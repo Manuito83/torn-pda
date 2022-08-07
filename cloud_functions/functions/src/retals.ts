@@ -125,7 +125,7 @@ export const retalsGroup = {
                         let lastRetalId = "";
                         let lastRetalName = "";
                         let allRetalNames = [];
-                        let lastRetalMinutes = 0;
+                        let retalMinutesRemaining = 0;
 
                         // Get all susceptible attacks (5 minutes)
                         const lastFiveMinutes: Attack[] = [];
@@ -164,7 +164,7 @@ export const retalsGroup = {
                                 } else {
                                     allRetalNames.push(` ${lastRetalName}`);
                                 }
-                                lastRetalMinutes = Math.round((currentDateInMillis - lastFiveMinutes[incomingId].timestamp_ended) / 60);
+                                retalMinutesRemaining = Math.round((lastFiveMinutes[incomingId].timestamp_ended + 300 - currentDateInMillis) / 60);
 
                                 /*
                                 console.log("________________");
@@ -180,7 +180,7 @@ export const retalsGroup = {
                         if (numberOrRetals === 0) continue;
                         if (numberOrRetals === 1) {
                             notificationTitle = `Retal on ${lastRetalName}`;
-                            notificationBody = `Expires in ${lastRetalMinutes} minutes`;
+                            notificationBody = `Expires in ${retalMinutesRemaining} minutes`;
                         } else {
                             notificationTitle = `${numberOrRetals} retals active!`;
                             notificationBody = `${allRetalNames}`;
