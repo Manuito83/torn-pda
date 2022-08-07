@@ -347,7 +347,7 @@ class RetalsController extends GetxController {
           );
 
           if (infoResult is Retal) {
-            infoResult.retalExpiry = incomingAttack.timestampEnded + 300000;
+            infoResult.retalExpiry = incomingAttack.timestampEnded + 300;
             retaliationList.add(infoResult);
           }
         }
