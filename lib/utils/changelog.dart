@@ -39,9 +39,9 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 253 - 07/08/2022
+    // Build 254 - 09/08/2022
 
-    // VERSION 2.8.9
+    // VERSION 2.9.0
     var v2_9_0 = ChangeLogItem();
     v2_9_0.version = 'Torn PDA v2.9.0';
     v2_9_0.date = '20 AUG 2022';
