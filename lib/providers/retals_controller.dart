@@ -301,7 +301,7 @@ class RetalsController extends GetxController {
       dynamic allAttacksSuccess = await getAllAttacks();
       dynamic ownStatsSuccess = await getOwnStats();
 
-      final timeStamp = DateTime.now().millisecondsSinceEpoch / 1000;
+      final timeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
       final validAttacks = <Attack>[];
 

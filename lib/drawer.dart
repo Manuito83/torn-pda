@@ -507,7 +507,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
     } else if (retals) {
-      if (int.parse(bulkDetails) == 1) {
+      if (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser) {
         launchBrowser = true;
         browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
       } else {
@@ -685,7 +685,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         final assistSplit = payload.split('###');
         final assistId = assistSplit[0].split(':')[1];
         final bulkDetails = assistSplit[1].split(':')[1];
-        if (int.parse(bulkDetails) == 1) {
+        if (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {

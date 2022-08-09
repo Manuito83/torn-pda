@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:math';
+import 'dart:developer' as dev;
 
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
@@ -1673,15 +1674,15 @@ class _CurrentRetalExpiryWidgetState extends State<CurrentRetalExpiryWidget> {
     Color diffColor = Colors.green;
 
     var dateTimeFightEnded = DateTime.fromMillisecondsSinceEpoch(widget.expiryTimeStamp * 1000);
-    var timeDifference = DateTime.now().difference(dateTimeFightEnded);
+    var timeDifference = dateTimeFightEnded.difference(DateTime.now());
 
-    if (timeDifference.inSeconds < 0) {
+    if (timeDifference.inSeconds <= 0) {
       diffText = "EXPIRED";
       diffColor = Colors.red;
     } else {
       String twoDigits(int n) => n.toString().padLeft(2, "0");
       String twoDigitSeconds = twoDigits(timeDifference.inSeconds.remainder(60).abs());
-      diffText = 'EXPIRES IN ${twoDigits(timeDifference.inMinutes)}:${twoDigitSeconds}';
+      diffText = 'EXPIRES IN ${twoDigits(timeDifference.inMinutes.abs())}:${twoDigitSeconds}';
 
       if (timeDifference.inSeconds < 60) {
         diffColor = Colors.orange;

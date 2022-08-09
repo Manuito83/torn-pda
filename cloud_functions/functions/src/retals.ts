@@ -166,7 +166,12 @@ export const retalsGroup = {
                                 }
                                 retalMinutesRemaining = Math.round((lastFiveMinutes[incomingId].timestamp_ended + 300 - currentDateInMillis) / 60);
 
+                                // DEBUGGING
                                 /*
+                                functions.logger.warn(`Retal CODE: ${lastFiveMinutes[incomingId].code}`);
+                                functions.logger.warn(`Retal time_stamp: ${lastFiveMinutes[incomingId].timestamp_ended}`);
+                                functions.logger.warn(`CurrentDateInMillis: ${currentDateInMillis}`);
+                                functions.logger.warn(`Minutes notified: ${retalMinutesRemaining}`);
                                 console.log("________________");
                                 console.log(`Code: ${lastFiveMinutes[incomingId].code}`);
                                 console.log(`Retal number: ${numberOrRetals}`);

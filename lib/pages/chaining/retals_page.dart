@@ -120,12 +120,8 @@ class _RetalsPageState extends State<RetalsPage> {
                       : SingleChildScrollView(
                           child: Column(
                             children: [
-                              Column(
-                                children: [
-                                  _topWidgets(r),
-                                  Flexible(child: _mainCards(r)),
-                                ],
-                              ),
+                              _topWidgets(r),
+                              _mainCards(r),
                             ],
                           ),
                         ),
