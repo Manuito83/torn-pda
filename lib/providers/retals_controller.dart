@@ -35,6 +35,7 @@ class RetalsController extends GetxController {
   List<Retal> retaliationList = <Retal>[];
   List<RetalsCardDetails> orderedCardsDetails = <RetalsCardDetails>[];
 
+  bool sectionVisible = false;
   bool updating = false;
   bool browserIsOpen = false;
 
@@ -247,22 +248,36 @@ class RetalsController extends GetxController {
   }
 
   Future retrieveRetals(BuildContext context) async {
+    if (!sectionVisible) {
+      return;
+    }
+
     updating = true;
     update();
 
     try {
-      bool success = await _getApiEvaluateRetals(context);
-      if (!success) {
+      String error = await _getApiEvaluateRetals(context);
+      int seconds = 6;
+      if (error.isNotEmpty) {
+        String message = "There was an issue fetching targets, there might be a connection error with the API."
+            "\n\nPlease try again in a while";
+
+        if (error.contains("incorrect ID-entity relation")) {
+          message = "Permission error!\n\n You do not seem to have Faction API permissions to use this feature."
+              "\n\nIf you think there might be an error, please talk to your faction leaders about it.\n\n"
+              "If you wish, you can deactivate this section altogether in Targets / Options.";
+          seconds = 10;
+        }
+
         BotToast.showText(
           clickClose: true,
-          text: "There was an issue fetching targets, there might be a connection error with the API."
-              "\n\nPlease try again in a while",
+          text: message,
           textStyle: TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.orange[900],
-          duration: Duration(seconds: 6),
+          duration: Duration(seconds: seconds),
           contentPadding: EdgeInsets.all(10),
         );
         return;
@@ -293,7 +308,7 @@ class RetalsController extends GetxController {
     update();
   }
 
-  Future<bool> _getApiEvaluateRetals(BuildContext context) async {
+  Future<String> _getApiEvaluateRetals(BuildContext context) async {
     var attacksResult = await TornApiCaller().getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       retaliationList.clear();
@@ -352,9 +367,11 @@ class RetalsController extends GetxController {
           }
         }
       }
-      return true;
+      return "";
+    } else if (attacksResult is ApiError) {
+      return (attacksResult.errorReason);
     }
-    return false;
+    return "error";
   }
 
   void saveSpies() {

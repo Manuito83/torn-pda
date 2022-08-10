@@ -31,6 +31,7 @@ class Prefs {
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
   final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
   // Retaliation
+  final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
   final String _kSingleRetaliationOpensBrowser = "pda_singleRetaliationOpensBrowser";
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
@@ -2048,9 +2049,19 @@ class Prefs {
     return prefs.setBool(_kRankedWarsInMenu, value);
   }
 
-  /// ------------------------------------
-  /// METHODS FOR RETALIATION NOTIFICATION
-  /// ------------------------------------
+  /// -----------------------
+  /// METHODS FOR RETALIATION
+  /// -----------------------
+  Future<bool> getRetaliationSectionEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRetaliationSectionEnabled) ?? true;
+  }
+
+  Future<bool> setRetaliationSectionEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRetaliationSectionEnabled, value);
+  }
+
   Future<bool> getSingleRetaliationOpensBrowser() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kSingleRetaliationOpensBrowser) ?? false;

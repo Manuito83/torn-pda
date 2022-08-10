@@ -26,6 +26,8 @@ export const retalsGroup = {
 
                         ownFactionId = +id;  // Parse to integer
 
+                        let originalNoHostWarning = factionsList[id].noHostWarning;
+
                         // Placeholder in the db, skip
                         if (ownFactionId === 0) continue;
 
@@ -66,12 +68,50 @@ export const retalsGroup = {
                                 continue;
                             }
 
+                            // If there are no hosts, send a notification
+                            let numberOfHosts = 0;
+                            for (const key of Array.from(subscribers.keys())) {
+                                if (subscribers[key].retalsNotificationHost) {
+                                    numberOfHosts++
+                                }
+                            }
+                            if (numberOfHosts === 0 && !factionsList[id].noHostWarning) {
+                                for (const key of Array.from(subscribers.keys())) {
+                                    promises.push(
+                                        sendNotificationToUser(
+                                            subscribers[key].token,
+                                            "Retaliation notifications inactive",
+                                            "No users in this faction detected with faction API access permits " +
+                                            "and retaliation notifications active in Torn PDA.\n\n" +
+                                            "Retaliation notifications might not work!",
+                                            "notification_retals",
+                                            "#FF0000",
+                                            "Alerts retals",
+                                            "",
+                                            "",
+                                            "-1",
+                                            "-1",
+                                            subscribers[key].vibration,
+                                            "sword_clash.aiff"
+                                        )
+                                    );
+                                }
+                                db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(true);
+                                continue;
+                            } else if (numberOfHosts > 0) {
+                                // Rearm the no-hosts warning
+                                db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(false);
+                            }
+
                             // Update with the most recent updated subscriber
                             // (to ensure that the apiKey is valid)
                             let lastActiveUserTime = 0;
                             let lastActiveUserApiKey = "";
 
                             for (const key of Array.from(subscribers.keys())) {
+                                // Only take into account hosts (users with faction API permits)
+                                if (!subscribers[key].retalsNotificationHost) continue;
+
                                 if (subscribers[key].lastActive > lastActiveUserTime) {
                                     lastActiveUserTime = subscribers[key].lastActive;
                                     lastActiveUserApiKey = subscribers[key].apiKey;
@@ -91,6 +131,39 @@ export const retalsGroup = {
                             uri: `https://api.torn.com/faction/${ownFactionId}?selections=attacks&key=${apiKey}`,
                             json: false,
                         });
+
+                        // If permissions are not right, remove this user as a host
+                        if (apiAttacks.includes("Incorrect ID-entity relation")) {
+                            db.ref(`retals/factions/${ownFactionId}/api`).set("");
+
+                            const response = await admin
+                                .firestore()
+                                .collection("players")
+                                .where("apiKey", "==", apiKey)
+                                .get();
+
+                            subscribers = response.docs.map((d) => d.data());
+
+                            for (const key of Array.from(subscribers.keys())) {
+                                promises.push(
+                                    admin
+                                        .firestore()
+                                        .collection("players")
+                                        .doc(subscribers[key].uid)
+                                        .update({
+                                            retalsNotificationHost: false,
+                                        })
+                                );
+                            }
+
+                            // If we had already sent a no-host warning to the faction, and for some
+                            // reason we encounter a username that lost his privileges after activating
+                            // (still with host == true), leave the warning as it was to avoid sending another notification
+                            if (originalNoHostWarning) {
+                                db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(true);
+                            }
+                            continue;
+                        }
 
                         // If the key is incorrect, deactivate the user and clean the key in the db
                         if (apiAttacks.includes("Incorrect key")) {
@@ -115,6 +188,7 @@ export const retalsGroup = {
                                         })
                                 );
                             }
+                            continue;
                         }
 
                         const factionAttacks: FactionAttacks = JSON.parse(apiAttacks);

@@ -1209,8 +1209,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
                       _terminalProvider.addInstruction(consoleMessage.message);
                     }
-                    // ignore: avoid_print
-                    print("TORN PDA CONSOLE: ${consoleMessage.message}");
+                    log("TORN PDA CONSOLE: ${consoleMessage.message}");
                   }
                 },
                 onLongPressHitTestResult: (controller, result) async {

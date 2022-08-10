@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -608,11 +609,53 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               fontStyle: FontStyle.italic,
                             ),
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.retaliationNotification = value;
-                            });
-                            firestore.toggleRetaliationNotification(value);
+                          onChanged: (enabled) async {
+                            if (!enabled) {
+                              setState(() {
+                                _firebaseUserModel?.retaliationNotification = enabled;
+                              });
+                              firestore.toggleRetaliationNotification(enabled);
+                              return;
+                            }
+
+                            // Assess whether we have permits
+                            var attacksResult = await TornApiCaller().getFactionAttacks();
+                            if (attacksResult is FactionAttacksModel) {
+                              setState(() {
+                                _firebaseUserModel?.retaliationNotification = enabled;
+                              });
+                              firestore.toggleRetaliationNotification(enabled);
+                            } else if (attacksResult is ApiError) {
+                              String message = "";
+                              int seconds = 0;
+
+                              if (attacksResult.errorReason.contains("incorrect ID-entity relation")) {
+                                setState(() {
+                                  _firebaseUserModel?.retaliationNotification = enabled;
+                                });
+                                firestore.toggleRetaliationNotification(enabled, host: false);
+                                message = "You have no faction API permissions (talk to your leadership about it).\n\n"
+                                    "This alert has been activated, but it won't work unless someone with proper "
+                                    "permissions in your faction activates it as well.";
+                                seconds = 10;
+                              } else {
+                                message = "It's not possible to activate this alert now (Torn PDA can't verify whether "
+                                    "you have proper Faction API permissions).\n\nPlease try again later!";
+                                seconds = 6;
+                              }
+
+                              BotToast.showText(
+                                clickClose: true,
+                                text: message,
+                                textStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.orange[900],
+                                duration: Duration(seconds: seconds),
+                                contentPadding: EdgeInsets.all(10),
+                              );
+                            }
                           },
                         ),
                       ),
@@ -906,7 +949,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                   "section (inside of Chaining); this is independent of how many targets are available for retaliation "
                   "at the same time.\n\nIn this section you can have a look at the stats, target status, etc."
                   "\n\nHowever, if you enable this option, retaliation notifications with a single target "
-                  "will automatically open the browser and take you straight to the attack page.",
+                  "will automatically open the browser and take you straight to the attack page.\n\n"
+                  "NOTE: this will have no effect if you have no faction API permissions, as the browser will"
+                  "open in any case.",
                   style: TextStyle(fontSize: 13),
                 ),
                 SizedBox(height: 10),

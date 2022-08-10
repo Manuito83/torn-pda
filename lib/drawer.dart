@@ -18,6 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/pages/about.dart';
@@ -507,15 +508,32 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
     } else if (retals) {
-      if (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser) {
+      if (int.parse(bulkDetails) == -1) {
+        // No-host notification
+        return;
+      }
+      // If we have the section manually deactivated
+      // Or everything is OK but we elected to open the browser with just 1 target
+      // >> Open browser
+      if (!_settingsProvider.retaliationSectionEnabled ||
+          (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
         launchBrowser = true;
         browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
       } else {
-        _retalsRedirection = true;
-        _callSectionFromOutside(2);
-        Future.delayed(Duration(seconds: 2)).then((value) {
-          _retalsRedirection = false;
-        });
+        // Even if we meet above requirements, call the API and assess whether the user
+        // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+        var attacksResult = await TornApiCaller().getFactionAttacks();
+        if (attacksResult is! FactionAttacksModel) {
+          launchBrowser = true;
+          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        } else {
+          // If we pass all checks above, redirect to the retals section
+          _retalsRedirection = true;
+          _callSectionFromOutside(2);
+          Future.delayed(Duration(seconds: 2)).then((value) {
+            _retalsRedirection = false;
+          });
+        }
       }
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
@@ -681,19 +699,37 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/points.php';
       } else if (payload.contains('retals')) {
-        log(payload);
         final assistSplit = payload.split('###');
         final assistId = assistSplit[0].split(':')[1];
         final bulkDetails = assistSplit[1].split(':')[1];
-        if (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser) {
+
+        if (int.parse(bulkDetails) == -1) {
+          // No-host notification
+          return;
+        }
+
+        // If we have the section manually deactivated
+        // Or everything is OK but we elected to open the browser with just 1 target
+        // >> Open browser
+        if (!_settingsProvider.retaliationSectionEnabled ||
+            (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
-          _retalsRedirection = true;
-          _callSectionFromOutside(2);
-          Future.delayed(Duration(seconds: 2)).then((value) {
-            _retalsRedirection = false;
-          });
+          // Even if we meet above requirements, call the API and assess whether the user
+          // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+          var attacksResult = await TornApiCaller().getFactionAttacks();
+          if (attacksResult is! FactionAttacksModel) {
+            launchBrowser = true;
+            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          } else {
+            // If we pass all checks above, redirect to the retals section
+            _retalsRedirection = true;
+            _callSectionFromOutside(2);
+            Future.delayed(Duration(seconds: 2)).then((value) {
+              _retalsRedirection = false;
+            });
+          }
         }
       } else if (payload.contains('stockMarket')) {
         // Not implemented (there is a box showing in _getBackGroundNotifications)

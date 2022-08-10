@@ -281,9 +281,14 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> toggleRetaliationNotification(bool active) async {
+  /// [host] stands for someone that does not have proper Faction API permissions
+  Future<void> toggleRetaliationNotification(bool active, {bool host = true}) async {
+    bool isHost = host;
+    if (!active) isHost = false;
+
     await _firestore.collection("players").doc(_uid).update({
       "retalsNotification": active,
+      "retalsNotificationHost": isHost,
     });
   }
 

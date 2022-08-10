@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -275,11 +276,29 @@ class _RetalsPageState extends State<RetalsPage> {
                 ),
                 SizedBox(height: 25),
                 Text(
-                  "This section shows targets that:\n"
-                  "  - Attacked your faction in the last 5 minutes\n"
-                  "  - Won the attack\n"
-                  "  - Have not been retaliated yet\n",
+                  "This section shows targets that:\n",
                   style: TextStyle(fontSize: 13),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    "- Attacked your faction in the last 5 minutes",
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    "- Won the attack",
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    "- Have not been retaliated yet",
+                    style: TextStyle(fontSize: 13),
+                  ),
                 ),
                 SizedBox(height: 25),
                 Text(

@@ -11,6 +11,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TargetsOptionsReturn {
   bool yataEnabled;
+  bool retaliationEnabled;
   //bool tacEnabled;
 }
 
@@ -24,6 +25,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   bool _showTargetsNotes = true;
   bool _showBlankTargetsNotes = true;
   bool _showOnlineFactionWarning = true;
+
+  // Retaliation
+  bool _retaliationEnabled = true;
 
   // Yata import
   bool _yataTargetsEnabled = true;
@@ -279,6 +283,40 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
+                                      'RETALIATION SECTION',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Section enabled"),
+                                      Switch(
+                                        value: _retaliationEnabled,
+                                        onChanged: (value) {
+                                          Prefs().setRetaliationSectionEnabled(value);
+                                          _settingsProvider.setRetaliationSectionEnabled = value;
+                                          setState(() {
+                                            // We use this for the callback as well to Chaining
+                                            _retaliationEnabled = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 15),
+                                Divider(),
+                                SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
                                       'YATA',
                                       style: TextStyle(fontSize: 10),
                                     ),
@@ -404,6 +442,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     var showBlankTargetsNotes = await Prefs().getShowBlankTargetsNotes();
     var showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
     var yataEnabled = await Prefs().getYataTargetsEnabled();
+    var retaliationEnabled = await Prefs().getRetaliationSectionEnabled();
     //var tacEnabled = await Prefs().getTACEnabled();
 
     setState(() {
@@ -411,13 +450,16 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
       _showBlankTargetsNotes = showBlankTargetsNotes;
       _showOnlineFactionWarning = showOnlineFactionWarning;
       _yataTargetsEnabled = yataEnabled;
+      _retaliationEnabled = retaliationEnabled;
       //_tacEnabled = tacEnabled;
     });
   }
 
   Future<bool> _willPopCallback() async {
     Navigator.of(context).pop(
-      TargetsOptionsReturn()..yataEnabled = _yataTargetsEnabled,
+      TargetsOptionsReturn()
+        ..yataEnabled = _yataTargetsEnabled
+        ..retaliationEnabled = _retaliationEnabled,
       //..tacEnabled = _tacEnabled,
     );
     return true;
