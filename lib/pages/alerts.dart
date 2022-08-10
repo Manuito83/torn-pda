@@ -606,7 +606,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.retaliationNotification ?? false,
+                          value: _firebaseUserModel.retalsNotification ?? false,
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
@@ -649,7 +649,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           onChanged: (enabled) async {
                             if (!enabled) {
                               setState(() {
-                                _firebaseUserModel?.retaliationNotification = enabled;
+                                _firebaseUserModel?.retalsNotification = enabled;
                               });
                               firestore.toggleRetaliationNotification(enabled);
                               return;
@@ -657,7 +657,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
                             if (_factionApiAccess) {
                               setState(() {
-                                _firebaseUserModel?.retaliationNotification = enabled;
+                                _firebaseUserModel?.retalsNotification = enabled;
                               });
                               firestore.toggleRetaliationNotification(enabled);
                             } else {
@@ -666,7 +666,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
                               if (!_factionApiAccessCheckError) {
                                 setState(() {
-                                  _firebaseUserModel?.retaliationNotification = enabled;
+                                  _firebaseUserModel?.retalsNotification = enabled;
                                 });
                                 firestore.toggleRetaliationNotification(enabled, host: false);
                                 message = "You have no faction API permissions (talk to your leadership about it).\n\n"
@@ -694,7 +694,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
-                      if (_firebaseUserModel.retaliationNotification && _factionApiAccess)
+                      if (_firebaseUserModel.retalsNotification && _factionApiAccess)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
                           child: Row(

@@ -25,7 +25,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool stockMarketNotification = false;
   List stockMarketShares = [];
   bool factionAssistMessage = true;
-  bool retaliationNotification = true;
+  bool retalsNotification = true;
 
   FirebaseUserModel();
 
@@ -66,7 +66,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "stockMarketNotification": stockMarketNotification,
       "stockMarketShares": stockMarketShares,
       "factionAssistMessage": factionAssistMessage,
-      "retaliationNotification": retaliationNotification,
+      "retalsNotification": retalsNotification,
     };
   }
 
@@ -98,6 +98,6 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..stockMarketNotification = data["stockMarketNotification"] ?? false
       ..stockMarketShares = data["stockMarketShares"] ?? []
       ..factionAssistMessage = data["factionAssistMessage"] ?? true
-      ..retaliationNotification = data["retaliationNotification"] ?? false;
+      ..retalsNotification = data["retalsNotification"] ?? false;
   }
 }
