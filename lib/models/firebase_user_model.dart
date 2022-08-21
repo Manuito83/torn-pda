@@ -25,7 +25,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool stockMarketNotification = false;
   List stockMarketShares = [];
   bool factionAssistMessage = true;
-  bool retalsNotification = true;
+  bool retalsNotification = false;
 
   FirebaseUserModel();
 

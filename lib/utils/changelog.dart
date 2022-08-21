@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 255 - 10/08/2022
+    // Build 256 - 21/08/2022
 
     // VERSION 2.9.0
     var v2_9_0 = ChangeLogItem();
     v2_9_0.version = 'Torn PDA v2.9.0';
-    v2_9_0.date = '20 AUG 2022';
+    v2_9_0.date = '01 SEP 2022';
     String feat2_9_0_1 = "Alerts: added retaliation alerts";
     String feat2_9_0_2 = "Chaining: added retaliation section";
     v2_9_0.features.add(feat2_9_0_1);

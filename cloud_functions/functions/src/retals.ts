@@ -1,13 +1,13 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { FactionAttacks, Attack } from "./interfaces/retals_interfaces";
+import { FactionModel, Attack, State } from "./interfaces/faction_interface";
 import { sendNotificationToUser } from "./notification";
 const rp = require("request-promise");
 
 export const retalsGroup = {
 
     evaluateRetals: functions.region('us-east4').pubsub
-        .schedule("*/1 * * * *")
+        .schedule("*/2 * * * *")
         .onRun(async () => {
             const promises: Promise<any>[] = [];
 
@@ -128,7 +128,7 @@ export const retalsGroup = {
 
                         // Use api to get attacks information and see if we have new retals
                         const apiAttacks = await rp({
-                            uri: `https://api.torn.com/faction/${ownFactionId}?selections=attacks&key=${apiKey}`,
+                            uri: `https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}`,
                             json: false,
                         });
 
@@ -191,25 +191,28 @@ export const retalsGroup = {
                             continue;
                         }
 
-                        const factionAttacks: FactionAttacks = JSON.parse(apiAttacks);
+                        const factionModel: FactionModel = JSON.parse(apiAttacks);
 
                         let notificationTitle = "";
                         let notificationBody = ""
                         let numberOrRetals = 0;
-                        let lastRetalId = "";
+                        let lastRetalAttackerId = "";
                         let lastRetalName = "";
+                        let lastRetalTargetId = 0;
                         let allRetalNames = [];
+                        let allRetalNamesTrimmed = [];
                         let retalMinutesRemaining = 0;
+                        let totalRetalsAbroad = 0;
 
                         // Get all susceptible attacks (5 minutes)
                         const lastFiveMinutes: Attack[] = [];
 
-                        for (let attackId in factionAttacks.attacks) {
-                            if (factionAttacks.attacks[attackId].attacker_name !== "" &&
-                                currentDateInMillis - factionAttacks.attacks[attackId].timestamp_ended < 300 &&
-                                factionAttacks.attacks[attackId].timestamp_ended > factionTimeUpdated
+                        for (let attackId in factionModel.attacks) {
+                            if (factionModel.attacks[attackId].attacker_name !== "" &&
+                                currentDateInMillis - factionModel.attacks[attackId].timestamp_ended < 300 &&
+                                factionModel.attacks[attackId].timestamp_ended > factionTimeUpdated
                             ) {
-                                lastFiveMinutes.push(factionAttacks.attacks[attackId]);
+                                lastFiveMinutes.push(factionModel.attacks[attackId]);
                             }
                         }
 
@@ -229,10 +232,22 @@ export const retalsGroup = {
                                 }
                                 if (alreadyRetaliated) continue;
 
+                                // Discard duplicated names (successive attacks)
+                                if (allRetalNamesTrimmed.includes(lastFiveMinutes[incomingId].attacker_name)) {
+                                    continue;
+                                }
+
                                 // If we reached here, it's a valid retal
                                 numberOrRetals++;
-                                lastRetalId = lastFiveMinutes[incomingId].attacker_id.toString();
+                                lastRetalAttackerId = lastFiveMinutes[incomingId].attacker_id.toString();
+                                lastRetalTargetId = lastFiveMinutes[incomingId].defender_id;
                                 lastRetalName = lastFiveMinutes[incomingId].attacker_name;
+
+                                if (lastFiveMinutes[incomingId].modifiers.overseas > 1) {
+                                    totalRetalsAbroad++;
+                                }
+
+                                allRetalNamesTrimmed.push(lastRetalName);
                                 if (allRetalNames.length === 0) {
                                     allRetalNames.push(lastRetalName);
                                 } else {
@@ -249,7 +264,7 @@ export const retalsGroup = {
                                 console.log("________________");
                                 console.log(`Code: ${lastFiveMinutes[incomingId].code}`);
                                 console.log(`Retal number: ${numberOrRetals}`);
-                                console.log(`Retal player id: ${lastRetalId}`);
+                                console.log(`Retal player id: ${lastRetalAttackerId}`);
                                 console.log(`Retal player name: ${lastRetalName}`);
                                 console.log(`Retal minutes: ${lastRetalMinutes}`);
                                 */
@@ -257,6 +272,7 @@ export const retalsGroup = {
                         }
 
                         if (numberOrRetals === 0) continue;
+
                         if (numberOrRetals === 1) {
                             notificationTitle = `Retal on ${lastRetalName}`;
                             notificationBody = `Expires in ${retalMinutesRemaining} minutes`;
@@ -300,8 +316,54 @@ export const retalsGroup = {
                         }
 
                         for (const key of Array.from(subscribers.keys())) {
-                            //console.log(notificationTitle);
-                            //console.log(notificationBody);
+                            /*
+                            console.log(`Notification title: ${notificationTitle}`);
+                            console.log(`Notification body: ${notificationBody}`);
+                            console.log(`Subscriber's ID: ${subscribers[key].playerId}`);
+                            console.log(`Ratal attacker's ID: ${lastRetalAttackerId}`);
+                            console.log(`Retal target's ID: ${lastRetalTargetId}`);
+                            console.log(`Retals abroad: ${totalRetalsAbroad}`);
+                            */
+
+                            if (numberOrRetals === 1 && subscribers[key].playerId === lastRetalTargetId) {
+                                // Avoid notifying about own retaliations suffered by one self
+                                // (limited to when there is only one retal to notify)
+                                continue;
+                            }
+
+                            // Find out where our subscriber is
+                            let subscriberState: State;
+                            for (let memberId in factionModel.members) {
+                                if (factionModel.members[memberId].name === subscribers[key].name) {
+                                    subscriberState === factionModel.members[memberId].status.state;
+                                }
+                            }
+
+                            // CASES WHEN TRAVELING
+                            // If subscriber is traveling, do not disturb
+                            if (subscriberState === State.Traveling) {
+                                continue;
+                            }
+                            // If he is in Torn and all retals are abroad, don't notify
+                            else if (subscriberState === State.Okay) {
+                                if (totalRetalsAbroad === numberOrRetals) {
+                                    continue;
+                                }
+                            }
+                            // If he is abroad and all retals took place in Torn, don't notify
+                            else if (subscriberState === State.Abroad) {
+                                if (totalRetalsAbroad === 0) {
+                                    continue;
+                                }
+                            }
+
+
+                            // DEBUG
+                            /*
+                            if (subscribers[key].name !== "Manuito") {
+                                return;
+                            }
+                            */
 
                             promises.push(
                                 sendNotificationToUser(
@@ -313,7 +375,7 @@ export const retalsGroup = {
                                     "Alerts retals",
                                     "",
                                     "",
-                                    lastRetalId,
+                                    lastRetalAttackerId,
                                     numberOrRetals.toString(),
                                     subscribers[key].vibration,
                                     "sword_clash.aiff"

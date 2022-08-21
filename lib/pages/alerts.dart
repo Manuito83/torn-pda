@@ -979,14 +979,22 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  "NOTE: you will not receive retaliation alerts when traveling, nor when the attack took place abroad "
+                  "and you are in Torn, nor if the attack took place in Torn and you are abroad.\n\nHowever, due to API limits, "
+                  "you might receive spurious notifications when you are abroad but in a different country from the attack.\n\n"
+                  "Depending on your API permissions, more detailed information about the attack, location, etc., "
+                  "will be available in the Chaining section of the app, as explained below:\n\n",
+                  style: TextStyle(fontSize: 13),
+                ),
                 if (!_factionApiAccess)
                   Text(
-                    "\nYou DO NOT HAVE Faction API access\n\n",
+                    "You DO NOT HAVE Faction API access\n\n",
                     style: TextStyle(fontSize: 13, color: Colors.red, fontWeight: FontWeight.bold),
                   )
                 else
                   Text(
-                    "\nYou HAVE Faction API access\n\n",
+                    "You HAVE Faction API access\n\n",
                     style: TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.bold),
                   ),
                 if (!_factionApiAccess)
