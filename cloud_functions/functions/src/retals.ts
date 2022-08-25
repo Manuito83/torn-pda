@@ -31,6 +31,9 @@ export const retalsGroup = {
                         // Placeholder in the db, skip
                         if (ownFactionId === 0) continue;
 
+                        // DEBUG! //
+                        //if (ownFactionId !== 33241) continue;
+
                         if (factionsList[id].timestamp === undefined) {
                             await db.ref(`retals/factions/${ownFactionId}/api`).set("");
                         }
@@ -357,13 +360,8 @@ export const retalsGroup = {
                                 }
                             }
 
-
-                            // DEBUG
-                            /*
-                            if (subscribers[key].name !== "Manuito") {
-                                return;
-                            }
-                            */
+                            // DEBUG! //
+                            //if (subscribers[key].name !== "Manuito") continue;
 
                             promises.push(
                                 sendNotificationToUser(

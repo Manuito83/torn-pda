@@ -371,21 +371,3 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
   }
 }
 
-// Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy
-// function getEstimatedPrice(estimatedWeeklyActiveUsers: number) {
-//   const numberOfExecutionsPerDay = 1440; //  Minutes in a day
-//   const totalDocumentReadsPerDay =
-//     estimatedWeeklyActiveUsers * numberOfExecutionsPerDay;
-
-//   const paidDocumentReadsPerDay = totalDocumentReadsPerDay - 50000; // 50k per day is free
-//   const pricePer100KRead = 0.06;
-//   const paidDocumentKReadsPerDay = paidDocumentReadsPerDay / 100000;
-//   const priceOfNotificationSender = paidDocumentKReadsPerDay * pricePer100KRead;
-//   const estimatedBillForCloudFunction = 5; // 5$ per month as of my estimation, can be optimized;
-//   return {
-//     estimatedWeeklyActiveUsers,
-//     estimatedDailyBill: priceOfNotificationSender,
-//     estimatedMonthlyBill: priceOfNotificationSender * 30,
-//     estimatedBillForCloudFunction,
-//   };
-// }

@@ -206,8 +206,9 @@ export const playersGroup = {
         !afterStat.eventsNotification &&
         !afterStat.refillsNotification &&
         !afterStat.stockMarketNotification &&
-        !afterStat.factionAssistMessage &&
-        !afterStat.retalsNotification &&
+        // NOTE: do NOT include here notifications that are outside of the main notification loop
+        // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
+        // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
         afterStat.alertsEnabled
       )
         promises.push(
@@ -232,8 +233,10 @@ export const playersGroup = {
           || afterStat.eventsNotification
           || afterStat.refillsNotification
           || afterStat.stockMarketNotification
-          || afterStat.factionAssistMessage
-          || afterStat.retalsNotification)
+          // NOTE: do NOT include here notifications that are outside of the main notification loop
+          // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
+          // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
+        )
         && !afterStat.alertsEnabled
       ) {
         promises.push(
