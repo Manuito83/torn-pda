@@ -309,10 +309,10 @@ class RetalsController extends GetxController {
   }
 
   Future<String> _getApiEvaluateRetals(BuildContext context) async {
+    List<Retal> newList = <Retal>[];
+
     var attacksResult = await TornApiCaller().getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
-      retaliationList.clear();
-
       dynamic allAttacksSuccess = await getAllAttacks();
       dynamic ownStatsSuccess = await getOwnStats();
 
@@ -363,10 +363,16 @@ class RetalsController extends GetxController {
 
           if (infoResult is Retal) {
             infoResult.retalExpiry = incomingAttack.timestampEnded + 300;
-            retaliationList.add(infoResult);
+            newList.add(infoResult);
           }
         }
       }
+
+      // Remove duplicates (just keep the last attack for each attacker)
+      final ids = Set();
+      newList.retainWhere((x) => ids.add(x.name));
+
+      retaliationList = List<Retal>.from(newList);
       return "";
     } else if (attacksResult is ApiError) {
       return (attacksResult.errorReason);

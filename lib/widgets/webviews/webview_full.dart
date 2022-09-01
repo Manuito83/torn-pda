@@ -366,7 +366,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (Platform.isAndroid) {
-      if (state == AppLifecycleState.paused) {
+      if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
         webView?.pauseTimers();
       } else {
         webView?.resumeTimers();

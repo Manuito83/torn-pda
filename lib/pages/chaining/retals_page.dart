@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:developer';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -87,47 +86,28 @@ class _RetalsPageState extends State<RetalsPage> {
             )
           : null,
       body: GetBuilder<RetalsController>(
-        builder: (r) => r.updating
-            ? Column(
-                children: [
-                  _topWidgets(r),
-                  Expanded(
+        builder: (r) => Container(
+          color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+            child: MediaQuery.of(context).orientation == Orientation.portrait
+                ? Column(
+                    children: [
+                      _topWidgets(r),
+                      Flexible(child: _mainCards(r)),
+                    ],
+                  )
+                : SingleChildScrollView(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 100),
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
+                        _topWidgets(r),
+                        _mainCards(r),
                       ],
                     ),
                   ),
-                ],
-              )
-            : Container(
-                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                  child: MediaQuery.of(context).orientation == Orientation.portrait
-                      ? Column(
-                          children: [
-                            _topWidgets(r),
-                            Flexible(child: _mainCards(r)),
-                          ],
-                        )
-                      : SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              _topWidgets(r),
-                              _mainCards(r),
-                            ],
-                          ),
-                        ),
-                ),
-              ),
+          ),
+        ),
       ),
     );
   }
@@ -141,7 +121,7 @@ class _RetalsPageState extends State<RetalsPage> {
           callBackOptions: _callBackChainOptions,
         ),
         r.updating
-            ? SizedBox.shrink()
+            ? CircularProgressIndicator()
             : Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -234,9 +214,11 @@ class _RetalsPageState extends State<RetalsPage> {
                 padding: const EdgeInsets.only(right: 10),
                 child: GestureDetector(
                   child: Icon(Icons.refresh),
-                  onTap: () {
-                    r.retrieveRetals(context);
-                  },
+                  onTap: r.updating
+                      ? null
+                      : () {
+                          r.retrieveRetals(context);
+                        },
                 ),
               );
             },

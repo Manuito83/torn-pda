@@ -1,7 +1,6 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:math';
-import 'dart:developer' as dev;
 
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
@@ -1655,6 +1654,7 @@ class _CurrentRetalExpiryWidgetState extends State<CurrentRetalExpiryWidget> {
   @override
   void initState() {
     super.initState();
+    _timerExpiry();
     _expiryTicker = new Timer.periodic(Duration(seconds: 1), (Timer t) => _timerExpiry());
   }
 

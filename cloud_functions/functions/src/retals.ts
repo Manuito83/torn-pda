@@ -31,7 +31,7 @@ export const retalsGroup = {
                         // Placeholder in the db, skip
                         if (ownFactionId === 0) continue;
 
-                        // DEBUG! //
+                        // DEBUG!
                         //if (ownFactionId !== 33241) continue;
 
                         if (factionsList[id].timestamp === undefined) {
@@ -258,7 +258,7 @@ export const retalsGroup = {
                                 }
                                 retalMinutesRemaining = Math.round((lastFiveMinutes[incomingId].timestamp_ended + 300 - currentDateInMillis) / 60);
 
-                                // DEBUGGING
+                                // DEBUG
                                 /*
                                 functions.logger.warn(`Retal CODE: ${lastFiveMinutes[incomingId].code}`);
                                 functions.logger.warn(`Retal time_stamp: ${lastFiveMinutes[incomingId].timestamp_ended}`);
@@ -269,7 +269,7 @@ export const retalsGroup = {
                                 console.log(`Retal number: ${numberOrRetals}`);
                                 console.log(`Retal player id: ${lastRetalAttackerId}`);
                                 console.log(`Retal player name: ${lastRetalName}`);
-                                console.log(`Retal minutes: ${lastRetalMinutes}`);
+                                console.log(`Retal minutes: ${retalMinutesRemaining}`);
                                 */
                             }
                         }
@@ -319,11 +319,13 @@ export const retalsGroup = {
                         }
 
                         for (const key of Array.from(subscribers.keys())) {
+                            // DEBUG
                             /*
+                            console.log(`############`);
                             console.log(`Notification title: ${notificationTitle}`);
                             console.log(`Notification body: ${notificationBody}`);
                             console.log(`Subscriber's ID: ${subscribers[key].playerId}`);
-                            console.log(`Ratal attacker's ID: ${lastRetalAttackerId}`);
+                            console.log(`Retal attacker's ID: ${lastRetalAttackerId}`);
                             console.log(`Retal target's ID: ${lastRetalTargetId}`);
                             console.log(`Retals abroad: ${totalRetalsAbroad}`);
                             */
@@ -335,10 +337,10 @@ export const retalsGroup = {
                             }
 
                             // Find out where our subscriber is
-                            let subscriberState: State;
+                            let subscriberState = "";
                             for (let memberId in factionModel.members) {
                                 if (factionModel.members[memberId].name === subscribers[key].name) {
-                                    subscriberState === factionModel.members[memberId].status.state;
+                                    subscriberState = factionModel.members[memberId].status.state.toString();
                                 }
                             }
 
@@ -360,7 +362,7 @@ export const retalsGroup = {
                                 }
                             }
 
-                            // DEBUG! //
+                            // DEBUG! 
                             //if (subscribers[key].name !== "Manuito") continue;
 
                             promises.push(
