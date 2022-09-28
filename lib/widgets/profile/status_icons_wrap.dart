@@ -52,6 +52,8 @@ final allowedIcons = <String, Map<String, String>>{
   "icon78": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (4-6%)"},
   "icon79": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (6-8%)"},
   "icon80": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (8%+)"},
+  "icon81": {"url": "https://www.torn.com/factions.php?step=your#/", "name": "Faction recruit"},
+  "icon83": {"url": "https://www.torn.com/companies.php", "name": "Company recruit"},
   "icon84": {"url": "https://www.torn.com/page.php?sid=stocks", "name": "Dividend ready"},
   "icon85": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name": "OC being planned"},
   "icon86": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name": "OC ready"},

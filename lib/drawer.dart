@@ -515,6 +515,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // If we have the section manually deactivated
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
+      await Future.delayed(Duration(seconds: 2));
       if (!_settingsProvider.retaliationSectionEnabled ||
           (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
         launchBrowser = true;
