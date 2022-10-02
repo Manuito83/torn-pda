@@ -47,7 +47,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_9_0.date = '04 OCT 2022';
     String feat2_9_0_1 = "Alerts: added retaliation alerts";
     String feat2_9_0_2 = "Chaining: added retaliation section";
-    String feat2_9_0_3 = "Fixed other reported issues";
+    String feat2_9_0_3 = "Fixed several reported issues";
     v2_9_0.features.add(feat2_9_0_1);
     v2_9_0.features.add(feat2_9_0_2);
     v2_9_0.features.add(feat2_9_0_3);
