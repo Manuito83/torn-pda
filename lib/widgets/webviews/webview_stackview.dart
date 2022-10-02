@@ -484,47 +484,49 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   Widget _getIcon(int i) {
     var url = _webViewProvider.tabList[i].currentUrl;
 
+    Widget boxWidget = const ImageIcon(AssetImage('images/icons/pda_icon.png'));
+
     // Find some icons manually first, as they might trigger errors with shortcuts
     if (_webViewProvider.tabList[i].isChainingBrowser) {
-      return Icon(MdiIcons.linkVariant, color: Colors.red);
+      boxWidget = Icon(MdiIcons.linkVariant, color: Colors.red);
     } else if (url.contains("sid=attack&user2ID=2225097")) {
-      return Icon(MdiIcons.pistol, color: Colors.pink);
+      boxWidget = Icon(MdiIcons.pistol, color: Colors.pink);
     } else if (url.contains("sid=attack&user2ID=")) {
-      return Icon(Icons.person);
+      boxWidget = Icon(Icons.person);
     } else if (url.contains("profiles.php?XID=2225097")) {
-      return Icon(Icons.person, color: Colors.pink);
+      boxWidget = Icon(Icons.person, color: Colors.pink);
     } else if (url.contains("profiles.php")) {
-      return Icon(Icons.person, color: _themeProvider.mainText);
+      boxWidget = Icon(Icons.person, color: _themeProvider.mainText);
     } else if (url.contains("companies.php") || url.contains("joblist.php")) {
-      return ImageIcon(AssetImage('images/icons/home/job.png'));
+      boxWidget = ImageIcon(AssetImage('images/icons/home/job.png'));
     } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
-      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
+      boxWidget = ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
     } else if (url.contains("https://www.torn.com/forums.php")) {
-      return ImageIcon(AssetImage('images/icons/home/forums.png'));
+      boxWidget = ImageIcon(AssetImage('images/icons/home/forums.png'));
     } else if (url.contains("yata.yt")) {
-      return Image.asset('images/icons/yata_logo.png');
+      boxWidget = Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("jailview.php")) {
-      return Image.asset('images/icons/map/jail.png', color: _themeProvider.mainText);
+      boxWidget = Image.asset('images/icons/map/jail.png', color: _themeProvider.mainText);
     } else if (url.contains("hospitalview.php")) {
-      return Image.asset('images/icons/map/hospital.png', color: _themeProvider.mainText);
+      boxWidget = Image.asset('images/icons/map/hospital.png', color: _themeProvider.mainText);
     } else if (url.contains("events.php")) {
-      return Image.asset('images/icons/home/events.png', color: _themeProvider.mainText);
+      boxWidget = Image.asset('images/icons/home/events.png', color: _themeProvider.mainText);
     } else if (url.contains("properties.php")) {
-      return Image.asset('images/icons/map/property.png', color: _themeProvider.mainText);
+      boxWidget = Image.asset('images/icons/map/property.png', color: _themeProvider.mainText);
     } else if (url.contains("tornstats.com/")) {
-      return Image.asset('images/icons/tornstats_logo.png');
+      boxWidget = Image.asset('images/icons/tornstats_logo.png');
     } else if (url.contains("torntrader.com/")) {
-      return Image.asset('images/icons/torntrader_logo.png', color: _themeProvider.mainText);
+      boxWidget = Image.asset('images/icons/torntrader_logo.png', color: _themeProvider.mainText);
     } else if (url.contains("arsonwarehouse.com/")) {
-      return Image.asset('images/icons/awh_logo2.png');
+      boxWidget = Image.asset('images/icons/awh_logo2.png');
     } else if (url.contains("index.php?page=hunting")) {
-      return Icon(MdiIcons.target, size: 20);
+      boxWidget = Icon(MdiIcons.target, size: 20);
     } else if (url.contains("bazaar.php")) {
-      return Image.asset('images/icons/inventory/bazaar.png', color: _themeProvider.mainText);
+      boxWidget = Image.asset('images/icons/inventory/bazaar.png', color: _themeProvider.mainText);
     } else if (url.contains("imarket.php")) {
-      return Image.asset('images/icons/map/item_market.png', color: _themeProvider.mainText);
+      boxWidget = Image.asset('images/icons/map/item_market.png', color: _themeProvider.mainText);
     } else if (url.contains("index.php")) {
-      return ImageIcon(AssetImage('images/icons/home/home.png'));
+      boxWidget = ImageIcon(AssetImage('images/icons/home/home.png'));
     }
 
     // Try to find by using shortcuts list
@@ -532,11 +534,11 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     // the standard URL in shortcuts. That's why there are some more in the list above.
     var shortProvider = context.read<ShortcutsProvider>();
     for (var short in shortProvider.allShortcuts) {
-      if (short.url.contains(url)) {
-        return ImageIcon(AssetImage(short.iconUrl));
+      if (url.contains(short.url)) {
+        boxWidget = ImageIcon(AssetImage(short.iconUrl));
       }
     }
 
-    return ImageIcon(AssetImage('images/icons/pda_icon.png'));
+    return boxWidget;
   }
 }
