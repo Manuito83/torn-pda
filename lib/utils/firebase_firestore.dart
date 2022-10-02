@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
@@ -45,6 +46,7 @@ class _FirestoreHelper {
       await FirebaseMessaging.instance.deleteToken();
     }
     token = await _messaging.getToken();
+    log("FCM token: $token");
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
     // Otherwise, an empty object will be returned

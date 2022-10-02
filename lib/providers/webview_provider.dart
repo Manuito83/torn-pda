@@ -159,7 +159,12 @@ class WebViewProvider extends ChangeNotifier {
     // Make sure we start at the first tab. We don't need to call activateTab because we have
     // still not initialised completely and the StackView is not live
     if (recallLastSession && useTabs) {
-      _currentTab = await Prefs().getWebViewLastActiveTab();
+      int lastActive = await Prefs().getWebViewLastActiveTab();
+      if (lastActive <= _tabList.length - 1) {
+        _currentTab = lastActive;
+      } else {
+        _currentTab = 0;
+      }
 
       // Awake WebView if we are recalling it
       if (_tabList[_currentTab].sleepTab) {

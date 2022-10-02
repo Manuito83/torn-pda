@@ -414,7 +414,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                           _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
                           // Make sure we continue in our previous active tab
                           for (var i = 0; i < _webViewProvider.tabList.length; i++) {
-                            if (_webViewProvider.tabList[i].webView.key == activeKey) {
+                            if (_webViewProvider.tabList[i].webView?.key == activeKey) {
                               _webViewProvider.activateTab(i);
                               break;
                             }
