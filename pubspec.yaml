@@ -55,6 +55,7 @@ dependencies:
   flutter_local_notifications: ^9.2.0
   flutter_slidable: ^1.2.1
   flutter_speed_dial: ^6.0.0
+  font_awesome_flutter: ^10.1.0
   get: ^4.6.3
   html: ^0.15.0
   http: ^0.13.4

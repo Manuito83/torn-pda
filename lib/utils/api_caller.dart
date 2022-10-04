@@ -19,6 +19,7 @@ import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/education_model.dart';
+import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
@@ -67,6 +68,7 @@ enum ApiSelection {
   education,
   faction,
   factionCrimes,
+  factionAttacks,
   friends,
   property,
   userStocks,
@@ -293,6 +295,23 @@ class TornApiCaller {
     if (apiResult is! ApiError) {
       try {
         return AttackFullModel.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, details: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> getFactionAttacks() async {
+    dynamic apiResult;
+    await _apiCall(apiSelection: ApiSelection.factionAttacks).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return FactionAttacksModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, details: "$e\n$trace");
@@ -607,6 +626,9 @@ class TornApiCaller {
         break;
       case ApiSelection.factionCrimes:
         url += 'faction/?selections=crimes';
+        break;
+      case ApiSelection.factionAttacks:
+        url += 'faction/?selections=attacks';
         break;
       case ApiSelection.friends:
         url += 'user/$prefix?selections=profile,discord';

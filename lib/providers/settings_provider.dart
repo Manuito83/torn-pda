@@ -515,6 +515,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _retaliationSectionEnabled = true;
+  bool get retaliationSectionEnabled => _retaliationSectionEnabled;
+  set setRetaliationSectionEnabled(bool value) {
+    _retaliationSectionEnabled = value;
+    Prefs().setRetaliationSectionEnabled(value);
+    notifyListeners();
+  }
+
+  var _singleRetaliationOpensBrowser = false;
+  bool get singleRetaliationOpensBrowser => _singleRetaliationOpensBrowser;
+  set setSingleRetaliationOpensBrowser(bool value) {
+    _singleRetaliationOpensBrowser = value;
+    Prefs().setSingleRetaliationOpensBrowser(value);
+    notifyListeners();
+  }
+
   int _lastAppUse = 0;
   int get lastAppUse => _lastAppUse;
   set updateLastUsed(int timeStamp) {
@@ -672,6 +688,9 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartDateTime = await Prefs().getTornStatsChartDateTime();
     _tornStatsChartEnabled = await Prefs().getTornStatsChartEnabled();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
+
+    _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
+    _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
 
     notifyListeners();
   }

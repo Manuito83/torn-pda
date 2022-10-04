@@ -163,6 +163,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts loot';
     channelName = 'Alerts loot';
     channelDescription = 'Automatic alerts for loot';
+  } else if (channel.contains("Alerts retals")) {
+    notificationIcon = "notification_retals";
+    notificationColor = Colors.red;
+    onTapPayload += 'retalId:$assistId###retalsNumber:$bulkDetails';
+    channelId = 'Alerts retals';
+    channelName = 'Alerts retals';
+    channelDescription = 'Automatic alerts for retals';
   }
 
   if (Platform.isAndroid) {
@@ -229,6 +236,14 @@ Future showNotificationBoth(Map payload, int notId) async {
         ),
       );
     } else if (channelName.contains("loot")) {
+      platformChannelSpecifics = NotificationDetails(
+        android: null,
+        iOS: IOSNotificationDetails(
+          presentSound: true,
+          sound: 'sword_clash.aiff',
+        ),
+      );
+    } else if (channelName.contains("retals")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
         iOS: IOSNotificationDetails(
@@ -637,6 +652,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts assists ${modifier.channelIdModifier} s',
       'Alerts assists ${modifier.channelIdModifier} s',
       description: 'Automatic alerts for assists',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('sword_clash'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts retals ${modifier.channelIdModifier} s',
+      'Alerts retals ${modifier.channelIdModifier} s',
+      description: 'Automatic alerts for retals',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,

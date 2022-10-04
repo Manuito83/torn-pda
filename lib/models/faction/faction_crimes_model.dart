@@ -20,15 +20,20 @@ class FactionCrimesModel {
 
   factory FactionCrimesModel.fromJson(Map<String, dynamic> json) {
     try {
+      if (json == null || json.isEmpty || json["crimes"] == null) {
+        throw ("OC are empty");
+      }
       return FactionCrimesModel(
-        crimes: json == null || json.isEmpty || json["crimes"] == null
-            ? null
-            : Map.from(json["crimes"]).map((k, v) => MapEntry<String, Crime>(k, Crime.fromJson(v))),
+        crimes: Map.from(json["crimes"]).map((k, v) => MapEntry<String, Crime>(k, Crime.fromJson(v))),
       );
     } catch (e) {
-      var response = json == null ? null : json['crimes'];
+      var response = json == null
+          ? "Null JSON"
+          : json['crimes'] == null
+              ? "Null JSON Crimes"
+              : "Other";
       FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model");
-      FirebaseCrashlytics.instance.recordError("Response: ${response}", null);
+      FirebaseCrashlytics.instance.recordError("Response: $response, Error: $e", null);
       return null;
     }
   }

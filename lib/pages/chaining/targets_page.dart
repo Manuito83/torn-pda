@@ -49,10 +49,12 @@ class TargetsOptions {
 }
 
 class TargetsPage extends StatefulWidget {
+  final Function retaliationCallback;
   //final Function tabCallback;
 
   const TargetsPage({
     Key key,
+    @required this.retaliationCallback,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -636,6 +638,7 @@ class _TargetsPageState extends State<TargetsPage> {
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
+        widget.retaliationCallback(newOptions.retaliationEnabled);
         //widget.tabCallback(newOptions.tacEnabled);
         break;
       case "Filter":

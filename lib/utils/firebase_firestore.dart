@@ -1,9 +1,11 @@
 // Dart imports:
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
@@ -44,6 +46,7 @@ class _FirestoreHelper {
       await FirebaseMessaging.instance.deleteToken();
     }
     token = await _messaging.getToken();
+    log("FCM token: $token");
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
     // Otherwise, an empty object will be returned
@@ -277,6 +280,17 @@ class _FirestoreHelper {
   Future<void> toggleFactionAssistMessage(bool active) async {
     await _firestore.collection("players").doc(_uid).update({
       "factionAssistMessage": active,
+    });
+  }
+
+  /// [host] stands for someone that does not have proper Faction API permissions
+  Future<void> toggleRetaliationNotification(bool active, {bool host = true}) async {
+    bool isHost = host;
+    if (!active) isHost = false;
+
+    await _firestore.collection("players").doc(_uid).update({
+      "retalsNotification": active,
+      "retalsNotificationHost": isHost,
     });
   }
 

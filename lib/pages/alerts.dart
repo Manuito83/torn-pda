@@ -2,11 +2,12 @@
 import 'dart:io';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -14,7 +15,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -37,7 +37,10 @@ class AlertsSettings extends StatefulWidget {
 class _AlertsSettingsState extends State<AlertsSettings> {
   FirebaseUserModel _firebaseUserModel;
 
-  Future _firestoreProfileReceived;
+  Future _getFirebaseAndTornDetails;
+
+  bool _factionApiAccess = false;
+  bool _factionApiAccessCheckError = false;
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -46,7 +49,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _firestoreProfileReceived = firestore.getUserProfile();
+    _getFirebaseAndTornDetails = Future.wait([
+      firestore.getUserProfile(),
+      _getFactionApiAccess(),
+    ]);
     analytics.setCurrentScreen(screenName: 'alerts');
   }
 
@@ -65,13 +71,13 @@ class _AlertsSettingsState extends State<AlertsSettings> {
       body: Container(
         color: _themeProvider.canvas,
         child: FutureBuilder(
-          future: _firestoreProfileReceived,
+          future: _getFirebaseAndTornDetails,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.data is FirebaseUserModel) {
+              if (snapshot.data[0] is FirebaseUserModel) {
                 if (_firebaseUserModel == null) {
                   // We don't use the snapshot data any longer if we have updated the model after a reset
-                  _firebaseUserModel = snapshot.data as FirebaseUserModel;
+                  _firebaseUserModel = snapshot.data[0] as FirebaseUserModel;
                 }
                 return SingleChildScrollView(
                   child: Column(
@@ -595,6 +601,150 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.retalsNotification ?? false,
+                          title: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(right: 5),
+                                child: Text(
+                                  "Retaliation",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: GestureDetector(
+                                  child: Icon(
+                                    Icons.info_outline_rounded,
+                                    color: _factionApiAccess ? Colors.green : Colors.orange,
+                                  ),
+                                  // Quick update
+                                  onTap: () async {
+                                    await showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return _retalsGeneralExplanation();
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: const Text(
+                            "Get notified whenever it is possible to initiate a retaliation attack.",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (enabled) async {
+                            if (!enabled) {
+                              setState(() {
+                                _firebaseUserModel?.retalsNotification = enabled;
+                              });
+                              firestore.toggleRetaliationNotification(enabled);
+                              return;
+                            }
+
+                            if (_factionApiAccess) {
+                              setState(() {
+                                _firebaseUserModel?.retalsNotification = enabled;
+                              });
+                              firestore.toggleRetaliationNotification(enabled);
+                            } else {
+                              String message = "";
+                              int seconds = 0;
+
+                              if (!_factionApiAccessCheckError) {
+                                setState(() {
+                                  _firebaseUserModel?.retalsNotification = enabled;
+                                });
+                                firestore.toggleRetaliationNotification(enabled, host: false);
+                                message = "You have no faction API permissions (talk to your leadership about it).\n\n"
+                                    "This alert has been activated, but it won't work unless someone with proper "
+                                    "permissions in your faction activates it as well.";
+                                seconds = 10;
+                              } else {
+                                message = "It's not possible to activate this alert now (Torn PDA can't verify whether "
+                                    "you have proper Faction API permissions).\n\nPlease try again later!";
+                                seconds = 6;
+                              }
+
+                              BotToast.showText(
+                                clickClose: true,
+                                text: message,
+                                textStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.orange[900],
+                                duration: Duration(seconds: seconds),
+                                contentPadding: EdgeInsets.all(10),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                      if (_firebaseUserModel.retalsNotification && _factionApiAccess)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Flexible(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Flexible(
+                                      child: const Padding(
+                                        padding: EdgeInsets.only(left: 10, right: 5),
+                                        child: Text(
+                                          "Single target opens browser",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 10),
+                                      child: GestureDetector(
+                                        child: Icon(Icons.info_outline_rounded),
+                                        // Quick update
+                                        onTap: () async {
+                                          await showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return _retalsNotificationExplanation();
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                value: _settingsProvider.singleRetaliationOpensBrowser,
+                                onChanged: (enabled) {
+                                  setState(() {
+                                    _settingsProvider.setSingleRetaliationOpensBrowser = enabled;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -816,5 +966,133 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         )
       ],
     );
+  }
+
+  _retalsGeneralExplanation() {
+    return AlertDialog(
+      title: Text("Retaliation alerts"),
+      content: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "NOTE: you will not receive retaliation alerts when traveling, nor when the attack took place abroad "
+                  "and you are in Torn, nor if the attack took place in Torn and you are abroad.\n\nHowever, due to API limits, "
+                  "you might receive spurious notifications when you are abroad but in a different country from the attack.\n\n"
+                  "Depending on your API permissions, more detailed information about the attack, location, etc., "
+                  "will be available in the Chaining section of the app, as explained below:\n\n",
+                  style: TextStyle(fontSize: 13),
+                ),
+                if (!_factionApiAccess)
+                  Text(
+                    "You DO NOT HAVE Faction API access\n\n",
+                    style: TextStyle(fontSize: 13, color: Colors.red, fontWeight: FontWeight.bold),
+                  )
+                else
+                  Text(
+                    "You HAVE Faction API access\n\n",
+                    style: TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+                if (!_factionApiAccess)
+                  Text(
+                    "For retaliation notifications to work, at least one member of your faction with API access "
+                    " privileges must have this alert active in Torn PDA. If this condition is not met at some point, "
+                    "Torn PDA will notify you about it so that you can discuss this internally.\n\n",
+                    style: TextStyle(fontSize: 13),
+                  )
+                else
+                  Text(
+                    "For retaliation notifications to work, at least one member of your faction with API access "
+                    " privileges must have this alert active in Torn PDA. This can be you or any other member.\n\n",
+                    style: TextStyle(fontSize: 13),
+                  ),
+                if (!_factionApiAccess)
+                  Text(
+                    "As you have no Faction API access, but the above criteria is met, you will be able to receive "
+                    "notifications, but you won't be able to access the Retaliation target list (in Chaining).",
+                    style: TextStyle(fontSize: 13),
+                  )
+                else
+                  Text(
+                    "Members of your faction with no Faction API access will be able to receive "
+                    "notifications, but they won't be able to access the Retaliation target list (in Chaining).",
+                    style: TextStyle(fontSize: 13),
+                  ),
+                SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            child: Text("Understood"),
+            onPressed: () {
+              Navigator.of(context).pop('exit');
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  _retalsNotificationExplanation() {
+    return AlertDialog(
+      title: Text("Retaliation notification"),
+      content: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "By default, on tapping a retaliation notification you will be redirected to the Retaliation "
+                  "section (inside of Chaining); this is independent of how many targets are available for retaliation "
+                  "at the same time.\n\nIn this section you can have a look at the stats, target status, etc."
+                  "\n\nHowever, if you enable this option, retaliation notifications with a single target "
+                  "will automatically open the browser and take you straight to the attack page.\n\n"
+                  "NOTE: this will have no effect if you have no faction API permissions, as the browser will "
+                  "open in any case.",
+                  style: TextStyle(fontSize: 13),
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            child: Text("Understood"),
+            onPressed: () {
+              Navigator.of(context).pop('exit');
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future _getFactionApiAccess() async {
+    // Assess whether we have permits
+    var attacksResult = await TornApiCaller().getFactionAttacks();
+    if (attacksResult is FactionAttacksModel) {
+      _factionApiAccess = true;
+    } else if (attacksResult is ApiError) {
+      _factionApiAccess = false;
+      if (!attacksResult.errorReason.contains("incorrect ID-entity relation")) {
+        _factionApiAccessCheckError = true;
+      }
+    }
   }
 }
