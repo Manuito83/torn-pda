@@ -41,6 +41,17 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // Build 260 - 02/10/2022
 
+    // VERSION 2.9.1
+    var v2_9_1 = ChangeLogItem();
+    v2_9_1.version = 'Torn PDA v2.9.1';
+    v2_9_1.date = '18 OCT 2022';
+    String feat2_9_1_1 = "Fixed recent attacks sorting";
+    String feat2_9_1_2 = "Fixed issues reported with tabs";
+    String feat2_9_1_3 = "Fixed frame rate issues in certain devices";
+    v2_9_1.features.add(feat2_9_1_1);
+    v2_9_1.features.add(feat2_9_1_2);
+    v2_9_1.features.add(feat2_9_1_3);
+
     // VERSION 2.9.0
     var v2_9_0 = ChangeLogItem();
     v2_9_0.version = 'Torn PDA v2.9.0';
@@ -1210,6 +1221,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_9_1);
     itemList.add(v2_9_0);
     itemList.add(v2_8_9);
     itemList.add(v2_8_8);
