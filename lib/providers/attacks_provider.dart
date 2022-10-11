@@ -134,6 +134,7 @@ class AttacksProvider extends ChangeNotifier {
       double levelD = exp(4 * baseRespect - 1);
       thisAttack.targetLevel = levelD.round();
     } else {
+      thisAttack.respectGain = 0;
       thisAttack.targetLevel = -1;
     }
   }
