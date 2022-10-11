@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 260 - 02/10/2022
+    // Build 261 - 11/10/2022
 
     // VERSION 2.9.1
     var v2_9_1 = ChangeLogItem();
     v2_9_1.version = 'Torn PDA v2.9.1';
-    v2_9_1.date = '18 OCT 2022';
+    v2_9_1.date = '20 OCT 2022';
     String feat2_9_1_1 = "Fixed recent attacks sorting";
     String feat2_9_1_2 = "Fixed issues reported with tabs";
     String feat2_9_1_3 = "Fixed frame rate issues in certain devices";
