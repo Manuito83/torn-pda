@@ -83,16 +83,16 @@ class _GymWidgetState extends State<GymWidget> {
     try {
       RegExp reg = RegExp(r"([0-9]+)%");
       for (String perk in perks.factionPerks) {
-        if (perk.contains("Increases strength gym gains by")) {
+        if (perk.contains("strength gym gains")) {
           var matches = reg.firstMatch(perk);
           strength = int.tryParse(matches.group(1));
-        } else if (perk.contains("Increases speed gym gains by")) {
+        } else if (perk.contains("speed gym gains")) {
           var matches = reg.firstMatch(perk);
           speed = int.tryParse(matches.group(1));
-        } else if (perk.contains("Increases defense gym gains by")) {
+        } else if (perk.contains("defense gym gains")) {
           var matches = reg.firstMatch(perk);
           defense = int.tryParse(matches.group(1));
-        } else if (perk.contains("Increases dexterity gym gains by")) {
+        } else if (perk.contains("dexterity gym gains")) {
           var matches = reg.firstMatch(perk);
           dexterity = int.tryParse(matches.group(1));
         }
