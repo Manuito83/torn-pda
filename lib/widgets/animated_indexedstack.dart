@@ -64,6 +64,12 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
         throw ("Forced IndexedStack throw!");
       }
 
+      if (_index < 0) {
+        _index = 0;
+      } else if (_index > widget.children.length - 1) {
+        _index = widget.children.length - 1;
+      }
+
       return AnimatedBuilder(
         animation: _animation,
         builder: (context, child) {
