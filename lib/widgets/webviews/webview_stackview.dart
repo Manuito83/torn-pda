@@ -139,12 +139,22 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                       }
                     } else {
                       try {
+                        return AnimatedIndexedStack(
+                          index: 0,
+                          children: [
+                            allWebViews[0],
+                          ],
+                          duration: 100,
+                          errorCallback: _closeWithError,
+                        );
+                        /*
                         return IndexedStack(
                           index: 0,
                           children: [
                             allWebViews[0],
                           ],
                         );
+                        */
                       } catch (e) {
                         FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
                         FirebaseCrashlytics.instance.recordError(e.toString(), null);

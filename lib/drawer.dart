@@ -396,7 +396,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   Future<void> _fireLaunchResumeNotifications(Map<String, dynamic> message) async {
     bool launchBrowser = false;
-    var browserUrl = '';
+    var browserUrl = "https://www.torn.com";
 
     bool travel = false;
     bool hospital = false;
@@ -623,13 +623,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     if (launchBrowser) {
       // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(const Duration(milliseconds: 2000));
+      if (Platform.isAndroid) {
+        await Future.delayed(const Duration(milliseconds: 2000));
+      } else if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 2500));
+      }
+
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       if (launchBrowser) {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
-          useDialog: _settingsProvider.useQuickBrowser,
+          useDialog: _settingsProvider?.useQuickBrowser ?? true,
         );
       }
     }

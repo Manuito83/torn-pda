@@ -306,6 +306,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _initialWebViewOptions = InAppWebViewGroupOptions(
       crossPlatform: InAppWebViewOptions(
+        cacheEnabled: false,
         transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
@@ -323,6 +324,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         //useShouldInterceptAjaxRequest: false,
       ),
       android: AndroidInAppWebViewOptions(
+        cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
+        safeBrowsingEnabled: false,
         useHybridComposition: true,
         supportMultipleWindows: true,
         initialScale: _settingsProvider.androidBrowserScale,
