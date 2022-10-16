@@ -13,3 +13,11 @@ plugins.each { name, path ->
     include ":$name"
     project(":$name").projectDir = pluginDirectory
 }
+
+// https://github.com/flutter/flutter/issues/83596#issuecomment-1236190793
+gradle.beforeProject({ project->
+    if (project.hasProperty("target-platform") &&
+            !project.getProperty("target-platform").split(",").contains("android-arm")) {
+        project.setProperty("target-platform", "android-arm,android-arm64")
+    }
+})
