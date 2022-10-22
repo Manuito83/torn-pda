@@ -497,7 +497,9 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     Widget boxWidget = const ImageIcon(AssetImage('images/icons/pda_icon.png'));
 
     // Find some icons manually first, as they might trigger errors with shortcuts
-    if (_webViewProvider.tabList[i].isChainingBrowser) {
+    if (!url.contains("torn.com")) {
+      return Icon(Icons.public, size: 22, color: _themeProvider.mainText);
+    } else if (_webViewProvider.tabList[i].isChainingBrowser) {
       boxWidget = Icon(MdiIcons.linkVariant, color: Colors.red);
     } else if (url.contains("sid=attack&user2ID=2225097")) {
       boxWidget = Icon(MdiIcons.pistol, color: Colors.pink);
