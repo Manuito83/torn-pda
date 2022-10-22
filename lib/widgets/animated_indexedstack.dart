@@ -44,8 +44,10 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
     super.didUpdateWidget(oldWidget);
     if (widget.index != _index) {
       _controller.reverse().then((_) {
-        setState(() => _index = widget.index);
         _controller.forward();
+      });
+      setState(() {
+        _index = widget.index;
       });
     }
   }
