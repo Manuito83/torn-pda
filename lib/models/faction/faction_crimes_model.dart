@@ -7,7 +7,7 @@ import 'dart:convert';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
-FactionCrimesModel factionCrimesModelFromJson(String str) => FactionCrimesModel.fromJson(json.decode(str));
+FactionCrimesModel factionCrimesModelFromJson(String str) => FactionCrimesModel.fromJson("unknown", json.decode(str));
 
 String factionCrimesModelToJson(FactionCrimesModel data) => json.encode(data.toJson());
 
@@ -18,14 +18,17 @@ class FactionCrimesModel {
 
   Map<String, Crime> crimes;
 
-  factory FactionCrimesModel.fromJson(Map<String, dynamic> json) {
+  factory FactionCrimesModel.fromJson(String playerId, Map<String, dynamic> json) {
     try {
       if (json == null || json.isEmpty || json["crimes"] == null) {
         throw ("OC are empty");
       }
-      return FactionCrimesModel(
+
+      var fc = FactionCrimesModel(
         crimes: Map.from(json["crimes"]).map((k, v) => MapEntry<String, Crime>(k, Crime.fromJson(v))),
       );
+
+      return fc;
     } catch (e) {
       var response = json == null
           ? "Null JSON"
@@ -33,7 +36,7 @@ class FactionCrimesModel {
               ? "Null JSON Crimes"
               : "Other";
       FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model");
-      FirebaseCrashlytics.instance.recordError("Response: $response, Error: $e", null);
+      FirebaseCrashlytics.instance.recordError("Player ID: $playerId, Response: $response, Error: $e", null);
       return null;
     }
   }
@@ -74,7 +77,9 @@ class Crime {
   int moneyGain;
   int respectGain;
 
-  factory Crime.fromJson(Map<String, dynamic> json) => Crime(
+  factory Crime.fromJson(Map<String, dynamic> json) {
+    try {
+      var crimes = Crime(
         crimeId: json["crime_id"] == null ? null : json["crime_id"],
         crimeName: json["crime_name"] == null ? null : json["crime_name"],
         participants: json["participants"] == null
@@ -92,6 +97,14 @@ class Crime {
         moneyGain: json["money_gain"] == null ? null : json["money_gain"],
         respectGain: json["respect_gain"] == null ? null : json["respect_gain"],
       );
+
+      return crimes;
+    } catch (e) {
+      FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model [Crime]");
+      FirebaseCrashlytics.instance.recordError("Error: $e", null);
+      return null;
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "crime_id": crimeId == null ? null : crimeId,
@@ -128,13 +141,23 @@ class Participant {
   String color;
   int until;
 
-  factory Participant.fromJson(Map<String, dynamic> json) => Participant(
+  factory Participant.fromJson(Map<String, dynamic> json) {
+    try {
+      var participant = Participant(
         description: json["description"] == null ? null : json["description"],
         details: json["details"] == null ? null : json["details"],
         state: json["state"] == null ? null : json["state"],
         color: json["color"] == null ? null : json["color"],
         until: json["until"] == null ? null : json["until"],
       );
+
+      return participant;
+    } catch (e) {
+      FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model [Participant]");
+      FirebaseCrashlytics.instance.recordError("Error: $e", null);
+      return null;
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "description": description == null ? null : description,

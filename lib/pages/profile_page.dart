@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
@@ -4480,7 +4481,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _getFactionCrimes() async {
     try {
-      var factionCrimes = await TornApiCaller().getFactionCrimes();
+      var factionCrimes = await TornApiCaller().getFactionCrimes(playerId: _user.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
@@ -4637,6 +4638,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // Don't fill anything
+      log(e);
     }
   }
 

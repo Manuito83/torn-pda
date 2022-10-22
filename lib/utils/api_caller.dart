@@ -8,7 +8,7 @@ import 'dart:io';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 // Project imports:
@@ -37,6 +37,7 @@ import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/utils/isolates.dart';
 
 import '../main.dart';
 
@@ -423,14 +424,21 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> getFactionCrimes() async {
+  Future<dynamic> getFactionCrimes({@required String playerId}) async {
     dynamic apiResult;
     await _apiCall(apiSelection: ApiSelection.factionCrimes).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError && apiResult != null) {
       try {
-        return FactionCrimesModel.fromJson(apiResult);
+        //Stopwatch stopwatch = new Stopwatch()..start();
+        //var processedModel = await FactionCrimesModel.fromJson(apiResult);
+        final isolateArgs = <dynamic>[];
+        isolateArgs.add(playerId);
+        isolateArgs.add(apiResult);
+        var processedModel = await compute(isolateDecodeFactionCrimes, isolateArgs);
+        //log('isolateDecodeFactionCrimes executed in ${stopwatch.elapsed}');
+        return processedModel;
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, details: "$e\n$trace");
