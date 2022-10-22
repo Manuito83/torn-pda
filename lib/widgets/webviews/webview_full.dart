@@ -1208,11 +1208,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 },
                 onConsoleMessage: (controller, consoleMessage) async {
                   if (consoleMessage.message != "") {
-                    if (!consoleMessage.message.contains("Refused to connect to 'https://stats.g.doubleclick") &&
-                        !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
+                    if (!consoleMessage.message.contains("Refused to connect to ")) {
                       _terminalProvider.addInstruction(consoleMessage.message);
+                      log("TORN PDA CONSOLE: ${consoleMessage.message}");
                     }
-                    log("TORN PDA CONSOLE: ${consoleMessage.message}");
                   }
                 },
                 onLongPressHitTestResult: (controller, result) async {

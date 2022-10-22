@@ -39,7 +39,16 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 264 + 265 - 16/10/2022
+    // Build 266 - 22/10/2022
+
+    // VERSION 2.9.2
+    var v2_9_2 = ChangeLogItem();
+    v2_9_2.version = 'Torn PDA v2.9.2';
+    v2_9_2.date = '01 NOV 2022';
+    String feat2_9_2_1 = "Improved browser speed";
+    String feat2_9_2_2 = "Fixed some API parsing issues";
+    v2_9_2.features.add(feat2_9_2_1);
+    v2_9_2.features.add(feat2_9_2_2);
 
     // VERSION 2.9.1
     var v2_9_1 = ChangeLogItem();
@@ -1223,6 +1232,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_9_2);
     itemList.add(v2_9_1);
     itemList.add(v2_9_0);
     itemList.add(v2_8_9);
