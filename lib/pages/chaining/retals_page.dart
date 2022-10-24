@@ -98,14 +98,21 @@ class _RetalsPageState extends State<RetalsPage> {
                       Flexible(child: _mainCards(r)),
                     ],
                   )
-                : SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _topWidgets(r),
-                        _mainCards(r),
-                      ],
-                    ),
-                  ),
+                : r.retaliationList.isEmpty
+                    ? Column(
+                        children: [
+                          _topWidgets(r),
+                          Flexible(child: _mainCards(r)),
+                        ],
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _topWidgets(r),
+                            _mainCards(r),
+                          ],
+                        ),
+                      ),
           ),
         ),
       ),
@@ -145,7 +152,7 @@ class _RetalsPageState extends State<RetalsPage> {
       children: <Widget>[
         const SizedBox(height: 5),
         r.retaliationList.isEmpty
-            ? Expanded(
+            ? Flexible(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
