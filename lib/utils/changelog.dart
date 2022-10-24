@@ -45,10 +45,14 @@ class _ChangeLogState extends State<ChangeLog> {
     var v2_9_2 = ChangeLogItem();
     v2_9_2.version = 'Torn PDA v2.9.2';
     v2_9_2.date = '01 NOV 2022';
-    String feat2_9_2_1 = "Improved browser speed";
+    String feat2_9_2_1 = "Fixed browser refresh rate";
     String feat2_9_2_2 = "Fixed some API parsing issues";
+    String feat2_9_2_3 = "Fixed incorrect header icons";
+    String feat2_9_2_4 = "Fixed retals section issues in landscape orientation";
     v2_9_2.features.add(feat2_9_2_1);
     v2_9_2.features.add(feat2_9_2_2);
+    v2_9_2.features.add(feat2_9_2_3);
+    v2_9_2.features.add(feat2_9_2_4);
 
     // VERSION 2.9.1
     var v2_9_1 = ChangeLogItem();
