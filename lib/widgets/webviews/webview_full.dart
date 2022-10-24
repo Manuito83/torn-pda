@@ -2920,6 +2920,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future _assessProfileAttack() async {
     if (mounted) {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
+          !_currentUrl.contains('loader2.php?sid=getInAttack&user2ID=') &&
           !_currentUrl.contains('torn.com/profiles.php?XID=')) {
         _profileTriggered = false;
         _profileAttackWidget = const SizedBox.shrink();
@@ -2951,7 +2952,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         } catch (e) {
           userId = 0;
         }
-      } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=')) {
+      } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=') || 
+                 _currentUrl.contains('loader.php?sid=getInAttack&user2ID=')) {
         if (_attackTriggered && _currentUrl == _lastProfileVisited) {
           return;
         }

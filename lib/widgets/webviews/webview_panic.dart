@@ -881,7 +881,9 @@ class _WebViewPanicState extends State<WebViewPanic> {
   // ASSESS PROFILES
   Future _assessProfileAttack(String page) async {
     if (mounted) {
-      if (!page.contains('loader.php?sid=attack&user2ID=') && !page.contains('torn.com/profiles.php?XID=')) {
+      if (!page.contains('loader.php?sid=attack&user2ID=') &&
+          !page.contains('loader2.php?sid=getInAttack&user2ID=') &&
+          !page.contains('torn.com/profiles.php?XID=')) {
         _profileAttackWidget = SizedBox.shrink();
         _lastProfileVisited = "";
         return;
@@ -911,7 +913,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
         } catch (e) {
           userId = 0;
         }
-      } else if (page.contains('loader.php?sid=attack&user2ID=')) {
+      } else if (page.contains('loader.php?sid=attack&user2ID=') || 
+                 page.contains('loader.php?sid=getInAttack&user2ID=')) {
         if (page == _lastProfileVisited) {
           return;
         }
