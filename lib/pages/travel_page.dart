@@ -899,6 +899,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var notificationTitle = await Prefs().getTravelNotificationTitle();
     var notificationSubtitle = await Prefs().getTravelNotificationBody();
 
+    if (_settingsProvider.discreteNotifications) {
+      notificationTitle = "T";
+      notificationSubtitle = " ";
+    }
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       201,
       notificationTitle,

@@ -378,13 +378,25 @@ class _LootPageState extends State<LootPage> {
                           isPending = true;
                         });
                         _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
-                        _scheduleNotification(
-                          levelDateTime,
-                          int.parse('400$npcId$levelNumber'),
-                          '400-$npcId',
-                          "${npcDetails.name} loot",
-                          "Approaching level $levelNumber!",
-                        );
+
+                        if (_settingsProvider.discreteNotifications) {
+                          _scheduleNotification(
+                            levelDateTime,
+                            int.parse('400$npcId$levelNumber'),
+                            '400-$npcId',
+                            "L",
+                            "${npcDetails.name} - $levelNumber!",
+                          );
+                        } else {
+                          _scheduleNotification(
+                            levelDateTime,
+                            int.parse('400$npcId$levelNumber'),
+                            '400-$npcId',
+                            "${npcDetails.name} loot",
+                            "Approaching level $levelNumber!",
+                          );
+                        }
+
                         BotToast.showText(
                           clickClose: true,
                           text: 'Loot level $levelNumber'

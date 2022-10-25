@@ -51,6 +51,7 @@ class Prefs {
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
   final String _kVibrationPattern = "pda_vibrationPattern";
+  final String _kDiscreteNotifications = "pda_discreteNotifications";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
@@ -611,6 +612,19 @@ class Prefs {
   Future<bool> setVibrationPattern(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kVibrationPattern, value);
+  }
+
+  /// ----------------------------
+  /// Methods for discrete notifications
+  /// ----------------------------
+  Future<bool> getDiscreteNotifications() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDiscreteNotifications) ?? false;
+  }
+
+  Future<bool> setDiscreteNotifications(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDiscreteNotifications, value);
   }
 
   /// ----------------------------

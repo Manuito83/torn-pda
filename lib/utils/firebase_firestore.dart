@@ -81,6 +81,12 @@ class _FirestoreHelper {
     return _firebaseUserModel;
   }
 
+  Future<void> toggleDiscrete(bool discrete) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "discrete": discrete,
+    });
+  }
+
   Future<void> subscribeToTravelNotification(bool subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "travelNotification": subscribe,

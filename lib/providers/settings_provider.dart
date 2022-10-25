@@ -152,6 +152,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _discreteNotifications = false;
+  bool get discreteNotifications => _discreteNotifications;
+  set discreteNotifications(bool value) {
+    _discreteNotifications = value;
+    Prefs().setDiscreteNotifications(value);
+    notifyListeners();
+  }
+
   var _showSecondsInClock = true;
   bool get showSecondsInClock => _showSecondsInClock;
   set changeShowSecondsInClock(bool value) {
@@ -635,6 +643,8 @@ class SettingsProvider extends ChangeNotifier {
     } else {
       _spiesSource = SpiesSource.tornStats;
     }
+
+    _discreteNotifications = await Prefs().getDiscreteNotifications();
 
     _showDateInClock = await Prefs().getShowDateInClock();
     _showSecondsInClock = await Prefs().getShowSecondsInClock();

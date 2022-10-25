@@ -134,11 +134,19 @@ export const lootGroup = {
                         const subscribers = response.docs.map((d) => d.data());
                         for (const key of Array.from(subscribers.keys())) {
                             //console.log(subscribers[key].name);
+
+                            let title = `${npcName} level ${warnLevel}!`;
+                            let body = warnMessage;
+                            if (subscribers[key].discrete) {
+                                title = `L`;
+                                body = `${npcName} - ${warnLevel}`;
+                            }
+
                             promises.push(
                                 sendNotificationToUser(
                                     subscribers[key].token,
-                                    `${npcName} level ${warnLevel}!`,
-                                    warnMessage,
+                                    title,
+                                    body,
                                     "notification_loot",
                                     "#FF0000",
                                     "Alerts loot",

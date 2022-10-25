@@ -4864,8 +4864,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
-        notificationTitle = await Prefs().getTravelNotificationTitle();
-        notificationSubtitle = await Prefs().getTravelNotificationBody();
+        notificationTitle = _settingsProvider.discreteNotifications ? "T" : await Prefs().getTravelNotificationTitle();
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? " " : await Prefs().getTravelNotificationBody();
         notificationPayload += 'travel';
         notificationIconAndroid = "notification_travel";
         notificationIconColor = Colors.blue;
@@ -4876,8 +4877,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual energy';
         channelSubtitle = 'Manual energy';
         channelDescription = 'Manual notifications for energy';
-        notificationTitle = 'Energy bar';
-        notificationSubtitle = 'Here is your energy reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "E" : 'Energy bar';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your energy reminder!';
         var myTimeStamp = (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_energy";
@@ -4889,8 +4890,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual nerve';
         channelSubtitle = 'Manual nerve';
         channelDescription = 'Manual notifications for nerve';
-        notificationTitle = 'Nerve bar';
-        notificationSubtitle = 'Here is your nerve reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "N" : 'Nerve bar';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your nerve reminder!';
         var myTimeStamp = (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_nerve";
@@ -4902,8 +4903,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual life';
         channelSubtitle = 'Manual life';
         channelDescription = 'Manual notifications for life';
-        notificationTitle = 'Life bar';
-        notificationSubtitle = 'Here is your life reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "Lf" : 'Life bar';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your life reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.life.fulltime;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4913,8 +4914,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual drugs';
         channelSubtitle = 'Manual drugs';
         channelDescription = 'Manual notifications for drugs';
-        notificationTitle = 'Drug Cooldown';
-        notificationSubtitle = 'Here is your drugs cooldown reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "D" : 'Drug Cooldown';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your drugs cooldown reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.drug;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4924,8 +4926,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual medical';
         channelSubtitle = 'Manual medical';
         channelDescription = 'Manual notifications for medical';
-        notificationTitle = 'Medical Cooldown';
-        notificationSubtitle = 'Here is your medical cooldown reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "Med" : 'Medical Cooldown';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your medical cooldown reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.medical;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4935,8 +4938,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual booster';
         channelSubtitle = 'Manual booster';
         channelDescription = 'Manual notifications for booster';
-        notificationTitle = 'Booster Cooldown';
-        notificationSubtitle = 'Here is your booster cooldown reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "B" : 'Booster Cooldown';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your booster cooldown reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.booster;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4946,8 +4950,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual hospital';
         channelSubtitle = 'Manual hospital';
         channelDescription = 'Manual notifications for hospital';
-        notificationTitle = 'Hospital release';
-        notificationSubtitle = 'You are about to be released from hospital!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "H" : 'Hospital release';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from hospital!';
         notificationPayload += 'hospital';
         break;
       case ProfileNotification.jail:
@@ -4956,8 +4961,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual jail';
         channelSubtitle = 'Manual jail';
         channelDescription = 'Manual notifications for jail';
-        notificationTitle = 'Jail release';
-        notificationSubtitle = 'You are about to be released from jail!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "J" : 'Jail release';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from jail!';
         notificationPayload += 'jail';
         break;
     }

@@ -80,13 +80,21 @@ export const retalsGroup = {
                             }
                             if (numberOfHosts === 0 && !factionsList[id].noHostWarning) {
                                 for (const key of Array.from(subscribers.keys())) {
+
+                                    let title = "Retaliation notifications inactive";
+                                    let body = "No users in this faction detected with faction API access permits " +
+                                        "and retaliation notifications active in Torn PDA.\n\n" +
+                                        "Retaliation notifications might not work!";
+                                    if (subscribers[key].discrete) {
+                                        title = `Retals`;
+                                        body = `Inactive`;
+                                    }
+
                                     promises.push(
                                         sendNotificationToUser(
                                             subscribers[key].token,
-                                            "Retaliation notifications inactive",
-                                            "No users in this faction detected with faction API access permits " +
-                                            "and retaliation notifications active in Torn PDA.\n\n" +
-                                            "Retaliation notifications might not work!",
+                                            title,
+                                            body,
                                             "notification_retals",
                                             "#FF0000",
                                             "Alerts retals",
@@ -365,11 +373,18 @@ export const retalsGroup = {
                             // DEBUG! 
                             //if (subscribers[key].name !== "Manuito") continue;
 
+                            let title = notificationTitle;
+                            let body = notificationBody;
+                            if (subscribers[key].discrete) {
+                                title = `Retal`;
+                                body = ` `;
+                            }
+
                             promises.push(
                                 sendNotificationToUser(
                                     subscribers[key].token,
-                                    notificationTitle,
-                                    notificationBody,
+                                    title,
+                                    body,
                                     "notification_retals",
                                     "#FF0000",
                                     "Alerts retals",
