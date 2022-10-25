@@ -46,17 +46,19 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_9_2.version = 'Torn PDA v2.9.2';
     v2_9_2.date = '05 NOV 2022';
     String feat2_9_2_1 = "Added discrete option for alerts and notifications";
-    String feat2_9_2_2 = "Fixed browser refresh rate";
-    String feat2_9_2_3 = "Fixed some API parsing issues";
-    String feat2_9_2_4 = "Fixed incorrect header icons";
-    String feat2_9_2_5 = "Fixed profile widget";
-    String feat2_9_2_6 = "Fixed retals section issues in landscape orientation";
+    String feat2_9_2_2 = "War: added option to filter out traveling targets";
+    String feat2_9_2_3 = "Fixed browser refresh rate";
+    String feat2_9_2_4 = "Fixed some API parsing issues";
+    String feat2_9_2_5 = "Fixed incorrect header icons";
+    String feat2_9_2_6 = "Fixed profile widget";
+    String feat2_9_2_7 = "Fixed retals section issues in landscape orientation";
     v2_9_2.features.add(feat2_9_2_1);
     v2_9_2.features.add(feat2_9_2_2);
     v2_9_2.features.add(feat2_9_2_3);
     v2_9_2.features.add(feat2_9_2_4);
     v2_9_2.features.add(feat2_9_2_5);
     v2_9_2.features.add(feat2_9_2_6);
+    v2_9_2.features.add(feat2_9_2_7);
 
     // VERSION 2.9.1
     var v2_9_1 = ChangeLogItem();

@@ -38,6 +38,7 @@ class WarController extends GetxController {
   int onlineFilter = 0;
   bool okayFilter = false;
   bool countryFilter = false;
+  bool travelingFilter = false;
   bool showChainWidget = true;
 
   bool updating = false;
@@ -645,6 +646,17 @@ class WarController extends GetxController {
     update();
   }
 
+  void setTravelingFilterActive(bool value) {
+    travelingFilter = value;
+    if (!value) {
+      activeFilters.removeWhere((element) => element == "hide traveling");
+    } else {
+      activeFilters.add("hide traveling");
+    }
+    savePreferences();
+    update();
+  }
+
   Future initialise() async {
     String spiesSource = await Prefs().getSpiesSource();
     spiesSource == "yata" ? _spiesSource = SpiesSource.yata : _spiesSource = SpiesSource.tornStats;
@@ -658,6 +670,7 @@ class WarController extends GetxController {
     onlineFilter = await Prefs().getOnlineFilterInWars();
     okayFilter = await Prefs().getOkayFilterInWars();
     countryFilter = await Prefs().getCountryFilterInWars();
+    travelingFilter = await Prefs().getTravelingFilterInWars();
     showChainWidget = await Prefs().getShowChainWidgetInWars();
 
     nukeReviveActive = await Prefs().getUseNukeRevive();
@@ -746,6 +759,7 @@ class WarController extends GetxController {
     Prefs().setOnlineFilterInWars(onlineFilter);
     Prefs().setOkayFilterInWars(okayFilter);
     Prefs().setCountryFilterInWars(countryFilter);
+    Prefs().setTravelingFilterInWars(travelingFilter);
     Prefs().setShowChainWidgetInWars(showChainWidget);
 
     // Save sorting

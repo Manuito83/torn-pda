@@ -206,6 +206,8 @@ class _WarPageState extends State<WarPage> {
               _okayFilter(w),
               SizedBox(width: 10),
               _countryFilter(w),
+              SizedBox(width: 5),
+              _travelingFilter(w),
               SizedBox(width: 10),
               _chainWidgetToggler(w),
             ],
@@ -217,6 +219,7 @@ class _WarPageState extends State<WarPage> {
                 offlineSelector: w.onlineFilter,
                 okayFilterActive: w.okayFilter,
                 countryFilterActive: w.countryFilter,
+                travelingFilterActive: w.travelingFilter,
               ),
             )
           else
@@ -225,6 +228,7 @@ class _WarPageState extends State<WarPage> {
               offlineSelector: w.onlineFilter,
               okayFilterActive: w.okayFilter,
               countryFilterActive: w.countryFilter,
+              travelingFilterActive: w.travelingFilter,
             ),
           if (_settingsProvider.appBarTop) SizedBox(height: 50),
         ],
@@ -416,6 +420,70 @@ class _WarPageState extends State<WarPage> {
 
           if (_w.activeFilters.isEmpty) {
             message = "Showing all targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _travelingFilter(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !w.travelingFilter ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.red[200]]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.red[500]]
+                : [Colors.red[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.airplane,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            w.setTravelingFilterActive(false);
+          } else {
+            w.setTravelingFilterActive(true);
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Hiding traveling targets";
           } else {
             message = "Filters: ${_w.activeFilters.join(", ")}";
           }
@@ -1247,12 +1315,14 @@ class WarTargetsList extends StatelessWidget {
     @required this.offlineSelector,
     @required this.okayFilterActive,
     @required this.countryFilterActive,
+    @required this.travelingFilterActive,
   });
 
   final WarController warController;
   final int offlineSelector;
   final bool okayFilterActive;
   final bool countryFilterActive;
+  final bool travelingFilterActive;
 
   @override
   Widget build(BuildContext context) {
@@ -1304,6 +1374,10 @@ class WarTargetsList extends StatelessWidget {
       }
 
       if (countryFilterActive && countryCheck(thisMember.status) != warController.playerLocation) {
+        continue;
+      }
+
+      if (travelingFilterActive && travelingCheck(thisMember.status)) {
         continue;
       }
 

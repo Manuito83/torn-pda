@@ -50,3 +50,17 @@ String countryCheck(Status status) {
 
   return "Torn";
 }
+
+/// Takes a player status and returns if the player is traveling (active flight)
+bool travelingCheck(Status status) {
+  try {
+    // Travelling
+    if (status.state == "Traveling") {
+      return true;
+    }
+  } catch (e) {
+    //
+  }
+
+  return false;
+}
