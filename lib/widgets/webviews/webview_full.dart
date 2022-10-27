@@ -692,7 +692,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             color: _themeProvider.mainText,
                           ),
                         ),
-                        if (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
+                        if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=")
+                            || _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
                             _userProvider.basic.faction.factionId != 0)
                           Text(
                             "ASSIST",
@@ -931,7 +932,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   return true;
                 },
                 onLoadStart: (c, uri) async {
-                  //log("Start URL: ${uri}}");
+                  log("Start URL: ${uri}}");
                   //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
                   if (!mounted) return;
@@ -1881,9 +1882,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
 
       const attackUrl = 'loader.php?sid=attack&user2ID=';
+      const attackUrl2 = 'loader2.php?sid=getInAttack&user2ID=';
       if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
+          (!_currentUrl.contains(attackUrl2) && _attackTriggered) ||
           (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
+          (_currentUrl.contains(attackUrl2) && !_attackTriggered) ||
           (_currentUrl.contains(attackUrl) && _currentUrl != _lastProfileVisited)) {
+  
         anySectionTriggered = true;
         getAttack = true;
       }
@@ -1966,7 +1971,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _tradesTriggered = false;
       _cityTriggered = false;
       _attackTriggered = false;
-    } else if (_currentUrl.contains("loader.php?sid=attack&user2ID=") && _attackTriggered) {
+    } else if ((_currentUrl.contains("loader.php?sid=attack&user2ID=") 
+              || _currentUrl.contains("loader2.php?sid=getInAttack&user2ID=")) 
+              && _attackTriggered) {
       _crimesTriggered = false;
       _gymTriggered = false;
       _vaultTriggered = false;
@@ -2953,7 +2960,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           userId = 0;
         }
       } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=') || 
-                 _currentUrl.contains('loader.php?sid=getInAttack&user2ID=')) {
+                 _currentUrl.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (_attackTriggered && _currentUrl == _lastProfileVisited) {
           return;
         }

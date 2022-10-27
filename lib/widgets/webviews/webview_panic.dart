@@ -914,7 +914,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
           userId = 0;
         }
       } else if (page.contains('loader.php?sid=attack&user2ID=') || 
-                 page.contains('loader.php?sid=getInAttack&user2ID=')) {
+                 page.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (page == _lastProfileVisited) {
           return;
         }
