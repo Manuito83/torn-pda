@@ -144,6 +144,8 @@ class ChainStatusProvider extends ChangeNotifier {
     await getEnergy();
 
     // Activate timers
+    _tickerCallChainApi?.cancel();
+    _tickerDecreaseCount?.cancel();
     _tickerCallChainApi = new Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
     _tickerDecreaseCount = new Timer.periodic(
       Duration(seconds: 1),
