@@ -404,8 +404,8 @@ class Bazaar {
   String name;
   String type;
   int quantity;
-  int price;
-  int marketPrice;
+  dynamic price; // Sometimes returns a double (?)
+  dynamic marketPrice;
 
   factory Bazaar.fromJson(Map<String, dynamic> json) => Bazaar(
         id: json["ID"],

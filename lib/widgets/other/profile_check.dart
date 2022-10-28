@@ -466,6 +466,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         int bazaar = 0;
         if (otherProfile.bazaar.isNotEmpty) {
           for (var b in otherProfile.bazaar) {
+            if (b.marketPrice is double) {
+              b.marketPrice = b.marketPrice.round();
+            }
+
             bazaar += b.marketPrice * b.quantity;
           }
         }

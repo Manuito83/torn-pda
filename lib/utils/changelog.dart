@@ -39,7 +39,7 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 269 - 27/10/2022
+    // Build 270 - 28/10/2022
 
     // VERSION 2.9.2
     var v2_9_2 = ChangeLogItem();
@@ -52,6 +52,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_9_2_5 = "Fixed incorrect header icons";
     String feat2_9_2_6 = "Fixed profile widget";
     String feat2_9_2_7 = "Fixed retals section issues in landscape orientation";
+    String feat2_9_2_8 = "Fixed bazaar widget";
     v2_9_2.features.add(feat2_9_2_1);
     v2_9_2.features.add(feat2_9_2_2);
     v2_9_2.features.add(feat2_9_2_3);
@@ -59,6 +60,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_9_2.features.add(feat2_9_2_5);
     v2_9_2.features.add(feat2_9_2_6);
     v2_9_2.features.add(feat2_9_2_7);
+    v2_9_2.features.add(feat2_9_2_8);
 
     // VERSION 2.9.1
     var v2_9_1 = ChangeLogItem();
