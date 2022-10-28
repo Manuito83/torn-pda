@@ -50,7 +50,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_9_2_3 = "Fixed browser refresh rate";
     String feat2_9_2_4 = "Fixed some API parsing issues";
     String feat2_9_2_5 = "Fixed incorrect header icons";
-    String feat2_9_2_6 = "Fixed profile widget";
+    String feat2_9_2_6 = "Fixed profile details widget";
     String feat2_9_2_7 = "Fixed retals section issues in landscape orientation";
     String feat2_9_2_8 = "Fixed bazaar widget";
     v2_9_2.features.add(feat2_9_2_1);
