@@ -86,7 +86,7 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
                           style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "Title: R",
+                          "Title: E",
                           style: TextStyle(fontSize: 13),
                         ),
                         Text(
