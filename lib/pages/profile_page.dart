@@ -2435,20 +2435,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Image _medicalIcon() {
-    // 0-6 hours
-    if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 21600) {
+  Widget _medicalIcon() {
+    // 0-90 minutes hours
+    if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 5400) {
       return Image.asset('images/icons/cooldowns/medical1.png', width: 20);
-    } // 6-12 hours
-    else if (_user.cooldowns.medical >= 21600 && _user.cooldowns.medical < 43200) {
+    } // 90-180 minutes
+    else if (_user.cooldowns.medical >= 5400 && _user.cooldowns.medical < 10800) {
       return Image.asset('images/icons/cooldowns/medical2.png', width: 20);
-    } // 12-18 hours
-    else if (_user.cooldowns.medical >= 43200 && _user.cooldowns.medical < 64800) {
+    } // 180-270 minutes
+    else if (_user.cooldowns.medical >= 10800 && _user.cooldowns.medical < 16200) {
       return Image.asset('images/icons/cooldowns/medical3.png', width: 20);
-    } // 18-24 hours
-    else if (_user.cooldowns.medical >= 64800 && _user.cooldowns.medical < 86400) {
+    } // 270-360 minutes
+    else if (_user.cooldowns.medical >= 16200 && _user.cooldowns.medical < 21600) {
       return Image.asset('images/icons/cooldowns/medical4.png', width: 20);
-    } // 24+ hours
+    } // 360+ minutes
     else {
       return Image.asset('images/icons/cooldowns/medical5.png', width: 20);
     }
