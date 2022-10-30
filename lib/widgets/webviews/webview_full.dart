@@ -692,9 +692,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             color: _themeProvider.mainText,
                           ),
                         ),
-                        if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=")
-                            || _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-                            _userProvider.basic.faction.factionId != 0)
+                        if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                                _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
+                            _userProvider.basic?.faction?.factionId != 0)
                           Text(
                             "ASSIST",
                             textAlign: TextAlign.center,
@@ -1888,7 +1888,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
           (_currentUrl.contains(attackUrl2) && !_attackTriggered) ||
           (_currentUrl.contains(attackUrl) && _currentUrl != _lastProfileVisited)) {
-  
         anySectionTriggered = true;
         getAttack = true;
       }
@@ -1971,9 +1970,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _tradesTriggered = false;
       _cityTriggered = false;
       _attackTriggered = false;
-    } else if ((_currentUrl.contains("loader.php?sid=attack&user2ID=") 
-              || _currentUrl.contains("loader2.php?sid=getInAttack&user2ID=")) 
-              && _attackTriggered) {
+    } else if ((_currentUrl.contains("loader.php?sid=attack&user2ID=") ||
+            _currentUrl.contains("loader2.php?sid=getInAttack&user2ID=")) &&
+        _attackTriggered) {
       _crimesTriggered = false;
       _gymTriggered = false;
       _vaultTriggered = false;
@@ -2959,8 +2958,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         } catch (e) {
           userId = 0;
         }
-      } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=') || 
-                 _currentUrl.contains('loader2.php?sid=getInAttack&user2ID=')) {
+      } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=') ||
+          _currentUrl.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (_attackTriggered && _currentUrl == _lastProfileVisited) {
           return;
         }
