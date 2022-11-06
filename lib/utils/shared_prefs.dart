@@ -157,6 +157,7 @@ class Prefs {
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
+  final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
@@ -1949,6 +1950,16 @@ class Prefs {
   /// -----------------------------
   /// METHODS FOR LISTS IN SETTINGS
   /// -----------------------------
+  Future<bool> getUserScriptsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUserScriptsEnabled) ?? true;
+  }
+
+  Future<bool> setUserScriptsEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUserScriptsEnabled, value);
+  }
+
   Future<String> getUserScriptsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kUserScriptsList) ?? null;

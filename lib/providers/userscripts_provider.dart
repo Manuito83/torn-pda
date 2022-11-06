@@ -30,9 +30,10 @@ class UserScriptsProvider extends ChangeNotifier {
 
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
-  set setUserScriptsEnabled(bool value) {
-    _userScriptsEnabled = value;
-    _saveUserScriptsSharedPrefs();
+  set setUserScriptsEnabled(bool enabled) {
+    _userScriptsEnabled = enabled;
+    Prefs().setUserScriptsEnabled(enabled);
+    _saveUserScriptsListSharedPrefs();
     notifyListeners();
   }
 
@@ -156,7 +157,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
     _sort();
     notifyListeners();
-    _saveUserScriptsSharedPrefs();
+    _saveUserScriptsListSharedPrefs();
   }
 
   void updateUserScript(
@@ -175,13 +176,13 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
-    _saveUserScriptsSharedPrefs();
+    _saveUserScriptsListSharedPrefs();
   }
 
   void removeUserScript(UserScriptModel removedModel) {
     _userScriptList.remove(removedModel);
     notifyListeners();
-    _saveUserScriptsSharedPrefs();
+    _saveUserScriptsListSharedPrefs();
   }
 
   void changeUserScriptEnabled(UserScriptModel changedModel, bool enabled) {
@@ -192,7 +193,7 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
-    _saveUserScriptsSharedPrefs();
+    _saveUserScriptsListSharedPrefs();
   }
 
   Future restoreExamples(bool onlyRestoreNew) async {
@@ -243,17 +244,17 @@ class UserScriptsProvider extends ChangeNotifier {
     _userScriptList = List<UserScriptModel>.from(newList);
 
     _sort();
-    _saveUserScriptsSharedPrefs();
+    _saveUserScriptsListSharedPrefs();
     notifyListeners();
   }
 
   void wipe() {
     _userScriptList.clear();
     notifyListeners();
-    _saveUserScriptsSharedPrefs();
+    _saveUserScriptsListSharedPrefs();
   }
 
-  void _saveUserScriptsSharedPrefs() {
+  void _saveUserScriptsListSharedPrefs() {
     var saveString = json.encode(_userScriptList);
     Prefs().setUserScriptsList(saveString);
   }
@@ -286,6 +287,8 @@ class UserScriptsProvider extends ChangeNotifier {
 
   Future<void> loadPreferences() async {
     try {
+      _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
+
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
       var savedScripts = await Prefs().getUserScriptsList();
       var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
@@ -304,7 +307,7 @@ class UserScriptsProvider extends ChangeNotifier {
             exampleCode: example.exampleCode,
           );
         }
-        _saveUserScriptsSharedPrefs();
+        _saveUserScriptsListSharedPrefs();
       } else {
         if (savedScripts.isNotEmpty) {
           var decoded = json.decode(savedScripts);
@@ -370,7 +373,7 @@ class UserScriptsProvider extends ChangeNotifier {
             }
           }
         }
-        if (updates) _saveUserScriptsSharedPrefs();
+        if (updates) _saveUserScriptsListSharedPrefs();
       }
       notifyListeners();
     } catch (e) {

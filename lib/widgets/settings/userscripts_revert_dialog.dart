@@ -82,7 +82,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                     SizedBox(height: 10),
                     Flexible(
                       child: Text(
-                        "This will restore the example scripts than come with Torn PDA by default!",
+                        "This will restore the example scripts that come with Torn PDA by default!",
                         style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                       ),
                     ),
