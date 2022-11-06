@@ -30,6 +30,7 @@ class FactionCrimesModel {
 
       return fc;
     } catch (e) {
+      /* No Crashlytics in isolates
       var response = json == null
           ? "Null JSON"
           : json['crimes'] == null
@@ -37,6 +38,7 @@ class FactionCrimesModel {
               : "Other";
       FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model");
       FirebaseCrashlytics.instance.recordError("Player ID: $playerId, Response: $response, Error: $e", null);
+      */
       return null;
     }
   }
