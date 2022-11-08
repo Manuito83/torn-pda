@@ -39,22 +39,24 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 271 - XX/11/2022
+    // Build 272 - 08/11/2022
 
     // VERSION 2.9.3
     var v2_9_3 = ChangeLogItem();
     v2_9_3.version = 'Torn PDA v2.9.3';
     v2_9_3.date = '15 NOV 2022';
     String feat2_9_3_1 = "Fixed crashes when closing the quick browser in some devices";
-    String feat2_9_3_2 = "Fixed persistence issue when disabling user scripts";
-    String feat2_9_3_3 = "Added missing honor images";
-    String feat2_9_3_4 = "Fixed incorrect medical cooldown icon";
-    String feat2_9_3_5 = "Fixed other reported issues";
+    String feat2_9_3_2 = "Fixed targets colors and sorting after importing from YATA";
+    String feat2_9_3_3 = "Fixed persistence issue when disabling user scripts";
+    String feat2_9_3_4 = "Added missing honor images";
+    String feat2_9_3_5 = "Fixed incorrect medical cooldown icon";
+    String feat2_9_3_6 = "Fixed other reported issues";
     v2_9_3.features.add(feat2_9_3_1);
     v2_9_3.features.add(feat2_9_3_2);
     v2_9_3.features.add(feat2_9_3_3);
     v2_9_3.features.add(feat2_9_3_4);
     v2_9_3.features.add(feat2_9_3_5);
+    v2_9_3.features.add(feat2_9_3_6);
 
     // VERSION 2.9.2
     var v2_9_2 = ChangeLogItem();

@@ -679,15 +679,21 @@ class _TargetCardState extends State<TargetCard> {
       _lifeTicker?.cancel();
     }
 
-    // Found players in federal jail with a higher life than their maximum. Correct it if it's the
-    // case to avoid issues with percentage bar
     double lifePercentage;
-    if (_target.life.current / _target.life.maximum > 1) {
-      lifePercentage = 1;
-    } else if (_target.life.current / _target.life.maximum > 1) {
+
+    // Avoid issues with dormant NPC reporting weird life values (0)
+    if (_target.life.current == 0 || _target.life.maximum == 0) {
       lifePercentage = 0;
     } else {
-      lifePercentage = _target.life.current / _target.life.maximum;
+      // Found players in federal jail with a higher life than their maximum. Correct it if it's the
+      // case to avoid issues with percentage bar
+      if (_target.life.current / _target.life.maximum > 1) {
+        lifePercentage = 1;
+      } else if (_target.life.current / _target.life.maximum > 1) {
+        lifePercentage = 0;
+      } else {
+        lifePercentage = _target.life.current / _target.life.maximum;
+      }
     }
 
     return Row(

@@ -364,7 +364,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
   String _localColorCode(int colorInt) {
     switch (colorInt) {
       case 0:
-        return '';
+        return 'z';
         break;
       case 1:
         return 'green';
