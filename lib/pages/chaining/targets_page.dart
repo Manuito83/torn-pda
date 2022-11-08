@@ -93,12 +93,16 @@ class _TargetsPageState extends State<TargetsPage> {
     TargetSort(type: TargetSortType.levelAsc),
     TargetSort(type: TargetSortType.respectDes),
     TargetSort(type: TargetSortType.respectAsc),
+    TargetSort(type: TargetSortType.ffDes),
+    TargetSort(type: TargetSortType.ffAsc),
     TargetSort(type: TargetSortType.nameDes),
     TargetSort(type: TargetSortType.nameAsc),
     TargetSort(type: TargetSortType.lifeDes),
     TargetSort(type: TargetSortType.lifeAsc),
     TargetSort(type: TargetSortType.colorAsc),
     TargetSort(type: TargetSortType.colorDes),
+    TargetSort(type: TargetSortType.onlineAsc),
+    TargetSort(type: TargetSortType.onlineDes),
   ];
 
   final _popupOptionsChoices = <TargetsOptions>[
@@ -584,6 +588,12 @@ class _TargetsPageState extends State<TargetsPage> {
       case TargetSortType.respectAsc:
         _targetsProvider.sortTargets(TargetSortType.respectAsc);
         break;
+      case TargetSortType.ffDes:
+        _targetsProvider.sortTargets(TargetSortType.ffDes);
+        break;
+      case TargetSortType.ffAsc:
+        _targetsProvider.sortTargets(TargetSortType.ffAsc);
+        break;
       case TargetSortType.nameDes:
         _targetsProvider.sortTargets(TargetSortType.nameDes);
         break;
@@ -601,6 +611,12 @@ class _TargetsPageState extends State<TargetsPage> {
         break;
       case TargetSortType.colorAsc:
         _targetsProvider.sortTargets(TargetSortType.colorAsc);
+        break;
+      case TargetSortType.onlineDes:
+        _targetsProvider.sortTargets(TargetSortType.onlineDes);
+        break;
+      case TargetSortType.onlineAsc:
+        _targetsProvider.sortTargets(TargetSortType.onlineAsc);
         break;
     }
   }

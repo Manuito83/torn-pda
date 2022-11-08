@@ -1239,7 +1239,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             padding: const EdgeInsets.only(left: 5),
             child: Text(
               drugsTime.isBefore(DateTime.now())
-                  ? "- No drug cooldowm"
+                  ? "- No drug cooldown"
                   : drugsGap.inHours > 24
                       ? "- Drug cooldown will be over more than a day before your return"
                       : "- Drug cooldown will be over ${_formatDuration(drugsGap)} before your return",
@@ -1261,7 +1261,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             padding: const EdgeInsets.only(left: 5),
             child: Text(
               medicalTime.isBefore(DateTime.now())
-                  ? "- No medical cooldowm"
+                  ? "- No medical cooldown"
                   : medicalsGap.inHours > 24
                       ? "- Medical cooldown will be over more than a day before your return"
                       : "- Medical cooldown will be over ${_formatDuration(medicalsGap)} before your return",
@@ -1283,7 +1283,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             padding: const EdgeInsets.only(left: 5),
             child: Text(
               boosterTime.isBefore(DateTime.now())
-                  ? "- No booster cooldowm"
+                  ? "- No booster cooldown"
                   : boostersGap.inHours > 24
                       ? "- Booster cooldown will be over more than a day before your return"
                       : "- Booster cooldown will be over ${_formatDuration(boostersGap)} before your return",

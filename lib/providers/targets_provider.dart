@@ -422,6 +422,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.respectAsc:
         _targets.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
+      case TargetSortType.ffDes:
+        _targets.sort((a, b) => b.fairFight.compareTo(a.fairFight));
+        break;
+      case TargetSortType.ffAsc:
+        _targets.sort((a, b) => a.fairFight.compareTo(b.fairFight));
+        break;
       case TargetSortType.nameDes:
         _targets.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
@@ -439,6 +445,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case TargetSortType.colorAsc:
         _targets.sort((a, b) => a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
+        break;
+      case TargetSortType.onlineDes:
+        _targets.sort((a, b) => b.lastAction.timestamp.compareTo(a.lastAction.timestamp));
+        break;
+      case TargetSortType.onlineAsc:
+        _targets.sort((a, b) => a.lastAction.timestamp.compareTo(b.lastAction.timestamp));
         break;
     }
     _saveSortSharedPrefs();
@@ -485,6 +497,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.respectAsc:
         sortToSave = 'respectDes';
         break;
+      case TargetSortType.ffDes:
+        sortToSave = 'ffDes';
+        break;
+      case TargetSortType.ffAsc:
+        sortToSave = 'ffDes';
+        break;
       case TargetSortType.nameDes:
         sortToSave = 'nameDes';
         break;
@@ -502,6 +520,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case TargetSortType.colorAsc:
         sortToSave = 'colorAsc';
+        break;
+      case TargetSortType.onlineDes:
+        sortToSave = 'onlineDes';
+        break;
+      case TargetSortType.onlineAsc:
+        sortToSave = 'onlineAsc';
         break;
     }
     Prefs().setTargetsSort(sortToSave);
@@ -553,6 +577,12 @@ class TargetsProvider extends ChangeNotifier {
       case 'respectAsc':
         _currentSort = TargetSortType.respectAsc;
         break;
+      case 'ffDes':
+        _currentSort = TargetSortType.ffDes;
+        break;
+      case 'ffAsc':
+        _currentSort = TargetSortType.ffAsc;
+        break;
       case 'nameDes':
         _currentSort = TargetSortType.nameDes;
         break;
@@ -564,6 +594,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case 'colorDes':
         _currentSort = TargetSortType.colorAsc;
+        break;
+      case 'onlineDes':
+        _currentSort = TargetSortType.onlineDes;
+        break;
+      case 'onlineAsc':
+        _currentSort = TargetSortType.onlineAsc;
         break;
     }
 
