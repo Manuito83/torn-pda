@@ -726,7 +726,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     setState(() {
                       _dialogCloseButtonTriggered = true;
                     });
-                    await Future.delayed(const Duration(milliseconds: 100));
+                    await Future.delayed(const Duration(milliseconds: 200));
                     if (mounted) {
                       Navigator.of(context).pop();
                     }
