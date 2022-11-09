@@ -132,6 +132,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   //int _loadTimeMill = 0;
 
+  CookieManager cm = CookieManager.instance();
+
   bool _firstLoad = true;
 
   URLRequest _initialUrl;
@@ -1140,6 +1142,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                 _scrollAfterLoad = false;
               }
+
+              if (_settingsProvider.restoreSessionCookie) {
+                if (_currentUrl.contains("torn.com")) {
+                  Cookie session = await cm.getCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID");
+                  if (session != null) {
+                    Prefs().setWebViewSessionCookie(session.value);
+                  }
+                }
+              }
+
+              _assessErrorCases(document);
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -1469,6 +1482,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       'responseText': resp.body,
       'responseHeaders': resp.headers.keys.map((key) => '${key}: ${resp.headers[key]}').join("\r\n")
     };
+  }
+
+  Future _assessErrorCases(dom.Document document) async {
+    // If for some reason we are logged out of Torn
+    if (document.querySelectorAll("[class*='logInWrap_']").isNotEmpty &&
+        !document.body.innerHtml.contains("failures from your IP address")) {
+      Prefs().setWebViewSessionCookie("");
+      log("Clearing session cookie!");
+    }
   }
 
   void _reportUrlVisit(Uri uri) {

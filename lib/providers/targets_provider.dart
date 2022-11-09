@@ -19,7 +19,6 @@ import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -618,7 +617,7 @@ class TargetsProvider extends ChangeNotifier {
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-      ).timeout(Duration(seconds: 15));
+      ).timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         return yataTargetsImportModelFromJson(response.body);

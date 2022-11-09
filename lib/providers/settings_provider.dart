@@ -61,6 +61,16 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _restoreSessionCookie = false;
+  bool get restoreSessionCookie => _restoreSessionCookie;
+  set restoreSessionCookie(bool enabled) {
+    _restoreSessionCookie = enabled;
+    Prefs().setRestoreSessionCookie(_restoreSessionCookie);
+    if (!enabled) {
+      Prefs().setWebViewSessionCookie("");
+    }
+  }
+
   var _clearCacheNextOpportunity = false;
   bool get getClearCacheNextOpportunityAndReset {
     if (_clearCacheNextOpportunity) {
@@ -564,6 +574,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
+    _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
     _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();

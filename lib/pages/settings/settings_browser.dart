@@ -257,7 +257,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
                       'You will see a note if you are visiting the profile of a '
-                      'friendly faction\'s player, or a warning if you are about to attack, ',
+                      'friendly faction\'s player, or a warning if you are about to attack',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 12,
@@ -492,6 +492,37 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
+                  Text("Restore session cookie"),
+                  Switch(
+                    value: _settingsProvider.restoreSessionCookie,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.restoreSessionCookie = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Enable this option if you are getting logged out from Torn consistently; '
+                'Torn PDA will try to reestablish your session ID when the browser opens',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
                   Text("Browser cache"),
                   ElevatedButton(
                     child: Text("Clear"),
@@ -500,6 +531,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       _settingsProvider.setClearCacheNextOpportunity = true;
                       // Clear tabs now
                       Prefs().setWebViewSecondaryTabs('{"tabsSave": []}');
+                      // Clear session cookie
+                      Prefs().setWebViewSessionCookie('');
 
                       BotToast.showText(
                         text: "Browser cache and tabs have been reset!",

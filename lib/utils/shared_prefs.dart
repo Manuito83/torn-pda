@@ -63,6 +63,7 @@ class Prefs {
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
+  final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
@@ -179,6 +180,7 @@ class Prefs {
   final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kWebViewLastActiveTab = "pda_webViewLastActiveTab";
   final String _kWebViewLastSessionUsedDialog = "pda_webViewLastSessionUsedDialog";
+  final String _kWebViewSessionCookie = "pda_webViewSessionCookie";
   final String _kWebViewMainTab = "pda_webViewMainTab";
   final String _kWebViewSecondaryTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
@@ -716,6 +718,16 @@ class Prefs {
   Future<bool> setTMenuButtonLongPressBrowser(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kUseQuickBrowser, value);
+  }
+
+  Future<bool> getRestoreSessionCookie() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRestoreSessionCookie) ?? false;
+  }
+
+  Future<bool> setRestoreSessionCookie(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRestoreSessionCookie, value);
   }
 
   Future<bool> getClearBrowserCacheNextOpportunity() async {
@@ -2152,6 +2164,16 @@ class Prefs {
   Future<bool> setWebViewLastSessionUsedDialog(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kWebViewLastSessionUsedDialog, value);
+  }
+
+  Future<String> getWebViewSessionCookie() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebViewSessionCookie) ?? '';
+  }
+
+  Future<bool> setWebViewSessionCookie(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebViewSessionCookie, value);
   }
 
   Future<String> getWebViewMainTab() async {

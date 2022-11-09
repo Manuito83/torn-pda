@@ -39,7 +39,7 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 272 - 08/11/2022
+    // Build 272 - 09/11/2022
 
     // VERSION 2.9.3
     var v2_9_3 = ChangeLogItem();
@@ -49,7 +49,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_9_3_2 = "Fixed targets colors and sorting after importing from YATA";
     String feat2_9_3_3 = "Fixed crashes when closing the quick browser in some devices";
     String feat2_9_3_4 = "Fixed persistence issue when disabling user scripts";
-    String feat2_9_3_5 = "Added missing honor images";
+    String feat2_9_3_5 = "Fixed missing honor images";
     String feat2_9_3_6 = "Fixed incorrect medical cooldown icon";
     String feat2_9_3_7 = "Fixed other reported issues";
     v2_9_3.features.add(feat2_9_3_1);

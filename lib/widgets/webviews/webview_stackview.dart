@@ -81,6 +81,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       recallLastSession: widget.recallLastSession,
       isChainingBrowser: widget.isChainingBrowser,
       chainingPayload: widget.chainingPayload,
+      restoreSessionCookie: _settingsProvider.restoreSessionCookie,
     );
   }
 

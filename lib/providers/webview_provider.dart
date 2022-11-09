@@ -5,6 +5,7 @@ import 'dart:developer';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -88,7 +89,21 @@ class WebViewProvider extends ChangeNotifier {
     bool recallLastSession = false,
     bool isChainingBrowser = false,
     ChainingPayload chainingPayload,
+    bool restoreSessionCookie = false,
   }) async {
+    if (restoreSessionCookie) {
+      try {
+        var cm = CookieManager.instance();
+        String sessionCookie = await Prefs().getWebViewSessionCookie();
+        if (sessionCookie != "") {
+          await cm.setCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID", value: "123");
+          log("Restored PHPSESSID cookie: $sessionCookie");
+        }
+      } catch (e) {
+        //
+      }
+    }
+
     _useDialog = dialog;
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
