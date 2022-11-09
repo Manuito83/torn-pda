@@ -96,7 +96,7 @@ class WebViewProvider extends ChangeNotifier {
         var cm = CookieManager.instance();
         String sessionCookie = await Prefs().getWebViewSessionCookie();
         if (sessionCookie != "") {
-          await cm.setCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID", value: "123");
+          await cm.setCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID", value: sessionCookie);
           log("Restored PHPSESSID cookie: $sessionCookie");
         }
       } catch (e) {
