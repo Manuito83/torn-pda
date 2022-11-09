@@ -39,7 +39,7 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 272 - 09/11/2022
+    // Build 273 - 09/11/2022
 
     // VERSION 2.9.3
     var v2_9_3 = ChangeLogItem();
