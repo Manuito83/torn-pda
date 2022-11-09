@@ -93,10 +93,25 @@ class WebViewProvider extends ChangeNotifier {
   }) async {
     if (restoreSessionCookie) {
       try {
-        var cm = CookieManager.instance();
         String sessionCookie = await Prefs().getWebViewSessionCookie();
         if (sessionCookie != "") {
-          await cm.setCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID", value: sessionCookie);
+          var cm = CookieManager.instance();
+
+          var allCookies = await cm.getCookies(url: Uri.parse("https://www.torn.com"));
+          log("Cookies: ${allCookies.length}");
+          var repetitions = allCookies.where((element) => element.name == "PHPSESSID").length;
+
+          for (int i = 0; i < repetitions; i++) {
+            await cm.deleteCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID");
+            log("Cleared PHPSESSID: $i");
+          }
+
+          await cm.setCookie(
+            url: Uri.parse("https://www.torn.com"),
+            domain: "www.torn.com",
+            name: "PHPSESSID",
+            value: sessionCookie,
+          );
           log("Restored PHPSESSID cookie: $sessionCookie");
         }
       } catch (e) {

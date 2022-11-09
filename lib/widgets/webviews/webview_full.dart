@@ -1151,8 +1151,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   }
                 }
               }
-
-              _assessErrorCases(document);
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -1482,15 +1480,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       'responseText': resp.body,
       'responseHeaders': resp.headers.keys.map((key) => '${key}: ${resp.headers[key]}').join("\r\n")
     };
-  }
-
-  Future _assessErrorCases(dom.Document document) async {
-    // If for some reason we are logged out of Torn
-    if (document.querySelectorAll("[class*='logInWrap_']").isNotEmpty &&
-        !document.body.innerHtml.contains("failures from your IP address")) {
-      Prefs().setWebViewSessionCookie("");
-      log("Clearing session cookie!");
-    }
   }
 
   void _reportUrlVisit(Uri uri) {
