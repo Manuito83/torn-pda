@@ -149,6 +149,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
+                                /*
                                 SizedBox(height: 20),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -184,6 +185,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
+                                */
                                 SizedBox(height: 50),
                               ],
                             ),
@@ -304,7 +306,7 @@ class _TradesOptionsState extends State<TradesOptions> {
   Future _restorePreferences() async {
     var tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
     var awhActive = await Prefs().getAWHEnabled();
-    var tornTraderActive = await Prefs().getTornTraderEnabled();
+    var tornTraderActive = false; //await Prefs().getTornTraderEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;

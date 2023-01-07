@@ -681,6 +681,7 @@ class _TipsPageState extends State<TipsPage> {
             "it to expand it for more details!",
       ),
     );
+    /*
     tips.add(
       ExpandableTip(
         headerValue: "Sync with Torn Trader",
@@ -688,6 +689,7 @@ class _TipsPageState extends State<TipsPage> {
             "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
       ),
     );
+    */
     tips.add(
       ExpandableTip(
         headerValue: "Sync with Arson Warehouse",

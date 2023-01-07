@@ -455,7 +455,7 @@ class _AboutPageState extends State<AboutPage> {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
                   child: Text('Thank you to our partners, who chose Torn PDA as their mobile '
-                      'interface: YATA, Arson Warehouse, Torn Trader, Nuke (Central Hospital) '
+                      'interface: YATA, Arson Warehouse, Nuke (Central Hospital) '
                       'and Universal Health Care.'),
                 ),
               ),
