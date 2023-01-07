@@ -14,9 +14,9 @@ export const travelGroup = {
 
       try {
         const currentDateInSeconds = Date.now() / 1000;
-        // 4 minutes and 20 seconds (240 + 60 = 260), so that earliest rounded notification is 4 minutes
-        // while we still allow for 2 passes leaving a 20 second margin in the worst-case scenario
-        const nextFourMinutes = currentDateInSeconds + 260;
+        // 2 minutes and 20 seconds (120 + 20 = 140)
+        // 20 second margin in the worst-case scenario
+        const nextTwoMinutes = currentDateInSeconds + 140;
 
         // Get the list of subscribers
         const response = await admin
@@ -25,7 +25,7 @@ export const travelGroup = {
           .where("active", "==", true)
           .where("travelNotification", "==", true)
           .where("travelTimeNotification", ">", 0)
-          .where("travelTimeNotification", "<", nextFourMinutes)
+          .where("travelTimeNotification", "<", nextTwoMinutes)
           .get();
 
         const subscribers = response.docs.map((d) => d.data());
@@ -36,12 +36,15 @@ export const travelGroup = {
           const thisUser = subscribers[key];
           errorUID = thisUser.uid;
           const minutesRemaining = Math.round((thisUser.travelTimeArrival - currentDateInSeconds) / 60);
+          const secondsRemaining = Math.round(thisUser.travelTimeArrival - currentDateInSeconds);
 
           let landingBody = "";
-          if (minutesRemaining <= 0) {
+          if (secondsRemaining <= 0) {
             landingBody = `You have landed in ${thisUser.travelDestination}!`;
-          } else if (minutesRemaining === 1) {
-            landingBody = `You are on final approach to ${thisUser.travelDestination}, landing in one minute or less!`;
+          } else if (secondsRemaining > 0 && secondsRemaining <= 60) {
+            landingBody = `You are on final approach to ${thisUser.travelDestination}, landing in less than a minute!`;
+          } else if (secondsRemaining > 60 && minutesRemaining <= 1) {
+            landingBody = `You are descending towards ${thisUser.travelDestination}, landing in one minute!`
           } else {
             landingBody = `You are descending towards ${thisUser.travelDestination}, landing in about ${minutesRemaining} minutes!`
           }
