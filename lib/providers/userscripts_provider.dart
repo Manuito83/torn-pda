@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -13,6 +13,7 @@ import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/utils/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/userscript_examples.dart';
 
@@ -37,10 +38,6 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _handlerReady;
-  String _handlerApi;
-  String _handlerEvaluateJavascript;
-
   UnmodifiableListView<UserScript> getContinuousSources({
     @required String apiKey,
   }) {
@@ -51,7 +48,7 @@ class UserScriptsProvider extends ChangeNotifier {
         UserScript(
           groupName: "__TornPDA_ReadyEvent__",
           injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: _handlerReady,
+          source: handler_flutterPlatformReady(),
         ),
       );
 
@@ -60,7 +57,7 @@ class UserScriptsProvider extends ChangeNotifier {
         UserScript(
           groupName: "__TornPDA_API__",
           injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: _handlerApi,
+          source: handler_pdaAPI(),
         ),
       );
 
@@ -69,7 +66,7 @@ class UserScriptsProvider extends ChangeNotifier {
         UserScript(
           groupName: "__TornPDA_EvaluateJavascript__",
           injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: _handlerEvaluateJavascript,
+          source: handler_evaluateJS(),
         ),
       );
 
@@ -143,6 +140,7 @@ class UserScriptsProvider extends ChangeNotifier {
     int exampleCode = 0,
     int version = 0,
     edited = false,
+    allScriptFirstLoad = false,
   }) {
     var newScript = UserScriptModel(
       name: name,
@@ -155,9 +153,12 @@ class UserScriptsProvider extends ChangeNotifier {
     );
     userScriptList.add(newScript);
 
-    _sort();
-    notifyListeners();
-    _saveUserScriptsListSharedPrefs();
+    // During first load we just sort, save and notify once
+    if (!allScriptFirstLoad) {
+      _sort();
+      notifyListeners();
+      _saveUserScriptsListSharedPrefs();
+    }
   }
 
   void updateUserScript(
@@ -291,11 +292,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
       var savedScripts = await Prefs().getUserScriptsList();
-      var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
-
-      _handlerReady = await rootBundle.loadString('userscripts/TornPDA_Ready.js');
-      _handlerApi = await rootBundle.loadString('userscripts/TornPDA_API.js');
-      _handlerEvaluateJavascript = await rootBundle.loadString('userscripts/TornPDA_EvaluateJavascript.js');
+      var exampleScripts = await List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
 
       // NULL returned if we installed the app, so we add all the example scripts
       if (savedScripts == null) {
@@ -305,6 +302,7 @@ class UserScriptsProvider extends ChangeNotifier {
             example.source,
             enabled: example.enabled,
             exampleCode: example.exampleCode,
+            allScriptFirstLoad: true,
           );
         }
         _saveUserScriptsListSharedPrefs();
@@ -320,11 +318,10 @@ class UserScriptsProvider extends ChangeNotifier {
               exampleCode: decodedModel.exampleCode,
               version: decodedModel.version,
               edited: decodedModel.edited,
+              allScriptFirstLoad: true,
             );
           }
         }
-
-        bool updates = false;
 
         // Force specific scripts
         if (appVersion == "2.8.9") {
@@ -334,7 +331,6 @@ class UserScriptsProvider extends ChangeNotifier {
             Prefs().setUserScriptsForcedVersions(pastForced);
             // Add hospital filter in this version
             _userScriptList.add(exampleScripts.firstWhere((element) => element.exampleCode == 7));
-            updates = true;
           }
         }
 
@@ -351,14 +347,12 @@ class UserScriptsProvider extends ChangeNotifier {
                       script.version < example.version) {
                     script.source = example.source;
                     script.version = example.version;
-                    updates = true;
                   }
                 }
               }
             } else {
               // Added for existing scripts than come from previous version than v2.4.2
               // We just flag each script for future use, but don't update anything
-              updates = true;
               for (var example in exampleScripts) {
                 if (script.exampleCode == example.exampleCode) {
                   if (script.source == example.source) {
@@ -373,11 +367,16 @@ class UserScriptsProvider extends ChangeNotifier {
             }
           }
         }
-        if (updates) _saveUserScriptsListSharedPrefs();
+
+        _sort();
+        notifyListeners();
+        _saveUserScriptsListSharedPrefs();
       }
       notifyListeners();
-    } catch (e) {
+    } catch (e, trace) {
       // Pass (scripts will be empty)
+      FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
+      FirebaseCrashlytics.instance.recordError(e, trace);
     }
   }
 }
