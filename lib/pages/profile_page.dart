@@ -4,11 +4,11 @@ import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
-import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:expandable/expandable.dart';

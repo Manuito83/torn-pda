@@ -3,10 +3,10 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:android_intent/android_intent.dart';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
