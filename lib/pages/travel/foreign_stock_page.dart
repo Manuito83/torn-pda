@@ -784,7 +784,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     try {
       Future yataAPI() async {
         String yataURL = 'https://yata.yt/api/v1/travel/export/';
-        var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
+        var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
         if (responseDB.statusCode == 200) {
           _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
           _apiSuccess = true;

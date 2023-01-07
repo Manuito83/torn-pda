@@ -841,7 +841,7 @@ class WarController extends GetxController {
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
       String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
-      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
+      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
       if (resp.statusCode == 200) {
         dynamic spiesJson = json.decode(resp.body);
         if (spiesJson != null) {

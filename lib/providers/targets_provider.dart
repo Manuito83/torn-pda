@@ -667,13 +667,16 @@ class TargetsProvider extends ChangeNotifier {
     var bodyOut = yataTargetsExportModelToJson(modelOut);
 
     try {
-      var response = await http.post(
-        Uri.parse('https://yata.yt/api/v1/targets/import/'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: bodyOut,
-      );
+      var response = await http
+          .post(
+            Uri.parse('https://yata.yt/api/v1/targets/import/'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: bodyOut,
+          )
+          .timeout(Duration(seconds: 15));
+
       if (response.statusCode == 200) {
         Map<String, dynamic> result = json.decode(response.body);
         var answer = result.values.first;

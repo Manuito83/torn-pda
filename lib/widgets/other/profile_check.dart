@@ -567,7 +567,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       try {
         if (_settingsProvider.spiesSource == SpiesSource.yata) {
           String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_u.alternativeYataKey}';
-          var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
+          var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
           if (resp.statusCode == 200) {
             var spyJson = json.decode(resp.body);
             var spiedStats = spyJson["spies"]["${otherProfile.playerId}"];

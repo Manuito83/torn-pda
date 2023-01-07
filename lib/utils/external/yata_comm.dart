@@ -47,7 +47,7 @@ class YataComm {
     }
 
     try {
-      var awardsRequest = await _client.getUrl(_awardsUrl);
+      var awardsRequest = await _client.getUrl(_awardsUrl).timeout(Duration(seconds: 15));
       awardsRequest.cookies.addAll(cookies);
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
       var awardsResponse = await awardsRequest.close();
@@ -74,7 +74,7 @@ class YataComm {
       // Modify header on the fly to account for the csrf token
       headers["X-CSRFToken"] = cookies[0].value;
 
-      var awardsRequest = await _client.postUrl(_awardsTogglePinUrl);
+      var awardsRequest = await _client.postUrl(_awardsTogglePinUrl).timeout(Duration(seconds: 15));
       awardsRequest.cookies.addAll(await _cj.loadForRequest(_authUrl));
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
       var body = "{\"awardId\": \"$awardId\"}";
@@ -96,7 +96,7 @@ class YataComm {
       "api-key": _u.alternativeYataKey,
     };
 
-    var authRequest = await _client.getUrl(_authUrl);
+    var authRequest = await _client.getUrl(_authUrl).timeout(Duration(seconds: 15));
     headers.forEach((key, value) => authRequest.headers.add(key, value));
     var authResponse = await authRequest.close();
 
