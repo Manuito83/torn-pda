@@ -96,6 +96,7 @@ class VaultsOptions {
 }
 
 class WebViewFull extends StatefulWidget {
+  final int windowId;
   final String customTitle;
   final String customUrl;
   final Function customCallBack;
@@ -109,6 +110,7 @@ class WebViewFull extends StatefulWidget {
   final ChainingPayload chainingPayload;
 
   const WebViewFull({
+    this.windowId,
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
     this.customCallBack,
@@ -128,7 +130,7 @@ class WebViewFull extends StatefulWidget {
 
 class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   InAppWebViewController webView;
-  var _initialWebViewOptions = InAppWebViewGroupOptions();
+  var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
 
@@ -245,6 +247,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
+  final _findInteractionController = FindInteractionController();
 
   bool _omitTabHistory = false;
 
@@ -274,6 +277,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    WebView.debugLoggingSettings.enabled = false;
+
     _localChatRemovalActive = widget.chatRemovalActive;
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
@@ -281,7 +286,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
-    _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
+    _initialUrl = URLRequest(url: WebUri(widget.customUrl));
 
     if (widget.isChainingBrowser) {
       _isChainingBrowser = true;
@@ -310,45 +315,39 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _findController.addListener(onFindInputTextChange);
 
-    _initialWebViewOptions = InAppWebViewGroupOptions(
-      crossPlatform: InAppWebViewOptions(
-        cacheEnabled: false,
-        transparentBackground: true,
-        clearCache: _clearCacheFirstOpportunity,
-        useOnLoadResource: true,
-        useShouldOverrideUrlLoading: true,
-        javaScriptCanOpenWindowsAutomatically: true,
-        userAgent: Platform.isAndroid
-            ? "Mozilla/5.0 (Linux; Android 12; sdk_gphone64_arm64 Build/S2B2.211203.006; wv) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
-            : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
+    _initialWebViewSettings = InAppWebViewSettings(
+      cacheEnabled: false,
+      transparentBackground: true,
+      clearCache: _clearCacheFirstOpportunity,
+      useOnLoadResource: true,
+      useShouldOverrideUrlLoading: true,
+      javaScriptCanOpenWindowsAutomatically: true,
+      userAgent: Platform.isAndroid
+          ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
+          : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+              "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
 
-        /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
-        /// hospital timer, company applications, etc. There is a but on iOS if we activate it
-        /// and deactivate it dynamically, where onLoadResource stops triggering!
-        //useShouldInterceptAjaxRequest: false,
-      ),
-      android: AndroidInAppWebViewOptions(
-        mixedContentMode: AndroidMixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-        cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
-        safeBrowsingEnabled: false,
-        useHybridComposition: true,
-        supportMultipleWindows: true,
-        initialScale: _settingsProvider.androidBrowserScale,
-        useWideViewPort: false,
-      ),
-      ios: IOSInAppWebViewOptions(
-        allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
-        disableLongPressContextMenuOnLinks: true,
-        ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
-      ),
+      /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
+      /// hospital timer, company applications, etc. There is a but on iOS if we activate it
+      /// and deactivate it dynamically, where onLoadResource stops triggering!
+      //useShouldInterceptAjaxRequest: false,
+      mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+      cacheMode: CacheMode.LOAD_NO_CACHE,
+      safeBrowsingEnabled: false,
+      //useHybridComposition: true,
+      supportMultipleWindows: true,
+      initialScale: _settingsProvider.androidBrowserScale,
+      useWideViewPort: false,
+      allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
+      disableLongPressContextMenuOnLinks: true,
+      ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
     );
 
     _pullToRefreshController = PullToRefreshController(
-      options: PullToRefreshOptions(
+      settings: PullToRefreshSettings(
         color: Colors.orange[800],
-        size: AndroidPullToRefreshSize.DEFAULT,
+        size: PullToRefreshSize.DEFAULT,
         backgroundColor: _themeProvider.secondBackground,
         enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
         slingshotDistance: 150,
@@ -358,10 +357,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         await reload();
       },
     );
-
-    if (Platform.isAndroid) {
-      AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
-    }
   }
 
   @override
@@ -531,7 +526,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   _findInPageActive = false;
                 });
                 _findController.text = "";
-                webView.clearMatches();
+                _findInteractionController.clearMatches();
                 _findFirstSubmitted = false;
               },
             ),
@@ -981,34 +976,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     return Stack(
       children: [
         InAppWebView(
+          windowId: widget.windowId,
           initialUrlRequest: _initialUrl,
           initialUserScripts: _userScriptsProvider.getContinuousSources(
             apiKey: _userProvider.basic.userApiKey,
           ),
-          // Temporarily deactivated as it is affecting chats
           pullToRefreshController: _pullToRefreshController,
-          initialOptions: _initialWebViewOptions,
+          findInteractionController: _findInteractionController,
+          initialSettings: _initialWebViewSettings,
           // EVENTS
           onWebViewCreated: (c) async {
             webView = c;
             _terminalProvider.terminal = "Terminal";
 
-            if (Platform.isAndroid) {
-              // MiniProfiles don't work in inAppWebView, so we use a handler from JS
-              webView.addJavaScriptHandler(
-                handlerName: 'handlerMiniProfiles',
-                callback: (args) {
-                  if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
-                      (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
-                    _loadUrl(args[0]);
-                  } else {
-                    // If we are using tabs, add a tab
-                    _webViewProvider.addTab(url: args[0]);
-                    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                  }
-                },
-              );
-            }
+            // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
+            webView.addJavaScriptHandler(
+              handlerName: 'copyToClipboard',
+              callback: (args) {
+                String copy = args.toString();
+                if (copy.startsWith("[")) {
+                  copy = copy.replaceFirst("[", "");
+                  copy = copy.substring(0, copy.length - 1);
+                }
+                Clipboard.setData(ClipboardData(text: copy));
+              },
+            );
 
             _addLoadoutChangeHandler(webView);
 
@@ -1032,10 +1024,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             } else {
               // If we are using tabs, add a tab
               String url = request.request.url.toString().replaceAll("http:", "https:");
-              _webViewProvider.addTab(url: url);
+              _webViewProvider.addTab(url: url, windowId: request.windowId);
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
             }
             return true;
+          },
+          onCloseWindow: (controller) {
+            _webViewProvider.removeTab(calledFromTab: true);
           },
           onLoadStart: (c, uri) async {
             log("Start URL: ${uri}}");
@@ -1145,7 +1140,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
               if (_settingsProvider.restoreSessionCookie) {
                 if (_currentUrl.contains("torn.com")) {
-                  Cookie session = await cm.getCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID");
+                  Cookie session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
                   if (session != null) {
                     Prefs().setWebViewSessionCookie(session.value);
                   }
@@ -1405,7 +1400,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.addJavaScriptHandler(
       handlerName: 'PDA_httpGet',
       callback: (args) async {
-        http.Response resp = await http.get(Uri.parse(args[0]));
+        http.Response resp = await http.get(WebUri(args[0]));
         return _makeScriptApiResponse(resp);
       },
     );
@@ -1417,8 +1412,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (body is Map<String, dynamic>) {
           body = Map<String, String>.from(body);
         }
-        http.Response resp =
-            await http.post(Uri.parse(args[0]), headers: Map<String, String>.from(args[1]), body: body);
+        http.Response resp = await http.post(WebUri(args[0]), headers: Map<String, String>.from(args[1]), body: body);
         return _makeScriptApiResponse(resp);
       },
     );
@@ -1549,7 +1543,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _findInPageActive = false;
               });
               _findController.text = "";
-              webView.clearMatches();
+              _findInteractionController.clearMatches();
               _findFirstSubmitted = false;
             },
           ),
@@ -3126,12 +3120,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       setState(() {
         _findFirstSubmitted = true;
       });
-      webView.findAllAsync(find: _findController.text);
+      _findInteractionController.findAll(find: _findController.text);
     }
   }
 
   void _findNext({@required bool forward}) {
-    webView.findNext(forward: forward);
+    _findInteractionController.findNext(forward: forward);
     if (_findFocus.hasFocus) _findFocus.unfocus();
   }
 
@@ -3257,13 +3251,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   void pauseWebview() {
     if (Platform.isAndroid) {
-      webView?.android?.pause();
+      webView?.pause();
     }
   }
 
   void resumeWebview() async {
     if (Platform.isAndroid) {
-      webView?.android?.resume();
+      webView?.resume();
     }
 
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
@@ -3287,7 +3281,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     inputUrl.replaceAll("http://", "https://");
 
-    var uri = Uri.parse(inputUrl);
+    var uri = WebUri(inputUrl);
     webView.loadUrl(urlRequest: URLRequest(url: uri));
   }
 
@@ -3298,9 +3292,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   void _revertTransparentBackground() async {
     if (_firstLoad) {
-      InAppWebViewGroupOptions newOptions = await webView.getOptions();
-      newOptions.crossPlatform.transparentBackground = false;
-      webView.setOptions(options: newOptions);
+      InAppWebViewSettings newSettings = await webView.getSettings();
+      newSettings.transparentBackground = false;
+      webView.setSettings(settings: newSettings);
       _firstLoad = false;
     }
   }

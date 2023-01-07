@@ -135,7 +135,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
         if (widget.inAppWebView != null) {
           widget.inAppWebView.loadUrl(
             urlRequest: URLRequest(
-              url: Uri.parse(thisShortcut.url),
+              url: WebUri(thisShortcut.url),
             ),
           );
         } else {

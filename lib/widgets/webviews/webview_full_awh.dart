@@ -36,8 +36,7 @@ class WebViewFullAwh extends StatefulWidget {
 
 class _WebViewFullAwhState extends State<WebViewFullAwh> {
   InAppWebViewController webView;
-  var _initialWebViewOptions = InAppWebViewGroupOptions();
-
+  var _initialWebViewSettings = InAppWebViewSettings();
   URLRequest _initialUrl;
   String _pageTitle = "";
 
@@ -50,13 +49,11 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
+    _initialUrl = URLRequest(url: WebUri(widget.customUrl));
     _pageTitle = widget.customTitle;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    _initialWebViewOptions = InAppWebViewGroupOptions(
-      android: AndroidInAppWebViewOptions(
-        useHybridComposition: true,
-      ),
+    _initialWebViewSettings = InAppWebViewSettings(
+      useHybridComposition: true,
     );
   }
 
@@ -74,7 +71,6 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
       // case this is the first time, as there is no appBar to be found and it would
       // failed to open
       child: buildScaffold(context),
-
     );
   }
 
@@ -91,7 +87,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
+          backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -127,7 +123,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
         Expanded(
           child: InAppWebView(
             initialUrlRequest: _initialUrl,
-            initialOptions: _initialWebViewOptions,
+            initialSettings: _initialWebViewSettings,
             onWebViewCreated: (c) {
               webView = c;
               // For Arson Warehouse

@@ -324,7 +324,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
           },
           onDoubleTap: () {
             if (_webViewProvider.tabList.length > 0) {
-              _webViewProvider.removeTab(i);
+              _webViewProvider.removeTab(position: i);
             }
           },
           child: Container(

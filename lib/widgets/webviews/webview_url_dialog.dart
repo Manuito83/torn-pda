@@ -560,7 +560,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
       if (widget.inAppWebview != null) {
         widget.inAppWebview.loadUrl(
           urlRequest: URLRequest(
-            url: Uri.parse(url),
+            url: WebUri(url),
           ),
         );
       } else {

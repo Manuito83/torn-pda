@@ -97,17 +97,17 @@ class WebViewProvider extends ChangeNotifier {
         if (sessionCookie != "") {
           var cm = CookieManager.instance();
 
-          var allCookies = await cm.getCookies(url: Uri.parse("https://www.torn.com"));
+          var allCookies = await cm.getCookies(url: WebUri("https://www.torn.com"));
           log("Cookies: ${allCookies.length}");
           var repetitions = allCookies.where((element) => element.name == "PHPSESSID").length;
 
           for (int i = 0; i < repetitions; i++) {
-            await cm.deleteCookie(url: Uri.parse("https://www.torn.com"), name: "PHPSESSID");
+            await cm.deleteCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
             log("Cleared PHPSESSID: $i");
           }
 
           await cm.setCookie(
-            url: Uri.parse("https://www.torn.com"),
+            url: WebUri("https://www.torn.com"),
             domain: "www.torn.com",
             name: "PHPSESSID",
             value: sessionCookie,
@@ -208,6 +208,7 @@ class WebViewProvider extends ChangeNotifier {
 
   Future addTab({
     GlobalKey tabKey,
+    int windowId,
     bool sleepTab = false,
     String url = "https://www.torn.com",
     String pageTitle = "",
@@ -226,6 +227,7 @@ class WebViewProvider extends ChangeNotifier {
         ..webView = sleepTab
             ? null
             : WebViewFull(
+                windowId: windowId,
                 customUrl: url,
                 key: key,
                 dialog: _useDialog,
@@ -278,8 +280,12 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void removeTab(int position) async {
-    if (position == 0) return;
+  void removeTab({int position, bool calledFromTab = false}) async {
+    if (calledFromTab) {
+      position = _currentTab;
+    }
+
+    if (position == null || position == 0) return;
 
     bool wasLast = _currentTab == _tabList.length - 1 || false;
 
