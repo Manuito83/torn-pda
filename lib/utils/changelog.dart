@@ -41,6 +41,25 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // Build 273 - 09/11/2022
 
+    // VERSION 2.9.4
+    var v2_9_4 = ChangeLogItem();
+    v2_9_4.version = 'Torn PDA v2.9.4';
+    v2_9_4.date = '15 JAN 2023';
+    String feat2_9_4_1 = "Added theme sync between app and web";
+    String feat2_9_4_2 = "";
+    if (Platform.isAndroid) feat2_9_4_2 = "Fixed website Google login";
+    if (Platform.isIOS) feat2_9_4_2 = "Fixed website login issues";
+    String feat2_9_4_3 = "Fixed log copy to clipboard";
+    String feat2_9_4_4 = "Fixed issue with missing shortcuts";
+    String feat2_9_4_5 = "Increased timeout with YATA to improve communication";
+    String feat2_9_4_6 = "Removed Torn Trader (service discontinued)";
+    v2_9_4.features.add(feat2_9_4_1);
+    v2_9_4.features.add(feat2_9_4_2);
+    v2_9_4.features.add(feat2_9_4_3);
+    v2_9_4.features.add(feat2_9_4_4);
+    v2_9_4.features.add(feat2_9_4_5);
+    v2_9_4.features.add(feat2_9_4_6);
+
     // VERSION 2.9.3
     var v2_9_3 = ChangeLogItem();
     v2_9_3.version = 'Torn PDA v2.9.3';
