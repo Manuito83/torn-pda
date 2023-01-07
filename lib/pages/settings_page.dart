@@ -560,6 +560,65 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                       Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            const Flexible(
+                              child: Text(
+                                "Sync theme and web themes",
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Switch(
+                              value: _settingsProvider.syncTheme,
+                              onChanged: (enabled) async {
+                                setState(() {
+                                  _settingsProvider.syncTheme = enabled;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_settingsProvider.syncTheme)
+                        Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Flexible(
+                                    child: Text(
+                                      "Dark theme equivalent",
+                                    ),
+                                  ),
+                                  Flexible(
+                                    flex: 2,
+                                    child: _themeToSyncDropdown(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'Specifies which of the two dark themes is activated in the app when the web is switched to dark',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      Padding(
                         padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1721,6 +1780,46 @@ class _SettingsPageState extends State<SettingsPage> {
           } else {
             _settingsProvider.changeSpiesSource = SpiesSource.tornStats;
           }
+        });
+      },
+    );
+  }
+
+  DropdownButton _themeToSyncDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.themeToSync,
+      items: const [
+        DropdownMenuItem(
+          value: "dark",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Dark",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "extraDark",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Extra Dark",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _settingsProvider.themeToSync = value;
         });
       },
     );

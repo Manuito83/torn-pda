@@ -557,6 +557,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _syncTheme = true;
+  bool get syncTheme => _syncTheme;
+  set syncTheme(bool value) {
+    _syncTheme = value;
+    Prefs().setSyncTheme(_syncTheme);
+    notifyListeners();
+  }
+
+  var _themeToSync = "dark";
+  String get themeToSync => _themeToSync;
+  set themeToSync(String value) {
+    _themeToSync = value;
+    Prefs().setThemeToSync(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -712,6 +728,9 @@ class SettingsProvider extends ChangeNotifier {
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
+
+    _syncTheme = await Prefs().getSyncTheme();
+    _themeToSync = await Prefs().getThemeToSync();
 
     notifyListeners();
   }

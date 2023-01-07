@@ -51,6 +51,8 @@ class Prefs {
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
+  final String _kSyncTheme = "tornLite_syncTheme";
+  final String _kThemeToSync = "tornLite_themeToSync";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreteNotifications = "pda_discreteNotifications";
   final String _kDefaultSection = "pda_defaultSection";
@@ -613,6 +615,29 @@ class Prefs {
   Future<bool> setAppTheme(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTheme, value);
+  }
+
+  /// ----------------------------
+  /// Methods for theme sync with web
+  /// ----------------------------
+  Future<bool> getSyncTheme() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSyncTheme) ?? true;
+  }
+
+  Future<bool> setSyncTheme(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSyncTheme, value);
+  }
+
+  Future<String> getThemeToSync() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kThemeToSync) ?? 'dark';
+  }
+
+  Future<bool> setThemeToSync(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kThemeToSync, value);
   }
 
   /// ----------------------------

@@ -1002,6 +1002,44 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               },
             );
 
+            // Theme change received from web
+            webView.addJavaScriptHandler(
+              handlerName: 'webThemeChange',
+              callback: (args) {
+                if (!_settingsProvider.syncTheme) return;
+                if (args.contains("dark")) {
+                  if (_settingsProvider.themeToSync == "dark") {
+                    _themeProvider.changeTheme = AppTheme.dark;
+                    log("Web theme changed to dark!");
+                  } else {
+                    _themeProvider.changeTheme = AppTheme.extraDark;
+                    log("Web theme changed to extra dark!");
+                  }
+                } else if (args.contains("light")) {
+                  _themeProvider.changeTheme = AppTheme.light;
+                  log("Web theme changed to light!");
+                }
+
+                setState(() {
+                  SystemChrome.setSystemUIOverlayStyle(
+                    SystemUiOverlayStyle(
+                      statusBarColor: _themeProvider.statusBar,
+                      systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape
+                          ? _themeProvider.canvas
+                          : _themeProvider.statusBar,
+                      systemNavigationBarIconBrightness: MediaQuery.of(context).orientation == Orientation.landscape
+                          ? _themeProvider.currentTheme == AppTheme.light
+                              ? Brightness.dark
+                              : Brightness.light
+                          : Brightness.light,
+                      statusBarBrightness: Brightness.dark,
+                      statusBarIconBrightness: Brightness.light,
+                    ),
+                  );
+                });
+              },
+            );
+
             _addLoadoutChangeHandler(webView);
 
             _addScriptApiHandlers(webView);
@@ -1144,6 +1182,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   if (session != null) {
                     Prefs().setWebViewSessionCookie(session.value);
                   }
+                }
+              }
+
+              if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTheme) {
+                if (_currentUrl.contains("www.torn.com")) {
+                  if (_webViewProvider.pendingThemeSync == "light") {
+                    _requestTornThemeChange(dark: false);
+                  } else {
+                    _requestTornThemeChange(dark: true);
+                  }
+                  _webViewProvider.pendingThemeSync = "";
                 }
               }
             } catch (e) {
@@ -2131,13 +2180,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
 
         // Send to server
-        await http.post(
-          Uri.parse('https://yata.yt/api/v1/travel/import/'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: foreignStockOutModelToJson(stockModel),
-        );
+        await http
+            .post(
+              Uri.parse('https://yata.yt/api/v1/travel/import/'),
+              headers: <String, String>{
+                'Content-Type': 'application/json; charset=UTF-8',
+              },
+              body: foreignStockOutModelToJson(stockModel),
+            )
+            .timeout(Duration(seconds: 15));
       } catch (e) {
         // Error parsing
       }
@@ -3877,6 +3928,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
       ),
+    );
+  }
+
+  _requestTornThemeChange({@required bool dark}) {
+    webView.evaluateJavascript(
+      source: '''
+        var event = new CustomEvent("onChangeTornMode", {
+          detail: { checked: $dark }
+        });
+        window.dispatchEvent(event);
+      ''',
     );
   }
 }

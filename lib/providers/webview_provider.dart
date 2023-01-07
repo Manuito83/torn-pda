@@ -61,6 +61,8 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _useDialog = false;
 
+  String pendingThemeSync = "";
+
   bool _useTabIcons = true;
   bool get useTabIcons => _useTabIcons;
 
@@ -633,6 +635,14 @@ class WebViewProvider extends ChangeNotifier {
       if (!recallLastSession && await canLaunch(url)) {
         await launch(url, forceSafariVC: false);
       }
+    }
+  }
+
+  void changeTornTheme({@required bool dark}) {
+    if (!dark) {
+      pendingThemeSync = "light";
+    } else {
+      pendingThemeSync = "dark";
     }
   }
 }

@@ -954,22 +954,29 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                           onToggle: (index) {
                             if (index == 0) {
                               _themeProvider.changeTheme = AppTheme.light;
+                              if (_settingsProvider.syncTheme) {
+                                _webViewProvider.changeTornTheme(dark: false);
+                              }
                             } else if (index == 1) {
                               _themeProvider.changeTheme = AppTheme.dark;
-                            } else {
-                              if (_themeProvider.currentTheme != AppTheme.extraDark) {
-                                BotToast.showText(
-                                  text: "Spooky...!",
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
-                                  contentColor: Color(0xFF0C0C0C),
-                                  duration: const Duration(seconds: 2),
-                                  contentPadding: const EdgeInsets.all(10),
-                                );
+                              if (_settingsProvider.syncTheme) {
+                                _webViewProvider.changeTornTheme(dark: true);
                               }
+                            } else {
                               _themeProvider.changeTheme = AppTheme.extraDark;
+                              if (_settingsProvider.syncTheme) {
+                                _webViewProvider.changeTornTheme(dark: true);
+                              }
+                              BotToast.showText(
+                                text: "Spooky...!",
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                contentColor: Color(0xFF0C0C0C),
+                                duration: const Duration(seconds: 2),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
                             }
                             setState(() {
                               SystemChrome.setSystemUIOverlayStyle(
