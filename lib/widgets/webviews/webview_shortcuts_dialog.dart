@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewShortcutsDialog extends StatefulWidget {
@@ -27,11 +28,13 @@ class WebviewShortcutsDialog extends StatefulWidget {
 class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
   ThemeProvider _themeProvider;
   ShortcutsProvider _shortcutsProvider;
+  UserDetailsProvider _userProv;
 
   @override
   void initState() {
     super.initState();
 
+    _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
   }
@@ -118,6 +121,17 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
 
     return InkWell(
       onTap: () async {
+        String url = thisShortcut.url;
+        if (thisShortcut.addPlayerId) {
+          url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+        }
+        if (thisShortcut.addFactionId) {
+          url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+        }
+        if (thisShortcut.addCompanyId) {
+          url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+        }
+
         if (widget.inAppWebView != null) {
           widget.inAppWebView.loadUrl(
             urlRequest: URLRequest(

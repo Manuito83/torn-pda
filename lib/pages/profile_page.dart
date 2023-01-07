@@ -822,10 +822,30 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       return InkWell(
         onLongPress: () {
-          _launchBrowser(url: thisShortcut.url, dialogRequested: false);
+          String url = thisShortcut.url;
+          if (thisShortcut.addPlayerId) {
+            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          }
+          if (thisShortcut.addFactionId) {
+            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+          }
+          if (thisShortcut.addCompanyId) {
+            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+          }
+          _launchBrowser(url: url, dialogRequested: false);
         },
         onTap: () async {
-          _launchBrowser(url: thisShortcut.url, dialogRequested: true);
+          String url = thisShortcut.url;
+          if (thisShortcut.addPlayerId) {
+            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          }
+          if (thisShortcut.addFactionId) {
+            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+          }
+          if (thisShortcut.addCompanyId) {
+            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+          }
+          _launchBrowser(url: url, dialogRequested: true);
         },
         child: Card(
           shape: RoundedRectangleBorder(

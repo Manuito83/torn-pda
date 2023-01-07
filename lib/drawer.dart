@@ -50,8 +50,6 @@ import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 
-import 'main.dart';
-
 class DrawerPage extends StatefulWidget {
   @override
   _DrawerPageState createState() => _DrawerPageState();

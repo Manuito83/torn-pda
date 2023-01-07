@@ -2,6 +2,7 @@
 import 'dart:collection';
 
 // Flutter imports:
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
 // Project imports:
@@ -22,8 +23,6 @@ class ShortcutsProvider extends ChangeNotifier {
   String _shortcutMenu = 'carousel';
   String get shortcutMenu => _shortcutMenu;
 
-  OwnProfileExtended _userDetails;
-
   ShortcutsProvider() {
     // CLEAN LIST, only for debug
     //Prefs().setActiveShortcutsList([]);
@@ -36,6 +35,11 @@ class ShortcutsProvider extends ChangeNotifier {
     _activeShortcuts.add(activeShortcut);
     _saveListAfterChanges();
     notifyListeners();
+  }
+
+  void activateSavedShortcut(Shortcut activeShortcut) {
+    activeShortcut.active = true;
+    _activeShortcuts.add(activeShortcut);
   }
 
   void deactivateShortcut(Shortcut inactiveShortcut) {
@@ -100,7 +104,6 @@ class ShortcutsProvider extends ChangeNotifier {
   Future _initializeStockShortcuts() async {
     _shortcutTile = await Prefs().getShortcutTile();
     _shortcutMenu = await Prefs().getShortcutMenu();
-    _userDetails = ownProfileExtendedFromJson(await Prefs().getOwnDetails());
 
     _configureStockShortcuts();
 
@@ -109,35 +112,28 @@ class ShortcutsProvider extends ChangeNotifier {
     // we look for the stock counterpart and activate it from scratch
     var savedLoad = await Prefs().getActiveShortcutsList();
     for (var savedShortRaw in savedLoad) {
-      var savedShort = shortcutFromJson(savedShortRaw);
-      if (savedShort.isCustom) {
-        activateShortcut(savedShort);
-      } else {
-        bool convertOldShortcuts = false; // See note
-        for (var stockShort in _allShortcuts) {
-          // This first check converts active shortcuts older than version 2.4.0 to avoid getting
-          // deleted upon update. It just add the 3 new parameters to the active shortcut and save the list.
-          // Can be safely deleted after a while, along with 'convertOldShortcuts', leaving just the second if.
-          if (savedShort.originalName == null) {
-            convertOldShortcuts = true;
-            savedShort.originalName = savedShort.name;
-            savedShort.originalNickname = savedShort.nickname;
-            savedShort.originalUrl = savedShort.url;
-          }
-
-          if (savedShort.originalName == stockShort.originalName) {
-            stockShort
-              ..name = savedShort.name
-              ..nickname = savedShort.nickname
-              ..url = savedShort.url;
-            activateShortcut(stockShort);
+      try {
+        var savedShort = shortcutFromJson(savedShortRaw);
+        if (savedShort.isCustom) {
+          activateSavedShortcut(savedShort);
+        } else {
+          for (var stockShort in _allShortcuts) {
+            if (savedShort.originalName == stockShort.originalName) {
+              stockShort
+                ..name = savedShort.name
+                ..nickname = savedShort.nickname
+                ..url = savedShort.url;
+              activateSavedShortcut(stockShort);
+            }
           }
         }
-        if (convertOldShortcuts) {
-          _saveListAfterChanges(); // See note
-        }
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
       }
     }
+
+    _saveListAfterChanges();
+    notifyListeners();
   }
 
   void _configureStockShortcuts() {
@@ -325,13 +321,13 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Personal Stats"
         ..nickname = "Personal Stats"
-        ..url = "https://www.torn.com/personalstats.php?ID=${_userDetails.playerId}&stats=useractivity&from=1%20month"
+        ..url = "https://www.torn.com/personalstats.php?ID=##P##&stats=useractivity&from=1%20month"
         ..originalName = "Personal Stats"
         ..originalNickname = "Personal Stats"
-        ..originalUrl =
-            "https://www.torn.com/personalstats.php?ID=${_userDetails.playerId}&stats=useractivity&from=1%20month"
+        ..originalUrl = "https://www.torn.com/personalstats.php?ID=##P##&stats=useractivity&from=1%20month"
         ..iconUrl = "images/icons/home/stats.png"
-        ..color = Colors.grey[600],
+        ..color = Colors.grey[600]
+        ..addPlayerId = true,
       Shortcut()
         ..name = "Hall of Fame"
         ..nickname = "HoF"
@@ -380,30 +376,33 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Forums: Own posts"
         ..nickname = "Own Posts"
-        ..url = "https://www.torn.com/forums.php#!p=search&q=by:${_userDetails.playerId}&f=0&y=0"
+        ..url = "https://www.torn.com/forums.php#!p=search&q=by:##P##"
         ..originalName = "Forums: Own posts"
         ..originalNickname = "Own Posts"
-        ..originalUrl = "https://www.torn.com/forums.php#!p=search&q=by:${_userDetails.playerId}&f=0&y=0"
+        ..originalUrl = "https://www.torn.com/forums.php#!p=search&q=by:##P##"
         ..iconUrl = "images/icons/home/forums.png"
-        ..color = Colors.brown,
+        ..color = Colors.brown
+        ..addPlayerId = true,
       Shortcut()
         ..name = "Forums: My faction"
         ..nickname = "Faction"
-        ..url = "https://www.torn.com/forums.php?p=forums&f=999&b=1&a=${_userDetails.faction.factionId}"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=999&b=1&a=##F##"
         ..originalName = "Forums: My faction"
         ..originalNickname = "Faction"
-        ..originalUrl = "https://www.torn.com/forums.php?p=forums&f=999&b=1&a=${_userDetails.faction.factionId}"
+        ..originalUrl = "https://www.torn.com/forums.php?p=forums&f=999&b=1&a=##F##"
         ..iconUrl = "images/icons/home/forums.png"
-        ..color = Colors.brown,
+        ..color = Colors.brown
+        ..addFactionId = true,
       Shortcut()
         ..name = "Forums: My company"
         ..nickname = "Company"
-        ..url = "https://www.torn.com/forums.php?p=forums&f=999&b=2&a=${_userDetails.job.companyId}"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=999&b=2&a=##C##"
         ..originalName = "Forums: My company"
         ..originalNickname = "Company"
-        ..originalUrl = "https://www.torn.com/forums.php?p=forums&f=999&b=2&a=${_userDetails.job.companyId}"
+        ..originalUrl = "https://www.torn.com/forums.php?p=forums&f=999&b=2&a=##C##"
         ..iconUrl = "images/icons/home/forums.png"
-        ..color = Colors.brown,
+        ..color = Colors.brown
+        ..addCompanyId = true,
       Shortcut()
         ..name = "Forums: Donator"
         ..nickname = "Donator"
