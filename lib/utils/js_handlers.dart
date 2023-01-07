@@ -1,5 +1,7 @@
 String handler_flutterPlatformReady() {
   return '''
+    //console.log("Handler: flutterPlatformReady");
+    
     // Initialize event listener for other handlers
     const __PDA_platformReadyPromise = new Promise(resolve => {
         window.addEventListener("flutterInAppWebViewPlatformReady", resolve);
@@ -9,6 +11,8 @@ String handler_flutterPlatformReady() {
 
 String handler_pdaAPI() {
   return '''
+    //console.log("Handler: pdaAPI");
+    
     // Performs a GET request to the provided URL
     // Returns a promise for a response object that has these properties:
     //     responseHeaders - String, with CRLF line terminators.
@@ -40,6 +44,8 @@ String handler_pdaAPI() {
 
 String handler_evaluateJS() {
   return '''
+    //console.log("Handler: evaluateJavascript");
+    
     // Allows scripts to evaluate javascript source code directly from PDA's webview
     // Might be useful if the source code being evaluated is not yet known, but obtained from
     // a different source, because Torn won't allow execution of eval()

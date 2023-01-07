@@ -1282,6 +1282,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_9_4);
     itemList.add(v2_9_3);
     itemList.add(v2_9_2);
     itemList.add(v2_9_1);

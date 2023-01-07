@@ -1093,10 +1093,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               if (Platform.isAndroid) {
                 // Not supported on iOS
                 for (var group in changes.scriptsToRemove) {
-                  c.removeUserScriptsByGroupName(groupName: group);
+                  await c.removeUserScriptsByGroupName(groupName: group);
                 }
               }
-              await c.addUserScripts(userScripts: changes.scriptsToAdd);
+              for (var script in changes.scriptsToAdd) {
+                webView.evaluateJavascript(source: script.source);
+              }
+              // Does not work v6 beta
+              //await webView.addUserScripts(userScripts: changes.scriptsToAdd);
 
               _hideChat();
 
