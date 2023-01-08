@@ -33,7 +33,7 @@ class ScriptsExamples {
     var source = r"""// ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.7
+// @version      0.8 (Manuito for Torn PDA)
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        https://www.torn.com/bazaar.php
@@ -141,18 +141,38 @@ let bazaarObserver = new MutationObserver((mutations) => {
   }
 });
 
-let wrapper = document.querySelector('#react-root');
-if (!wrapper) wrapper = document.querySelector('#bazaarRoot');
+var wrapper = document.querySelector('#bazaarRoot');
 
-try {
-  bazaarObserver.observe(wrapper, { subtree: true, childList: true });
-} catch (e) {
-  // wrapper not found
-}""";
+// Sleep and wait for elements to load
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForElementsAndRun() {
+  if (document.querySelectorAll("#bazaarRoot").length < 1) {
+    console.log("Waiting for bazaar (short)");
+    await sleep(600);
+    if (document.querySelectorAll("#bazaarRoot").length < 1) {
+      console.log("Waiting for bazaar (long)");
+      await sleep(2000);
+    }
+  } 
+
+  wrapper = document.querySelector('#bazaarRoot');
+
+  try {
+    bazaarObserver.observe(wrapper, { subtree: true, childList: true });
+  } catch (e) {
+    // wrapper not found
+  }
+}
+
+waitForElementsAndRun();
+""";
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 2,
+      version: 3,
 
       enabled: true,
       urls: getUrls(source),
