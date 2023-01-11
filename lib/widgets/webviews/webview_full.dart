@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
 
@@ -989,6 +990,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             webView = c;
             _terminalProvider.terminal = "Terminal";
 
+            // Userscripts initial load
+            UserScriptChanges changes = _userScriptsProvider.getCondSources(
+              url: _initialUrl.url.toString(),
+              apiKey: _userProvider.basic.userApiKey,
+            );
+            await webView.addUserScripts(userScripts: changes.scriptsToAdd);
+
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
             webView.addJavaScriptHandler(
               handlerName: 'copyToClipboard',
@@ -1045,6 +1053,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _addScriptApiHandlers(webView);
           },
           shouldOverrideUrlLoading: (c, request) async {
+            // Userscripts load before webpage begins loading
+            UserScriptChanges changes = _userScriptsProvider.getCondSources(
+              url: request.request.url.toString(),
+              apiKey: _userProvider.basic.userApiKey,
+            );
+            await webView.addUserScripts(userScripts: changes.scriptsToAdd);
+
             if (request.request.url.toString().contains("http://")) {
               _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
               return NavigationActionPolicy.CANCEL;
@@ -1071,7 +1086,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _webViewProvider.removeTab(calledFromTab: true);
           },
           onLoadStart: (c, uri) async {
-            log("Start URL: ${uri}}");
+            log("Start URL: ${uri}");
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
             if (!mounted) return;
@@ -1084,23 +1099,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _currentUrl = uri.toString();
 
               final html = await webView.getHtml();
-
-              // Userscripts
-              UserScriptChanges changes = _userScriptsProvider.getCondSources(
-                url: uri.toString(),
-                apiKey: _userProvider.basic.userApiKey,
-              );
-              if (Platform.isAndroid) {
-                // Not supported on iOS
-                for (var group in changes.scriptsToRemove) {
-                  await c.removeUserScriptsByGroupName(groupName: group);
-                }
-              }
-              for (var script in changes.scriptsToAdd) {
-                webView.evaluateJavascript(source: script.source);
-              }
-              // Does not work v6 beta
-              //await webView.addUserScripts(userScripts: changes.scriptsToAdd);
 
               _hideChat();
 
@@ -1153,6 +1151,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             try {
               _currentUrl = uri.toString();
+
+              // Userscripts remove those no longer necessary
+              UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                url: uri.toString(),
+                apiKey: _userProvider.basic.userApiKey,
+              );
+              if (Platform.isAndroid) {
+                // Not supported on iOS
+                for (var group in changes.scriptsToRemove) {
+                  await c.removeUserScriptsByGroupName(groupName: group);
+                }
+              }
 
               _hideChat();
               _highlightChat();
@@ -3323,7 +3333,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _loadUrl(String inputUrl) {
+  void _loadUrl(String inputUrl) async {
     // If the input URL is invalid, we will see if there was one saved as _currentUrl
     // http and https are valid because we'll change them later
     if (inputUrl == null || inputUrl.isEmpty) {
@@ -3335,6 +3345,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     inputUrl.replaceAll("http://", "https://");
+
+    // Loads userscripts that are not triggered in shouldOverrideUrlLoading
+    // (e.g.: when reloading a page or navigating back/forward)
+    UserScriptChanges changes = _userScriptsProvider.getCondSources(
+      url: inputUrl,
+      apiKey: _userProvider.basic.userApiKey,
+    );
+    await webView.addUserScripts(userScripts: changes.scriptsToAdd);
 
     var uri = WebUri(inputUrl);
     webView.loadUrl(urlRequest: URLRequest(url: uri));

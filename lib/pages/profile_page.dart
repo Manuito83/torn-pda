@@ -823,28 +823,36 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return InkWell(
         onLongPress: () {
           String url = thisShortcut.url;
-          if (thisShortcut.addPlayerId) {
-            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          if (thisShortcut.addPlayerId != null) {
+            // Avoid null objects coming before the introduction of this replacement (v2.9.4)
+            if (thisShortcut.addPlayerId) {
+              url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+            }
+            if (thisShortcut.addFactionId) {
+              url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+            }
+            if (thisShortcut.addCompanyId) {
+              url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+            }
           }
-          if (thisShortcut.addFactionId) {
-            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
-          }
-          if (thisShortcut.addCompanyId) {
-            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
-          }
+
           _launchBrowser(url: url, dialogRequested: false);
         },
         onTap: () async {
           String url = thisShortcut.url;
-          if (thisShortcut.addPlayerId) {
-            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          if (thisShortcut.addPlayerId != null) {
+            // Avoid null objects coming before the introduction of this replacement (v2.9.4)
+            if (thisShortcut.addPlayerId) {
+              url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+            }
+            if (thisShortcut.addFactionId) {
+              url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+            }
+            if (thisShortcut.addCompanyId) {
+              url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+            }
           }
-          if (thisShortcut.addFactionId) {
-            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
-          }
-          if (thisShortcut.addCompanyId) {
-            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
-          }
+
           _launchBrowser(url: url, dialogRequested: true);
         },
         child: Card(

@@ -33,7 +33,7 @@ class ScriptsExamples {
     var source = r"""// ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.8 (Manuito for Torn PDA)
+// @version      0.8 (updated by Manuito)
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        https://www.torn.com/bazaar.php
@@ -141,33 +141,23 @@ let bazaarObserver = new MutationObserver((mutations) => {
   }
 });
 
-var wrapper = document.querySelector('#bazaarRoot');
-
 // Sleep and wait for elements to load
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function waitForElementsAndRun() {
-  if (document.querySelectorAll("#bazaarRoot").length < 1) {
-    console.log("Waiting for bazaar (short)");
-    await sleep(600);
-    if (document.querySelectorAll("#bazaarRoot").length < 1) {
-      console.log("Waiting for bazaar (long)");
-      await sleep(2000);
+var waitForElementsAndRun = setInterval(() => {
+  if(document.querySelector("#bazaarRoot") !== null) {
+    clearInterval(waitForElementsAndRun);
+    // Main logic    
+    var wrapper = document.querySelector('#bazaarRoot');
+    try {
+      bazaarObserver.observe(wrapper, { subtree: true, childList: true });
+    } catch (e) {
+      // wrapper not found
     }
-  } 
-
-  wrapper = document.querySelector('#bazaarRoot');
-
-  try {
-    bazaarObserver.observe(wrapper, { subtree: true, childList: true });
-  } catch (e) {
-    // wrapper not found
   }
-}
-
-waitForElementsAndRun();
+}, 300);
 """;
 
     return UserScriptModel(
@@ -312,13 +302,13 @@ function drawPresetBar() {
   static UserScriptModel _specialGymRatios() {
     var source = r"""// ==UserScript==
 // @name         Custom Gym Ratios
-// @version      2.3.1
+// @version      2.4 (updated by Manuito)
 // @description  Monitors battle stat ratios and provides warnings if they approach levels that would preclude access to special gyms
 // @author       RGiskard [1953860], assistance by Xiphias [187717] - Torn PDA adaptation v1 [Manuito]
 // @match      	 torn.com/gym.php
 // ==/UserScript==
 
-gymLoaded().then(() => {
+function loadGym() {
 	// Maximum amount below the stat limit another stat can be before we start warning the player.
 	var statSafeDistance = localStorage.statSafeDistance;
 	if (statSafeDistance === null) {
@@ -625,25 +615,21 @@ gymLoaded().then(() => {
 		}
 		return statString;
 	}
-});
+}
 
 
-function gymLoaded() {
-  return new Promise((resolve) => {
-	let checker = setInterval(() => {
-	  if (document.querySelector("#gymroot")) {
-		setInterval(() => {
-		  resolve(true);
-		}, 300);
-		return clearInterval(checker);
-	  }
-	});
-  });
-} """;
+let waitForElementsAndRun = setInterval(() => {
+  if (document.querySelector("#gymroot")) {
+    loadGym();
+    return clearInterval(waitForElementsAndRun);
+  }
+}, 300);
+
+ """;
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 1,
+      version: 2,
 
       enabled: true,
       urls: getUrls(source),
@@ -785,7 +771,7 @@ if (document.querySelector(".stock-list-wrap")) {
     var source = r"""// ==UserScript==
 // @name         Company Activity for Torn PDA
 // @namespace    TornExtensions
-// @version      1.1
+// @version      1.2 (updated by Manuito)
 // @description  Shows the activity of employees.
 // @author       Twenu [XID 2659526]
 // @match        https://www.torn.com/companies.php*
@@ -804,22 +790,26 @@ if (document.querySelector(".stock-list-wrap")) {
 			elements[0].parentNode.removeChild(elements[0]);
 		}
 	}
-	
-	let callback = function(mutationsList, observer) {
+		
+	function checkEmployees () {
         // Make sure to remove previous 'Active' lines (needed for iOS)
 		removeElementsByClass('activeEmployee');
-						
+		
 		$("a.user.name").each(function() {
+		
 			if($(this).closest("li").attr("data-user").length > 0 && $(this).next("img")) {
-                let uID = $(this).closest("li").attr("data-user");
+                
+				let uID = $(this).closest("li").attr("data-user");
                 let API = `https://api.torn.com/user/${uID}?selections=profile&key=${APIKey}`;
                 fetch(API)
                   .then((res) => res.json())
-                  .then((res) => {
-                    $($($(this).parent().parent().parent()).find(".acc-body")).find(".stats").append('<span tabindex="0" class="span-cont t-first activeEmployee" aria-label="Active: "' + res.last_action.relative + '"><span class="bold t-show">Active:</span> ' + res.last_action.relative + '</span><span class="t-hide">/</span>');
+                  .then((res) => {            
+
+					$($($(this).parent().parent().parent()).find(".acc-body")).find(".stats").append('<span tabindex="0" class="span-cont t-first activeEmployee" aria-label="Active: "' + res.last_action.relative + '"><span class="bold t-show">Active:</span> ' + res.last_action.relative + '</span><span class="t-hide">/</span>');
                     $($($(this).parent().parent().parent()).find(".acc-body")).find(".stats").append('<span tabindex="0" class="span-cont t-first activeEmployee" aria-label=" "><span class="bold t-show"></span></span> <span class="t-hide">/</span>');
                     let days = res.last_action.relative.split(" ");
-                    if(days[1].includes("day"))
+                    
+					if(days[1].includes("hour"))
                         if(parseInt(days[0]) == 1)
                             $(this).parent().css("background-color", "orange");
                         else if(parseInt(days[0]) >= 2)
@@ -827,22 +817,26 @@ if (document.querySelector(".stock-list-wrap")) {
                   });
             }
         });
-    };
-	
-	  // Save variable in a persistent object so that we only add the listener once
-    // event if we fire the script several times (removing the listener won't work)
-    var savedFound = document.querySelector(".pdaListener") !== null;
-    if (!savedFound) {
-		var save = document.querySelector(".content-wrapper");
-		save.classList.add("pdaListener");
-		let observer = new MutationObserver(callback);
-		observer.observe(targetNode, config);
     }
-})();""";
+	
+	var waitForElementsAndRun = setInterval(function () {
+	  if(document.querySelector(".employee-effectiveness") !== null) {
+		clearInterval(waitForElementsAndRun);
+		// Main logic    
+		var savedFound = document.querySelector(".pdaListener") !== null;
+		if (!savedFound) {
+			var save = document.querySelector(".content-wrapper");
+			save.classList.add("pdaListener");
+			checkEmployees();
+		}
+	  }
+	}, 300);
+})();
+""";
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 2,
+      version: 3,
 
       enabled: false,
       urls: getUrls(source),
@@ -858,13 +852,12 @@ if (document.querySelector(".stock-list-wrap")) {
 // ==UserScript==
 // @name         Hospital filters
 // @namespace    https://www.torn.com/profiles.php?XID=2190604
-// @version      0.1
+// @version      0.2 (updated by Manuito)
 // @description  An attempt to filter people who have revives disabled.
 // @author       Kwack_Kwack [2190604]
 // @match        *://www.torn.com/hospitalview.php*
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js
 // ==/UserScript==
-
 
 //Thanks to Manuito for the following function to use GM_addStyle in PDA.
 let GM_addStyle = function (s) {
@@ -879,7 +872,6 @@ var styles = `
     display: none !important
 }
 `;
-GM_addStyle(styles);
 
 // Finds parents (credit: Torn Tools)
 function hasParent(element, attributes = {}) {
@@ -916,6 +908,10 @@ function enableFilters() {
             error + "\n This error was thrown when adding filtered-row class"
         );
     }
+
+    var wrap = document.querySelector(".content-wrapper");
+    wrap.classList.add("hospitalScriptEnabled");
+    wrap.classList.remove("hospitalScriptDisabled");
 }
 
 function disableFilters() {
@@ -939,71 +935,62 @@ function disableFilters() {
             error + "\n This error was thrown when removing filtered-row class"
         );
     }
+
+    var wrap = document.querySelector(".content-wrapper");
+    wrap.classList.add("hospitalScriptDisabled");
+    wrap.classList.remove("hospitalScriptEnabled");
 }
 
-// Sleep and wait for elements to load
-async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function waitForElementsAndRun() {
-  if (document.querySelectorAll(".hospital-list-wrapper").length === 0 || 
-  document.querySelectorAll(".msg-info-wrap").length === 0) {
-	console.log("Waiting for hospital (short)");
-	await sleep(300);
-	if (document.querySelectorAll(".hospital-list-wrapper").length === 0 || 
-	document.querySelectorAll(".msg-info-wrap").length === 0) {
-	  console.log("Waiting for hospital (long)");
-	  await sleep(1000);
-	}
+async function addPdaVariable() {
+  // Save variable in a persistent object so that we only add the listener once
+  // event if we fire the script several times (removing the listener won't work)
+  var savedFound = document.querySelector(".pdaListener") !== null;
+  if (!savedFound) {
+    var save = document.querySelector(".content-wrapper");
+    save.classList.add("pdaListener");
+    document.addEventListener("click", listener, true);
   }
-  
-  if (document.querySelectorAll(".hospital-list-wrapper").length > 0 && 
-  document.querySelectorAll(".msg-info-wrap").length > 0) {
-	console.log("Page ready, hospital filters script starting");
-	await sleep(500);
-	disableFilters();
-  } else {
-    console.log("no hospital found");
-  }  
 }
 
-waitForElementsAndRun();
+var waitForElementsAndRun = setInterval(function () {
+  if(document.querySelector(".user") !== null) {
+    clearInterval(waitForElementsAndRun);
+    // Main logic    
+    GM_addStyle(styles);  
+    disableFilters();
+    addPdaVariable();  
+  }
+}, 300);
 
 // Listener for page change
 var intervalRepetitions = 0;
 var listener = function (event) {
   if (event.target.classList && !event.target.classList.contains("gallery-wrapper")
-	  && hasParent(event.target, { class: "gallery-wrapper" })) {
+	    && hasParent(event.target, { class: "gallery-wrapper" })) {
 	
-	return new Promise((resolve) => {
-	  let checker = setInterval(() => {
-		if (document.querySelector(".hospital-list-wrapper")) {
-		  disableFilters();
-		  return clearInterval(checker);
-		}
-		if (++intervalRepetitions === 20) {
-		  return clearInterval(checker);
-		}
-	  }, 300);
-	});
+    let checker = setInterval(() => {
+      if (document.querySelector(".user")) {
+        var savedFound = document.querySelector(".hospitalScriptEnabled") !== null;
+        if (savedFound) {
+          enableFilters(); 
+        } else {
+          disableFilters();
+        }
+        return clearInterval(checker);
+      }
+      if (++intervalRepetitions === 50) {
+        return clearInterval(checker);
+      }
+    }, 300);
   }
 }
 
-// Save variable in a persistent object so that we only add the listener once
-// event if we fire the script several times (removing the listener won't work)
-var savedFound = document.querySelector(".pdaListener") !== null;
-if (!savedFound) {
-  var save = document.querySelector(".content-wrapper");
-  console.log(save.length);
-  save.classList.add("pdaListener");
-  document.addEventListener("click", listener, true);
-}
+
 """;
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 1,
+      version: 2,
 
       enabled: true,
       urls: getUrls(source),
