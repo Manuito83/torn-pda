@@ -28,6 +28,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
+import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
@@ -991,11 +992,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
-            UserScriptChanges changes = _userScriptsProvider.getCondSources(
+            UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
               url: _initialUrl.url.toString(),
               apiKey: _userProvider.basic.userApiKey,
+              time: UserScriptTime.start,
             );
-            await webView.addUserScripts(userScripts: changes.scriptsToAdd);
+            await webView.addUserScripts(userScripts: scriptsToAdd);
 
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
             webView.addJavaScriptHandler(
@@ -1054,11 +1056,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           },
           shouldOverrideUrlLoading: (c, request) async {
             // Userscripts load before webpage begins loading
-            UserScriptChanges changes = _userScriptsProvider.getCondSources(
+            UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
               url: request.request.url.toString(),
               apiKey: _userProvider.basic.userApiKey,
+              time: UserScriptTime.start,
             );
-            await webView.addUserScripts(userScripts: changes.scriptsToAdd);
+            await webView.addUserScripts(userScripts: scriptsToAdd);
 
             if (request.request.url.toString().contains("http://")) {
               _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
@@ -1153,15 +1156,25 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _currentUrl = uri.toString();
 
               // Userscripts remove those no longer necessary
-              UserScriptChanges changes = _userScriptsProvider.getCondSources(
+              List<String> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
                 url: uri.toString(),
-                apiKey: _userProvider.basic.userApiKey,
               );
               if (Platform.isAndroid) {
                 // Not supported on iOS
-                for (var group in changes.scriptsToRemove) {
+                for (var group in scriptsToRemove) {
                   await c.removeUserScriptsByGroupName(groupName: group);
                 }
+              }
+
+              // Userscripts add those that inject at the end
+              UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+                url: uri.toString(),
+                apiKey: _userProvider.basic.userApiKey,
+                time: UserScriptTime.end,
+              );
+              // We need to inject directly, otherwise these scripts will only load in the next page visit
+              for (var script in scriptsToAdd) {
+                await webView.evaluateJavascript(source: script.source);
               }
 
               _hideChat();
@@ -3348,11 +3361,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Loads userscripts that are not triggered in shouldOverrideUrlLoading
     // (e.g.: when reloading a page or navigating back/forward)
-    UserScriptChanges changes = _userScriptsProvider.getCondSources(
+    UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
       url: inputUrl,
       apiKey: _userProvider.basic.userApiKey,
+      time: UserScriptTime.end,
     );
-    await webView.addUserScripts(userScripts: changes.scriptsToAdd);
+    await webView.addUserScripts(userScripts: scriptsToAdd);
 
     var uri = WebUri(inputUrl);
     webView.loadUrl(urlRequest: URLRequest(url: uri));

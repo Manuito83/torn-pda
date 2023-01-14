@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -45,9 +46,24 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
             return _firstTimeDialog();
           },
         );
+
+        // If we see user scripts for the first time, don't show new features in the next visit
+        // (the user should use the disclaimer for that)
+        _userScriptsProvider.changeFeatInjectionTimeShown(true);
+
         if (_firstTimeNotAccepted) {
           _willPopCallback();
         }
+      } else {
+        if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatureInjectionTimeShown)
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return _injectionTimeDialog();
+            },
+          );
+        _userScriptsProvider.changeFeatInjectionTimeShown(true);
       }
     });
   }
@@ -680,6 +696,85 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 SizedBox(height: 25),
                 Text(
+                  "SCRIPT INJECTION TIME",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
+                        "loads (START) and after the load has been completed (END). The user can select when each "
+                        "script should be loaded by editing its details.\n\n"
+                        "By loading the script at the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "START",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ", you might be able to fetch resources loading and ajax calls, for example. However, "
+                            "Torn PDA will inject the script even before the HTML Document or jQuery are available; "
+                            "therefore, you need to plan for this and check their availability before doing any work. "
+                            "This can be accomplished with ",
+                      ),
+                      TextSpan(
+                        text: "intervals",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or properties such as ",
+                      ),
+                      TextSpan(
+                        text: "'Document.readyState'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or checks like ",
+                      ),
+                      TextSpan(
+                        text: "'typeof window.jQuery'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                      TextSpan(
+                        text: "\n\n"
+                            "By loading the script at the ",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "END",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
+                                "However, please be aware that there might be some items being dynamically "
+                                "loaded (e.g.: items list, jail and hospital lists, etc.), so it might still be "
+                                "necessary to ensure that certain elements are available before doing any work.",
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 25),
+                Text(
                   "CROSS-ORIGIN REQUESTS (ADVANCED)",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
@@ -840,6 +935,114 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  _injectionTimeDialog() {
+    return AlertDialog(
+      title: Text("SCRIPT INJECTION TIME"),
+      content: Scrollbar(
+        isAlwaysShown: true,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "NEW FEATURE (v2.9.4)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
+                        "loads (START) and after the load has been completed (END). The user can select when each "
+                        "script should be loaded by editing its details.\n\n"
+                        "By loading the script at the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "START",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ", you might be able to fetch resources loading and ajax calls, for example. However, "
+                            "Torn PDA will inject the script even before the HTML Document or jQuery are available; "
+                            "therefore, you need to plan for this and check their availability before doing any work. "
+                            "This can be accomplished with ",
+                      ),
+                      TextSpan(
+                        text: "intervals",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or properties such as ",
+                      ),
+                      TextSpan(
+                        text: "'Document.readyState'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or checks like ",
+                      ),
+                      TextSpan(
+                        text: "'typeof window.jQuery'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                      TextSpan(
+                        text: "\n\n"
+                            "By loading the script at the ",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "END",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
+                                "However, please be aware that there might be some items being dynamically "
+                                "loaded (e.g.: items list, jail and hospital lists, etc.), so it might still be "
+                                "necessary to ensure that certain elements are available before doing any work.",
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            child: Text("Understood"),
+            onPressed: () {
+              Navigator.of(context).pop('exit');
+            },
+          ),
+        ),
+      ],
     );
   }
 

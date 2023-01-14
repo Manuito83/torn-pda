@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.8 (Manuito for Torn PDA)
+// @version      0.8 (updated by Manuito)
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        https://www.torn.com/bazaar.php
@@ -35,13 +35,9 @@ var event = new Event('keyup');
 var APIERROR = false;
 
 async function lmp(itemID) {
-	if (APIERROR === true) {
-		return 'API key error';
-	}
+	if (APIERROR === true) return 'API key error'
 	const prices = await torn_api(`market.${itemID}.bazaar`)
-	if (prices.error) {
-		APIERROR = true; return 'API key error';
-	}
+	if (prices.error) { APIERROR = true; return 'API key error' }
 	const lowest_market_price = prices['bazaar'][0].cost
 	return lowest_market_price - 5
 }
@@ -113,30 +109,20 @@ let bazaarObserver = new MutationObserver((mutations) => {
 	}
 });
 
-var wrapper = document.querySelector('#bazaarRoot');
-
 // Sleep and wait for elements to load
 async function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function waitForElementsAndRun() {
-	if (document.querySelectorAll("#bazaarRoot").length < 1) {
-		console.log("Waiting for bazaar (short)");
-		await sleep(600);
-		if (document.querySelectorAll("#bazaarRoot").length < 1) {
-			console.log("Waiting for bazaar (long)");
-			await sleep(2000);
+var waitForElementsAndRun = setInterval(() => {
+	if (document.querySelector("#bazaarRoot") !== null) {
+		clearInterval(waitForElementsAndRun);
+		// Main logic    
+		var wrapper = document.querySelector('#bazaarRoot');
+		try {
+			bazaarObserver.observe(wrapper, { subtree: true, childList: true });
+		} catch (e) {
+			// wrapper not found
 		}
 	}
-
-	wrapper = document.querySelector('#bazaarRoot');
-
-	try {
-		bazaarObserver.observe(wrapper, { subtree: true, childList: true });
-	} catch (e) {
-		// wrapper not found
-	}
-}
-
-waitForElementsAndRun();
+}, 300);

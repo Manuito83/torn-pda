@@ -26,29 +26,29 @@
  */
 
 var presets = [{
-		name: "Quick Industrial",
-		maxDrivers: 2,
-		trackName: "Industrial",
-		numberOfLaps: 1,
-		upgradesAllowed: true,
-		betAmount: 0,
-		waitTime: 1,
-		password: "",
-	},
-	{
-		name: "1hr Start - Docks",
-		maxDrivers: 100,
-		trackName: "Docks",
-		numberOfLaps: 100,
-		waitTime: 60,
-		password: "",
-	},
+	name: "Quick Industrial",
+	maxDrivers: 2,
+	trackName: "Industrial",
+	numberOfLaps: 1,
+	upgradesAllowed: true,
+	betAmount: 0,
+	waitTime: 1,
+	password: "",
+},
+{
+	name: "1hr Start - Docks",
+	maxDrivers: 100,
+	trackName: "Docks",
+	numberOfLaps: 100,
+	waitTime: 60,
+	password: "",
+},
 ];
 
-(function() {
+(function () {
 	'use strict';
 	scrubPresets();
-	$('body').ajaxComplete(function(e, xhr, settings) {
+	$('body').ajaxComplete(function (e, xhr, settings) {
 		var createCustomRaceSection = "section=createCustomRace";
 		var url = settings.url;
 		if (url.indexOf(createCustomRaceSection) >= 0) {
@@ -96,7 +96,7 @@ function drawPresetBar() {
 	for (let box of document.querySelectorAll('.filter-container.m-top10')) {
 		box.remove();
 	}
-	
+
 	let filterBar = $(`
   <div class="filter-container m-top10">
 	<div class="title-gray top-round">Race Presets</div>
@@ -107,8 +107,5 @@ function drawPresetBar() {
   </div>`);
 
 	$('#racingAdditionalContainer > .form-custom-wrap').before(filterBar);
-	$('.preset-btn').each((index, element) => element.onclick = function() {fillPreset(index)});
+	$('.preset-btn').each((index, element) => element.onclick = function () { fillPreset(index) });
 }
-
-
-

@@ -17,17 +17,16 @@ import 'package:torn_pda/utils/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/userscript_examples.dart';
 
-class UserScriptChanges {
-  UnmodifiableListView<UserScript> scriptsToAdd;
-  List<String> scriptsToRemove;
-}
-
 class UserScriptsProvider extends ChangeNotifier {
   List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
 
+  List<UserScriptModel> exampleScripts = <UserScriptModel>[];
+
   bool _scriptsFirstTime = true;
   bool get scriptsFirstTime => _scriptsFirstTime;
+
+  bool newFeatureInjectionTimeShown = true;
 
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
@@ -88,11 +87,39 @@ class UserScriptsProvider extends ChangeNotifier {
     return UnmodifiableListView<UserScript>(scriptList);
   }
 
-  UserScriptChanges getCondSources({
+  UnmodifiableListView<UserScript> getCondSources({
     @required String url,
     @required String apiKey,
+    @required UserScriptTime time,
   }) {
     var scriptListToAdd = <UserScript>[];
+    if (_userScriptsEnabled) {
+      for (var script in _userScriptList) {
+        if (script.enabled) {
+          if (time != script.time) continue;
+          if (script.urls.isNotEmpty) {
+            for (String u in script.urls) {
+              if (url.contains(u.replaceAll("*", ""))) {
+                scriptListToAdd.add(
+                  UserScript(
+                    groupName: script.name,
+                    injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                    source: _adaptSource(script, apiKey),
+                  ),
+                );
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    return UnmodifiableListView(scriptListToAdd);
+  }
+
+  List<String> getScriptsToRemove({
+    @required String url,
+  }) {
     var scriptListToRemove = <String>[];
     if (_userScriptsEnabled) {
       for (var script in _userScriptList) {
@@ -102,15 +129,6 @@ class UserScriptsProvider extends ChangeNotifier {
             for (String u in script.urls) {
               if (url.contains(u.replaceAll("*", ""))) {
                 found = true;
-                scriptListToAdd.add(
-                  UserScript(
-                    groupName: script.name,
-                    injectionTime: Platform.isAndroid
-                        ? UserScriptInjectionTime.AT_DOCUMENT_START
-                        : UserScriptInjectionTime.AT_DOCUMENT_END,
-                    source: _adaptSource(script, apiKey),
-                  ),
-                );
                 break;
               }
             }
@@ -121,10 +139,7 @@ class UserScriptsProvider extends ChangeNotifier {
         }
       }
     }
-    var changes = UserScriptChanges()
-      ..scriptsToAdd = UnmodifiableListView(scriptListToAdd)
-      ..scriptsToRemove = scriptListToRemove;
-    return changes;
+    return scriptListToRemove;
   }
 
   String _adaptSource(UserScriptModel script, String apiKey) {
@@ -135,6 +150,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
   void addUserScript(
     String name,
+    UserScriptTime time,
     String source, {
     bool enabled = true,
     int exampleCode = 0,
@@ -144,6 +160,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }) {
     var newScript = UserScriptModel(
       name: name,
+      time: time,
       source: source,
       enabled: enabled,
       exampleCode: exampleCode,
@@ -164,6 +181,7 @@ class UserScriptsProvider extends ChangeNotifier {
   void updateUserScript(
     UserScriptModel editedModel,
     String name,
+    UserScriptTime time,
     String source,
     bool changedSource,
   ) {
@@ -171,6 +189,7 @@ class UserScriptsProvider extends ChangeNotifier {
       if (script == editedModel) {
         script.name = name;
         script.urls = getUrls(source);
+        script.time = time;
         script.source = source;
         script.edited = changedSource;
         break;
@@ -286,19 +305,27 @@ class UserScriptsProvider extends ChangeNotifier {
     Prefs().setUserScriptsFirstTime(value);
   }
 
+  void changeFeatInjectionTimeShown(bool value) {
+    newFeatureInjectionTimeShown = value;
+    Prefs().setUserScriptsFeatInjectionTimeShown(value);
+  }
+
   Future<void> loadPreferences() async {
     try {
       _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
 
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
+      newFeatureInjectionTimeShown = await Prefs().getUserScriptsFeatInjectionTimeShown();
+
       var savedScripts = await Prefs().getUserScriptsList();
-      var exampleScripts = await List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+      exampleScripts = await List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
 
       // NULL returned if we installed the app, so we add all the example scripts
       if (savedScripts == null) {
         for (var example in exampleScripts) {
           addUserScript(
             example.name,
+            example.time,
             example.source,
             enabled: example.enabled,
             exampleCode: example.exampleCode,
@@ -314,6 +341,7 @@ class UserScriptsProvider extends ChangeNotifier {
               var decodedModel = UserScriptModel.fromJson(dec);
               addUserScript(
                 decodedModel.name,
+                decodedModel.time,
                 decodedModel.source,
                 enabled: decodedModel.enabled,
                 exampleCode: decodedModel.exampleCode,

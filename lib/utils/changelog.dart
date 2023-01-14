@@ -39,19 +39,21 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 273 - 09/11/2022
+    // Build 274 - 14/11/2023
 
     // VERSION 2.9.4
     var v2_9_4 = ChangeLogItem();
     v2_9_4.version = 'Torn PDA v2.9.4';
-    v2_9_4.date = '15 JAN 2023';
-    String feat2_9_4_1 = "Added theme sync between app and web";
-    String feat2_9_4_2 = "";
-    if (Platform.isAndroid) feat2_9_4_2 = "Fixed website Google login";
-    if (Platform.isIOS) feat2_9_4_2 = "Fixed website login issues";
-    String feat2_9_4_3 = "Fixed log copy to clipboard";
-    String feat2_9_4_4 = "Fixed issue with missing shortcuts";
-    String feat2_9_4_5 = "Improve auto bazaar script activation (needs manual reload)";
+    v2_9_4.date = '25 JAN 2023';
+    String feat2_9_4_1 = "Added theme synchronization between app and web (can be disabled)";
+    String feat2_9_4_2 = "User scripts' injection time can now be selected. NOTE: this might be "
+        "a breaking change for some scripts, that will require to be adapted. It is also recommended to restore "
+        "the default script examples. Please read the documentation (in the user scripts section) for more information.";
+    String feat2_9_4_3 = "";
+    if (Platform.isAndroid) feat2_9_4_3 = "Fixed website Google login";
+    if (Platform.isIOS) feat2_9_4_3 = "Fixed website login issues";
+    String feat2_9_4_4 = "Fixed log copy to clipboard";
+    String feat2_9_4_5 = "Fixed issue with missing shortcuts";
     String feat2_9_4_6 = "Increased timeout with YATA to improve communication";
     String feat2_9_4_7 = "Removed Torn Trader (service discontinued)";
     v2_9_4.features.add(feat2_9_4_1);

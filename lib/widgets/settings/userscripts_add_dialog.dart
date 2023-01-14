@@ -1,11 +1,14 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 
 class UserScriptsAddDialog extends StatefulWidget {
@@ -29,14 +32,18 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
   var _sourceFormKey = GlobalKey<FormState>();
 
   UserScriptsProvider _userScriptsProvider;
+  ThemeProvider _themeProvider;
 
   String _originalSource = "";
   String _originalName = "";
+
+  UserScriptTime _originalTime = UserScriptTime.end;
 
   @override
   void initState() {
     super.initState();
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     if (widget.editExisting) {
       for (var script in _userScriptsProvider.userScriptList) {
@@ -45,6 +52,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
           _addSourceController.text = script.source;
           _originalSource = script.source;
           _originalName = script.name;
+          _originalTime = script.time;
         }
       }
     }
@@ -120,6 +128,42 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                 ),
               ),
             ),
+            Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Injection time"),
+                    ToggleSwitch(
+                      minHeight: 28,
+                      customHeights: [30, 30],
+                      borderColor:
+                          _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+                      initialLabelIndex: _originalTime == UserScriptTime.start ? 0 : 1,
+                      activeBgColor: _themeProvider.currentTheme == AppTheme.light
+                          ? [Colors.blueGrey[400]]
+                          : _themeProvider.currentTheme == AppTheme.dark
+                              ? [Colors.blueGrey]
+                              : [Colors.blueGrey[700]],
+                      activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                      inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                          ? Colors.white
+                          : _themeProvider.currentTheme == AppTheme.dark
+                              ? Colors.grey[800]
+                              : Colors.black,
+                      inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                      borderWidth: 1,
+                      cornerRadius: 5,
+                      totalSwitches: 2,
+                      animate: true,
+                      animationDuration: 500,
+                      labels: ["START", "END"],
+                      onToggle: (index) {
+                        index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
+                      },
+                    )
+                  ],
+                )),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
@@ -187,17 +231,23 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
       // early and delete the global, so that text
       // does not appear again in case of failure
       var inputName = _addNameController.text;
+      var inputTime = _originalTime;
       var inputSource = _addSourceController.text;
       _addNameController.text = _addSourceController.text = '';
 
       if (!widget.editExisting) {
-        _userScriptsProvider.addUserScript(inputName, inputSource);
+        _userScriptsProvider.addUserScript(inputName, inputTime, inputSource);
       } else {
-        var sourcedChanged = false;
-        if (inputSource != _originalSource || inputName != _originalName) {
-          sourcedChanged = true;
+        // Flag the script as edited if we've changed something now or in the past
+        var sourcedChanged = true;
+        if (!widget.editScript.edited &&
+            inputSource == _originalSource &&
+            inputTime == _originalTime &&
+            inputName == _originalName) {
+          sourcedChanged = false;
         }
-        _userScriptsProvider.updateUserScript(widget.editScript, inputName, inputSource, sourcedChanged);
+
+        _userScriptsProvider.updateUserScript(widget.editScript, inputName, inputTime, inputSource, sourcedChanged);
       }
     }
   }

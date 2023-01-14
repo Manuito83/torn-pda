@@ -163,6 +163,7 @@ class Prefs {
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
+  final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
@@ -2015,6 +2016,16 @@ class Prefs {
   Future<bool> setUserScriptsFirstTime(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUserScriptsFirstTime, value);
+  }
+
+  Future<bool> getUserScriptsFeatInjectionTimeShown() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUserScriptsFeatInjectionTimeShown) ?? false;
+  }
+
+  Future<bool> setUserScriptsFeatInjectionTimeShown(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUserScriptsFeatInjectionTimeShown, value);
   }
 
   Future<List<String>> getUserScriptsForcedVersions() async {

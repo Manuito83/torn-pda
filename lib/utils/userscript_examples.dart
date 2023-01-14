@@ -169,6 +169,7 @@ var waitForElementsAndRun = setInterval(() => {
       name: "Bazaar Auto Price",
       exampleCode: 1,
       edited: false,
+      time: UserScriptTime.start,
       source: source,
     );
   }
@@ -288,13 +289,14 @@ function drawPresetBar() {
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 2,
+      version: 3,
 
       enabled: true,
       urls: getUrls(source),
       name: "Custom Race Presets",
       exampleCode: 3,
       edited: false,
+      time: UserScriptTime.end,
       source: source,
     );
   }
@@ -636,6 +638,7 @@ let waitForElementsAndRun = setInterval(() => {
       name: "Custom Gym Ratios",
       exampleCode: 4,
       edited: false,
+      time: UserScriptTime.start,
       source: source,
     );
   }
@@ -756,13 +759,14 @@ if (document.querySelector(".stock-list-wrap")) {
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 1,
+      version: 2,
 
       enabled: false,
       urls: getUrls(source),
       name: "Company Stocks Order",
       exampleCode: 5,
       edited: false,
+      time: UserScriptTime.end,
       source: source,
     );
   }
@@ -843,6 +847,7 @@ if (document.querySelector(".stock-list-wrap")) {
       name: "Company Activity",
       exampleCode: 6,
       edited: false,
+      time: UserScriptTime.start,
       source: source,
     );
   }
@@ -997,6 +1002,7 @@ var listener = function (event) {
       name: "Hospital Filters",
       exampleCode: 7,
       edited: false,
+      time: UserScriptTime.start,
       source: source,
     );
   }
