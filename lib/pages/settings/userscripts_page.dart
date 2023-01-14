@@ -55,7 +55,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           _willPopCallback();
         }
       } else {
-        if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatureInjectionTimeShown)
+        if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatInjectionTimeShown)
           await showDialog(
             context: context,
             barrierDismissible: false,

@@ -26,7 +26,7 @@ class UserScriptsProvider extends ChangeNotifier {
   bool _scriptsFirstTime = true;
   bool get scriptsFirstTime => _scriptsFirstTime;
 
-  bool newFeatureInjectionTimeShown = true;
+  bool newFeatInjectionTimeShown = true;
 
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
@@ -306,7 +306,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void changeFeatInjectionTimeShown(bool value) {
-    newFeatureInjectionTimeShown = value;
+    newFeatInjectionTimeShown = value;
     Prefs().setUserScriptsFeatInjectionTimeShown(value);
   }
 
@@ -315,7 +315,7 @@ class UserScriptsProvider extends ChangeNotifier {
       _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
 
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
-      newFeatureInjectionTimeShown = await Prefs().getUserScriptsFeatInjectionTimeShown();
+      newFeatInjectionTimeShown = await Prefs().getUserScriptsFeatInjectionTimeShown();
 
       var savedScripts = await Prefs().getUserScriptsList();
       exampleScripts = await List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
