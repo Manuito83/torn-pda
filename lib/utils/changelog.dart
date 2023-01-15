@@ -51,7 +51,7 @@ class _ChangeLogState extends State<ChangeLog> {
         "the default script examples. Please read the documentation (in the user scripts section) for more information.";
     String feat2_9_4_3 = "";
     if (Platform.isAndroid) feat2_9_4_3 = "Fixed website Google login";
-    if (Platform.isIOS) feat2_9_4_3 = "Fixed website login issues";
+    if (Platform.isIOS) feat2_9_4_3 = "Fixed alternative website login";
     String feat2_9_4_4 = "Fixed log copy to clipboard";
     String feat2_9_4_5 = "Fixed issue with missing shortcuts";
     String feat2_9_4_6 = "Increased timeout with YATA to improve communication";
