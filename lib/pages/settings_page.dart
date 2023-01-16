@@ -21,6 +21,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-login/native_login_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:vibration/vibration.dart';
@@ -123,6 +124,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       SizedBox(height: _extraMargin),
                       _apiKeyWidget(),
                       SizedBox(height: 15),
+                      if (_userToLoad)
+                        Column(
+                          children: [
+                            NativeLoginWidget(),
+                            SizedBox(height: 15),
+                          ],
+                        ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -915,7 +923,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_userToLoad) {
       _expandableController.expanded = false;
       return Padding(
-        padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+        padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
         child: Card(
           child: ExpandablePanel(
             collapsed: null,

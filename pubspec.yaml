@@ -27,10 +27,12 @@ dependencies:
   bubble_showcase: ^1.1.0
   cloud_firestore: ^3.1.7
   cloud_functions: ^3.2.5
+  connectivity_plus: ^2.3.7
   cookie_jar: ^3.0.1
   cupertino_icons: ^1.0.2
   dart_ping: ^6.1.1
   dart_ping_ios: ^1.0.0
+  dbcrypt: ^2.0.0
   dio: ^4.0.6
   device_info: ^2.0.3
   dotted_border: ^2.0.0+2
@@ -50,6 +52,7 @@ dependencies:
   flutter_icons: ^1.1.0
   flutter_inappwebview: 6.0.0-beta.22
   flutter_local_notifications: 9.2.0
+  flutter_secure_storage: ^6.0.0
   flutter_slidable: ^1.2.1
   flutter_speed_dial: ^6.0.0
   font_awesome_flutter: ^10.1.0

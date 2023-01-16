@@ -41,6 +41,8 @@ import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-login/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-login/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
@@ -160,6 +162,10 @@ Future<void> main() async {
         ChangeNotifierProvider<WebViewProvider>(
           create: (context) => WebViewProvider(),
         ),
+        // Native login
+        ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
+        ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
+        // ------------
       ],
       child: MyApp(),
     ),

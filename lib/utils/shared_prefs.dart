@@ -12,6 +12,8 @@ class Prefs {
   final String _kAppVersion = "pda_appVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  // Native login
+  final String _kNativePlayerEmail = "pda_nativePlayerEmail";
   // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
@@ -266,6 +268,19 @@ class Prefs {
   Future<bool> setLastAppUse(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kLastAppUse, value);
+  }
+
+  /// ----------------------------
+  /// Methods for native login
+  /// ----------------------------
+  Future<String> getNativePlayerEmail() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNativePlayerEmail) ?? '';
+  }
+
+  Future<bool> setNativePlayerEmail(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNativePlayerEmail, value);
   }
 
   /// ----------------------------
