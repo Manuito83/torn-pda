@@ -62,7 +62,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_9_4.features.add(feat2_9_4_2);
     v2_9_4.features.add(feat2_9_4_3);
     v2_9_4.features.add(feat2_9_4_4);
-    v2_9_4.features.add(feat2_9_4_5);
+    if (Platform.isIOS) v2_9_4.features.add(feat2_9_4_5);
     v2_9_4.features.add(feat2_9_4_6);
     v2_9_4.features.add(feat2_9_4_7);
     v2_9_4.features.add(feat2_9_4_8);
