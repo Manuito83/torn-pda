@@ -52,10 +52,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_9_4_3 = "";
     if (Platform.isAndroid) feat2_9_4_3 = "Fixed website Google login";
     if (Platform.isIOS) feat2_9_4_3 = "Fixed alternative website login";
-    String feat2_9_4_4 = "Fixed log copy to clipboard";
-    String feat2_9_4_5 = "Fixed issue with missing shortcuts";
-    String feat2_9_4_6 = "Increased timeout with YATA to improve communication";
-    String feat2_9_4_7 = "Removed Torn Trader (service discontinued)";
+    String feat2_9_4_4 = "Fixed discrete notifications option (Settings) missing on iOS";
+    String feat2_9_4_5 = "Fixed log copy to clipboard";
+    String feat2_9_4_6 = "Fixed issue with missing shortcuts";
+    String feat2_9_4_7 = "Increased timeout with YATA to improve communication";
+    String feat2_9_4_8 = "Removed Torn Trader (service discontinued)";
     v2_9_4.features.add(feat2_9_4_1);
     v2_9_4.features.add(feat2_9_4_2);
     v2_9_4.features.add(feat2_9_4_3);
@@ -63,6 +64,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_9_4.features.add(feat2_9_4_5);
     v2_9_4.features.add(feat2_9_4_6);
     v2_9_4.features.add(feat2_9_4_7);
+    v2_9_4.features.add(feat2_9_4_8);
 
     // VERSION 2.9.3
     var v2_9_3 = ChangeLogItem();
