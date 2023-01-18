@@ -39,7 +39,7 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 274 - 14/11/2023
+    // Build 275 - 18/01/2023
 
     // VERSION 2.9.4
     var v2_9_4 = ChangeLogItem();
@@ -49,14 +49,15 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_9_4_2 = "User scripts' injection time can now be selected. NOTE: this might be "
         "a breaking change for some scripts, that will require to be adapted. It is also recommended to restore "
         "the default script examples. Please read the documentation (in the user scripts section) for more information.";
-    String feat2_9_4_3 = "";
-    if (Platform.isAndroid) feat2_9_4_3 = "Fixed website Google login";
-    if (Platform.isIOS) feat2_9_4_3 = "Fixed alternative website login";
-    String feat2_9_4_4 = "Fixed discrete notifications option (Settings) missing on iOS";
-    String feat2_9_4_5 = "Fixed log copy to clipboard";
-    String feat2_9_4_6 = "Fixed issue with missing shortcuts";
-    String feat2_9_4_7 = "Increased timeout with YATA to improve communication";
-    String feat2_9_4_8 = "Removed Torn Trader (service discontinued)";
+    String feat2_9_4_3 = "Added option to open tab in external browser (URL options dialog)";
+    String feat2_9_4_4 = "";
+    if (Platform.isAndroid) feat2_9_4_4 = "Fixed website Google login";
+    if (Platform.isIOS) feat2_9_4_4 = "Fixed alternative website login";
+    String feat2_9_4_5 = "Fixed discrete notifications option (Settings) missing on iOS";
+    String feat2_9_4_6 = "Fixed log copy to clipboard";
+    String feat2_9_4_7 = "Fixed issue with missing shortcuts";
+    String feat2_9_4_8 = "Increased timeout with YATA to improve communication";
+    String feat2_9_4_9 = "Removed Torn Trader (service discontinued)";
     v2_9_4.features.add(feat2_9_4_1);
     v2_9_4.features.add(feat2_9_4_2);
     v2_9_4.features.add(feat2_9_4_3);
@@ -65,6 +66,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_9_4.features.add(feat2_9_4_6);
     v2_9_4.features.add(feat2_9_4_7);
     v2_9_4.features.add(feat2_9_4_8);
+    v2_9_4.features.add(feat2_9_4_9);
 
     // VERSION 2.9.3
     var v2_9_3 = ChangeLogItem();
