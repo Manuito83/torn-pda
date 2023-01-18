@@ -76,6 +76,8 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _secondaryInitialised = false;
 
+  DateTime _lastBrowserOpenedTime;
+
   var _onlyLoadTabsWhenUsed = true;
   bool get onlyLoadTabsWhenUsed => _onlyLoadTabsWhenUsed;
   set onlyLoadTabsWhenUsed(bool value) {
@@ -584,6 +586,14 @@ class WebViewProvider extends ChangeNotifier {
     final bool isChainingBrowser = false,
     final ChainingPayload chainingPayload,
   }) async {
+    // Checking _tabList might not be enough to ensure that the browser is closed. We might get duplicates
+    // with double presses or even notifications, try to open the browser twice (creating repeated keys)
+    // This ensures that a browser open request only happens once
+    if (_lastBrowserOpenedTime != null && (DateTime.now().difference(_lastBrowserOpenedTime).inSeconds) < 1) {
+      return;
+    }
+    _lastBrowserOpenedTime = DateTime.now();
+
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
       // First check if the browser (whichever) is open. If it is, load the url in that browser.
