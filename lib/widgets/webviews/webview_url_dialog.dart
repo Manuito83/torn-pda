@@ -161,8 +161,6 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
                             Navigator.of(context).pop();
 
-                            String apiKey = widget.userProvider.basic.userApiKey;
-
                             String attackId = widget.url.split("user2ID=")[1];
                             var t = await TornApiCaller().getOtherProfile(playerId: attackId);
 
