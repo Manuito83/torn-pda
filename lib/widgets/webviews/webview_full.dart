@@ -1180,7 +1180,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (var script in scriptsToAdd) {
-                await webView.evaluateJavascript(source: script.source);
+                await webView.evaluateJavascript(
+                  source: _userScriptsProvider.adaptSource(script.source, _userProvider.basic.userApiKey),
+                );
               }
 
               _hideChat();

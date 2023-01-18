@@ -78,7 +78,7 @@ class UserScriptsProvider extends ChangeNotifier {
               injectionTime: Platform.isAndroid
                   ? UserScriptInjectionTime.AT_DOCUMENT_START
                   : UserScriptInjectionTime.AT_DOCUMENT_END,
-              source: _adaptSource(script, apiKey),
+              source: adaptSource(script.source, apiKey),
             ),
           );
         }
@@ -104,7 +104,7 @@ class UserScriptsProvider extends ChangeNotifier {
                   UserScript(
                     groupName: script.name,
                     injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                    source: _adaptSource(script, apiKey),
+                    source: adaptSource(script.source, apiKey),
                   ),
                 );
                 break;
@@ -142,8 +142,8 @@ class UserScriptsProvider extends ChangeNotifier {
     return scriptListToRemove;
   }
 
-  String _adaptSource(UserScriptModel script, String apiKey) {
-    String withApiKey = script.source.replaceAll("###PDA-APIKEY###", apiKey);
+  String adaptSource(String source, String apiKey) {
+    String withApiKey = source.replaceAll("###PDA-APIKEY###", apiKey);
     String anonFunction = "(function() {$withApiKey}());";
     anonFunction = anonFunction.replaceAll('“', '"');
     anonFunction = anonFunction.replaceAll('”', '"');
