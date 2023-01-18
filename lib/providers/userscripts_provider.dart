@@ -144,7 +144,9 @@ class UserScriptsProvider extends ChangeNotifier {
 
   String _adaptSource(UserScriptModel script, String apiKey) {
     String withApiKey = script.source.replaceAll("###PDA-APIKEY###", apiKey);
-    String anonFunction = "(function() {\n$withApiKey\n}());";
+    String anonFunction = "(function() {$withApiKey}());";
+    anonFunction = anonFunction.replaceAll('“', '"');
+    anonFunction = anonFunction.replaceAll('”', '"');
     return anonFunction;
   }
 
