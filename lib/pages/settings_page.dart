@@ -303,7 +303,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       // TODO: this is conditional now because it only affects Android.
                       // In the future it might be needed to show always the Divider and
                       // SizedBox and only hide the actual Android elements
-                      if (Platform.isAndroid)
+                      
                         Column(
                           children: [
                             Divider(),

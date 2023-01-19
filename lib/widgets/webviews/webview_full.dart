@@ -992,13 +992,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
-            UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+              UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
               url: _initialUrl.url.toString(),
               apiKey: _userProvider.basic.userApiKey,
               time: UserScriptTime.start,
-            );
-            await webView.addUserScripts(userScripts: scriptsToAdd);
-
+              );
+              await webView.addUserScripts(userScripts: scriptsToAdd);
+            } else if (Platform.isIOS && widget.windowId != null) {
+              _terminalProvider.addInstruction("TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
+                "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+            }
+            
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
             webView.addJavaScriptHandler(
               handlerName: 'copyToClipboard',
@@ -1055,13 +1060,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _addScriptApiHandlers(webView);
           },
           shouldOverrideUrlLoading: (c, request) async {
-            // Userscripts load before webpage begins loading
-            UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-              url: request.request.url.toString(),
-              apiKey: _userProvider.basic.userApiKey,
-              time: UserScriptTime.start,
-            );
-            await webView.addUserScripts(userScripts: scriptsToAdd);
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+              // Userscripts load before webpage begins loading
+              UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+                url: request.request.url.toString(),
+                apiKey: _userProvider.basic.userApiKey,
+                time: UserScriptTime.start,
+              );
+              await webView.addUserScripts(userScripts: scriptsToAdd);
+            }
 
             if (request.request.url.toString().contains("http://")) {
               _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
@@ -1159,8 +1166,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               List<String> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
                 url: uri.toString(),
               );
-              if (Platform.isAndroid) {
-                // Not supported on iOS
+              if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
                 for (var group in scriptsToRemove) {
                   await c.removeUserScriptsByGroupName(groupName: group);
                 }
@@ -1174,7 +1180,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (var script in scriptsToAdd) {
-                await webView.evaluateJavascript(source: script.source);
+                await webView.evaluateJavascript(
+                  source: _userScriptsProvider.adaptSource(script.source, _userProvider.basic.userApiKey),
+                );
               }
 
               _hideChat();
@@ -3359,14 +3367,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     inputUrl.replaceAll("http://", "https://");
 
-    // Loads userscripts that are not triggered in shouldOverrideUrlLoading
-    // (e.g.: when reloading a page or navigating back/forward)
-    UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-      url: inputUrl,
-      apiKey: _userProvider.basic.userApiKey,
-      time: UserScriptTime.end,
-    );
-    await webView.addUserScripts(userScripts: scriptsToAdd);
+    if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+      // Loads userscripts that are not triggered in shouldOverrideUrlLoading
+      // (e.g.: when reloading a page or navigating back/forward)
+      UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+        url: inputUrl,
+        apiKey: _userProvider.basic.userApiKey,
+        time: UserScriptTime.end,
+      );
+      await webView.addUserScripts(userScripts: scriptsToAdd);
+    }
 
     var uri = WebUri(inputUrl);
     webView.loadUrl(urlRequest: URLRequest(url: uri));

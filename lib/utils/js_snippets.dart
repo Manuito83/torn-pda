@@ -567,40 +567,46 @@ String restoreChatJS() {
 }
 
 String quickItemsJS({@required String item, bool faction = false, bool eRefill = false, bool nRefill = false}) {
-  String timeRegex = r'/<span class="counter-wrap" data-time="([0-9]+)"><\/span>/';
+  String timeRegex =
+      r'/<span class="counter-wrap[\s=\-"a-zA-Z0-9]*data-time="[0-9]+"[\s=\-"a-zA-Z0-9]*>[0-9:]*<\/span>/g';
 
   return '''
     // Credit Torn Tools
     
     // Fixed time string for faction armoury replies
     function fixTime(str) {
-      let regexp = $timeRegex;
-      let match = str.match(regexp);
+      let regexp = $timeRegex
+      let matches = str.match(regexp);
 
-      if (match === null) {
-        console.log("null");
+      if (matches == null || Object.keys(matches).length === 0) {
+        //console.log("null");
         return "";
       }
 
-      let secondsToAdd = match[1];
-
       function secondsToHms(d) {
-          d = Number(d);
-          var h = Math.floor(d / 3600);
-          var m = Math.floor(d % 3600 / 60);
-          var s = Math.floor(d % 3600 % 60);
+        d = Number(d);
+        var h = Math.floor(d / 3600);
+        var m = Math.floor(d % 3600 / 60);
+        var s = Math.floor(d % 3600 % 60);
 
-          var hDisplay = minTwoDigits(h) + ":";
-          var mDisplay = minTwoDigits(m) + ":";
-          var sDisplay = minTwoDigits(s);
-          return hDisplay + mDisplay + sDisplay; 
+        var hDisplay = minTwoDigits(h) + ":";
+        var mDisplay = minTwoDigits(m) + ":";
+        var sDisplay = minTwoDigits(s);
+        return hDisplay + mDisplay + sDisplay; 
       }
 
       function minTwoDigits(n) {
         return (n < 10 ? '0' : '') + n;
       }
 
-      return(str.replace(/<span class="counter-wrap".*span>/, secondsToHms(secondsToAdd)));
+      var final = str;
+      for (var m of matches) {
+        //console.log("M: " + m);
+        let regTime = /data-time="([0-9:]+)"/
+        let timeMatch = m.match(regTime);
+        final = final.replace(m, secondsToHms(timeMatch[1]));
+      }
+      return final;
     }
 
     // Add style for result box

@@ -20,7 +20,7 @@ admin.initializeApp({
 });
 
 export const alerts = alertsGroup;
-//export const alertsTest = alertsTestGroup;
+//export const alertsTest = alertsTestGroup;  // Note: run watcher to change!
 export const travel = travelGroup
 export const stale = staleGroup;
 export const players = playersGroup;

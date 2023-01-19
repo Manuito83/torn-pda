@@ -813,7 +813,7 @@ if (document.querySelector(".stock-list-wrap")) {
                     $($($(this).parent().parent().parent()).find(".acc-body")).find(".stats").append('<span tabindex="0" class="span-cont t-first activeEmployee" aria-label=" "><span class="bold t-show"></span></span> <span class="t-hide">/</span>');
                     let days = res.last_action.relative.split(" ");
                     
-					if(days[1].includes("hour"))
+					if(days[1].includes("day"))
                         if(parseInt(days[0]) == 1)
                             $(this).parent().css("background-color", "orange");
                         else if(parseInt(days[0]) >= 2)
@@ -840,7 +840,7 @@ if (document.querySelector(".stock-list-wrap")) {
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 3,
+      version: 4,
 
       enabled: false,
       urls: getUrls(source),

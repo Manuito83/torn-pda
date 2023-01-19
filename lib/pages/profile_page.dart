@@ -4561,6 +4561,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
 
+          if (!mounted) return;
+
           setState(() {
             _ocFinalStringLong = "$complexString $complexTimeString";
             _ocFinalStringShort = "$complexTimeString";
@@ -4656,6 +4658,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _ocSimpleStringFinal = "";
           }
         }
+
+        if (!mounted) return;
 
         setState(() {
           _ocSimpleExists = simpleExists;

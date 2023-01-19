@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -694,7 +696,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 25),
+                SizedBox(height: 25),                                            
                 Text(
                   "SCRIPT INJECTION TIME",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
@@ -774,6 +776,29 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                   ),
                 ),
                 SizedBox(height: 25),
+                if (Platform.isIOS)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                      "UNSUPPORTED WINDOWS (iOS)",
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "Be aware that user scripts injection at LOAD START is NOT supported on iOS when a tab has been opened as a 'new window' (e.g. "
+                        "when a link is long-pressed and 'open in a new window' is selected, when a pop-up window opens, or when a new tab "
+                        "is opened automatically from the HTML code)."
+                        "\n\nIn these cases, a warning will appear in the Terminal. "
+                        "The only work-around is to open pages as standard tabs by adding them manually if you need user script support. Alternatively, "
+                        "injection at LOAD END should work with no issues.",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                      SizedBox(height: 25),
+                    ],
+                  ),  
                 Text(
                   "CROSS-ORIGIN REQUESTS (ADVANCED)",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
