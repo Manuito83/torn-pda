@@ -39,6 +39,8 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-login/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-login/native_user_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
@@ -1262,6 +1264,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           _userUID = existingUid;
         }
       });
+
+      // Native user status check
+      NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+      await nativeUser.loadPreferences();
+      NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+      if (nativeUser.playerEmail.isNotEmpty &&
+          nativeUser.playerPasswordHash.isNotEmpty &&
+          nativeUser.playerSToken.isNotEmpty) {
+        nativeAuth.authStatus = NativeAuthStatus.loggedIn;
+      }
+      // ------------------------
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)
