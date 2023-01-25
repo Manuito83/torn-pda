@@ -790,6 +790,17 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           _apiSuccess = true;
         } else {
           _apiSuccess = false;
+
+          BotToast.showText(
+            text: "YATA debug error: ${responseDB.body}",
+            textStyle: TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+            ),
+            contentColor: Colors.red[800],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
         }
       }
 
@@ -802,7 +813,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future profileMisc() async {
-        _profile = await TornApiCaller().getProfileExtended();
+        _profile = await TornApiCaller().getProfileExtended(limit: 3);
       }
 
       // Get all APIs at the same time
@@ -921,6 +932,17 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       _filterAndSortTopLists();
     } catch (e) {
       _apiSuccess = false;
+
+      BotToast.showText(
+        text: "YATA debug catch: $e",
+        textStyle: TextStyle(
+          fontSize: 13,
+          color: Colors.white,
+        ),
+        contentColor: Colors.red[800],
+        duration: Duration(seconds: 4),
+        contentPadding: EdgeInsets.all(10),
+      );
     }
   }
 

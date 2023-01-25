@@ -61,6 +61,7 @@ class Prefs {
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
   final String _kOnAppExit = "pda_onAppExit";
+  final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
@@ -691,6 +692,19 @@ class Prefs {
   Future<bool> setOnAppExit(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kOnAppExit, value);
+  }
+
+  /// ----------------------------
+  /// Methods for debug messages
+  /// ----------------------------
+  Future<bool> getDebugMessages() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDebugMessages) ?? false;
+  }
+
+  Future<bool> setDebugMessages(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDebugMessages, value);
   }
 
   /// ----------------------------
