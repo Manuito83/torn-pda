@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 276 - 18/01/2023
+    // Build 277 - 25/01/2023
 
     // VERSION 2.9.4
     var v2_9_4 = ChangeLogItem();
     v2_9_4.version = 'Torn PDA v2.9.4';
-    v2_9_4.date = '25 JAN 2023';
+    v2_9_4.date = '01 FEB 2023';
     String feat2_9_4_1 = "Added theme synchronization between app and web (can be disabled)";
     String feat2_9_4_2 = "User scripts' injection time can now be selected. NOTE: this might be "
         "a breaking change for some scripts, that will require to be adapted. It is also recommended to restore "
