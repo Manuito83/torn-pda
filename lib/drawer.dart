@@ -1265,10 +1265,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         }
       });
 
-      // Native user status check
+      // Native user status check and auth time check
       NativeUserProvider nativeUser = context.read<NativeUserProvider>();
-      await nativeUser.loadPreferences();
       NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+      await nativeUser.loadPreferences();
+      await nativeAuth.loadPreferences();
       if (nativeUser.playerEmail.isNotEmpty &&
           nativeUser.playerPasswordHash.isNotEmpty &&
           nativeUser.playerSToken.isNotEmpty) {

@@ -14,6 +14,7 @@ class Prefs {
   final String _kLastAppUse = "pda_lastAppUse";
   // Native login
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
+  final String _kLastAuthRedirect = "pda_lastAuthRedirect";
   // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
@@ -281,6 +282,16 @@ class Prefs {
   Future<bool> setNativePlayerEmail(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kNativePlayerEmail, value);
+  }
+
+  Future<int> getLastAuthRedirect() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kLastAuthRedirect) ?? 0;
+  }
+
+  Future<bool> setLastAuthRedirect(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kLastAuthRedirect, value);
   }
 
   /// ----------------------------

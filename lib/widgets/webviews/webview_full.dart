@@ -47,6 +47,9 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-login/native_auth_models.dart';
+import 'package:torn_pda/torn-pda-login/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-login/native_user_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -274,6 +277,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // See: https://github.com/flutter/flutter/issues/112542
   bool _dialogCloseButtonTriggered = false;
 
+  // Native Auth management
+  Future _nativeAuthObtained;
+
   @override
   void initState() {
     super.initState();
@@ -282,6 +288,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     WebView.debugLoggingSettings.enabled = false;
 
     _localChatRemovalActive = widget.chatRemovalActive;
+
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _clearCacheFirstOpportunity = _settingsProvider.getClearCacheNextOpportunityAndReset;
@@ -359,6 +367,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         await reload();
       },
     );
+
+    // Native Auth
+    _nativeAuthObtained = _assessNativeAuth();
   }
 
   @override
@@ -383,7 +394,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _terminalProvider = Provider.of<TerminalProvider>(context);
 
@@ -882,7 +892,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _bountiesExpandable,
         // Actual WebView
         Expanded(
-          child: _dialogCloseButtonTriggered ? const SizedBox.shrink() : _mainWebViewStack(),
+          child: _dialogCloseButtonTriggered
+              ? const SizedBox.shrink()
+              : FutureBuilder(
+                  future: _nativeAuthObtained,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return _mainWebViewStack();
+                    } else {
+                      return SizedBox.shrink();
+                    }
+                  },
+                ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom
         if (!_settingsProvider.appBarTop)
@@ -994,16 +1015,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             // Userscripts initial load
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-              url: _initialUrl.url.toString(),
-              apiKey: _userProvider.basic.userApiKey,
-              time: UserScriptTime.start,
+                url: _initialUrl.url.toString(),
+                apiKey: _userProvider.basic.userApiKey,
+                time: UserScriptTime.start,
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
-              _terminalProvider.addInstruction("TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
-                "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+              _terminalProvider.addInstruction(
+                  "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
+                  "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             }
-            
+
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
             webView.addJavaScriptHandler(
               handlerName: 'copyToClipboard',
@@ -1477,6 +1499,40 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
       ],
     );
+  }
+
+  Future _assessNativeAuth() async {
+    NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+    NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+
+    String originalInitUrl = _initialUrl.url.toString();
+
+    int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inSeconds;
+    if (nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 10) {
+      log("Getting auth URL!");
+      try {
+        TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
+          context: context,
+          loginData: GetInitDataModel(
+            playerId: _userProvider.basic.playerId,
+            sToken: nativeUser.playerSToken,
+          ),
+        );
+
+        if (loginResponse.success) {
+          // Join the standard Auth URL and the original URL requested as part of the redirect parameter
+          _initialUrl = URLRequest(url: WebUri(loginResponse.authUrl + originalInitUrl));
+          log("Auth URL: $_initialUrl");
+        } else {
+          log("Auth URL failed: ${loginResponse.message}");
+        }
+        // TODO: reset time
+      } catch (e) {
+        // TODO
+      }
+    }
+
+    return;
   }
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
