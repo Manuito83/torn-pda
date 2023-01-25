@@ -573,6 +573,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _debugMessages = false;
+  bool get debugMessages => _debugMessages;
+  set debugMessages(bool value) {
+    _debugMessages = value;
+    Prefs().setDebugMessages(_debugMessages);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -731,6 +739,8 @@ class SettingsProvider extends ChangeNotifier {
 
     _syncTheme = await Prefs().getSyncTheme();
     _themeToSync = await Prefs().getThemeToSync();
+
+    _debugMessages = await Prefs().getDebugMessages();
 
     notifyListeners();
   }

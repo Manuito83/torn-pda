@@ -303,214 +303,214 @@ class _SettingsPageState extends State<SettingsPage> {
                       // TODO: this is conditional now because it only affects Android.
                       // In the future it might be needed to show always the Divider and
                       // SizedBox and only hide the actual Android elements
-                      
-                        Column(
-                          children: [
-                            Divider(),
-                            SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'NOTIFICATIONS',
-                                  style: TextStyle(fontSize: 10),
+
+                      Column(
+                        children: [
+                          Divider(),
+                          SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'NOTIFICATIONS',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 5),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          "Discrete notifications",
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.info_outline),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return DiscreteInfo();
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Switch(
+                                  value: _settingsProvider.discreteNotifications,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _settingsProvider.discreteNotifications = value;
+                                      firestore.toggleDiscrete(value);
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
                                 ),
                               ],
                             ),
-                            SizedBox(height: 5),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Flexible(
-                                    child: Row(
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            "Discrete notifications",
-                                          ),
+                          ),
+                          if (Platform.isAndroid)
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Flexible(
+                                        child: Text(
+                                          "Remove notifications on launch",
                                         ),
-                                        IconButton(
-                                          icon: Icon(Icons.info_outline),
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return DiscreteInfo();
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                      ),
+                                      Switch(
+                                        value: _removeNotificationsLaunch,
+                                        onChanged: (value) {
+                                          _settingsProvider.changeRemoveNotificationsOnLaunch = value;
+                                          setState(() {
+                                            _removeNotificationsLaunch = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Text(
+                                    'This will remove all Torn PDA notifications from your notifications bar '
+                                    'when you launch the app. Deactivate it if you would prefer to keep them '
+                                    'and erase them later manually',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  Switch(
-                                    value: _settingsProvider.discreteNotifications,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _settingsProvider.discreteNotifications = value;
-                                        firestore.toggleDiscrete(value);
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
+                                ),
+                                SizedBox(height: 5),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Flexible(
+                                        child: Text(
+                                          "Alerts vibration",
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 20),
+                                      ),
+                                      Flexible(
+                                        flex: 2,
+                                        child: _vibrationDropdown(),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                            if (Platform.isAndroid)
-                              Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Flexible(
-                                          child: Text(
-                                            "Remove notifications on launch",
-                                          ),
-                                        ),
-                                        Switch(
-                                          value: _removeNotificationsLaunch,
-                                          onChanged: (value) {
-                                            _settingsProvider.changeRemoveNotificationsOnLaunch = value;
-                                            setState(() {
-                                              _removeNotificationsLaunch = value;
-                                            });
-                                          },
-                                          activeTrackColor: Colors.lightGreenAccent,
-                                          activeColor: Colors.green,
-                                        ),
-                                      ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Text(
+                                    'This vibration applies to the automatic alerts only, with the '
+                                    'app in use or in the background',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                                    child: Text(
-                                      'This will remove all Torn PDA notifications from your notifications bar '
-                                      'when you launch the app. Deactivate it if you would prefer to keep them '
-                                      'and erase them later manually',
+                                ),
+                                SizedBox(height: 5),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Manual alarm sound"),
+                                      Switch(
+                                        value: _manualAlarmSound,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _manualAlarmSound = value;
+                                          });
+                                          Prefs().setManualAlarmSound(value);
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Manual alarm vibration"),
+                                      Switch(
+                                        value: _manualAlarmVibration,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _manualAlarmVibration = value;
+                                          });
+                                          Prefs().setManualAlarmVibration(value);
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      text: 'Applies to manually activated alarms in all sections '
+                                          '(Travel, Loot, Profile, etc.). '
+                                          'Some Android clock applications do not work well '
+                                          'with more than 1 timer or do not allow to choose '
+                                          'between sound and vibration for alarms. If you experience '
+                                          'any issue, it is recommended to install ',
                                       style: TextStyle(
                                         color: Colors.grey[600],
                                         fontSize: 12,
                                         fontStyle: FontStyle.italic,
                                       ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Flexible(
-                                          child: Text(
-                                            "Alerts vibration",
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 20),
-                                        ),
-                                        Flexible(
-                                          flex: 2,
-                                          child: _vibrationDropdown(),
+                                      children: <TextSpan>[
+                                        TextSpan(
+                                          text: 'Google\'s Clock application',
+                                          style: TextStyle(color: Colors.blue),
+                                          recognizer: TapGestureRecognizer()
+                                            ..onTap = () async {
+                                              AndroidIntent intent = AndroidIntent(
+                                                action: 'action_view',
+                                                data: 'https://play.google.com/store'
+                                                    '/apps/details?id=com.google.android.deskclock',
+                                              );
+                                              await intent.launch();
+                                            },
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                                    child: Text(
-                                      'This vibration applies to the automatic alerts only, with the '
-                                      'app in use or in the background',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Text("Manual alarm sound"),
-                                        Switch(
-                                          value: _manualAlarmSound,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _manualAlarmSound = value;
-                                            });
-                                            Prefs().setManualAlarmSound(value);
-                                          },
-                                          activeTrackColor: Colors.lightGreenAccent,
-                                          activeColor: Colors.green,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Text("Manual alarm vibration"),
-                                        Switch(
-                                          value: _manualAlarmVibration,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _manualAlarmVibration = value;
-                                            });
-                                            Prefs().setManualAlarmVibration(value);
-                                          },
-                                          activeTrackColor: Colors.lightGreenAccent,
-                                          activeColor: Colors.green,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                                    child: RichText(
-                                      text: TextSpan(
-                                        text: 'Applies to manually activated alarms in all sections '
-                                            '(Travel, Loot, Profile, etc.). '
-                                            'Some Android clock applications do not work well '
-                                            'with more than 1 timer or do not allow to choose '
-                                            'between sound and vibration for alarms. If you experience '
-                                            'any issue, it is recommended to install ',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: 'Google\'s Clock application',
-                                            style: TextStyle(color: Colors.blue),
-                                            recognizer: TapGestureRecognizer()
-                                              ..onTap = () async {
-                                                AndroidIntent intent = AndroidIntent(
-                                                  action: 'action_view',
-                                                  data: 'https://play.google.com/store'
-                                                      '/apps/details?id=com.google.android.deskclock',
-                                                );
-                                                await intent.launch();
-                                              },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 15),
-                                ],
-                              )
-                          ],
-                        ),
+                                ),
+                                SizedBox(height: 15),
+                              ],
+                            )
+                        ],
+                      ),
 
                       Divider(),
                       SizedBox(height: 5),
@@ -868,6 +868,44 @@ class _SettingsPageState extends State<SettingsPage> {
                           "In case that you are facing connection problems, this will ping Torn's API and show whether "
                           "it is reachable from your device. If it isn't, it might be because of your DNS servers (you "
                           "can try switching from WiFi to data)",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            const Flexible(
+                              child: Text(
+                                "Enable debug messages",
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Switch(
+                              value: _settingsProvider.debugMessages,
+                              onChanged: (enabled) async {
+                                setState(() {
+                                  _settingsProvider.debugMessages = enabled;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Enable specific debug messages for app failure testing. This is an advanced feature that might create '
+                          'additional error messages: avoid using it unless you have been requested to do so',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
