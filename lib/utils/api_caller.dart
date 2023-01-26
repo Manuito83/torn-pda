@@ -727,10 +727,10 @@ class TornApiCaller {
     } catch (e) {
       // ERROR HANDLING 3: exception from http call
 
-      log("API CALL ERROR [$e]");
+      log("API CALL ERROR (URL was $url): [$e]");
       // Analytics limits at 100 chars
       String platform = Platform.isAndroid ? "a" : "i";
-      String versionError = "$appVersion$platform $e";
+      String versionError = "$appVersion$platform (URL was $url): $e";
       analytics.logEvent(
         name: 'api_call_error',
         parameters: {
