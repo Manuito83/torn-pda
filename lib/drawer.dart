@@ -1270,9 +1270,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
       await nativeUser.loadPreferences();
       await nativeAuth.loadPreferences();
-      if (nativeUser.playerEmail.isNotEmpty &&
-          nativeUser.playerPasswordHash.isNotEmpty &&
-          nativeUser.playerSToken.isNotEmpty) {
+      if (nativeUser.isNativeUserEnabled()) {
         nativeAuth.authStatus = NativeAuthStatus.loggedIn;
       }
       // ------------------------

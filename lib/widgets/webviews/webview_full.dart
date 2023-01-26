@@ -279,6 +279,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Native Auth management
   Future _nativeAuthObtained;
+  NativeUserProvider _nativeUser;
+  NativeAuthProvider _nativeAuth;
 
   @override
   void initState() {
@@ -295,6 +297,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _clearCacheFirstOpportunity = _settingsProvider.getClearCacheNextOpportunityAndReset;
 
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+
+    _nativeUser = context.read<NativeUserProvider>();
+    _nativeAuth = context.read<NativeAuthProvider>();
 
     _initialUrl = URLRequest(url: WebUri(widget.customUrl));
 
@@ -1252,6 +1257,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   _webViewProvider.pendingThemeSync = "";
                 }
               }
+
+              _assessErrorCases(document);
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -1502,33 +1509,67 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _assessNativeAuth() async {
-    NativeUserProvider nativeUser = context.read<NativeUserProvider>();
-    NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+    if (!_nativeUser.isNativeUserEnabled()) {
+      return;
+    }
 
     String originalInitUrl = _initialUrl.url.toString();
 
-    int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inSeconds;
-    if (nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 10) {
+    int elapsedSinceLastAuth = DateTime.now().difference(_nativeAuth.lastAuthRedirect).inHours;
+    if (_nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
+      bool error = false;
+
+      // Tentative immediate change, so that other opening tabs don't auth as well
+      _nativeAuth.lastAuthRedirect = DateTime.now();
       log("Getting auth URL!");
       try {
-        TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
+        TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
           context: context,
           loginData: GetInitDataModel(
             playerId: _userProvider.basic.playerId,
-            sToken: nativeUser.playerSToken,
+            sToken: _nativeUser.playerSToken,
           ),
         );
 
         if (loginResponse.success) {
           // Join the standard Auth URL and the original URL requested as part of the redirect parameter
           _initialUrl = URLRequest(url: WebUri(loginResponse.authUrl + originalInitUrl));
-          log("Auth URL: $_initialUrl");
+          log("Auth URL: ${_initialUrl.url}");
         } else {
+          error = true;
           log("Auth URL failed: ${loginResponse.message}");
         }
-        // TODO: reset time
       } catch (e) {
-        // TODO
+        error = true;
+        log("Auth URL catch: $e");
+      }
+
+      if (error) {
+        // Reset time with some delay, so that rapidly opening tabs don't cause
+        Future.delayed(Duration(seconds: 2)).then((_) {
+          _nativeAuth.lastAuthRedirect = DateTime.fromMicrosecondsSinceEpoch(elapsedSinceLastAuth);
+        });
+
+        String errorMessage = "Authentication error, please check your username and password in Settings!";
+        if (_nativeAuth.authErrorsInSession >= 3) {
+          _nativeAuth.authErrorsInSession = 0;
+          errorMessage = "Too many authentication errors, your username and password have been erased in "
+              "Torn PDA settings as a precaution!";
+          _nativeUser.eraseUserPreferences();
+        } else {
+          _nativeAuth.authErrorsInSession++;
+        }
+
+        BotToast.showText(
+          text: errorMessage,
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red,
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
       }
     }
 
@@ -1614,6 +1655,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       'responseText': resp.body,
       'responseHeaders': resp.headers.keys.map((key) => '${key}: ${resp.headers[key]}').join("\r\n")
     };
+  }
+
+  Future _assessErrorCases(dom.Document document) async {
+    if (!_nativeUser.isNativeUserEnabled()) {
+      return;
+    }
+
+    // If for some reason we are logged out of Torn, try to login again
+    if (document.body.innerHtml.contains("Email address or password incorrect") ||
+        document.body.innerHtml.contains("multiple failures from your IP address")) {
+      BotToast.showText(
+        clickClose: true,
+        text: "Authentication error detected!\n\nIf you have inserted your username and password combination in Torn "
+            "PDA's settings section, please verify that they are correct!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.red,
+        duration: Duration(seconds: 6),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
   }
 
   void _reportUrlVisit(Uri uri) {
