@@ -20,7 +20,6 @@ import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
-import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
@@ -666,7 +665,7 @@ class TornApiCaller {
       Dio dio = Dio(
         BaseOptions(
           connectTimeout: 30000,
-          receiveTimeout: 30000,
+          //receiveTimeout: 30000, // Causing errors?
           responseType: ResponseType.plain,
         ),
       );
