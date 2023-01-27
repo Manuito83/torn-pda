@@ -1956,7 +1956,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _userToLoad = false;
           _apiError = true;
           _errorReason = myProfile.errorReason;
-          _errorDetails = myProfile.errorDetails;
+          _errorDetails = myProfile.pdaErrorDetails;
           _expandableController.expanded = true;
         });
         // We'll only remove the user if the key is invalid, otherwise we

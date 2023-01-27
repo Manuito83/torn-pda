@@ -515,7 +515,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 'There was an error: ${_apiError.errorReason}',
                                 textAlign: TextAlign.center,
                               ),
-                              if (_apiError.errorDetails.isNotEmpty)
+                              if (_apiError.pdaErrorDetails.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 20),
                                   child: Column(
@@ -529,7 +529,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                       ),
                                       SizedBox(height: 5),
                                       Text(
-                                        _apiError.errorDetails,
+                                        _apiError.pdaErrorDetails,
                                         style: TextStyle(
                                           fontStyle: FontStyle.italic,
                                           fontSize: 10,
