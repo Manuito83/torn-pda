@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -58,6 +59,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   Future _apiCalled;
   bool _apiSuccess;
+  bool _yataTimeOut = false;
 
   var _activeRestocks = Map<String, dynamic>();
 
@@ -782,47 +784,22 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   Future<void> _fetchApiInformation() async {
     try {
-      Future yataAPI() async {
-        String yataURL = 'https://yata.yt/api/v1/travel/export/';
-        var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
-        if (responseDB.statusCode == 200) {
-          _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
-          _apiSuccess = true;
-        } else {
-          _apiSuccess = false;
-
-          BotToast.showText(
-            text: "YATA debug error: ${responseDB.body}",
-            textStyle: TextStyle(
-              fontSize: 13,
-              color: Colors.white,
-            ),
-            contentColor: Colors.red[800],
-            duration: Duration(seconds: 4),
-            contentPadding: EdgeInsets.all(10),
-          );
-        }
+      // Get all APIs
+      await yataAPI();
+      if (_yataTimeOut) {
+        return;
       }
 
-      Future tornItems() async {
-        _allTornItems = await TornApiCaller().getItems();
-      }
-
-      Future inventory() async {
-        _inventory = await TornApiCaller().getInventory();
-      }
-
-      Future profileMisc() async {
-        _profile = await TornApiCaller().getProfileExtended(limit: 3);
-      }
-
-      // Get all APIs at the same time
       await Future.wait<void>([
-        yataAPI(),
         tornItems(),
         inventory(),
         profileMisc(),
       ]);
+
+      if (!_apiSuccess) {
+        log("Unsuccessful Torn API replies");
+        return;
+      }
 
       // We need to calculate several additional values before sorting the list
       // for the first time, as this values don't come straight
@@ -933,17 +910,196 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     } catch (e) {
       _apiSuccess = false;
 
+      if (_settingsProvider.debugMessages) {
+        BotToast.showText(
+          text: "YATA debug catch: $e",
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+    }
+  }
+
+  Future yataAPI() async {
+    try {
+      _yataTimeOut = false;
+      String yataURL = 'https://yata.yt/api/v1/travel/export/';
+      var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
+      if (responseDB.statusCode == 200) {
+        _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
+        _apiSuccess = true;
+      } else {
+        _apiSuccess = false;
+
+        if (_settingsProvider.debugMessages) {
+          BotToast.showText(
+            text: "YATA debug error: ${responseDB.body}",
+            textStyle: TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+            ),
+            contentColor: Colors.red[800],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+        }
+      }
+    } catch (e) {
+      _apiSuccess = false;
+      if (e is TimeoutException) {
+        _yataTimeOut = true;
+        BotToast.showText(
+          text: "YATA connection timed out, the server might be busy.\n\nPlease try again later!",
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+    }
+  }
+
+  Future tornItems() async {
+    dynamic itemsResponse = await TornApiCaller().getItems();
+
+    String error = "";
+    if (itemsResponse is ApiError) {
+      // Torn API generates lots of errors with this query (JAN 2023)
+      ApiError e = itemsResponse as ApiError;
+      error = e.errorReason;
+      log("Recalling API due to items error: ${e.errorReason}");
       BotToast.showText(
-        text: "YATA debug catch: $e",
+        text: "Torn API replied with error, retrying after a few seconds, please wait...",
+        onlyOne: true,
         textStyle: TextStyle(
           fontSize: 13,
           color: Colors.white,
         ),
-        contentColor: Colors.red[800],
-        duration: Duration(seconds: 4),
+        contentColor: Colors.orange[800],
+        duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
+      await Future.delayed(const Duration(seconds: 8));
+      itemsResponse = await TornApiCaller().getItems();
     }
+
+    if (itemsResponse is ApiError) {
+      _apiSuccess = false;
+      if (itemsResponse.errorReason.isNotEmpty) {
+        BotToast.showText(
+          text: "Torn API response with error: $error",
+          onlyOne: true,
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+      return;
+    }
+
+    _allTornItems = itemsResponse;
+  }
+
+  Future inventory() async {
+    dynamic inventoryResponse = await TornApiCaller().getInventory();
+
+    String error = "";
+    if (inventoryResponse is ApiError) {
+      // Torn API generates lots of errors with this query (JAN 2023)
+      ApiError e = inventoryResponse as ApiError;
+      error = e.errorReason;
+      log("Recalling API due to profile error: ${e.errorReason}");
+      BotToast.showText(
+        text: "Torn API replied with error, retrying after a few seconds, please wait...",
+        onlyOne: true,
+        textStyle: TextStyle(
+          fontSize: 13,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+      await Future.delayed(const Duration(seconds: 8));
+      inventoryResponse = await TornApiCaller().getInventory();
+    }
+
+    if (inventoryResponse is ApiError) {
+      _apiSuccess = false;
+      if (inventoryResponse.errorReason.isNotEmpty) {
+        BotToast.showText(
+          text: "Torn API response with error: $error",
+          onlyOne: true,
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+      return;
+    }
+
+    _inventory = inventoryResponse;
+  }
+
+  Future profileMisc() async {
+    dynamic profileResponse = await TornApiCaller().getProfileExtended(limit: 3);
+
+    String error = "";
+    if (profileResponse is ApiError) {
+      // Torn API generates lots of errors with this query (JAN 2023)
+      ApiError e = profileResponse as ApiError;
+      error = e.errorReason;
+      log("Recalling API due to profile error: ${e.errorReason}");
+      BotToast.showText(
+        text: "Torn API replied with error, retrying after a few seconds, please wait...",
+        onlyOne: true,
+        textStyle: TextStyle(
+          fontSize: 13,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+      await Future.delayed(const Duration(seconds: 8));
+      profileResponse = await TornApiCaller().getProfileExtended(limit: 3);
+    }
+
+    if (profileResponse is ApiError) {
+      _apiSuccess = false;
+      if (profileResponse.errorReason.isNotEmpty) {
+        BotToast.showText(
+          text: "Torn API response with error: $error",
+          onlyOne: true,
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+      return;
+    }
+
+    _profile = profileResponse;
   }
 
   void _filterAndSortTopLists() {

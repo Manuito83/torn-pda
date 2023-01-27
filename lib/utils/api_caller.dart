@@ -20,7 +20,6 @@ import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
-import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
@@ -82,8 +81,8 @@ enum ApiSelection {
 class ApiError {
   int errorId;
   String errorReason = "";
-  String errorDetails = "";
-  ApiError({int errorId = 0, String details = ""}) {
+  String pdaErrorDetails = "";
+  ApiError({this.errorId = 0, this.pdaErrorDetails = ""}) {
     switch (errorId) {
       // Torn PDA codes
       case 100:
@@ -92,12 +91,12 @@ class ApiError {
       // Torn PDA codes
       case 101:
         errorReason = 'issue with data model';
-        errorDetails = details;
+        pdaErrorDetails = pdaErrorDetails;
         break;
       // Torn codes
       case 0:
         errorReason = 'no connection';
-        errorDetails = details;
+        pdaErrorDetails = pdaErrorDetails;
         break;
       case 1:
         errorReason = 'key is empty';
@@ -147,6 +146,9 @@ class ApiError {
       case 16:
         errorReason = 'access level of this key is not high enough: Torn PDA request at least a Limited key.';
         break;
+      case 17:
+        errorReason = 'backend error occurred, please try again.';
+        break;
     }
   }
 }
@@ -162,7 +164,7 @@ class TornApiCaller {
         return TravelModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -179,7 +181,7 @@ class TornApiCaller {
         return OwnProfileBasic.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -196,7 +198,7 @@ class TornApiCaller {
         return OwnProfileExtended.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -213,7 +215,7 @@ class TornApiCaller {
         return OwnPersonalStatsModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -230,7 +232,7 @@ class TornApiCaller {
         return OwnProfileMisc.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -247,7 +249,7 @@ class TornApiCaller {
         return OtherProfileModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -264,7 +266,7 @@ class TornApiCaller {
         return TargetModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -281,7 +283,7 @@ class TornApiCaller {
         return AttackModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -298,7 +300,7 @@ class TornApiCaller {
         return AttackFullModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -315,7 +317,7 @@ class TornApiCaller {
         return FactionAttacksModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -332,7 +334,7 @@ class TornApiCaller {
         return ChainModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -349,7 +351,7 @@ class TornApiCaller {
         return BarsModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -366,7 +368,7 @@ class TornApiCaller {
         return ItemsModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -383,7 +385,7 @@ class TornApiCaller {
         return InventoryModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -400,7 +402,7 @@ class TornApiCaller {
         return TornEducationModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -417,7 +419,7 @@ class TornApiCaller {
         return FactionModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -441,7 +443,7 @@ class TornApiCaller {
         return processedModel;
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -458,7 +460,7 @@ class TornApiCaller {
         return FriendModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -475,7 +477,7 @@ class TornApiCaller {
         return PropertyModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -492,7 +494,7 @@ class TornApiCaller {
         return StockMarketModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -509,7 +511,7 @@ class TornApiCaller {
         return StockMarketUserModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -526,7 +528,7 @@ class TornApiCaller {
         return MarketItemModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -543,7 +545,7 @@ class TornApiCaller {
         return UserPerksModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -560,7 +562,7 @@ class TornApiCaller {
         return RankedWarsModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
       return apiResult;
@@ -666,7 +668,7 @@ class TornApiCaller {
       Dio dio = Dio(
         BaseOptions(
           connectTimeout: 30000,
-          receiveTimeout: 30000,
+          //receiveTimeout: 30000, // Causing errors?
           responseType: ResponseType.plain,
         ),
       );
@@ -701,13 +703,15 @@ class TornApiCaller {
               "a request with your API key";
         }
         return ApiError(
-            errorId: 0, details: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]");
+            errorId: 0,
+            pdaErrorDetails: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]");
       }
 
       // ERROR HANDLING 2: JSON is correct, but the API is reporting an error from JSON
       if (jsonResponse.isNotEmpty && response.statusCode == 200) {
         if (jsonResponse['error'] != null) {
-          return ApiError(errorId: jsonResponse['error']['code']);
+          var code = jsonResponse['error']['code'];
+          return ApiError(errorId: code);
         }
         // Otherwise, return a good json response
         return jsonResponse;
@@ -720,7 +724,7 @@ class TornApiCaller {
             'response_body': jsonResponse.length > 99 ? jsonResponse.substring(0, 99) : jsonResponse,
           },
         );
-        return ApiError(errorId: 0, details: "API STATUS ERROR\n[${response.statusCode}: ${response.data}]");
+        return ApiError(errorId: 0, pdaErrorDetails: "API STATUS ERROR\n[${response.statusCode}: ${response.data}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
@@ -739,7 +743,8 @@ class TornApiCaller {
       );
       // We limit to a bit more here (it will be shown to the user)
       String error = e.toString();
-      return ApiError(errorId: 0, details: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : e}]");
+      return ApiError(
+          errorId: 0, pdaErrorDetails: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : e}]");
     }
   }
 }
