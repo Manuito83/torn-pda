@@ -18,6 +18,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -511,7 +512,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             )
                         ],
                       ),
-
                       Divider(),
                       SizedBox(height: 5),
                       Row(
@@ -548,6 +548,50 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Text(
                           'Choose the source of spied stats. This affects the stats shown when you visit a profile '
                           'in the browser, as well as those shown in the War section (Chaining)',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'ORGANIZED CRIMES',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Nerve bar source",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _naturalNerveBarSourceDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each '
+                          'member of your faction available to plan an organized crime',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
@@ -1825,6 +1869,64 @@ class _SettingsPageState extends State<SettingsPage> {
             _settingsProvider.changeSpiesSource = SpiesSource.yata;
           } else {
             _settingsProvider.changeSpiesSource = SpiesSource.tornStats;
+          }
+        });
+      },
+    );
+  }
+
+  DropdownButton _naturalNerveBarSourceDropdown() {
+    return DropdownButton<NaturalNerveBarSource>(
+      value: _settingsProvider.naturalNerveBarSource,
+      items: [
+        DropdownMenuItem(
+          value: NaturalNerveBarSource.off,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "Disabled",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: NaturalNerveBarSource.yata,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "YATA",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: NaturalNerveBarSource.tornStats,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "Torn Stats",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          if (value == NaturalNerveBarSource.yata) {
+            _settingsProvider.naturalNerveBarSource = NaturalNerveBarSource.yata;
+          } else if (value == NaturalNerveBarSource.tornStats) {
+            _settingsProvider.naturalNerveBarSource = NaturalNerveBarSource.tornStats;
+          } else {
+            _settingsProvider.naturalNerveBarSource = NaturalNerveBarSource.off;
           }
         });
       },

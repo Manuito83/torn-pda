@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 // Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
+import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
@@ -183,6 +184,16 @@ class SettingsProvider extends ChangeNotifier {
   set changeSpiesSource(SpiesSource value) {
     _spiesSource = value;
     _spiesSource == SpiesSource.yata ? Prefs().setSpiesSource('yata') : Prefs().setSpiesSource('tornstats');
+    notifyListeners();
+  }
+
+  NaturalNerveBarSource _naturalNerveBarSource = NaturalNerveBarSource.yata;
+  NaturalNerveBarSource get naturalNerveBarSource => _naturalNerveBarSource;
+  set naturalNerveBarSource(NaturalNerveBarSource value) {
+    _naturalNerveBarSource = value;
+    _naturalNerveBarSource == NaturalNerveBarSource.yata
+        ? Prefs().setNaturalNerveBarSource('yata')
+        : Prefs().setNaturalNerveBarSource('tornstats');
     notifyListeners();
   }
 

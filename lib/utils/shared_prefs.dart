@@ -80,6 +80,7 @@ class Prefs {
   final String _kShowSecondsInClock = "pda_showSecondsInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kSpiesSource = "pda_SpiesSource";
+  final String _kNaturalNerveBarSource = "pda_naturalNerveBarSource";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
@@ -906,6 +907,19 @@ class Prefs {
   Future<bool> setSpiesSource(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kSpiesSource, value);
+  }
+
+  /// ----------------------------
+  /// Methods for OC Crimes NNB Source
+  /// ----------------------------
+  Future<String> getNaturalNerveBarSource() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNaturalNerveBarSource) ?? 'yata';
+  }
+
+  Future<bool> setNaturalNerveBarSource(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNaturalNerveBarSource, value);
   }
 
   /// ----------------------------

@@ -27,6 +27,8 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
+import 'package:torn_pda/models/oc/ts_members_model.dart';
+import 'package:torn_pda/models/oc/yata_members_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
@@ -57,6 +59,7 @@ import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
+import 'package:torn_pda/widgets/crimes/faction_crimes_widget.dart';
 import 'package:torn_pda/widgets/gym/steadfast_widget.dart';
 import 'package:torn_pda/widgets/jail/jail_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
@@ -155,6 +158,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _crimesActive = false;
   final _crimesController = ExpandableController();
 
+  final _ocNnbUrl = "factions.php?step=your#/tab=crimes";
+  final _ocNnbController = ExpandableController();
+  String _ocSource = "";
+
   Widget _gymExpandable = SizedBox.shrink();
 
   var _tradesFullActive = false;
@@ -215,6 +222,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
   bool _vaultTriggered = false;
+  bool _ocNnbTriggered = false;
 
   Widget _profileAttackWidget = const SizedBox.shrink();
   var _lastProfileVisited = "";
@@ -842,6 +850,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           )
         else
           const SizedBox.shrink(),
+        ExpandablePanel(
+          theme: const ExpandableThemeData(
+            hasIcon: false,
+            tapBodyToCollapse: false,
+            tapHeaderToExpand: false,
+          ),
+          collapsed: const SizedBox.shrink(),
+          controller: _ocNnbController,
+          header: const SizedBox.shrink(),
+          expanded: _ocNnbTriggered
+              ? FactionCrimesWidget(
+                  source: _ocSource,
+                )
+              : const SizedBox.shrink(),
+        ),
         // Quick items widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
@@ -2093,6 +2116,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // Note: bounties is also in onResource. This will make sure bounties activates correctly
       // in some devices
       getBounties = true;
+    }
+
+    if ((_currentUrl.contains(_ocNnbUrl) && !_ocNnbTriggered) ||
+        (!_currentUrl.contains(_ocNnbUrl) && _ocNnbTriggered)) {
+      _assessOCnnb(); // Using a more direct call for OCnnb
     }
 
     if (_settingsProvider.extraPlayerInformation) {
@@ -3447,6 +3475,71 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         removeRed: _bountiesModel.removeRed,
       ),
     );
+  }
+
+  // ORGANIZED CRIMES NNB
+  void _assessOCnnb() async {
+    if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.off) return;
+
+    if (_currentUrl.contains(_ocNnbUrl) && _ocNnbTriggered) {
+      // Return calls if widget is already active
+      return;
+    } else if (!_currentUrl.contains(_ocNnbUrl)) {
+      // Return calls and reset widget if we are in another URL
+      if (_ocNnbTriggered) _ocNnbTriggered = false;
+      if (_ocNnbController.expanded) {
+        setState(() {
+          _ocNnbController.expanded = false;
+        });
+      }
+      return;
+    }
+
+    _ocNnbTriggered = true;
+    setState(() {
+      _ocNnbController.expanded = true;
+    });
+
+    String membersString = "{";
+    try {
+      if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.yata) {
+        _ocSource = "YATA";
+        String yataUrl = 'https://yata.yt/api/v1/faction/members/?key=${_userProvider.basic.userApiKey}';
+        final yataOCjson = await http.get(WebUri(yataUrl)).timeout(Duration(seconds: 15));
+        final yataMembersModel = yataMembersModelFromJson(yataOCjson.body);
+        yataMembersModel.members.forEach((key, value) {
+          if (value.nnbShare == 1) {
+            membersString += '"${value.id}":"${value.nnb}",';
+          } else {
+            membersString += '"${value.id}":"unk",';
+          }
+        });
+      } else if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.tornStats) {
+        _ocSource = "Torn Stats";
+        String tsUrl = 'https://www.tornstats.com/api/v2/${_userProvider.basic.userApiKey}/faction/crimes';
+        final tsOCjson = await http.get(WebUri(tsUrl)).timeout(Duration(seconds: 15));
+        final tsMembersModel = tornStatsMembersModelFromJson(tsOCjson.body);
+        tsMembersModel.members.forEach((key, value) {
+          membersString += '"${key}":"${value.naturalNerve}",';
+        });
+        // No need to account for unknown in TS, as the member won't be in the JSON (the script assigns 'unk')
+      }
+
+      membersString += "}";
+      webView.evaluateJavascript(source: ocNNB(members: membersString));
+    } catch (e) {
+      BotToast.showText(
+        text: "Could not load NNB from $_ocSource: ${e}",
+        clickClose: true,
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.red[900],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
   }
 
   // Called from parent though GlobalKey state

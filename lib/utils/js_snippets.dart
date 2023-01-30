@@ -1184,3 +1184,122 @@ String bountiesJS({
     123;
   ''';
 }
+
+String ocNNB({@required String members}) {
+  return '''
+    // Credits: some functions and logic thanks to Torn Tools
+
+    (function() {
+
+      var data = $members;
+	
+      function loadNNB () {
+        // Add style nnb title
+        function addStyle(styleString) {
+          const style = document.createElement('style');
+          style.textContent = styleString;
+          document.head.append(style);
+        }
+
+        addStyle(
+          `.pda-nnb-title {
+            text-align: right;
+            width: 30px;
+          }`
+        );
+
+        addStyle(
+          `.pda-nnb-value {
+            width: 30px;
+          }`
+        );
+
+        addStyle(
+          `.member.pda-modified {
+            width: 80px !important;
+          }`
+        );
+
+        addStyle(
+          `.level.pda-modified {
+            width: 15px !important;
+          }`
+        );
+
+        addStyle(
+          `.offences.pda-modified {
+            width: 50px !important;
+          }`
+        );
+
+        addStyle(
+          `.act.pda-modified {
+            width: 29px !important;
+          }`
+        );
+
+
+        function createNerveTitle () {
+          var newDiv = document.createElement("li");
+          var newContent = document.createTextNode("NNB");
+          newDiv.className = "pda-nnb-title";
+          newDiv.appendChild(newContent);
+          return newDiv;
+        }
+
+        function createNerveValue (value) {
+          var newDiv = document.createElement("li");
+          var newContent = document.createTextNode(value);
+          newDiv.className = "pda-nnb-value";
+          newDiv.appendChild(newContent);
+          return newDiv;
+        }
+        var member = document.querySelectorAll('.member');
+        for (var m of member) {
+            
+          var row = m.closest(".item");
+          if (row === null) continue;
+          
+          row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
+          row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
+          row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
+          row.querySelectorAll(`.act`).forEach((element) => element.classList.add("pda-modified"));
+          
+          const stat = row.querySelector(".act");
+          if (stat === null) continue; 
+          
+          if (row.classList.contains("title")) {
+            stat.parentElement.insertBefore(
+              createNerveTitle(),
+              stat
+            );
+            continue;
+          }
+          
+          const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
+          
+          var found = false;
+          for (const [key, value] of Object.entries(data)) {
+            if (id === key) {
+              stat.insertAdjacentElement("beforebegin", createNerveValue(value));
+              found = true;
+              continue;
+            } 
+          }
+          if (!found) {
+            stat.insertAdjacentElement("beforebegin", createNerveValue("unk"));
+          }
+        }
+      }
+
+      let waitForOCAndRun = setInterval(() => {
+        if (document.querySelector(".faction-crimes-wrap")) {
+        loadNNB();
+        console.log("Torn PDA: adding NNB!");
+        return clearInterval(waitForOCAndRun);
+        }
+      }, 300);
+
+    })();
+  ''';
+}
