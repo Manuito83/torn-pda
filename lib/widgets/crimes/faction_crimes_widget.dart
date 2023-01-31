@@ -30,7 +30,7 @@ class _FactionCrimesWidgetState extends State<FactionCrimesWidget> {
             "Member's NNB source: ${widget.source}",
             style: TextStyle(
               color: Colors.white,
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ],
