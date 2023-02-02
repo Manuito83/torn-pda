@@ -1245,7 +1245,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "\nYou can get your API key in the Torn website by taping your profile picture (upper right corner)"
+                        "\nYou can get your API key in the Torn website by tapping your profile picture (upper right corner)"
                         " and going to Settings, API Keys. Torn PDA only needs a Limited Access key.\n",
                       ),
                       RichText(

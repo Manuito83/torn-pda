@@ -561,7 +561,7 @@ class _WarPageState extends State<WarPage> {
           key: _showCaseAddFaction,
           title: 'Welcome to War!',
           description: "\nThe first thing you'll want to do is to add an enemy faction to your list. You can do so by "
-              "taping this icon."
+              "tapping this icon."
               "\n\nIf you don't know the faction's ID, you can optionally insert one of it's members' "
               "ID (look for the 'person' icon)."
               "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",

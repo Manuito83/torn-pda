@@ -476,7 +476,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 20),
                                   child: Text(
-                                    "Choose which medical section to open when taping on the life bar. "
+                                    "Choose which medical section to open when tapping on the life bar. "
                                     "If 'ask' is chosen a dialog will appear every time",
                                     style: TextStyle(
                                       color: Colors.grey[600],
