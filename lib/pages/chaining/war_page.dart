@@ -557,7 +557,7 @@ class _WarPageState extends State<WarPage> {
       ),
       actions: <Widget>[
         Showcase(
-          disableAnimation: true,
+          disableMovingAnimation: true,
           key: _showCaseAddFaction,
           title: 'Welcome to War!',
           description: "\nThe first thing you'll want to do is to add an enemy faction to your list. You can do so by "
@@ -566,9 +566,9 @@ class _WarPageState extends State<WarPage> {
               "ID (look for the 'person' icon)."
               "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.secondBackground,
+          tooltipBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
-          contentPadding: EdgeInsets.all(20),
+          tooltipPadding: EdgeInsets.all(20),
           child: IconButton(
             icon: Image.asset(
               'images/icons/faction.png',
@@ -582,7 +582,7 @@ class _WarPageState extends State<WarPage> {
           ),
         ),
         Showcase(
-          disableAnimation: true,
+          disableMovingAnimation: true,
           key: _showCaseUpdate,
           title: 'Updating targets!',
           description: "\nThere are a couple of ways to update war targets.\n\nWith a short tap, you can perform "
@@ -590,9 +590,9 @@ class _WarPageState extends State<WarPage> {
               "A long-press will start a slower but full update of all targets.\n\n"
               "Alternatively, you can update targets individually.",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.secondBackground,
+          tooltipBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
-          contentPadding: EdgeInsets.all(20),
+          tooltipPadding: EdgeInsets.all(20),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: GetBuilder<WarController>(
