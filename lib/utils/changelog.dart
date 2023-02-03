@@ -41,32 +41,33 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // Build 278 - 27/01/2023
 
-    // VERSION 2.9.4
-    var v2_9_4 = ChangeLogItem();
-    v2_9_4.version = 'Torn PDA v2.9.4';
-    v2_9_4.date = '01 FEB 2023';
-    String feat2_9_4_1 = "Added theme synchronization between app and web (can be disabled)";
-    String feat2_9_4_2 = "User scripts' injection time can now be selected. NOTE: this might be "
+    // VERSION 2.9.5
+    var v2_9_5 = ChangeLogItem();
+    v2_9_5.version = 'Torn PDA v2.9.5';
+    v2_9_5.date = '01 FEB 2023';
+    v2_9_5.infoString = "Hotfix for crashes in some iOS devices when launching the browser";
+    String feat2_9_5_1 = "Added theme synchronization between app and web (can be disabled)";
+    String feat2_9_5_2 = "User scripts' injection time can now be selected. NOTE: this might be "
         "a breaking change for some scripts, that will require to be adapted. It is also recommended to restore "
         "the default script examples. Please read the documentation (in the user scripts section) for more information.";
-    String feat2_9_4_3 = "Added option to open tab in external browser (URL options dialog)";
-    String feat2_9_4_4 = "";
-    if (Platform.isAndroid) feat2_9_4_4 = "Fixed website Google login";
-    if (Platform.isIOS) feat2_9_4_4 = "Fixed alternative website login";
-    String feat2_9_4_5 = "Fixed discrete notifications option (Settings) missing on iOS";
-    String feat2_9_4_6 = "Fixed log copy to clipboard";
-    String feat2_9_4_7 = "Fixed issue with missing shortcuts";
-    String feat2_9_4_8 = "Increased timeout with YATA to improve communication";
-    String feat2_9_4_9 = "Removed Torn Trader (service discontinued)";
-    v2_9_4.features.add(feat2_9_4_1);
-    v2_9_4.features.add(feat2_9_4_2);
-    v2_9_4.features.add(feat2_9_4_3);
-    v2_9_4.features.add(feat2_9_4_4);
-    if (Platform.isIOS) v2_9_4.features.add(feat2_9_4_5);
-    v2_9_4.features.add(feat2_9_4_6);
-    v2_9_4.features.add(feat2_9_4_7);
-    v2_9_4.features.add(feat2_9_4_8);
-    v2_9_4.features.add(feat2_9_4_9);
+    String feat2_9_5_3 = "Added option to open tab in external browser (URL options dialog)";
+    String feat2_9_5_4 = "";
+    if (Platform.isAndroid) feat2_9_5_4 = "Fixed website Google login";
+    if (Platform.isIOS) feat2_9_5_4 = "Fixed alternative website login";
+    String feat2_9_5_5 = "Fixed discrete notifications option (Settings) missing on iOS";
+    String feat2_9_5_6 = "Fixed log copy to clipboard";
+    String feat2_9_5_7 = "Fixed issue with missing shortcuts";
+    String feat2_9_5_8 = "Increased timeout with YATA to improve communication";
+    String feat2_9_5_9 = "Removed Torn Trader (service discontinued)";
+    v2_9_5.features.add(feat2_9_5_1);
+    v2_9_5.features.add(feat2_9_5_2);
+    v2_9_5.features.add(feat2_9_5_3);
+    v2_9_5.features.add(feat2_9_5_4);
+    if (Platform.isIOS) v2_9_5.features.add(feat2_9_5_5);
+    v2_9_5.features.add(feat2_9_5_6);
+    v2_9_5.features.add(feat2_9_5_7);
+    v2_9_5.features.add(feat2_9_5_8);
+    v2_9_5.features.add(feat2_9_5_9);
 
     // VERSION 2.9.3
     var v2_9_3 = ChangeLogItem();
@@ -1290,7 +1291,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v2_9_4);
+    itemList.add(v2_9_5);
     itemList.add(v2_9_3);
     itemList.add(v2_9_2);
     itemList.add(v2_9_1);

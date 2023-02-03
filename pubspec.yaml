@@ -25,9 +25,8 @@ dependencies:
   audioplayers: ^0.20.1
   bot_toast: ^4.0.1
   bubble_showcase: ^1.1.0
-  cloud_firestore: ^3.1.7
-  cloud_functions: ^3.2.5
-  connectivity_plus: ^2.3.7
+  cloud_firestore: 4.3.1
+  cloud_functions: 4.0.7
   cookie_jar: ^3.0.1
   cupertino_icons: ^1.0.2
   dart_ping: ^6.1.1
@@ -40,17 +39,21 @@ dependencies:
   expandable: ^5.0.1
   ## ffi ^ to avoid strut errors
   ## ffi: ^1.0.0
-  firebase_analytics: ^9.1.8
-  firebase_auth: ^3.3.19
-  firebase_core: ^1.17.1
-  firebase_crashlytics: ^2.8.0
-  firebase_database: ^9.0.14
-  firebase_messaging: ^11.4.0
+  firebase_analytics: 10.1.0
+  firebase_auth: 4.2.5
+  firebase_core: 2.4.1
+  firebase_crashlytics: 3.0.11
+  firebase_database: 10.0.9
+  firebase_messaging: 14.2.1
   fl_chart: ^0.50.6
   flutter_app_badger: ^1.3.0
   flutter_colorpicker: ^1.0.3
   flutter_icons: ^1.1.0
-  flutter_inappwebview: 6.0.0-beta.22
+  #flutter_inappwebview: 6.0.0-beta.22
+  flutter_inappwebview: 
+    git:
+      url: https://github.com/Manuito83/flutter_inappwebview.git
+      ref: manuito-beta22
   flutter_local_notifications: 9.2.0
   flutter_secure_storage: ^6.0.0
   flutter_slidable: ^1.2.1
@@ -72,7 +75,7 @@ dependencies:
   rxdart: ^0.27.3
   share: ^2.0.4
   shared_preferences: ^2.0.15
-  showcaseview: ^1.1.5
+  showcaseview: 2.0.0+1
   sliding_up_panel: ^2.0.0+1
   speech_bubble: 0.0.9
   timeline_tile: ^2.0.0

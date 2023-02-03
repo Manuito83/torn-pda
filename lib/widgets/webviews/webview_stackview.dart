@@ -374,16 +374,16 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     }
 
     return Showcase(
-      disableAnimation: true,
+      disableMovingAnimation: true,
       textColor: _themeProvider.mainText,
-      showcaseBackgroundColor: _themeProvider.secondBackground,
+      tooltipBackgroundColor: _themeProvider.secondBackground,
       key: _showcaseTabsGeneral,
       title: 'Tab bar',
       description: "\nYou've opened your first tab; remember you can close tabs (except for the first one) by double "
-          "taping them. You can also rearrange tabs, duplicate the first one, etc."
+          "tapping them. You can also rearrange tabs, duplicate the first one, etc."
           "\n\nVisit the Tips section for more information!\n",
       descTextStyle: TextStyle(fontSize: 13),
-      contentPadding: EdgeInsets.all(20),
+      tooltipPadding: EdgeInsets.all(20),
       child: Container(
         height: 40,
         decoration: new BoxDecoration(
