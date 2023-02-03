@@ -577,8 +577,8 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _themeToSync = "dark";
-  String get themeToSync => _themeToSync;
-  set themeToSync(String value) {
+  String get darkThemeToSyncFromWeb => _themeToSync;
+  set darkThemeToSyncFromWeb(String value) {
     _themeToSync = value;
     Prefs().setThemeToSync(value);
     notifyListeners();

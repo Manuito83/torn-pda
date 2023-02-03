@@ -1073,12 +1073,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               callback: (args) {
                 if (!_settingsProvider.syncTheme) return;
                 if (args.contains("dark")) {
-                  if (_settingsProvider.themeToSync == "dark") {
-                    _themeProvider.changeTheme = AppTheme.dark;
-                    log("Web theme changed to dark!");
-                  } else {
-                    _themeProvider.changeTheme = AppTheme.extraDark;
-                    log("Web theme changed to extra dark!");
+                  // Only change to dark themes if we are currently in light (the web will respond with a
+                  // theme change event when we initiate the change, and it could revert to the default dark)
+                  if (_themeProvider.currentTheme == AppTheme.light) {
+                    if (_settingsProvider.darkThemeToSyncFromWeb == "dark") {
+                      _themeProvider.changeTheme = AppTheme.dark;
+                      log("Web theme changed to dark!");
+                    } else {
+                      _themeProvider.changeTheme = AppTheme.extraDark;
+                      log("Web theme changed to extra dark!");
+                    }
                   }
                 } else if (args.contains("light")) {
                   _themeProvider.changeTheme = AppTheme.light;

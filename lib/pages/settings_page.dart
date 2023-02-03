@@ -1935,7 +1935,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   DropdownButton _themeToSyncDropdown() {
     return DropdownButton<String>(
-      value: _settingsProvider.themeToSync,
+      value: _settingsProvider.darkThemeToSyncFromWeb,
       items: const [
         DropdownMenuItem(
           value: "dark",
@@ -1967,7 +1967,7 @@ class _SettingsPageState extends State<SettingsPage> {
       onChanged: (value) {
         if (value == null) return;
         setState(() {
-          _settingsProvider.themeToSync = value;
+          _settingsProvider.darkThemeToSyncFromWeb = value;
         });
       },
     );
