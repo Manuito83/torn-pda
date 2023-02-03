@@ -27,6 +27,7 @@ dependencies:
   bubble_showcase: ^1.1.0
   cloud_firestore: 4.3.1
   cloud_functions: 4.0.7
+  connectivity_plus: ^2.3.7
   cookie_jar: ^3.0.1
   cupertino_icons: ^1.0.2
   dart_ping: ^6.1.1
