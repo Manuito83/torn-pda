@@ -16,6 +16,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 
 import '../../providers/targets_provider.dart';
 import '../../providers/war_controller.dart';
@@ -30,12 +31,14 @@ class RankedWarCard extends StatefulWidget {
   final RankedWar rankedWar;
   final RankedWarStatus status;
   final String warId;
+  final int ownFactionId;
 
   // Key is needed to update at least the hospital counter individually
   RankedWarCard({
     @required this.rankedWar,
     @required this.status,
     @required this.warId,
+    @required this.ownFactionId,
     @required Key key,
   }) : super(key: key);
 
@@ -82,6 +85,15 @@ class _RankedWarCardState extends State<RankedWarCard> {
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Card(
         elevation: 2,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+            color: widget.rankedWar.factions.containsKey(widget.ownFactionId.toString())
+                ? Colors.blue
+                : Colors.transparent,
+            width: 3,
+          ),
+          borderRadius: BorderRadius.circular(4.0),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -362,33 +374,34 @@ class _RankedWarCardState extends State<RankedWarCard> {
   }
 
   void _getTimeString() {
-    TimeFormatSetting timePrefs = _settingsProvider.currentTimeFormat;
-    DateFormat dateFormatter;
-    DateFormat hourFormatter;
-    switch (timePrefs) {
-      case TimeFormatSetting.h24:
-        dateFormatter = DateFormat('dd MMM');
-        hourFormatter = DateFormat('HH:mm');
-        break;
-      case TimeFormatSetting.h12:
-        dateFormatter = DateFormat('MMM dd');
-        hourFormatter = DateFormat('hh:mm a');
-        break;
-    }
-
     if (widget.status == RankedWarStatus.active) {
       DateTime date = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
-      _titleString += "War #${widget.warId}, started on ${dateFormatter.format(date)} @ ${hourFormatter.format(date)}";
+      _titleString += "War #${widget.warId}, started ${_dayWeek(date)} @ ${_hour(date)}";
     } else if (widget.status == RankedWarStatus.upcoming) {
       DateTime date = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
-      _titleString += "War #${widget.warId}, starts on ${dateFormatter.format(date)} @ ${hourFormatter.format(date)}";
+      _titleString += "War #${widget.warId}, starts ${_dayWeek(date)} @ ${_hour(date)}";
     } else if (widget.status == RankedWarStatus.finished) {
       DateTime dateStart = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
       DateTime dateEnd = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.end * 1000);
-      _titleString +=
-          "War #${widget.warId}, started on ${dateFormatter.format(dateStart)} @ ${hourFormatter.format(dateStart)}";
-      _finishedString = "Finished on ${dateFormatter.format(dateEnd)} @ ${hourFormatter.format(dateEnd)}";
+      _titleString += "War #${widget.warId}, started ${_dayWeek(dateStart)} @ ${_hour(dateStart)}";
+      _finishedString = "Finished ${_dayWeek(dateEnd)} @ ${_hour(dateEnd)}";
     }
+  }
+
+  String _hour(DateTime date) {
+    return TimeFormatter(
+      inputTime: date,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).formatHour;
+  }
+
+  String _dayWeek(DateTime date) {
+    return TimeFormatter(
+      inputTime: date,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).formatDayWeek;
   }
 
   _checkFactionLeftAdded() {
