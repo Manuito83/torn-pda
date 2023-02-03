@@ -2886,7 +2886,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // CITY
   Future _assessCity(dom.Document document, String pageTitle) async {
-    if (!pageTitle.contains('city')) {
+    if (!pageTitle.contains('city') || pageTitle.contains('raceway')) {
       setState(() {
         _cityIconActive = false;
         _cityExpandable = const SizedBox.shrink();
