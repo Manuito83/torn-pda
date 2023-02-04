@@ -283,7 +283,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // We need to destroy the webview before closing the dialog
   // See: https://github.com/flutter/flutter/issues/112542
-  bool _dialogCloseButtonTriggered = false;
+  bool _closeButtonTriggered = false;
 
   // Native Auth management
   Future _nativeAuthObtained;
@@ -503,7 +503,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        top: _settingsProvider.appBarTop || true,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: widget.dialog
@@ -744,7 +743,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   ),
                   onTap: () async {
                     setState(() {
-                      _dialogCloseButtonTriggered = true;
+                      _closeButtonTriggered = true;
                     });
                     await Future.delayed(const Duration(milliseconds: 200));
                     if (mounted) {
@@ -920,7 +919,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _bountiesExpandable,
         // Actual WebView
         Expanded(
-          child: _dialogCloseButtonTriggered
+          child: _closeButtonTriggered
               ? const SizedBox.shrink()
               : FutureBuilder(
                   future: _nativeAuthObtained,
@@ -1877,7 +1876,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               if (widget.customCallBack != null) {
                 widget.customCallBack();
               }
-              Navigator.pop(context);
+              setState(() {
+                _closeButtonTriggered = true;
+              });
+              await Future.delayed(const Duration(milliseconds: 200));
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
             } else {
               // But we can change and go back to previous page in certain
               // situations (e.g. when going for the vault while trading),

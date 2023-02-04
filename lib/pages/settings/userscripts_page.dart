@@ -82,8 +82,6 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -696,7 +694,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 25),                                            
+                SizedBox(height: 25),
                 Text(
                   "SCRIPT INJECTION TIME",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
@@ -781,8 +779,8 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                      "UNSUPPORTED WINDOWS (iOS)",
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        "UNSUPPORTED WINDOWS (iOS)",
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 10),
                       Text(
@@ -798,7 +796,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                       SizedBox(height: 25),
                     ],
-                  ),  
+                  ),
                 Text(
                   "CROSS-ORIGIN REQUESTS (ADVANCED)",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),

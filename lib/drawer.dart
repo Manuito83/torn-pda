@@ -855,7 +855,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       : _themeProvider.canvas
                   : _themeProvider.canvas,
               child: SafeArea(
-                top: !_settingsProvider.appBarTop || false,
                 child: Scaffold(
                   key: _scaffoldKey,
                   body: _getPages(),
@@ -877,7 +876,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             return Container(
               color: _themeProvider.secondBackground,
               child: SafeArea(
-                top: _settingsProvider.appBarTop || true,
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),

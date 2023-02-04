@@ -136,8 +136,6 @@ class _WebViewPanicState extends State<WebViewPanic> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
@@ -913,8 +911,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
         } catch (e) {
           userId = 0;
         }
-      } else if (page.contains('loader.php?sid=attack&user2ID=') || 
-                 page.contains('loader2.php?sid=getInAttack&user2ID=')) {
+      } else if (page.contains('loader.php?sid=attack&user2ID=') ||
+          page.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (page == _lastProfileVisited) {
           return;
         }

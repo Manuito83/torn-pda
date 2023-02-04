@@ -99,8 +99,6 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
         child: ShowCaseWidget(
           builder: Builder(
             builder: (_) => Scaffold(

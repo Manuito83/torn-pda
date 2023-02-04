@@ -59,32 +59,29 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
             return DefaultTabController(
               length: 3,
               child: SafeArea(
-                top: _settingsProvider.appBarTop ? false : true,
                 child: Scaffold(
                   backgroundColor: _themeProvider.canvas,
                   appBar: _settingsProvider.appBarTop
                       ? buildAppBarSuccess(context)
                       : new PreferredSize(
                           preferredSize: Size.fromHeight(kToolbarHeight),
-                          child: new Container(
+                          child: Container(
                             color: _themeProvider.currentTheme == AppTheme.light
                                 ? MediaQuery.of(context).orientation == Orientation.portrait
                                     ? Colors.blueGrey
                                     : _themeProvider.canvas
                                 : _themeProvider.canvas,
-                            child: new SafeArea(
-                              child: Column(
-                                children: <Widget>[
-                                  Expanded(child: new Container()),
-                                  TabBar(
-                                    tabs: [
-                                      Tab(text: "Active"),
-                                      Tab(text: "Upcoming"),
-                                      Tab(text: "Finished"),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                            child: Column(
+                              children: <Widget>[
+                                Expanded(child: new Container()),
+                                TabBar(
+                                  tabs: [
+                                    Tab(text: "Active"),
+                                    Tab(text: "Upcoming"),
+                                    Tab(text: "Finished"),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -114,19 +111,23 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
               ),
             );
           } else {
-            return Scaffold(
-              backgroundColor: _themeProvider.canvas,
-              appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-              body: Container(color: _themeProvider.canvas, child: _fetchError()),
+            return SafeArea(
+              child: Scaffold(
+                backgroundColor: _themeProvider.canvas,
+                appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
+                body: Container(color: _themeProvider.canvas, child: _fetchError()),
+              ),
             );
           }
         } else {
-          return Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-            body: Container(
-                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-                child: Center(child: CircularProgressIndicator())),
+          return SafeArea(
+            child: Scaffold(
+              backgroundColor: _themeProvider.canvas,
+              appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
+              body: Container(
+                  color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                  child: Center(child: CircularProgressIndicator())),
+            ),
           );
         }
       },

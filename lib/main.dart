@@ -101,10 +101,9 @@ Future<void> main() async {
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
-  // TODO: remove class?
-  //HttpOverrides.global = MyHttpOverrides();
-  ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
-  SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
+  // TODO: remove certificate?
+  //ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+  //SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
 
   // Needs to register plugin for iOS
   if (Platform.isIOS) {
@@ -207,7 +206,6 @@ class _MyAppState extends State<MyApp> {
                   color: _themeProvider.statusBar,
                 ),
                 primarySwatch: Colors.blueGrey,
-                visualDensity: VisualDensity.adaptivePlatformDensity,
                 brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
               ),
               home: DrawerPage(),
