@@ -65,6 +65,7 @@ class Prefs {
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kDebugMessages = "pda_debugMessages";
+  final String _kShowFavoritesInTabBar = "pda_showFavoritesInTabBar";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
@@ -732,6 +733,19 @@ class Prefs {
   Future<bool> setDebugMessages(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kDebugMessages, value);
+  }
+
+  /// ----------------------------
+  /// Methods for favorites icon in tab bar
+  /// ----------------------------
+  Future<bool> getShowFavoritesInTabBar() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowFavoritesInTabBar) ?? true;
+  }
+
+  Future<bool> setShowFavoritesInTabBar(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowFavoritesInTabBar, value);
   }
 
   /// ----------------------------

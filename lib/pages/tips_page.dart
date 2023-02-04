@@ -377,7 +377,10 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Save the current URL as a shortcut or navigate to an existing one",
-        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
+        expandedValue: "If you are using tabs, a favorites (heart-shaped) icon will appear to the right. Tapping it "
+            "will open your shortcuts menu. Long-press it to add a new custom shortcut to the current page.\n\n"
+            "Alternatively, if you are not using tabs (or if you deactivated the favorites icon), you can also:\n\n"
+            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
       ),
     );

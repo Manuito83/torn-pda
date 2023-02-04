@@ -10,15 +10,18 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewShortcutsDialog extends StatefulWidget {
   final InAppWebViewController inAppWebView;
   final WebViewController stockWebview;
+  final bool fromShortcut;
 
   WebviewShortcutsDialog({
     this.inAppWebView,
     this.stockWebview,
+    this.fromShortcut,
   });
 
   @override
@@ -29,6 +32,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
   ThemeProvider _themeProvider;
   ShortcutsProvider _shortcutsProvider;
   UserDetailsProvider _userProv;
+  WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -37,6 +41,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
   }
 
   @override
@@ -49,10 +54,28 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
       backgroundColor: _themeProvider.secondBackground,
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 5.0),
+            child: Text(
+              "TAP: load in current tab\nLONG PRESS: open a new tab",
+              style: TextStyle(
+                fontSize: 10,
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
           Flexible(
             child: SingleChildScrollView(
-              child: _shortcutsWrap(),
+              child: Column(
+                children: List<Widget>.generate(
+                  _shortcutsProvider.activeShortcuts.length,
+                  (index) {
+                    return shortcutTile(_shortcutsProvider.activeShortcuts[index]);
+                  },
+                ),
+              ),
             ),
           ),
         ],
@@ -68,50 +91,31 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
     );
   }
 
-  Wrap _shortcutsWrap() {
-    var shortcuts = <Widget>[];
-
-    for (var short in _shortcutsProvider.activeShortcuts) {
-      shortcuts.add(
-        Container(
-          height: 60,
-          width: 70,
-          child: shortcutTile(short),
-        ),
-      );
-    }
-
-    return Wrap(children: shortcuts);
-  }
-
   Widget shortcutTile(Shortcut thisShortcut) {
-    Widget tile = Padding(
+    Widget tile;
+
+    tile = Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Column(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
-            height: 18,
+            height: 25,
             child: Image.asset(
               thisShortcut.iconUrl,
               width: 16,
               color: _themeProvider.mainText,
             ),
           ),
-          SizedBox(height: 3),
+          const SizedBox(height: 3),
           Flexible(
-            child: Container(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
-                child: SizedBox(
-                  width: 55,
-                  child: Text(
-                    thisShortcut.nickname.toUpperCase(),
-                    style: TextStyle(fontSize: 9),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.fade,
-                  ),
-                ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                thisShortcut.nickname.toUpperCase(),
+                style: const TextStyle(fontSize: 9),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.fade,
               ),
             ),
           ),
@@ -120,6 +124,30 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
     );
 
     return InkWell(
+      onLongPress: () {
+        String url = thisShortcut.url;
+        if (thisShortcut.addPlayerId) {
+          url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+        }
+        if (thisShortcut.addFactionId) {
+          url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+        }
+        if (thisShortcut.addCompanyId) {
+          url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+        }
+
+        if (widget.inAppWebView != null) {
+          _webViewProvider.addTab(url: url);
+          _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+        } else if (widget.stockWebview != null) {
+          widget.stockWebview.loadUrl(url);
+        } else if (widget.fromShortcut) {
+          _webViewProvider.addTab(url: url);
+          _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+        }
+
+        Navigator.of(context).pop();
+      },
       onTap: () async {
         String url = thisShortcut.url;
         if (thisShortcut.addPlayerId) {
@@ -134,14 +162,12 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
 
         if (widget.inAppWebView != null) {
           widget.inAppWebView.loadUrl(
-            urlRequest: URLRequest(
-              url: WebUri(thisShortcut.url),
-            ),
+            urlRequest: URLRequest(url: WebUri(url)),
           );
-        } else {
-          widget.stockWebview.loadUrl(
-            thisShortcut.url,
-          );
+        } else if (widget.stockWebview != null) {
+          widget.stockWebview.loadUrl(url);
+        } else if (widget.fromShortcut) {
+          _webViewProvider.loadCurrentTabUrl(url);
         }
 
         Navigator.of(context).pop();

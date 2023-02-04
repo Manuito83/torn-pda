@@ -61,11 +61,6 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
   final _customURLController = new TextEditingController();
   var _customURLKey = GlobalKey<FormState>();
 
-  final _customShortcutNameController = new TextEditingController();
-  final _customShortcutURLController = new TextEditingController();
-  var _customShortcutNameKey = GlobalKey<FormState>();
-  var _customShortcutURLKey = GlobalKey<FormState>();
-
   String _currentUrl;
   String _pageTitle;
 
@@ -637,191 +632,14 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
   }
 
   Future<void> _openCustomShortcutDialog(String title, String url) {
-    _customShortcutNameController.text = title;
-    _customShortcutURLController.text = url;
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
-                      children: <Widget>[
-                        Flexible(
-                          child: Text(
-                            "Add a name and URL for your custom shortcut. Note: "
-                            "ensure URL begins with 'https://'",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Form(
-                          key: _customShortcutNameKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min, // To make the card compact
-                            children: <Widget>[
-                              TextFormField(
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: _themeProvider.mainText,
-                                ),
-                                textCapitalization: TextCapitalization.sentences,
-                                controller: _customShortcutNameController,
-                                maxLength: 30,
-                                maxLines: 1,
-                                decoration: InputDecoration(
-                                  counterText: "",
-                                  isDense: true,
-                                  border: OutlineInputBorder(),
-                                  labelText: 'Name',
-                                ),
-                                validator: (value) {
-                                  if (value.replaceAll(' ', '').isEmpty) {
-                                    return "Cannot be empty!";
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Form(
-                                key: _customShortcutURLKey,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min, // To make the card compact
-                                  children: <Widget>[
-                                    TextFormField(
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: _themeProvider.mainText,
-                                      ),
-                                      controller: _customShortcutURLController,
-                                      maxLength: 300,
-                                      maxLines: 1,
-                                      decoration: InputDecoration(
-                                        counterText: "",
-                                        isDense: true,
-                                        border: OutlineInputBorder(),
-                                        labelText: 'URL',
-                                      ),
-                                      validator: (value) {
-                                        if (value.replaceAll(' ', '').isEmpty) {
-                                          return "Cannot be empty!";
-                                        }
-                                        if (!value.toLowerCase().contains('https://')) {
-                                          if (value.toLowerCase().contains('http://')) {
-                                            return "Invalid, HTTPS needed!";
-                                          }
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: Text("Add"),
-                              onPressed: () {
-                                if (!_customShortcutURLKey.currentState.validate()) {
-                                  return;
-                                }
-                                if (!_customShortcutNameKey.currentState.validate()) {
-                                  return;
-                                }
-
-                                var customShortcut = Shortcut()
-                                  ..name = _customShortcutNameController.text
-                                  ..nickname = _customShortcutNameController.text
-                                  ..url = _customShortcutURLController.text
-                                  ..iconUrl = 'images/icons/pda_icon.png'
-                                  ..color = Colors.orange[500]
-                                  ..isCustom = true;
-
-                                _shortcutsProvider.activateShortcut(customShortcut);
-                                Navigator.of(context).pop();
-                                _customShortcutNameController.text = '';
-                                _customURLController.text = '';
-                              },
-                            ),
-                            TextButton(
-                              child: Text("Close"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                _customShortcutNameController.text = '';
-                                _customURLController.text = '';
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 25,
-                        width: 25,
-                        child: Image.asset(
-                          "images/icons/pda_icon.png",
-                          width: 18,
-                          height: 18,
-                          color: _themeProvider.mainText,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return CustomShortcutDialog(
+          themeProvider: _themeProvider,
+          title: title,
+          url: url,
         );
       },
     );
@@ -842,6 +660,225 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
           );
         }
       },
+    );
+  }
+}
+
+class CustomShortcutDialog extends StatefulWidget {
+  final ThemeProvider themeProvider;
+  final String title;
+  final String url;
+
+  const CustomShortcutDialog({
+    @required this.themeProvider,
+    @required this.title,
+    @required this.url,
+    Key key,
+  }) : super(key: key);
+
+  @override
+  State<CustomShortcutDialog> createState() => _CustomShortcutDialogState();
+}
+
+class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
+  ShortcutsProvider _shortcutsProvider;
+
+  final _customURLController = new TextEditingController();
+  final _customShortcutNameController = new TextEditingController();
+  final _customShortcutURLController = new TextEditingController();
+  var _customShortcutNameKey = GlobalKey<FormState>();
+  var _customShortcutURLKey = GlobalKey<FormState>();
+
+  @override
+  @override
+  void initState() {
+    super.initState();
+    _shortcutsProvider = context.read<ShortcutsProvider>();
+    _customShortcutNameController.text = widget.title;
+    _customShortcutURLController.text = widget.url;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 0.0,
+      backgroundColor: Colors.transparent,
+      content: SingleChildScrollView(
+        child: Stack(
+          children: <Widget>[
+            SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.only(
+                  top: 45,
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                ),
+                margin: EdgeInsets.only(top: 15),
+                decoration: new BoxDecoration(
+                  color: widget.themeProvider.secondBackground,
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10.0,
+                      offset: const Offset(0.0, 10.0),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // To make the card compact
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        "Add a name and URL for your custom shortcut. Note: "
+                        "ensure URL begins with 'https://'",
+                        style: TextStyle(fontSize: 12, color: widget.themeProvider.mainText),
+                      ),
+                    ),
+                    SizedBox(height: 15),
+                    Form(
+                      key: _customShortcutNameKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min, // To make the card compact
+                        children: <Widget>[
+                          TextFormField(
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: widget.themeProvider.mainText,
+                            ),
+                            textCapitalization: TextCapitalization.sentences,
+                            controller: _customShortcutNameController,
+                            maxLength: 30,
+                            maxLines: 1,
+                            decoration: InputDecoration(
+                              counterText: "",
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                              labelText: 'Name',
+                            ),
+                            validator: (value) {
+                              if (value.replaceAll(' ', '').isEmpty) {
+                                return "Cannot be empty!";
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Form(
+                            key: _customShortcutURLKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min, // To make the card compact
+                              children: <Widget>[
+                                TextFormField(
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: widget.themeProvider.mainText,
+                                  ),
+                                  controller: _customShortcutURLController,
+                                  maxLength: 300,
+                                  maxLines: 1,
+                                  decoration: InputDecoration(
+                                    counterText: "",
+                                    isDense: true,
+                                    border: OutlineInputBorder(),
+                                    labelText: 'URL',
+                                  ),
+                                  validator: (value) {
+                                    if (value.replaceAll(' ', '').isEmpty) {
+                                      return "Cannot be empty!";
+                                    }
+                                    if (!value.toLowerCase().contains('https://')) {
+                                      if (value.toLowerCase().contains('http://')) {
+                                        return "Invalid, HTTPS needed!";
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        TextButton(
+                          child: Text("Add"),
+                          onPressed: () {
+                            if (!_customShortcutURLKey.currentState.validate()) {
+                              return;
+                            }
+                            if (!_customShortcutNameKey.currentState.validate()) {
+                              return;
+                            }
+
+                            var customShortcut = Shortcut()
+                              ..name = _customShortcutNameController.text
+                              ..nickname = _customShortcutNameController.text
+                              ..url = _customShortcutURLController.text
+                              ..iconUrl = 'images/icons/pda_icon.png'
+                              ..color = Colors.orange[500]
+                              ..isCustom = true;
+
+                            _shortcutsProvider.activateShortcut(customShortcut);
+                            Navigator.of(context).pop();
+                            _customShortcutNameController.text = '';
+                            _customURLController.text = '';
+                          },
+                        ),
+                        TextButton(
+                          child: Text("Close"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _customShortcutNameController.text = '';
+                            _customURLController.text = '';
+                          },
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              child: CircleAvatar(
+                radius: 26,
+                backgroundColor: widget.themeProvider.secondBackground,
+                child: CircleAvatar(
+                  backgroundColor: widget.themeProvider.secondBackground,
+                  radius: 22,
+                  child: SizedBox(
+                    height: 25,
+                    width: 25,
+                    child: Image.asset(
+                      "images/icons/pda_icon.png",
+                      width: 18,
+                      height: 18,
+                      color: widget.themeProvider.mainText,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

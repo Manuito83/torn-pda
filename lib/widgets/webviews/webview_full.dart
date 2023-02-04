@@ -3610,6 +3610,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.loadUrl(urlRequest: URLRequest(url: uri));
   }
 
+  String reportCurrentUrl() {
+    return _currentUrl;
+  }
+
+  String reportCurrentTitle() {
+    return _pageTitle;
+  }
+
   Future<bool> _willPopCallback() async {
     _tryGoBack();
     return false;

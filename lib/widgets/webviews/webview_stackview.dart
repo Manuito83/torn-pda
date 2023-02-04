@@ -13,6 +13,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/tabs_excess_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
@@ -435,11 +437,58 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                 ),
               ),
             ),
+            if (_settingsProvider.showFavoritesInTabBar)
+              Row(
+                children: [
+                  VerticalDivider(
+                    width: 2,
+                    thickness: 2,
+                    color: _themeProvider.mainText,
+                  ),
+                  GestureDetector(
+                    child: Container(
+                      color: _themeProvider.navSelected,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          width: 24,
+                          child: Icon(
+                            MdiIcons.heartPlusOutline,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                      ),
+                    ),
+                    onTap: () async {
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return WebviewShortcutsDialog(fromShortcut: true);
+                        },
+                      );
+                    },
+                    onLongPress: () {
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return CustomShortcutDialog(
+                            themeProvider: _themeProvider,
+                            title: _webViewProvider.currentTabTitle(),
+                            url: _webViewProvider.currentTabUrl(),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
             Row(
               children: [
                 VerticalDivider(
-                  width: 2,
-                  thickness: 2,
+                  width: _settingsProvider.showFavoritesInTabBar ? 1 : 2,
+                  thickness: _settingsProvider.showFavoritesInTabBar ? 1 : 2,
                   color: _themeProvider.mainText,
                 ),
                 GestureDetector(

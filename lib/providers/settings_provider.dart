@@ -592,6 +592,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showFavoritesInTabBar = true;
+  bool get showFavoritesInTabBar => _showFavoritesInTabBar;
+  set showFavoritesInTabBar(bool value) {
+    _showFavoritesInTabBar = value;
+    Prefs().setShowFavoritesInTabBar(_showFavoritesInTabBar);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -752,6 +760,8 @@ class SettingsProvider extends ChangeNotifier {
     _themeToSync = await Prefs().getThemeToSync();
 
     _debugMessages = await Prefs().getDebugMessages();
+
+    _showFavoritesInTabBar = await Prefs().getShowFavoritesInTabBar();
 
     notifyListeners();
   }
