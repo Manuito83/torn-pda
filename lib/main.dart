@@ -216,18 +216,23 @@ class _MyAppState extends State<MyApp> {
       ),
     );
 
+    var orientation = mq.data.orientation;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: _themeProvider.statusBar,
         systemNavigationBarColor:
-            mq.data.orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
-        systemNavigationBarIconBrightness: mq.data.orientation == Orientation.landscape
+            orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: orientation == Orientation.landscape
             ? _themeProvider.currentTheme == AppTheme.light
                 ? Brightness.dark
                 : Brightness.light
             : Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+            ? orientation == Orientation.portrait
+                ? Brightness.dark
+                : Brightness.light
+            : Brightness.dark,
+        statusBarIconBrightness: orientation == Orientation.portrait ? Brightness.light : Brightness.light,
       ),
     );
 

@@ -1100,8 +1100,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               ? Brightness.dark
                               : Brightness.light
                           : Brightness.light,
-                      statusBarBrightness: Brightness.dark,
-                      statusBarIconBrightness: Brightness.light,
+                      statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+                          ? MediaQuery.of(context).orientation == Orientation.portrait
+                              ? Brightness.dark
+                              : Brightness.light
+                          : Brightness.dark,
+                      statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.portrait
+                          ? Brightness.light
+                          : Brightness.light,
                     ),
                   );
                 });

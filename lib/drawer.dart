@@ -263,8 +263,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                   : _themeProvider.currentTheme == AppTheme.light
                       ? Brightness.dark
                       : Brightness.light,
-          statusBarBrightness: Brightness.dark,
-          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+              ? MediaQuery.of(context).orientation == Orientation.landscape
+                  ? Brightness.dark
+                  : Brightness.light
+              : Brightness.dark,
+          statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+              ? Brightness.light
+              : Brightness.light,
         ),
       );
     });
@@ -991,8 +997,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                               ? Brightness.dark
                                               : Brightness.light
                                           : Brightness.light,
-                                  statusBarBrightness: Brightness.dark,
-                                  statusBarIconBrightness: Brightness.light,
+                                  statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+                                      ? MediaQuery.of(context).orientation == Orientation.portrait
+                                          ? Brightness.dark
+                                          : Brightness.light
+                                      : Brightness.dark,
+                                  statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.portrait
+                                      ? Brightness.light
+                                      : Brightness.light,
                                 ),
                               );
                             });
