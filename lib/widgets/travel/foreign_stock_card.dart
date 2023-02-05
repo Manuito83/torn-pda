@@ -14,6 +14,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
@@ -44,6 +45,8 @@ class ForeignStockCard extends StatefulWidget {
   final CountryName travellingCountry;
   final String travellingCountryFullName;
 
+  final bool displayShowcase;
+
   ForeignStockCard(
       {@required this.foreignStock,
       @required this.inventoryEnabled,
@@ -58,6 +61,7 @@ class ForeignStockCard extends StatefulWidget {
       @required this.travellingTimeStamp,
       @required this.travellingCountry,
       @required this.travellingCountryFullName,
+      @required this.displayShowcase,
       @required Key key})
       : super(key: key);
 
@@ -104,6 +108,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   Timer _ticker;
 
+  // Showcases
+  GlobalKey _showcaseMoneyIcon = GlobalKey();
+  GlobalKey _showcaseFlagIcon = GlobalKey();
+  GlobalKey _showcaseExpandIcon = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -132,27 +141,60 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        side: BorderSide(
-          color: widget.activeRestocks.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(4.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ExpandablePanel(
-          collapsed: null,
-          controller: _expandableController,
-          theme: ExpandableThemeData(
-            hasIcon: false,
-          ),
-          header: _header(),
-          expanded: _footer(),
-        ),
+    return ShowCaseWidget(
+      builder: Builder(
+        builder: (_) {
+          _launchShowCases(_);
+          return Card(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: widget.activeRestocks.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ExpandablePanel(
+                collapsed: null,
+                controller: _expandableController,
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                ),
+                header: _header(),
+                expanded: _footer(),
+              ),
+            ),
+          );
+        },
       ),
     );
+  }
+
+  void _launchShowCases(BuildContext _) {
+    if (!widget.displayShowcase) return;
+    Future.delayed(Duration(seconds: 1), () async {
+      List showCases = <GlobalKey<State<StatefulWidget>>>[];
+
+      if (!_settingsProvider.showCases.contains("foreign_flagIcon")) {
+        _settingsProvider.addShowCase = "foreign_flagIcon";
+        showCases.add(_showcaseFlagIcon);
+      }
+
+      if (!_settingsProvider.showCases.contains("foreign_moneyIcon")) {
+        _settingsProvider.addShowCase = "foreign_moneyIcon";
+        showCases.add(_showcaseMoneyIcon);
+      }
+
+      if (!_settingsProvider.showCases.contains("foreign_expandIcon")) {
+        _settingsProvider.addShowCase = "foreign_expandIcon";
+        showCases.add(_showcaseExpandIcon);
+      }
+
+      if (showCases.isNotEmpty) {
+        ShowCaseWidget.of(_).startShowCase(showCases);
+      }
+    });
   }
 
   Widget _header() {
@@ -569,9 +611,21 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       costWidget = Row(
         children: [
           GestureDetector(
-            child: Icon(
-              MdiIcons.cash,
-              color: moneyToBuyColor,
+            child: Showcase(
+              key: _showcaseMoneyIcon,
+              title: 'Quick money check',
+              description: '\nTap to see if you need to carry some more money before your departure.'
+                  ' If you do, tap the safe to vault icon to access it in game.',
+              targetPadding: const EdgeInsets.all(10),
+              disableMovingAnimation: true,
+              textColor: _themeProvider.mainText,
+              tooltipBackgroundColor: _themeProvider.secondBackground,
+              descTextStyle: TextStyle(fontSize: 13),
+              tooltipPadding: EdgeInsets.all(20),
+              child: Icon(
+                MdiIcons.cash,
+                color: moneyToBuyColor,
+              ),
             ),
             onTap: () {
               BotToast.showText(
@@ -773,14 +827,25 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         GestureDetector(
-          child: Column(
-            children: [
-              Text(countryCode),
-              Image.asset(
-                flag,
-                width: 30,
-              ),
-            ],
+          child: Showcase(
+            key: _showcaseFlagIcon,
+            title: 'Travel Agency',
+            description: '\nTap any flag to access the Travel Agency directly from this section!',
+            targetPadding: const EdgeInsets.all(10),
+            disableMovingAnimation: true,
+            textColor: _themeProvider.mainText,
+            tooltipBackgroundColor: _themeProvider.secondBackground,
+            descTextStyle: TextStyle(fontSize: 13),
+            tooltipPadding: EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Text(countryCode),
+                Image.asset(
+                  flag,
+                  width: 30,
+                ),
+              ],
+            ),
           ),
           onLongPress: () {
             _launchMoneyWarning(stock);
@@ -791,9 +856,20 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             widget.flagPressedCallback(true, true);
           },
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Icon(Icons.keyboard_arrow_down_outlined),
+        Showcase(
+          key: _showcaseExpandIcon,
+          title: 'Detailed view',
+          description: '\nClick to expand the item card and learn more details about your travel and stock!',
+          targetPadding: const EdgeInsets.all(10),
+          disableMovingAnimation: true,
+          textColor: _themeProvider.mainText,
+          tooltipBackgroundColor: _themeProvider.secondBackground,
+          descTextStyle: TextStyle(fontSize: 13),
+          tooltipPadding: EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Icon(Icons.keyboard_arrow_down_outlined),
+          ),
         ),
       ],
     );
@@ -1468,14 +1544,16 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                     fontSize: 10,
                   ),
                 );
+              } else if (yValue > 0) {
+                return Text(
+                  yValue.floor().toString(),
+                  style: TextStyle(
+                    color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
+                    fontSize: 10,
+                  ),
+                );
               }
-              return Text(
-                yValue.floor().toString(),
-                style: TextStyle(
-                  color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
-                  fontSize: 10,
-                ),
-              );
+              return SizedBox.shrink();
             },
           ),
         ),

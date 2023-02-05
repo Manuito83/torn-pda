@@ -14,8 +14,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:speech_bubble/speech_bubble.dart';
-
 // Project imports:
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -181,54 +179,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                     if (snapshot.connectionState == ConnectionState.done) {
                       if (_apiSuccess) {
-                        return BubbleShowcase(
-                          // KEEP THIS UNIQUE
-                          bubbleShowcaseId: 'foreign_stock_showcase',
-                          // WILL SHOW IF VERSION CHANGED
-                          bubbleShowcaseVersion: 2,
-                          showCloseButton: false,
-                          doNotReopenOnClose: true,
-                          bubbleSlides: [
-                            AbsoluteBubbleSlide(
-                              positionCalculator: (size) => Position(
-                                top: 0,
-                                right: size.width,
-                                bottom: size.height,
-                                left: size.width,
-                              ),
-                              child: RelativeBubbleSlideChild(
-                                direction: AxisDirection.right,
-                                widget: Padding(
-                                  padding: const EdgeInsets.only(right: 75),
-                                  child: SpeechBubble(
-                                    width: 200,
-                                    nipLocation: NipLocation.RIGHT,
-                                    color: Colors.blue,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Text(
-                                        'Did you know?\n\n'
-                                        'Click any flag to go directly to the travel agency and '
-                                        'get a check on how much money you need for that particular '
-                                        'item (based on your preset capacity)!',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                          child: SmartRefresher(
-                            enablePullDown: true,
-                            header: WaterDropMaterialHeader(
-                              backgroundColor: Theme.of(context).primaryColor,
-                            ),
-                            controller: _refreshController,
-                            onRefresh: _onRefresh,
-                            child: ListView(
-                              children: _stockItems(),
-                            ),
+                        return SmartRefresher(
+                          enablePullDown: true,
+                          header: WaterDropMaterialHeader(
+                            backgroundColor: Theme.of(context).primaryColor,
+                          ),
+                          controller: _refreshController,
+                          onRefresh: _onRefresh,
+                          child: ListView(
+                            children: _stockItems(),
                           ),
                         );
                       } else {
@@ -753,6 +712,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     thisStockList.add(countriesFilterDetails);
     thisStockList.add(typesFilterDetails);
 
+    bool displayShowcase = true; // Add showcase to first card only
     for (var stock in _filteredStocksCards) {
       thisStockList.add(
         ForeignStockCard(
@@ -769,9 +729,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           travellingTimeStamp: _profile.travel.timestamp,
           travellingCountry: _returnCountryName(_profile.travel.destination),
           travellingCountryFullName: _profile.travel.destination,
+          displayShowcase: displayShowcase,
           key: UniqueKey(),
         ),
       );
+      displayShowcase = false;
     }
 
     thisStockList.add(SizedBox(

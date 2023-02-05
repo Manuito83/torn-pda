@@ -20,7 +20,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
-import 'package:speech_bubble/speech_bubble.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
@@ -266,6 +266,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   StatsChartTornStats _statsChartModel;
   Future _statsChartDataFetched;
 
+  // Showcases
+  GlobalKey _showcaseProfileBars = GlobalKey();
+  GlobalKey _showcaseProfileClock = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -340,245 +344,175 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _shortcutsProv = Provider.of<ShortcutsProvider>(context, listen: true);
-    return Scaffold(
-      backgroundColor: _themeProvider.canvas,
-      drawer: new Drawer(),
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
-          : null,
-      floatingActionButton: Stack(
-        children: [
-          buildSpeedDial(),
-          GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            child: Container(
-              width: 56,
-              height: 56,
-            ),
-            onLongPress: () async {
-              bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
-              _launchBrowser(url: "", dialogRequested: lastSessionWasDialog, recallLastSession: true);
-            },
+    return ShowCaseWidget(
+      builder: Builder(builder: (_) {
+        _launchShowCases(_);
+        return Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          drawer: new Drawer(),
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          floatingActionButton: Stack(
+            children: [
+              buildSpeedDial(),
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                ),
+                onLongPress: () async {
+                  bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
+                  _launchBrowser(url: "", dialogRequested: lastSessionWasDialog, recallLastSession: true);
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Container(
-        color: _themeProvider.canvas,
-        child: FutureBuilder(
-          future: _apiFetched,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (_apiGoodData) {
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    _fetchApi();
-                    _getMiscCardInfo();
-                    _miscTick = 0;
-                    await Future.delayed(Duration(seconds: 1));
-                  },
-                  child: BubbleShowcase(
-                    // KEEP THIS UNIQUE
-                    bubbleShowcaseId: 'profile_showcase',
-                    // WILL SHOW IF VERSION CHANGED
-                    bubbleShowcaseVersion: 3,
-                    showCloseButton: false,
-                    doNotReopenOnClose: true,
-                    bubbleSlides: [
-                      AbsoluteBubbleSlide(
-                        positionCalculator: (size) => Position(
-                          top: 0,
-                          right: 0,
-                          bottom: 0,
-                          left: 0,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: FutureBuilder(
+              future: _apiFetched,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_apiGoodData) {
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _fetchApi();
+                        _getMiscCardInfo();
+                        _miscTick = 0;
+                        await Future.delayed(Duration(seconds: 1));
+                      },
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            _headerIcons(),
+                            Column(
+                              children: _returnSections(),
+                            ),
+                            SizedBox(height: 70),
+                          ],
                         ),
-                        child: AbsoluteBubbleSlideChild(
-                          positionCalculator: (size) => Position(
-                            bottom: MediaQuery.of(context).size.height / 2 - 100,
-                            left: (size.width) / 2 - 200,
-                          ),
-                          widget: SpeechBubble(
-                            width: 200,
-                            nipLocation: NipLocation.BOTTOM,
-                            nipHeight: 0,
-                            color: Colors.green[800],
-                            child: Padding(
-                              padding: EdgeInsets.all(10),
-                              child: Text(
-                                'Did you know?\n\n'
-                                'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
-                                'a full browser with a LONG PRESS. You decide.\n\n'
-                                'You can deactivate this feature in the Settings section.',
-                                style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  } else {
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _fetchApi();
+                        await Future.delayed(Duration(seconds: 1));
+                      },
+                      child: SingleChildScrollView(
+                        // Physics so that page can be refreshed even with no scroll
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            SizedBox(height: 50),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: _shortcutsCarrousel(),
+                            ),
+                            SizedBox(height: 50),
+                            Text(
+                              'OOPS!',
+                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'There was an error: ${_apiError.errorReason}',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  if (_apiError.pdaErrorDetails.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 20),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            'Error details:',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          SizedBox(height: 5),
+                                          Text(
+                                            _apiError.pdaErrorDetails,
+                                            style: TextStyle(
+                                              fontStyle: FontStyle.italic,
+                                              fontSize: 10,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  SizedBox(height: 20),
+                                  Text(
+                                    'Torn PDA is retrying automatically. '
+                                    'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 20),
+                                  Text(
+                                    'You can still try to access Torn through shortcuts or the main '
+                                    'menu icon below.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
+                            SizedBox(height: 50),
+                          ],
                         ),
                       ),
-                      RelativeBubbleSlide(
-                        shape: Rectangle(spreadRadius: 10),
-                        widgetKey: _showOne,
-                        child: RelativeBubbleSlideChild(
-                          direction: AxisDirection.up,
-                          widget: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: SpeechBubble(
-                              nipLocation: NipLocation.BOTTOM,
-                              color: Colors.blue,
-                              child: Padding(
-                                padding: EdgeInsets.all(6),
-                                child: Text(
-                                  'Did you know?\n\n'
-                                  'Tap any of the bars to launch a browser '
-                                  'straight to the gym, crimes or items sections!',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      AbsoluteBubbleSlide(
-                        positionCalculator: (size) => Position(
-                          top: 0,
-                          right: 0,
-                          bottom: 0,
-                          left: 0,
-                        ),
-                        child: AbsoluteBubbleSlideChild(
-                          positionCalculator: (size) => Position(
-                            bottom: MediaQuery.of(context).size.height / 2 - 100,
-                            left: (size.width) / 2 - 200,
-                          ),
-                          widget: SpeechBubble(
-                            width: 200,
-                            nipLocation: NipLocation.BOTTOM,
-                            nipHeight: 0,
-                            color: Colors.blue,
-                            child: Padding(
-                              padding: EdgeInsets.all(10),
-                              child: Text(
-                                'There are many other places where you can tap to '
-                                'navigate to Torn (e.g. the points or cash icons below)\n\n'
-                                'Don\'t forget to visit the TIPS section (see main menu) for other tips '
-                                'and tricks!',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          _headerIcons(),
-                          Column(
-                            children: _returnSections(),
-                          ),
-                          SizedBox(height: 70),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              } else {
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    _fetchApi();
-                    await Future.delayed(Duration(seconds: 1));
-                  },
-                  child: SingleChildScrollView(
-                    // Physics so that page can be refreshed even with no scroll
-                    physics: const AlwaysScrollableScrollPhysics(),
+                    );
+                  }
+                } else {
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        SizedBox(height: 50),
+                        Text('Fetching data...'),
+                        SizedBox(height: 30),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: _shortcutsCarrousel(),
+                          padding: const EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
                         ),
-                        SizedBox(height: 50),
-                        Text(
-                          'OOPS!',
-                          style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                          child: Column(
-                            children: [
-                              Text(
-                                'There was an error: ${_apiError.errorReason}',
-                                textAlign: TextAlign.center,
-                              ),
-                              if (_apiError.pdaErrorDetails.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 20),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        'Error details:',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      SizedBox(height: 5),
-                                      Text(
-                                        _apiError.pdaErrorDetails,
-                                        style: TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 10,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              SizedBox(height: 20),
-                              Text(
-                                'Torn PDA is retrying automatically. '
-                                'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 20),
-                              Text(
-                                'You can still try to access Torn through shortcuts or the main '
-                                'menu icon below.',
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 50),
                       ],
                     ),
-                  ),
-                );
-              }
-            } else {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text('Fetching data...'),
-                    SizedBox(height: 30),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ],
-                ),
-              );
-            }
-          },
-        ),
-      ),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      }),
     );
+  }
+
+  void _launchShowCases(BuildContext _) {
+    Future.delayed(Duration(seconds: 1), () async {
+      List showCases = <GlobalKey<State<StatefulWidget>>>[];
+      // Show tab bar showcases
+      if (!_settingsProvider.showCases.contains("profile_bars")) {
+        _settingsProvider.addShowCase = "profile_bars";
+        showCases.add(_showcaseProfileBars);
+      }
+      if (!_settingsProvider.showCases.contains("profile_clock")) {
+        _settingsProvider.addShowCase = "profile_clock";
+        showCases.add(_showcaseProfileClock);
+      }
+      if (showCases.isNotEmpty) {
+        ShowCaseWidget.of(_).startShowCase(showCases);
+      }
+    });
   }
 
   AppBar buildAppBar() {
@@ -669,7 +603,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   onLongPress: () {
                     _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: false);
                   },
-                  child: const TctClock(),
+                  child: Showcase(
+                    key: _showcaseProfileClock,
+                    title: 'There is a lot to explore!',
+                    description: '\nAlmost anything in Torn PDA can be interacted with!\n\n'
+                        'Try for yourself, and don\'t forget to visit the Tips section for more '
+                        'information!',
+                    showArrow: false,
+                    disableMovingAnimation: true,
+                    textColor: _themeProvider.mainText,
+                    tooltipBackgroundColor: _themeProvider.secondBackground,
+                    descTextStyle: TextStyle(fontSize: 13),
+                    tooltipPadding: EdgeInsets.all(20),
+                    child: const TctClock(),
+                  ),
                 ),
               )
             : SizedBox.shrink(),
@@ -1615,23 +1562,37 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             onTap: () async {
                               _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: true);
                             },
-                            child: LinearPercentIndicator(
-                              padding: null,
-                              barRadius: Radius.circular(10),
-                              width: 150,
-                              lineHeight: 20,
-                              progressColor: Colors.green,
-                              backgroundColor: Colors.grey,
-                              center: FittedBox(
-                                fit: BoxFit.fitWidth,
-                                child: Text(
-                                  '${_user.energy.current}/${_user.energy.maximum}',
-                                  style: TextStyle(color: Colors.black),
+                            child: Showcase(
+                              key: _showcaseProfileBars,
+                              title: 'Did you know?',
+                              description: '\nTap any of the bars to launch a browser '
+                                  'straight to the gym, crimes or items sections!\n\n'
+                                  'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
+                                  'a full browser with a LONG PRESS.',
+                              targetPadding: const EdgeInsets.all(10),
+                              disableMovingAnimation: true,
+                              textColor: _themeProvider.mainText,
+                              tooltipBackgroundColor: _themeProvider.secondBackground,
+                              descTextStyle: TextStyle(fontSize: 13),
+                              tooltipPadding: EdgeInsets.all(20),
+                              child: LinearPercentIndicator(
+                                padding: null,
+                                barRadius: Radius.circular(10),
+                                width: 150,
+                                lineHeight: 20,
+                                progressColor: Colors.green,
+                                backgroundColor: Colors.grey,
+                                center: FittedBox(
+                                  fit: BoxFit.fitWidth,
+                                  child: Text(
+                                    '${_user.energy.current}/${_user.energy.maximum}',
+                                    style: TextStyle(color: Colors.black),
+                                  ),
                                 ),
+                                percent: _user.energy.current / _user.energy.maximum > 1.0
+                                    ? 1.0
+                                    : _user.energy.current / _user.energy.maximum,
                               ),
-                              percent: _user.energy.current / _user.energy.maximum > 1.0
-                                  ? 1.0
-                                  : _user.energy.current / _user.energy.maximum,
                             ),
                           ),
                           if (_warnAboutChains && _chainModel.chain.current > 10 && _chainModel.chain.cooldown == 0)

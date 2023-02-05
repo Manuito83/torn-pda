@@ -7,7 +7,7 @@ import 'dart:io';
 // Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:bubble_showcase/bubble_showcase.dart';
+//import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
 // Flutter imports:
@@ -20,7 +20,7 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:speech_bubble/speech_bubble.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -229,7 +229,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _profileTriggered = false;
   var _attackTriggered = false;
 
-  final _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
   TerminalProvider _terminalProvider;
 
@@ -289,6 +288,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future _nativeAuthObtained;
   NativeUserProvider _nativeUser;
   NativeAuthProvider _nativeAuth;
+
+  // Showcases
+  GlobalKey _showCaseCloseButton = GlobalKey();
+  GlobalKey _showCaseTitleBar = GlobalKey();
 
   @override
   void initState() {
@@ -415,82 +418,33 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // If we are launching from a dialog, it's important not to add the show case, in
       // case this is the first time, as there is no appBar to be found and it would
       // failed to open
-      child: widget.dialog
-          ? BubbleShowcase(
-              // KEEP THIS UNIQUE
-              bubbleShowcaseId: 'webview_dialog_showcase',
-              // WILL SHOW IF VERSION CHANGED
-              bubbleShowcaseVersion: 1,
-              showCloseButton: false,
-              doNotReopenOnClose: true,
-              counterText: "",
-              bubbleSlides: [
-                AbsoluteBubbleSlide(
-                  positionCalculator: (size) => const Position(),
-                  child: AbsoluteBubbleSlideChild(
-                    positionCalculator: (size) => Position(
-                      top: size.height / 2,
-                      left: (size.width - 200) / 2,
-                    ),
-                    widget: SpeechBubble(
-                      width: 200,
-                      nipHeight: 0,
-                      color: Colors.green[800],
-                      child: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Text(
-                          'NEW!\n\n'
-                          'Did you know?\n\n'
-                          'Long press the bottom bar of the quick browser to open a '
-                          'menu with additional options\n\n'
-                          'GIVE IT A TRY!',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              child: buildScaffold(context),
-            )
-          : BubbleShowcase(
-              // KEEP THIS UNIQUE
-              bubbleShowcaseId: 'webview_full_showcase',
-              // WILL SHOW IF VERSION CHANGED
-              bubbleShowcaseVersion: 2,
-              showCloseButton: false,
-              doNotReopenOnClose: true,
-              counterText: "",
-              bubbleSlides: [
-                RelativeBubbleSlide(
-                  shape: const Rectangle(spreadRadius: 10),
-                  widgetKey: _showOne,
-                  child: RelativeBubbleSlideChild(
-                    direction: _settingsProvider.appBarTop ? AxisDirection.down : AxisDirection.up,
-                    widget: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SpeechBubble(
-                        nipLocation: _settingsProvider.appBarTop ? NipLocation.TOP : NipLocation.BOTTOM,
-                        color: Colors.green[800],
-                        child: const Padding(
-                          padding: EdgeInsets.all(6),
-                          child: Text(
-                            'NEW!\n\n'
-                            'Did you know?\n\n'
-                            'Tap page title to open a menu with additional options\n\n'
-                            'Swipe page title left/right to browse forward/back\n\n'
-                            'GIVE IT A TRY!',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              child: buildScaffold(context),
-            ),
+      child: ShowCaseWidget(
+        builder: Builder(builder: (_) {
+          _launchShowCases(_);
+          return buildScaffold(context);
+        }),
+      ),
     );
+  }
+
+  void _launchShowCases(BuildContext _) {
+    Future.delayed(Duration(seconds: 1), () async {
+      List showCases = <GlobalKey<State<StatefulWidget>>>[];
+      if (widget.dialog) {
+        if (!_settingsProvider.showCases.contains("webview_closeButton")) {
+          _settingsProvider.addShowCase = "webview_closeButton";
+          showCases.add(_showCaseCloseButton);
+        }
+      } else {
+        if (!_settingsProvider.showCases.contains("webview_titleBar")) {
+          _settingsProvider.addShowCase = "webview_titleBar";
+          showCases.add(_showCaseTitleBar);
+        }
+      }
+      if (showCases.isNotEmpty) {
+        ShowCaseWidget.of(_).startShowCase(showCases);
+      }
+    });
   }
 
   Widget buildScaffold(BuildContext context) {
@@ -696,60 +650,73 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: GestureDetector(
-                  child: Container(
-                    color: Colors.transparent, // Background to extend the buttons detection area
-                    child: Column(
-                      children: [
-                        Text(
-                          "CLOSE",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: _themeProvider.mainText,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 15,
-                          child: Divider(
-                            height: 3,
-                            thickness: 1,
-                            color: _themeProvider.mainText,
-                          ),
-                        ),
-                        if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
-                                _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-                            _userProvider.basic?.faction?.factionId != 0)
+                child: Showcase(
+                  key: _showCaseCloseButton,
+                  title: 'Options menu',
+                  description: '\nLong press the bottom bar of the quick browser to open a '
+                      'menu with additional options, including faction attack assists calls!\n\n'
+                      'Swipe down/up to hide or show your tab bar!',
+                  targetPadding: const EdgeInsets.only(top: 8),
+                  disableMovingAnimation: true,
+                  textColor: _themeProvider.mainText,
+                  tooltipBackgroundColor: _themeProvider.secondBackground,
+                  descTextStyle: TextStyle(fontSize: 13),
+                  tooltipPadding: EdgeInsets.all(20),
+                  child: GestureDetector(
+                    child: Container(
+                      color: Colors.transparent, // Background to extend the buttons detection area
+                      child: Column(
+                        children: [
                           Text(
-                            "ASSIST",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 7,
-                            ),
-                          )
-                        else
-                          Text(
-                            "OPTIONS",
+                            "CLOSE",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: _themeProvider.mainText,
-                              fontSize: 7,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
                             ),
                           ),
-                      ],
+                          SizedBox(
+                            width: 15,
+                            child: Divider(
+                              height: 3,
+                              thickness: 1,
+                              color: _themeProvider.mainText,
+                            ),
+                          ),
+                          if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                                  _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
+                              _userProvider.basic?.faction?.factionId != 0)
+                            Text(
+                              "ASSIST",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 7,
+                              ),
+                            )
+                          else
+                            Text(
+                              "OPTIONS",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _themeProvider.mainText,
+                                fontSize: 7,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
+                    onTap: () async {
+                      setState(() {
+                        _closeButtonTriggered = true;
+                      });
+                      await Future.delayed(const Duration(milliseconds: 200));
+                      if (mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
                   ),
-                  onTap: () async {
-                    setState(() {
-                      _closeButtonTriggered = true;
-                    });
-                    await Future.delayed(const Duration(milliseconds: 200));
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  },
                 ),
               ),
             ),
@@ -1914,17 +1881,30 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             color: Colors.white70,
             child: ClipRRect(
               borderRadius: const BorderRadius.all(Radius.circular(12)),
-              child: Row(
-                key: _showOne,
-                children: [
-                  Flexible(
-                    child: Text(
-                      _pageTitle,
-                      overflow: TextOverflow.fade,
-                      style: TextStyle(fontSize: 16),
+              child: Showcase(
+                key: _showCaseTitleBar,
+                title: 'Options menu',
+                description: '\nTap the page title to open a menu with additional options, '
+                    'including faction attack assists calls!\n\n'
+                    'Swipe left/right to browse back/forward\n\n'
+                    'Swipe down/up to hide or show your tab bar!',
+                targetPadding: const EdgeInsets.all(10),
+                disableMovingAnimation: true,
+                textColor: _themeProvider.mainText,
+                tooltipBackgroundColor: _themeProvider.secondBackground,
+                descTextStyle: TextStyle(fontSize: 13),
+                tooltipPadding: EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        _pageTitle,
+                        overflow: TextOverflow.fade,
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

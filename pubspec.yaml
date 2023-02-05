@@ -78,7 +78,6 @@ dependencies:
   shared_preferences: ^2.0.15
   showcaseview: 2.0.0+1
   sliding_up_panel: ^2.0.0+1
-  speech_bubble: 0.0.9
   timeline_tile: ^2.0.0
   timezone: ^0.8.0
   toggle_switch: ^2.0.1
