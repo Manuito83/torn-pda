@@ -1135,7 +1135,7 @@ String bountiesJS({
         shouldHide = true;
       }
       
-      var foundRed = player.querySelector(".t-red");
+      var foundRed = player.querySelector(".user-red-status");
       if ($removeRed && foundRed) {
         shouldHide = true;
       }

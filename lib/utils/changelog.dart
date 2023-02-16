@@ -39,7 +39,16 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 278 - 27/01/2023
+    // Build 280 - 20/02/2023
+
+    // VERSION 2.9.6
+    var v2_9_6 = ChangeLogItem();
+    v2_9_6.version = 'Torn PDA v2.9.6';
+    v2_9_6.date = '20 FEB 2023';
+    String feat2_9_6_1 = "Fixed bounties filter";
+    String feat2_9_6_2 = "Improved Trades widget activation";
+    v2_9_6.features.add(feat2_9_6_1);
+    v2_9_6.features.add(feat2_9_6_2);
 
     // VERSION 2.9.5
     var v2_9_5 = ChangeLogItem();
@@ -1291,6 +1300,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_9_6);
     itemList.add(v2_9_5);
     itemList.add(v2_9_3);
     itemList.add(v2_9_2);

@@ -2521,6 +2521,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // TRADES
   Future _assessTrades(dom.Document document, String pageTitle) async {
     final easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
+
+    // Try to get the page title after the section loads
+    if (_currentUrl.contains('trade') && pageTitle.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 1500));
+      final html = await webView.getHtml();
+      document = parse(html);
+      pageTitle = (await _getPageTitle(document)).toLowerCase();
+    }
+
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
       if (mounted) {
@@ -2580,7 +2589,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     try {
       if (totalFinds.isEmpty) {
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(milliseconds: 1500));
         final updatedHtml = await webView.getHtml();
         final updatedDoc = parse(updatedHtml);
         document = updatedDoc;
