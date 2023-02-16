@@ -994,16 +994,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             // Userscripts initial load
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-              url: _initialUrl.url.toString(),
-              apiKey: _userProvider.basic.userApiKey,
-              time: UserScriptTime.start,
+                url: _initialUrl.url.toString(),
+                apiKey: _userProvider.basic.userApiKey,
+                time: UserScriptTime.start,
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
-              _terminalProvider.addInstruction("TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
-                "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+              _terminalProvider.addInstruction(
+                  "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
+                  "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             }
-            
+
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
             webView.addJavaScriptHandler(
               handlerName: 'copyToClipboard',
@@ -2378,6 +2379,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // TRADES
   Future _assessTrades(dom.Document document, String pageTitle) async {
     final easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
+
+    // Try to get the page title after the section loads
+    if (_currentUrl.contains('trade') && pageTitle.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 1500));
+      final html = await webView.getHtml();
+      document = parse(html);
+      pageTitle = (await _getPageTitle(document)).toLowerCase();
+    }
+
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
       if (mounted) {
@@ -2437,7 +2447,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     try {
       if (totalFinds.isEmpty) {
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(milliseconds: 1500));
         final updatedHtml = await webView.getHtml();
         final updatedDoc = parse(updatedHtml);
         document = updatedDoc;
@@ -2738,7 +2748,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // CITY
   Future _assessCity(dom.Document document, String pageTitle) async {
-    if (!pageTitle.contains('city')) {
+    if (!pageTitle.contains('city') || pageTitle.contains('raceway')) {
       setState(() {
         _cityIconActive = false;
         _cityExpandable = const SizedBox.shrink();

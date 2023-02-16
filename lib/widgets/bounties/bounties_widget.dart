@@ -4,7 +4,6 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
-import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class BountiesWidget extends StatefulWidget {
