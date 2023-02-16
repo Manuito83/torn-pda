@@ -183,7 +183,7 @@ class WarController extends GetxController {
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller().getOtherProfile(playerId: memberKey);
+      dynamic updatedTarget = await TornApiCaller().getOtherProfileExtended(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
@@ -345,7 +345,7 @@ class WarController extends GetxController {
     int numberUpdated = 0;
 
     // Get player's current location
-    final apiPlayer = await TornApiCaller().getProfileBasic();
+    final apiPlayer = await TornApiCaller().getOwnProfileBasic();
     if (apiPlayer is ApiError) {
       return -1;
     }

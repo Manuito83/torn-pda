@@ -908,7 +908,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               // We save the key because the API call will reset it
               final savedKey = _userProv.basic.userApiKey;
 
-              final dynamic myProfile = await TornApiCaller().getProfileBasic();
+              final dynamic myProfile = await TornApiCaller().getOwnProfileBasic();
 
               if (myProfile is OwnProfileBasic) {
                 myProfile

@@ -202,7 +202,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    var otherProfile = await TornApiCaller().getOtherProfile(playerId: widget.profileId.toString());
+    var otherProfile = await TornApiCaller().getOtherProfileExtended(playerId: widget.profileId.toString());
 
     // FRIEND CHECK
     if (!mounted) return; // We could be unmounted when rapidly skipping the first target

@@ -4344,7 +4344,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber > limit) limit = _messagesShowNumber;
     if (_eventsShowNumber > limit) limit = _eventsShowNumber;
 
-    var apiResponse = await TornApiCaller().getProfileExtended(limit: limit);
+    var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: limit);
     var apiChain = await TornApiCaller().getChainStatus();
 
     if (mounted) {
@@ -4401,7 +4401,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getMiscCardInfo() async {
     try {
-      var miscApiResponse = await TornApiCaller().getProfileMisc();
+      var miscApiResponse = await TornApiCaller().getOwnProfileMisc();
 
       if (_tornEducationModel == null) {
         _tornEducationModel = await TornApiCaller().getEducation();

@@ -32,6 +32,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
+import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -58,8 +59,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  final int _settingsPosition = 10;
-  final int _aboutPosition = 11;
+  final int _settingsPosition = 11;
+  final int _aboutPosition = 12;
   var _allowSectionsWithoutKey = <int>[];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -70,6 +71,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Chaining",
     "Loot",
     "Friends",
+    "Stakeouts",
     "Awards",
     "Items",
     "Ranked Wars",
@@ -1133,27 +1135,30 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return FriendsPage();
         break;
       case 5:
-        return AwardsPage();
+        return StakeoutsPage();
         break;
       case 6:
-        return ItemsPage();
+        return AwardsPage();
         break;
       case 7:
-        return RankedWarsPage(calledFromMenu: true);
+        return ItemsPage();
         break;
       case 8:
-        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
+        return RankedWarsPage(calledFromMenu: true);
         break;
       case 9:
-        return AlertsSettings(_onChangeStockMarketInMenu);
+        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
         break;
       case 10:
-        return SettingsPage(changeUID: changeUID);
+        return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 11:
-        return AboutPage(uid: _userUID);
+        return SettingsPage(changeUID: changeUID);
         break;
       case 12:
+        return AboutPage(uid: _userUID);
+        break;
+      case 13:
         return TipsPage();
         break;
 
@@ -1180,27 +1185,30 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return const Icon(Icons.people);
         break;
       case 5:
-        return const Icon(MdiIcons.trophy);
+        return const Icon(MdiIcons.cctv);
         break;
       case 6:
-        return const Icon(MdiIcons.packageVariantClosed);
+        return const Icon(MdiIcons.trophy);
         break;
       case 7:
-        return const Icon(MaterialCommunityIcons.sword_cross);
+        return const Icon(MdiIcons.packageVariantClosed);
         break;
       case 8:
-        return const Icon(MdiIcons.bankTransfer);
+        return const Icon(MaterialCommunityIcons.sword_cross);
         break;
       case 9:
-        return const Icon(Icons.notifications_active);
+        return const Icon(MdiIcons.bankTransfer);
         break;
       case 10:
-        return const Icon(Icons.settings);
+        return const Icon(Icons.notifications_active);
         break;
       case 11:
-        return const Icon(Icons.info_outline);
+        return const Icon(Icons.settings);
         break;
       case 12:
+        return const Icon(Icons.info_outline);
+        break;
+      case 13:
         return const Icon(Icons.question_answer_outlined);
         break;
       default:
@@ -1330,7 +1338,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider.basic.userApiKey;
-    final dynamic prof = await TornApiCaller().getProfileBasic();
+    final dynamic prof = await TornApiCaller().getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof

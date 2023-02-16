@@ -26,6 +26,7 @@ import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
 import 'package:torn_pda/models/perks/user_perks_model.dart';
+import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
@@ -58,6 +59,7 @@ enum ApiSelection {
   ownMisc,
   bazaar,
   otherProfile,
+  basicProfile,
   target,
   attacks,
   attacksFull,
@@ -171,7 +173,7 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> getProfileBasic({String forcedApiKey = ""}) async {
+  Future<dynamic> getOwnProfileBasic({String forcedApiKey = ""}) async {
     dynamic apiResult;
     await _apiCall(apiSelection: ApiSelection.ownBasic, forcedApiKey: forcedApiKey).then((value) {
       apiResult = value;
@@ -188,7 +190,7 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> getProfileExtended({@required int limit}) async {
+  Future<dynamic> getOwnProfileExtended({@required int limit}) async {
     dynamic apiResult;
     await _apiCall(apiSelection: ApiSelection.ownExtended, limit: limit).then((value) {
       apiResult = value;
@@ -222,7 +224,7 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> getProfileMisc() async {
+  Future<dynamic> getOwnProfileMisc() async {
     dynamic apiResult;
     await _apiCall(apiSelection: ApiSelection.ownMisc).then((value) {
       apiResult = value;
@@ -239,7 +241,7 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> getOtherProfile({@required String playerId}) async {
+  Future<dynamic> getOtherProfileExtended({@required String playerId}) async {
     dynamic apiResult;
     await _apiCall(prefix: playerId, apiSelection: ApiSelection.otherProfile).then((value) {
       apiResult = value;
@@ -247,6 +249,23 @@ class TornApiCaller {
     if (apiResult is! ApiError) {
       try {
         return OtherProfileModel.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> getOtherProfileBasic({@required String playerId}) async {
+    dynamic apiResult;
+    await _apiCall(prefix: playerId, apiSelection: ApiSelection.basicProfile).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return BasicProfileModel.fromJson(apiResult);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -606,6 +625,9 @@ class TornApiCaller {
         break;
       case ApiSelection.otherProfile:
         url += 'user/$prefix?selections=profile,crimes,personalstats,bazaar';
+        break;
+      case ApiSelection.basicProfile:
+        url += 'user/$prefix?selections=profile';
         break;
       case ApiSelection.target:
         url += 'user/$prefix?selections=profile,discord';

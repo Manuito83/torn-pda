@@ -1018,7 +1018,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Future profileMisc() async {
-    dynamic profileResponse = await TornApiCaller().getProfileExtended(limit: 3);
+    dynamic profileResponse = await TornApiCaller().getOwnProfileExtended(limit: 3);
 
     String error = "";
     if (profileResponse is ApiError) {
@@ -1038,7 +1038,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         contentPadding: EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      profileResponse = await TornApiCaller().getProfileExtended(limit: 3);
+      profileResponse = await TornApiCaller().getOwnProfileExtended(limit: 3);
     }
 
     if (profileResponse is ApiError) {
@@ -1426,7 +1426,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   _refreshMoney() async {
-    var profileModel = await TornApiCaller().getProfileExtended(limit: 3);
+    var profileModel = await TornApiCaller().getOwnProfileExtended(limit: 3);
     if (profileModel is OwnProfileExtended && mounted) {
       setState(() {
         _profile = profileModel;

@@ -74,7 +74,7 @@ class RetalsController extends GetxController {
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller().getOtherProfile(playerId: retalKey);
+      dynamic updatedTarget = await TornApiCaller().getOtherProfileExtended(playerId: retalKey);
       if (updatedTarget is other.OtherProfileModel) {
         retal.name = updatedTarget.name;
         retal.level = updatedTarget.level;

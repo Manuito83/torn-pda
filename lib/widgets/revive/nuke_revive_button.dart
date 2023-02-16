@@ -168,7 +168,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                               onPressed: () async {
                                 // User can be null if we are not accessing from the Profile page
                                 if (widget.user == null) {
-                                  var apiResponse = await TornApiCaller().getProfileExtended(limit: 3);
+                                  var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: 3);
                                   if (apiResponse is OwnProfileExtended) {
                                     _user = apiResponse;
                                   }
