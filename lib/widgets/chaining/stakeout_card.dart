@@ -2,6 +2,8 @@
 import 'dart:async';
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -36,12 +38,12 @@ class StakeoutCard extends StatefulWidget {
 class _StakeoutCardState extends State<StakeoutCard> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ChainStatusProvider _chainProvider;
   WebViewProvider _webViewProvider;
 
   Stakeout _stakeout;
   final StakeoutsController _s = Get.put(StakeoutsController());
+
+  var _expandableController = ExpandableController();
 
   String _currentLifeString = "";
   String _lastUpdatedString;
@@ -53,8 +55,17 @@ class _StakeoutCardState extends State<StakeoutCard> {
     _stakeout = widget.stakeout;
     _webViewProvider = context.read<WebViewProvider>();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    _chainProvider = Provider.of<ChainStatusProvider>(context, listen: false);
+
+    _expandableController.expanded = _stakeout.cardExpanded;
+    _expandableController.addListener(() {
+      _s.setCardExpanded(stakeout: _stakeout, cardExpanded: _expandableController.expanded);
+    });
+  }
+
+  @override
+  void dispose() {
+    //_expandableController.dispose();
+    super.dispose();
   }
 
   @override
@@ -76,7 +87,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         child: Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
           elevation: 2,
@@ -86,91 +97,154 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                // LINE 1
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
-                  child: Row(
-                    children: <Widget>[
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          GestureDetector(
-                            child: Row(
-                              children: [
-                                Icon(MdiIcons.cctv),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5),
-                                ),
-                                SizedBox(
-                                  width: 95,
-                                  child: Text(
-                                    '${_stakeout.name}',
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            onTap: () {
-                              _openBrowser();
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // LINE 4
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Row(
-                          children: <Widget>[
-                            SizedBox(
-                              width: 30,
-                              height: 20,
-                              child: IconButton(
-                                padding: EdgeInsets.all(0),
-                                iconSize: 20,
-                                icon: Icon(
-                                  MdiIcons.notebookEditOutline,
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  _showNotesDialog();
-                                },
-                              ),
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              'Notes: ',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            Flexible(
-                              child: Text(
-                                '${_stakeout.personalNote}',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 10),
-              ],
+            child: ExpandablePanel(
+              collapsed: null,
+              controller: _expandableController,
+              header: _header(),
+              expanded: _footer(),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Column _header() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        // LINE 1
+        Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
+          child: Row(
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  GestureDetector(
+                    child: Row(
+                      children: [
+                        Icon(MdiIcons.cctv),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 5),
+                        ),
+                        SizedBox(
+                          width: 95,
+                          child: Text(
+                            '${_stakeout.name}',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _openBrowser();
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // LINE 2
+        Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
+          child: Row(
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    if (!_stakeout.okayEnabled)
+                      Flexible(
+                        child: Text(
+                          "Nothing enabled, expand the card for options!",
+                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.orange[800]),
+                        ),
+                      ),
+                    if (_stakeout.okayEnabled)
+                      GestureDetector(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: Icon(
+                            MdiIcons.checkBold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        onTap: () {
+                          _showTooltip("Is Okay");
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // LINE 3
+        Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                      width: 30,
+                      height: 20,
+                      child: IconButton(
+                        padding: EdgeInsets.all(0),
+                        iconSize: 20,
+                        icon: Icon(
+                          MdiIcons.notebookEditOutline,
+                          size: 18,
+                        ),
+                        onPressed: () {
+                          _showNotesDialog();
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      'Notes: ',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Flexible(
+                      child: Text(
+                        '${_stakeout.personalNote}',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Padding _footer() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text("Is Okay"),
+          Switch(
+            value: _stakeout.okayEnabled,
+            onChanged: (value) {
+              _s.setOkay(stakeout: _stakeout, okayEnabled: value);
+            },
+            activeTrackColor: Colors.lightGreenAccent,
+            activeColor: Colors.green,
+          ),
+        ],
       ),
     );
   }
@@ -202,7 +276,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
 
   void _openBrowser() async {
     var browserType = _settingsProvider.currentBrowser;
-    String url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_stakeout.id}';
+    String url = 'https://www.torn.com/profiles.php?XID=${_stakeout.id}';
     switch (browserType) {
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
@@ -217,5 +291,18 @@ class _StakeoutCardState extends State<StakeoutCard> {
         }
         break;
     }
+  }
+
+  void _showTooltip(String text) {
+    BotToast.showText(
+      text: text,
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.green,
+      duration: const Duration(seconds: 2),
+      contentPadding: const EdgeInsets.all(10),
+    );
   }
 }

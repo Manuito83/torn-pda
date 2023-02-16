@@ -6,6 +6,7 @@ import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class StakeoutCardDetails {
   int cardPosition;
@@ -42,7 +43,10 @@ class StakeoutsController extends GetxController {
   }
 
   Future initialise() async {
-    //
+    List<String> saved = await Prefs().getStakeouts();
+    for (String s in saved) {
+      stakeouts.add(stakeoutFromJson(s));
+    }
     update();
   }
 
@@ -89,7 +93,23 @@ class StakeoutsController extends GetxController {
     update();
   }
 
+  void setCardExpanded({Stakeout stakeout, bool cardExpanded}) {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+    s.cardExpanded = cardExpanded;
+  }
+
+  void setOkay({Stakeout stakeout, bool okayEnabled}) {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+    s.okayEnabled = okayEnabled;
+    savePreferences();
+    update();
+  }
+
   void savePreferences() {
-    // TODO
+    List<String> toSave = [];
+    for (Stakeout st in stakeouts) {
+      toSave.add(stakeoutToJson(st));
+    }
+    Prefs().setStakeouts(toSave);
   }
 }

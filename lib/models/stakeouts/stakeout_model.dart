@@ -11,6 +11,9 @@ Stakeout stakeoutFromJson(String str) => Stakeout.fromJson(json.decode(str));
 String stakeoutToJson(Stakeout data) => json.encode(data.toJson());
 
 class Stakeout {
+  // Only state
+  bool cardExpanded;
+
   String id;
   String name;
   String personalNote;
@@ -20,13 +23,17 @@ class Stakeout {
   bool okayEnabled;
 
   Stakeout({
+    this.cardExpanded = false,
+
+    // Main
     @required this.id,
     @required this.name,
     this.personalNote = "",
+
     // Okay
     @required this.okayNow,
-    this.okayLast,
-    this.okayEnabled,
+    this.okayLast = false,
+    this.okayEnabled = false,
   });
 
   factory Stakeout.fromJson(Map<String, dynamic> json) => Stakeout(

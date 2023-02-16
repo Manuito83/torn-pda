@@ -205,6 +205,8 @@ class Prefs {
   final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
+  // Stakeouts
+  final String _kStakeouts = "pda_stakeouts";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
 
@@ -1882,6 +1884,19 @@ class Prefs {
   Future<bool> setPinnedItems(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kPinnedItems, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Chat Removal
+  /// ----------------------------
+  Future<List<String>> getStakeouts() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kStakeouts) ?? [];
+  }
+
+  Future<bool> setStakeouts(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kStakeouts, value);
   }
 
   /// ----------------------------
