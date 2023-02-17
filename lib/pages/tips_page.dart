@@ -713,15 +713,54 @@ class _TipsPageState extends State<TipsPage> {
     return tips;
   }
 
-  List<ExpandableTip> buildDeepLinksTips() {
-    var tips = <ExpandableTip>[];
+  List<TipTextBuilder> buildDeepLinksTips() {
+    var tips = <TipTextBuilder>[];
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Deep/custom app links",
-        expandedValue: "Torn PDA supports what's called deep linking or custom URLs. You can create a link outside "
-            "of the application with the following scheme 'tornpda://', where the rest of the URL remains unchanged."
-            "\n\nExample: 'tornpda://www.torn.com/gym.php' should be recognized as a valid URL and open Torn PDA with "
-            "a browser pointing to the gym.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "Torn PDA supports what's called deep linking or custom URLs. You can create a link outside "
+                  "of the application with the following scheme 'tornpda://', where the rest of the URL remains unchanged."
+                  "\n\nExample: 'tornpda://www.torn.com/gym.php' should be recognized as a valid URL and open Torn PDA with "
+                  "a browser pointing to the gym."
+                  "\n\nIn order for this to work in some browser (e.g.: Chrome), you'll need to adapt "
+                  "your link to be similar to this example:\n\n",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+              children: [
+                TextSpan(
+                  text:
+                      '<a href="intent://tornpda://www.cnn.com#Intent;package=com.manuito.tornpda;scheme=tornpda;end">click</a>',
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                TextSpan(
+                  text: "\n\nYou can find more information about this scheme in Chrome's ",
+                ),
+                TextSpan(
+                  text: "official documentation",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      const String scriptApiUrl = "https://developer.chrome.com/docs/multidevice/android/intents/";
+                      if (await canLaunch(scriptApiUrl)) {
+                        launch(scriptApiUrl);
+                      }
+                    },
+                ),
+                TextSpan(
+                  text: ".",
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
     return tips;

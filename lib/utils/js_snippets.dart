@@ -1111,7 +1111,7 @@ String MiniProfiles() {
 
 String bountiesJS({
   @required int levelMax,
-  @required bool removeRed,
+  @required bool removeNotAvailable,
 }) {
   return '''
     // Credit to TornTools for implementation logic
@@ -1128,26 +1128,25 @@ String bountiesJS({
     function modifyBounties() {
       // FILTERS
       for (var player of doc.querySelectorAll(".bounties-list > li:not(.clear)")) {
-      var shouldHide = false;
+        var shouldHide = false;
 
-      var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
-      if (level > $levelMax) {
-        shouldHide = true;
+        var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
+        if (level > $levelMax) {
+          shouldHide = true;
+        }
+        
+        var foundNotAvail = player.querySelector(".user-red-status, .user-blue-status");
+        if ($removeNotAvailable && foundNotAvail) {
+          shouldHide = true;
+        }
+        
+        // Hide users
+        if (shouldHide) {
+          player.hidden = true;
+        } else {
+          player.hidden = false;
+        }
       }
-      
-      var foundRed = player.querySelector(".user-red-status");
-      if ($removeRed && foundRed) {
-        shouldHide = true;
-      }
-      
-      // Hide users
-      if (shouldHide) {
-        player.hidden = true;
-      } else {
-        player.hidden = false;
-      }
-      }
-    
     }
 
     modifyBounties();
