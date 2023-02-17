@@ -39,7 +39,7 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 280 - 20/02/2023
+    // Build 282 - 17/02/2023
 
     // VERSION 2.9.6
     var v2_9_6 = ChangeLogItem();
@@ -47,8 +47,10 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_9_6.date = '20 FEB 2023';
     String feat2_9_6_1 = "Fixed bounties filter";
     String feat2_9_6_2 = "Improved Trades widget activation";
+    String feat2_9_6_3 = "Added deep links compatibility for Chrome href links (see Tips)";
     v2_9_6.features.add(feat2_9_6_1);
     v2_9_6.features.add(feat2_9_6_2);
+    v2_9_6.features.add(feat2_9_6_3);
 
     // VERSION 2.9.5
     var v2_9_5 = ChangeLogItem();

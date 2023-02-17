@@ -313,6 +313,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         showError = true;
       } else {
         url = url.replaceAll("http://", "https://");
+        // Double tornpda comes from href in website
+        // <a href="intent://tornpda://www.cnn.com#Intent;package=com.manuito.tornpda;scheme=tornpda;end">test</a>
+        url = url.replaceAll("tornpda://tornpda://", "https://");
         url = url.replaceAll("tornpda://", "https://");
         if (!url.contains("https://")) {
           showError = true;
