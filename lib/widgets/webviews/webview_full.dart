@@ -3334,7 +3334,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.evaluateJavascript(
       source: bountiesJS(
         levelMax: _bountiesModel.levelMax,
-        removeRed: _bountiesModel.removeRed,
+        removeNotAvailable: _bountiesModel.removeRed,
       ),
     );
   }
