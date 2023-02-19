@@ -206,7 +206,9 @@ class Prefs {
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
   // Stakeouts
+  final String _kStakeoutsEnabled = "pda_stakeoutsEnabled";
   final String _kStakeouts = "pda_stakeouts";
+  final String _kSleepStakeoutsTime = "pda_sleepStakeoutsTime";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
 
@@ -1887,8 +1889,18 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for Chat Removal
+  /// Methods for Stakeouts
   /// ----------------------------
+  Future<bool> getStakeoutsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStakeoutsEnabled) ?? false;
+  }
+
+  Future<bool> setStakeoutsEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStakeoutsEnabled, value);
+  }
+
   Future<List<String>> getStakeouts() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getStringList(_kStakeouts) ?? [];
@@ -1897,6 +1909,16 @@ class Prefs {
   Future<bool> setStakeouts(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kStakeouts, value);
+  }
+
+  Future<int> getStakeoutsSleepTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kSleepStakeoutsTime) ?? 0;
+  }
+
+  Future<bool> setStakeoutsSleepTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kSleepStakeoutsTime, value);
   }
 
   /// ----------------------------

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -36,6 +37,7 @@ import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
@@ -52,6 +54,7 @@ import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -87,6 +90,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
   WebViewProvider _webViewProvider;
+  StakeoutsController _s;
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -847,10 +851,32 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     });
   }
 
+  void _openBrowserFromToast(String url) async {
+    var browserType = _settingsProvider.currentBrowser;
+    switch (browserType) {
+      case BrowserSetting.app:
+        await _webViewProvider.openBrowserPreference(
+          context: context,
+          useDialog: _settingsProvider.useQuickBrowser,
+          url: url,
+        );
+        break;
+      case BrowserSetting.external:
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
+    if (_s == null) {
+      _s = Get.put(StakeoutsController(), permanent: true);
+      _s.callbackBrowser = _openBrowserFromToast;
+    }
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: FutureBuilder(

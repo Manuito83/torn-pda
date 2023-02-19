@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 // Package imports:
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -77,8 +78,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
         extentRatio: 0.5,
         children: [
           SlidableAction(
-            label: 'Hide',
-            backgroundColor: Colors.blue,
+            label: 'Delete',
+            backgroundColor: Colors.red,
             icon: Icons.delete,
             onPressed: (context) {
               _s.removeStakeout(removeId: _stakeout.id);
@@ -157,7 +158,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
               Flexible(
                 child: Row(
                   children: [
-                    if (!_stakeout.okayEnabled)
+                    if (!_s.isAnyOptionActive(stakeout: _stakeout))
                       Flexible(
                         child: Text(
                           "Nothing enabled, expand the card for options!",
@@ -174,7 +175,21 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           ),
                         ),
                         onTap: () {
-                          _showTooltip("Is Okay");
+                          _showTooltip("Is okay");
+                        },
+                      ),
+                    if (_stakeout.hospitalEnabled)
+                      GestureDetector(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: Icon(
+                            FontAwesome.ambulance,
+                            color: Colors.red,
+                            size: 18,
+                          ),
+                        ),
+                        onTap: () {
+                          _showTooltip("Is hospitalized");
                         },
                       ),
                   ],
@@ -232,17 +247,35 @@ class _StakeoutCardState extends State<StakeoutCard> {
   Padding _footer() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Text("Is Okay"),
-          Switch(
-            value: _stakeout.okayEnabled,
-            onChanged: (value) {
-              _s.setOkay(stakeout: _stakeout, okayEnabled: value);
-            },
-            activeTrackColor: Colors.lightGreenAccent,
-            activeColor: Colors.green,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Is okay"),
+              Switch(
+                value: _stakeout.okayEnabled,
+                onChanged: (value) {
+                  _s.setOkay(stakeout: _stakeout, okayEnabled: value);
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Is hospitalized"),
+              Switch(
+                value: _stakeout.hospitalEnabled,
+                onChanged: (value) {
+                  _s.setHospital(stakeout: _stakeout, hospitalEnabled: value);
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
           ),
         ],
       ),
@@ -300,7 +333,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.green,
+      contentColor: Colors.blue,
       duration: const Duration(seconds: 2),
       contentPadding: const EdgeInsets.all(10),
     );

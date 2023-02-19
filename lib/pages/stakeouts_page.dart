@@ -9,26 +9,13 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:toggle_switch/toggle_switch.dart';
-import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
-import 'package:torn_pda/models/chaining/war_sort.dart';
-import 'package:torn_pda/models/faction/faction_model.dart';
-import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
-import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/country_check.dart';
-import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/chaining/chain_widget.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/chaining/stakeout_card.dart';
-import 'package:torn_pda/widgets/chaining/war_card.dart';
-import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
-import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 
 class StakeoutsPage extends StatefulWidget {
   const StakeoutsPage({
@@ -43,7 +30,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   final _addIdController = TextEditingController();
   final _addFormKey = GlobalKey<FormState>();
 
-  StakeoutsController _s;
+  StakeoutsController _s = Get.find();
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   WebViewProvider _webViewProvider;
@@ -67,10 +54,6 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_s == null) {
-      _s = Get.put(StakeoutsController());
-    }
-
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
     return ShowCaseWidget(
@@ -120,13 +103,41 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
 
   Widget _mainColumn() {
     return GetBuilder<StakeoutsController>(builder: (s) {
+      int sleepTime = s.timeUntilStakeoutsSlept();
+      String sleepString = "";
+      if (sleepTime > 0) {
+        sleepString = TimeFormatter(
+          inputTime: DateTime.fromMillisecondsSinceEpoch(sleepTime),
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+      }
+
       return Column(
         children: <Widget>[
+          if (sleepTime > 0)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      Text("Alerts silenced until"),
+                      Text(sleepString),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () => s.disableSleepStakeouts(),
+                    child: Text("Deactivate"),
+                  ),
+                ],
+              ),
+            ),
           if (context.orientation == Orientation.portrait)
             Flexible(child: StakeoutTargetsList(stakeoutsController: s))
           else
             StakeoutTargetsList(stakeoutsController: s),
-          if (_settingsProvider.appBarTop) SizedBox(height: 50),
         ],
       );
     });
@@ -169,6 +180,17 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
             },
           ),
         ),
+        GetBuilder<StakeoutsController>(builder: (s) {
+          return Switch(
+            value: s.stakeoutsEnabled,
+            onChanged: (value) {
+              s.stakeoutsEnabled = value;
+              BotToast.showText(text: "Stakeouts ${value ? 'enabled' : 'disabled'}!");
+            },
+            activeTrackColor: Colors.lightGreenAccent,
+            activeColor: Colors.green,
+          );
+        }),
       ],
     );
   }
