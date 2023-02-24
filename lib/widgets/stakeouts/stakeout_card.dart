@@ -13,15 +13,14 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 
 class StakeoutCard extends StatefulWidget {
   final Stakeout stakeout;
@@ -147,6 +146,38 @@ class _StakeoutCardState extends State<StakeoutCard> {
                   ),
                 ],
               ),
+              Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                child: Row(
+                  children: <Widget>[
+                    // If last fetch was more than 10 minutes ago, we don't should Status details
+                    if (DateTime.now().millisecondsSinceEpoch - _stakeout.lastFetch < 600000)
+                      Row(
+                        children: <Widget>[
+                          _travelIcon(),
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: _returnStatusColor(_stakeout.lastAction.status),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13),
+                            child: Text(
+                              _stakeout.lastAction.relative == "0 minutes ago"
+                                  ? 'now'
+                                  : _stakeout.lastAction.relative.replaceAll(' ago', ''),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Text("no recent update", style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                  ],
+                ),
+              )
             ],
           ),
         ),
@@ -337,5 +368,99 @@ class _StakeoutCardState extends State<StakeoutCard> {
       duration: const Duration(seconds: 2),
       contentPadding: const EdgeInsets.all(10),
     );
+  }
+
+  Widget _travelIcon() {
+    var country = countryCheck(state: _stakeout.status.state, description: _stakeout.status.description);
+
+    if (_stakeout.status.color == "blue" || (country != "Torn" && _stakeout.status.color == "red")) {
+      var destination = _stakeout.status.color == "blue" ? _stakeout.status.description : country;
+      var flag = '';
+      if (destination.contains('Japan')) {
+        flag = 'images/flags/stock/japan.png';
+      } else if (destination.contains('Hawaii')) {
+        flag = 'images/flags/stock/hawaii.png';
+      } else if (destination.contains('China')) {
+        flag = 'images/flags/stock/china.png';
+      } else if (destination.contains('Argentina')) {
+        flag = 'images/flags/stock/argentina.png';
+      } else if (destination.contains('United Kingdom')) {
+        flag = 'images/flags/stock/uk.png';
+      } else if (destination.contains('Cayman')) {
+        flag = 'images/flags/stock/cayman.png';
+      } else if (destination.contains('South Africa')) {
+        flag = 'images/flags/stock/south-africa.png';
+      } else if (destination.contains('Switzerland')) {
+        flag = 'images/flags/stock/switzerland.png';
+      } else if (destination.contains('Mexico')) {
+        flag = 'images/flags/stock/mexico.png';
+      } else if (destination.contains('UAE')) {
+        flag = 'images/flags/stock/uae.png';
+      } else if (destination.contains('Canada')) {
+        flag = 'images/flags/stock/canada.png';
+      }
+
+      return Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(100),
+          onTap: () {
+            BotToast.showText(
+              text: _stakeout.status.description,
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 3),
+                child: RotatedBox(
+                  quarterTurns: _stakeout.status.description.contains('Traveling to ')
+                      ? 1 // If traveling to another country
+                      : _stakeout.status.description.contains('Returning ')
+                          ? 3 // If returning to Torn
+                          : 0, // If staying abroad (blue but not moving)
+                  child: Icon(
+                    _stakeout.status.description.contains('In ')
+                        ? Icons.location_city_outlined
+                        : Icons.airplanemode_active,
+                    color: Colors.blue,
+                    size: 16,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: Image.asset(
+                  flag,
+                  width: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Color _returnStatusColor(String status) {
+    switch (status) {
+      case 'Online':
+        return Colors.green;
+        break;
+      case 'Idle':
+        return Colors.orange;
+        break;
+      default:
+        return Colors.grey;
+    }
   }
 }

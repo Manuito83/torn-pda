@@ -51,22 +51,71 @@ class StakeoutsController extends GetxController {
 
   bool _stakeoutsEnabled;
   bool get stakeoutsEnabled => _stakeoutsEnabled;
-  set stakeoutsEnabled(bool value) {
-    // TODO: we need to update everything quickly...?
-    _stakeoutsEnabled = value;
-    Prefs().setStakeoutsEnabled(value);
+  enableStakeOuts() async {
+    // Quickly update active stakeouts that have not been updated in 30 seconds
+    int millis = DateTime.now().millisecondsSinceEpoch;
+    bool anySuccess = false;
+    for (Stakeout s in stakeouts) {
+      if (isAnyOptionActive(stakeout: s) && millis - s.lastFetch > 30000) {
+        var success = await _fetchSingle(stakeout: s);
+        if (success) {
+          anySuccess = true;
+        }
+      }
+    }
+
+    if (!anySuccess) {
+      BotToast.showText(
+        text: "Stakeouts have been enabled but targets could not be updated (API returned error).\n\n"
+            "Be aware that you might get false notifications when API information is regained.",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800],
+        duration: const Duration(seconds: 8),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+
+    _stakeoutsEnabled = true;
+    Prefs().setStakeoutsEnabled(true);
     update();
   }
 
-  int _sleepStakeoutsTime;
-  int get sleepStakeoutsTime => _sleepStakeoutsTime;
-  set sleepStakeoutsTime(int value) {
-    _sleepStakeoutsTime = value;
+  disableStakeouts() {
+    _stakeoutsEnabled = false;
+    Prefs().setStakeoutsEnabled(false);
+    update();
+  }
+
+  int _stakeoutsSleepTime;
+  int get stakeoutsSleepTime => _stakeoutsSleepTime;
+  set stakeoutsSleepTime(int value) {
+    _stakeoutsSleepTime = value;
     Prefs().setStakeoutsSleepTime(value);
     update();
   }
 
   Timer _stakeoutTimer;
+  void startTimer() {
+    _stakeoutTimer?.cancel();
+    _stakeoutTimer = new Timer.periodic(Duration(milliseconds: 2500), (Timer t) {
+      _fetchStakeoutsPeriodic();
+      _resetSleepTimeIfExpired();
+    });
+  }
+
+  void stopTimer() {
+    _stakeoutTimer?.cancel();
+  }
+
+  int _fetchMinutesDelayLimit = 60;
+  int get fetchMinutesDelayLimit => _fetchMinutesDelayLimit;
+  set fetchMinutesDelayLimit(int value) {
+    _fetchMinutesDelayLimit = value;
+    Prefs().setStakeoutsFetchDelayLimit(value);
+  }
 
   @override
   void onInit() {
@@ -76,11 +125,7 @@ class StakeoutsController extends GetxController {
 
   Future initialise() async {
     await _loadPreferences();
-    _stakeoutTimer?.cancel();
-    _stakeoutTimer = new Timer.periodic(Duration(milliseconds: 2500), (Timer t) {
-      _fetchStakeoutsPeriodic();
-      _resetSleepTimeIfExpired();
-    });
+    startTimer();
     update();
   }
 
@@ -98,10 +143,18 @@ class StakeoutsController extends GetxController {
     dynamic basicModel = await TornApiCaller().getOtherProfileBasic(playerId: inputId);
 
     if (basicModel is BasicProfileModel) {
+      int millis = DateTime.now().millisecondsSinceEpoch;
       stakeouts.add(
         Stakeout(
           id: basicModel.playerId.toString(),
           name: basicModel.name,
+          lastFetch: millis,
+          lastPass: millis,
+          status: basicModel.status,
+          lastAction: basicModel.lastAction,
+          okayLast: basicModel.status.state == "Okay",
+          hospitalLast: basicModel.status.state == "Hospital",
+          // TODO
         ),
       );
       savePreferences();
@@ -120,7 +173,7 @@ class StakeoutsController extends GetxController {
     }
   }
 
-  Future<AddStakeoutResult> removeStakeout({@required String removeId}) {
+  void removeStakeout({@required String removeId}) {
     stakeouts.removeWhere((s) => s.id == removeId);
     savePreferences();
     update();
@@ -133,24 +186,24 @@ class StakeoutsController extends GetxController {
 
   void setOkay({@required Stakeout stakeout, @required bool okayEnabled}) async {
     Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
-    s.okayEnabled = okayEnabled;
 
     if (okayEnabled && !isAnyOptionActive(stakeout: stakeout)) {
       _fetchSingle(stakeout: stakeout);
     }
 
+    s.okayEnabled = okayEnabled;
     savePreferences();
     update();
   }
 
   void setHospital({@required Stakeout stakeout, @required bool hospitalEnabled}) async {
     Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
-    s.hospitalEnabled = hospitalEnabled;
 
     if (hospitalEnabled && !isAnyOptionActive(stakeout: stakeout)) {
       _fetchSingle(stakeout: stakeout);
     }
 
+    s.hospitalEnabled = hospitalEnabled;
     savePreferences();
     update();
   }
@@ -179,11 +232,13 @@ class StakeoutsController extends GetxController {
 
     _stakeoutsEnabled = await Prefs().getStakeoutsEnabled();
 
-    _sleepStakeoutsTime = await Prefs().getStakeoutsSleepTime();
+    _stakeoutsSleepTime = await Prefs().getStakeoutsSleepTime();
+
+    _fetchMinutesDelayLimit = await Prefs().getStakeoutsFetchDelayLimit();
   }
 
   void sleepStakeouts() {
-    sleepStakeoutsTime = DateTime.now().millisecondsSinceEpoch + 600000; // 10 minutes
+    stakeoutsSleepTime = DateTime.now().millisecondsSinceEpoch + 600000; // 10 minutes
 
     BotToast.showText(
       text: "Stakeouts silenced for 10 minutes!",
@@ -198,7 +253,7 @@ class StakeoutsController extends GetxController {
   }
 
   void disableSleepStakeouts() {
-    sleepStakeoutsTime = 0; // 10 minutes
+    stakeoutsSleepTime = 0; // 10 minutes
 
     BotToast.showText(
       text: "Stakeouts alerts re-enabled!",
@@ -213,9 +268,9 @@ class StakeoutsController extends GetxController {
   }
 
   void _resetSleepTimeIfExpired() {
-    if (_sleepStakeoutsTime > 0) {
-      if (_sleepStakeoutsTime < DateTime.now().millisecondsSinceEpoch) {
-        sleepStakeoutsTime = 0;
+    if (_stakeoutsSleepTime > 0) {
+      if (_stakeoutsSleepTime < DateTime.now().millisecondsSinceEpoch) {
+        stakeoutsSleepTime = 0;
       }
     }
   }
@@ -223,8 +278,8 @@ class StakeoutsController extends GetxController {
   // Returns 0 if stakeouts are not slept, and the timestamp if they are
   int timeUntilStakeoutsSlept() {
     int currentMillis = DateTime.now().millisecondsSinceEpoch;
-    if (sleepStakeoutsTime > currentMillis) {
-      return sleepStakeoutsTime;
+    if (stakeoutsSleepTime > currentMillis) {
+      return stakeoutsSleepTime;
     }
     return 0;
   }
@@ -232,37 +287,58 @@ class StakeoutsController extends GetxController {
   void _fetchStakeoutsPeriodic() async {
     if (!_stakeoutsEnabled) return;
     int currentMills = DateTime.now().millisecondsSinceEpoch;
-    Stakeout nextToUpdate = stakeouts.firstWhere((element) => currentMills - element.lastUpdate > 30000); // 30 sec
-    nextToUpdate.lastUpdate = currentMills;
+    Stakeout stakeoutPass = stakeouts.firstWhereOrNull((element) => currentMills - element.lastPass > 30000);
+    if (stakeoutPass == null) return;
+    // [lastPass] always gets updated, even if no option are active;
+    stakeoutPass.lastPass = currentMills;
 
-    if (!isAnyOptionActive(stakeout: nextToUpdate)) {
-      log("Stakeouts: ${nextToUpdate.name} has no active options");
+    if (!isAnyOptionActive(stakeout: stakeoutPass)) {
+      log("Stakeouts: ${stakeoutPass.name} has no active options");
       return;
     }
 
-    log("Stakeouts: updating ${nextToUpdate.name} @${DateTime.now()}");
-    var response = await TornApiCaller().getOtherProfileBasic(playerId: nextToUpdate.id);
+    log("Stakeouts: updating ${stakeoutPass.name} @${DateTime.now()}");
+    var response = await TornApiCaller().getOtherProfileBasic(playerId: stakeoutPass.id);
     if (response is BasicProfileModel) {
       int currentMills = DateTime.now().millisecondsSinceEpoch;
-      if (currentMills > _sleepStakeoutsTime) {
-        _alertStakeout(alertStakeout: nextToUpdate, tornProfile: response);
+      // Get minutes since last fetch, so that we don't alert if it's above a certain threshold
+      double minutesSinceFetch = (currentMills - stakeoutPass.lastFetch) / 60000;
+      // Then update, since we already fetched
+      stakeoutPass.lastFetch = currentMills;
+
+      if (currentMills > _stakeoutsSleepTime) {
+        if (minutesSinceFetch > _fetchMinutesDelayLimit) {
+          log("Stakeouts: skipping ${stakeoutPass.name} alert due > ${_fetchMinutesDelayLimit} minutes delay");
+        } else {
+          _alertStakeout(alertStakeout: stakeoutPass, tornProfile: response);
+        }
       }
-      _updateStakeout(alertStakeout: nextToUpdate, tornProfile: response);
+      _updateStakeout(updateStakeout: stakeoutPass, tornProfile: response);
     }
   }
 
   /// Used when we need to quickly update all properties of a stakeout, since it was inactive before
-  _fetchSingle({@required Stakeout stakeout}) async {
+  Future<bool> _fetchSingle({@required Stakeout stakeout}) async {
     var response = await TornApiCaller().getOtherProfileBasic(playerId: stakeout.id);
     if (response is BasicProfileModel) {
-      _updateStakeout(alertStakeout: stakeout, tornProfile: response);
+      _updateStakeout(updateStakeout: stakeout, tornProfile: response);
+      return true;
     }
+    return false;
   }
 
-  void _updateStakeout({@required Stakeout alertStakeout, @required BasicProfileModel tornProfile}) {
+  void _updateStakeout({@required Stakeout updateStakeout, @required BasicProfileModel tornProfile}) {
     // Update current values
-    alertStakeout.okayLast = tornProfile.status.state == "Okay";
-    alertStakeout.hospitalLast = tornProfile.status.state == "Hospital";
+    int millis = DateTime.now().millisecondsSinceEpoch;
+    updateStakeout.lastAction = tornProfile.lastAction;
+    updateStakeout.status = tornProfile.status;
+    updateStakeout.lastFetch = millis;
+    updateStakeout.lastPass = millis;
+    updateStakeout.okayLast = tornProfile.status.state == "Okay";
+    updateStakeout.hospitalLast = tornProfile.status.state == "Hospital";
+    // TODO add rest
+    savePreferences();
+    update();
   }
 
   void _alertStakeout({@required Stakeout alertStakeout, @required BasicProfileModel tornProfile}) {
@@ -282,6 +358,7 @@ class StakeoutsController extends GetxController {
     }
 
     if (alerts.isNotEmpty) {
+      log(alerts.toString());
       _showAlert(
         text: alerts,
         icon: icons,

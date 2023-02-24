@@ -13,9 +13,9 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/chaining/stakeout_card.dart';
+import 'package:torn_pda/widgets/stakeouts/stakeout_card.dart';
+import 'package:torn_pda/widgets/stakeouts/stakeouts_info_dialog.dart';
 
 class StakeoutsPage extends StatefulWidget {
   const StakeoutsPage({
@@ -33,7 +33,6 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   StakeoutsController _s = Get.find();
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
-  WebViewProvider _webViewProvider;
 
   // Showcases
   GlobalKey _showcaseInfo = GlobalKey();
@@ -42,7 +41,6 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _webViewProvider = context.read<WebViewProvider>();
   }
 
   @override
@@ -134,6 +132,36 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                 ],
               ),
             ),
+          if (_s.stakeouts.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 100, 20, 0),
+              child: Column(
+                children: [
+                  Text(
+                    "No stakeout targets!",
+                    textAlign: TextAlign.center,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Add your first one:",
+                        textAlign: TextAlign.center,
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          MdiIcons.cameraPlusOutline,
+                          size: 30,
+                        ),
+                        onPressed: () {
+                          _showAddDialog();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           if (context.orientation == Orientation.portrait)
             Flexible(child: StakeoutTargetsList(stakeoutsController: s))
           else
@@ -173,18 +201,31 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
           tooltipBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
           tooltipPadding: EdgeInsets.all(20),
-          child: IconButton(
-            icon: Icon(Icons.info_outline),
-            onPressed: () {
-              //TODO
-            },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: GestureDetector(
+              child: Image.asset(
+                'images/icons/gear_info.png',
+                width: 24,
+                color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.mainText,
+              ),
+              onTap: () {
+                return showDialog<void>(
+                  context: context,
+                  barrierDismissible: false, // user must tap button!
+                  builder: (BuildContext context) {
+                    return StakeoutsInfoDialog();
+                  },
+                );
+              },
+            ),
           ),
         ),
         GetBuilder<StakeoutsController>(builder: (s) {
           return Switch(
             value: s.stakeoutsEnabled,
             onChanged: (value) {
-              s.stakeoutsEnabled = value;
+              value ? s.enableStakeOuts() : s.disableStakeouts();
               BotToast.showText(text: "Stakeouts ${value ? 'enabled' : 'disabled'}!");
             },
             activeTrackColor: Colors.lightGreenAccent,

@@ -284,13 +284,25 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.paused) {
+      // Stop stakeouts
+      if (_s != null) {
+        _s.stopTimer();
+        log("Stakeouts stopped");
+      }
+    } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
 
       // Handle notifications
       _getBackGroundNotifications();
       _removeExistingNotifications();
+
+      // Resume stakeouts
+      if (_s != null) {
+        _s.startTimer();
+        log("Stakeouts resumed");
+      }
     }
   }
 

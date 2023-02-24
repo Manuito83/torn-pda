@@ -812,7 +812,7 @@ class _WarCardState extends State<WarCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(_member.status);
+    var country = countryCheck(state: _member.status.state, description: _member.status.description);
 
     if (_member.status.color == "blue" || (country != "Torn" && _member.status.color == "red")) {
       var destination = _member.status.color == "blue" ? _member.status.description : country;

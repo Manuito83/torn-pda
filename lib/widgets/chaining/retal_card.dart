@@ -624,7 +624,7 @@ class _RetalCardState extends State<RetalCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(_retal.status);
+    var country = countryCheck(state: _retal.status.state, description: _retal.status.description);
 
     if (_retal.status.color == "blue" || (country != "Torn" && _retal.status.color == "red")) {
       var destination = _retal.status.color == "blue" ? _retal.status.description : country;

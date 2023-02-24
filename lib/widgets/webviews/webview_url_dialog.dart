@@ -327,14 +327,13 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           }
 
                           BotToast.showText(
-                            text: "Current URL copied to "
-                                "the clipboard [$copied]",
+                            text: "Link copied! [$copied]",
                             textStyle: TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                             ),
                             contentColor: Colors.green,
-                            duration: Duration(seconds: 5),
+                            duration: Duration(milliseconds: 1500),
                             contentPadding: EdgeInsets.all(10),
                           );
                           _customURLController.text = "";

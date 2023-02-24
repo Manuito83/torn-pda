@@ -1373,11 +1373,16 @@ class WarTargetsList extends StatelessWidget {
         continue;
       }
 
-      if (countryFilterActive && countryCheck(thisMember.status) != warController.playerLocation) {
+      if (countryFilterActive &&
+          countryCheck(
+                state: thisMember.status.state,
+                description: thisMember.status.description,
+              ) !=
+              warController.playerLocation) {
         continue;
       }
 
-      if (travelingFilterActive && travelingCheck(thisMember.status)) {
+      if (travelingFilterActive && travelingCheck(state: thisMember.status.state)) {
         continue;
       }
 

@@ -350,7 +350,10 @@ class WarController extends GetxController {
       return -1;
     }
     final profile = apiPlayer as OwnProfileBasic;
-    playerLocation = countryCheck(profile.status);
+    playerLocation = countryCheck(
+      state: profile.status.state,
+      description: profile.status.description,
+    );
 
     for (FactionModel f in factions) {
       final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());

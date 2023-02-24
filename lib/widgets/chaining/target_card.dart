@@ -720,7 +720,7 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(_target.status);
+    var country = countryCheck(state: _target.status.state, description: _target.status.description);
 
     if (_target.status.color == "blue" || (country != "Torn" && _target.status.color == "red")) {
       var destination = _target.status.color == "blue" ? _target.status.description : country;

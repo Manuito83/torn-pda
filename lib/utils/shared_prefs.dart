@@ -208,7 +208,8 @@ class Prefs {
   // Stakeouts
   final String _kStakeoutsEnabled = "pda_stakeoutsEnabled";
   final String _kStakeouts = "pda_stakeouts";
-  final String _kSleepStakeoutsTime = "pda_sleepStakeoutsTime";
+  final String _kStakeoutsSleepTime = "pda_stakeoutsSleepTime";
+  final String _kStakeoutsFetchDelayLimit = "pda_stakeoutsFetchDelayLimit";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
 
@@ -1913,12 +1914,22 @@ class Prefs {
 
   Future<int> getStakeoutsSleepTime() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kSleepStakeoutsTime) ?? 0;
+    return prefs.getInt(_kStakeoutsSleepTime) ?? 0;
   }
 
   Future<bool> setStakeoutsSleepTime(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kSleepStakeoutsTime, value);
+    return prefs.setInt(_kStakeoutsSleepTime, value);
+  }
+
+  Future<int> getStakeoutsFetchDelayLimit() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStakeoutsFetchDelayLimit) ?? 60;
+  }
+
+  Future<bool> setStakeoutsFetchDelayLimit(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStakeoutsFetchDelayLimit, value);
   }
 
   /// ----------------------------
