@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:math' as math;
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
+// TODO: Useful
 class StakeoutCardDetails {
   int cardPosition;
   int playerId;
@@ -100,7 +102,7 @@ class StakeoutsController extends GetxController {
   Timer _stakeoutTimer;
   void startTimer() {
     _stakeoutTimer?.cancel();
-    _stakeoutTimer = new Timer.periodic(Duration(milliseconds: 2500), (Timer t) {
+    _stakeoutTimer = new Timer.periodic(Duration(milliseconds: 4000), (Timer t) {
       _fetchStakeoutsPeriodic();
       _resetSleepTimeIfExpired();
     });
@@ -154,7 +156,13 @@ class StakeoutsController extends GetxController {
           lastAction: basicModel.lastAction,
           okayLast: basicModel.status.state == "Okay",
           hospitalLast: basicModel.status.state == "Hospital",
-          // TODO
+          revivableLast: basicModel.revivable == 1,
+          landedLast: basicModel.status.state != "Traveling",
+          onlineLast: basicModel.lastAction.status == "Online",
+          lifeBelowPercentageLast: basicModel.life.current < 50,
+          lifeBelowPercentageLimit: 50,
+          offlineLongerThanLast: _getOfflineTimeInHours(lastAction: basicModel.lastAction) < 2,
+          offlineLongerThanLimit: 2,
         ),
       );
       savePreferences();
@@ -208,9 +216,113 @@ class StakeoutsController extends GetxController {
     update();
   }
 
+  void setRevivable({@required Stakeout stakeout, @required bool revivableEnabled}) async {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+
+    if (revivableEnabled && !isAnyOptionActive(stakeout: stakeout)) {
+      _fetchSingle(stakeout: stakeout);
+    }
+
+    s.revivableEnabled = revivableEnabled;
+    savePreferences();
+    update();
+  }
+
+  void setLanded({@required Stakeout stakeout, @required bool landedEnabled}) async {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+
+    if (landedEnabled && !isAnyOptionActive(stakeout: stakeout)) {
+      _fetchSingle(stakeout: stakeout);
+    }
+
+    s.landedEnabled = landedEnabled;
+    savePreferences();
+    update();
+  }
+
+  void setOnline({@required Stakeout stakeout, @required bool onlineEnabled}) async {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+
+    if (onlineEnabled && !isAnyOptionActive(stakeout: stakeout)) {
+      _fetchSingle(stakeout: stakeout);
+    }
+
+    s.onlineEnabled = onlineEnabled;
+    savePreferences();
+    update();
+  }
+
+  void setLifePercentageEnabled({
+    @required Stakeout stakeout,
+    @required bool lifePercentageEnabled,
+  }) async {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+
+    if (lifePercentageEnabled && !isAnyOptionActive(stakeout: stakeout)) {
+      _fetchSingle(stakeout: stakeout);
+    }
+
+    s.lifeBelowPercentageEnabled = lifePercentageEnabled;
+    savePreferences();
+    update();
+  }
+
+  void setLifePercentageLimit({
+    @required Stakeout stakeout,
+    @required int percentage,
+  }) async {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+    s.lifeBelowPercentageLimit = percentage;
+    savePreferences();
+    update();
+  }
+
+  void setOfflineLongerThanEnabled({
+    @required Stakeout stakeout,
+    @required bool offlineLongerThanEnabled,
+  }) async {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+
+    if (offlineLongerThanEnabled && !isAnyOptionActive(stakeout: stakeout)) {
+      _fetchSingle(stakeout: stakeout);
+    }
+
+    s.offlineLongerThanEnabled = offlineLongerThanEnabled;
+    savePreferences();
+    update();
+  }
+
+  void setOfflineLongerThanLimit({
+    @required Stakeout stakeout,
+    @required int hours,
+  }) async {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+    s.offlineLongerThanLimit = hours;
+    savePreferences();
+    update();
+  }
+
+  int _getOfflineTimeInHours({@required LastAction lastAction}) {
+    if (lastAction.status != "Offline") {
+      return 0;
+    }
+
+    int offlineTimestamp = lastAction.timestamp * 1000;
+    int currentMillis = DateTime.now().millisecondsSinceEpoch;
+    int diff = currentMillis - offlineTimestamp;
+    Duration millisElapsed = Duration(milliseconds: diff);
+
+    return millisElapsed.inHours;
+  }
+
   bool isAnyOptionActive({@required Stakeout stakeout}) {
-    // TODO all categories
-    if (stakeout.okayEnabled || stakeout.hospitalEnabled) {
+    if (stakeout.okayEnabled ||
+        stakeout.hospitalEnabled ||
+        stakeout.landedEnabled ||
+        stakeout.onlineEnabled ||
+        stakeout.revivableEnabled ||
+        stakeout.lifeBelowPercentageEnabled ||
+        stakeout.offlineLongerThanEnabled) {
       return true;
     }
     return false;
@@ -231,9 +343,7 @@ class StakeoutsController extends GetxController {
     }
 
     _stakeoutsEnabled = await Prefs().getStakeoutsEnabled();
-
     _stakeoutsSleepTime = await Prefs().getStakeoutsSleepTime();
-
     _fetchMinutesDelayLimit = await Prefs().getStakeoutsFetchDelayLimit();
   }
 
@@ -293,11 +403,11 @@ class StakeoutsController extends GetxController {
     stakeoutPass.lastPass = currentMills;
 
     if (!isAnyOptionActive(stakeout: stakeoutPass)) {
-      log("Stakeouts: ${stakeoutPass.name} has no active options");
+      //log("Stakeouts: ${stakeoutPass.name} has no active options");
       return;
     }
 
-    log("Stakeouts: updating ${stakeoutPass.name} @${DateTime.now()}");
+    //log("Stakeouts: updating ${stakeoutPass.name} @${DateTime.now()}");
     var response = await TornApiCaller().getOtherProfileBasic(playerId: stakeoutPass.id);
     if (response is BasicProfileModel) {
       int currentMills = DateTime.now().millisecondsSinceEpoch;
@@ -336,14 +446,19 @@ class StakeoutsController extends GetxController {
     updateStakeout.lastPass = millis;
     updateStakeout.okayLast = tornProfile.status.state == "Okay";
     updateStakeout.hospitalLast = tornProfile.status.state == "Hospital";
-    // TODO add rest
+    updateStakeout.revivableLast = tornProfile.revivable == 1;
+    updateStakeout.landedLast = tornProfile.status.state != "Traveling";
+    updateStakeout.onlineLast = tornProfile.lastAction.status == "Online";
+    updateStakeout.lifeBelowPercentageLast = tornProfile.life.current < updateStakeout.lifeBelowPercentageLimit;
+    updateStakeout.offlineLongerThanLast =
+        _getOfflineTimeInHours(lastAction: updateStakeout.lastAction) < updateStakeout.offlineLongerThanLimit;
     savePreferences();
     update();
   }
 
   void _alertStakeout({@required Stakeout alertStakeout, @required BasicProfileModel tornProfile}) {
     List<String> alerts = [];
-    List<Icon> icons = <Icon>[];
+    List<Widget> icons = <Icon>[];
     // Send alerts
     bool okayNow = tornProfile.status.state == "Okay";
     if (!alertStakeout.okayLast && okayNow) {
@@ -355,6 +470,44 @@ class StakeoutsController extends GetxController {
     if (!alertStakeout.hospitalLast && hospitalNow) {
       alerts.add("${alertStakeout.name} has been hospitalized!");
       icons.add(Icon(FontAwesome.ambulance, color: Colors.red, size: 18));
+    }
+
+    bool revivableNow = tornProfile.revivable == 1;
+    if (!alertStakeout.revivableLast && revivableNow) {
+      alerts.add("${alertStakeout.name} is now revivable!");
+      icons.add(Icon(Icons.monitor_heart_outlined, color: Colors.green));
+    }
+
+    bool landedNow = tornProfile.status.state != "Traveling";
+    if (!alertStakeout.landedLast && landedNow) {
+      alerts.add("${alertStakeout.name} has landed!");
+      icons.add(Icon(MdiIcons.airplaneLanding, color: Colors.blue));
+    }
+
+    bool onlineNow = tornProfile.lastAction.status == "Online";
+    if (!alertStakeout.onlineLast && onlineNow) {
+      alerts.add("${alertStakeout.name} is online!");
+      icons.add(Icon(MdiIcons.circle, color: Colors.green));
+    }
+
+    bool lifeBelowPercentageNow = tornProfile.life.current < alertStakeout.lifeBelowPercentageLimit;
+    if (!alertStakeout.lifeBelowPercentageLast && lifeBelowPercentageNow) {
+      alerts.add("${alertStakeout.name} life is below ${alertStakeout.lifeBelowPercentageLimit}%!");
+      icons.add(
+        Container(
+          child: Transform.rotate(
+            angle: 90 * math.pi / 180,
+            child: Icon(MdiIcons.glassStange, color: Colors.red),
+          ),
+        ),
+      );
+    }
+
+    bool offlineLongerThanNow =
+        _getOfflineTimeInHours(lastAction: tornProfile.lastAction) < alertStakeout.offlineLongerThanLimit;
+    if (!alertStakeout.offlineLongerThanLast && offlineLongerThanNow) {
+      alerts.add("${alertStakeout.name} offline for longer than ${alertStakeout.offlineLongerThanLimit} hours!");
+      icons.add(Icon(Icons.hourglass_bottom_outlined, color: Colors.orange[800]));
     }
 
     if (alerts.isNotEmpty) {
@@ -390,6 +543,14 @@ class StakeoutsController extends GetxController {
       onlyOne: true,
       crossPage: true,
     );
+  }
+
+  void setStakeoutNote(Stakeout stakeout, String note, String noteColor) {
+    Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
+    s.personalNote = note;
+    s.personalNoteColor = noteColor;
+    savePreferences();
+    update();
   }
 }
 

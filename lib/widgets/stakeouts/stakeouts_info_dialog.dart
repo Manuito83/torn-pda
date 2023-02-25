@@ -15,7 +15,7 @@ class StakeoutsInfoDialog extends StatefulWidget {
 
 class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
   final _maxDelayController = TextEditingController();
-  var _maxDelayFormState = GlobalKey<FormState>();
+  final _maxDelayFormState = GlobalKey<FormState>();
 
   bool _firstLoad = true;
 

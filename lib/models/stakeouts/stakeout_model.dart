@@ -27,12 +27,30 @@ class Stakeout {
   Status status;
   LastAction lastAction;
   String personalNote;
+  String personalNoteColor;
 
   bool okayLast;
   bool okayEnabled;
 
   bool hospitalLast;
   bool hospitalEnabled;
+
+  bool revivableLast;
+  bool revivableEnabled;
+
+  bool landedLast;
+  bool landedEnabled;
+
+  bool onlineLast;
+  bool onlineEnabled;
+
+  bool lifeBelowPercentageLast;
+  bool lifeBelowPercentageEnabled;
+  int lifeBelowPercentageLimit;
+
+  bool offlineLongerThanLast;
+  bool offlineLongerThanEnabled;
+  int offlineLongerThanLimit;
 
   Stakeout({
     this.cardExpanded = false,
@@ -45,6 +63,7 @@ class Stakeout {
     @required this.status,
     @required this.lastAction,
     this.personalNote = "",
+    this.personalNoteColor = "",
 
     // Okay
     this.okayLast = false,
@@ -53,29 +72,79 @@ class Stakeout {
     // Hospital
     this.hospitalLast = false,
     this.hospitalEnabled = false,
+
+    // Revivable
+    this.revivableLast = false,
+    this.revivableEnabled = false,
+
+    // Has landed
+    this.landedLast = false,
+    this.landedEnabled = false,
+
+    // Comes online
+    this.onlineLast = false,
+    this.onlineEnabled = false,
+
+    // Life below percentage
+    this.lifeBelowPercentageLast = false,
+    this.lifeBelowPercentageEnabled = false,
+    this.lifeBelowPercentageLimit = 50,
+
+    // Offline time
+    this.offlineLongerThanLast = false,
+    this.offlineLongerThanEnabled = false,
+    this.offlineLongerThanLimit = 2,
   });
 
   factory Stakeout.fromJson(Map<String, dynamic> json) => Stakeout(
         lastFetch: json["lastFetch"],
         id: json["id"],
         name: json["name"],
+        personalNote: json["personalNote"] ?? "",
+        personalNoteColor: json["personalNoteColor"] ?? "",
         status: Status.fromJson(json["status"]),
         lastAction: LastAction.fromJson(json["lastAction"]),
-        okayLast: json["okayLast"],
-        okayEnabled: json["okayEnabled"],
-        hospitalLast: json["hospitalLast"],
-        hospitalEnabled: json["hospitalEnabled"],
+        okayLast: json["okayLast"] ?? false,
+        okayEnabled: json["okayEnabled"] ?? false,
+        hospitalLast: json["hospitalLast"] ?? false,
+        hospitalEnabled: json["hospitalEnabled"] ?? false,
+        revivableLast: json["revivableLast"] ?? false,
+        revivableEnabled: json["revivableEnabled"] ?? false,
+        landedLast: json["landedLast"] ?? false,
+        landedEnabled: json["landedEnabled"] ?? false,
+        onlineLast: json["onlineLast"] ?? false,
+        onlineEnabled: json["onlineEnabled"] ?? false,
+        lifeBelowPercentageLast: json["lifeBelowPercentageLast"] ?? false,
+        lifeBelowPercentageEnabled: json["lifeBelowPercentageEnabled"] ?? false,
+        lifeBelowPercentageLimit: json["lifePercentageLimit"] ?? 50,
+        offlineLongerThanLast: json["offlineTimeLast"] ?? false,
+        offlineLongerThanEnabled: json["offlineTimeEnabled"] ?? false,
+        offlineLongerThanLimit: json["offlineTimeLimit"] ?? 50,
       );
 
   Map<String, dynamic> toJson() => {
         "lastFetch": lastFetch,
         "id": id,
         "name": name,
+        "personalNote": personalNote,
+        "personalNoteColor": personalNoteColor,
         "status": status.toJson(),
         "lastAction": lastAction.toJson(),
         "okayLast": okayLast,
         "okayEnabled": okayEnabled,
         "hospitalLast": hospitalLast,
         "hospitalEnabled": hospitalEnabled,
+        "revivableLast": revivableLast,
+        "revivableEnabled": revivableEnabled,
+        "landedLast": landedLast,
+        "landedEnabled": landedEnabled,
+        "onlineLast": onlineLast,
+        "onlineEnabled": onlineEnabled,
+        "lifeBelowPercentageLast": lifeBelowPercentageLast,
+        "lifeBelowPercentageEnabled": lifeBelowPercentageEnabled,
+        "lifePercentageLimit": lifeBelowPercentageLimit,
+        "offlineTimeLast": offlineLongerThanLast,
+        "offlineTimeEnabled": offlineLongerThanEnabled,
+        "offlineTimeLimit": offlineLongerThanLimit,
       };
 }
