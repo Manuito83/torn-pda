@@ -12,7 +12,7 @@ import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-// TODO: Useful
+// TODO: useful?
 class StakeoutCardDetails {
   int cardPosition;
   int playerId;
@@ -132,6 +132,8 @@ class StakeoutsController extends GetxController {
   }
 
   Future<AddStakeoutResult> addStakeout({@required String inputId}) async {
+    // TODO: error if already 15 stakeouts!
+
     // Return custom error code if stakeout already exists
     for (Stakeout st in stakeouts) {
       if (st.id.toString() == inputId) {
@@ -522,7 +524,7 @@ class StakeoutsController extends GetxController {
 
   void _showAlert({
     @required List<String> text,
-    @required List<Icon> icon,
+    @required List<Widget> icon,
     @required Stakeout stakeout,
   }) {
     BotToast.showCustomNotification(
@@ -556,7 +558,7 @@ class StakeoutsController extends GetxController {
 
 class CustomWidget extends StatefulWidget {
   final List<String> alertStrings;
-  final List<Icon> icons;
+  final List<Widget> icons;
   final String stakeoutId;
   final CancelFunc cancelFunc;
   final Function sleepStakeouts;

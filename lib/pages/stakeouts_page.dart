@@ -187,8 +187,22 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
       actions: <Widget>[
         IconButton(
           icon: Icon(MdiIcons.cameraPlusOutline),
+          color: _s.stakeouts.length >= 15 ? Colors.grey : Colors.white,
           onPressed: () {
-            _showAddDialog();
+            if (_s.stakeouts.length >= 15) {
+              BotToast.showText(
+                text: "You have reached a maximum of 15 stakeout targets!",
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.grey[800],
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            } else {
+              _showAddDialog();
+            }
           },
         ),
         Showcase(
