@@ -460,7 +460,7 @@ class StakeoutsController extends GetxController {
 
   void _alertStakeout({@required Stakeout alertStakeout, @required BasicProfileModel tornProfile}) {
     List<String> alerts = [];
-    List<Widget> icons = <Icon>[];
+    List<Widget> icons = <Widget>[];
     // Send alerts
     bool okayNow = tornProfile.status.state == "Okay";
     if (!alertStakeout.okayLast && okayNow) {
