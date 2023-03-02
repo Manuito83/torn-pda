@@ -1894,7 +1894,7 @@ class Prefs {
   /// ----------------------------
   Future<bool> getStakeoutsEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStakeoutsEnabled) ?? false;
+    return prefs.getBool(_kStakeoutsEnabled) ?? true;
   }
 
   Future<bool> setStakeoutsEnabled(bool value) async {

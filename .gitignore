@@ -92,3 +92,4 @@ android/.idea/modules.xml
 android/.idea/vcs.xml
 lib/firebase_options.dart
 ios/firebase_app_id_file.json
+app.ios-arm64.symbols
