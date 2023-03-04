@@ -45,6 +45,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
@@ -230,6 +231,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _attackTriggered = false;
 
   UserDetailsProvider _userProvider;
+  UserController _u = Get.put(UserController());
   TerminalProvider _terminalProvider;
 
   WebViewProvider _webViewProvider;
@@ -3508,7 +3510,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.yata) {
         _ocSource = "YATA";
-        String yataUrl = 'https://yata.yt/api/v1/faction/members/?key=${_userProvider.basic.userApiKey}';
+        String yataUrl = 'https://yata.yt/api/v1/faction/members/?key=${_u.alternativeYataKey}';
         final yataOCjson = await http.get(WebUri(yataUrl)).timeout(Duration(seconds: 15));
         final yataMembersModel = yataMembersModelFromJson(yataOCjson.body);
         yataMembersModel.members.forEach((key, value) {
@@ -3520,9 +3522,23 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         });
       } else if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.tornStats) {
         _ocSource = "Torn Stats";
-        String tsUrl = 'https://www.tornstats.com/api/v2/${_userProvider.basic.userApiKey}/faction/crimes';
+        String tsUrl = 'https://www.tornstats.com/api/v2/${_u.alternativeTornStatsKey}/faction/crimes';
         final tsOCjson = await http.get(WebUri(tsUrl)).timeout(Duration(seconds: 15));
         final tsMembersModel = tornStatsMembersModelFromJson(tsOCjson.body);
+        if (!tsMembersModel.status) {
+          BotToast.showText(
+            text: "Could not load NNB from TornStats: ${tsMembersModel.message}",
+            clickClose: true,
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.red[900],
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
+          );
+          return;
+        }
         tsMembersModel.members.forEach((key, value) {
           membersString += '"${key}":"${value.naturalNerve}",';
         });

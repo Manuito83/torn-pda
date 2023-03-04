@@ -52,6 +52,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -435,6 +436,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool nerve = false;
     bool energy = false;
     bool drugs = false;
+    bool medical = false;
+    bool booster = false;
     bool refills = false;
     bool stockMarket = false;
     bool assists = false;
@@ -481,6 +484,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       energy = true;
     } else if (channel.contains("Alerts drugs")) {
       drugs = true;
+    } else if (channel.contains("Alerts medical")) {
+      medical = true;
+    } else if (channel.contains("Alerts booster")) {
+      booster = true;
     } else if (channel.contains("Alerts refills")) {
       refills = true;
     } else if (channel.contains("Alerts stocks")) {
@@ -531,6 +538,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (drugs) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#drugs-items";
+    } else if (medical) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+    } else if (booster) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#boosters-items";
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
@@ -644,8 +657,45 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         contentPadding: const EdgeInsets.all(10),
       );
     } else if (loot) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      var incomingIds = assistId.split(",");
+      if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
+        // This is a standard loot alert for a single NPC
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      } else if (incomingIds[0].contains("[")) {
+        // This is a Loot Rangers alert for one or more NPCs
+        var ids = <String>[];
+        var names = <String>[];
+        var notes = <String>[];
+        var colors = <String>[];
+        for (var i = 0; i < incomingIds.length; i++) {
+          var parts = incomingIds[i].split("[");
+          names.add(parts[0]);
+          ids.add(parts[1].replaceAll("]", ""));
+          colors.add("green");
+          if (i == 0) {
+            notes.add("Attacks due to commence at $bulkDetails TCT!");
+          } else {
+            notes.add("");
+          }
+        }
+
+        // Open chaining browser for Loot Rangers
+        _webViewProvider.openBrowserPreference(
+            context: context,
+            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+            useDialog: false,
+            isChainingBrowser: true,
+            awaitable: true,
+            chainingPayload: ChainingPayload()
+              ..attackIdList = ids
+              ..attackNameList = names
+              ..attackNotesList = notes
+              ..attackNotesColorList = colors
+              ..showNotes = true
+              ..showBlankNotes = false
+              ..showOnlineFactionWarning = false);
+      }
     }
 
     if (launchBrowser) {
@@ -689,11 +739,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('drugs')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';
-        // Medical is only in manual notifications, payload comes from Profile
       } else if (payload.contains('medical')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#medical-items';
-        // Booster is only in manual notifications, payload comes from Profile
       } else if (payload.contains('booster')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#boosters-items';
@@ -848,9 +896,48 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           contentPadding: const EdgeInsets.all(10),
         );
       } else if (payload.contains('lootId:')) {
-        launchBrowser = true;
-        final assistId = payload.split(':');
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
+        final assistSplit = payload.split('###');
+        final assistId = assistSplit[0].split(':');
+        final bulkDetails = assistSplit[1].split('bulkDetails:');
+        var incomingIds = assistId[1].split(",");
+        if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
+          // This is a standard loot alert for a single NPC
+          launchBrowser = true;
+          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        } else if (incomingIds[0].contains("[")) {
+          // This is a Loot Rangers alert for one or more NPCs
+          var ids = <String>[];
+          var names = <String>[];
+          var notes = <String>[];
+          var colors = <String>[];
+          for (var i = 0; i < incomingIds.length; i++) {
+            var parts = incomingIds[i].split("[");
+            names.add(parts[0]);
+            ids.add(parts[1].replaceAll("]", ""));
+            colors.add("green");
+            if (i == 0) {
+              notes.add("Attacks due to commence at ${bulkDetails[1]} TCT!");
+            } else {
+              notes.add("");
+            }
+          }
+
+          // Open chaining browser for Loot Rangers
+          _webViewProvider.openBrowserPreference(
+              context: context,
+              url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+              useDialog: false,
+              isChainingBrowser: true,
+              awaitable: true,
+              chainingPayload: ChainingPayload()
+                ..attackIdList = ids
+                ..attackNameList = names
+                ..attackNotesList = notes
+                ..attackNotesColorList = colors
+                ..showNotes = true
+                ..showBlankNotes = false
+                ..showOnlineFactionWarning = false);
+        }
       }
 
       if (launchBrowser) {

@@ -26,9 +26,11 @@ class TornStatsMembersModel {
   Map<String, Member> members;
 
   factory TornStatsMembersModel.fromJson(Map<String, dynamic> json) => TornStatsMembersModel(
-        status: json["status"],
-        message: json["message"],
-        members: Map.from(json["members"]).map((k, v) => MapEntry<String, Member>(k, Member.fromJson(v))),
+        status: json["status"] ?? false,
+        message: json["message"] ?? "",
+        members: json["members"] == null
+            ? null
+            : Map.from(json["members"]).map((k, v) => MapEntry<String, Member>(k, Member.fromJson(v))),
       );
 
   Map<String, dynamic> toJson() => {

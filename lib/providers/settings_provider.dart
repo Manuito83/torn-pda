@@ -698,6 +698,15 @@ class SettingsProvider extends ChangeNotifier {
       _spiesSource = SpiesSource.tornStats;
     }
 
+    String naturalNerveBarSource = await Prefs().getNaturalNerveBarSource();
+    if (naturalNerveBarSource == "yata") {
+      _naturalNerveBarSource = NaturalNerveBarSource.yata;
+    } else if (naturalNerveBarSource == "tornstats") {
+      _naturalNerveBarSource = NaturalNerveBarSource.tornStats;
+    } else {
+      _naturalNerveBarSource = NaturalNerveBarSource.off;
+    }
+
     _discreteNotifications = await Prefs().getDiscreteNotifications();
 
     _showDateInClock = await Prefs().getShowDateInClock();

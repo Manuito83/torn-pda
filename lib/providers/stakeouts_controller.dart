@@ -530,7 +530,7 @@ class StakeoutsController extends GetxController {
     BotToast.showCustomNotification(
       animationDuration: Duration(milliseconds: 200),
       animationReverseDuration: Duration(milliseconds: 200),
-      duration: Duration(seconds: 4),
+      duration: Duration(seconds: 6),
       backButtonBehavior: BackButtonBehavior.none,
       toastBuilder: (cancel) {
         return CustomWidget(
@@ -542,7 +542,7 @@ class StakeoutsController extends GetxController {
         );
       },
       enableSlideOff: true,
-      onlyOne: true,
+      onlyOne: false,
       crossPage: true,
     );
   }

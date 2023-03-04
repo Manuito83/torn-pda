@@ -61,6 +61,14 @@ export const playersGroup = {
         promises.push(manageStats("drugsNotification", -1));
       }
 
+      if (beforeStat.medicalNotification) {
+        promises.push(manageStats("medicalNotification", -1));
+      }
+
+      if (beforeStat.boosterNotification) {
+        promises.push(manageStats("boosterNotification", -1));
+      }
+
       if (beforeStat.racingNotification) {
         promises.push(manageStats("racingNotification", -1));
       }
@@ -152,6 +160,18 @@ export const playersGroup = {
           )
         );
 
+      if (beforeStat.medicalNotification !== afterStat.medicalNotification)
+        promises.push(
+          manageStats("medicalNotification", afterStat.medicalNotification ? 1 : -1
+          )
+        );
+
+      if (beforeStat.boosterNotification !== afterStat.boosterNotification)
+        promises.push(
+          manageStats("boosterNotification", afterStat.boosterNotification ? 1 : -1
+          )
+        );
+
       if (beforeStat.racingNotification !== afterStat.racingNotification)
         promises.push(
           manageStats("racingNotification", afterStat.racingNotification ? 1 : -1
@@ -201,6 +221,8 @@ export const playersGroup = {
         !afterStat.foreignRestockNotification &&
         !afterStat.hospitalNotification &&
         !afterStat.drugsNotification &&
+        !afterStat.medicalNotification &&
+        !afterStat.boosterNotification &&
         !afterStat.racingNotification &&
         !afterStat.messagesNotification &&
         !afterStat.eventsNotification &&
@@ -228,6 +250,8 @@ export const playersGroup = {
           || afterStat.foreignRestockNotification
           || afterStat.hospitalNotification
           || afterStat.drugsNotification
+          || afterStat.medicalNotification
+          || afterStat.boosterNotification
           || afterStat.racingNotification
           || afterStat.messagesNotification
           || afterStat.eventsNotification

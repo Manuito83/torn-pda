@@ -97,6 +97,20 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts drugs';
     channelName = 'Alerts drugs';
     channelDescription = 'Automatic alerts for drugs';
+  } else if (channel.contains("Alerts medical")) {
+    notificationIcon = "notification_medical";
+    notificationColor = Colors.pink;
+    onTapPayload += 'medical';
+    channelId = 'Alerts medical';
+    channelName = 'Alerts medical';
+    channelDescription = 'Automatic alerts for medical';
+  } else if (channel.contains("Alerts booster")) {
+    notificationIcon = "notification_booster";
+    notificationColor = Colors.pink;
+    onTapPayload += 'booster';
+    channelId = 'Alerts booster';
+    channelName = 'Alerts booster';
+    channelDescription = 'Automatic alerts for booster';
   } else if (channel.contains("Alerts racing")) {
     notificationIcon = "notification_racing";
     notificationColor = Colors.orange[800];
@@ -159,7 +173,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (channel.contains("Alerts loot")) {
     notificationIcon = "notification_loot";
     notificationColor = Colors.red;
-    onTapPayload += 'lootId:$assistId';
+    onTapPayload += 'lootId:$assistId###bulkDetails:$bulkDetails';
     channelId = 'Alerts loot';
     channelName = 'Alerts loot';
     channelDescription = 'Automatic alerts for loot';
@@ -584,9 +598,35 @@ Future configureNotificationChannels({String mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
+      'Alerts medical ${modifier.channelIdModifier}',
+      'Alerts medical ${modifier.channelIdModifier}',
+      description: 'Automatic alerts for medical',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
       'Manual medical ${modifier.channelIdModifier}',
       'Manual medical ${modifier.channelIdModifier}',
       description: 'Manual notifications for medical',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts booster ${modifier.channelIdModifier}',
+      'Alerts booster ${modifier.channelIdModifier}',
+      description: 'Automatic alerts for booster',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

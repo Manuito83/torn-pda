@@ -3,7 +3,8 @@ import * as admin from "firebase-admin";
 import {
   sendEnergyNotification, sendNerveNotification,
   logTravelArrival, sendHospitalNotification,
-  sendDrugsNotification, sendRacingNotification,
+  sendDrugsNotification, sendMedicalNotification,
+  sendBoosterNotification, sendRacingNotification,
   sendMessagesNotification, sendEventsNotification,
   sendForeignRestockNotification, sendStockMarketNotification
 } from "./notification";
@@ -308,6 +309,10 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
         promises.push(sendHospitalNotification(userStats, subscriber));
       if (subscriber.drugsNotification)
         promises.push(sendDrugsNotification(userStats, subscriber));
+      if (subscriber.medicalNotification)
+        promises.push(sendMedicalNotification(userStats, subscriber));
+      if (subscriber.boosterNotification)
+        promises.push(sendBoosterNotification(userStats, subscriber));
       if (subscriber.racingNotification)
         promises.push(sendRacingNotification(userStats, subscriber));
       if (subscriber.messagesNotification)

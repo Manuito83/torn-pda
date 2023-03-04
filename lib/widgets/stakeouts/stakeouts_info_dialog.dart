@@ -48,8 +48,8 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                         TextSpan(
                           text:
                               "The Stakeouts section allows you configure specific alerts for players of your choice.\n\n"
-                              "Please be aware that these alerts are only active while using Torn PDA (they will NOT generate) "
-                              "notifications if the app is in the background or closed."
+                              "Please be aware that these alerts are only active while using Torn PDA. They will NOT "
+                              "generate notifications if the app is in the background or closed."
                               "\n\nThere is a maximum of 15 slots for targets and each one of them is updated every 30 "
                               "seconds, minimizing API usage as much as practicable",
                           style: TextStyle(fontSize: 13),
@@ -63,7 +63,7 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                                   "\n\nWhenever you launch the application, or when stakeouts are re-enabled (using the "
                                   "main switch), some of your targets might be out of date. If this situation, you might get "
                                   "instant alert for a condition that is no longer true (e.g.: you relaunch Torn PDA after 12 "
-                                  "hours of no use, and some of your targets cause alerts for changes that took place hours ago"
+                                  "hours of no use, and some of your targets cause alerts for changes that took place hours ago "
                                   "that are no longer useful).\n\nBy default, changes that happened more than 60 minutes ago "
                                   "won't generate an alert, but you can change this setting here:",
                               style: TextStyle(fontSize: 13),
