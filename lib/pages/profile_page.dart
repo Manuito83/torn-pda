@@ -10,7 +10,6 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -24,6 +23,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
@@ -854,25 +854,42 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           : _shortcutsProv.shortcutTile == 'both'
               ? 60
               : 40,
-      child: _shortcutsProv.activeShortcuts.length == 0
-          ? Column(
+      child: _shortcutsProv.activeShortcuts.isEmpty
+          ? Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'No shortcuts configured, add some!',
-                  style: TextStyle(
-                    color: Colors.orange[900],
-                    fontStyle: FontStyle.italic,
-                    fontSize: 13,
-                  ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'No shortcuts configured, add some!',
+                      style: TextStyle(
+                        color: Colors.orange[900],
+                        fontStyle: FontStyle.italic,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      'Tap the icon to configure',
+                      style: TextStyle(
+                        color: Colors.orange[900],
+                        fontStyle: FontStyle.italic,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Tap the settings icon to configure',
-                  style: TextStyle(
-                    color: Colors.orange[900],
-                    fontStyle: FontStyle.italic,
-                    fontSize: 10,
-                  ),
+                GestureDetector(
+                  child: IconButton(
+                      icon: const Icon(Icons.switch_access_shortcut_outlined),
+                      color: Colors.orange[900],
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => ShortcutsPage(),
+                          ),
+                        );
+                      }),
                 ),
               ],
             )

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -52,34 +53,77 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
       ),
       elevation: 0.0,
       backgroundColor: _themeProvider.secondBackground,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 5.0),
-            child: Text(
-              "TAP: load in current tab\nLONG PRESS: open a new tab",
-              style: TextStyle(
-                fontSize: 10,
-              ),
-            ),
-          ),
-          SizedBox(height: 10),
-          Flexible(
-            child: SingleChildScrollView(
-              child: Column(
-                children: List<Widget>.generate(
-                  _shortcutsProvider.activeShortcuts.length,
-                  (index) {
-                    return shortcutTile(_shortcutsProvider.activeShortcuts[index]);
-                  },
+      content: _shortcutsProvider.activeShortcuts.isEmpty
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'No shortcuts configured, add some!',
+                      style: TextStyle(
+                        color: Colors.orange[900],
+                        fontStyle: FontStyle.italic,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      'Tap the icon to configure',
+                      style: TextStyle(
+                        color: Colors.orange[900],
+                        fontStyle: FontStyle.italic,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                GestureDetector(
+                  child: IconButton(
+                      icon: const Icon(Icons.switch_access_shortcut_outlined),
+                      color: Colors.orange[900],
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => ShortcutsPage(),
+                          ),
+                        );
+                        setState(() {
+                          // Update shortcuts
+                        });
+                      }),
+                ),
+              ],
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 5.0),
+                  child: Text(
+                    "TAP: load in current tab\nLONG PRESS: open a new tab",
+                    style: TextStyle(
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: List<Widget>.generate(
+                        _shortcutsProvider.activeShortcuts.length,
+                        (index) {
+                          return shortcutTile(_shortcutsProvider.activeShortcuts[index]);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       actions: [
         TextButton(
           child: Text("Close"),
