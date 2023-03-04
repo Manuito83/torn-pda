@@ -1193,6 +1193,7 @@ String ocNNB({@required String members}) {
       var data = $members;
 	
       function loadNNB () {
+	
         // Add style nnb title
         function addStyle(styleString) {
           const style = document.createElement('style');
@@ -1202,38 +1203,44 @@ String ocNNB({@required String members}) {
 
         addStyle(
           `.pda-nnb-title {
-            text-align: right;
-            width: 30px;
+          text-align: right;
+          width: 30px;
           }`
         );
 
         addStyle(
           `.pda-nnb-value {
-            width: 30px;
+          width: 30px;
           }`
         );
 
         addStyle(
           `.member.pda-modified {
-            width: 80px !important;
+          width: 80px !important;
           }`
         );
 
         addStyle(
           `.level.pda-modified {
-            width: 15px !important;
+          width: 15px !important;
           }`
         );
 
         addStyle(
           `.offences.pda-modified {
-            width: 50px !important;
+          width: 50px !important;
           }`
         );
 
         addStyle(
           `.act.pda-modified {
-            width: 29px !important;
+          width: 29px !important;
+          }`
+        );
+        
+        addStyle(
+          `.stat.pda-modified {
+          width: 50px !important;
           }`
         );
 
@@ -1253,49 +1260,87 @@ String ocNNB({@required String members}) {
           newDiv.appendChild(newContent);
           return newDiv;
         }
+        
         var member = document.querySelectorAll('.member');
         for (var m of member) {
+          // Crimes scheduled
+          var row = m.closest(".organize-wrap .crimes-list .details-list > li > ul");
+          if (row !== null) 
+          {
+            row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.stat`).forEach((element) => element.classList.add("pda-modified"));
             
-          var row = m.closest(".item");
-          if (row === null) continue;
-          
-          row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
-          row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
-          row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
-          row.querySelectorAll(`.act`).forEach((element) => element.classList.add("pda-modified"));
-          
-          const stat = row.querySelector(".act");
-          if (stat === null) continue; 
-          
-          if (row.classList.contains("title")) {
+            let stat = row.querySelector(".stat");
+            if (stat === null) continue; 
+            
+            if (row.classList.contains("title")) {
             stat.parentElement.insertBefore(
               createNerveTitle(),
               stat
             );
             continue;
-          }
-          
-          const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
-          
-          var found = false;
-          for (const [key, value] of Object.entries(data)) {
+            }
+            
+            const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
+            
+            var found = false;
+            for (const [key, value] of Object.entries(data)) {
             if (id === key) {
               stat.insertAdjacentElement("beforebegin", createNerveValue(value));
               found = true;
               continue;
             } 
-          }
-          if (!found) {
+            }
+            if (!found) {
             stat.insertAdjacentElement("beforebegin", createNerveValue("unk"));
+            }
+            continue;
           }
-        }
+          
+            
+          // Crimes available
+          var row = m.closest(".plans-list .item");
+          if (row !== null) {
+            row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.act`).forEach((element) => element.classList.add("pda-modified"));
+              
+            let act = row.querySelector(".act");
+            if (act === null) continue; 
+            
+            if (row.classList.contains("title")) {
+            act.parentElement.insertBefore(
+              createNerveTitle(),
+              act
+            );
+            continue;
+            }
+            
+            const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
+            
+            var found = false;
+            for (const [key, value] of Object.entries(data)) {
+            if (id === key) {
+              act.insertAdjacentElement("beforebegin", createNerveValue(value));
+              found = true;
+              continue;
+            } 
+            }
+            if (!found) {
+            act.insertAdjacentElement("beforebegin", createNerveValue("unk"));
+            }
+          }	    
+        }  
       }
 
       let waitForOCAndRun = setInterval(() => {
         if (document.querySelector(".faction-crimes-wrap")) {
-        loadNNB();
-        console.log("Torn PDA: adding NNB!");
-        return clearInterval(waitForOCAndRun);
+          loadNNB();
+          console.log("Torn PDA: adding NNB!");
+          return clearInterval(waitForOCAndRun);
         }
       }, 300);
 
