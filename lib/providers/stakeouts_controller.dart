@@ -453,7 +453,7 @@ class StakeoutsController extends GetxController {
     updateStakeout.onlineLast = tornProfile.lastAction.status == "Online";
     updateStakeout.lifeBelowPercentageLast = tornProfile.life.current < updateStakeout.lifeBelowPercentageLimit;
     updateStakeout.offlineLongerThanLast =
-        _getOfflineTimeInHours(lastAction: updateStakeout.lastAction) < updateStakeout.offlineLongerThanLimit;
+        _getOfflineTimeInHours(lastAction: updateStakeout.lastAction) > updateStakeout.offlineLongerThanLimit;
     savePreferences();
     update();
   }
@@ -506,7 +506,7 @@ class StakeoutsController extends GetxController {
     }
 
     bool offlineLongerThanNow =
-        _getOfflineTimeInHours(lastAction: tornProfile.lastAction) < alertStakeout.offlineLongerThanLimit;
+        _getOfflineTimeInHours(lastAction: tornProfile.lastAction) > alertStakeout.offlineLongerThanLimit;
     if (!alertStakeout.offlineLongerThanLast && offlineLongerThanNow) {
       alerts.add("${alertStakeout.name} offline for longer than ${alertStakeout.offlineLongerThanLimit} hours!");
       icons.add(Icon(Icons.hourglass_bottom_outlined, color: Colors.orange[800]));
