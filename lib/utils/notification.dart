@@ -18,6 +18,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 // 201 travel arrival
 // 211 travel departure
 // 400 loot
+// 499 loot rangers
 // 555 chain watcher
 
 Future showNotification(Map payload, int notId) async {

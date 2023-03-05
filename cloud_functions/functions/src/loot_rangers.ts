@@ -101,6 +101,12 @@ export const lootRangersGroup = {
         let attackTime = `${hours}:${minutes}`;
 
         for (const key of Array.from(subscribers.keys())) {
+
+          if (subscribers[key].discrete) {
+            title = `LR`;
+            subtitle = ``;
+          }
+
           promises.push(
             sendNotificationToUser(
               subscribers[key].token,

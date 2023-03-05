@@ -755,6 +755,46 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         launchBrowser = true;
         final npcId = payload.split('-')[1];
         browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+      } else if (payload.contains('499-')) {
+        // Loot Rangers payload is (split by -)
+        // [0] 499
+        // [1] id list
+        // [2] name list
+        // [3] timestamp
+
+        final lootRangersNpcsIds = payload.split('-')[1].split(",");
+        final lootRangersNpcsNames = payload.split('-')[2].split(",");
+        final lootRangersTime = payload.split('-')[3];
+        final timeNote = "Attacks due to commence at $lootRangersTime!";
+
+        var notes = <String>[];
+        var colors = <String>[];
+        for (var i = 0; i < lootRangersNpcsIds.length; i++) {
+          colors.add("green");
+          if (i == 0) {
+            notes.add(timeNote);
+          } else {
+            notes.add("");
+          }
+        }
+
+        // Open chaining browser for Loot Rangers
+        _webViewProvider.openBrowserPreference(
+            context: context,
+            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
+            useDialog: false,
+            isChainingBrowser: true,
+            awaitable: true,
+            chainingPayload: ChainingPayload()
+              ..attackIdList = lootRangersNpcsIds
+              ..attackNameList = lootRangersNpcsNames
+              ..attackNotesList = notes
+              ..attackNotesColorList = colors
+              ..showNotes = true
+              ..showBlankNotes = false
+              ..showOnlineFactionWarning = false);
+
+        browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$lootRangersNpcsIds';
       } else if (payload.contains('tornMessageId:')) {
         launchBrowser = true;
         final messageId = payload.split(':');

@@ -48,7 +48,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_0_0_1 = "Added stakeouts section";
     String feat3_0_0_2 = "Added native Torn authentication (see Settings)";
     String feat3_0_0_3 = "Added alerts for medical and booster cooldowns";
-    String feat3_0_0_4 = "Added alerts for Loot Rangers schedule attacks";
+    String feat3_0_0_4 = "Added Loot Rangers attack information, alerts and notifications";
     String feat3_0_0_5 = "Added quick favorites menu in the browser tab bar";
     String feat3_0_0_6 = "Added natural nerve information to OC planning";
     String feat3_0_0_7 = "Ranked Wars sorting and own faction identification has been improved";

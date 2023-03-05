@@ -22,6 +22,7 @@ import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import 'alerts/stockmarket_alerts_page.dart';
@@ -316,11 +317,11 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               const Text("Loot Rangers attack"),
                               SizedBox(width: 5),
                               GestureDetector(
-                                onTap: () {
-                                  openBrowserDialog(
-                                    context,
-                                    "https://discord.gg/ANcQdwKgAw",
-                                  );
+                                onTap: () async {
+                                  if (await canLaunchUrl(Uri.parse("https://discord.gg/ANcQdwKgAw"))) {
+                                    await launchUrl(Uri.parse("https://discord.gg/ANcQdwKgAw"),
+                                        mode: LaunchMode.externalApplication);
+                                  }
                                 },
                                 child: Icon(
                                   Icons.info_outline,
