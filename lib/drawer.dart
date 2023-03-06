@@ -608,22 +608,28 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             }
 
             String xanaxString = "";
-            if (xanaxComparison.isNegative) {
+            if (xanaxComparison < 0) {
               xanaxString = "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
+            } else if (xanaxComparison == 0) {
+              xanaxString = "\n- Xanax: SAME as you";
             } else {
               xanaxString = "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
             }
 
             String refillsString = "";
-            if (refillsComparison.isNegative) {
+            if (refillsComparison < 0) {
               refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+            } else if (refillsComparison == 0) {
+              refillsString = "\n- Refills (E): SAME as you";
             } else {
               refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
             }
 
             String drinksString = "";
-            if (drinksComparison.isNegative) {
+            if (drinksComparison < 0) {
               drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+            } else if (drinksComparison == 0) {
+              drinksString = "\n- Drinks (E): SAME as you";
             } else {
               drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
             }
@@ -888,22 +894,28 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
               }
 
               String xanaxString = "";
-              if (xanaxComparison.isNegative) {
+              if (xanaxComparison < 0) {
                 xanaxString = "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
+              } else if (xanaxComparison == 0) {
+                xanaxString = "\n- Xanax: SAME as you";
               } else {
                 xanaxString = "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
               }
 
               String refillsString = "";
-              if (refillsComparison.isNegative) {
+              if (refillsComparison < 0) {
                 refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+              } else if (refillsComparison == 0) {
+                refillsString = "\n- Refills (E): SAME as you";
               } else {
                 refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
               }
 
               String drinksString = "";
-              if (drinksComparison.isNegative) {
+              if (drinksComparison < 0) {
                 drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+              } else if (drinksComparison == 0) {
+                drinksString = "\n- Drinks (E): SAME as you";
               } else {
                 drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
               }

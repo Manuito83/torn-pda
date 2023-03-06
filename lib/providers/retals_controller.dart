@@ -18,7 +18,7 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/stats_calculator.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import '../models/profile/own_profile_basic.dart';
 
 class RetalsCardDetails {

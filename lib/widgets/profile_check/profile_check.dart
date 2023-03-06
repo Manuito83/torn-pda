@@ -12,7 +12,6 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spy_model.dart';
 
 // Project imports:
@@ -21,16 +20,15 @@ import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 
 enum ProfileCheckType {
   profile,
@@ -68,14 +66,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   SettingsProvider _settingsProvider;
   UserController _u = Get.put(UserController());
 
-  TargetsProvider _targetsProvider;
   UserDetailsProvider _userDetails;
   var _expandableController = ExpandableController();
 
   Widget _statsWidget; // Has to be null at the beginning
   Widget _errorDetailsWidget = SizedBox.shrink();
-
-  bool _addButtonActive = true;
 
   var _isTornPda = false;
   var _isPartner = false;
@@ -88,6 +83,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   // we don't show them separately, but by importance (first one self, then
   // own faction and lastly friendly faction)
   var _networthWidgetEnabled = false;
+
+  String _playerName = "Player";
+  String _factionName = "Faction";
+  int _factionId = 0;
 
   Widget _tornPdaWidget = SizedBox.shrink();
   Widget _partnerWidget = SizedBox.shrink();
@@ -109,7 +108,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
   @override
   Widget build(BuildContext context) {
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
     return FutureBuilder(
       future: _checkedPerson,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -147,7 +145,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 Expanded(
                   child: _statsWidget,
                 ),
-                _addRemoveTargetIcon(),
+                ProfileCheckAddButton(
+                  profileId: widget.profileId,
+                  playerName: _playerName,
+                  factionId: _factionId,
+                ),
               ],
             ),
           ),
@@ -215,6 +217,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
 
     if (otherProfile is OtherProfileModel) {
+      _playerName = otherProfile.name;
+      _factionName = otherProfile.faction.factionName;
+      _factionId = otherProfile.faction.factionId;
+
       // Estimated stats is not awaited, since it can take a few seconds
       // to contact YATA and decide what we show
       estimatedStatsCalculator(otherProfile);
@@ -559,8 +565,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       int dexterity = 0;
       int total = 0;
       int timestamp = 0;
-      String name = "";
-      String factionName = "";
       bool spyFound = false;
       SpiesSource spiesSource;
 
@@ -580,8 +584,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               dexterity = spyModel.dexterity;
               total = spyModel.total;
               timestamp = spyModel.update;
-              name = spyModel.targetName;
-              factionName = spyModel.targetFactionName;
               spyFound = true;
             }
           }
@@ -828,8 +830,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               speed: speed,
                               dexterity: dexterity,
                               total: total,
-                              name: name,
-                              factionName: factionName,
+                              name: _playerName,
+                              factionName: _factionName,
                               update: timestamp,
                               spiesSource: spiesSource,
                             );
@@ -1079,100 +1081,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         setState(() {});
       }
     }
-  }
-
-  Widget _addRemoveTargetIcon() {
-    bool targetExists = false;
-    Color targetExistsColor = Colors.green;
-    TargetModel target = TargetModel();
-    for (TargetModel t in _targetsProvider.allTargets) {
-      if (t.playerId == widget.profileId) {
-        targetExists = true;
-        targetExistsColor = Colors.red;
-        target = t;
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 10),
-      child: GestureDetector(
-        child: _addButtonActive
-            ? targetExists
-                ? Icon(
-                    Icons.remove_circle_outline,
-                    color: targetExistsColor,
-                    size: 18,
-                  )
-                : Icon(
-                    Icons.add_circle_outline,
-                    color: targetExistsColor,
-                    size: 18,
-                  )
-            : SizedBox(
-                height: 15,
-                width: 15,
-                child: CircularProgressIndicator(),
-              ),
-        onTap: () async {
-          setState(() {
-            _addButtonActive = false;
-          });
-
-          if (targetExists) {
-            _targetsProvider.deleteTarget(target);
-            BotToast.showText(
-              clickClose: true,
-              text: HtmlParser.fix('Removed from Torn PDA targets!'),
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.orange[900],
-              duration: Duration(seconds: 3),
-              contentPadding: EdgeInsets.all(10),
-            );
-          } else {
-            dynamic attacks = await _targetsProvider.getAttacks();
-            AddTargetResult tryAddTarget = await _targetsProvider.addTarget(
-              targetId: widget.profileId.toString(),
-              attacks: attacks,
-            );
-            if (tryAddTarget.success) {
-              BotToast.showText(
-                clickClose: true,
-                text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
-                    'main targets list in Torn PDA!'),
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.green[700],
-                duration: Duration(seconds: 3),
-                contentPadding: EdgeInsets.all(10),
-              );
-            } else if (!tryAddTarget.success) {
-              BotToast.showText(
-                clickClose: true,
-                text: HtmlParser.fix('Error adding ${widget.profileId}. ${tryAddTarget.errorReason}'),
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.red[900],
-                duration: Duration(seconds: 4),
-                contentPadding: EdgeInsets.all(10),
-              );
-            }
-          }
-
-          if (mounted) {
-            setState(() {
-              _addButtonActive = true;
-            });
-          }
-        },
-      ),
-    );
   }
 
   void _showSpiedDetailsDialog({
@@ -1493,9 +1401,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     bool sslProb,
     OtherProfileModel otherProfile,
   ) {
-    String xanaxRelative = "SAME as you";
+    String xanaxRelative = "";
     if (xanaxCompare > 0) {
       xanaxRelative = "${xanaxCompare.abs()} MORE than you";
+    } else if (xanaxCompare == 0) {
+      xanaxRelative = "SAME as you";
     } else {
       xanaxRelative = "${xanaxCompare.abs()} LESS than you";
     }
@@ -1515,9 +1425,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
     ;
 
-    String refillRelative = "SAME as you";
+    String refillRelative = "";
     if (refillCompare > 0) {
       refillRelative = "${refillCompare.abs()} MORE than you";
+    } else if (refillCompare == 0) {
+      refillRelative = "SAME as you";
     } else {
       refillRelative = "${refillCompare.abs()} LESS than you";
     }
@@ -1536,10 +1448,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       ],
     );
 
-    String enhancementRelative = "SAME as you";
+    String enhancementRelative = "";
     if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider.mainText;
     if (enhancementCompare > 0) {
       enhancementRelative = "${enhancementCompare.abs()} MORE than you";
+    } else if (enhancementCompare == 0) {
+      enhancementRelative = "SAME as you";
     } else if (enhancementCompare < 0) {
       enhancementRelative = "${enhancementCompare.abs()} LESS than you";
     }
@@ -1558,9 +1472,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       ],
     );
 
-    String cansRelative = "SAME as you";
+    String cansRelative = "";
     if (cansCompare > 0) {
       cansRelative = "${cansCompare.abs()} MORE than you";
+    } else if (cansCompare == 0) {
+      cansRelative = "SAME as you";
     } else if (cansCompare < 0) {
       cansRelative = "${cansCompare.abs()} LESS than you";
     }

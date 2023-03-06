@@ -39,7 +39,7 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 283 - 02/03/2023
+    // Build 284 - 06/03/2023
 
     // VERSION 3.0.0
     var v3_0_0 = ChangeLogItem();
@@ -51,10 +51,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_0_0_4 = "Added Loot Rangers attack information, alerts and notifications";
     String feat3_0_0_5 = "Added quick favorites menu in the browser tab bar";
     String feat3_0_0_6 = "Added natural nerve information to OC planning";
-    String feat3_0_0_7 = "Ranked Wars sorting and own faction identification has been improved";
-    String feat3_0_0_8 = "Fixed dark theme sync with Torn";
-    String feat3_0_0_9 = "Fixed target level calculation in recent attacks";
-    String feat3_0_0_10 = "Fixed other reported issues";
+    String feat3_0_0_7 = "Players can now be added to several lists from their profile widget";
+    String feat3_0_0_8 = "Ranked Wars sorting and own faction identification has been improved";
+    String feat3_0_0_9 = "Fixed dark theme sync with Torn";
+    String feat3_0_0_10 = "Fixed target level calculation in recent attacks";
+    String feat3_0_0_11 = "Fixed other reported issues";
     v3_0_0.features.add(feat3_0_0_1);
     v3_0_0.features.add(feat3_0_0_2);
     v3_0_0.features.add(feat3_0_0_3);
@@ -65,6 +66,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_0_0.features.add(feat3_0_0_8);
     v3_0_0.features.add(feat3_0_0_9);
     v3_0_0.features.add(feat3_0_0_10);
+    v3_0_0.features.add(feat3_0_0_11);
 
     // VERSION 2.9.6
     var v2_9_6 = ChangeLogItem();

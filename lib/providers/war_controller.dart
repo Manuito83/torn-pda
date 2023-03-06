@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:math';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
@@ -16,7 +17,7 @@ import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/stats_calculator.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 
 class WarCardDetails {
   int cardPosition;
@@ -67,10 +68,16 @@ class WarController extends GetxController {
 
   String playerLocation = "";
 
+  bool initialised = false;
+  bool _initWithIntegrity = true;
+  WarController({bool initWithIntegrity = true}) {
+    _initWithIntegrity = initWithIntegrity;
+  }
+
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    initialise();
+    initialise(needsIntegrityCheck: _initWithIntegrity);
   }
 
   Future<String> addFaction(String factionId, List<TargetModel> targets) async {
@@ -660,7 +667,9 @@ class WarController extends GetxController {
     update();
   }
 
-  Future initialise() async {
+  /// [needsIntegrityCheck] calls the API. Might not be necessary for simple controller uses
+  /// (e.g.: profile widget)
+  Future initialise({bool needsIntegrityCheck = true}) async {
     String spiesSource = await Prefs().getSpiesSource();
     spiesSource == "yata" ? _spiesSource = SpiesSource.yata : _spiesSource = SpiesSource.tornStats;
 
@@ -746,8 +755,11 @@ class WarController extends GetxController {
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
 
-    _integrityCheck();
+    if (needsIntegrityCheck) {
+      _integrityCheck();
+    }
 
+    initialised = true;
     update();
   }
 

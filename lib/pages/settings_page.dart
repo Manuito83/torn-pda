@@ -24,7 +24,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-login/native_login_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:vibration/vibration.dart';
 
 // Project imports:

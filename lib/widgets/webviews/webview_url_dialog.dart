@@ -297,7 +297,34 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 5),
+                    SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: ElevatedButton(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.home, size: 20),
+                            SizedBox(width: 5),
+                            Flexible(
+                                child: Text(
+                              'Torn Home',
+                              style: TextStyle(fontSize: 12),
+                              textAlign: TextAlign.center,
+                            )),
+                          ],
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          widget.inAppWebview.loadUrl(
+                            urlRequest: URLRequest(
+                              url: WebUri("https://www.torn.com"),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
@@ -341,7 +368,6 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         },
                       ),
                     ),
-                    SizedBox(height: 5),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
@@ -371,7 +397,6 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 }
                               : null),
                     ),
-                    SizedBox(height: 5),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
