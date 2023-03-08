@@ -204,6 +204,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _quickItemsFactionController = ExpandableController();
   DateTime _quickItemsFactionOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
+  // NNB is called from:
+  // - onPageVisit (to ensure that iOS loads after using the faction tab menu)
+  // - onLoadStart (to ensure iOS loads after reloading the page)
+  // To avoid overloading the APIs, in any case, we store members and times globally
+  YataMembersModel _yataMembersModel;
+  TornStatsMembersModel _tsMembersModel;
+  DateTime _yataMembersLastCalled;
+  DateTime _tsMembersLastCalled;
+  DateTime _nnbTriggeredTime;
+
   Widget _jailExpandable = const SizedBox.shrink();
   DateTime _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
   JailModel _jailModel;
@@ -1270,6 +1280,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onUpdateVisitedHistory: (c, uri, androidReload) async {
             if (!mounted) return;
             _reportUrlVisit(uri);
+            _assessOCnnb(uri.toString()); // Using a more direct call for OCnnb
             return;
           },
           onLoadResource: (c, resource) async {
@@ -1423,6 +1434,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   _assessFactionQuickItems(deactivate: true);
                 }
               }
+
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -2116,11 +2128,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       getBounties = true;
     }
 
-    if ((_currentUrl.contains(_ocNnbUrl) && !_ocNnbTriggered) ||
-        (!_currentUrl.contains(_ocNnbUrl) && _ocNnbTriggered)) {
-      _assessOCnnb(); // Using a more direct call for OCnnb
-    }
-
+    // Using a more direct call for OC NNB
+    // The script handles repetitions and we handle how many times API are called
+    _assessOCnnb(_currentUrl); 
+        
     if (_settingsProvider.extraPlayerInformation) {
       const profileUrl = 'torn.com/profiles.php?XID=';
       if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
@@ -3485,13 +3496,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ORGANIZED CRIMES NNB
-  void _assessOCnnb() async {
+  void _assessOCnnb(String calledUrl) async {
     if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.off) return;
 
-    if (_currentUrl.contains(_ocNnbUrl) && _ocNnbTriggered) {
-      // Return calls if widget is already active
-      return;
-    } else if (!_currentUrl.contains(_ocNnbUrl)) {
+    if (!calledUrl.contains(_ocNnbUrl)) {
       // Return calls and reset widget if we are in another URL
       if (_ocNnbTriggered) _ocNnbTriggered = false;
       if (_ocNnbController.expanded) {
@@ -3502,6 +3510,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return;
     }
 
+    // API are protected by timing, and NNB script is protected by saved variable
+    // But we also double check here to avoid several activations (prob. not necessary)
+    if (_nnbTriggeredTime != null &&
+        DateTime.now().difference(_nnbTriggeredTime).inSeconds < 1) return;
+      _nnbTriggeredTime = DateTime.now();
+
     _ocNnbTriggered = true;
     setState(() {
       _ocNnbController.expanded = true;
@@ -3511,36 +3525,63 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.yata) {
         _ocSource = "YATA";
-        String yataUrl = 'https://yata.yt/api/v1/faction/members/?key=${_u.alternativeYataKey}';
-        final yataOCjson = await http.get(WebUri(yataUrl)).timeout(Duration(seconds: 15));
-        final yataMembersModel = yataMembersModelFromJson(yataOCjson.body);
-        yataMembersModel.members.forEach((key, value) {
+        YataMembersModel yataMembers;
+
+        if (_yataMembersLastCalled != null && _yataMembersModel != null
+            && DateTime.now().difference(_yataMembersLastCalled).inMinutes < 10) {
+          log("Using saved YATA members for NNB");
+          yataMembers = _yataMembersModel;
+        } else {
+          log("Fetching new YATA members for NNB");
+          String yataUrl = 'https://yata.yt/api/v1/faction/members/?key=${_u.alternativeYataKey}';
+          final yataOCjson = await http.get(WebUri(yataUrl)).timeout(Duration(seconds: 15));
+          yataMembers = yataMembersModelFromJson(yataOCjson.body);
+          _yataMembersModel = yataMembers;
+          _yataMembersLastCalled = DateTime.now();
+        }
+
+        yataMembers.members.forEach((key, value) {
           if (value.nnbShare == 1) {
             membersString += '"${value.id}":"${value.nnb}",';
           } else {
             membersString += '"${value.id}":"unk",';
           }
         });
+      
       } else if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.tornStats) {
         _ocSource = "Torn Stats";
-        String tsUrl = 'https://www.tornstats.com/api/v2/${_u.alternativeTornStatsKey}/faction/crimes';
-        final tsOCjson = await http.get(WebUri(tsUrl)).timeout(Duration(seconds: 15));
-        final tsMembersModel = tornStatsMembersModelFromJson(tsOCjson.body);
-        if (!tsMembersModel.status) {
-          BotToast.showText(
-            text: "Could not load NNB from TornStats: ${tsMembersModel.message}",
-            clickClose: true,
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.red[900],
-            duration: Duration(seconds: 5),
-            contentPadding: EdgeInsets.all(10),
-          );
-          return;
+        TornStatsMembersModel tsMembers;
+
+        if (_tsMembersLastCalled != null && _tsMembersModel != null
+            && DateTime.now().difference(_tsMembersLastCalled).inMinutes < 10) {
+          log("Using saved TS members for NNB");
+          tsMembers = _tsMembersModel;
+        } else {
+          log("Fetching new TS members for NNB");
+          String tsUrl = 'https://www.tornstats.com/api/v2/${_u.alternativeTornStatsKey}/faction/crimes';
+          final tsOCjson = await http.get(WebUri(tsUrl)).timeout(Duration(seconds: 15));
+          tsMembers = tornStatsMembersModelFromJson(tsOCjson.body);
+
+          if (!tsMembers.status) {
+            BotToast.showText(
+              text: "Could not load NNB from TornStats: ${tsMembers.message}",
+              clickClose: true,
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.red[900],
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+            return;
+          }
+
+          _tsMembersModel = tsMembers;
+          _tsMembersLastCalled = DateTime.now();
         }
-        tsMembersModel.members.forEach((key, value) {
+      
+        tsMembers.members.forEach((key, value) {
           membersString += '"${key}":"${value.naturalNerve}",';
         });
         // No need to account for unknown in TS, as the member won't be in the JSON (the script assigns 'unk')

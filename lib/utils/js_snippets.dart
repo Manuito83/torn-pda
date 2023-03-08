@@ -1193,6 +1193,17 @@ String ocNNB({@required String members}) {
       var data = $members;
 	
       function loadNNB () {
+
+        // Avoid adding NNB twice
+        var savedFound = document.querySelector(".pdaNNBListener") !== null;
+        if (!savedFound) {
+          var save = document.querySelector(".content-wrapper");
+          save.classList.add("pdaNNBListener");
+          console.log("Torn PDA: adding NNB!");
+        } else {
+          console.log("PDA NNB found, returning");
+          return;
+        }
 	
         // Add style nnb title
         function addStyle(styleString) {
@@ -1339,7 +1350,6 @@ String ocNNB({@required String members}) {
       let waitForOCAndRun = setInterval(() => {
         if (document.querySelector(".faction-crimes-wrap")) {
           loadNNB();
-          console.log("Torn PDA: adding NNB!");
           return clearInterval(waitForOCAndRun);
         }
       }, 300);
