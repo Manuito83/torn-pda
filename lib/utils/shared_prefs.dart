@@ -81,7 +81,6 @@ class Prefs {
   final String _kShowSecondsInClock = "pda_showSecondsInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kSpiesSource = "pda_SpiesSource";
-  final String _kNaturalNerveBarSource = "pda_naturalNerveBarSource";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
@@ -205,6 +204,12 @@ class Prefs {
   final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
+  // NNB
+  final String _kNaturalNerveBarSource = "pda_naturalNerveBarSource";
+  final String _kNaturalNerveYataTime = "pda_naturalNerveYataTime";
+  final String _kNaturalNerveYataModel = "pda_naturalNerveYataModel";
+  final String _kNaturalNerveTornStatsTime = "pda_naturalNerveTornStatsTime";
+  final String _kNaturalNerveTornStatsModel = "pda_naturalNerveTornStatsModel";
   // Stakeouts
   final String _kStakeoutsEnabled = "pda_stakeoutsEnabled";
   final String _kStakeouts = "pda_stakeouts";
@@ -939,6 +944,46 @@ class Prefs {
   Future<bool> setNaturalNerveBarSource(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kNaturalNerveBarSource, value);
+  }
+
+  Future<int> getNaturalNerveYataTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kNaturalNerveYataTime) ?? 0;
+  }
+
+  Future<bool> setNaturalNerveYataTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kNaturalNerveYataTime, value);
+  }
+
+  Future<String> getNaturalNerveYataModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNaturalNerveYataModel) ?? '';
+  }
+
+  Future<bool> setNaturalNerveYataModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNaturalNerveYataModel, value);
+  }
+
+  Future<int> getNaturalNerveTornStatsTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kNaturalNerveTornStatsTime) ?? 0;
+  }
+
+  Future<bool> setNaturalNerveTornStatsTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kNaturalNerveTornStatsTime, value);
+  }
+
+  Future<String> getNaturalNerveTornStatsModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNaturalNerveTornStatsModel) ?? '';
+  }
+
+  Future<bool> setNaturalNerveTornStatsModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNaturalNerveTornStatsModel, value);
   }
 
   /// ----------------------------

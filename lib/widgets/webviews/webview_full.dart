@@ -159,10 +159,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _crimesActive = false;
   final _crimesController = ExpandableController();
 
-  final _ocNnbUrl = "factions.php?step=your#/tab=crimes";
-  final _ocNnbController = ExpandableController();
-  String _ocSource = "";
-
   Widget _gymExpandable = SizedBox.shrink();
 
   var _tradesFullActive = false;
@@ -204,15 +200,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _quickItemsFactionController = ExpandableController();
   DateTime _quickItemsFactionOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
-  // NNB is called from:
-  // - onPageVisit (to ensure that iOS loads after using the faction tab menu)
-  // - onLoadStart (to ensure iOS loads after reloading the page)
-  // To avoid overloading the APIs, in any case, we store members and times globally
-  YataMembersModel _yataMembersModel;
-  TornStatsMembersModel _tsMembersModel;
-  DateTime _yataMembersLastCalled;
-  DateTime _tsMembersLastCalled;
+  // NNB is called from onPageVisit and onLoadStart, so API fetch and script activation have several checks
   DateTime _nnbTriggeredTime;
+  DateTime _yataTriggeredTime;
+  DateTime _tsTriggeredTime;
+  final _ocNnbUrl = "factions.php?step=your#/tab=crimes";
+  final _ocNnbController = ExpandableController();
+  String _ocSource = "";
 
   Widget _jailExpandable = const SizedBox.shrink();
   DateTime _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
@@ -1434,7 +1428,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   _assessFactionQuickItems(deactivate: true);
                 }
               }
-
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -2130,8 +2123,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Using a more direct call for OC NNB
     // The script handles repetitions and we handle how many times API are called
-    _assessOCnnb(_currentUrl); 
-        
+    _assessOCnnb(_currentUrl);
+
     if (_settingsProvider.extraPlayerInformation) {
       const profileUrl = 'torn.com/profiles.php?XID=';
       if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
@@ -3512,9 +3505,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // API are protected by timing, and NNB script is protected by saved variable
     // But we also double check here to avoid several activations (prob. not necessary)
-    if (_nnbTriggeredTime != null &&
-        DateTime.now().difference(_nnbTriggeredTime).inSeconds < 1) return;
-      _nnbTriggeredTime = DateTime.now();
+    if (_nnbTriggeredTime != null && DateTime.now().difference(_nnbTriggeredTime).inSeconds < 2) return;
+    _nnbTriggeredTime = DateTime.now();
+
+    log(DateTime.now().toString());
 
     _ocNnbTriggered = true;
     setState(() {
@@ -3525,19 +3519,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.yata) {
         _ocSource = "YATA";
-        YataMembersModel yataMembers;
 
-        if (_yataMembersLastCalled != null && _yataMembersModel != null
-            && DateTime.now().difference(_yataMembersLastCalled).inMinutes < 10) {
+        YataMembersModel yataMembers;
+        final t = await Prefs().getNaturalNerveYataTime();
+        _yataTriggeredTime = DateTime.fromMillisecondsSinceEpoch(t);
+        if (DateTime.now().difference(_yataTriggeredTime).inHours < 2) {
+          final yataSaved = await Prefs().getNaturalNerveYataModel();
+          yataMembers = yataMembersModelFromJson(yataSaved);
           log("Using saved YATA members for NNB");
-          yataMembers = _yataMembersModel;
         } else {
           log("Fetching new YATA members for NNB");
           String yataUrl = 'https://yata.yt/api/v1/faction/members/?key=${_u.alternativeYataKey}';
           final yataOCjson = await http.get(WebUri(yataUrl)).timeout(Duration(seconds: 15));
           yataMembers = yataMembersModelFromJson(yataOCjson.body);
-          _yataMembersModel = yataMembers;
-          _yataMembersLastCalled = DateTime.now();
+          Prefs().setNaturalNerveYataModel(yataMembersModelToJson(yataMembers));
+          Prefs().setNaturalNerveYataTime(DateTime.now().millisecondsSinceEpoch);
         }
 
         yataMembers.members.forEach((key, value) {
@@ -3547,15 +3543,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             membersString += '"${value.id}":"unk",';
           }
         });
-      
       } else if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.tornStats) {
         _ocSource = "Torn Stats";
-        TornStatsMembersModel tsMembers;
 
-        if (_tsMembersLastCalled != null && _tsMembersModel != null
-            && DateTime.now().difference(_tsMembersLastCalled).inMinutes < 10) {
-          log("Using saved TS members for NNB");
-          tsMembers = _tsMembersModel;
+        TornStatsMembersModel tsMembers;
+        final t = await Prefs().getNaturalNerveTornStatsTime();
+        _tsTriggeredTime = DateTime.fromMillisecondsSinceEpoch(t);
+
+        if (DateTime.now().difference(_tsTriggeredTime).inHours < 2) {
+          final tsSaved = await Prefs().getNaturalNerveTornStatsModel();
+          tsMembers = tornStatsMembersModelFromJson(tsSaved);
+          log("Using saved YATA members for NNB");
         } else {
           log("Fetching new TS members for NNB");
           String tsUrl = 'https://www.tornstats.com/api/v2/${_u.alternativeTornStatsKey}/faction/crimes';
@@ -3577,14 +3575,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             return;
           }
 
-          _tsMembersModel = tsMembers;
-          _tsMembersLastCalled = DateTime.now();
+          Prefs().setNaturalNerveTornStatsModel(tornStatsMembersModelToJson(tsMembers));
+          Prefs().setNaturalNerveTornStatsTime(DateTime.now().millisecondsSinceEpoch);
         }
-      
+
         tsMembers.members.forEach((key, value) {
+          // No need to account for unknown in TS, as the member won't be in the JSON (the script assigns 'unk')
           membersString += '"${key}":"${value.naturalNerve}",';
         });
-        // No need to account for unknown in TS, as the member won't be in the JSON (the script assigns 'unk')
       }
 
       membersString += "}";

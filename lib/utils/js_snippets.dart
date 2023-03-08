@@ -1197,7 +1197,7 @@ String ocNNB({@required String members}) {
         // Avoid adding NNB twice
         var savedFound = document.querySelector(".pdaNNBListener") !== null;
         if (!savedFound) {
-          var save = document.querySelector(".content-wrapper");
+          var save = document.querySelector(".faction-crimes-wrap");
           save.classList.add("pdaNNBListener");
           console.log("Torn PDA: adding NNB!");
         } else {
