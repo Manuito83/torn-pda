@@ -3586,6 +3586,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
 
       membersString += "}";
+      
+      // On iOS, when using the new menu icon for OC, the html doc does not respond for some reason
+      // We just wait a second and then add the script (should not be noticeable)
+      await Future.delayed(Duration(milliseconds: 1000));
       webView.evaluateJavascript(source: ocNNB(members: membersString));
     } catch (e) {
       BotToast.showText(
