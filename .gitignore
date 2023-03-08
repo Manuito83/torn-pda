@@ -90,3 +90,5 @@ android/.idea/gradle.xml
 android/.idea/misc.xml
 android/.idea/modules.xml
 android/.idea/vcs.xml
+ios/firebase_app_id_file.json
+lib/firebase_options.dart
