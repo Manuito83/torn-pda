@@ -119,7 +119,7 @@ class _JailWidgetState extends State<JailWidget> {
                           style: TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                         Text(
-                          '(tab to expand)',
+                          '(tap to expand)',
                           style: TextStyle(color: Colors.orange, fontSize: 9),
                         ),
                       ],

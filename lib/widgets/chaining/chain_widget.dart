@@ -2,7 +2,6 @@
 import 'dart:async';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -19,13 +18,11 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
 class ChainWidget extends StatefulWidget {
-  final String userKey;
   final bool alwaysDarkBackground;
   final Function callBackOptions;
 
   ChainWidget({
     @required Key key,
-    @required this.userKey,
     @required this.alwaysDarkBackground,
     this.callBackOptions,
   }) : super(key: key);
@@ -46,6 +43,10 @@ class _ChainWidgetState extends State<ChainWidget> {
 
   @override
   void dispose() {
+    if (!_chainStatusProvider.watcherActive) {
+      _chainStatusProvider.widgetVisible = false;
+      _chainStatusProvider.tryToDeactivateStatus();
+    }
     super.dispose();
   }
 
@@ -54,6 +55,7 @@ class _ChainWidgetState extends State<ChainWidget> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
     initialise();
+    _chainStatusProvider.widgetVisible = true;
 
     Color titleColor;
     if (widget.alwaysDarkBackground) {
@@ -164,6 +166,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 ),
                               ),
                               LinearPercentIndicator(
+                                padding: null,
+                                barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
@@ -207,6 +211,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                           return Column(
                             children: <Widget>[
                               LinearPercentIndicator(
+                                padding: null,
+                                barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
@@ -225,6 +231,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 padding: EdgeInsets.symmetric(vertical: 2),
                               ),
                               LinearPercentIndicator(
+                                padding: null,
+                                barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 3,
@@ -272,9 +280,11 @@ class _ChainWidgetState extends State<ChainWidget> {
   }
 
   void _callBackChainOptions() {
-    setState(() {
-      widget.callBackOptions();
-    });
+    if (widget.callBackOptions != null) {
+      setState(() {
+        widget.callBackOptions();
+      });
+    }
   }
 
   var lastReported = WatchDefcon.red1;

@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,14 +20,17 @@ import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/pages/awards_page.dart';
+import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
+import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
@@ -47,9 +51,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:uni_links/uni_links.dart';
-
-import 'main.dart';
-import 'models/profile/own_profile_model.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -57,8 +59,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  final int _settingsPosition = 8;
-  final int _aboutPosition = 9;
+  final int _settingsPosition = 10;
+  final int _aboutPosition = 11;
   var _allowSectionsWithoutKey = <int>[];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -70,6 +72,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Loot",
     "Friends",
     "Awards",
+    "Items",
+    "Ranked Wars",
     "Stock Market",
     "Alerts",
     "Settings",
@@ -84,7 +88,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   WebViewProvider _webViewProvider;
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FirebaseAnalytics analytics = FirebaseAnalytics();
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   StreamSubscription _deepLinkSub;
   DateTime _deepLinkSubTriggeredTime;
@@ -98,7 +102,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   bool _changelogIsActive = false;
   bool _forceFireUserReload = false;
 
+  bool _retalsRedirection = false;
+
   String _userUID = "";
+  bool _drawerUserChecked = false;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -137,6 +144,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // ENDS QUICK ACTIONS
 
     WidgetsBinding.instance.addObserver(this);
+
     _allowSectionsWithoutKey = [
       _settingsPosition,
       _aboutPosition,
@@ -250,6 +258,29 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeMetrics() {
+    setState(() {
+      // Note: orientation here is taken BEFORE the change
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(
+          statusBarColor: _themeProvider.statusBar,
+          systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+              ? _themeProvider.statusBar
+              : Colors.transparent,
+          systemNavigationBarIconBrightness:
+              MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+                  ? Brightness.light
+                  : _themeProvider.currentTheme == AppTheme.light
+                      ? Brightness.dark
+                      : Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          statusBarIconBrightness: Brightness.light,
+        ),
+      );
+    });
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
@@ -294,6 +325,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         showError = true;
       } else {
         url = url.replaceAll("http://", "https://");
+        // Double tornpda comes from href in website
+        // <a href="intent://tornpda://www.cnn.com#Intent;package=com.manuito.tornpda;scheme=tornpda;end">test</a>
+        url = url.replaceAll("tornpda://tornpda://", "https://");
         url = url.replaceAll("tornpda://", "https://");
         if (!url.contains("https://")) {
           showError = true;
@@ -317,7 +351,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           return;
         }
         _deepLinkSubTriggeredTime = DateTime.now();
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 2000));
         _webViewProvider.openBrowserPreference(
           context: context,
           url: url,
@@ -375,7 +409,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   Future<void> _fireLaunchResumeNotifications(Map<String, dynamic> message) async {
     bool launchBrowser = false;
-    var browserUrl = '';
+    var browserUrl = "https://www.torn.com";
 
     bool travel = false;
     bool hospital = false;
@@ -390,6 +424,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool refills = false;
     bool stockMarket = false;
     bool assists = false;
+    bool loot = false;
+    bool retals = false;
 
     var channel = '';
     var messageId = '';
@@ -437,6 +473,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       stockMarket = true;
     } else if (channel.contains("Alerts assists")) {
       assists = true;
+    } else if (channel.contains("Alerts loot")) {
+      loot = true;
+    } else if (channel.contains("Alerts retals")) {
+      retals = true;
     }
 
     if (travel) {
@@ -480,6 +520,35 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
+    } else if (retals) {
+      if (int.parse(bulkDetails) == -1) {
+        // No-host notification
+        return;
+      }
+      // If we have the section manually deactivated
+      // Or everything is OK but we elected to open the browser with just 1 target
+      // >> Open browser
+      await Future.delayed(Duration(seconds: 2));
+      if (!_settingsProvider.retaliationSectionEnabled ||
+          (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      } else {
+        // Even if we meet above requirements, call the API and assess whether the user
+        // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+        var attacksResult = await TornApiCaller().getFactionAttacks();
+        if (attacksResult is! FactionAttacksModel) {
+          launchBrowser = true;
+          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        } else {
+          // If we pass all checks above, redirect to the retals section
+          _retalsRedirection = true;
+          _callSectionFromOutside(2);
+          Future.delayed(Duration(seconds: 2)).then((value) {
+            _retalsRedirection = false;
+          });
+        }
+      }
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
@@ -494,7 +563,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+          var own = await TornApiCaller().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
             int xanaxComparison = otherXanax - own.personalstats.xantaken;
             int refillsComparison = otherRefills - own.personalstats.refills;
@@ -560,17 +629,25 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         duration: const Duration(seconds: 10),
         contentPadding: const EdgeInsets.all(10),
       );
+    } else if (loot) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
     }
 
     if (launchBrowser) {
       // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(const Duration(milliseconds: 1000));
+      if (Platform.isAndroid) {
+        await Future.delayed(const Duration(milliseconds: 2000));
+      } else if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 2500));
+      }
+
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       if (launchBrowser) {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
-          useDialog: _settingsProvider.useQuickBrowser,
+          useDialog: _settingsProvider?.useQuickBrowser ?? true,
         );
       }
     }
@@ -640,6 +717,39 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('refills') && (!payload.contains("Xanax"))) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/points.php';
+      } else if (payload.contains('retals')) {
+        final assistSplit = payload.split('###');
+        final assistId = assistSplit[0].split(':')[1];
+        final bulkDetails = assistSplit[1].split(':')[1];
+
+        if (int.parse(bulkDetails) == -1) {
+          // No-host notification
+          return;
+        }
+
+        // If we have the section manually deactivated
+        // Or everything is OK but we elected to open the browser with just 1 target
+        // >> Open browser
+        if (!_settingsProvider.retaliationSectionEnabled ||
+            (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+          launchBrowser = true;
+          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        } else {
+          // Even if we meet above requirements, call the API and assess whether the user
+          // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+          var attacksResult = await TornApiCaller().getFactionAttacks();
+          if (attacksResult is! FactionAttacksModel) {
+            launchBrowser = true;
+            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          } else {
+            // If we pass all checks above, redirect to the retals section
+            _retalsRedirection = true;
+            _callSectionFromOutside(2);
+            Future.delayed(Duration(seconds: 2)).then((value) {
+              _retalsRedirection = false;
+            });
+          }
+        }
       } else if (payload.contains('stockMarket')) {
         // Not implemented (there is a box showing in _getBackGroundNotifications)
       } else if (payload.contains('assistId:')) {
@@ -658,7 +768,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+            var own = await TornApiCaller().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
               int xanaxComparison = otherXanax - own.personalstats.xantaken;
               int refillsComparison = otherRefills - own.personalstats.refills;
@@ -723,6 +833,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           duration: const Duration(seconds: 10),
           contentPadding: const EdgeInsets.all(10),
         );
+      } else if (payload.contains('lootId:')) {
+        launchBrowser = true;
+        final assistId = payload.split(':');
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
       }
 
       if (launchBrowser) {
@@ -751,26 +865,22 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
               color: _themeProvider.currentTheme == AppTheme.light
                   ? MediaQuery.of(context).orientation == Orientation.portrait
                       ? Colors.blueGrey
-                      : Colors.grey[900]
-                  : Colors.grey[900],
+                      : _themeProvider.canvas
+                  : _themeProvider.canvas,
               child: SafeArea(
                 top: !_settingsProvider.appBarTop || false,
                 child: Scaffold(
                   key: _scaffoldKey,
                   body: _getPages(),
                   drawer: Drawer(
+                    backgroundColor: _themeProvider.canvas,
                     elevation: 2, // This avoids shadow over SafeArea
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: _themeProvider.currentTheme == AppTheme.light ? Colors.grey[100] : Colors.transparent,
-                          backgroundBlendMode: BlendMode.multiply),
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: <Widget>[
-                          _getDrawerHeader(),
-                          _getDrawerItems(),
-                        ],
-                      ),
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: <Widget>[
+                        _getDrawerHeader(),
+                        _getDrawerItems(),
+                      ],
                     ),
                   ),
                 ),
@@ -778,7 +888,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             );
           } else {
             return Container(
-              color: Colors.black,
+              color: _themeProvider.secondBackground,
               child: SafeArea(
                 top: _settingsProvider.appBarTop || true,
                 child: const Center(
@@ -822,31 +932,87 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: <Widget>[
-                      Text(
-                        _themeProvider.currentTheme == AppTheme.light ? 'Light' : 'Dark',
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 10),
-                      ),
-                      Switch(
-                        value: _themeProvider.currentTheme == AppTheme.dark || false,
-                        onChanged: (bool value) {
-                          if (value) {
-                            _themeProvider.changeTheme = AppTheme.dark;
-                          } else {
-                            _themeProvider.changeTheme = AppTheme.light;
-                          }
-                          setState(() {
-                            SystemChrome.setSystemUIOverlayStyle(
-                              SystemUiOverlayStyle(
-                                statusBarColor:
-                                    _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
-                                statusBarBrightness: Brightness.dark,
-                                statusBarIconBrightness: Brightness.light,
-                              ),
-                            );
-                          });
-                        },
+                      SizedBox(
+                        height: 30,
+                        child: ToggleSwitch(
+                          customWidths: [35, 35, 35],
+                          iconSize: 15,
+                          borderWidth: 1,
+                          cornerRadius: 5,
+                          borderColor:
+                              _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+                          initialLabelIndex: _themeProvider.currentTheme == AppTheme.light
+                              ? 0
+                              : _themeProvider.currentTheme == AppTheme.dark
+                                  ? 1
+                                  : 2,
+                          activeBgColor: _themeProvider.currentTheme == AppTheme.light
+                              ? [Colors.blueGrey]
+                              : _themeProvider.currentTheme == AppTheme.dark
+                                  ? [Colors.blueGrey]
+                                  : [Colors.blueGrey[900]],
+                          activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                          inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                              ? Colors.white
+                              : _themeProvider.currentTheme == AppTheme.dark
+                                  ? Colors.grey[800]
+                                  : Colors.black,
+                          inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                          totalSwitches: 3,
+                          animate: true,
+                          animationDuration: 500,
+                          icons: [
+                            FontAwesome.sun_o,
+                            FontAwesome.moon_o,
+                            MdiIcons.ghost,
+                          ],
+                          onToggle: (index) {
+                            if (index == 0) {
+                              _themeProvider.changeTheme = AppTheme.light;
+                              if (_settingsProvider.syncTheme) {
+                                _webViewProvider.changeTornTheme(dark: false);
+                              }
+                            } else if (index == 1) {
+                              _themeProvider.changeTheme = AppTheme.dark;
+                              if (_settingsProvider.syncTheme) {
+                                _webViewProvider.changeTornTheme(dark: true);
+                              }
+                            } else {
+                              _themeProvider.changeTheme = AppTheme.extraDark;
+                              if (_settingsProvider.syncTheme) {
+                                _webViewProvider.changeTornTheme(dark: true);
+                              }
+                              BotToast.showText(
+                                text: "Spooky...!",
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                contentColor: Color(0xFF0C0C0C),
+                                duration: const Duration(seconds: 2),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            }
+                            setState(() {
+                              SystemChrome.setSystemUIOverlayStyle(
+                                SystemUiOverlayStyle(
+                                  statusBarColor: _themeProvider.statusBar,
+                                  systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape
+                                      ? _themeProvider.canvas
+                                      : _themeProvider.statusBar,
+                                  systemNavigationBarIconBrightness:
+                                      MediaQuery.of(context).orientation == Orientation.landscape
+                                          ? _themeProvider.currentTheme == AppTheme.light
+                                              ? Brightness.dark
+                                              : Brightness.light
+                                          : Brightness.light,
+                                  statusBarBrightness: Brightness.dark,
+                                  statusBarIconBrightness: Brightness.light,
+                                ),
+                              );
+                            });
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -911,13 +1077,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
           continue;
         }
+        if (!_settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
+          continue;
+        }
         if (!_settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
           continue;
         }
 
         // Adding divider just before SETTINGS
         if (i == _settingsPosition) {
-          drawerOptions.add(const Divider());
+          drawerOptions.add(
+            Divider(),
+          );
         }
         drawerOptions.add(
           ListTileTheme(
@@ -956,7 +1127,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return TravelPage();
         break;
       case 2:
-        return ChainingPage();
+        return ChainingPage(retalsRedirection: _retalsRedirection);
         break;
       case 3:
         return LootPage();
@@ -968,18 +1139,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return AwardsPage();
         break;
       case 6:
-        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
+        return ItemsPage();
         break;
       case 7:
-        return AlertsSettings(_onChangeStockMarketInMenu);
+        return RankedWarsPage(calledFromMenu: true);
         break;
       case 8:
-        return SettingsPage(changeUID: changeUID);
+        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
         break;
       case 9:
-        return AboutPage(uid: _userUID);
+        return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 10:
+        return SettingsPage(changeUID: changeUID);
+        break;
+      case 11:
+        return AboutPage(uid: _userUID);
+        break;
+      case 12:
         return TipsPage();
         break;
 
@@ -1009,18 +1186,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return const Icon(MdiIcons.trophy);
         break;
       case 6:
-        return const Icon(MdiIcons.bankTransfer);
+        return const Icon(MdiIcons.packageVariantClosed);
         break;
       case 7:
-        return const Icon(Icons.notifications_active);
+        return const Icon(MaterialCommunityIcons.sword_cross);
         break;
       case 8:
-        return const Icon(Icons.settings);
+        return const Icon(MdiIcons.bankTransfer);
         break;
       case 9:
-        return const Icon(Icons.info_outline);
+        return const Icon(Icons.notifications_active);
         break;
       case 10:
+        return const Icon(Icons.settings);
+        break;
+      case 11:
+        return const Icon(Icons.info_outline);
+        break;
+      case 12:
         return const Icon(Icons.question_answer_outlined);
         break;
       default:
@@ -1029,10 +1212,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _onSelectItem(int index) async {
-/*    await analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': _drawerItemsList[index]});*/
-
     Navigator.of(context).pop();
     setState(() {
       _selected = index;
@@ -1045,21 +1224,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // ## Leave this first as other options below need this to be initialized ##
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
-
-    // Change device preferences
-    final allowRotation = _settingsProvider.allowScreenRotation;
-    if (allowRotation) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
-    }
 
     // Set up UserScriptsProvider so that user preferences are applied
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
@@ -1079,19 +1243,59 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _activeDrawerIndex = int.parse(defaultSection);
 
       // Firestore get auth and init
-      final user = await firebaseAuth.currentUser();
-      if (user == null) {
-        _updateFirebaseDetails();
-        _userUID = "";
-      } else {
-        final uid = await firebaseAuth.getUID();
-        firestore.setUID(uid as String);
-        _userUID = uid as String;
-      }
+      FirebaseAuth.instance.authStateChanges().listen((User user) async {
+        // Only execute once, otherwise we risk creating users in a row below
+        if (_drawerUserChecked) return;
+        _drawerUserChecked = true;
+
+        if (user == null) {
+          log("Drawer: Firebase user is null, signing in!");
+          // Upload information to Firebase (this includes the token)
+          final User newAnonUser = await firebaseAuth.signInAnon() as User;
+          firestore.setUID(newAnonUser.uid);
+          _updateFirebaseDetails();
+          _userUID = newAnonUser.uid;
+
+          // Warn user about the possibility of a new UID being regenerated
+          // We should not arrive here under normal circumstances, as null users are redirected to Settings
+          BotToast.showText(
+            clickClose: true,
+            text: "A problem was found with your user.\n\n"
+                "Please visit the Alerts page and ensure that your alerts are properly setup!",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: Duration(seconds: 6),
+            contentPadding: EdgeInsets.all(10),
+          );
+        } else {
+          final existingUid = user.uid;
+          log("Drawer: Firebase user ID $existingUid");
+          firestore.setUID(existingUid);
+          _userUID = existingUid;
+        }
+      });
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)
       _updateLastActiveTime();
+    }
+
+    // Change device preferences
+    final allowRotation = _settingsProvider.allowScreenRotation;
+    if (allowRotation) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
     }
   }
 
@@ -1119,16 +1323,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider.basic.userApiKey;
-    final dynamic prof = await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+    final dynamic prof = await TornApiCaller().getProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof
         ..userApiKey = savedKey
         ..userApiKeyValid = true;
 
-      // Upload information to Firebase (this includes the token)
-      final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
-      firestore.setUID(mFirebaseUser.uid);
       await firestore.uploadUsersProfileDetail(prof, userTriggered: true);
     }
 
@@ -1141,13 +1342,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _handleChangelog() async {
-    final String savedVersion = await Prefs().getAppVersion();
-    if (savedVersion != appVersion) {
-      Prefs().setAppVersion(appVersion);
+    final String savedCompilation = await Prefs().getAppCompilation();
+
+    String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+
+    if (savedCompilation != currentCompilation) {
+      Prefs().setAppCompilation(currentCompilation);
 
       // Exceptions were we don't show a changelog
       /*
-      if (savedVersion == '1.6.0') {
+      if (savedVersion == 'xxx') {
         return;
       }
       */
@@ -1284,7 +1488,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -1352,9 +1556,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,

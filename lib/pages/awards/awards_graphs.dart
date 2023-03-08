@@ -49,13 +49,16 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: WillPopScope(
         onWillPop: _willPopCallback,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -63,37 +66,40 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: Padding(
-              padding: const EdgeInsets.all(30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  /*
-                  Text(
-                    'Awards',
-                    style: TextStyle(
-                        color: const Color(0xff0f4a3c),
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(
-                    height: 38,
-                  ),
-                  */
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: BarChart(
-                        mainBarData(),
+            body: Container(
+              color: _themeProvider.canvas,
+              child: Padding(
+                padding: const EdgeInsets.all(30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    /*
+                    Text(
+                      'Awards',
+                      style: TextStyle(
+                          color: const Color(0xff0f4a3c),
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(
+                      height: 38,
+                    ),
+                    */
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: BarChart(
+                          mainBarData(),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                ],
+                    const SizedBox(
+                      height: 12,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -180,11 +186,11 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
             }),
         // Threshold so that the smallest bars can be selected as well
         touchExtraThreshold: EdgeInsets.only(top: 30),
-        touchCallback: (barTouchResponse) {
+        touchCallback: (flTouchEvent, barTouchResponse) {
           setState(() {
-            if (barTouchResponse.spot != null &&
-                barTouchResponse.touchInput is! PointerUpEvent &&
-                barTouchResponse.touchInput is! PointerExitEvent) {
+            if (barTouchResponse?.spot != null &&
+                barTouchResponse is! PointerUpEvent &&
+                barTouchResponse is! PointerExitEvent) {
               _touchedIndex = barTouchResponse.spot.touchedBarGroupIndex;
             } else {
               _touchedIndex = -1;
@@ -194,27 +200,45 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       ),
       titlesData: FlTitlesData(
         show: true,
-        bottomTitles: SideTitles(
-          showTitles: false,
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: false,
+          ),
         ),
-        leftTitles: SideTitles(
-          reservedSize: 25,
-          getTitles: (value) {
-            // Antilogarithm
-            int yValue = pow(10, value).round();
-            String yString = yValue.toString();
-            if (yValue == 1) {
-              return "0";
-            } else if (yValue > 999) {
-              yString = "${(yValue / 1000).truncate().toStringAsFixed(0)}K";
-            }
-            return yString;
-          },
-          getTextStyles: (value) {
-            return TextStyle(color: _themeProvider.mainText, fontSize: 12);
-          },
-          showTitles: true,
-          interval: 1,
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: false,
+          ),
+        ),
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: false,
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            reservedSize: 40,
+            interval: 1,
+            showTitles: true,
+            getTitlesWidget: (value, titleMeta) {
+              // Antilogarithm
+              int yValue = pow(10, value).round();
+              String yString = yValue.toString();
+              if (yValue == 1) {
+                yString = "0";
+              } else if (yValue > 999) {
+                yString = "${(yValue / 1000).truncate().toStringAsFixed(0)}K";
+              }
+
+              return Text(
+                yString,
+                style: TextStyle(
+                  color: _themeProvider.mainText,
+                  fontSize: 12,
+                ),
+              );
+            },
+          ),
         ),
       ),
       borderData: FlBorderData(
@@ -260,15 +284,13 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       x: x,
       barRods: [
         BarChartRodData(
-          //y: isTouched ? y + 1 : y,
-          y: y,
-          colors: isTouched ? [Colors.yellow] : [barColor],
+          toY: y,
+          color: isTouched ? Colors.yellow : barColor,
           width: width,
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
-            //y: 20,
-            y: y,
-            colors: [barBackgroundColor],
+            toY: y,
+            color: barBackgroundColor,
           ),
         ),
       ],

@@ -13,7 +13,6 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 
 class ChainWidgetOptions extends StatefulWidget {
@@ -41,11 +40,16 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -850,7 +854,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   void _errorReset() {
     _chainStatusProvider.resetAllDefcon();
     BotToast.showText(
-      text: "Ops! Error encountered, all warning levels have been reset!",
+      text: "Oops! Error encountered, all warning levels have been reset!",
       textStyle: const TextStyle(
         fontSize: 13,
         color: Colors.white,
@@ -885,7 +889,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -939,9 +943,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -983,7 +987,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -1012,7 +1016,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                             "the first available (non blue/red) one. Think about using easy/quick targets.\n\n"
                             "This can be specially useful when chain watching while asleep, working, etc.\n\n"
                             "Remember you need to leave Torn PDA open, "
-                            "with the screen active, for the Panic Mode to work as well.",
+                            "with the screen active, for the Panic Mode to work as well.\n\n"
+                            "NOTE: the browser used by Panic Mode does not contain any of the features (widgets, etc.) "
+                            "of the standard browser, as it is designed to load as quickly as possible.",
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
@@ -1037,9 +1043,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -1083,7 +1089,6 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
     _chainProvider = Provider.of<ChainStatusProvider>(context, listen: true);
 
     return AlertDialog(
@@ -1102,7 +1107,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
           ),
           margin: const EdgeInsets.only(top: 30),
           decoration: BoxDecoration(
-            color: widget.themeProvider.background,
+            color: widget.themeProvider.secondBackground,
             borderRadius: BorderRadius.circular(16),
             boxShadow: const [
               BoxShadow(
@@ -1180,7 +1185,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                           String inputId = _addIdController.text;
                           _addIdController.text = '';
 
-                          dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
+                          dynamic target = await TornApiCaller().getTarget(playerId: inputId);
                           String message = "";
                           Color messageColor = Colors.green[700];
                           if (target is TargetModel) {
@@ -1244,7 +1249,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
             ),
             Flexible(
               child: Card(
-                color: widget.themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: widget.themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(

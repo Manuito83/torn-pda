@@ -9,7 +9,6 @@ import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class QuickItemsProvider extends ChangeNotifier {
@@ -17,17 +16,16 @@ class QuickItemsProvider extends ChangeNotifier {
   bool _itemSuccess = false;
 
   var _activeQuickItemsList = <QuickItem>[];
-  UnmodifiableListView<QuickItem> get activeQuickItems =>
-      UnmodifiableListView(_activeQuickItemsList);
+  UnmodifiableListView<QuickItem> get activeQuickItems => UnmodifiableListView(_activeQuickItemsList);
 
   var _fullQuickItemsList = <QuickItem>[];
-  UnmodifiableListView<QuickItem> get fullQuickItems =>
-      UnmodifiableListView(_fullQuickItemsList);
+  UnmodifiableListView<QuickItem> get fullQuickItems => UnmodifiableListView(_fullQuickItemsList);
 
   String _currentSearchFilter = '';
   String get searchFilter => _currentSearchFilter;
 
-  String _apiKey = "";
+  int _numberOfLoadoutsToShow = 3;
+  int get numberOfLoadoutsToShow => _numberOfLoadoutsToShow;
 
   var _quickItemTypes = [
     ItemType.ALCOHOL,
@@ -42,10 +40,9 @@ class QuickItemsProvider extends ChangeNotifier {
     "box of tissues",
   ];
 
-  Future loadItems({@required String apiKey}) async {
+  Future loadItems() async {
     if (_firstLoad) {
       _firstLoad = false;
-      _apiKey = apiKey;
       await _loadSaveActiveItems();
       _itemSuccess = await _getAllTornItems();
       updateInventoryQuantities(fullUpdate: true);
@@ -67,8 +64,11 @@ class QuickItemsProvider extends ChangeNotifier {
   Future _loadSaveActiveItems() async {
     var savedActives = await Prefs().getQuickItemsList();
     for (var rawItem in savedActives) {
-      _activeQuickItemsList.add(quickItemFromJson(rawItem));
+      QuickItem activeItem = quickItemFromJson(rawItem);
+      _activeQuickItemsList.add(activeItem);
     }
+
+    _numberOfLoadoutsToShow = await Prefs().getNumberOfLoadouts();
   }
 
   void activateQuickItem(QuickItem newItem) {
@@ -76,14 +76,12 @@ class QuickItemsProvider extends ChangeNotifier {
     _activeQuickItemsList.add(newItem);
     _saveListAfterChanges();
     notifyListeners();
-
-    _saveListAfterChanges();
-    notifyListeners();
   }
 
   void decreaseInventory(QuickItem item) {
     if (item.inventory > 0) {
       item.inventory--;
+      _saveListAfterChanges();
       notifyListeners();
     }
   }
@@ -126,6 +124,24 @@ class QuickItemsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setNumberOfLoadoutsToShow(int number) {
+    _numberOfLoadoutsToShow = number;
+    Prefs().setNumberOfLoadouts(number);
+    notifyListeners();
+  }
+
+  void changeLoadoutName(QuickItem loadout, String name) {
+    if (!loadout.isLoadout) return;
+    for (QuickItem item in _activeQuickItemsList) {
+      if (loadout.loadoutNumber == item.loadoutNumber) {
+        item.loadoutName = name;
+        break;
+      }
+    }
+    _saveListAfterChanges();
+    notifyListeners();
+  }
+
   void _saveListAfterChanges() {
     var saveList = <String>[];
 
@@ -145,10 +161,12 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   Future _getAllTornItems() async {
-    var allTornItems = await TornApiCaller.items(_apiKey).getItems;
+    var allTornItems = await TornApiCaller().getItems();
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsList.clear();
+
+      // Add Torn items
       allTornItems.items.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type) ||
             _quickItemExceptions.contains(itemProperties.name.toLowerCase())) {
@@ -164,7 +182,7 @@ class QuickItemsProvider extends ChangeNotifier {
 
           _fullQuickItemsList.add(
             QuickItem()
-              ..name = EmojiParser.fix(itemProperties.name)
+              ..name = itemProperties.name
               ..description = itemProperties.description
               ..number = int.parse(itemNumber)
               ..active = savedActive,
@@ -172,6 +190,30 @@ class QuickItemsProvider extends ChangeNotifier {
         }
       });
       _fullQuickItemsList.sort((a, b) => a.name.compareTo(b.name));
+
+      // Insert loadouts at the beginning after sorting
+      for (int i = 0; i < 9; i++) {
+        var savedActive = false;
+        for (var saved in _activeQuickItemsList) {
+          if (saved.isLoadout && saved.loadoutNumber == i + 1) {
+            savedActive = true;
+            break;
+          }
+        }
+
+        _fullQuickItemsList.insert(
+          i,
+          QuickItem()
+            ..name = "Loadout ${i + 1}"
+            ..description = "Activates loadout ${i + 1}"
+            ..number = 0
+            ..active = savedActive
+            ..isLoadout = true
+            ..loadoutNumber = i + 1
+            ..loadoutName = "Loadout ${i + 1}",
+        );
+      }
+
       return true;
     }
     return false;
@@ -180,7 +222,7 @@ class QuickItemsProvider extends ChangeNotifier {
   /// [fullUpdate] is true, it will also update the inactive/stock items, which are not
   /// visible in the widget. Only makes sense if entering the options page
   Future updateInventoryQuantities({bool fullUpdate = false}) async {
-    var inventoryItems = await TornApiCaller.items(_apiKey).getInventory;
+    var inventoryItems = await TornApiCaller().getInventory();
     if (inventoryItems is InventoryModel) {
       if (fullUpdate) {
         for (var quickItem in _fullQuickItemsList) {
@@ -212,6 +254,7 @@ class QuickItemsProvider extends ChangeNotifier {
         }
       }
 
+      _saveListAfterChanges();
       notifyListeners();
       return true;
     }

@@ -65,7 +65,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: _themeProvider.background,
+                  color: _themeProvider.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -82,7 +82,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                     SizedBox(height: 10),
                     Flexible(
                       child: Text(
-                        "This will restore the example scripts than come with Torn PDA by default!",
+                        "This will restore the example scripts that come with Torn PDA by default!",
                         style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                       ),
                     ),
@@ -148,9 +148,9 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: _themeProvider.background,
+                backgroundColor: _themeProvider.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: _themeProvider.background,
+                  backgroundColor: _themeProvider.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 34,

@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +22,7 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
@@ -27,6 +30,7 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewUrlDialog extends StatefulWidget {
@@ -98,7 +102,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: _themeProvider.background,
+                  color: _themeProvider.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -121,127 +125,135 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     SizedBox(height: 15),
                     if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
                         widget.userProvider.basic.faction.factionId != 0)
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.red,
-                          onPrimary: Colors.white,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(MdiIcons.fencing, size: 20),
-                            SizedBox(width: 5),
-                            Text('FACTION ASSISTANCE', style: TextStyle(fontSize: 12)),
-                          ],
-                        ),
-                        onPressed: () async {
-                          BotToast.showText(
-                            onlyOne: true,
-                            text: "Requesting assistance from faction members!",
-                            textStyle: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: Colors.green,
-                            duration: Duration(seconds: 2),
-                            contentPadding: EdgeInsets.all(10),
-                          );
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.red,
+                            onPrimary: Colors.white,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Icon(MdiIcons.fencing, size: 20),
+                              SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'FACTION ASSISTANCE',
+                                  style: TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                          onPressed: () async {
+                            BotToast.showText(
+                              onlyOne: true,
+                              text: "Requesting assistance from faction members!",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                              contentPadding: EdgeInsets.all(10),
+                            );
 
-                          Navigator.of(context).pop();
+                            Navigator.of(context).pop();
 
-                          String apiKey = widget.userProvider.basic.userApiKey;
+                            String attackId = widget.url.split("user2ID=")[1];
+                            var t = await TornApiCaller().getOtherProfile(playerId: attackId);
 
-                          String attackId = widget.url.split("user2ID=")[1];
-                          var t = await TornApiCaller.target(apiKey, attackId).getOtherProfile;
-
-                          // Get stats from YATA
-                          var spyModel = YataSpyModel();
-                          var spyFoundInYata = false;
-                          try {
-                            String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=$apiKey';
-                            var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
-                            if (resp.statusCode == 200) {
-                              var spyJson = json.decode(resp.body);
-                              var spiedStats = spyJson["spies"]["$attackId"];
-                              if (spiedStats != null) {
-                                spyModel = yataSpyModelFromJson(json.encode(spiedStats));
-                                spyFoundInYata = true;
+                            // Get stats from YATA
+                            var spyModel = YataSpyModel();
+                            var spyFoundInYata = false;
+                            try {
+                              UserController _u = Get.put(UserController());
+                              String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=${_u.alternativeYataKey}';
+                              var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
+                              if (resp.statusCode == 200) {
+                                var spyJson = json.decode(resp.body);
+                                var spiedStats = spyJson["spies"]["$attackId"];
+                                if (spiedStats != null) {
+                                  spyModel = yataSpyModelFromJson(json.encode(spiedStats));
+                                  spyFoundInYata = true;
+                                }
                               }
+                            } catch (e) {
+                              // Won't get YATA details
                             }
-                          } catch (e) {
-                            // Won't get YATA details
-                          }
 
-                          int membersNotified = 0;
-                          if (t is OtherProfileModel) {
-                            // Fill stats either way
-                            String exactStats = "";
-                            String estimatedStats = "";
-                            if (spyFoundInYata) {
-                              String total = formatBigNumbers(spyModel.total);
-                              String str = formatBigNumbers(spyModel.strength);
-                              String spd = formatBigNumbers(spyModel.speed);
-                              String def = formatBigNumbers(spyModel.defense);
-                              String dex = formatBigNumbers(spyModel.dexterity);
-                              exactStats = "${total} (STR $str, SPD $spd, DEF $def, DEX $dex), "
-                                  "updated ${readTimestamp(spyModel.update)}";
-                            } else {
-                              estimatedStats = StatsCalculator.calculateStats(
-                                criminalRecordTotal: t.criminalrecord.total,
-                                level: t.level,
-                                networth: t.personalstats.networth,
-                                rank: t.rank,
+                            int membersNotified = 0;
+                            if (t is OtherProfileModel) {
+                              // Fill stats either way
+                              String exactStats = "";
+                              String estimatedStats = "";
+                              if (spyFoundInYata) {
+                                String total = formatBigNumbers(spyModel.total);
+                                String str = formatBigNumbers(spyModel.strength);
+                                String spd = formatBigNumbers(spyModel.speed);
+                                String def = formatBigNumbers(spyModel.defense);
+                                String dex = formatBigNumbers(spyModel.dexterity);
+                                exactStats = "${total} (STR $str, SPD $spd, DEF $def, DEX $dex), "
+                                    "updated ${readTimestamp(spyModel.update)}";
+                              } else {
+                                estimatedStats = StatsCalculator.calculateStats(
+                                  criminalRecordTotal: t.criminalrecord.total,
+                                  level: t.level,
+                                  networth: t.personalstats.networth,
+                                  rank: t.rank,
+                                );
+
+                                estimatedStats += "\n- Xanax: ${t.personalstats.xantaken}";
+                                estimatedStats += "\n- Refills (E): ${t.personalstats.refills}";
+                                estimatedStats += "\n- Drinks (E): ${t.personalstats.energydrinkused}";
+                                estimatedStats += "\n(tap to get a comparison with you)";
+                              }
+
+                              membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                                attackId: attackId,
+                                attackName: t.name,
+                                attackLevel: t.level.toString(),
+                                attackLife: "${t.life.current}/${t.life.maximum}",
+                                attackAge: t.age.toString(),
+                                estimatedStats: estimatedStats,
+                                exactStats: exactStats,
+                                xanax: t.personalstats.xantaken.toString(),
+                                refills: t.personalstats.refills.toString(),
+                                drinks: t.personalstats.energydrinkused.toString(),
                               );
-
-                              estimatedStats += "\n- Xanax: ${t.personalstats.xantaken}";
-                              estimatedStats += "\n- Refills (E): ${t.personalstats.refills}";
-                              estimatedStats += "\n- Drinks (E): ${t.personalstats.energydrinkused}";
-                              estimatedStats += "\n(tap to get a comparison with you)";
+                            } else {
+                              membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                                attackId: attackId,
+                              );
                             }
 
-                            membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                              attackId: attackId,
-                              attackName: t.name,
-                              attackLevel: t.level.toString(),
-                              attackLife: "${t.life.current}/${t.life.maximum}",
-                              attackAge: t.age.toString(),
-                              estimatedStats: estimatedStats,
-                              exactStats: exactStats,
-                              xanax: t.personalstats.xantaken.toString(),
-                              refills: t.personalstats.refills.toString(),
-                              drinks: t.personalstats.energydrinkused.toString(),
+                            String membersMessage = "$membersNotified faction member${membersNotified == 1 ? "" : "s"} "
+                                "${membersNotified == 1 ? "has" : "have"} been notified!";
+                            Color membersColor = Colors.green;
+
+                            if (membersNotified == 0) {
+                              membersMessage = "No faction member could be notified (not using Torn PDA or "
+                                  "assists messages deactivated)!";
+                              membersColor = Colors.orange[700];
+                            } else if (membersNotified == -1) {
+                              membersMessage = "There was a problem locating your faction's details, please try again!";
+                              membersColor = Colors.orange[700];
+                            }
+
+                            BotToast.showText(
+                              onlyOne: true,
+                              text: membersMessage,
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: membersColor,
+                              duration: Duration(seconds: 5),
+                              contentPadding: EdgeInsets.all(10),
                             );
-                          } else {
-                            membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                              attackId: attackId,
-                            );
-                          }
-
-                          String membersMessage = "$membersNotified faction member${membersNotified == 1 ? "" : "s"} "
-                              "${membersNotified == 1 ? "has" : "have"} been notified!";
-                          Color membersColor = Colors.green;
-
-                          if (membersNotified == 0) {
-                            membersMessage = "No faction member could be notified (not using Torn PDA or "
-                                "assists messages deactivated)!";
-                            membersColor = Colors.orange[700];
-                          } else if (membersNotified == -1) {
-                            membersMessage = "There was a problem locating your faction's details, please try again!";
-                            membersColor = Colors.orange[700];
-                          }
-
-                          BotToast.showText(
-                            onlyOne: true,
-                            text: membersMessage,
-                            textStyle: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: membersColor,
-                            duration: Duration(seconds: 5),
-                            contentPadding: EdgeInsets.all(10),
-                          );
-                        },
+                          },
+                        ),
                       ),
                     SizedBox(height: 5),
                     Row(
@@ -291,102 +303,230 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ],
                     ),
                     SizedBox(height: 5),
-                    ElevatedButton(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        //mainAxisAlignment: MainAxisAlign,
-                        children: [
-                          Icon(Icons.copy, size: 20),
-                          SizedBox(width: 5),
-                          Text('Copy URL', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: _currentUrl));
-
-                        // Avoid copying _currentUrl directly unless we await,
-                        // otherwise we can change _currentUrl while the copy
-                        // is being performed and hang the app
-                        var copied = _currentUrl;
-                        if (_currentUrl.length > 60) {
-                          copied = _currentUrl.substring(0, 60) + "...";
-                        }
-
-                        BotToast.showText(
-                          text: "Current URL copied to "
-                              "the clipboard [$copied]",
-                          textStyle: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          contentColor: Colors.green,
-                          duration: Duration(seconds: 5),
-                          contentPadding: EdgeInsets.all(10),
-                        );
-                        _customURLController.text = "";
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    SizedBox(height: 5),
-                    ElevatedButton(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: ElevatedButton(
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          //mainAxisAlignment: MainAxisAlign,
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset(
-                              'images/icons/heart.png',
-                              width: 20,
-                              color: _shortcutsProvider.activeShortcuts.length > 0 ? Colors.white : Colors.grey,
-                            ),
+                            Icon(Icons.copy, size: 20),
                             SizedBox(width: 5),
-                            Text('Browse shortcuts', style: TextStyle(fontSize: 12)),
+                            Flexible(
+                                child: Text(
+                              'Copy URL',
+                              style: TextStyle(fontSize: 12),
+                              textAlign: TextAlign.center,
+                            )),
                           ],
                         ),
-                        onPressed: _shortcutsProvider.activeShortcuts.length > 0
-                            ? () {
-                                Navigator.of(context).pop();
-                                _openShortcutsDialog();
-                                _customURLController.text = "";
-                              }
-                            : null),
-                    SizedBox(height: 5),
-                    ElevatedButton(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        //mainAxisAlignment: MainAxisAlign,
-                        children: [
-                          Image.asset(
-                            'images/icons/heart_add.png',
-                            width: 20,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 8),
-                          Text('Save as shortcut', style: TextStyle(fontSize: 12)),
-                        ],
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: _currentUrl));
+
+                          // Avoid copying _currentUrl directly unless we await,
+                          // otherwise we can change _currentUrl while the copy
+                          // is being performed and hang the app
+                          var copied = _currentUrl;
+                          if (_currentUrl.length > 60) {
+                            copied = _currentUrl.substring(0, 60) + "...";
+                          }
+
+                          BotToast.showText(
+                            text: "Current URL copied to "
+                                "the clipboard [$copied]",
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.green,
+                            duration: Duration(seconds: 5),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+                          _customURLController.text = "";
+                          Navigator.of(context).pop();
+                        },
                       ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _openCustomShortcutDialog(_pageTitle, _currentUrl);
-                        _customURLController.text = "";
-                      },
+                    ),
+                    SizedBox(height: 5),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: ElevatedButton(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'images/icons/heart.png',
+                                width: 20,
+                                color: _shortcutsProvider.activeShortcuts.length > 0 ? Colors.white : Colors.grey,
+                              ),
+                              SizedBox(width: 5),
+                              Flexible(
+                                  child: Text(
+                                'Browse shortcuts',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              )),
+                            ],
+                          ),
+                          onPressed: _shortcutsProvider.activeShortcuts.length > 0
+                              ? () {
+                                  Navigator.of(context).pop();
+                                  _openShortcutsDialog();
+                                  _customURLController.text = "";
+                                }
+                              : null),
+                    ),
+                    SizedBox(height: 5),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: ElevatedButton(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'images/icons/heart_add.png',
+                              width: 20,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 8),
+                            Flexible(
+                                child: Text(
+                              'Save as shortcut',
+                              style: TextStyle(fontSize: 12),
+                              textAlign: TextAlign.center,
+                            )),
+                          ],
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _openCustomShortcutDialog(_pageTitle, _currentUrl);
+                          _customURLController.text = "";
+                        },
+                      ),
                     ),
                     if (widget.inAppWebview != null)
                       Padding(
-                        padding: const EdgeInsets.only(top: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: ElevatedButton(
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            //mainAxisAlignment: MainAxisAlign,
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.search, size: 20),
                               SizedBox(width: 8),
-                              Text('Find in page', style: TextStyle(fontSize: 12)),
+                              Flexible(
+                                  child: Text(
+                                'Find in page',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              )),
                             ],
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
                             widget.callFindInPage();
                           },
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: ElevatedButton(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.open_in_browser_outlined, size: 20),
+                            SizedBox(width: 8),
+                            Flexible(
+                                child: Text(
+                              'External browser',
+                              style: TextStyle(fontSize: 12),
+                              textAlign: TextAlign.center,
+                            )),
+                          ],
+                        ),
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          if (await canLaunchUrl(Uri.parse(_currentUrl))) {
+                            await launchUrl(Uri.parse(_currentUrl), mode: LaunchMode.externalApplication);
+                          }
+                        },
+                      ),
+                    ),
+                    if (widget.inAppWebview != null && Platform.isAndroid)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Column(
+                          children: [
+                            Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'ZOOM',
+                                  style: TextStyle(fontSize: 8),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Icon(MdiIcons.minus),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        if (newOptions.android.initialScale == 0) {
+                                          newOptions.android.initialScale = 350;
+                                        } else if (newOptions.android.initialScale > 100) {
+                                          newOptions.android.initialScale -= 5;
+                                        }
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                      }
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Icon(MdiIcons.refresh),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        newOptions.android.initialScale = 0;
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = 0;
+                                      }
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Icon(MdiIcons.plus),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        if (newOptions.android.initialScale == 0) {
+                                          newOptions.android.initialScale = 100;
+                                        } else if (newOptions.android.initialScale < 350) {
+                                          newOptions.android.initialScale += 5;
+                                        }
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     if (widget.inAppWebview != null)
@@ -447,9 +587,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: _themeProvider.background,
+                backgroundColor: _themeProvider.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: _themeProvider.background,
+                  backgroundColor: _themeProvider.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 25,
@@ -472,17 +612,17 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState.validate()) {
-      String url = _customURLController.text.toLowerCase().replaceAll(" ", "");
-      if (!url.contains("https://") || !url.contains("http://")) {
+      String url = _customURLController.text.replaceAll(" ", "");
+      if (!url.toLowerCase().contains("https://") && !url.toLowerCase().contains("http://")) {
         url = 'https://' + url;
-      } else if (url.contains("http://")) {
+      } else if (url.toLowerCase().contains("http://")) {
         url = url.replaceAll("http://", "https://");
       }
 
       if (widget.inAppWebview != null) {
         widget.inAppWebview.loadUrl(
           urlRequest: URLRequest(
-            url: Uri.parse(url),
+            url: WebUri(url),
           ),
         );
       } else {
@@ -522,7 +662,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -556,7 +696,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 ),
                                 textCapitalization: TextCapitalization.sentences,
                                 controller: _customShortcutNameController,
-                                maxLength: 20,
+                                maxLength: 30,
                                 maxLines: 1,
                                 decoration: InputDecoration(
                                   counterText: "",
@@ -662,9 +802,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 25,

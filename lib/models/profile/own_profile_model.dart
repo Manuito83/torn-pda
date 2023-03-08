@@ -5,8 +5,9 @@
 // Dart imports:
 import 'dart:convert';
 
-OwnProfileExtended ownProfileExtendedFromJson(String str) =>
-    OwnProfileExtended.fromJson(json.decode(str));
+import 'own_profile_basic.dart';
+
+OwnProfileExtended ownProfileExtendedFromJson(String str) => OwnProfileExtended.fromJson(json.decode(str));
 
 String ownProfileExtendedToJson(OwnProfileExtended data) => json.encode(data.toJson());
 
@@ -29,6 +30,7 @@ class OwnProfileExtended {
     this.name,
     this.propertyId,
     this.serverTime,
+    this.moneyOnHand,
     this.life,
     this.status,
     this.job,
@@ -65,6 +67,7 @@ class OwnProfileExtended {
   String name;
   int propertyId;
   int serverTime;
+  int moneyOnHand;
   Life life;
   Status status;
   Job job;
@@ -102,6 +105,7 @@ class OwnProfileExtended {
       name: json["name"] == null ? null : json["name"],
       propertyId: json["property_id"] == null ? null : json["property_id"],
       serverTime: json["server_time"] == null ? null : json["server_time"],
+      moneyOnHand: json["money_onhand"] == null ? 0 : json["money_onhand"],
       life: json["life"] == null ? null : Life.fromJson(json["life"]),
       status: json["status"] == null ? null : Status.fromJson(json["status"]),
       job: json["job"] == null ? null : Job.fromJson(json["job"]),
@@ -149,6 +153,7 @@ class OwnProfileExtended {
         "name": name == null ? null : name,
         "property_id": propertyId == null ? null : propertyId,
         "server_time": serverTime == null ? null : serverTime,
+        "money_onhand": moneyOnHand == null ? null : moneyOnHand,
         "life": life == null ? null : life.toJson(),
         "status": status == null ? null : status.toJson(),
         "job": job == null ? null : job.toJson(),
@@ -160,9 +165,7 @@ class OwnProfileExtended {
         "energy": energy == null ? null : energy.toJson(),
         "nerve": nerve == null ? null : nerve.toJson(),
         "chain": chain == null ? null : chain.toJson(),
-        "networth": networth == null
-            ? null
-            : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
+        "networth": networth == null ? null : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
         "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
         "events": events,
         "messages": messages,
@@ -479,7 +482,7 @@ class Job {
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         position: json["position"] == null ? null : json["position"],
         companyId: json["company_id"] == null ? null : json["company_id"],
-        companyName: json["company_name"] == null ? null : json["company_name"],
+        companyName: json["company_name"] == null ? null : json["company_name"].toString(),
         companyType: json["company_type"] == null ? null : json["company_type"],
       );
 
@@ -559,38 +562,6 @@ class States {
       };
 }
 
-class Status {
-  Status({
-    this.description,
-    this.details,
-    this.state,
-    this.color,
-    this.until,
-  });
-
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
-
-  factory Status.fromJson(Map<String, dynamic> json) => Status(
-        description: json["description"] == null ? null : json["description"],
-        details: json["details"] == null ? null : json["details"],
-        state: json["state"] == null ? null : json["state"],
-        color: json["color"] == null ? null : json["color"],
-        until: json["until"] == null ? null : json["until"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "description": description == null ? null : description,
-        "details": details == null ? null : details,
-        "state": state == null ? null : state,
-        "color": color == null ? null : color,
-        "until": until == null ? null : until,
-      };
-}
-
 class Travel {
   Travel({
     this.destination,
@@ -621,6 +592,8 @@ class Travel {
 
 class TornIcons {
   TornIcons({
+    this.icon3,
+    this.icon4,
     this.icon12,
     this.icon13,
     this.icon15,
@@ -628,7 +601,11 @@ class TornIcons {
     this.icon17,
     this.icon18,
     this.icon20,
+    this.icon29,
     this.icon30,
+    this.icon31,
+    this.icon32,
+    this.icon33,
     this.icon37,
     this.icon39,
     this.icon40,
@@ -661,11 +638,15 @@ class TornIcons {
     this.icon78,
     this.icon79,
     this.icon80,
+    this.icon81,
+    this.icon83,
     this.icon84,
     this.icon85,
     this.icon86,
   });
 
+  String icon3;
+  String icon4;
   String icon12;
   String icon13;
   String icon15;
@@ -673,7 +654,11 @@ class TornIcons {
   String icon17;
   String icon18;
   String icon20;
+  String icon29;
   String icon30;
+  String icon31;
+  String icon32;
+  String icon33;
   String icon37;
   String icon39;
   String icon40;
@@ -706,100 +691,117 @@ class TornIcons {
   String icon78;
   String icon79;
   String icon80;
+  String icon81;
+  String icon83;
   String icon84;
   String icon85;
   String icon86;
 
   factory TornIcons.fromJson(Map<String, dynamic> json) => TornIcons(
-    icon12: json["icon12"] == null ? null : json["icon12"],
-    icon13: json["icon13"] == null ? null : json["icon13"],
-    icon15: json["icon15"] == null ? null : json["icon15"],
-    icon16: json["icon16"] == null ? null : json["icon16"],
-    icon17: json["icon17"] == null ? null : json["icon17"],
-    icon18: json["icon18"] == null ? null : json["icon18"],
-    icon20: json["icon20"] == null ? null : json["icon20"],
-    icon30: json["icon30"] == null ? null : json["icon30"],
-    icon37: json["icon37"] == null ? null : json["icon37"],
-    icon39: json["icon39"] == null ? null : json["icon39"],
-    icon40: json["icon40"] == null ? null : json["icon40"],
-    icon41: json["icon41"] == null ? null : json["icon41"],
-    icon42: json["icon42"] == null ? null : json["icon42"],
-    icon43: json["icon43"] == null ? null : json["icon43"],
-    icon44: json["icon44"] == null ? null : json["icon44"],
-    icon45: json["icon45"] == null ? null : json["icon45"],
-    icon46: json["icon46"] == null ? null : json["icon46"],
-    icon47: json["icon47"] == null ? null : json["icon47"],
-    icon48: json["icon48"] == null ? null : json["icon48"],
-    icon49: json["icon49"] == null ? null : json["icon49"],
-    icon50: json["icon50"] == null ? null : json["icon50"],
-    icon51: json["icon51"] == null ? null : json["icon51"],
-    icon52: json["icon52"] == null ? null : json["icon52"],
-    icon53: json["icon53"] == null ? null : json["icon53"],
-    icon57: json["icon57"] == null ? null : json["icon57"],
-    icon58: json["icon58"] == null ? null : json["icon58"],
-    icon59: json["icon59"] == null ? null : json["icon59"],
-    icon60: json["icon60"] == null ? null : json["icon60"],
-    icon61: json["icon61"] == null ? null : json["icon61"],
-    icon63: json["icon63"] == null ? null : json["icon63"],
-    icon64: json["icon64"] == null ? null : json["icon64"],
-    icon65: json["icon65"] == null ? null : json["icon65"],
-    icon66: json["icon66"] == null ? null : json["icon66"],
-    icon67: json["icon67"] == null ? null : json["icon67"],
-    icon68: json["icon68"] == null ? null : json["icon68"],
-    icon75: json["icon75"] == null ? null : json["icon75"],
-    icon76: json["icon76"] == null ? null : json["icon76"],
-    icon78: json["icon78"] == null ? null : json["icon78"],
-    icon79: json["icon79"] == null ? null : json["icon79"],
-    icon80: json["icon80"] == null ? null : json["icon80"],
-    icon84: json["icon84"] == null ? null : json["icon84"],
-    icon85: json["icon85"] == null ? null : json["icon85"],
-    icon86: json["icon86"] == null ? null : json["icon86"],
-  );
+        icon3: json["icon3"] == null ? null : json["icon3"],
+        icon4: json["icon4"] == null ? null : json["icon4"],
+        icon12: json["icon12"] == null ? null : json["icon12"],
+        icon13: json["icon13"] == null ? null : json["icon13"],
+        icon15: json["icon15"] == null ? null : json["icon15"],
+        icon16: json["icon16"] == null ? null : json["icon16"],
+        icon17: json["icon17"] == null ? null : json["icon17"],
+        icon18: json["icon18"] == null ? null : json["icon18"],
+        icon20: json["icon20"] == null ? null : json["icon20"],
+        icon29: json["icon29"] == null ? null : json["icon29"],
+        icon30: json["icon30"] == null ? null : json["icon30"],
+        icon31: json["icon31"] == null ? null : json["icon31"],
+        icon32: json["icon32"] == null ? null : json["icon32"],
+        icon33: json["icon33"] == null ? null : json["icon33"],
+        icon37: json["icon37"] == null ? null : json["icon37"],
+        icon39: json["icon39"] == null ? null : json["icon39"],
+        icon40: json["icon40"] == null ? null : json["icon40"],
+        icon41: json["icon41"] == null ? null : json["icon41"],
+        icon42: json["icon42"] == null ? null : json["icon42"],
+        icon43: json["icon43"] == null ? null : json["icon43"],
+        icon44: json["icon44"] == null ? null : json["icon44"],
+        icon45: json["icon45"] == null ? null : json["icon45"],
+        icon46: json["icon46"] == null ? null : json["icon46"],
+        icon47: json["icon47"] == null ? null : json["icon47"],
+        icon48: json["icon48"] == null ? null : json["icon48"],
+        icon49: json["icon49"] == null ? null : json["icon49"],
+        icon50: json["icon50"] == null ? null : json["icon50"],
+        icon51: json["icon51"] == null ? null : json["icon51"],
+        icon52: json["icon52"] == null ? null : json["icon52"],
+        icon53: json["icon53"] == null ? null : json["icon53"],
+        icon57: json["icon57"] == null ? null : json["icon57"],
+        icon58: json["icon58"] == null ? null : json["icon58"],
+        icon59: json["icon59"] == null ? null : json["icon59"],
+        icon60: json["icon60"] == null ? null : json["icon60"],
+        icon61: json["icon61"] == null ? null : json["icon61"],
+        icon63: json["icon63"] == null ? null : json["icon63"],
+        icon64: json["icon64"] == null ? null : json["icon64"],
+        icon65: json["icon65"] == null ? null : json["icon65"],
+        icon66: json["icon66"] == null ? null : json["icon66"],
+        icon67: json["icon67"] == null ? null : json["icon67"],
+        icon68: json["icon68"] == null ? null : json["icon68"],
+        icon75: json["icon75"] == null ? null : json["icon75"],
+        icon76: json["icon76"] == null ? null : json["icon76"],
+        icon78: json["icon78"] == null ? null : json["icon78"],
+        icon79: json["icon79"] == null ? null : json["icon79"],
+        icon80: json["icon80"] == null ? null : json["icon80"],
+        icon81: json["icon81"] == null ? null : json["icon81"],
+        icon83: json["icon83"] == null ? null : json["icon83"],
+        icon84: json["icon84"] == null ? null : json["icon84"],
+        icon85: json["icon85"] == null ? null : json["icon85"],
+        icon86: json["icon86"] == null ? null : json["icon86"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "icon12": icon12 == null ? null : icon12,
-    "icon13": icon13 == null ? null : icon13,
-    "icon15": icon15 == null ? null : icon15,
-    "icon16": icon16 == null ? null : icon16,
-    "icon17": icon17 == null ? null : icon17,
-    "icon18": icon18 == null ? null : icon18,
-    "icon20": icon20 == null ? null : icon20,
-    "icon30": icon30 == null ? null : icon30,
-    "icon37": icon37 == null ? null : icon37,
-    "icon39": icon39 == null ? null : icon39,
-    "icon40": icon40 == null ? null : icon40,
-    "icon41": icon41 == null ? null : icon41,
-    "icon42": icon42 == null ? null : icon42,
-    "icon43": icon43 == null ? null : icon43,
-    "icon44": icon44 == null ? null : icon44,
-    "icon45": icon45 == null ? null : icon45,
-    "icon46": icon46 == null ? null : icon46,
-    "icon47": icon47 == null ? null : icon47,
-    "icon48": icon48 == null ? null : icon48,
-    "icon49": icon49 == null ? null : icon49,
-    "icon50": icon50 == null ? null : icon50,
-    "icon51": icon51 == null ? null : icon51,
-    "icon52": icon52 == null ? null : icon52,
-    "icon53": icon53 == null ? null : icon53,
-    "icon57": icon57 == null ? null : icon57,
-    "icon58": icon58 == null ? null : icon58,
-    "icon59": icon59 == null ? null : icon59,
-    "icon60": icon60 == null ? null : icon60,
-    "icon61": icon61 == null ? null : icon61,
-    "icon63": icon63 == null ? null : icon63,
-    "icon64": icon64 == null ? null : icon64,
-    "icon65": icon65 == null ? null : icon65,
-    "icon66": icon66 == null ? null : icon66,
-    "icon67": icon67 == null ? null : icon67,
-    "icon68": icon68 == null ? null : icon68,
-    "icon75": icon75 == null ? null : icon75,
-    "icon76": icon76 == null ? null : icon76,
-    "icon78": icon78 == null ? null : icon78,
-    "icon79": icon79 == null ? null : icon79,
-    "icon80": icon80 == null ? null : icon80,
-    "icon84": icon85 == null ? null : icon84,
-    "icon85": icon85 == null ? null : icon85,
-    "icon86": icon86 == null ? null : icon86,
-  };
-
+        "icon3": icon3 == null ? null : icon3,
+        "icon4": icon4 == null ? null : icon4,
+        "icon12": icon12 == null ? null : icon12,
+        "icon13": icon13 == null ? null : icon13,
+        "icon15": icon15 == null ? null : icon15,
+        "icon16": icon16 == null ? null : icon16,
+        "icon17": icon17 == null ? null : icon17,
+        "icon18": icon18 == null ? null : icon18,
+        "icon20": icon20 == null ? null : icon20,
+        "icon29": icon29 == null ? null : icon29,
+        "icon30": icon30 == null ? null : icon30,
+        "icon31": icon31 == null ? null : icon31,
+        "icon32": icon32 == null ? null : icon32,
+        "icon33": icon33 == null ? null : icon33,
+        "icon37": icon37 == null ? null : icon37,
+        "icon39": icon39 == null ? null : icon39,
+        "icon40": icon40 == null ? null : icon40,
+        "icon41": icon41 == null ? null : icon41,
+        "icon42": icon42 == null ? null : icon42,
+        "icon43": icon43 == null ? null : icon43,
+        "icon44": icon44 == null ? null : icon44,
+        "icon45": icon45 == null ? null : icon45,
+        "icon46": icon46 == null ? null : icon46,
+        "icon47": icon47 == null ? null : icon47,
+        "icon48": icon48 == null ? null : icon48,
+        "icon49": icon49 == null ? null : icon49,
+        "icon50": icon50 == null ? null : icon50,
+        "icon51": icon51 == null ? null : icon51,
+        "icon52": icon52 == null ? null : icon52,
+        "icon53": icon53 == null ? null : icon53,
+        "icon57": icon57 == null ? null : icon57,
+        "icon58": icon58 == null ? null : icon58,
+        "icon59": icon59 == null ? null : icon59,
+        "icon60": icon60 == null ? null : icon60,
+        "icon61": icon61 == null ? null : icon61,
+        "icon63": icon63 == null ? null : icon63,
+        "icon64": icon64 == null ? null : icon64,
+        "icon65": icon65 == null ? null : icon65,
+        "icon66": icon66 == null ? null : icon66,
+        "icon67": icon67 == null ? null : icon67,
+        "icon68": icon68 == null ? null : icon68,
+        "icon75": icon75 == null ? null : icon75,
+        "icon76": icon76 == null ? null : icon76,
+        "icon78": icon78 == null ? null : icon78,
+        "icon79": icon79 == null ? null : icon79,
+        "icon80": icon80 == null ? null : icon80,
+        "icon81": icon81 == null ? null : icon81,
+        "icon83": icon83 == null ? null : icon83,
+        "icon84": icon85 == null ? null : icon84,
+        "icon85": icon85 == null ? null : icon85,
+        "icon86": icon86 == null ? null : icon86,
+      };
 }

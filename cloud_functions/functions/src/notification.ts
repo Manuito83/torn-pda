@@ -11,11 +11,19 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
       energy.maximum === energy.current &&
       (subscriber.energyLastCheckFull === false)
     ) {
+
+      let title = `Full Energy Bar`;
+      let body = `Your energy is full, go spend on something!`;
+      if (subscriber.discrete) {
+        title = `E`;
+        body = `Full`;
+      }
+
       promises.push(
         sendNotificationToUser(
           subscriber.token,
-          "Full Energy Bar",
-          "Your energy is full, go spend on something!",
+          title,
+          body,
           "notification_energy",
           "#00FF00",
           "Alerts energy",
@@ -68,11 +76,19 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
       nerve.maximum === nerve.current &&
       (subscriber.nerveLastCheckFull === false)
     ) {
+
+      let title = `Full Nerve Bar`;
+      let body = `Your nerve is full, go crazy!`;
+      if (subscriber.discrete) {
+        title = `N`;
+        body = `Full`;
+      }
+
       promises.push(
         sendNotificationToUser(
           subscriber.token,
-          "Full Nerve Bar",
-          "Your nerve is full, go crazy!",
+          title,
+          body,
           "notification_nerve",
           "#FF0000",
           "Alerts nerve",
@@ -179,11 +195,19 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
       );
 
       if (status !== 'Online') {
+
+        let title = `Hospital admission`;
+        let body = `You have been hospitalised!`;
+        if (subscriber.discrete) {
+          title = `H`;
+          body = `Adm`;
+        }
+
         promises.push(
           sendNotificationToUser(
             subscriber.token,
-            `Hospital admission`,
-            `You have been hospitalised!`,
+            title,
+            body,
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
@@ -215,11 +239,19 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
       );
 
       if (status !== 'Online') {
+
+        let title = `Hospital time ending`;
+        let body = `You are about to be released from the hospital, grab your things!`;
+        if (subscriber.discrete) {
+          title = `H`;
+          body = `End`;
+        }
+
         promises.push(
           sendNotificationToUser(
             subscriber.token,
-            `Hospital time ending`,
-            `You are about to be released from the hospital, grab your things!`,
+            title,
+            body,
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
@@ -250,11 +282,19 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
       );
 
       if (status !== 'Online') {
+
+        let title = `You are out of hospital!`;
+        let body = `You left hospital earlier than expected!`;
+        if (subscriber.discrete) {
+          title = `H`;
+          body = `Out`;
+        }
+
         promises.push(
           sendNotificationToUser(
             subscriber.token,
-            `You are out of hospital!`,
-            `You left hospital earlier than expected!`,
+            title,
+            body,
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
@@ -300,11 +340,19 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
       cooldowns.drug === 0 &&
       (subscriber.drugsInfluence === true)
     ) {
+
+      let title = `Drug cooldown expired`;
+      let body = `Hey junkie! Your drugs cooldown has expired, go get some more!`;
+      if (subscriber.discrete) {
+        title = `D`;
+        body = `Exp`;
+      }
+
       promises.push(
         sendNotificationToUser(
           subscriber.token,
-          "Drug cooldown expired",
-          "Hey junkie! Your drugs cooldown has expired, go get some more!",
+          title,
+          body,
           "notification_drugs",
           "#FF00c3",
           "Alerts drugs",
@@ -357,11 +405,19 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
       icons.icon18 &&
       subscriber.racingSent === false
     ) {
+
+      let title = `Race finished`;
+      let body = `Get in there ${userStats.name}!`;
+      if (subscriber.discrete) {
+        title = `R`;
+        body = `End`;
+      }
+
       promises.push(
         sendNotificationToUser(
           subscriber.token,
-          "Race finished",
-          `Get in there ${userStats.name}!`,
+          title,
+          body,
           "notification_racing",
           "#FF9900",
           "Alerts racing",
@@ -478,24 +534,41 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
       let tornMessageId = "";
 
       if (newMessages === 1) {
-        notificationTitle = "You have a new message from " + newMessagesSenders[0];
+        notificationTitle = "Message from " + newMessagesSenders[0];
         notificationSubtitle = `Subject: "${newMessagesSubjects[0]}"`;
         tornMessageId = knownMessages[0];
       }
       else if (newMessages > 1 && newMessagesSenders.length === 1) {
-        notificationTitle = `You have ${newMessages} new messages from ${newMessagesSenders[0]}`;
+        notificationTitle = `${newMessages} new messages from ${newMessagesSenders[0]}`;
         notificationSubtitle = `Subjects: "${newMessagesSubjects.join('", "')}"`;
       }
       else if (newMessages > 1 && newMessagesSenders.length > 1) {
-        notificationTitle = `You have ${newMessages} new messages from ${newMessagesSenders.join(", ")}`;
+        notificationTitle = `${newMessages} new messages from ${newMessagesSenders.join(", ")}`;
         notificationSubtitle = `Subjects: "${newMessagesSubjects.join('", "')}"`;
+      }
+
+      let title = notificationTitle;
+      let body = notificationSubtitle;
+      if (subscriber.discrete) {
+        title = `M`;
+        let sender = "";
+        if (newMessages === 1) {
+          sender = `${newMessagesSubjects[0]}`;
+        }
+        else if (newMessages > 1 && newMessagesSenders.length === 1) {
+          sender = `${newMessagesSenders[0]}`;
+        }
+        else if (newMessages > 1 && newMessagesSenders.length > 1) {
+          sender = `${newMessagesSenders.join(", ")}`;
+        }
+        body = `${sender}`;
       }
 
       promises.push(
         sendNotificationToUser(
           subscriber.token,
-          notificationTitle,
-          notificationSubtitle,
+          title,
+          body,
           "notification_messages",
           "#7B1FA2",
           "Alerts messages",
@@ -692,11 +765,18 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
         notificationSubtitle = notificationSubtitle.replace(/ to collect your funds./g, '');
         notificationSubtitle = notificationSubtitle.replace(/ Please click here./g, '');
 
+        let title = notificationTitle;
+        let body = notificationSubtitle;
+        if (subscriber.discrete) {
+          title = `Event`;
+          body = ` `;
+        }
+
         promises.push(
           sendNotificationToUser(
             subscriber.token,
-            notificationTitle,
-            notificationSubtitle,
+            title,
+            body,
             "notification_events",
             "#5B1FA2",
             "Alerts events",
@@ -758,11 +838,18 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           if (matches !== null) tradeId = matches[1];
         }
 
+        let title = notificationTitle;
+        let body = notificationSubtitle;
+        if (subscriber.discrete) {
+          title = `Trade`;
+          body = ` `;
+        }
+
         promises.push(
           sendNotificationToUser(
             subscriber.token,
-            notificationTitle,
-            notificationSubtitle,
+            title,
+            body,
             "notification_trades",
             "#389500",
             "Alerts trades",
@@ -821,11 +908,18 @@ export async function sendForeignRestockNotification(dbStocks: any, subscriber: 
           })
       );
 
+      let title = notificationTitle;
+      let body = notificationSubtitle;
+      if (subscriber.discrete) {
+        title = `Stock`;
+        body = ` `;
+      }
+
       promises.push(
         sendNotificationToUser(
           subscriber.token,
-          notificationTitle,
-          notificationSubtitle,
+          title,
+          body,
           "notification_travel",
           "#389500",
           "Alerts restocks",
@@ -924,11 +1018,18 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
           })
       );
 
+      let title = notificationTitle;
+      let body = notificationSubtitle;
+      if (subscriber.discrete) {
+        title = `Shares`;
+        body = ` `;
+      }
+
       promises.push(
         sendNotificationToUser(
           subscriber.token,
-          notificationTitle,
-          notificationSubtitle,
+          title,
+          body,
           "notification_stock_market",
           "#389500",
           "Alerts stocks",

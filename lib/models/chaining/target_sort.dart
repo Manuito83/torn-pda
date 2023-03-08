@@ -3,12 +3,16 @@ enum TargetSortType {
   levelAsc,
   respectDes,
   respectAsc,
+  ffDes,
+  ffAsc,
   nameDes,
   nameAsc,
   lifeDes,
   lifeAsc,
   colorAsc,
   colorDes,
+  onlineDes,
+  onlineAsc,
 }
 
 class TargetSort {
@@ -29,6 +33,12 @@ class TargetSort {
       case TargetSortType.respectAsc:
         description = 'Sort by respect (asc)';
         break;
+      case TargetSortType.ffDes:
+        description = 'Sort by fair fight (des)';
+        break;
+      case TargetSortType.ffAsc:
+        description = 'Sort by fair fight (asc)';
+        break;
       case TargetSortType.nameDes:
         description = 'Sort by name (des)';
         break;
@@ -46,6 +56,12 @@ class TargetSort {
         break;
       case TargetSortType.colorAsc:
         description = 'Sort by color (G-Y-R-#)';
+        break;
+      case TargetSortType.onlineDes:
+        description = 'Sort online';
+        break;
+      case TargetSortType.onlineAsc:
+        description = 'Sort offline';
         break;
     }
   }

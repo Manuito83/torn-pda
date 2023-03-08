@@ -1,20 +1,20 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/gestures.dart';
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
-import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -23,20 +23,24 @@ import 'package:share/share.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
+import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
+import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
+import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 
 // Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
-import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -47,9 +51,6 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/emoji_parser.dart';
-import 'package:torn_pda/utils/external/nuke_revive.dart';
-import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -123,7 +124,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future _apiFetched;
   bool _apiGoodData = false;
-  String _apiError = '';
+  ApiError _apiError = ApiError();
   int _apiRetries = 0;
 
   OwnProfileExtended _user;
@@ -137,6 +138,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   UserDetailsProvider _userProv;
   ShortcutsProvider _shortcutsProv;
   WebViewProvider _webViewProvider;
+  UserController _u = Get.put(UserController());
 
   int _travelNotificationAhead;
   int _travelAlarmAhead;
@@ -202,7 +204,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
-  BazaarModel _bazaarModel;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
@@ -262,6 +263,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _sharedEffTotal = "";
   var _sharedJobPoints = "";
 
+  StatsChartTornStats _statsChartModel;
+  Future _statsChartDataFetched;
+
   @override
   void initState() {
     super.initState();
@@ -278,6 +282,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
+    _startApiTimer();
+
+    analytics.setCurrentScreen(screenName: 'profile');
+  }
+
+  void _startApiTimer() {
+    _tickerCallApi?.cancel();
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
       _fetchApi();
 
@@ -286,12 +297,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _miscTick++;
       } else {
         _getMiscCardInfo();
-        _getBazaarInfo();
         _miscTick = 0;
       }
     });
-
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'profile'});
   }
 
   void _requestIOSPermissions() {
@@ -306,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _tickerCallApi.cancel();
+    _tickerCallApi?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -315,12 +323,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       await _fetchApi();
+      _startApiTimer();
       if (_apiGoodData) {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
         _getMiscCardInfo();
-        _getBazaarInfo();
+        _getStatsChart();
       }
+    } else if (state == AppLifecycleState.paused) {
+      _tickerCallApi?.cancel();
     }
   }
 
@@ -330,6 +341,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _shortcutsProv = Provider.of<ShortcutsProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: new Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -355,6 +367,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       ),
       body: Container(
+        color: _themeProvider.canvas,
         child: FutureBuilder(
           future: _apiFetched,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -364,7 +377,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   onRefresh: () async {
                     _fetchApi();
                     _getMiscCardInfo();
-                    _getBazaarInfo();
                     _miscTick = 0;
                     await Future.delayed(Duration(seconds: 1));
                   },
@@ -474,7 +486,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 );
               } else {
-                var error = _apiError.isEmpty ? "" : ": $_apiError";
                 return RefreshIndicator(
                   onRefresh: () async {
                     _fetchApi();
@@ -501,7 +512,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Column(
                             children: [
                               Text(
-                                'There was an error$error\n\n'
+                                'There was an error: ${_apiError.errorReason}',
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_apiError.pdaErrorDetails.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 20),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Error details:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 5),
+                                      Text(
+                                        _apiError.pdaErrorDetails,
+                                        style: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 10,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              SizedBox(height: 20),
+                              Text(
                                 'Torn PDA is retrying automatically. '
                                 'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
                                 textAlign: TextAlign.center,
@@ -672,6 +711,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             if (newOptions.oCrimesReactivated) {
               _getFactionCrimes();
             }
+            if (_settingsProvider.tornStatsChartDateTime == 0) {
+              _getStatsChart();
+            }
           },
         )
       ],
@@ -780,10 +822,38 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       return InkWell(
         onLongPress: () {
-          _launchBrowser(url: thisShortcut.url, dialogRequested: false);
+          String url = thisShortcut.url;
+          if (thisShortcut.addPlayerId != null) {
+            // Avoid null objects coming before the introduction of this replacement (v2.9.4)
+            if (thisShortcut.addPlayerId) {
+              url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+            }
+            if (thisShortcut.addFactionId) {
+              url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+            }
+            if (thisShortcut.addCompanyId) {
+              url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+            }
+          }
+
+          _launchBrowser(url: url, dialogRequested: false);
         },
         onTap: () async {
-          _launchBrowser(url: thisShortcut.url, dialogRequested: true);
+          String url = thisShortcut.url;
+          if (thisShortcut.addPlayerId != null) {
+            // Avoid null objects coming before the introduction of this replacement (v2.9.4)
+            if (thisShortcut.addPlayerId) {
+              url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+            }
+            if (thisShortcut.addFactionId) {
+              url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+            }
+            if (thisShortcut.addCompanyId) {
+              url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+            }
+          }
+
+          _launchBrowser(url: url, dialogRequested: true);
         },
         child: Card(
           shape: RoundedRectangleBorder(
@@ -850,7 +920,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
                 Text(
-                  'TAP OPTIONS BUTTON TO CONFIGURE',
+                  'Tap the settings icon to configure',
                   style: TextStyle(
                     color: Colors.orange[900],
                     fontStyle: FontStyle.italic,
@@ -875,7 +945,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           descriptionText += '- ${_user.status.details}';
         }
 
-        // Causing player ID (jailed of hospitalised the user)
+        // Causing player ID (jailed of hospitalized the user)
         RegExp expHtml = RegExp(r"<[^>]*>");
         var matches = expHtml.allMatches(descriptionText).map((m) => m[0]);
         String causingId = '';
@@ -970,56 +1040,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    Widget nukeRevive() {
-      if (_user.status.state == 'Hospital' && _nukeReviveActive) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                child: GestureDetector(
-                  child: Image.asset('images/icons/nuke-revive.png', width: 24),
-                  onTap: () {
-                    _openNukeReviveDialog(context);
-                  },
-                ),
-              ),
-              SizedBox(width: 10),
-              Flexible(child: Text("Request a revive (Nuke)")),
-            ],
-          ),
-        );
-      } else {
-        return SizedBox.shrink();
-      }
-    }
-
-    Widget uhcRevive() {
-      if (_user.status.state == 'Hospital' && _uhcReviveActive) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                child: GestureDetector(
-                  child: Image.asset('images/icons/uhc_revive.png', width: 24),
-                  onTap: () {
-                    _openUhcReviveDialog(context);
-                  },
-                ),
-              ),
-              SizedBox(width: 10),
-              Flexible(child: Text("Request a revive (UHC)")),
-            ],
-          ),
-        );
-      } else {
-        return SizedBox.shrink();
-      }
-    }
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -1060,13 +1080,32 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ],
                   ),
                   BazaarStatusCard(
-                    bazaarModel: _bazaarModel,
+                    // Careful, in this card we mixed sync with async items, so the miscModel can still be null
+                    bazaarModel: _miscModel?.bazaar,
                     launchBrowser: _launchBrowser,
                   ),
                   if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
-                  nukeRevive(),
-                  uhcRevive(),
+                  if (_user.status.state == 'Hospital' && _nukeReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: NukeReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
+                  if (_user.status.state == 'Hospital' && _uhcReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: UhcReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1092,7 +1131,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user.status.state == 'Traveling') {
       var startTime = _user.travel.departed;
       var endTime = _user.travel.timestamp;
-      var arrivalSeconds = endTime - startTime;
+      var totalTravelTimeSeconds = endTime - startTime;
 
       var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
       var timeDifference = dateTimeArrival.difference(DateTime.now());
@@ -1106,6 +1145,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timeZoneSetting: _settingsProvider.currentTimeZone,
       ).formatHour;
 
+      double percentage = _getTravelPercentage(totalTravelTimeSeconds);
+      String ballAssetLocation = _flagBallAsset();
+
       return Padding(
         padding: const EdgeInsets.only(top: 10),
         child: Column(
@@ -1113,46 +1155,52 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onLongPress: () => _launchBrowser(url: 'https://www.torn.com', dialogRequested: false),
-                  onTap: () {
-                    _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
-                  },
-                  child: LinearPercentIndicator(
-                    isRTL: _user.travel.destination == "Torn" ? true : false,
-                    center: Text(
-                      diff,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    widgetIndicator: Opacity(
-                      // Make icon transparent when about to pass over text
-                      opacity: _getTravelPercentage(arrivalSeconds) < 0.2 || _getTravelPercentage(arrivalSeconds) > 0.7
-                          ? 1
-                          : 0.3,
-                      child: Padding(
-                        padding: _user.travel.destination == "Torn"
-                            ? const EdgeInsets.only(top: 6, right: 6)
-                            : const EdgeInsets.only(top: 6, left: 10),
-                        child: RotatedBox(
-                          quarterTurns: _user.travel.destination == "Torn" ? 3 : 1,
-                          child: Icon(
-                            Icons.airplanemode_active,
-                            color: Colors.blue[900],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onLongPress: () => _launchBrowser(url: 'https://www.torn.com', dialogRequested: false),
+                      onTap: () {
+                        _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
+                      },
+                      child: LinearPercentIndicator(
+                        padding: null,
+                        barRadius: Radius.circular(10),
+                        isRTL: _user.travel.destination == "Torn" ? true : false,
+                        center: Text(
+                          diff,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        widgetIndicator: Padding(
+                          padding: _user.travel.destination == "Torn"
+                              ? const EdgeInsets.only(top: 7, left: 15)
+                              : const EdgeInsets.only(top: 7, right: 15),
+                          child: Opacity(
+                            // Make icon transparent when about to pass over text
+                            opacity: percentage < 0.2 || percentage > 0.7 ? 1 : 0.3,
+                            child: _user.travel.destination == "Torn"
+                                ? Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
+                                : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
+                          ),
+                        ),
+                        animateFromLastPercent: true,
+                        animation: true,
+                        width: 180,
+                        lineHeight: 18,
+                        progressColor: Colors.blue[200],
+                        backgroundColor: Colors.grey,
+                        percent: percentage,
                       ),
                     ),
-                    animateFromLastPercent: true,
-                    animation: true,
-                    width: 180,
-                    lineHeight: 18,
-                    progressColor: Colors.blue[200],
-                    backgroundColor: Colors.grey,
-                    percent: _getTravelPercentage(arrivalSeconds),
-                  ),
+                    if (ballAssetLocation.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: Image.asset(ballAssetLocation, height: 22),
+                      ),
+                  ],
                 ),
                 if (!_dedicatedTravelCard) _notificationIcon(ProfileNotification.travel),
               ],
@@ -1196,7 +1244,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.background : Colors.white,
+                  primary: _themeProvider.cardColor,
                   side: BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
@@ -1313,7 +1361,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.background : Colors.white,
+                  primary: _themeProvider.cardColor,
                   side: BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
@@ -1568,6 +1616,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: true);
                             },
                             child: LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.green,
@@ -1633,6 +1683,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: true);
                             },
                             child: LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.redAccent,
@@ -1678,6 +1730,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', dialogRequested: true);
                         },
                         child: LinearPercentIndicator(
+                          padding: null,
+                          barRadius: Radius.circular(10),
                           width: 150,
                           lineHeight: 20,
                           progressColor: Colors.amber,
@@ -1748,6 +1802,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               }
                             },
                             child: LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.blue,
@@ -2407,20 +2463,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Image _medicalIcon() {
-    // 0-6 hours
-    if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 21600) {
+  Widget _medicalIcon() {
+    // 0-90 minutes hours
+    if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 5400) {
       return Image.asset('images/icons/cooldowns/medical1.png', width: 20);
-    } // 6-12 hours
-    else if (_user.cooldowns.medical >= 21600 && _user.cooldowns.medical < 43200) {
+    } // 90-180 minutes
+    else if (_user.cooldowns.medical >= 5400 && _user.cooldowns.medical < 10800) {
       return Image.asset('images/icons/cooldowns/medical2.png', width: 20);
-    } // 12-18 hours
-    else if (_user.cooldowns.medical >= 43200 && _user.cooldowns.medical < 64800) {
+    } // 180-270 minutes
+    else if (_user.cooldowns.medical >= 10800 && _user.cooldowns.medical < 16200) {
       return Image.asset('images/icons/cooldowns/medical3.png', width: 20);
-    } // 18-24 hours
-    else if (_user.cooldowns.medical >= 64800 && _user.cooldowns.medical < 86400) {
+    } // 270-360 minutes
+    else if (_user.cooldowns.medical >= 16200 && _user.cooldowns.medical < 21600) {
       return Image.asset('images/icons/cooldowns/medical4.png', width: 20);
-    } // 24+ hours
+    } // 360+ minutes
     else {
       return Image.asset('images/icons/cooldowns/medical5.png', width: 20);
     }
@@ -2570,7 +2626,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       String message = HtmlParser.fix(e.event);
-      message = EmojiParser.fix(message);
+      message = message;
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll('Please click here to continue.', '');
       message = message.replaceAll(' [view]', '.');
@@ -2670,6 +2726,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return Card(
       child: ExpandablePanel(
         controller: _eventsExpController,
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
@@ -2794,7 +2851,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         msg.title = msg.title.toString();
       }
 
-      String title = EmojiParser.fix(msg.title);
+      String title = msg.title;
       Widget insideIcon = _messagesInsideIconCases(msg.type);
 
       IndicatorStyle iconBubble;
@@ -2947,6 +3004,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         controller: _messagesExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
@@ -3223,6 +3281,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         controller: _basicInfoExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
@@ -3273,13 +3332,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 4),
               _jobPoints(),
               SizedBox(height: 8),
-              SelectableText('Battle: ${decimalFormat.format(_miscModel.total)}'),
+              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
                     child: SelectableText(
-                      'Battle (effective): ${decimalFormat.format(totalEffective)}',
+                      'Battle Stats (effective): ${decimalFormat.format(totalEffective)}',
                     ),
                   ),
                   if (totalEffectiveModifier < 0)
@@ -3298,7 +3357,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     )
                 ],
               ),
-              SizedBox(height: 8),
+              if (_settingsProvider.tornStatsChartEnabled && _settingsProvider.tornStatsChartInCollapsedMiscCard)
+                FutureBuilder(
+                  future: _statsChartDataFetched,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_statsChartModel?.data != null) {
+                        return Column(
+                          children: [
+                            SizedBox(height: 20),
+                            SizedBox(
+                              height: 200,
+                              child: StatsChart(
+                                statsData: _statsChartModel,
+                              ),
+                            ),
+                            SizedBox(height: 40),
+                          ],
+                        );
+                      }
+                    }
+                    return SizedBox(height: 8);
+                  },
+                )
+              else
+                SizedBox(height: 8),
               SelectableText('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
               SelectableText('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
               SelectableText('END: ${decimalFormat.format(_miscModel.endurance)}'),
@@ -3446,7 +3529,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              SizedBox(height: 20),
+              if (_settingsProvider.tornStatsChartEnabled)
+                FutureBuilder(
+                  future: _statsChartDataFetched,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_statsChartModel?.data != null) {
+                        return Column(
+                          children: [
+                            SizedBox(height: 40),
+                            SizedBox(
+                              height: 200,
+                              child: StatsChart(
+                                statsData: _statsChartModel,
+                              ),
+                            ),
+                            SizedBox(height: 40),
+                          ],
+                        );
+                      }
+                    }
+                    return SizedBox(height: 20);
+                  },
+                )
+              else
+                SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
@@ -3723,6 +3830,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool bankActive = false;
     bool educationActive = false;
     bool propertyActive = false;
+    bool donatorActive = false;
 
     // DEBUG ******************************
     //_user.icons.icon57 = "Test addiction -" + " long string " * 6;
@@ -3997,7 +4105,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           Flexible(
             child: RichText(
               text: TextSpan(
-                text: "Your education in ",
+                text: "Your course: ",
                 style: DefaultTextStyle.of(context).style,
                 children: <TextSpan>[
                   TextSpan(
@@ -4008,7 +4116,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     */
                   ),
-                  TextSpan(text: " will end in "),
+                  TextSpan(text: ", will end in "),
                   TextSpan(
                     text: "$expiryString",
                     style: TextStyle(color: expiryColor),
@@ -4046,6 +4154,34 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_rentedProperties > 0) {
       showMisc = true;
       propertyActive = true;
+    }
+
+    // DONATOR
+    Widget donatorWidget = SizedBox.shrink();
+    if (_user.icons.icon3 != null || _user.icons.icon4 != null) {
+      showMisc = true;
+      donatorActive = true;
+      String donatorString;
+
+      if (_user.icons.icon3 != null) {
+        donatorString = _user.icons.icon3;
+      } else if (_user.icons.icon4 != null) {
+        donatorString = _user.icons.icon4.replaceAll("Subscriber - Donator status:", "Donator:");
+        donatorString = donatorString.replaceAll("Donator status:", "Donator:");
+      }
+
+      donatorWidget = Row(
+        children: <Widget>[
+          Icon(MdiIcons.starOutline),
+          SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              donatorString,
+              style: DefaultTextStyle.of(context).style,
+            ),
+          ),
+        ],
+      );
     }
 
     if (!showMisc) {
@@ -4098,6 +4234,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Padding(
                     padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
                     child: _rentedPropertiesWidget,
+                  ),
+                if (donatorActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: donatorWidget,
                   ),
               ],
             ),
@@ -4185,6 +4326,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 color: v.value < 0 ? Colors.red : Colors.green,
               ),
             ),
+            if (v.key == "points" && _miscModel != null && _miscModel.points > 0)
+              Text(
+                "  (@\$${moneyFormat.format((v.value.round()) / _miscModel.points)})",
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
           ],
         ),
       );
@@ -4192,6 +4341,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         controller: _networthExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
@@ -4233,8 +4383,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber > limit) limit = _messagesShowNumber;
     if (_eventsShowNumber > limit) limit = _eventsShowNumber;
 
-    var apiResponse = await TornApiCaller.ownExtended(_userProv.basic.userApiKey, limit).getProfileExtended;
-    var apiChain = await TornApiCaller.chain(_userProv.basic.userApiKey).getChainStatus;
+    var apiResponse = await TornApiCaller().getProfileExtended(limit: limit);
+    var apiChain = await TornApiCaller().getChainStatus();
 
     if (mounted) {
       setState(() {
@@ -4268,8 +4418,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _apiRetries++;
           } else {
             _apiGoodData = false;
-            var error = apiResponse as ApiError;
-            _apiError = error.errorReason;
+            _apiError = apiResponse as ApiError;
             _apiRetries = 0;
           }
         }
@@ -4280,11 +4429,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // As part of MiscCardInfo()
     //  - (sync) Education, money and skills with miscInfo call
     //  - (async) OC Crimes (both types) with AA call or from events
-    // Separately
     //  - (async) Bazaar
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
-      _getBazaarInfo();
+      _statsChartDataFetched = _getStatsChart();
     }
 
     _retrievePendingNotifications();
@@ -4292,13 +4440,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getMiscCardInfo() async {
     try {
-      var miscApiResponse = await TornApiCaller.ownMisc(_userProv.basic.userApiKey).getProfileMisc;
+      var miscApiResponse = await TornApiCaller().getProfileMisc();
 
-      var educationResponse = await TornApiCaller.education(_userProv.basic.userApiKey).getEducation;
+      if (_tornEducationModel == null) {
+        _tornEducationModel = await TornApiCaller().getEducation();
+      }
 
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
-      if (miscApiResponse is OwnProfileMisc && educationResponse is TornEducationModel) {
+      if (miscApiResponse is OwnProfileMisc && _tornEducationModel is TornEducationModel) {
         // Get this async
         if (_settingsProvider.oCrimesEnabled) {
           _getFactionCrimes();
@@ -4316,7 +4466,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         setState(() {
           _miscModel = miscApiResponse;
           _miscApiFetchedOnce = true;
-          _tornEducationModel = educationResponse;
         });
       }
     } catch (e) {
@@ -4324,12 +4473,46 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
+  Future _getStatsChart() async {
+    try {
+      if (!_settingsProvider.tornStatsChartEnabled) return;
+
+      DateTime lastFetched = DateTime.fromMillisecondsSinceEpoch(_settingsProvider.tornStatsChartDateTime);
+
+      if (DateTime.now().difference(lastFetched).inHours < 26) {
+        var savedChart = await Prefs().getTornStatsChartSave();
+        if (savedChart.isNotEmpty) {
+          setState(() {
+            _statsChartModel = statsChartTornStatsFromJson(savedChart);
+          });
+          return;
+        }
+      }
+
+      String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/battlestats/graph';
+      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 2));
+      if (resp.statusCode == 200) {
+        StatsChartTornStats statsJson = statsChartTornStatsFromJson(resp.body);
+        if (statsJson != null && !statsJson.message.contains("ERROR")) {
+          setState(() {
+            _statsChartModel = statsJson;
+          });
+
+          Prefs().setTornStatsChartSave(resp.body);
+          _settingsProvider.setTornStatsChartDateTime = DateTime.now().millisecondsSinceEpoch;
+        }
+      }
+    } catch (e) {
+      // Returns null
+    }
+  }
+
   Future<void> _getFactionCrimes() async {
     try {
-      var factionCrimes = await TornApiCaller.factionCrimes(_userProv.basic.userApiKey).getFactionCrimes;
+      var factionCrimes = await TornApiCaller().getFactionCrimes(playerId: _user.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
-      if (factionCrimes is FactionCrimesModel) {
+      if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
         String complexString = "";
         DateTime complexTime = DateTime.now();
 
@@ -4378,6 +4561,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
 
+          if (!mounted) return;
+
           setState(() {
             _ocFinalStringLong = "$complexString $complexTimeString";
             _ocFinalStringShort = "$complexTimeString";
@@ -4390,7 +4575,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       // OPTION 2 - Could indicate that we have no AA access, so we are looking for events!
-      if (factionCrimes is ApiError || _ocFinalStringLong.isEmpty) {
+      if (factionCrimes == null || factionCrimes is ApiError || _ocFinalStringLong.isEmpty) {
         bool simpleExists = false;
         DateTime simpleTime = DateTime.now();
         String simpleString = "";
@@ -4399,7 +4584,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         void calculateSimpleReadiness() {
           if (simpleTime.isBefore(DateTime.now())) {
             simpleReady = true;
-            simpleString = "A faction organised crime might be ready!";
+            simpleString = "A faction organized crime might be ready!";
           } else {
             var formattedTime = TimeFormatter(
               inputTime: simpleTime,
@@ -4474,6 +4659,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
         }
 
+        if (!mounted) return;
+
         setState(() {
           _ocSimpleExists = simpleExists;
           _ocSimpleReady = simpleReady;
@@ -4483,27 +4670,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // Don't fill anything
-    }
-  }
-
-  Future _getBazaarInfo() async {
-    try {
-      var bazaarApiResponse = await TornApiCaller.bazaar(_userProv.basic.userApiKey).getBazaar;
-      if (bazaarApiResponse is BazaarModel) {
-        setState(() {
-          _bazaarModel = bazaarApiResponse;
-        });
-      }
-    } catch (e) {
-      // If something fails, we simple don't show the bazaar section
+      log(e);
     }
   }
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      animationSpeed: 150,
+      animationDuration: Duration(milliseconds: 150),
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.Up : SpeedDialDirection.Left,
+          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       child: Container(
@@ -4721,8 +4896,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
-        notificationTitle = await Prefs().getTravelNotificationTitle();
-        notificationSubtitle = await Prefs().getTravelNotificationBody();
+        notificationTitle = _settingsProvider.discreteNotifications ? "T" : await Prefs().getTravelNotificationTitle();
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? " " : await Prefs().getTravelNotificationBody();
         notificationPayload += 'travel';
         notificationIconAndroid = "notification_travel";
         notificationIconColor = Colors.blue;
@@ -4733,8 +4909,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual energy';
         channelSubtitle = 'Manual energy';
         channelDescription = 'Manual notifications for energy';
-        notificationTitle = 'Energy bar';
-        notificationSubtitle = 'Here is your energy reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "E" : 'Energy bar';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your energy reminder!';
         var myTimeStamp = (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_energy";
@@ -4746,8 +4922,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual nerve';
         channelSubtitle = 'Manual nerve';
         channelDescription = 'Manual notifications for nerve';
-        notificationTitle = 'Nerve bar';
-        notificationSubtitle = 'Here is your nerve reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "N" : 'Nerve bar';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your nerve reminder!';
         var myTimeStamp = (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_nerve";
@@ -4759,8 +4935,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual life';
         channelSubtitle = 'Manual life';
         channelDescription = 'Manual notifications for life';
-        notificationTitle = 'Life bar';
-        notificationSubtitle = 'Here is your life reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "Lf" : 'Life bar';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your life reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.life.fulltime;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4770,8 +4946,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual drugs';
         channelSubtitle = 'Manual drugs';
         channelDescription = 'Manual notifications for drugs';
-        notificationTitle = 'Drug Cooldown';
-        notificationSubtitle = 'Here is your drugs cooldown reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "D" : 'Drug Cooldown';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your drugs cooldown reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.drug;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4781,8 +4958,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual medical';
         channelSubtitle = 'Manual medical';
         channelDescription = 'Manual notifications for medical';
-        notificationTitle = 'Medical Cooldown';
-        notificationSubtitle = 'Here is your medical cooldown reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "Med" : 'Medical Cooldown';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your medical cooldown reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.medical;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4792,8 +4970,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual booster';
         channelSubtitle = 'Manual booster';
         channelDescription = 'Manual notifications for booster';
-        notificationTitle = 'Booster Cooldown';
-        notificationSubtitle = 'Here is your booster cooldown reminder!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "B" : 'Booster Cooldown';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your booster cooldown reminder!';
         var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.booster;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
@@ -4803,8 +4982,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual hospital';
         channelSubtitle = 'Manual hospital';
         channelDescription = 'Manual notifications for hospital';
-        notificationTitle = 'Hospital release';
-        notificationSubtitle = 'You are about to be released from hospital!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "H" : 'Hospital release';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from hospital!';
         notificationPayload += 'hospital';
         break;
       case ProfileNotification.jail:
@@ -4813,8 +4993,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual jail';
         channelSubtitle = 'Manual jail';
         channelDescription = 'Manual notifications for jail';
-        notificationTitle = 'Jail release';
-        notificationSubtitle = 'You are about to be released from jail!';
+        notificationTitle = _settingsProvider.discreteNotifications ? "J" : 'Jail release';
+        notificationSubtitle =
+            _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from jail!';
         notificationPayload += 'jail';
         break;
     }
@@ -4833,7 +5014,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       channelTitle,
       channelSubtitle,
-      channelDescription,
+      channelDescription: channelDescription,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: notificationIconAndroid,
@@ -5650,376 +5831,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _checkIfNotificationsAreCurrent();
   }
 
-  Future<void> _openNukeReviveDialog(BuildContext _) {
-    return showDialog<void>(
-      context: _,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  "REQUEST A REVIVE FROM NUKE",
-                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Flexible(
-                          child: EasyRichText(
-                            "Nuke is a premium Torn reviving service consisting in more than "
-                            "300 revivers. You can find more information in the forums or "
-                            "in the Central Hospital Discord server.",
-                            defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                            patternList: [
-                              EasyRichTextPattern(
-                                targetString: 'forums',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    _launchBrowser(
-                                      url: 'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0',
-                                      dialogRequested: true,
-                                    );
-                                  },
-                              ),
-                              EasyRichTextPattern(
-                                targetString: 'Central Hospital',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    var url = 'https://discord.gg/qSHjTXx';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Each revive must be paid directly to the reviver (unless under a "
-                            "contract with Nuke) and costs \$1 million or 1 Xanax.",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Please keep in mind if you don't pay for the requested revive, "
-                            "you risk getting blocked from Nuke!",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: Text("Medic!"),
-                              onPressed: () async {
-                                var nuke = NukeRevive(
-                                  playerId: _user.playerId.toString(),
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerLocation: _user.travel.destination,
-                                );
-                                nuke.callMedic().then((value) {
-                                  if (value.isNotEmpty) {
-                                    BotToast.showText(
-                                      text: value,
-                                      textStyle: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.green[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  } else {
-                                    BotToast.showText(
-                                      text: 'There was an error contacting Nuke, try again later '
-                                          'or contact them through Central Hospital\'s Discord '
-                                          'server!',
-                                      textStyle: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.red[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  }
-                                });
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            TextButton(
-                              child: Text("Cancel"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.background,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Image.asset(
-                          'images/icons/nuke-revive.png',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _openUhcReviveDialog(BuildContext _) {
-    return showDialog<void>(
-      context: _,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  "REQUEST A REVIVE FROM UHC",
-                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Flexible(
-                          child: EasyRichText(
-                            "Universal Health Care (UHC for short) is a revive alliance consisting "
-                            "of factions. You can find more information in the forums or "
-                            "in the UHC Discord server.",
-                            defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                            patternList: [
-                              EasyRichTextPattern(
-                                targetString: 'forums',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    _launchBrowser(
-                                      url: 'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0',
-                                      dialogRequested: true,
-                                    );
-                                  },
-                              ),
-                              EasyRichTextPattern(
-                                targetString: 'UHC Discord',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    var url = 'https://discord.gg/JJprTpb';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Each revive must be paid directly to the reviver and costs "
-                            "\$1 million or 1 Xanax. There are special prices for faction contracts "
-                            "(more information in the forums).",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Please keep in mind if you don't pay for the requested revive, "
-                            "you risk getting blocked from UHC!",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: Text("Medic!"),
-                              onPressed: () async {
-                                var uhc = UhcRevive(
-                                  playerId: _user.playerId,
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerFactionId: _user.faction.factionId,
-                                );
-
-                                uhc.callMedic().then((value) {
-                                  var resultString = "";
-                                  var resultColor = Colors.transparent;
-
-                                  if (value == "200") {
-                                    resultString = "Request received by UHC!\n\n"
-                                        "Please pay your reviver "
-                                        "1 Xanax or \$1M";
-                                    resultColor = Colors.green[800];
-                                  } else if (value == "error") {
-                                    resultString = "There was an error contacting UHC, try again later"
-                                        "or contact them through UHC\'s Discord"
-                                        "server!";
-                                    resultColor = Colors.red[800];
-                                  } else {
-                                    resultString = value;
-                                    resultColor = Colors.red[800];
-                                  }
-
-                                  BotToast.showText(
-                                    text: resultString,
-                                    textStyle: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: resultColor,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
-                                  );
-                                });
-
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            TextButton(
-                              child: Text("Cancel"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.background,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Image.asset(
-                          'images/icons/uhc_revive.png',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _openWalletDialog() {
     return showDialog<void>(
       context: context,
@@ -6044,7 +5855,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       margin: EdgeInsets.only(top: 15),
                       decoration: new BoxDecoration(
-                        color: _themeProvider.background,
+                        color: _themeProvider.secondBackground,
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
@@ -6157,9 +5968,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -6204,7 +6015,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       margin: EdgeInsets.only(top: 15),
                       decoration: new BoxDecoration(
-                        color: _themeProvider.background,
+                        color: _themeProvider.secondBackground,
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
@@ -6285,9 +6096,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -6449,6 +6260,71 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
+  String _flagBallAsset() {
+    switch (_user.travel.destination) {
+      case "Torn":
+        if (_user.status.description.contains("to Torn from Argentina"))
+          return 'images/flags/ball/ball_argentina.png';
+        else if (_user.status.description.contains("to Torn from Canada"))
+          return 'images/flags/ball/ball_canada.png';
+        else if (_user.status.description.contains("to Torn from Cayman Islands"))
+          return 'images/flags/ball/ball_cayman.png';
+        else if (_user.status.description.contains("to Torn from China"))
+          return 'images/flags/ball/ball_china.png';
+        else if (_user.status.description.contains("to Torn from Hawaii"))
+          return 'images/flags/ball/ball_hawaii.png';
+        else if (_user.status.description.contains("to Torn from Japan"))
+          return 'images/flags/ball/ball_japan.png';
+        else if (_user.status.description.contains("to Torn from Mexico"))
+          return 'images/flags/ball/ball_mexico.png';
+        else if (_user.status.description.contains("to Torn from South Africa"))
+          return 'images/flags/ball/ball_south-africa.png';
+        else if (_user.status.description.contains("to Torn from Switzerland"))
+          return 'images/flags/ball/ball_switzerland.png';
+        else if (_user.status.description.contains("to Torn from UAE"))
+          return 'images/flags/ball/ball_uae.png';
+        else if (_user.status.description.contains("to Torn from United Kingdom"))
+          return 'images/flags/ball/ball_uk.png';
+        else
+          return '';
+        break;
+      case "Argentina":
+        return 'images/flags/ball/ball_argentina.png';
+        break;
+      case "Canada":
+        return 'images/flags/ball/ball_canada.png';
+        break;
+      case "Cayman Islands":
+        return 'images/flags/ball/ball_cayman.png';
+        break;
+      case "China":
+        return 'images/flags/ball/ball_china.png';
+        break;
+      case "Hawaii":
+        return 'images/flags/ball/ball_hawaii.png';
+        break;
+      case "Japan":
+        return 'images/flags/ball/ball_japan.png';
+        break;
+      case "Mexico":
+        return 'images/flags/ball/ball_mexico.png';
+        break;
+      case "South Africa":
+        return 'images/flags/ball/ball_south-africa.png';
+        break;
+      case "Switzerland":
+        return 'images/flags/ball/ball_switzerland.png';
+        break;
+      case "UAE":
+        return 'images/flags/ball/ball_uae.png';
+        break;
+      case "United Kingdom":
+        return 'images/flags/ball/ball_uk.png';
+        break;
+    }
+    return '';
+  }
+
   List<Widget> _returnSections() {
     var sectionSort = <Widget>[];
 
@@ -6541,7 +6417,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (element) async {
-      var rentDetails = await TornApiCaller.property(_userProv.basic.userApiKey, element).getProperty;
+      var rentDetails = await TornApiCaller().getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         var timeLeft = rentDetails.property.rented.daysLeft;

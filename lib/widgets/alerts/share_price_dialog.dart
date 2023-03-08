@@ -101,7 +101,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
-                color: _themeProvider.background,
+                color: _themeProvider.secondBackground,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -528,7 +528,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
             right: 16,
             child: CircleAvatar(
               radius: 26,
-              backgroundColor: _themeProvider.background,
+              backgroundColor: _themeProvider.secondBackground,
               child: CircleAvatar(
                 backgroundColor: _themeProvider.mainText,
                 radius: 22,
@@ -537,7 +537,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                   width: 28,
                   child: Icon(
                     MdiIcons.chartLine,
-                    color: _themeProvider.background,
+                    color: _themeProvider.secondBackground,
                   ),
                 ),
               ),

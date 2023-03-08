@@ -373,141 +373,154 @@ String addOthersBazaarFillButtonsJS() {
     // Credits
     // Implementation logic partially based on TornTools by Mephiles and DKK
     // New React 15/16 dispatch event based on Father's input
-    
-    var doc = document;
-    
-    var narrow_screen = false; 
-    if (doc.querySelector("[class*='searchBar_'] [class*='tablet_']") !== null 
-      || doc.querySelector("[class*='searchBar_'] [class*='mobile']") !== null) {
-      narrow_screen = true;
-    }
-    
-    function addFillMaxButtons(){
-    
-      function addStyle(styleString) {
-        const style = document.createElement('style');
-        style.textContent = styleString;
-        document.head.append(style);
-      }
-    
-      function dispatchClick(element, newValue) {
-        let input = element; 
-        let lastValue = input.value;
-        input.value = newValue;
-        let event = new Event('input', { bubbles: true });
-        // hack React15 (Torn seems to be using React 16)
-        event.simulated = true;
-        // hack React16 (This is what Torn uses)
-        let tracker = input._valueTracker;
-        if (tracker) {
-          tracker.setValue(lastValue);
+        
+    (async function() {  
+        var doc = document;
+        
+      function sleep(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
         }
-        input.dispatchEvent(event);
+      
+      var documentLoaded = doc.querySelectorAll("[class*='rowItems_").length;
+      if (documentLoaded === 0) {
+        console.log("waiting for bazaar");
+        await sleep(2000);
       }
       
-      // Creates our button
-      addStyle(`
-        .max-buy {
-        border: none !important;
-        position: absolute;
-        height: 15px;
-        line-height: 15px;
-        bottom: 0;
-        left: 10px;
-        font-size: 10.5px;
-        }
-      `);
-      
-      // Brings existing buy button a little up
-      addStyle(`
-        .buy___1OagD {
-        padding-bottom: 20px !important;
-        font-size: 12px !important;
-        }
-      `);
-    
-      // Narrow screen: load all buttons at once
-      if(narrow_screen){
-      
-        // Plenty of rowItems, one for each item
-        let item_boxes = doc.querySelectorAll("[class*='rowItems_");
-    
-        if(!item_boxes){
-          return;
-        }
-          
-        for(let item_box of item_boxes){
-          let buy_btn = item_box.querySelector("[class*='buy_']");
-          let max_span = doc.createElement('span');
-          max_span.innerHTML = '<a class="max-buy">MAX</a>';
-          buy_btn.parentElement.appendChild(max_span);
-    
-          max_span.addEventListener("click", function(event){
-            event.stopPropagation();
-            let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
-            let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
-            let user_money = parseInt(document.querySelector("#user-money").dataset.money);
-            if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
-            if (max > 10000) max = 10000;
-            amountBox = item_box.querySelector("[class*='buyAmountInput_']");
-            dispatchClick(amountBox, max);
-          });
+        var narrow_screen = false; 
+        if (doc.querySelector("[class*='searchBar_'] [class*='tablet_']") !== null 
+          || doc.querySelector("[class*='searchBar_'] [class*='mobile']") !== null) {
+          narrow_screen = true;
         }
         
-      // Wide screen: load button in the expandable box only when the cart is pressed
-      } else {
+        function addFillMaxButtons(){
         
-        doc.addEventListener("click", (event) => {
+          function addStyle(styleString) {
+            const style = document.createElement('style');
+            style.textContent = styleString;
+            document.head.append(style);
+          }
+        
+          function dispatchClick(element, newValue) {
+            let input = element; 
+            let lastValue = input.value;
+            input.value = newValue;
+            let event = new Event('input', { bubbles: true });
+            // hack React15 (Torn seems to be using React 16)
+            event.simulated = true;
+            // hack React16 (This is what Torn uses)
+            let tracker = input._valueTracker;
+            if (tracker) {
+              tracker.setValue(lastValue);
+            }
+            input.dispatchEvent(event);
+          }
           
-          if (event.target.getAttribute("class").includes("controlPanelButton_") && event.target.getAttribute("aria-label").includes("Buy")) {
-            
-            // Only one buy menu opened at a time, no need to loop
-            let item_box = doc.querySelector("[class*='buyMenu_");
-    
-            if(!item_box){
+          // Creates our button
+          addStyle(`
+            .max-buy {
+            border: none !important;
+            position: absolute;
+            height: 15px;
+            line-height: 15px;
+            bottom: 0;
+            left: 10px;
+            font-size: 11px;
+            }
+          `);
+          
+          // Brings existing buy button a little up
+          addStyle(`
+            button[class^="buy___"] {
+            padding-bottom: 20px !important;
+            font-size: 11px !important;
+			      text-transform: uppercase;
+            }
+          `);
+        
+          // Narrow screen: load all buttons at once
+          if(narrow_screen){
+          
+            // Plenty of rowItems, one for each item
+            let item_boxes = doc.querySelectorAll("[class*='rowItems_");
+        
+            if(!item_boxes){
               return;
             }
-                    
-            var buy_btn = item_box.querySelector("[class*='buy_']");
-            let max_span = doc.createElement('span');
-            max_span.innerHTML = '<a class="max-buy">MAX</a>';
-            buy_btn.parentElement.appendChild(max_span);
-    
-            max_span.addEventListener("click", function(event){
-              event.stopPropagation();
-              let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
-              let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
-              let user_money = parseInt(document.querySelector("#user-money").dataset.money);
-              if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
-              if (max > 10000) max = 10000;
-              amountBox = item_box.querySelector("[class*='buyAmountInput_']");
-              dispatchClick(amountBox, max);
-            });
-          }
-        });
+              
+            for(let item_box of item_boxes){
+              let buy_btn = item_box.querySelector("[class*='buy_']");
+              let max_span = doc.createElement('span');
+              max_span.innerHTML = '<a class="max-buy">MAX</a>';
+              buy_btn.parentElement.appendChild(max_span);
+        
+              max_span.addEventListener("click", function(event){
+                event.stopPropagation();
+                let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
+                let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
+                let user_money = parseInt(document.querySelector("#user-money").dataset.money);
+                if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
+                if (max > 10000) max = 10000;
+                amountBox = item_box.querySelector("[class*='buyAmountInput_']");
+                dispatchClick(amountBox, max);
+              });
+            }
             
-      }
-    }
-    
-    // Delete and recreate buttons when scrolling, otherwise they'll appear on top of each other
-    // Not needed for wide screen
-    if (narrow_screen) {
-      let moreItemsObserver = new MutationObserver(renewButtons);
-      moreItemsObserver.observe(doc.querySelector(".ReactVirtualized__Grid__innerScrollContainer"), { childList: true });
-      function renewButtons() {
-        var existing_list = doc.querySelectorAll(".max-buy");
-        for(let item of existing_list){
-          item.remove();
+          // Wide screen: load button in the expandable box only when the cart is pressed
+          } else {
+            
+            doc.addEventListener("click", (event) => {
+              
+              if (event.target.getAttribute("class").includes("controlPanelButton_") && event.target.getAttribute("aria-label").includes("Buy")) {
+                
+                // Only one buy menu opened at a time, no need to loop
+                let item_box = doc.querySelector("[class*='buyMenu_");
+        
+                if(!item_box){
+                  return;
+                }
+                        
+                var buy_btn = item_box.querySelector("[class*='buy_']");
+                let max_span = doc.createElement('span');
+                max_span.innerHTML = '<a class="max-buy">MAX</a>';
+                buy_btn.parentElement.appendChild(max_span);
+        
+                max_span.addEventListener("click", function(event){
+                  event.stopPropagation();
+                  let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
+                  let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
+                  let user_money = parseInt(document.querySelector("#user-money").dataset.money);
+                  if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
+                  if (max > 10000) max = 10000;
+                  amountBox = item_box.querySelector("[class*='buyAmountInput_']");
+                  dispatchClick(amountBox, max);
+                });
+              }
+            });
+                
+          }
         }
+        
+        // Delete and recreate buttons when scrolling, otherwise they'll appear on top of each other
+        // Not needed for wide screen
+        if (narrow_screen) {
+          let moreItemsObserver = new MutationObserver(renewButtons);
+          moreItemsObserver.observe(doc.querySelector(".ReactVirtualized__Grid__innerScrollContainer"), { childList: true });
+          function renewButtons() {
+            var existing_list = doc.querySelectorAll(".max-buy");
+            for(let item of existing_list){
+              item.remove();
+            }
+            addFillMaxButtons();
+          }
+        }
+        
+        // Launch main function at the start
         addFillMaxButtons();
-      }
-    }
-    
-    // Launch main function at the start
-    addFillMaxButtons();
-    
-    // Return to avoid iOS WKErrorDomain
-    123;
+        
+        // Return to avoid iOS WKErrorDomain
+        123;
+    })();  
   ''';
 }
 
@@ -553,10 +566,49 @@ String restoreChatJS() {
   ''';
 }
 
-String quickItemsJS({@required String item}) {
+String quickItemsJS({@required String item, bool faction = false, bool eRefill = false, bool nRefill = false}) {
+  String timeRegex =
+      r'/<span class="counter-wrap[\s=\-"a-zA-Z0-9]*data-time="[0-9]+"[\s=\-"a-zA-Z0-9]*>[0-9:]*<\/span>/g';
+
   return '''
     // Credit Torn Tools
     
+    // Fixed time string for faction armoury replies
+    function fixTime(str) {
+      let regexp = $timeRegex
+      let matches = str.match(regexp);
+
+      if (matches == null || Object.keys(matches).length === 0) {
+        //console.log("null");
+        return "";
+      }
+
+      function secondsToHms(d) {
+        d = Number(d);
+        var h = Math.floor(d / 3600);
+        var m = Math.floor(d % 3600 / 60);
+        var s = Math.floor(d % 3600 % 60);
+
+        var hDisplay = minTwoDigits(h) + ":";
+        var mDisplay = minTwoDigits(m) + ":";
+        var sDisplay = minTwoDigits(s);
+        return hDisplay + mDisplay + sDisplay; 
+      }
+
+      function minTwoDigits(n) {
+        return (n < 10 ? '0' : '') + n;
+      }
+
+      var final = str;
+      for (var m of matches) {
+        //console.log("M: " + m);
+        let regTime = /data-time="([0-9:]+)"/
+        let timeMatch = m.match(regTime);
+        final = final.replace(m, secondsToHms(timeMatch[1]));
+      }
+      return final;
+    }
+
     // Add style for result box
     function addStyle(styleString) {
       const style = document.createElement('style');
@@ -614,25 +666,85 @@ String quickItemsJS({@required String item}) {
       return url;
     }
     
-    var url = "https://www.torn.com/" + addRFC("item.php");
-      
-    ajaxWrapper({
-      url: url,
-      type: 'POST',
-      data: 'step=actionForm&id=$item&action=use',
-      oncomplete: function(resp) {
-      var response = resp.responseText;
-      var topBox = document.querySelector('.content-title');
-      topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
-      resultBox = document.querySelector('.resultBox');
-      resultBox.style.display = "block";
-      resultBox.innerHTML = response;
-      resultBox.querySelector(`a[data-item='$item`).click();
-      },
-      onerror: function(e) {
-      console.error(e)
+    var url = "";
+    if (!$eRefill && !$nRefill) {
+      url = "https://www.torn.com/" + addRFC("item.php");
+    } else {
+      url = "https://www.torn.com/" + addRFC("factions.php");
+    }
+    
+
+    if (!$faction) {
+      ajaxWrapper({
+        url: url,
+        type: 'POST',
+        data: 'step=actionForm&id=$item&action=use',
+        oncomplete: function(resp) {
+          var response = resp.responseText;
+          var topBox = document.querySelector('.content-title');
+          topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+          resultBox = document.querySelector('.resultBox');
+          resultBox.style.display = "block";
+          resultBox.innerHTML = response;
+          resultBox.querySelector(`a[data-item='$item`).click();
+        },
+        onerror: function(e) {
+          console.error(e)
+        }
+      });
+    } else {
+      if (!$eRefill && !$nRefill) {
+        ajaxWrapper({
+          url: url,
+          type: 'POST',
+          data: 'step=useItem&itemID=$item&fac=1',
+          oncomplete: function(resp) {
+            var response = JSON.parse(resp.responseText);
+            var topBox = document.querySelector('.content-title');
+            topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+            resultBox = document.querySelector('.resultBox');
+            resultBox.style.display = "block";
+            response.text = response.text.replace("This item has already been used", "Not available");
+            
+            let fixResult = fixTime(response.text);
+            if (fixResult === "") {
+              resultBox.innerHTML = response.text;
+            } else {
+              resultBox.innerHTML = fixResult;
+            }
+          },
+          onerror: function(e) {
+            console.error(e)
+          }
+        });
+      } else {
+        let step = $eRefill ? "step=armouryRefillEnergy" : "step=armouryRefillNerve";
+
+        ajaxWrapper({
+          url: url,
+          type: 'POST',
+          data: step,
+          oncomplete: function(resp) {
+            console.log(resp.responseText);
+            
+            var response = JSON.parse(resp.responseText);
+            var topBox = document.querySelector('.content-title');
+            topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+            resultBox = document.querySelector('.resultBox');
+            resultBox.style.display = "block";
+            if (response.success === false) {
+              resultBox.innerHTML = response.message;
+            } else {
+              resultBox.innerHTML = response.text;
+            }
+          },
+          onerror: function(e) {
+            console.error(e)
+          }
+        });
       }
-    });
+    }
+    
     
     // Get rid of the resultBox on close
     document.addEventListener("click", (event) => {
@@ -655,6 +767,30 @@ String quickItemsJS({@required String item}) {
       }
     }
     removeRemaining();
+
+    // Return to avoid iOS WKErrorDomain
+    123;
+  ''';
+}
+
+String changeLoadOutJS({@required String item, @required bool attackWebview}) {
+  return '''
+    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=${item}';
+    
+    ajaxWrapper({
+      url: action,
+      type: 'GET',
+      oncomplete: function(resp) {
+        if (${attackWebview}) {
+          window.loadoutChangeHandler.postMessage(resp.responseText);
+        } else {
+          window.flutter_inappwebview.callHandler('loadoutChangeHandler', resp.responseText);
+        }
+      },
+      onerror: function(e) {
+        console.error(e)
+      }
+    });
 
     // Return to avoid iOS WKErrorDomain
     123;
@@ -828,10 +964,13 @@ String jailJS({
           shouldHide = true;
         }
         if (shouldHide) {
-          player.hidden = true;
+          //player.hidden = true; // Not allowed with new user agent on iOS
+          player.style.display = "none"; 
         } else {
-          player.hidden = false;
+          //player.hidden = false; // Not allowed with new user agent on iOS
+          player.style.display = ""; 
         }
+
       }
 
       // BAIL
@@ -898,7 +1037,27 @@ String jailJS({
       }
     }
 
-    modifyJail();
+    // Sleep and wait for elements to load
+    async function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function waitForElementsAndRun() {
+      // CAUTION: returning 1 when still no users loaded
+      if (doc.querySelectorAll(".users-list > li").length <= 1) {
+        console.log("Waiting for jail (short)");
+        await sleep(300);
+        if (doc.querySelectorAll(".users-list > li").length <= 1) {
+          console.log("Waiting for jail (long)");
+          await sleep(1000);
+        }
+      } 
+
+      modifyJail();
+    }
+    
+    waitForElementsAndRun();
+
 
     // Listener for page change
     var intervalRepetitions = 0;
@@ -944,6 +1103,81 @@ String MiniProfiles() {
     \$(document).on("click","[class*=profile-mini-_factionWrap]",function(e){
         window.flutter_inappwebview.callHandler('handlerMiniProfiles', e.target.href);
     });
+
+    // Return to avoid iOS WKErrorDomain
+    123;
+  ''';
+}
+
+String bountiesJS({
+  @required int levelMax,
+  @required bool removeNotAvailable,
+}) {
+  return '''
+    // Credit to TornTools for implementation logic
+    var doc = window.document;
+
+    // Finds parents (credit: Torn Tools)
+    function hasParent(element, attributes = {}) {
+      if (!element.parentElement) return false;
+      if (attributes.class && element.parentElement.classList.contains(attributes.class)) return true;
+      if (attributes.id && element.parentElement.id === attributes.id) return true;
+      return hasParent(element.parentElement, attributes);
+    }
+
+    function modifyBounties() {
+      // FILTERS
+      for (var player of doc.querySelectorAll(".bounties-list > li:not(.clear)")) {
+        var shouldHide = false;
+
+        var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
+        if (level > $levelMax) {
+          shouldHide = true;
+        }
+        
+        var foundNotAvail = player.querySelector(".user-red-status, .user-blue-status");
+        if ($removeNotAvailable && foundNotAvail) {
+          shouldHide = true;
+        }
+        
+        // Hide users
+        if (shouldHide) {
+          player.hidden = true;
+        } else {
+          player.hidden = false;
+        }
+      }
+    }
+
+    modifyBounties();
+
+    // Listener for page change
+    var intervalRepetitions = 0;
+    var listener = function (event) {
+      if (event.target.classList && !event.target.classList.contains("gallery-wrapper")
+        && hasParent(event.target, { class: "gallery-wrapper" })) {
+      return new Promise((resolve) => {
+        let checker = setInterval(() => {
+        if (doc.querySelector(".bounties-list > li")) {
+          modifyBounties();
+          return clearInterval(checker);
+        }
+        if (++intervalRepetitions === 20) {
+          return clearInterval(checker);
+        }
+        }, 300);
+      });
+      }
+    }
+
+    // Save variable in a persistent object so that we only add the listener once
+    // event if we fire the script several times (removing the listener won't work)
+    var savedFound = doc.querySelector(".pdaListener") !== null;
+    if (!savedFound) {
+      var save = doc.querySelector(".content-wrapper");
+      save.classList.add("pdaListener");
+      doc.addEventListener("click", listener, true);
+    }
 
     // Return to avoid iOS WKErrorDomain
     123;

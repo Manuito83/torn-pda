@@ -1,5 +1,4 @@
 import 'package:expandable/expandable.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';

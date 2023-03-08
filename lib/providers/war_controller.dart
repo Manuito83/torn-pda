@@ -5,14 +5,18 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
+import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/stats_calculator.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 
 class WarCardDetails {
   int cardPosition;
@@ -27,8 +31,15 @@ class WarController extends GetxController {
 
   List<FactionModel> factions = <FactionModel>[];
   List<WarCardDetails> orderedCardsDetails = <WarCardDetails>[];
-  bool showChainWidget = true;
   WarSortType currentSort;
+
+  // Filters
+  List<String> activeFilters = [];
+  int onlineFilter = 0;
+  bool okayFilter = false;
+  bool countryFilter = false;
+  bool travelingFilter = false;
+  bool showChainWidget = true;
 
   bool updating = false;
   bool _stopUpdate = false;
@@ -39,8 +50,22 @@ class WarController extends GetxController {
 
   DateTime _lastIntegrityCheck;
 
-  DateTime _lastSpiesDownload;
-  List<YataSpyModel> _spies = <YataSpyModel>[];
+  SpiesSource _spiesSource = SpiesSource.yata;
+
+  DateTime _lastYataSpiesDownload;
+  List<YataSpyModel> _yataSpies = <YataSpyModel>[];
+
+  DateTime _lastTornStatsSpiesDownload;
+  TornStatsSpiesModel _tornStatsSpies = TornStatsSpiesModel();
+
+  bool nukeReviveActive = false;
+  bool uhcReviveActive = false;
+
+  List<String> lastAttackedTargets = [];
+
+  bool toggleAddUserActive = false;
+
+  String playerLocation = "";
 
   @override
   void onInit() {
@@ -51,7 +76,7 @@ class WarController extends GetxController {
   Future<String> addFaction(String factionId, List<TargetModel> targets) async {
     stopUpdate();
 
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
 
     // Return custom error code if faction already exists
     for (FactionModel faction in factions) {
@@ -60,7 +85,7 @@ class WarController extends GetxController {
       }
     }
 
-    final apiResult = await TornApiCaller.faction(_u.apiKey, factionId).getFaction;
+    final apiResult = await TornApiCaller().getFaction(factionId: factionId);
     if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
       return "";
     }
@@ -68,7 +93,12 @@ class WarController extends GetxController {
     final faction = apiResult as FactionModel;
     factions.add(faction);
 
-    dynamic allSpiesSuccess = await _getYataSpies(_u.apiKey);
+    dynamic allSpiesSuccess;
+    if (_spiesSource == SpiesSource.yata) {
+      allSpiesSuccess = await _getYataSpies(_u.apiKey);
+    } else {
+      allSpiesSuccess = await _getTornStatsSpies(_u.apiKey);
+    }
 
     // Add extra member information
     DateTime addedTime = DateTime.now();
@@ -92,25 +122,7 @@ class WarController extends GetxController {
         }
       }
 
-      if (allSpiesSuccess != null) {
-        for (YataSpyModel spy in allSpiesSuccess) {
-          if (spy.targetName == member.name) {
-            member.statsExactTotal = member.statsSort = spy.total;
-            member.statsExactUpdated = spy.update;
-            member.statsStr = spy.strength;
-            member.statsSpd = spy.speed;
-            member.statsDef = spy.defense;
-            member.statsDex = spy.dexterity;
-            int known = 0;
-            if (spy.strength != 1) known += spy.strength;
-            if (spy.speed != 1) known += spy.speed;
-            if (spy.defense != 1) known += spy.defense;
-            if (spy.dexterity != 1) known += spy.dexterity;
-            member.statsExactTotalKnown = known;
-            break;
-          }
-        }
-      }
+      _assignSpiedStats(allSpiesSuccess, member);
 
       if (allAttacksSuccess is AttackModel) {
         _getRespectFF(
@@ -148,26 +160,34 @@ class WarController extends GetxController {
   Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies, dynamic ownStats}) async {
     dynamic allAttacksSuccess = allAttacks;
     if (allAttacksSuccess == null) {
-      allAttacksSuccess = await getAllAttacks(_u.apiKey);
+      allAttacksSuccess = await getAllAttacks();
     }
 
     dynamic ownStatsSuccess = ownStats;
     if (ownStatsSuccess == null) {
-      ownStatsSuccess = await getOwnStats(_u.apiKey);
+      ownStatsSuccess = await getOwnStats();
     }
 
     member.isUpdating = true;
     update();
 
-    dynamic allSpiesSuccess = await _getYataSpies(_u.apiKey);
+    dynamic allSpiesSuccess;
+    if (_spiesSource == SpiesSource.yata) {
+      allSpiesSuccess = await _getYataSpies(_u.apiKey);
+    } else {
+      allSpiesSuccess = await _getTornStatsSpies(_u.apiKey);
+    }
 
     String memberKey = member.memberId.toString();
     bool error = false;
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller.target(_u.apiKey, memberKey).getOtherProfile;
+      dynamic updatedTarget = await TornApiCaller().getOtherProfile(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
+        member.name = updatedTarget.name;
+        member.level = updatedTarget.level;
+        member.position = updatedTarget.faction.position;
         member.overrideEasyLife = true;
         member.lifeMaximum = updatedTarget.life.maximum;
         member.lifeCurrent = updatedTarget.life.current;
@@ -177,30 +197,14 @@ class WarController extends GetxController {
         member.status.state = updatedTarget.status.state;
         member.status.until = updatedTarget.status.until;
         member.status.color = updatedTarget.status.color;
+
         member.lastUpdated = DateTime.now();
         if (allAttacksSuccess is AttackModel) {
           _getRespectFF(allAttacksSuccess, member, oldRespect: member.respectGain, oldFF: member.fairFight);
         }
         member.lifeSort = _getLifeSort(member);
-        if (allSpiesSuccess != null) {
-          for (YataSpyModel spy in allSpiesSuccess) {
-            if (spy.targetName == member.name) {
-              member.statsExactTotal = member.statsSort = spy.total;
-              member.statsExactUpdated = spy.update;
-              member.statsStr = spy.strength;
-              member.statsSpd = spy.speed;
-              member.statsDef = spy.defense;
-              member.statsDex = spy.dexterity;
-              int known = 0;
-              if (spy.strength != 1) known += spy.strength;
-              if (spy.speed != 1) known += spy.speed;
-              if (spy.defense != 1) known += spy.defense;
-              if (spy.dexterity != 1) known += spy.dexterity;
-              member.statsExactTotalKnown = known;
-              break;
-            }
-          }
-        }
+
+        _assignSpiedStats(allSpiesSuccess, member);
 
         member.statsEstimated = StatsCalculator.calculateStats(
           criminalRecordTotal: updatedTarget.criminalrecord.total,
@@ -217,6 +221,8 @@ class WarController extends GetxController {
           member.memberRefill = updatedTarget.personalstats.refills;
           member.myRefill = ownStatsSuccess.personalstats.refills;
           member.memberEnhancement = updatedTarget.personalstats.statenhancersused;
+          member.memberCans = updatedTarget.personalstats.energydrinkused;
+          member.myCans = ownStatsSuccess.personalstats.energydrinkused;
           member.myEnhancement = ownStatsSuccess.personalstats.statenhancersused;
           member.memberEcstasy = updatedTarget.personalstats.exttaken;
           member.memberLsd = updatedTarget.personalstats.lsdtaken;
@@ -276,8 +282,8 @@ class WarController extends GetxController {
   Future<List<int>> updateAllMembersFull() async {
     await _integrityCheck(force: true);
 
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
-    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
+    dynamic ownStatsSuccess = await getOwnStats();
     int numberUpdated = 0;
 
     updating = true;
@@ -323,19 +329,33 @@ class WarController extends GetxController {
   }
 
   Future<int> updateAllMembersEasy() async {
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
 
     stopUpdate();
 
     await _integrityCheck(force: true);
-    dynamic allSpiesSuccess = await _getYataSpies(_u.apiKey);
+
+    dynamic allSpiesSuccess;
+    if (_spiesSource == SpiesSource.yata) {
+      allSpiesSuccess = await _getYataSpies(_u.apiKey);
+    } else {
+      allSpiesSuccess = await _getTornStatsSpies(_u.apiKey);
+    }
 
     int numberUpdated = 0;
 
+    // Get player's current location
+    final apiPlayer = await TornApiCaller().getProfileBasic();
+    if (apiPlayer is ApiError) {
+      return -1;
+    }
+    final profile = apiPlayer as OwnProfileBasic;
+    playerLocation = countryCheck(profile.status);
+
     for (FactionModel f in factions) {
-      final apiResult = await TornApiCaller.faction(_u.apiKey, f.id.toString()).getFaction;
+      final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
-        return 0;
+        return -1;
       }
       final apiFaction = apiResult as FactionModel;
 
@@ -352,28 +372,15 @@ class WarController extends GetxController {
             update();
           });
 
+          // Update only what's necessary (most info does not come from API)
           f.members[apiMemberId].lastUpdated = updatedTime;
           f.members[apiMemberId].status = apiMember.status;
+          f.members[apiMemberId].lastAction = apiMember.lastAction;
+          f.members[apiMemberId].level = apiMember.level;
+          f.members[apiMemberId].position = apiMember.position;
+          f.members[apiMemberId].name = apiMember.name;
 
-          if (allSpiesSuccess != null) {
-            for (YataSpyModel spy in allSpiesSuccess) {
-              if (spy.targetName == apiMember.name) {
-                f.members[apiMemberId].statsExactTotal = apiMember.statsSort = spy.total;
-                f.members[apiMemberId].statsExactUpdated = spy.update;
-                f.members[apiMemberId].statsStr = spy.strength;
-                f.members[apiMemberId].statsSpd = spy.speed;
-                f.members[apiMemberId].statsDef = spy.defense;
-                f.members[apiMemberId].statsDex = spy.dexterity;
-                int known = 0;
-                if (spy.strength != 1) known += spy.strength;
-                if (spy.speed != 1) known += spy.speed;
-                if (spy.defense != 1) known += spy.defense;
-                if (spy.dexterity != 1) known += spy.dexterity;
-                f.members[apiMemberId]?.statsExactTotalKnown = known;
-                break;
-              }
-            }
-          }
+          _assignSpiedStats(allSpiesSuccess, f.members[apiMemberId]);
 
           if (allAttacksSuccess is AttackModel) {
             _getRespectFF(
@@ -391,14 +398,13 @@ class WarController extends GetxController {
 
     update();
     savePreferences();
-    print(numberUpdated); // !!TODO
     return numberUpdated;
   }
 
-  Future updateSomeMembersAfterAttack(List<String> attackedMembers) async {
+  Future updateSomeMembersAfterAttack() async {
     await Future.delayed(Duration(seconds: 15));
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
-    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
+    dynamic ownStatsSuccess = await getOwnStats();
 
     updating = true;
     update();
@@ -407,7 +413,7 @@ class WarController extends GetxController {
     // which might happen even if we stop the update
     List<FactionModel> thisFactions = List.from(factions);
 
-    for (String id in attackedMembers) {
+    for (String id in lastAttackedTargets) {
       for (FactionModel f in thisFactions) {
         if (_stopUpdate) {
           _stopUpdate = false;
@@ -423,7 +429,7 @@ class WarController extends GetxController {
             ownStats: ownStatsSuccess,
           );
 
-          if (attackedMembers.length > 60) {
+          if (lastAttackedTargets.length > 60) {
             await Future.delayed(Duration(seconds: 1));
           }
           break;
@@ -580,16 +586,16 @@ class WarController extends GetxController {
     return membersHidden;
   }
 
-  dynamic getAllAttacks(String _userKey) async {
-    var result = await TornApiCaller.attacks(_userKey).getAttacks;
+  dynamic getAllAttacks() async {
+    var result = await TornApiCaller().getAttacks();
     if (result is AttackModel) {
       return result;
     }
     return false;
   }
 
-  dynamic getOwnStats(String _userKey) async {
-    var result = await TornApiCaller.ownPersonalStats(_userKey).getOwnPersonalStats;
+  dynamic getOwnStats() async {
+    var result = await TornApiCaller().getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -602,13 +608,73 @@ class WarController extends GetxController {
     update();
   }
 
+  void setOnlineFilter(int i) {
+    onlineFilter = i;
+    if (i == 0) {
+      activeFilters.removeWhere((element) => element == "online/idle");
+      activeFilters.removeWhere((element) => element == "offline");
+    } else if (i == 1) {
+      activeFilters.add("online/idle");
+      activeFilters.removeWhere((element) => element == "offline");
+    } else if (i == 2) {
+      activeFilters.add("offline");
+      activeFilters.removeWhere((element) => element == "online/idle");
+    }
+    savePreferences();
+    update();
+  }
+
+  void setOkayFilterActive(bool value) {
+    okayFilter = value;
+    if (!value) {
+      activeFilters.removeWhere((element) => element == "okay");
+    } else {
+      activeFilters.add("okay");
+    }
+    savePreferences();
+    update();
+  }
+
+  void setCountryFilterActive(bool value) {
+    countryFilter = value;
+    if (!value) {
+      activeFilters.removeWhere((element) => element == "same country");
+    } else {
+      activeFilters.add("same country");
+    }
+    savePreferences();
+    update();
+  }
+
+  void setTravelingFilterActive(bool value) {
+    travelingFilter = value;
+    if (!value) {
+      activeFilters.removeWhere((element) => element == "hide traveling");
+    } else {
+      activeFilters.add("hide traveling");
+    }
+    savePreferences();
+    update();
+  }
+
   Future initialise() async {
+    String spiesSource = await Prefs().getSpiesSource();
+    spiesSource == "yata" ? _spiesSource = SpiesSource.yata : _spiesSource = SpiesSource.tornStats;
+
     List<String> saved = await Prefs().getWarFactions();
     saved.forEach((element) {
       factions.add(factionModelFromJson(element));
     });
 
+    activeFilters = await Prefs().getFilterListInWars();
+    onlineFilter = await Prefs().getOnlineFilterInWars();
+    okayFilter = await Prefs().getOkayFilterInWars();
+    countryFilter = await Prefs().getCountryFilterInWars();
+    travelingFilter = await Prefs().getTravelingFilterInWars();
     showChainWidget = await Prefs().getShowChainWidgetInWars();
+
+    nukeReviveActive = await Prefs().getUseNukeRevive();
+    uhcReviveActive = await Prefs().getUseUhcRevive();
 
     // Get sorting
     String targetSort = await Prefs().getWarMembersSort();
@@ -628,26 +694,52 @@ class WarController extends GetxController {
       case 'respectAsc':
         currentSort = WarSortType.respectAsc;
         break;
-      case 'statsDes':
-        currentSort = WarSortType.statsDes;
-        break;
-      case 'statsAsc':
-        currentSort = WarSortType.statsDes;
-        break;
       case 'nameDes':
         currentSort = WarSortType.nameDes;
         break;
       case 'nameAsc':
         currentSort = WarSortType.nameAsc;
         break;
+      case 'lifeDes':
+        currentSort = WarSortType.lifeDes;
+        break;
+      case 'lifeAsc':
+        currentSort = WarSortType.lifeAsc;
+        break;
+      case 'statsDes':
+        currentSort = WarSortType.statsDes;
+        break;
+      case 'statsAsc':
+        currentSort = WarSortType.statsDes;
+        break;
+      case 'onlineDes':
+        currentSort = WarSortType.onlineDes;
+        break;
+      case 'onlineAsc':
+        currentSort = WarSortType.onlineAsc;
+        break;
+      case 'colorDes':
+        currentSort = WarSortType.colorDes;
+        break;
+      case 'colorAsc':
+        currentSort = WarSortType.colorAsc;
+        break;
     }
 
-    List<String> savedSpies = await Prefs().getWarSpies();
-    for (String spyJson in savedSpies) {
-      YataSpyModel spyModel = yataSpyModelFromJson(spyJson);
-      _spies.add(spyModel);
+    if (_spiesSource == SpiesSource.yata) {
+      List<String> savedYataSpies = await Prefs().getYataSpies();
+      for (String spyJson in savedYataSpies) {
+        YataSpyModel spyModel = yataSpyModelFromJson(spyJson);
+        _yataSpies.add(spyModel);
+      }
+      _lastYataSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getYataSpiesTime());
+    } else {
+      String savedTornStatsSpies = await Prefs().getTornStatsSpies();
+      if (savedTornStatsSpies.isNotEmpty) {
+        _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
+        _lastTornStatsSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getTornStatsSpiesTime());
+      }
     }
-    _lastSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarSpiesTime());
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
 
@@ -663,6 +755,11 @@ class WarController extends GetxController {
     });
     Prefs().setWarFactions(factionList);
 
+    Prefs().setFilterListInWars(activeFilters);
+    Prefs().setOnlineFilterInWars(onlineFilter);
+    Prefs().setOkayFilterInWars(okayFilter);
+    Prefs().setCountryFilterInWars(countryFilter);
+    Prefs().setTravelingFilterInWars(travelingFilter);
     Prefs().setShowChainWidgetInWars(showChainWidget);
 
     // Save sorting
@@ -678,25 +775,31 @@ class WarController extends GetxController {
         sortToSave = 'respectDes';
         break;
       case WarSortType.respectAsc:
-        sortToSave = 'respectDes';
+        sortToSave = 'respectAsc';
         break;
       case WarSortType.nameDes:
         sortToSave = 'nameDes';
         break;
       case WarSortType.nameAsc:
-        sortToSave = 'nameDes';
+        sortToSave = 'nameAsc';
         break;
       case WarSortType.lifeDes:
-        sortToSave = 'nameDes';
+        sortToSave = 'lifeDes';
         break;
       case WarSortType.lifeAsc:
-        sortToSave = 'nameDes';
+        sortToSave = 'lifeAsc';
         break;
       case WarSortType.statsDes:
         sortToSave = 'statsDes';
         break;
       case WarSortType.statsAsc:
         sortToSave = 'statsAsc';
+        break;
+      case WarSortType.onlineDes:
+        sortToSave = 'onlineDes';
+        break;
+      case WarSortType.onlineAsc:
+        sortToSave = 'onlineAsc';
         break;
       case WarSortType.colorDes:
         sortToSave = 'colorDes';
@@ -709,13 +812,18 @@ class WarController extends GetxController {
   }
 
   void saveSpies() {
-    List<String> spiesSave = <String>[];
-    for (YataSpyModel spy in _spies) {
-      String spyJson = yataSpyModelToJson(spy);
-      spiesSave.add(spyJson);
+    if (_spiesSource == SpiesSource.yata) {
+      List<String> yataSpiesSave = <String>[];
+      for (YataSpyModel spy in _yataSpies) {
+        String spyJson = yataSpyModelToJson(spy);
+        yataSpiesSave.add(spyJson);
+      }
+      Prefs().setYataSpies(yataSpiesSave);
+      Prefs().setYataSpiesTime(_lastYataSpiesDownload.millisecondsSinceEpoch);
+    } else {
+      Prefs().setTornStatsSpies(tornStatsSpiesModelToJson(_tornStatsSpies));
+      Prefs().setTornStatsSpiesTime(_lastTornStatsSpiesDownload.millisecondsSinceEpoch);
     }
-    Prefs().setWarSpies(spiesSave);
-    Prefs().setWarSpiesTime(_lastSpiesDownload.millisecondsSinceEpoch);
   }
 
   void sortTargets(WarSortType sortType) {
@@ -726,14 +834,14 @@ class WarController extends GetxController {
 
   Future<List<YataSpyModel>> _getYataSpies(String apiKey) async {
     // If spies where updated less than an hour ago
-    if (_lastSpiesDownload != null && DateTime.now().difference(_lastSpiesDownload).inHours < 1) {
-      return _spies;
+    if (_lastYataSpiesDownload != null && DateTime.now().difference(_lastYataSpiesDownload).inHours < 1) {
+      return _yataSpies;
     }
 
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
-      String yataURL = 'https://yata.yt/api/v1/spies/?key=${apiKey}';
-      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 2));
+      String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
+      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
       if (resp.statusCode == 200) {
         dynamic spiesJson = json.decode(resp.body);
         if (spiesJson != null) {
@@ -746,13 +854,38 @@ class WarController extends GetxController {
         }
       }
     } catch (e) {
-      return _spies = null;
+      return _yataSpies = null;
     }
-    _lastSpiesDownload = DateTime.now();
-    _spies = spies;
+    _lastYataSpiesDownload = DateTime.now();
+    _yataSpies = spies;
     saveSpies();
 
     return spies;
+  }
+
+  Future<TornStatsSpiesModel> _getTornStatsSpies(String apiKey) async {
+    // If spies where updated less than an hour ago
+    if (_lastTornStatsSpiesDownload != null && DateTime.now().difference(_lastTornStatsSpiesDownload).inHours < 1) {
+      return _tornStatsSpies;
+    }
+
+    try {
+      String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/faction/spies';
+      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 10));
+      if (resp.statusCode == 200) {
+        TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
+        if (spyJson != null && !spyJson.message.contains("Error")) {
+          _lastTornStatsSpiesDownload = DateTime.now();
+          _tornStatsSpies = spyJson;
+          saveSpies();
+          return spyJson;
+        }
+      }
+    } catch (e) {
+      // Returns null
+      print(e);
+    }
+    return _tornStatsSpies = null;
   }
 
   void launchShowCaseAddFaction() async {
@@ -765,13 +898,18 @@ class WarController extends GetxController {
     update();
   }
 
+  void setAddUserActive(bool active) {
+    toggleAddUserActive = active;
+    update();
+  }
+
   Future _integrityCheck({bool force = false}) async {
     if (!force && DateTime.now().difference(_lastIntegrityCheck).inHours < 1) {
       return;
     }
 
     for (FactionModel f in factions) {
-      final apiResult = await TornApiCaller.faction(_u.apiKey, f.id.toString()).getFaction;
+      final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return;
       }
@@ -805,6 +943,50 @@ class WarController extends GetxController {
       return member.lifeCurrent;
     } else {
       return -(member.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
+    }
+  }
+
+  void _assignSpiedStats(dynamic spies, Member member) {
+    if (spies != null) {
+      if (_spiesSource == SpiesSource.yata) {
+        for (YataSpyModel spy in spies) {
+          if (spy.targetName == member.name) {
+            member.spiesSource = "yata";
+            member.statsExactTotal = member.statsSort = spy.total;
+            member.statsExactUpdated = spy.update;
+            member.statsStr = spy.strength;
+            member.statsSpd = spy.speed;
+            member.statsDef = spy.defense;
+            member.statsDex = spy.dexterity;
+            int known = 0;
+            if (spy.strength != 1) known += spy.strength;
+            if (spy.speed != 1) known += spy.speed;
+            if (spy.defense != 1) known += spy.defense;
+            if (spy.dexterity != 1) known += spy.dexterity;
+            member?.statsExactTotalKnown = known;
+            break;
+          }
+        }
+      } else {
+        for (SpyElement spy in spies.spies) {
+          if (spy.playerName == member.name) {
+            member.spiesSource = "tornstats";
+            member.statsExactTotal = member.statsSort = spy.total;
+            member.statsExactUpdated = spy.timestamp;
+            member.statsStr = spy.strength;
+            member.statsSpd = spy.speed;
+            member.statsDef = spy.defense;
+            member.statsDex = spy.dexterity;
+            int known = 0;
+            if (spy.strength != 1) known += spy.strength;
+            if (spy.speed != 1) known += spy.speed;
+            if (spy.defense != 1) known += spy.defense;
+            if (spy.dexterity != 1) known += spy.dexterity;
+            member?.statsExactTotalKnown = known;
+            break;
+          }
+        }
+      }
     }
   }
 }

@@ -5,9 +5,11 @@ import 'dart:io';
 
 // Package imports:
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/private/yata_config.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 
 class YataError {
   String reason;
@@ -34,7 +36,7 @@ class YataComm {
     var cookies = await _cj.loadForRequest(_authUrl);
     if (cookies.length < 2) {
       // No valid sessionId, calling auth!
-      var result = await _getAuth(apiKey);
+      var result = await _getAuth();
       if (result is YataError) {
         if (result.reason == "user") {
           return result;
@@ -45,7 +47,7 @@ class YataComm {
     }
 
     try {
-      var awardsRequest = await _client.getUrl(_awardsUrl);
+      var awardsRequest = await _client.getUrl(_awardsUrl).timeout(Duration(seconds: 15));
       awardsRequest.cookies.addAll(cookies);
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
       var awardsResponse = await awardsRequest.close();
@@ -56,7 +58,7 @@ class YataComm {
     }
   }
 
-  static Future<dynamic> getPin(String apiKey, String awardId ) async {
+  static Future<dynamic> getPin(String awardId) async {
     Map<String, String> headers = {
       "referer": _url,
     };
@@ -65,14 +67,14 @@ class YataComm {
     var cookies = await _cj.loadForRequest(_authUrl);
     if (cookies.length < 2) {
       // No valid sessionId, calling auth!
-      await _getAuth(apiKey);
+      await _getAuth();
     }
 
     try {
       // Modify header on the fly to account for the csrf token
       headers["X-CSRFToken"] = cookies[0].value;
 
-      var awardsRequest = await _client.postUrl(_awardsTogglePinUrl);
+      var awardsRequest = await _client.postUrl(_awardsTogglePinUrl).timeout(Duration(seconds: 15));
       awardsRequest.cookies.addAll(await _cj.loadForRequest(_authUrl));
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
       var body = "{\"awardId\": \"$awardId\"}";
@@ -86,14 +88,15 @@ class YataComm {
     }
   }
 
-  static Future _getAuth(String apiKey) async {
+  static Future _getAuth() async {
+    UserController _u = Get.put(UserController());
     Map<String, String> headers = {
       "authorization": 'Basic ' + base64Encode(utf8.encode('$_user:$_pass')),
       "referer": _url,
-      "api-key": apiKey,
+      "api-key": _u.alternativeYataKey,
     };
 
-    var authRequest = await _client.getUrl(_authUrl);
+    var authRequest = await _client.getUrl(_authUrl).timeout(Duration(seconds: 15));
     headers.forEach((key, value) => authRequest.headers.add(key, value));
     var authResponse = await authRequest.close();
 
@@ -104,5 +107,4 @@ class YataComm {
     await _cj.saveFromResponse(_authUrl, authResponse.cookies);
     return true;
   }
-
 }

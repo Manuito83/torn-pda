@@ -2,20 +2,20 @@
 import 'dart:async';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -26,7 +26,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_attack.dart';
+import '../../utils/country_check.dart';
 import '../notes_dialog.dart';
 
 class TargetCard extends StatefulWidget {
@@ -46,6 +46,7 @@ class _TargetCardState extends State<TargetCard> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ChainStatusProvider _chainProvider;
+  WebViewProvider _webViewProvider;
 
   Timer _updatedTicker;
   Timer _lifeTicker;
@@ -57,6 +58,7 @@ class _TargetCardState extends State<TargetCard> {
   @override
   void initState() {
     super.initState();
+    _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _chainProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
@@ -77,41 +79,80 @@ class _TargetCardState extends State<TargetCard> {
     _returnLastUpdated();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Slidable(
-      actionPane: SlidableDrawerActionPane(),
-      actionExtentRatio: 0.25,
-      actions: <Widget>[
-        IconSlideAction(
-          caption: 'Remove',
-          color: Colors.red,
-          icon: Icons.delete,
-          onTap: () {
-            Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
-            BotToast.showText(
-              text: 'Deleted ${_target.name}!',
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.orange[800],
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
-            );
-          },
-        ),
-      ],
-      secondaryActions: <Widget>[
-        _chainProvider.panicTargets.where((t) => t.name == _target.name).length == 0
-            ? IconSlideAction(
-                caption: 'Add to panic!',
-                color: Colors.blue,
-                icon: MdiIcons.alphaPCircleOutline,
-                onTap: () {
-                  String message = "Added ${_target.name} as a Panic Mode target!";
-                  Color messageColor = Colors.green;
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        extentRatio: 0.5,
+        children: [
+          SlidableAction(
+            label: 'Remove',
+            backgroundColor: Colors.red,
+            icon: Icons.delete,
+            onPressed: (context) {
+              Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
+              BotToast.showText(
+                text: 'Deleted ${_target.name}!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[800],
+                duration: Duration(seconds: 5),
+                contentPadding: EdgeInsets.all(10),
+              );
+            },
+          ),
+        ],
+      ),
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        extentRatio: 0.5,
+        children: [
+          _chainProvider.panicTargets.where((t) => t.name == _target.name).length == 0
+              ? SlidableAction(
+                  label: 'Add to panic!',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.alphaPCircleOutline,
+                  onPressed: (context) {
+                    String message = "Added ${_target.name} as a Panic Mode target!";
+                    Color messageColor = Colors.green;
 
-                  if (_chainProvider.panicTargets.length < 10) {
+                    if (_chainProvider.panicTargets.length < 10) {
+                      setState(() {
+                        _chainProvider.addPanicTarget(
+                          PanicTargetModel()
+                            ..name = _target.name
+                            ..level = _target.level
+                            ..id = _target.playerId
+                            ..factionName = _target.faction.factionName,
+                        );
+                      });
+                    } else {
+                      message = "There are already 10 targets in the Panic Mode list, remove some!";
+                      messageColor = Colors.orange[700];
+                    }
+
+                    BotToast.showText(
+                      text: message,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: messageColor,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                )
+              : SlidableAction(
+                  label: 'PANIC TARGET',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.alphaPCircleOutline,
+                  onPressed: (context) {
+                    String message = "Removed ${_target.name} as a Panic Mode target!";
+                    Color messageColor = Colors.green;
+
                     setState(() {
-                      _chainProvider.addPanicTarget(
+                      _chainProvider.removePanicTarget(
                         PanicTargetModel()
                           ..name = _target.name
                           ..level = _target.level
@@ -119,54 +160,21 @@ class _TargetCardState extends State<TargetCard> {
                           ..factionName = _target.faction.factionName,
                       );
                     });
-                  } else {
-                    message = "There are already 10 targets in the Panic Mode list, remove some!";
-                    messageColor = Colors.orange[700];
-                  }
 
-                  BotToast.showText(
-                    text: message,
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: messageColor,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-              )
-            : IconSlideAction(
-                caption: 'PANIC TARGET',
-                color: Colors.blue,
-                icon: MdiIcons.alphaPCircleOutline,
-                onTap: () {
-                  String message = "Removed ${_target.name} as a Panic Mode target!";
-                  Color messageColor = Colors.green;
-
-                  setState(() {
-                    _chainProvider.removePanicTarget(
-                      PanicTargetModel()
-                        ..name = _target.name
-                        ..level = _target.level
-                        ..id = _target.playerId
-                        ..factionName = _target.faction.factionName,
+                    BotToast.showText(
+                      text: message,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: messageColor,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
                     );
-                  });
-
-                  BotToast.showText(
-                    text: message,
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: messageColor,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-              ),
-      ],
+                  },
+                ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
         child: Card(
@@ -208,11 +216,31 @@ class _TargetCardState extends State<TargetCard> {
                           children: <Widget>[
                             GestureDetector(
                               onTap: () {
-                                _startAttack();
+                                if (_target.status.state.contains("Federal") ||
+                                    _target.status.state.contains("Fallen")) {
+                                  BotToast.showText(
+                                    text: "This player is "
+                                        "${_target.status.state.replaceAll("Federal", "in federal jail").toLowerCase()}"
+                                        " and cannot be attacked!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.red,
+                                    duration: Duration(seconds: 5),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                } else {
+                                  _startAttack();
+                                }
                               },
                               child: Row(
                                 children: [
-                                  _attackIcon(),
+                                  if (_target.status.state.contains("Federal") ||
+                                      _target.status.state.contains("Fallen"))
+                                    Icon(MdiIcons.graveStone, size: 18)
+                                  else
+                                    _attackIcon(),
                                   Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 5),
                                   ),
@@ -651,15 +679,21 @@ class _TargetCardState extends State<TargetCard> {
       _lifeTicker?.cancel();
     }
 
-    // Found players in federal jail with a higher life than their maximum. Correct it if it's the
-    // case to avoid issues with percentage bar
     double lifePercentage;
-    if (_target.life.current / _target.life.maximum > 1) {
-      lifePercentage = 1;
-    } else if (_target.life.current / _target.life.maximum > 1) {
+
+    // Avoid issues with dormant NPC reporting weird life values (0)
+    if (_target.life.current == 0 || _target.life.maximum == 0) {
       lifePercentage = 0;
     } else {
-      lifePercentage = _target.life.current / _target.life.maximum;
+      // Found players in federal jail with a higher life than their maximum. Correct it if it's the
+      // case to avoid issues with percentage bar
+      if (_target.life.current / _target.life.maximum > 1) {
+        lifePercentage = 1;
+      } else if (_target.life.current / _target.life.maximum > 1) {
+        lifePercentage = 0;
+      } else {
+        lifePercentage = _target.life.current / _target.life.maximum;
+      }
     }
 
     return Row(
@@ -669,6 +703,8 @@ class _TargetCardState extends State<TargetCard> {
           'Life ',
         ),
         LinearPercentIndicator(
+          padding: null,
+          barRadius: Radius.circular(10),
           width: 100,
           lineHeight: 16,
           progressColor: lifeBarColor,
@@ -684,8 +720,10 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _travelIcon() {
-    if (_target.status.color == "blue") {
-      var destination = _target.status.description;
+    var country = countryCheck(_target.status);
+
+    if (_target.status.color == "blue" || (country != "Torn" && _target.status.color == "red")) {
+      var destination = _target.status.color == "blue" ? _target.status.description : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -853,23 +891,6 @@ class _TargetCardState extends State<TargetCard> {
     }
   }
 
-  void _updateSeveralTargets(List<String> attackedIds) async {
-    BotToast.showText(
-      text: '${attackedIds.length} attacked targets will auto update in a few seconds!',
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.grey[800],
-      duration: Duration(seconds: 4),
-      contentPadding: EdgeInsets.all(10),
-    );
-
-    await Future.delayed(Duration(seconds: 15));
-    if (!mounted) return;
-    await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
-  }
-
   void _timerUpdateInformation() {
     _returnLastUpdated();
     if (mounted) {
@@ -959,19 +980,42 @@ class _TargetCardState extends State<TargetCard> {
           attacksNotesColor.add(tar.personalNoteColor);
         }
 
-        Get.to(
-          TornWebViewAttack(
-            attackIdList: attacksIds,
-            attackNameList: attacksNames,
-            attackNotesList: attackNotes,
-            attackNotesColorList: attacksNotesColor,
-            attacksCallback: _updateSeveralTargets,
-            userKey: _userProvider.basic.userApiKey,
-            showNotes: await Prefs().getShowTargetsNotes(),
-            showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
-            showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
-          ),
+        bool showNotes = await Prefs().getShowTargetsNotes();
+        bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
+        bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+
+        await _webViewProvider.openBrowserPreference(
+          awaitable: true,
+          context: context,
+          url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+          useDialog: false,
+          recallLastSession: false,
+          isChainingBrowser: true,
+          chainingPayload: ChainingPayload()
+            ..attackIdList = attacksIds
+            ..attackNameList = attacksNames
+            ..attackNotesList = attackNotes
+            ..attackNotesColorList = attacksNotesColor
+            ..showNotes = showNotes
+            ..showBlankNotes = showBlankNotes
+            ..showOnlineFactionWarning = showOnlineFactionWarning,
         );
+
+        if (_targetsProvider.lastAttackedTargets.length > 0) {
+          BotToast.showText(
+            text: '${_targetsProvider.lastAttackedTargets.length} attacked targets will auto update in a few seconds!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[800],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+
+          _targetsProvider.updateTargetsAfterAttacks();
+        }
+
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid='

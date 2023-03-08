@@ -43,11 +43,14 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
           drawer: Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
@@ -56,75 +59,78 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                   child: buildAppBar(),
                 )
               : null,
-          body: SingleChildScrollView(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${widget.friend.name} [${widget.friend.playerId}]',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 5),
-                          child: SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: IconButton(
-                              icon: Icon(Icons.content_copy),
-                              iconSize: 20,
-                              onPressed: () {
-                                Clipboard.setData(ClipboardData(text: widget.friend.playerId.toString()));
-                                BotToast.showText(
-                                  text: "Your friend's ID [${widget.friend.playerId}] has been "
-                                      "copied to the clipboard!",
-                                  textStyle: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: Colors.green,
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
-                                );
-                              },
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: SingleChildScrollView(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: <Widget>[
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${widget.friend.name} [${widget.friend.playerId}]',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Text('${widget.friend.rank}'),
-                    SizedBox(height: 20),
-                    Text('Level: ${widget.friend.level}'),
-                    Text('Gender: ${widget.friend.gender}'),
-                    Text('Age: ${widget.friend.age} days'),
-                    SizedBox(height: 20),
-                    _returnLife(),
-                    SizedBox(height: 5),
-                    _returnLastAction(),
-                    SizedBox(height: 5),
-                    _returnStatus(),
-                    SizedBox(height: 20),
-                    Text('Awards: ${widget.friend.awards} '
-                        '(you have ${_userDetails.basic.awards})'),
-                    SizedBox(height: 20),
-                    Text('Donator: ${widget.friend.donator == 0 ? 'NO' : 'YES'}'),
-                    Text('Friends/Enemies: ${widget.friend.friends}'
-                        '/${widget.friend.enemies}'),
-                    SizedBox(height: 20),
-                    _returnFaction(),
-                    SizedBox(height: 20),
-                    _returnJob(),
-                    SizedBox(height: 20),
-                    _returnDiscord(),
-                    SizedBox(height: 50),
-                  ],
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: IconButton(
+                                icon: Icon(Icons.content_copy),
+                                iconSize: 20,
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(text: widget.friend.playerId.toString()));
+                                  BotToast.showText(
+                                    text: "Your friend's ID [${widget.friend.playerId}] has been "
+                                        "copied to the clipboard!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.green,
+                                    duration: Duration(seconds: 5),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text('${widget.friend.rank}'),
+                      SizedBox(height: 20),
+                      Text('Level: ${widget.friend.level}'),
+                      Text('Gender: ${widget.friend.gender}'),
+                      Text('Age: ${widget.friend.age} days'),
+                      SizedBox(height: 20),
+                      _returnLife(),
+                      SizedBox(height: 5),
+                      _returnLastAction(),
+                      SizedBox(height: 5),
+                      _returnStatus(),
+                      SizedBox(height: 20),
+                      Text('Awards: ${widget.friend.awards} '
+                          '(you have ${_userDetails.basic.awards})'),
+                      SizedBox(height: 20),
+                      Text('Donator: ${widget.friend.donator == 0 ? 'NO' : 'YES'}'),
+                      Text('Friends/Enemies: ${widget.friend.friends}'
+                          '/${widget.friend.enemies}'),
+                      SizedBox(height: 20),
+                      _returnFaction(),
+                      SizedBox(height: 20),
+                      _returnJob(),
+                      SizedBox(height: 20),
+                      _returnDiscord(),
+                      SizedBox(height: 50),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -157,6 +163,8 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
           child: Text('Life'),
         ),
         LinearPercentIndicator(
+          padding: null,
+          barRadius: Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,

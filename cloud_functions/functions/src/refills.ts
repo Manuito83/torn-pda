@@ -13,7 +13,7 @@ export const refillsGroup = {
   sendRefillNotifications: functions.region('us-east4')
     .runWith(runtimeOpts)
     .pubsub
-    .schedule("58 17,18,19,20,21,22 * * *")
+    .schedule("58 15,16,17,18,19,20,21,22 * * *")
     .timeZone('Etc/UTC')
     .onRun(async () => {
 
@@ -67,11 +67,18 @@ export const refillsGroup = {
               const emptyTitle = "No refills selected!";
               const emptyBody = "You have activated your refills alerts but did not select which refills you would like to be notified about!"
 
+              let title = emptyTitle;
+              let body = emptyBody;
+              if (thisUser.discrete) {
+                title = `Refill`;
+                body = ` `;
+              }
+
               promises.push(
                 sendNotificationToUser(
                   thisUser.token,
-                  emptyTitle,
-                  emptyBody,
+                  title,
+                  body,
                   "notification_refills",
                   "#0000FF",
                   "Alerts refills",

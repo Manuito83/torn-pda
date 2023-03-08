@@ -47,7 +47,6 @@ class TradesProvider extends ChangeNotifier {
 
   void updateTrades({
     @required playerId,
-    @required String userApiKey,
     @required String sellerName,
     @required int sellerId,
     @required int tradeId,
@@ -106,7 +105,7 @@ class TradesProvider extends ChangeNotifier {
     if (leftItemsElements.length > 0 || rightItemsElements.length > 0) {
       var allTornItems;
       try {
-        allTornItems = await TornApiCaller.items(userApiKey).getItems;
+        allTornItems = await TornApiCaller().getItems();
       } catch (e) {
         print(e);
       }
@@ -128,7 +127,7 @@ class TradesProvider extends ChangeNotifier {
 
         // TORN TRADER init here (it only takes into account elements sold to us,
         // so we'll only pass this information
-        var tornTraderActive = await Prefs().getTornTraderEnabled();
+        var tornTraderActive = false; //await Prefs().getTornTraderEnabled();
         if (rightItemsElements.isNotEmpty && tornTraderActive) {
           TornTraderInModel tornTraderIn = await TornTraderComm.submitItems(
             newModel.rightItems,

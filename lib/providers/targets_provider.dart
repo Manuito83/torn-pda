@@ -1,10 +1,12 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Package imports:
 import 'package:http/http.dart' as http;
@@ -17,7 +19,7 @@ import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -44,6 +46,8 @@ class TargetsProvider extends ChangeNotifier {
 
   List<TargetModel> _oldTargetsList = [];
 
+  UserController _u = Get.put(UserController());
+
   String _currentWordFilter = '';
   String get currentWordFilter => _currentWordFilter;
 
@@ -52,10 +56,9 @@ class TargetsProvider extends ChangeNotifier {
 
   TargetSortType _currentSort;
 
-  String _userKey = '';
+  List<String> lastAttackedTargets = [];
 
-  OwnProfileBasic _userDetails;
-  TargetsProvider(this._userDetails) {
+  TargetsProvider() {
     restorePreferences();
   }
 
@@ -76,7 +79,7 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewTargetModel = await TornApiCaller.target(_userKey, targetId).getTarget;
+    dynamic myNewTargetModel = await TornApiCaller().getTarget(playerId: targetId);
 
     if (myNewTargetModel is TargetModel) {
       _getRespectFF(attacks, myNewTargetModel);
@@ -108,7 +111,7 @@ class TargetsProvider extends ChangeNotifier {
   /// to call several times if looping. Example: we can loop the addTarget method 100 times, but
   /// the attack variable we provide is the same and we only requested it once.
   dynamic getAttacks() async {
-    return await TornApiCaller.attacks(_userKey).getAttacks;
+    return await TornApiCaller().getAttacks();
   }
 
   void _getTargetFaction(TargetModel myNewTargetModel) {
@@ -210,7 +213,7 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
+      dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: targetToUpdate.playerId.toString());
       if (myUpdatedTargetModel is TargetModel) {
         _getRespectFF(
           attacks,
@@ -254,7 +257,7 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
+        dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: _targets[i].playerId.toString());
         if (myUpdatedTargetModel is TargetModel) {
           _getRespectFF(
             attacks,
@@ -298,18 +301,20 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> updateTargetsAfterAttacks({@required List<String> targetsIds}) async {
+  Future<void> updateTargetsAfterAttacks() async {
+    await Future.delayed(Duration(seconds: 15));
+
     // Get attacks full to use later
     dynamic attacks = await getAttacks();
 
     // Local function for the update of several targets after attacking
     for (var tar in _targets) {
-      for (var i = 0; i < targetsIds.length; i++) {
-        if (tar.playerId.toString() == targetsIds[i]) {
+      for (var i = 0; i < lastAttackedTargets.length; i++) {
+        if (tar.playerId.toString() == lastAttackedTargets[i]) {
           tar.isUpdating = true;
           notifyListeners();
           try {
-            dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
+            dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: tar.playerId.toString());
             if (myUpdatedTargetModel is TargetModel) {
               _getRespectFF(
                 attacks,
@@ -334,7 +339,7 @@ class TargetsProvider extends ChangeNotifier {
             tar.isUpdating = false;
             _updateResultAnimation(tar, false);
           }
-          if (targetsIds.length > 40) {
+          if (lastAttackedTargets.length > 40) {
             await Future.delayed(const Duration(seconds: 1), () {});
           }
         }
@@ -416,6 +421,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.respectAsc:
         _targets.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
+      case TargetSortType.ffDes:
+        _targets.sort((a, b) => b.fairFight.compareTo(a.fairFight));
+        break;
+      case TargetSortType.ffAsc:
+        _targets.sort((a, b) => a.fairFight.compareTo(b.fairFight));
+        break;
       case TargetSortType.nameDes:
         _targets.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
@@ -433,6 +444,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case TargetSortType.colorAsc:
         _targets.sort((a, b) => a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
+        break;
+      case TargetSortType.onlineDes:
+        _targets.sort((a, b) => b.lastAction.timestamp.compareTo(a.lastAction.timestamp));
+        break;
+      case TargetSortType.onlineAsc:
+        _targets.sort((a, b) => a.lastAction.timestamp.compareTo(b.lastAction.timestamp));
         break;
     }
     _saveSortSharedPrefs();
@@ -479,6 +496,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.respectAsc:
         sortToSave = 'respectDes';
         break;
+      case TargetSortType.ffDes:
+        sortToSave = 'ffDes';
+        break;
+      case TargetSortType.ffAsc:
+        sortToSave = 'ffDes';
+        break;
       case TargetSortType.nameDes:
         sortToSave = 'nameDes';
         break;
@@ -497,16 +520,17 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.colorAsc:
         sortToSave = 'colorAsc';
         break;
+      case TargetSortType.onlineDes:
+        sortToSave = 'onlineDes';
+        break;
+      case TargetSortType.onlineAsc:
+        sortToSave = 'onlineAsc';
+        break;
     }
     Prefs().setTargetsSort(sortToSave);
   }
 
   Future<void> restorePreferences() async {
-    // User key
-    if (_userDetails.userApiKeyValid) {
-      _userKey = _userDetails.userApiKey;
-    }
-
     // Target list
     bool needToSave = false;
     List<String> jsonTargets = await Prefs().getTargetsList();
@@ -552,6 +576,12 @@ class TargetsProvider extends ChangeNotifier {
       case 'respectAsc':
         _currentSort = TargetSortType.respectAsc;
         break;
+      case 'ffDes':
+        _currentSort = TargetSortType.ffDes;
+        break;
+      case 'ffAsc':
+        _currentSort = TargetSortType.ffAsc;
+        break;
       case 'nameDes':
         _currentSort = TargetSortType.nameDes;
         break;
@@ -563,6 +593,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case 'colorDes':
         _currentSort = TargetSortType.colorAsc;
+        break;
+      case 'onlineDes':
+        _currentSort = TargetSortType.onlineDes;
+        break;
+      case 'onlineAsc':
+        _currentSort = TargetSortType.onlineAsc;
         break;
     }
 
@@ -577,11 +613,11 @@ class TargetsProvider extends ChangeNotifier {
   Future<YataTargetsImportModel> getTargetsFromYata() async {
     try {
       var response = await http.get(
-        Uri.parse('https://yata.yt/api/v1/targets/export/?key=$_userKey'),
+        Uri.parse('https://yata.yt/api/v1/targets/export/?key=${_u.alternativeYataKey}'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-      );
+      ).timeout(Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         return yataTargetsImportModelFromJson(response.body);
@@ -602,7 +638,7 @@ class TargetsProvider extends ChangeNotifier {
     @required List<TargetsBothSides> bothSides,
   }) async {
     var modelOut = YataTargetsExportModel();
-    modelOut.key = _userKey;
+    modelOut.key = _u.alternativeYataKey;
     //modelOut.user = "Torn PDA $appVersion";
 
     var targets = Map<String, YataExportTarget>();
@@ -631,13 +667,15 @@ class TargetsProvider extends ChangeNotifier {
     var bodyOut = yataTargetsExportModelToJson(modelOut);
 
     try {
-      var response = await http.post(
-        Uri.parse('https://yata.yt/api/v1/targets/import/'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: bodyOut,
-      );
+      var response = await http
+          .post(
+            Uri.parse('https://yata.yt/api/v1/targets/import/'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: bodyOut,
+          )
+          .timeout(Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         Map<String, dynamic> result = json.decode(response.body);
@@ -648,10 +686,12 @@ class TargetsProvider extends ChangeNotifier {
 
         return answer;
       } else {
-        return "";
+        //return "";
+        return "Error: $e"; // Returns full error to player (in case YATA is down, etc.)
       }
     } catch (e) {
-      return "";
+      //return "";
+      return "Error: $e"; // Returns full error to player (in case YATA is down, etc.)
     }
   }
 

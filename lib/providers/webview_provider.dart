@@ -1,10 +1,14 @@
 // Dart imports:
 
 // Flutter imports:
+import 'dart:developer';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 // Package imports:
@@ -15,14 +19,37 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TabDetails {
+  bool sleepTab = false;
   bool initialised = false;
   Widget webView;
+  SleepingWebView sleepingWebView;
   GlobalKey<WebViewFullState> webViewKey;
   String currentUrl = "https://www.torn.com";
   String pageTitle = "";
   bool chatRemovalActiveTab = false;
   List<String> historyBack = <String>[];
   List<String> historyForward = <String>[];
+  bool isChainingBrowser = false;
+}
+
+class SleepingWebView {
+  final String customUrl;
+  final GlobalKey<WebViewFullState> key;
+  final bool dialog;
+  final bool useTabs;
+  final bool chatRemovalActive;
+  final bool isChainingBrowser;
+  final ChainingPayload chainingPayload;
+
+  const SleepingWebView({
+    this.customUrl = 'https://www.torn.com',
+    this.dialog = false,
+    this.useTabs = false,
+    this.chatRemovalActive = false,
+    this.key,
+    this.isChainingBrowser = false,
+    this.chainingPayload,
+  });
 }
 
 class WebViewProvider extends ChangeNotifier {
@@ -33,6 +60,8 @@ class WebViewProvider extends ChangeNotifier {
   bool chatRemovalActiveGlobal = false;
 
   bool _useDialog = false;
+
+  String pendingThemeSync = "";
 
   bool _useTabIcons = true;
   bool get useTabIcons => _useTabIcons;
@@ -47,8 +76,53 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _secondaryInitialised = false;
 
+  DateTime _lastBrowserOpenedTime;
+
+  var _onlyLoadTabsWhenUsed = true;
+  bool get onlyLoadTabsWhenUsed => _onlyLoadTabsWhenUsed;
+  set onlyLoadTabsWhenUsed(bool value) {
+    _onlyLoadTabsWhenUsed = value;
+    Prefs().setOnlyLoadTabsWhenUsed(_onlyLoadTabsWhenUsed);
+    notifyListeners();
+  }
+
   /// [recallLastSession] should be used to open a browser session where we left it last time
-  Future initialiseMain({@required String initUrl, bool dialog = false, bool recallLastSession = false}) async {
+  Future initialiseMain({
+    @required String initUrl,
+    bool dialog = false,
+    bool recallLastSession = false,
+    bool isChainingBrowser = false,
+    ChainingPayload chainingPayload,
+    bool restoreSessionCookie = false,
+  }) async {
+    if (restoreSessionCookie) {
+      try {
+        String sessionCookie = await Prefs().getWebViewSessionCookie();
+        if (sessionCookie != "") {
+          var cm = CookieManager.instance();
+
+          var allCookies = await cm.getCookies(url: WebUri("https://www.torn.com"));
+          log("Cookies: ${allCookies.length}");
+          var repetitions = allCookies.where((element) => element.name == "PHPSESSID").length;
+
+          for (int i = 0; i < repetitions; i++) {
+            await cm.deleteCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
+            log("Cleared PHPSESSID: $i");
+          }
+
+          await cm.setCookie(
+            url: WebUri("https://www.torn.com"),
+            domain: "www.torn.com",
+            name: "PHPSESSID",
+            value: sessionCookie,
+          );
+          log("Restored PHPSESSID cookie: $sessionCookie");
+        }
+      } catch (e) {
+        //
+      }
+    }
+
     _useDialog = dialog;
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
@@ -77,7 +151,12 @@ class WebViewProvider extends ChangeNotifier {
         await addTab(url: "https://www.torn.com", chatRemovalActive: chatRemovalActiveGlobal);
       }
     } else {
-      await addTab(url: url, chatRemovalActive: chatRemovalActiveGlobal);
+      await addTab(
+        url: url,
+        chatRemovalActive: chatRemovalActiveGlobal,
+        isChainingBrowser: isChainingBrowser,
+        chainingPayload: chainingPayload,
+      );
     }
     _currentTab = 0;
   }
@@ -85,12 +164,15 @@ class WebViewProvider extends ChangeNotifier {
   Future initialiseSecondary({@required bool useTabs, bool recallLastSession = false}) async {
     var savedJson = await Prefs().getWebViewSecondaryTabs();
     var savedWebViews = tabSaveModelFromJson(savedJson);
+    bool sleepTabsByDefault = await Prefs().getOnlyLoadTabsWhenUsed();
 
     _secondaryInitialised = true;
 
     for (var wv in savedWebViews.tabsSave) {
       if (useTabs) {
         addTab(
+          tabKey: wv.tabKey,
+          sleepTab: sleepTabsByDefault,
           url: wv.url,
           pageTitle: wv.pageTitle,
           chatRemovalActive: wv.chatRemovalActive,
@@ -111,36 +193,70 @@ class WebViewProvider extends ChangeNotifier {
     // Make sure we start at the first tab. We don't need to call activateTab because we have
     // still not initialised completely and the StackView is not live
     if (recallLastSession && useTabs) {
-      _currentTab = await Prefs().getWebViewLastActiveTab();
+      int lastActive = await Prefs().getWebViewLastActiveTab();
+      if (lastActive <= _tabList.length - 1) {
+        _currentTab = lastActive;
+      } else {
+        _currentTab = 0;
+      }
+
+      // Awake WebView if we are recalling it
+      if (_tabList[_currentTab].sleepTab) {
+        _tabList[_currentTab].sleepTab = false;
+        _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView);
+      }
     } else {
       _currentTab = 0;
     }
   }
 
   Future addTab({
+    GlobalKey tabKey,
+    int windowId,
+    bool sleepTab = false,
     String url = "https://www.torn.com",
     String pageTitle = "",
     bool chatRemovalActive,
     List<String> historyBack,
     List<String> historyForward,
+    bool isChainingBrowser = false,
+    ChainingPayload chainingPayload,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     var key = GlobalKey<WebViewFullState>();
     _tabList.add(
       TabDetails()
+        ..sleepTab = sleepTab
         ..webViewKey = key
-        ..webView = WebViewFull(
-          customUrl: url,
-          key: key,
-          dialog: _useDialog,
-          useTabs: true,
-          chatRemovalActive: chatRemovalActive,
-        )
+        ..webView = sleepTab
+            ? null
+            : WebViewFull(
+                windowId: windowId,
+                customUrl: url,
+                key: key,
+                dialog: _useDialog,
+                useTabs: true,
+                chatRemovalActive: chatRemovalActive,
+                isChainingBrowser: isChainingBrowser,
+                chainingPayload: chainingPayload,
+              )
+        ..sleepingWebView = sleepTab
+            ? SleepingWebView(
+                customUrl: url,
+                key: key,
+                dialog: _useDialog,
+                useTabs: true,
+                chatRemovalActive: chatRemovalActive,
+                isChainingBrowser: isChainingBrowser,
+                chainingPayload: chainingPayload,
+              )
+            : null
         ..pageTitle = pageTitle
         ..currentUrl = url
         ..chatRemovalActiveTab = chatRemovalActive
         ..historyBack = historyBack ?? <String>[]
-        ..historyForward = historyForward ?? <String>[],
+        ..historyForward = historyForward ?? <String>[]
+        ..isChainingBrowser = isChainingBrowser,
     );
     notifyListeners();
     _callAssessMethods();
@@ -168,15 +284,27 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void removeTab(int position) async {
-    if (position == 0) return;
+  void removeTab({int position, bool calledFromTab = false}) async {
+    if (calledFromTab) {
+      position = _currentTab;
+    }
+
+    if (position == null || position == 0) return;
 
     bool wasLast = _currentTab == _tabList.length - 1 || false;
 
     // If we remove the current tab, we need to decrease the current tab by 1
     if (position == _currentTab) {
       _currentTab = position - 1;
-      _tabList[_currentTab].webViewKey.currentState?.resumeTimers();
+
+      // Awake WebView if necessary
+      var activated = _tabList[_currentTab];
+      if (activated.sleepTab) {
+        activated.sleepTab = false;
+        activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView);
+      }
+
+      _tabList[_currentTab]?.webViewKey?.currentState?.resumeWebview();
     } else if (_currentTab == _tabList.length - 1) {
       // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
       _currentTab = _tabList.length - 2;
@@ -184,7 +312,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
     if (wasLast) {
-      _tabList[_currentTab].webViewKey.currentState?.resumeTimers();
+      _tabList[_currentTab]?.webViewKey?.currentState?.resumeWebview();
       // Notify listeners first so that the tab changes
       notifyListeners();
       // Then wait 200 milliseconds so that the animated stack view changes its child
@@ -203,14 +331,33 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty || _tabList.length - 1 < newActiveTab) return;
 
     var deactivated = _tabList[_currentTab];
-    deactivated.webViewKey.currentState?.pauseTimers();
+    deactivated?.webViewKey?.currentState?.pauseWebview();
 
     _currentTab = newActiveTab;
     var activated = _tabList[_currentTab];
-    activated.webViewKey.currentState?.resumeTimers();
+
+    // Awake WebView if necessary
+    if (activated.sleepTab) {
+      activated.sleepTab = false;
+      activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView);
+    }
+
+    activated?.webViewKey?.currentState?.resumeWebview();
 
     _callAssessMethods();
     notifyListeners();
+  }
+
+  Widget _buildRealWebViewFromSleeping(SleepingWebView sleeping) {
+    return WebViewFull(
+      customUrl: sleeping.customUrl,
+      key: sleeping.key,
+      dialog: sleeping.dialog,
+      useTabs: true,
+      chatRemovalActive: sleeping.chatRemovalActive,
+      isChainingBrowser: sleeping.isChainingBrowser,
+      chainingPayload: sleeping.chainingPayload,
+    );
   }
 
   void reorderTabs(TabDetails movedItem, int oldIndex, int newIndex) {
@@ -248,7 +395,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Pause timers for tabs that load which are not active (e.g. at the initialization, we pause all except the main)
     if (_tabList[_currentTab] != tab) {
-      tab.webViewKey.currentState?.pauseTimers();
+      tab.webViewKey.currentState?.pauseWebview();
     }
 
     notifyListeners();
@@ -291,6 +438,17 @@ class WebViewProvider extends ChangeNotifier {
       // Call child method directly, otherwise the 'back' button will only work with the first webView
       tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
+      _saveTabs();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool reviveUrl() {
+    var tab = _tabList[_currentTab];
+    if (tab.currentUrl != null) {
+      tab.webViewKey.currentState?.loadFromExterior(url: tab.currentUrl, omitHistory: true);
       _saveTabs();
       return true;
     } else {
@@ -343,19 +501,27 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void clearOnDispose() {
+    // Ensure tab number is correct before saving active session
+    if (_currentTab >= _tabList.length) {
+      _tabList.length == 1 ? _currentTab = 0 : _currentTab = _tabList.length - 1;
+    }
+    Prefs().setWebViewLastActiveTab(_currentTab);
+
     _tabList.clear();
     _secondaryInitialised = false;
+
     // It is necessary to bring this to 0 so that on opening no checks are performed in tabs that don't exist yet
-    Prefs().setWebViewLastActiveTab(_currentTab);
     _currentTab = 0;
   }
 
   TabDetails getTabFromKey(Key reporterKey) {
     for (var tab in _tabList) {
-      if (tab.webView.key == reporterKey) {
+      // Null check because not all webview have a key (sleeping tabs!)
+      if (tab.webView?.key == reporterKey) {
         return tab;
       }
     }
+
     return null;
   }
 
@@ -370,7 +536,8 @@ class WebViewProvider extends ChangeNotifier {
   // several tabs are open to the gym
   void showEnergyWarningMessage(String message, Key reporterKey) {
     for (var tab in _tabList) {
-      if (tab.webView.key == reporterKey) {
+      // Null check because not all webview have a key (sleeping tabs!)
+      if (tab.webView?.key == reporterKey) {
         if (!_gymMessageActive) {
           _gymMessageActive = true;
           BotToast.showText(
@@ -403,13 +570,30 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void cancelChainingBrowser() {
+    var tab = _tabList[_currentTab];
+    tab.isChainingBrowser = false;
+    notifyListeners();
+  }
+
   Future openBrowserPreference({
     @required BuildContext context,
     @required String url,
     @required bool useDialog,
     bool awaitable = false,
     bool recallLastSession = false,
+    // Chaining
+    final bool isChainingBrowser = false,
+    final ChainingPayload chainingPayload,
   }) async {
+    // Checking _tabList might not be enough to ensure that the browser is closed. We might get duplicates
+    // with double presses or even notifications, try to open the browser twice (creating repeated keys)
+    // This ensures that a browser open request only happens once
+    if (_lastBrowserOpenedTime != null && (DateTime.now().difference(_lastBrowserOpenedTime).inSeconds) < 1) {
+      return;
+    }
+    _lastBrowserOpenedTime = DateTime.now();
+
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
       // First check if the browser (whichever) is open. If it is, load the url in that browser.
@@ -419,21 +603,39 @@ class WebViewProvider extends ChangeNotifier {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
           if (awaitable) {
-            await openBrowserDialog(context, url, recallLastSession: recallLastSession);
+            await openBrowserDialog(
+              context,
+              url,
+              recallLastSession: recallLastSession,
+            );
           } else {
-            openBrowserDialog(context, url, recallLastSession: recallLastSession);
+            openBrowserDialog(
+              context,
+              url,
+              recallLastSession: recallLastSession,
+            );
           }
         } else {
           if (awaitable) {
             await Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(initUrl: url, recallLastSession: recallLastSession),
+                builder: (BuildContext context) => WebViewStackView(
+                  initUrl: url,
+                  recallLastSession: recallLastSession,
+                  isChainingBrowser: isChainingBrowser,
+                  chainingPayload: chainingPayload,
+                ),
               ),
             );
           } else {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(initUrl: url, recallLastSession: recallLastSession),
+                builder: (BuildContext context) => WebViewStackView(
+                  initUrl: url,
+                  recallLastSession: recallLastSession,
+                  isChainingBrowser: isChainingBrowser,
+                  chainingPayload: chainingPayload,
+                ),
               ),
             );
           }
@@ -443,6 +645,14 @@ class WebViewProvider extends ChangeNotifier {
       if (!recallLastSession && await canLaunch(url)) {
         await launch(url, forceSafariVC: false);
       }
+    }
+  }
+
+  void changeTornTheme({@required bool dark}) {
+    if (!dark) {
+      pendingThemeSync = "light";
+    } else {
+      pendingThemeSync = "dark";
     }
   }
 }

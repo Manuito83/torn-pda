@@ -28,21 +28,27 @@ class ItemsModel {
 }
 
 class Item {
-  String id; // Manually entered, as it don't follow the same order in the map
+  String id; // Manually entered, as it doesn't follow the same order in the map
+  int inventoryOwned;
+  int totalValue;
+  //
   String name;
   String description;
   String effect;
-  Requirement requirement;
+  String requirement;
   ItemType type;
-  WeaponType weaponType;
+  String weaponType;
   int buyPrice;
   int sellPrice;
   int marketValue;
   int circulation;
   String image;
+  Coverage coverage;
 
   Item({
     this.id,
+    this.inventoryOwned = 0,
+    this.totalValue = 0,
     this.name,
     this.description,
     this.effect,
@@ -54,54 +60,39 @@ class Item {
     this.marketValue,
     this.circulation,
     this.image,
+    this.coverage,
   });
 
   factory Item.fromJson(Map<String, dynamic> json) => Item(
         name: json["name"] == null ? null : json["name"],
         description: json["description"] == null ? null : json["description"],
         effect: json["effect"] == null ? null : json["effect"],
-        requirement: json["requirement"] == null ? null : requirementValues.map[json["requirement"]],
+        requirement: json["requirement"] == null ? null : json["requirement"],
         type: json["type"] == null ? null : typeValues.map[json["type"]],
-        weaponType: json["weapon_type"] == null ? null : weaponTypeValues.map[json["weapon_type"]],
+        weaponType: json["weapon_type"] == null ? null : json["weapon_type"],
         buyPrice: json["buy_price"] == null ? null : json["buy_price"],
         sellPrice: json["sell_price"] == null ? null : json["sell_price"],
         marketValue: json["market_value"] == null ? null : json["market_value"],
         circulation: json["circulation"] == null ? null : json["circulation"],
         image: json["image"] == null ? null : json["image"],
+        coverage: json["coverage"] == null ? null : Coverage.fromJson(json["coverage"]),
       );
 
   Map<String, dynamic> toJson() => {
         "name": name == null ? null : name,
         "description": description == null ? null : description,
         "effect": effect == null ? null : effect,
-        "requirement": requirement == null ? null : requirementValues.reverse[requirement],
+        "requirement": requirement == null ? null : requirement,
         "type": type == null ? null : typeValues.reverse[type],
-        "weapon_type": weaponType == null ? null : weaponTypeValues.reverse[weaponType],
+        "weapon_type": weaponType == null ? null : weaponType,
         "buy_price": buyPrice == null ? null : buyPrice,
         "sell_price": sellPrice == null ? null : sellPrice,
         "market_value": marketValue == null ? null : marketValue,
         "circulation": circulation == null ? null : circulation,
         "image": image == null ? null : image,
+        "coverage": coverage == null ? null : coverage.toJson(),
       };
 }
-
-enum Requirement {
-  EMPTY,
-  UNDER_THE_EFFECT_OF_RADIATION_POISONING,
-  BACHELOR_OF_BIOLOGY_EDUCATION_COURSE,
-  INTRAVENOUS_THERAPY_EDUCATION_COURSE,
-  ONLY_WORKS_DURING_THE_VALENTINE_S_DAY_EVENT,
-  REQUIRES_NOTHING
-}
-
-final requirementValues = EnumValues({
-  "Bachelor of Biology education course.": Requirement.BACHELOR_OF_BIOLOGY_EDUCATION_COURSE,
-  "": Requirement.EMPTY,
-  "Intravenous Therapy education course.": Requirement.INTRAVENOUS_THERAPY_EDUCATION_COURSE,
-  "Only works during the Valentine's day event.": Requirement.ONLY_WORKS_DURING_THE_VALENTINE_S_DAY_EVENT,
-  "Requires nothing.": Requirement.REQUIRES_NOTHING,
-  "Under the effect of radiation poisoning.": Requirement.UNDER_THE_EFFECT_OF_RADIATION_POISONING
-});
 
 enum ItemType {
   MELEE,
@@ -161,33 +152,61 @@ final typeValues = EnumValues({
   "Virus": ItemType.VIRUS
 });
 
-enum WeaponType {
-  CLUBBING,
-  PIERCING,
-  SLASHING,
-  MECHANICAL,
-  PISTOL,
-  SHOTGUN,
-  SMG,
-  RIFLE,
-  MACHINE_GUN,
-  HEAVY_ARTILLERY,
-  TEMPORARY
-}
+class Coverage {
+  Coverage({
+    this.fullBodyCoverage,
+    this.heartCoverage,
+    this.stomachCoverage,
+    this.chestCoverage,
+    this.armCoverage,
+    this.legCoverage,
+    this.groinCoverage,
+    this.handCoverage,
+    this.footCoverage,
+    this.headCoverage,
+    this.throatCoverage,
+  });
 
-final weaponTypeValues = EnumValues({
-  "Clubbing": WeaponType.CLUBBING,
-  "Heavy artillery": WeaponType.HEAVY_ARTILLERY,
-  "Machine gun": WeaponType.MACHINE_GUN,
-  "Mechanical": WeaponType.MECHANICAL,
-  "Piercing": WeaponType.PIERCING,
-  "Pistol": WeaponType.PISTOL,
-  "Rifle": WeaponType.RIFLE,
-  "Shotgun": WeaponType.SHOTGUN,
-  "Slashing": WeaponType.SLASHING,
-  "SMG": WeaponType.SMG,
-  "Temporary": WeaponType.TEMPORARY
-});
+  double fullBodyCoverage;
+  double heartCoverage;
+  double stomachCoverage;
+  double chestCoverage;
+  double armCoverage;
+  double legCoverage;
+  double groinCoverage;
+  double handCoverage;
+  double footCoverage;
+  double headCoverage;
+  double throatCoverage;
+
+  factory Coverage.fromJson(Map<String, dynamic> json) => Coverage(
+        fullBodyCoverage: json["Full Body Coverage"] == null ? 0 : json["Full Body Coverage"].toDouble(),
+        heartCoverage: json["Heart Coverage"] == null ? 0 : json["Heart Coverage"].toDouble(),
+        stomachCoverage: json["Stomach Coverage"] == null ? 0 : json["Stomach Coverage"].toDouble(),
+        chestCoverage: json["Chest Coverage"] == null ? 0 : json["Chest Coverage"].toDouble(),
+        armCoverage: json["Arm Coverage"] == null ? 0 : json["Arm Coverage"].toDouble(),
+        legCoverage: json["Leg Coverage"] == null ? 0 : json["Leg Coverage"].toDouble(),
+        groinCoverage: json["Groin Coverage"] == null ? 0 : json["Groin Coverage"].toDouble(),
+        handCoverage: json["Hand Coverage"] == null ? 0 : json["Hand Coverage"].toDouble(),
+        footCoverage: json["Foot Coverage"] == null ? 0 : json["Foot Coverage"].toDouble(),
+        headCoverage: json["Head Coverage"] == null ? 0 : json["Head Coverage"].toDouble(),
+        throatCoverage: json["Throat Coverage"] == null ? 0 : json["Throat Coverage"].toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "Full Body Coverage": fullBodyCoverage,
+        "Heart Coverage": heartCoverage,
+        "Stomach Coverage": stomachCoverage,
+        "Chest Coverage": chestCoverage,
+        "Arm Coverage": armCoverage,
+        "Leg Coverage": legCoverage,
+        "Groin Coverage": groinCoverage,
+        "Hand Coverage": handCoverage,
+        "Foot Coverage": footCoverage,
+        "Head Coverage": headCoverage,
+        "Throat Coverage": throatCoverage,
+      };
+}
 
 class EnumValues<T> {
   Map<String, T> map;

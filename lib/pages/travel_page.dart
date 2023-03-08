@@ -3,12 +3,10 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:android_intent/android_intent.dart';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -71,7 +69,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
     _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'travel'});
+    analytics.setCurrentScreen(screenName: 'travel');
   }
 
   @override
@@ -92,6 +90,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -100,22 +99,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               child: buildAppBar(),
             )
           : null,
-      body: Center(
-        child: SingleChildScrollView(
-          child: FutureBuilder(
-            future: _finishedLoadingPreferences,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return Column(
-                  children: _travelMain(),
-                );
-              } else {
-                return Padding(
-                  padding: EdgeInsets.all(10),
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
+      body: Container(
+        color: _themeProvider.canvas,
+        child: Center(
+          child: SingleChildScrollView(
+            child: FutureBuilder(
+              future: _finishedLoadingPreferences,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Column(
+                    children: _travelMain(),
+                  );
+                } else {
+                  return Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
+            ),
           ),
         ),
       ),
@@ -421,7 +423,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     return SpeedDial(
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.Up : SpeedDialDirection.Left,
+          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       elevation: 2,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
@@ -614,12 +616,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         // Calculations for travel bar
         var startTime = _travelModel.departed;
         var endTime = _travelModel.timeStamp;
-        var totalSeconds = endTime - startTime;
+        var totalTravelTimeSeconds = endTime - startTime;
         var dateTimeArrival = _travelModel.timeArrival;
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
         String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
         String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+
+        double percentage = _getTravelPercentage(totalTravelTimeSeconds);
 
         return <Widget>[
           Padding(
@@ -667,6 +671,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   _updateInformation();
                 },
                 child: LinearPercentIndicator(
+                  padding: null,
+                  barRadius: Radius.circular(10),
                   isRTL: _travelModel.destination == "Torn" ? true : false,
                   center: Text(
                     diff,
@@ -675,30 +681,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  widgetIndicator: Opacity(
-                    // Make icon transparent when about to pass over text
-                    opacity:
-                        _getTravelPercentage(totalSeconds) < 0.2 || _getTravelPercentage(totalSeconds) > 0.7 ? 1 : 0.3,
-                    child: Padding(
-                      padding: _travelModel.destination == "Torn"
-                          ? const EdgeInsets.only(top: 6, right: 6)
-                          : const EdgeInsets.only(top: 6, left: 10),
-                      child: RotatedBox(
-                        quarterTurns: _travelModel.destination == "Torn" ? 3 : 1,
-                        child: Icon(
-                          Icons.airplanemode_active,
-                          color: Colors.blue[900],
-                        ),
-                      ),
+                  widgetIndicator: Padding(
+                    padding: _travelModel.destination == "Torn"
+                        ? const EdgeInsets.only(top: 7, left: 15)
+                        : const EdgeInsets.only(top: 7, right: 15),
+                    child: Opacity(
+                      // Make icon transparent when about to pass over text
+                      opacity: percentage < 0.2 || percentage > 0.7 ? 1 : 0.3,
+                      child: _travelModel.destination == "Torn"
+                          ? Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
+                          : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
                     ),
                   ),
                   animateFromLastPercent: true,
                   animation: true,
-                  width: 200,
+                  width: 180,
                   lineHeight: 18,
                   progressColor: Colors.blue[200],
                   backgroundColor: Colors.grey,
-                  percent: _getTravelPercentage(totalSeconds),
+                  percent: percentage,
                 ),
               ),
             ],
@@ -848,7 +849,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchTornApi() async {
-    var myTravel = await TornApiCaller.travel(_myCurrentKey).getTravel;
+    var myTravel = await TornApiCaller().getTravel();
     if (myTravel is TravelModel) {
       _apiRetries = 0;
       setState(() {
@@ -875,7 +876,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'Manual travel ${modifier.channelIdModifier} s',
       'Manual travel ${modifier.channelIdModifier} s',
-      'Manual notifications for travel',
+      channelDescription: 'Manual notifications for travel',
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_travel',
@@ -897,6 +898,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     var notificationTitle = await Prefs().getTravelNotificationTitle();
     var notificationSubtitle = await Prefs().getTravelNotificationBody();
+
+    if (_settingsProvider.discreteNotifications) {
+      notificationTitle = "T";
+      notificationSubtitle = " ";
+    }
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       201,

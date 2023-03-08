@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +9,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -45,9 +48,24 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
             return _firstTimeDialog();
           },
         );
+
+        // If we see user scripts for the first time, don't show new features in the next visit
+        // (the user should use the disclaimer for that)
+        _userScriptsProvider.changeFeatInjectionTimeShown(true);
+
         if (_firstTimeNotAccepted) {
           _willPopCallback();
         }
+      } else {
+        if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatInjectionTimeShown)
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return _injectionTimeDialog();
+            },
+          );
+        _userScriptsProvider.changeFeatInjectionTimeShown(true);
       }
     });
   }
@@ -61,12 +79,13 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -74,86 +93,89 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: Column(
-                children: <Widget>[
-                  SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(width: 2, color: Colors.blueGrey),
-                              ),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            size: 20,
-                            color: _themeProvider.mainText,
-                          ),
-                          onPressed: () {
-                            _showAddDialog(context);
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: Colors.blueGrey,
+            body: Container(
+              color: _themeProvider.canvas,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ButtonTheme(
+                          minWidth: 1.0,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(width: 2, color: Colors.blueGrey),
                                 ),
                               ),
                             ),
+                            child: Icon(
+                              Icons.add,
+                              size: 20,
+                              color: _themeProvider.mainText,
+                            ),
+                            onPressed: () {
+                              _showAddDialog(context);
+                            },
                           ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 20,
-                            color: _themeProvider.mainText,
+                        ),
+                        SizedBox(width: 15),
+                        ButtonTheme(
+                          minWidth: 1.0,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(
+                                    width: 2,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: _themeProvider.mainText,
+                            ),
+                            onPressed: () {
+                              _openWipeDialog();
+                            },
                           ),
-                          onPressed: () {
-                            _openWipeDialog();
-                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Preexisting scripts might require modifications to work with Torn PDA. '
+                        'Please ensure that you use scripts responsibly and '
+                        'understand the hazards. Tap the exclamation mark for more information.',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Preexisting scripts might require modifications to work with Torn PDA. '
-                      'Please ensure that you use scripts responsibly and '
-                      'understand the hazards. Tap the exclamation mark for more information.',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
+                    ),
+                    SizedBox(height: 10),
+                    Flexible(
+                      child: Consumer<UserScriptsProvider>(
+                        builder: (context, settingsProvider, child) => scriptsCards(),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  Flexible(
-                    child: Consumer<UserScriptsProvider>(
-                      builder: (context, settingsProvider, child) => scriptsCards(),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -383,7 +405,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -445,9 +467,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -489,7 +511,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -537,9 +559,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -674,6 +696,181 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 13,
                   ),
                 ),
+                SizedBox(height: 25),                                            
+                Text(
+                  "SCRIPT INJECTION TIME",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
+                        "loads (START) and after the load has been completed (END). The user can select when each "
+                        "script should be loaded by editing its details.\n\n"
+                        "By loading the script at the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "START",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ", you might be able to fetch resources loading and ajax calls, for example. However, "
+                            "Torn PDA will inject the script even before the HTML Document or jQuery are available; "
+                            "therefore, you need to plan for this and check their availability before doing any work. "
+                            "This can be accomplished with ",
+                      ),
+                      TextSpan(
+                        text: "intervals",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or properties such as ",
+                      ),
+                      TextSpan(
+                        text: "'Document.readyState'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or checks like ",
+                      ),
+                      TextSpan(
+                        text: "'typeof window.jQuery'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                      TextSpan(
+                        text: "\n\n"
+                            "By loading the script at the ",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "END",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
+                                "However, please be aware that there might be some items being dynamically "
+                                "loaded (e.g.: items list, jail and hospital lists, etc.), so it might still be "
+                                "necessary to ensure that certain elements are available before doing any work.",
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 25),
+                if (Platform.isIOS)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                      "UNSUPPORTED WINDOWS (iOS)",
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "Be aware that user scripts injection at LOAD START is NOT supported on iOS when a tab has been opened as a 'new window' (e.g. "
+                        "when a link is long-pressed and 'open in a new window' is selected, when a pop-up window opens, or when a new tab "
+                        "is opened automatically from the HTML code)."
+                        "\n\nIn these cases, a warning will appear in the Terminal. "
+                        "The only work-around is to open pages as standard tabs by adding them manually if you need user script support. Alternatively, "
+                        "injection at LOAD END should work with no issues.",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                      SizedBox(height: 25),
+                    ],
+                  ),  
+                Text(
+                  "CROSS-ORIGIN REQUESTS (ADVANCED)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn limits cross-origin requests via the content-security-policy header. In order to "
+                        "allow other APIs to be called from within the browser (though an userscript), Torn PDA "
+                        "incorporates its own JavasScript API.\n\n"
+                        "For more information regarding GET and POST calls, please visit the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "JavasScript API implementation",
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String scriptApiUrl =
+                                "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_API.js";
+                            if (await canLaunch(scriptApiUrl)) {
+                              launch(scriptApiUrl);
+                            }
+                          },
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 25),
+                Text(
+                  "JAVASCRIPT HANDLER (ADVANCED)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn limits the use of the eval() function in javascript via the content-security-policy "
+                        "header. In order to allow the execution of javascript code retrieved at runtime by userscripts, "
+                        " Torn PDA incorporates a handler through which source code can be passed which is then "
+                        "evaluated directly from the app.\n\n"
+                        "For more information, please visit the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "EvaluateJavascript Handler implementation",
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String scriptApiUrl =
+                                "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_EvaluateJavascript.js";
+                            if (await canLaunch(scriptApiUrl)) {
+                              launch(scriptApiUrl);
+                            }
+                          },
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -763,6 +960,114 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  _injectionTimeDialog() {
+    return AlertDialog(
+      title: Text("SCRIPT INJECTION TIME"),
+      content: Scrollbar(
+        isAlwaysShown: true,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "NEW FEATURE (v2.9.4)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
+                        "loads (START) and after the load has been completed (END). The user can select when each "
+                        "script should be loaded by editing its details.\n\n"
+                        "By loading the script at the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "START",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ", you might be able to fetch resources loading and ajax calls, for example. However, "
+                            "Torn PDA will inject the script even before the HTML Document or jQuery are available; "
+                            "therefore, you need to plan for this and check their availability before doing any work. "
+                            "This can be accomplished with ",
+                      ),
+                      TextSpan(
+                        text: "intervals",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or properties such as ",
+                      ),
+                      TextSpan(
+                        text: "'Document.readyState'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " or checks like ",
+                      ),
+                      TextSpan(
+                        text: "'typeof window.jQuery'",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                      TextSpan(
+                        text: "\n\n"
+                            "By loading the script at the ",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "END",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
+                                "However, please be aware that there might be some items being dynamically "
+                                "loaded (e.g.: items list, jail and hospital lists, etc.), so it might still be "
+                                "necessary to ensure that certain elements are available before doing any work.",
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            child: Text("Understood"),
+            onPressed: () {
+              Navigator.of(context).pop('exit');
+            },
+          ),
+        ),
+      ],
     );
   }
 

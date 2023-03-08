@@ -8,6 +8,7 @@ import { foreignStocksGroup } from "./foreign_stocks";
 import { lootGroup } from "./loot";
 import { refillsGroup } from "./refills";
 import { factionAssistGroup } from "./faction_assist";
+import { retalsGroup } from "./retals";
 //import { testGroup } from "./tests";
 //import { helperGroup } from "./helpers";
 
@@ -19,7 +20,7 @@ admin.initializeApp({
 });
 
 export const alerts = alertsGroup;
-//export const alertsTest = alertsTestGroup;
+//export const alertsTest = alertsTestGroup;  // Note: run watcher to change!
 export const travel = travelGroup
 export const stale = staleGroup;
 export const players = playersGroup;
@@ -27,5 +28,6 @@ export const stocks = foreignStocksGroup;
 export const loot = lootGroup;
 export const refills = refillsGroup;
 export const factionAssist = factionAssistGroup;
+export const retals = retalsGroup;
 //export const tests = testGroup;
 //export const helper = helperGroup;

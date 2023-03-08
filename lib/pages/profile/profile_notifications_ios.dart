@@ -62,12 +62,13 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -77,39 +78,42 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                 : null,
             body: Builder(
               builder: (BuildContext context) {
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                  child: FutureBuilder(
-                    future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return SingleChildScrollView(
-                          child: Column(
-                            children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(20.0),
-                                child: Text('Here you can specify your preferred alerting '
-                                    'values for each type of event.'),
-                              ),
-                              _rowsWithTypes(),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 50,
-                                  vertical: 20,
+                return Container(
+                  color: _themeProvider.canvas,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                    child: FutureBuilder(
+                      future: _preferencesLoaded,
+                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return SingleChildScrollView(
+                            child: Column(
+                              children: <Widget>[
+                                Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Text('Here you can specify your preferred alerting '
+                                      'values for each type of event.'),
                                 ),
-                                child: Divider(),
-                              ),
-                              SizedBox(height: 50),
-                            ],
-                          ),
-                        );
-                      } else {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                    },
+                                _rowsWithTypes(),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 50,
+                                    vertical: 20,
+                                  ),
+                                  child: Divider(),
+                                ),
+                                SizedBox(height: 50),
+                              ],
+                            ),
+                          );
+                        } else {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                      },
+                    ),
                   ),
                 );
               },

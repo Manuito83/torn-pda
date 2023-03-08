@@ -25,8 +25,7 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Quick Items: browse to the items section in Torn with the full browser and add your prefer items for a quick access later on.
 
-* Trade calculator with total price calculation for cash, items and shares, plus the ability to copy total figures for a quick trading. If you are a professional trader, you can also synchronize with Torn Trader and the Arson Warehouse.
-
+* Trade calculator with total price calculation for cash, items and shares, plus the ability to copy total figures for a quick trading. If you are a professional trader, you can also synchronize with the Arson Warehouse.
 
 * Automatic city items finder in the map.
 

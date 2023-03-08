@@ -13,12 +13,12 @@ if (flutterRoot == null) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '156'
+    flutterVersionCode = '282'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '2.6.1'
+    flutterVersionName = '2.9.6'
 }
 
 apply plugin: 'com.android.application'
@@ -31,7 +31,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 33
 
     lintOptions {
         disable 'InvalidPackage'
@@ -39,12 +39,18 @@ android {
 
     defaultConfig {
         applicationId "com.manuito.tornpda"
-        minSdkVersion 20
-        targetSdkVersion 30
+        minSdkVersion 21
+        targetSdkVersion 31
         multiDexEnabled true
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+        // Filter for architectures supported by Flutter.
+        // https://github.com/flutter/flutter/issues/83596#issuecomment-1122132782
+        abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+        }
     }
 
     signingConfigs {
@@ -79,6 +85,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     implementation 'com.google.android.material:material:1.3.0'
+    implementation 'androidx.core:core-splashscreen:1.0.0-beta01'
 }
 
 apply plugin: 'com.google.gms.google-services'

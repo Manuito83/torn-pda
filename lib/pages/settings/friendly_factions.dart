@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override
@@ -39,13 +40,13 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
-            drawer: new Drawer(),
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -53,86 +54,89 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: Column(
-                children: <Widget>[
-                  SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(width: 2, color: Colors.blueGrey),
-                              ),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            size: 20,
-                            color: _themeProvider.mainText,
-                          ),
-                          onPressed: () {
-                            _showAddDialog(context);
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: Colors.blueGrey,
+            body: Container(
+              color: _themeProvider.canvas,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ButtonTheme(
+                          minWidth: 1.0,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(width: 2, color: Colors.blueGrey),
                                 ),
                               ),
                             ),
+                            child: Icon(
+                              Icons.add,
+                              size: 20,
+                              color: _themeProvider.mainText,
+                            ),
+                            onPressed: () {
+                              _showAddDialog(context);
+                            },
                           ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 20,
-                            color: _themeProvider.mainText,
+                        ),
+                        SizedBox(width: 15),
+                        ButtonTheme(
+                          minWidth: 1.0,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(
+                                    width: 2,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: _themeProvider.mainText,
+                            ),
+                            onPressed: () {
+                              _openWipeDialog();
+                            },
                           ),
-                          onPressed: () {
-                            _openWipeDialog();
-                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Use the \'+\' button to add new friendly factions to the list. '
+                        'Players in said factions will be flagged as allied when you visit their '
+                        'profiles or try to attack them.',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Use the \'+\' button to add new friendly factions to the list. '
-                      'Players in said factions will be flagged as allied when you visit their '
-                      'profiles or try to attack them.',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
+                    ),
+                    SizedBox(height: 10),
+                    Flexible(
+                      child: Consumer<SettingsProvider>(
+                        builder: (context, settingsProvider, child) => factions(),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  Flexible(
-                    child: Consumer<SettingsProvider>(
-                      builder: (context, settingsProvider, child) => factions(),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -155,7 +159,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(fact.name),
+                    Text(HtmlParser.fix(fact.name)),
                     Text(
                       "[${fact.id}]",
                       style: TextStyle(
@@ -253,7 +257,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -315,9 +319,9 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -387,7 +391,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                 ),
                 margin: EdgeInsets.only(top: 30),
                 decoration: new BoxDecoration(
-                  color: widget.themeProvider.background,
+                  color: widget.themeProvider.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -489,7 +493,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.background,
+                backgroundColor: widget.themeProvider.secondBackground,
                 child: CircleAvatar(
                   backgroundColor: widget.themeProvider.mainText,
                   radius: 22,
@@ -498,7 +502,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                     width: 20,
                     child: Image.asset(
                       'images/icons/faction.png',
-                      color: widget.themeProvider.background,
+                      color: widget.themeProvider.secondBackground,
                     ),
                   ),
                 ),
@@ -525,7 +529,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
 
       // If an user ID was inserted, we need to transform it first
       if (_addFromUserId) {
-        dynamic target = await TornApiCaller.target(userProv.basic.userApiKey, inputId).getTarget;
+        dynamic target = await TornApiCaller().getTarget(playerId: inputId);
         String convertError = "";
         if (target is TargetModel) {
           inputId = target.faction.factionId.toString();
@@ -582,10 +586,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         }
       }
 
-      var retrievedFaction = await TornApiCaller.faction(
-        userProv.basic.userApiKey,
-        inputId,
-      ).getFaction;
+      var retrievedFaction = await TornApiCaller().getFaction(factionId: inputId);
 
       if (retrievedFaction is FactionModel) {
         if (retrievedFaction.name.isNotEmpty) {

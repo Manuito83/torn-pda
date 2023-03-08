@@ -5,6 +5,8 @@
 // Dart imports:
 import 'dart:convert';
 
+import '../profile/own_profile_basic.dart';
+
 TargetModel targetModelFromJson(String str) => TargetModel.fromJson(json.decode(str));
 
 String targetModelToJson(TargetModel data) => json.encode(data.toJson());
@@ -226,7 +228,7 @@ class Job {
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         position: json["position"],
         companyId: json["company_id"],
-        companyName: json["company_name"],
+        companyName: json["company_name"].toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -337,37 +339,5 @@ class States {
   Map<String, dynamic> toJson() => {
         "hospital_timestamp": hospitalTimestamp,
         "jail_timestamp": jailTimestamp,
-      };
-}
-
-class Status {
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
-
-  Status({
-    this.description,
-    this.details,
-    this.state,
-    this.color,
-    this.until,
-  });
-
-  factory Status.fromJson(Map<String, dynamic> json) => Status(
-        description: json["description"],
-        details: json["details"],
-        state: json["state"],
-        color: json["color"],
-        until: json["until"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "description": description,
-        "details": details,
-        "state": state,
-        "color": color,
-        "until": until,
       };
 }

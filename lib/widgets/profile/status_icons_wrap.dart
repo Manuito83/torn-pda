@@ -5,6 +5,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 
 // ! Add new icons to the model as well
 final allowedIcons = <String, Map<String, String>>{
+  "icon3": {"url": "https://www.torn.com/donator.php?", "name": "Donator"},
+  "icon4": {"url": "https://www.torn.com/donator.php?", "name": "Subscriber"},
   "icon12": {"url": "", "name": "Low life"},
   // Needs to add ID
   "icon13": {"url": "https://www.torn.com/bounties.php?userID=", "name": "Bounty"},
@@ -13,7 +15,11 @@ final allowedIcons = <String, Map<String, String>>{
   "icon17": {"url": "https://www.torn.com/loader.php?sid=racing", "name": "Racing in progress"},
   "icon18": {"url": "https://www.torn.com/loader.php?sid=racing", "name": "Racing completed"},
   "icon20": {"url": "https://www.torn.com/education.php#/step=main", "name": "Education completed"},
+  "icon29": {"url": "https://www.torn.com/bank.php", "name": "Investment in progress"},
   "icon30": {"url": "https://www.torn.com/bank.php", "name": "Investment completed"},
+  "icon31": {"url": "", "name": "Cayman Islands bank"},
+  "icon32": {"url": "https://www.torn.com/properties.php#/p=options&tab=vault", "name": "Property vault"},
+  "icon33": {"url": "https://www.torn.com/loan.php", "name": "Loan"},
   "icon37": {"url": "https://www.torn.com/trade.php", "name": "Trade in progress"},
   "icon39": {"url": "", "name": "Booster (0-6hr)"},
   "icon40": {"url": "", "name": "Booster (6-12hr)"},
@@ -46,6 +52,8 @@ final allowedIcons = <String, Map<String, String>>{
   "icon78": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (4-6%)"},
   "icon79": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (6-8%)"},
   "icon80": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (8%+)"},
+  "icon81": {"url": "https://www.torn.com/factions.php?step=your#/", "name": "Faction recruit"},
+  "icon83": {"url": "https://www.torn.com/companies.php", "name": "Company recruit"},
   "icon84": {"url": "https://www.torn.com/page.php?sid=stocks", "name": "Dividend ready"},
   "icon85": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name": "OC being planned"},
   "icon86": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name": "OC ready"},
@@ -98,6 +106,8 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
             }
           }
 
+          //details = "Bank Investment - Current bank investment worth 194,587,366 - 0 hours, 16 minutes and 57 seconds";
+
           if (!skip) {
             final icon = Image.asset('images/icons/status/$iconNumber.png', width: 18);
             iconList.add(
@@ -105,7 +115,7 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
                 child: icon,
                 onTap: () {
                   BotToast.showText(
-                    text: details.replaceAll("0 days, 0 hours, ", "").replaceAll("0 days, ", ""),
+                    text: details.replaceAll(" 0 days, 0 hours, ", " ").replaceAll(" 0 days, ", " "),
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,

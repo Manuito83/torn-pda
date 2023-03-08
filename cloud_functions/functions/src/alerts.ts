@@ -126,7 +126,7 @@ export const alertsGroup = {
           .where("active", "==", true)
           .where("alertsEnabled", "==", true)
           .where("platform", "==", "android")
-          .where("level", "<", 40)
+          .where("level", "<", 42)
           .get();
 
         const subscribers = response.docs.map((d) => d.data());
@@ -191,7 +191,7 @@ export const alertsGroup = {
           .where("active", "==", true)
           .where("alertsEnabled", "==", true)
           .where("platform", "==", "android")
-          .where("level", ">=", 40)
+          .where("level", ">=", 42)
           .get();
 
         const subscribers = response.docs.map((d) => d.data());
@@ -335,35 +335,39 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
 
     // If users uninstall without removing API Key, this error will trigger
     // because the token is not known. In this case, stale the user
+    // We allow up to 10 tries (will be reverted by the app later)
     if (e.toString().includes("Requested entity was not found")) {
-      await admin
-        .firestore()
-        .collection("players")
-        .doc(subscriber.uid)
-        .update({
-          active: false,
-        });
-      functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid}`);
+      if (subscriber.tokenErrors !== undefined) {
+        let errors = subscriber.tokenErrors + 1;
+        if (errors >= 10) {
+          await admin
+            .firestore()
+            .collection("players")
+            .doc(subscriber.uid)
+            .update({
+              active: false,
+              tokenErrors: errors
+            });
+          functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid} after ${errors} token errors`);
+        } else {
+          await admin
+            .firestore()
+            .collection("players")
+            .doc(subscriber.uid)
+            .update({
+              tokenErrors: errors,
+            });
+        }
+      } else {
+        await admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            tokenErrors: 1,
+          });
+      }
     }
   }
-
 }
 
-// Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy
-// function getEstimatedPrice(estimatedWeeklyActiveUsers: number) {
-//   const numberOfExecutionsPerDay = 1440; //  Minutes in a day
-//   const totalDocumentReadsPerDay =
-//     estimatedWeeklyActiveUsers * numberOfExecutionsPerDay;
-
-//   const paidDocumentReadsPerDay = totalDocumentReadsPerDay - 50000; // 50k per day is free
-//   const pricePer100KRead = 0.06;
-//   const paidDocumentKReadsPerDay = paidDocumentReadsPerDay / 100000;
-//   const priceOfNotificationSender = paidDocumentKReadsPerDay * pricePer100KRead;
-//   const estimatedBillForCloudFunction = 5; // 5$ per month as of my estimation, can be optimized;
-//   return {
-//     estimatedWeeklyActiveUsers,
-//     estimatedDailyBill: priceOfNotificationSender,
-//     estimatedMonthlyBill: priceOfNotificationSender * 30,
-//     estimatedBillForCloudFunction,
-//   };
-// }

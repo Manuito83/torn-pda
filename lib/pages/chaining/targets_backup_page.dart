@@ -66,11 +66,14 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -79,37 +82,62 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                   )
                 : null,
             body: Builder(builder: (BuildContext context) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
-                        child: Text(
-                          "HOW TO EXPORT TARGETS",
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
-                        child: Text(
-                          _exportInfo,
-                          style: TextStyle(
-                            fontSize: 12,
+              return Container(
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
+                          child: Text(
+                            "HOW TO EXPORT TARGETS",
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                           ),
                         ),
-                      ),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        direction: Axis.horizontal,
-                        children: <Widget>[
-                          Padding(
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                          child: Text(
+                            _exportInfo,
+                            style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          direction: Axis.horizontal,
+                          children: <Widget>[
+                            Padding(
+                                padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                                child: ElevatedButton.icon(
+                                  icon: Icon(Icons.share),
+                                  label: Text("Export"),
+                                  onPressed: () async {
+                                    var export = _targetsProvider.exportTargets();
+                                    if (export == '') {
+                                      BotToast.showText(
+                                        text: "No targets to export!",
+                                        textStyle: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                        contentColor: Colors.red,
+                                        duration: Duration(seconds: 3),
+                                        contentPadding: EdgeInsets.all(10),
+                                      );
+                                    } else {
+                                      Share.share(export);
+                                    }
+                                  },
+                                )),
+                            Padding(
                               padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
                               child: ElevatedButton.icon(
-                                icon: Icon(Icons.share),
-                                label: Text("Export"),
+                                icon: Icon(Icons.content_copy),
+                                label: Text("Clipboard"),
                                 onPressed: () async {
                                   var export = _targetsProvider.exportTargets();
                                   if (export == '') {
@@ -124,128 +152,106 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                                       contentPadding: EdgeInsets.all(10),
                                     );
                                   } else {
-                                    Share.share(export);
+                                    Clipboard.setData(ClipboardData(text: export));
+                                    BotToast.showText(
+                                      text: "${_targetsProvider.getTargetNumber()} "
+                                          "targets copied to clipboard!",
+                                      textStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.green,
+                                      duration: Duration(seconds: 3),
+                                      contentPadding: EdgeInsets.all(10),
+                                    );
                                   }
                                 },
-                              )),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-                            child: ElevatedButton.icon(
-                              icon: Icon(Icons.content_copy),
-                              label: Text("Clipboard"),
-                              onPressed: () async {
-                                var export = _targetsProvider.exportTargets();
-                                if (export == '') {
-                                  BotToast.showText(
-                                    text: "No targets to export!",
-                                    textStyle: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.red,
-                                    duration: Duration(seconds: 3),
-                                    contentPadding: EdgeInsets.all(10),
-                                  );
-                                } else {
-                                  Clipboard.setData(ClipboardData(text: export));
-                                  BotToast.showText(
-                                    text: "${_targetsProvider.getTargetNumber()} "
-                                        "targets copied to clipboard!",
-                                    textStyle: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.green,
-                                    duration: Duration(seconds: 3),
-                                    contentPadding: EdgeInsets.all(10),
-                                  );
-                                }
-                              },
+                              ),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
+                          child: Divider(),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
+                          child: Text(
+                            "HOW TO IMPORT TARGETS",
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                          child: Text(
+                            _importInfo,
+                            style: TextStyle(
+                              fontSize: 12,
                             ),
                           ),
-                        ],
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
-                        child: Divider(),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
-                        child: Text(
-                          "HOW TO IMPORT TARGETS",
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
-                        child: Text(
-                          _importInfo,
-                          style: TextStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      _importProgressWidget(),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
-                        child: Form(
-                          key: _importFormKey,
-                          child: Column(
-                            children: <Widget>[
-                              TextFormField(
-                                controller: _importInputController,
-                                maxLines: 6,
-                                style: TextStyle(fontSize: 12),
-                                decoration: InputDecoration(
-                                  counterText: "",
-                                  border: OutlineInputBorder(),
-                                  hintText: _importHintText,
-                                  hintStyle: TextStyle(
-                                    color: _importHintStyle,
-                                    fontWeight: _importHintWeight,
+                        _importProgressWidget(),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                          child: Form(
+                            key: _importFormKey,
+                            child: Column(
+                              children: <Widget>[
+                                TextFormField(
+                                  controller: _importInputController,
+                                  maxLines: 6,
+                                  style: TextStyle(fontSize: 12),
+                                  decoration: InputDecoration(
+                                    counterText: "",
+                                    border: OutlineInputBorder(),
+                                    hintText: _importHintText,
+                                    hintStyle: TextStyle(
+                                      color: _importHintStyle,
+                                      fontWeight: _importHintWeight,
+                                    ),
                                   ),
-                                ),
-                                validator: (value) {
-                                  if (value.isEmpty) {
-                                    return "Cannot be empty!";
-                                  }
-                                  return null;
-                                },
-                              ),
-                              Padding(
-                                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                child: ElevatedButton.icon(
-                                  icon: Icon(Icons.file_download),
-                                  label: Text("Import"),
-                                  onPressed: () {
-                                    if (_importFormKey.currentState.validate()) {
-                                      var numberImported = _importChecker();
-                                      if (numberImported == 0) {
-                                        BotToast.showText(
-                                          text: 'No targets to import! '
-                                              'Is the file structure correct?',
-                                          textStyle: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.white,
-                                          ),
-                                          contentColor: Colors.red,
-                                          duration: Duration(seconds: 3),
-                                          contentPadding: EdgeInsets.all(10),
-                                        );
-                                      } else {
-                                        FocusScope.of(context).requestFocus(new FocusNode());
-                                        _showImportDialog();
-                                      }
+                                  validator: (value) {
+                                    if (value.isEmpty) {
+                                      return "Cannot be empty!";
                                     }
+                                    return null;
                                   },
                                 ),
-                              ),
-                            ],
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                  child: ElevatedButton.icon(
+                                    icon: Icon(Icons.file_download),
+                                    label: Text("Import"),
+                                    onPressed: () {
+                                      if (_importFormKey.currentState.validate()) {
+                                        var numberImported = _importChecker();
+                                        if (numberImported == 0) {
+                                          BotToast.showText(
+                                            text: 'No targets to import! '
+                                                'Is the file structure correct?',
+                                            textStyle: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                            ),
+                                            contentColor: Colors.red,
+                                            duration: Duration(seconds: 3),
+                                            contentPadding: EdgeInsets.all(10),
+                                          );
+                                        } else {
+                                          FocusScope.of(context).requestFocus(new FocusNode());
+                                          _showImportDialog();
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 50),
-                    ],
+                        SizedBox(height: 50),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -275,6 +281,8 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
       child: LinearPercentIndicator(
+        padding: null,
+        barRadius: Radius.circular(10),
         alignment: MainAxisAlignment.center,
         width: 200,
         lineHeight: 16,
@@ -332,7 +340,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
               ),
               //margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
-                color: _themeProvider.background,
+                color: _themeProvider.secondBackground,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [

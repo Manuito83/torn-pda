@@ -1,5 +1,5 @@
+/*
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -14,7 +14,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 
@@ -32,7 +31,6 @@ class _TacCardState extends State<TacCard> {
   TacTarget _target;
 
   SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
 
   bool _addButtonActive = true;
 
@@ -42,7 +40,6 @@ class _TacCardState extends State<TacCard> {
   void initState() {
     super.initState();
     _target = widget.target;
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
   }
 
@@ -201,7 +198,9 @@ class _TacCardState extends State<TacCard> {
               attackNotesList: attackNotes,
               attackNotesColorList: attacksNotesColor,
               //attacksCallback: _updateSeveralTargets,
-              userKey: _userProvider.basic.userApiKey,
+              showOnlineFactionWarning: true,
+              showNotes: true,
+              showBlankNotes: true,
             ),
           ),
         );
@@ -361,6 +360,8 @@ class _TacCardState extends State<TacCard> {
             style: TextStyle(fontSize: 12),
           ),
           LinearPercentIndicator(
+                    padding: null,
+                              barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 12,
             progressColor: lifeBarColor,
@@ -377,3 +378,4 @@ class _TacCardState extends State<TacCard> {
     );
   }
 }
+*/

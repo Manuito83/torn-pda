@@ -60,7 +60,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
                   ),
                   margin: EdgeInsets.only(top: 15),
                   decoration: new BoxDecoration(
-                    color: _themeProvider.background,
+                    color: _themeProvider.secondBackground,
                     shape: BoxShape.rectangle,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
@@ -78,9 +78,9 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: _themeProvider.background,
+                backgroundColor: _themeProvider.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: _themeProvider.background,
+                  backgroundColor: _themeProvider.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 34,
@@ -270,6 +270,8 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         ),
         SizedBox(height: 18),
         LinearPercentIndicator(
+          padding: null,
+          barRadius: Radius.circular(10),
           alignment: MainAxisAlignment.center,
           width: 200,
           lineHeight: 16,
@@ -362,7 +364,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
   String _localColorCode(int colorInt) {
     switch (colorInt) {
       case 0:
-        return '';
+        return 'z';
         break;
       case 1:
         return 'green';

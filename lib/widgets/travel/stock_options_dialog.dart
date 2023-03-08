@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ class StocksOptionsDialog extends StatefulWidget {
   final Function callBack;
   final bool inventoryEnabled;
   final bool showArrivalTime;
+  final bool showBarsCooldownAnalysis;
   final SettingsProvider settingsProvider;
 
   StocksOptionsDialog({
@@ -22,6 +24,7 @@ class StocksOptionsDialog extends StatefulWidget {
     @required this.callBack,
     @required this.inventoryEnabled,
     @required this.showArrivalTime,
+    @required this.showBarsCooldownAnalysis,
     @required this.settingsProvider,
   });
 
@@ -35,6 +38,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   int _capacity;
   bool _inventoryEnabled;
   bool _showArrivalTime;
+  bool _barsCooldownAnalysis;
 
   @override
   void initState() {
@@ -42,6 +46,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     _capacity = widget.capacity;
     _inventoryEnabled = widget.inventoryEnabled;
     _showArrivalTime = widget.showArrivalTime;
+    _barsCooldownAnalysis = widget.showBarsCooldownAnalysis;
   }
 
   @override
@@ -60,7 +65,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
-                color: _themeProvider.background,
+                color: _themeProvider.secondBackground,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -122,6 +127,30 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       ),
                     ],
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "Bars/cooldown analysis",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _barsCooldownAnalysis,
+                        onChanged: (value) {
+                          setState(() {
+                            _barsCooldownAnalysis = value;
+                          });
+                          _callBackValues();
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 10),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -145,8 +174,37 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                           _callBackValues();
                         },
                       ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () {
+                              if (_capacity > 1) {
+                                setState(() {
+                                  _capacity--;
+                                });
+                                _callBackValues();
+                              }
+                            },
+                            child: Icon(MdiIcons.minus),
+                          ),
+                          SizedBox(width: 10),
+                          OutlinedButton(
+                            onPressed: () {
+                              if (_capacity < 44) {
+                                setState(() {
+                                  _capacity++;
+                                });
+                                _callBackValues();
+                              }
+                            },
+                            child: Icon(MdiIcons.plus),
+                          ),
+                        ],
+                      )
                     ],
                   ),
+                  SizedBox(height: 5),
                   Text(
                     'Affects profit per hour calculation',
                     style: TextStyle(
@@ -200,7 +258,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
             right: 16,
             child: CircleAvatar(
               radius: 26,
-              backgroundColor: _themeProvider.background,
+              backgroundColor: _themeProvider.secondBackground,
               child: CircleAvatar(
                 backgroundColor: _themeProvider.mainText,
                 radius: 22,
@@ -209,7 +267,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                   width: 28,
                   child: Icon(
                     Icons.settings,
-                    color: _themeProvider.background,
+                    color: _themeProvider.secondBackground,
                   ),
                 ),
               ),
@@ -287,9 +345,10 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   }
 
   void _callBackValues() {
-    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime);
+    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime, _barsCooldownAnalysis);
     Prefs().setStockCapacity(_capacity);
     Prefs().setShowForeignInventory(_inventoryEnabled);
     Prefs().setShowArrivalTime(_showArrivalTime);
+    Prefs().setShowBarsCooldownAnalysis(_barsCooldownAnalysis);
   }
 }

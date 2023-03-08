@@ -44,12 +44,13 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -58,6 +59,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   )
                 : null,
             body: Container(
+              color: _themeProvider.canvas,
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,28 +183,34 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
             activeShortcuts.add(
               Slidable(
                 key: UniqueKey(),
-                actionPane: SlidableDrawerActionPane(),
-                actionExtentRatio: 0.25,
-                actions: <Widget>[
-                  IconSlideAction(
-                    color: Colors.red,
-                    icon: Icons.remove_circle_outline_outlined,
-                    onTap: () {
-                      _shortcutsProvider.deactivateShortcut(short);
-                    },
-                  ),
-                ],
-                secondaryActions: <Widget>[
-                  IconSlideAction(
-                    color: Colors.blue,
-                    icon: Icons.edit,
-                    onTap: () {
-                      _customNameController.text = short.nickname;
-                      _customURLController.text = short.url;
-                      _openEditDialog(short);
-                    },
-                  ),
-                ],
+                startActionPane: ActionPane(
+                  motion: const ScrollMotion(),
+                  extentRatio: 0.25,
+                  children: [
+                    SlidableAction(
+                      backgroundColor: Colors.red,
+                      icon: Icons.remove_circle_outline_outlined,
+                      onPressed: (context) {
+                        _shortcutsProvider.deactivateShortcut(short);
+                      },
+                    ),
+                  ],
+                ),
+                endActionPane: ActionPane(
+                  motion: const ScrollMotion(),
+                  extentRatio: 0.25,
+                  children: [
+                    SlidableAction(
+                      backgroundColor: Colors.blue,
+                      icon: Icons.edit,
+                      onPressed: (context) {
+                        _customNameController.text = short.nickname;
+                        _customURLController.text = short.url;
+                        _openEditDialog(short);
+                      },
+                    ),
+                  ],
+                ),
                 child: Container(
                   height: 50,
                   child: Card(
@@ -553,7 +561,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -602,9 +610,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -646,7 +654,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -680,7 +688,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 ),
                                 textCapitalization: TextCapitalization.sentences,
                                 controller: _customNameController,
-                                maxLength: 20,
+                                maxLength: 30,
                                 maxLines: 1,
                                 decoration: InputDecoration(
                                   counterText: "",
@@ -805,9 +813,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 25,
@@ -854,7 +862,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -1009,9 +1017,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 25,

@@ -1,10 +1,13 @@
 // Dart imports:
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
@@ -34,7 +37,16 @@ class _FirestoreHelper {
     _alreadyUploaded = true;
 
     final platform = Platform.isAndroid ? "android" : "ios";
-    final token = await _messaging.getToken();
+
+    // Generate or replace token if it already exists
+    // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
+    String token = "";
+    String currentToken = await _messaging.getToken();
+    if (currentToken.isNotEmpty) {
+      await FirebaseMessaging.instance.deleteToken();
+    }
+    token = await _messaging.getToken();
+    log("FCM token: $token");
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
     // Otherwise, an empty object will be returned
@@ -61,11 +73,18 @@ class _FirestoreHelper {
 
         // This is a unique identifier to identify this user and target notification
         "token": token,
+        "tokenErrors": 0,
       },
       SetOptions(merge: true),
     );
 
     return _firebaseUserModel;
+  }
+
+  Future<void> toggleDiscrete(bool discrete) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "discrete": discrete,
+    });
   }
 
   Future<void> subscribeToTravelNotification(bool subscribe) async {
@@ -268,5 +287,36 @@ class _FirestoreHelper {
     await _firestore.collection("players").doc(_uid).update({
       "factionAssistMessage": active,
     });
+  }
+
+  /// [host] stands for someone that does not have proper Faction API permissions
+  Future<void> toggleRetaliationNotification(bool active, {bool host = true}) async {
+    bool isHost = host;
+    if (!active) isHost = false;
+
+    await _firestore.collection("players").doc(_uid).update({
+      "retalsNotification": active,
+      "retalsNotificationHost": isHost,
+    });
+  }
+
+  Future<void> toggleNpcAlert({
+    @required String id,
+    @required int level,
+    @required bool active,
+  }) async {
+    if (active) {
+      if (!_firebaseUserModel.lootAlerts.contains("$id:$level")) {
+        _firebaseUserModel.lootAlerts.add("$id:$level");
+        await _firestore.collection("players").doc(_uid).update({
+          "lootAlerts": _firebaseUserModel.lootAlerts,
+        });
+      }
+    } else {
+      _firebaseUserModel.lootAlerts.remove("$id:$level");
+      await _firestore.collection("players").doc(_uid).update({
+        "lootAlerts": _firebaseUserModel.lootAlerts,
+      });
+    }
   }
 }

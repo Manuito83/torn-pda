@@ -91,7 +91,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
-                color: _themeProvider.background,
+                color: _themeProvider.secondBackground,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -302,13 +302,13 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
             right: 16,
             child: CircleAvatar(
               radius: 26,
-              backgroundColor: _themeProvider.background,
+              backgroundColor: _themeProvider.secondBackground,
               child: CircleAvatar(
                 backgroundColor: _themeProvider.mainText,
                 radius: 22,
                 child: Icon(
                   Icons.library_books,
-                  color: _themeProvider.background,
+                  color: _themeProvider.secondBackground,
                   size: 20,
                 ),
               ),

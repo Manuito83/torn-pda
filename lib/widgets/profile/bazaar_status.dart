@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:torn_pda/models/profile/bazaar_model.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/profile/bazaar_dialog.dart';
 
 class BazaarStatusCard extends StatelessWidget {
-  final BazaarModel bazaarModel;
+  final List<Bazaar> bazaarModel;
   final Function launchBrowser;
 
   const BazaarStatusCard({@required this.bazaarModel, @required this.launchBrowser, Key key}) : super(key: key);
@@ -13,18 +13,22 @@ class BazaarStatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check null as it loads after a while, then empty to see if bazaar is open
-    if (bazaarModel == null || bazaarModel.bazaar.isEmpty) return SizedBox.shrink();
+    if (bazaarModel == null || bazaarModel.isEmpty) return SizedBox.shrink();
 
     int totalItems = 0;
     int totalMoney = 0;
 
-    bazaarModel.bazaar.forEach((element) {
+    bazaarModel.forEach((element) {
+      if (element.price is double) {
+        element.price = element.price.round();
+      }
+
       totalItems += element.quantity;
-      totalMoney += element.quantity * element.price;
+      totalMoney += element.quantity * element.price.round();
     });
 
     var bazaarNumber = "";
-    bazaarModel.bazaar.length == 1 ? bazaarNumber = "1 item" : bazaarNumber = "$totalItems items";
+    bazaarModel.length == 1 ? bazaarNumber = "1 item" : bazaarNumber = "$totalItems items";
 
     var bazaarPendingString = "";
     bazaarPendingString = "\$${formatProfit(inputInt: totalMoney)}";

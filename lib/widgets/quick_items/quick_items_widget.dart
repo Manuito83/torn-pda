@@ -2,31 +2,31 @@
 import 'dart:async';
 
 // Flutter imports:
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/quick_item_model.dart';
+import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
+import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class QuickItemsWidget extends StatefulWidget {
-  final String webviewType;
   final InAppWebViewController inAppWebViewController;
   final WebViewController webViewController;
-  final bool appBarTop;
-  final bool browserDialog;
+  final bool faction;
 
   QuickItemsWidget({
-    @required this.webviewType,
+    @required this.faction,
     this.inAppWebViewController,
     this.webViewController,
-    this.appBarTop,
-    this.browserDialog,
   });
 
   @override
@@ -35,14 +35,14 @@ class QuickItemsWidget extends StatefulWidget {
 
 class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   QuickItemsProvider _itemsProvider;
+  QuickItemsProviderFaction _itemsProviderFaction;
 
   Timer _inventoryRefreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _inventoryRefreshTimer = new Timer.periodic(
-        Duration(seconds: 40), (Timer t) => _refreshInventory());
+    _inventoryRefreshTimer = new Timer.periodic(Duration(seconds: 40), (Timer t) => _refreshInventory());
   }
 
   @override
@@ -54,27 +54,31 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   @override
   Widget build(BuildContext context) {
     _itemsProvider = context.watch<QuickItemsProvider>();
+    _itemsProviderFaction = context.watch<QuickItemsProviderFaction>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: ConstrainedBox(
-        constraints: BoxConstraints.loose(Size.fromHeight(
-                (MediaQuery.of(context).size.height -
-                    kToolbarHeight -
-                    AppBar().preferredSize.height)) /
-            3),
-        child: Scrollbar(
-          child: SingleChildScrollView(
-            child: Align(
-              alignment: Alignment.center,
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 5,
-                runSpacing: -10,
-                children: _itemButtons(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: BoxConstraints.loose(Size.fromHeight(
+                      (MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
+                  3),
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 5,
+                    runSpacing: -10,
+                    children: _itemButtons(),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -82,24 +86,34 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   List<Widget> _itemButtons() {
     var myList = <Widget>[];
 
-    for (var item in _itemsProvider.activeQuickItems) {
-      Color itemColor;
+    List<QuickItem> itemList = <QuickItem>[];
+    if (widget.faction) {
+      itemList = List.from(_itemsProviderFaction.activeQuickItemsFaction);
+    } else {
+      itemList = List.from(_itemsProvider.activeQuickItems);
+    }
+
+    for (var item in itemList) {
+      Color qtyColor;
       if (item.inventory == 0) {
-        itemColor = Colors.orange[300];
+        qtyColor = Colors.orange[300];
       } else {
-        itemColor = Colors.green[300];
+        qtyColor = Colors.green[300];
       }
 
-      double fontSize = 12;
+      double qtyFontSize = 12;
       var itemQty = item.inventory.toString();
-      if (item.inventory > 999 && item.inventory < 100000) {
-        itemQty = "${(item.inventory / 1000).truncate().toStringAsFixed(0)}K";
-      } else if (item.inventory >= 100000) {
-        itemQty = "∞";
+      if (!item.isLoadout && !widget.faction) {
+        if (item.inventory > 999 && item.inventory < 100000) {
+          itemQty = "${(item.inventory / 1000).truncate().toStringAsFixed(0)}K";
+        } else if (item.inventory >= 100000) {
+          itemQty = "∞";
+        }
+        if (item.inventory >= 10000 && item.inventory < 100000) {
+          qtyFontSize = 11;
+        }
       }
-      if (item.inventory >= 10000 && item.inventory < 100000) {
-        fontSize = 11;
-      }
+
       myList.add(
         Tooltip(
           message: '${item.name}\n\n${item.description}',
@@ -109,34 +123,66 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
-            avatar: CircleAvatar(
-              child: Text(
-                itemQty,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  color: itemColor,
-                ),
-              ),
-            ),
-            label: item.name.split(' ').length > 1
-                ? _splitName(item.name)
-                : Text(
-                    item.name,
-                    softWrap: true,
-                    overflow: TextOverflow.clip,
-                    maxLines: 2,
+            side: item.isLoadout || item.isEnergyPoints || item.isNervePoints ? BorderSide(color: Colors.blue) : null,
+            avatar: item.isLoadout
+                ? null
+                : widget.faction
+                    ? item.isEnergyPoints || item.isNervePoints
+                        ? Icon(
+                            MdiIcons.alphaPCircleOutline,
+                            color: item.isEnergyPoints ? Colors.green : Colors.red,
+                          )
+                        : CircleAvatar(
+                            child: Image.asset(
+                              'images/icons/faction.png',
+                              width: 12,
+                              color: Colors.white,
+                            ),
+                          )
+                    : CircleAvatar(
+                        child: Text(
+                          itemQty,
+                          style: TextStyle(
+                            fontSize: qtyFontSize,
+                            color: qtyColor,
+                          ),
+                        ),
+                      ),
+            label: item.isLoadout
+                ? Text(
+                    item.loadoutName,
                     style: TextStyle(fontSize: 11),
-                  ),
+                  )
+                : item.isEnergyPoints || item.isNervePoints
+                    ? Text(
+                        item.isEnergyPoints ? "E Refill" : "N Refill",
+                        style: TextStyle(fontSize: 11),
+                      )
+                    : item.name.split(' ').length > 1
+                        ? _splitName(item.name.replaceAll("Blood Bag : ", "Blood: "))
+                        : Text(
+                            item.name.replaceAll("Blood Bag : ", "Blood: "),
+                            softWrap: true,
+                            overflow: TextOverflow.clip,
+                            maxLines: 2,
+                            style: TextStyle(fontSize: 11),
+                          ),
             onPressed: () async {
-              var js = quickItemsJS(item: item.number.toString());
-
-              if (widget.webviewType == "attacks") {
-                widget.webViewController.evaluateJavascript(js);
-              } else {
+              if (item.isLoadout) {
+                var js = changeLoadOutJS(item: item.name.split(" ")[1], attackWebview: false);
                 await widget.inAppWebViewController.evaluateJavascript(source: js);
+              } else {
+                var js = quickItemsJS(
+                  item: item.number.toString(),
+                  faction: widget.faction,
+                  eRefill: item.isEnergyPoints,
+                  nRefill: item.isNervePoints,
+                );
+                await widget.inAppWebViewController.evaluateJavascript(source: js);
+                if (!widget.faction) {
+                  _itemsProvider.decreaseInventory(item);
+                }
               }
-
-              _itemsProvider.decreaseInventory(item);
             },
           ),
         ),
@@ -144,18 +190,6 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     }
 
     if (myList.isEmpty) {
-      String appBarPosition = "above";
-      if (!widget.appBarTop) {
-        appBarPosition = "below";
-      }
-
-      String explanation =
-          "Use the box icon $appBarPosition to configure quick items";
-      if (widget.browserDialog) {
-        explanation =
-            "Use the full browser to configure quick items";
-      }
-
       myList.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
@@ -163,33 +197,15 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                explanation,
+                widget.faction
+                    ? "Configure your faction's armoury quick items"
+                    : "Configure your preferred quick items",
                 style: TextStyle(
                   color: Colors.orangeAccent,
                   fontSize: 12,
                 ),
               ),
-              if (widget.browserDialog)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: GestureDetector(
-                    onTap: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return BrowserExplanationDialog();
-                        },
-                      );
-                    },
-                    child: Icon(
-                      Icons.info_outline,
-                      size: 18,
-                      color: Colors.orangeAccent,
-                    ),
-                  ),
-                )
-              else
-                SizedBox.shrink(),
+              _settingsIcon(),
             ],
           ),
         ),
@@ -226,6 +242,40 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   }
 
   _refreshInventory() {
-    _itemsProvider.updateInventoryQuantities(fullUpdate: false);
+    if (!widget.faction) {
+      _itemsProvider.updateInventoryQuantities(fullUpdate: false);
+    }
+  }
+
+  Widget _settingsIcon() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return QuickItemsOptions(
+            isFaction: widget.faction,
+          );
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(Icons.settings, size: 16, color: Colors.orange),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

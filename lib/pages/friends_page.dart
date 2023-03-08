@@ -1,5 +1,4 @@
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -55,13 +54,14 @@ class _FriendsPageState extends State<FriendsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'friends'});
+    analytics.setCurrentScreen(screenName: 'friends');
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -70,14 +70,17 @@ class _FriendsPageState extends State<FriendsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-        child: MediaQuery.of(context).orientation == Orientation.portrait
-            ? _mainColumn()
-            : SingleChildScrollView(
-                child: _mainColumn(),
-              ),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+          child: MediaQuery.of(context).orientation == Orientation.portrait
+              ? _mainColumn()
+              : SingleChildScrollView(
+                  child: _mainColumn(),
+                ),
+        ),
       ),
     );
   }
@@ -93,7 +96,7 @@ class _FriendsPageState extends State<FriendsPage> {
               minWidth: 1.0,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
+                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
                   shape: MaterialStateProperty.all<OutlinedBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
@@ -116,7 +119,7 @@ class _FriendsPageState extends State<FriendsPage> {
               minWidth: 1.0,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
+                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
                   shape: MaterialStateProperty.all<OutlinedBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
@@ -307,7 +310,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     ),
                     margin: EdgeInsets.only(top: 30),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -411,7 +414,7 @@ class _FriendsPageState extends State<FriendsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.mainText,
                       radius: 22,

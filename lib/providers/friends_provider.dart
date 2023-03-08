@@ -18,11 +18,7 @@ class AddFriendResult {
   String friendId = "";
   String friendName = "";
 
-  AddFriendResult(
-      {@required this.success,
-      this.errorReason,
-      this.friendId,
-      this.friendName});
+  AddFriendResult({@required this.success, this.errorReason, this.friendId, this.friendName});
 }
 
 class UpdateFriendResult {
@@ -30,10 +26,7 @@ class UpdateFriendResult {
   int numberErrors;
   int numberSuccessful;
 
-  UpdateFriendResult(
-      {@required this.success,
-      @required this.numberErrors,
-      @required this.numberSuccessful});
+  UpdateFriendResult({@required this.success, @required this.numberErrors, @required this.numberSuccessful});
 }
 
 class FriendsProvider extends ChangeNotifier {
@@ -41,8 +34,7 @@ class FriendsProvider extends ChangeNotifier {
   bool get initialized => _initialized;
 
   List<FriendModel> _friends = [];
-  UnmodifiableListView<FriendModel> get allFriends =>
-      UnmodifiableListView(_friends);
+  UnmodifiableListView<FriendModel> get allFriends => UnmodifiableListView(_friends);
 
   List<FriendModel> _oldFriendsList = [];
 
@@ -56,8 +48,7 @@ class FriendsProvider extends ChangeNotifier {
 
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
-  Future<AddFriendResult> addFriend(String friendId,
-      {String notes = '', String notesColor = ''}) async {
+  Future<AddFriendResult> addFriend(String friendId, {String notes = '', String notesColor = ''}) async {
     for (var fri in _friends) {
       if (fri.playerId.toString() == friendId) {
         return AddFriendResult(
@@ -67,9 +58,7 @@ class FriendsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewFriendModel =
-        await TornApiCaller.friends(_userDetails.userApiKey, friendId)
-            .getFriends;
+    dynamic myNewFriendModel = await TornApiCaller().getFriends(playerId: friendId);
 
     if (myNewFriendModel is FriendModel) {
       _getFriendFaction(myNewFriendModel);
@@ -113,9 +102,8 @@ class FriendsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedFriendModel = await TornApiCaller.friends(
-              _userDetails.userApiKey, oldFriend.playerId.toString())
-          .getFriends;
+      dynamic myUpdatedFriendModel =
+          await TornApiCaller().getFriends(playerId: oldFriend.playerId.toString());
       if (myUpdatedFriendModel is FriendModel) {
         _getFriendFaction(myUpdatedFriendModel);
         _friends[_friends.indexOf(oldFriend)] = myUpdatedFriendModel;
@@ -151,9 +139,8 @@ class FriendsProvider extends ChangeNotifier {
     // Then start the real update
     for (var i = 0; i < _friends.length; i++) {
       try {
-        dynamic myUpdatedFriendModel = await TornApiCaller.friends(
-                _userDetails.userApiKey, _friends[i].playerId.toString())
-            .getFriends;
+        dynamic myUpdatedFriendModel =
+            await TornApiCaller().getFriends(playerId: _friends[i].playerId.toString());
         if (myUpdatedFriendModel is FriendModel) {
           _getFriendFaction(myUpdatedFriendModel);
           var notes = _friends[i].personalNote;
@@ -265,20 +252,16 @@ class FriendsProvider extends ChangeNotifier {
         _friends.sort((a, b) => a.level.compareTo(b.level));
         break;
       case FriendSortType.factionDes:
-        _friends.sort(
-            (a, b) => b.faction.factionName.compareTo(a.faction.factionName));
+        _friends.sort((a, b) => b.faction.factionName.compareTo(a.faction.factionName));
         break;
       case FriendSortType.factionAsc:
-        _friends.sort(
-            (a, b) => a.faction.factionName.compareTo(b.faction.factionName));
+        _friends.sort((a, b) => a.faction.factionName.compareTo(b.faction.factionName));
         break;
       case FriendSortType.nameDes:
-        _friends.sort(
-            (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        _friends.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
       case FriendSortType.nameAsc:
-        _friends.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        _friends.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
     }
     _saveSortSharedPrefs();

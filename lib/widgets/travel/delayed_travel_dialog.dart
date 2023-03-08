@@ -2,10 +2,10 @@
 import 'dart:io';
 
 // Flutter imports:
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
@@ -75,7 +75,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
-                color: _themeProvider.background,
+                color: _themeProvider.secondBackground,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -120,9 +120,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                           ActionChip(
                             label: Icon(
                               Icons.chat_bubble_outline,
-                              color: _notificationActive
-                                  ? Colors.green
-                                  : _themeProvider.mainText,
+                              color: _notificationActive ? Colors.green : _themeProvider.mainText,
                             ),
                             onPressed: () {
                               if (_notificationActive) {
@@ -224,7 +222,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
             right: 16,
             child: CircleAvatar(
               radius: 26,
-              backgroundColor: _themeProvider.background,
+              backgroundColor: _themeProvider.secondBackground,
               child: CircleAvatar(
                 backgroundColor: _themeProvider.mainText,
                 radius: 22,
@@ -233,7 +231,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                   width: 28,
                   child: Icon(
                     Icons.settings,
-                    color: _themeProvider.background,
+                    color: _themeProvider.secondBackground,
                   ),
                 ),
               ),
@@ -325,19 +323,21 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   void _scheduleNotification() async {
     String channelTitle = 'Manual flight departure';
     String channelSubtitle = 'Manual flight departure';
-    String channelDescription =
-        'Manual notifications for delayed flight departure';
-    String notificationTitle =
-        "You flight to ${widget.country} is ready for boarding!";
-    String notificationSubtitle =
-        "Remember to bring you ${widget.stockName} import papers!";
+    String channelDescription = 'Manual notifications for delayed flight departure';
+    String notificationTitle = "You flight to ${widget.country} is ready for boarding!";
+    String notificationSubtitle = "Remember to bring you ${widget.stockName} import papers!";
     int notificationId = int.parse("211${widget.countryId}${widget.itemId}");
+
+    if (_settingsProvider.discreteNotifications) {
+      notificationTitle = "Scheduled";
+      notificationSubtitle = "Departure";
+    }
 
     var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       "$channelTitle ${modifier.channelIdModifier}",
       "$channelSubtitle ${modifier.channelIdModifier}",
-      channelDescription,
+      channelDescription: channelDescription,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_travel',
@@ -362,18 +362,15 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
         notificationTitle,
         notificationSubtitle,
         //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-        tz.TZDateTime.from(widget.boardingTime, tz.local)
-            .add(Duration(minutes: _delayMinutes)),
+        tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes)),
         platformChannelSpecifics,
         payload: '211',
         androidAllowWhileIdle: true, // Deliver at exact time
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime);
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
   }
 
   Future _retrievePendingNotifications() async {
-    var pendingNotificationRequests =
-        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     for (var not in pendingNotificationRequests) {
       var id = not.id.toString();
@@ -386,8 +383,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   }
 
   void _cancelNotifications() async {
-    await flutterLocalNotificationsPlugin
-        .cancel(int.parse("211${widget.countryId}${widget.itemId}"));
+    await flutterLocalNotificationsPlugin.cancel(int.parse("211${widget.countryId}${widget.itemId}"));
     setState(() {
       _notificationActive = false;
     });
@@ -421,9 +417,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   }
 
   void _setTimer() {
-    var totalSeconds =
-        widget.boardingTime.difference(DateTime.now()).inSeconds +
-            _delayMinutes * 60;
+    var totalSeconds = widget.boardingTime.difference(DateTime.now()).inSeconds + _delayMinutes * 60;
     var message = 'Flight Boarding - ${widget.stockName}';
 
     AndroidIntent intent = AndroidIntent(

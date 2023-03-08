@@ -7,7 +7,7 @@ export const playersGroup = {
     .onCreate(async (snap, context) => {
       const promises: Promise<any>[] = [];
       const beforeStat = snap.data();
-      
+
       promises.push(manageStats("totalUsers", 1));
 
       if (beforeStat.platform === "ios") {
@@ -26,9 +26,9 @@ export const playersGroup = {
     .onDelete(async (snap, context) => {
       const promises: Promise<any>[] = [];
       const beforeStat = snap.data();
-      
+
       promises.push(manageStats("totalUsers", -1));
-      
+
       if (beforeStat.active) {
         promises.push(manageStats("activeUsers", -1));
       }
@@ -81,6 +81,14 @@ export const playersGroup = {
         promises.push(manageStats("stockMarketNotification", -1));
       }
 
+      if (beforeStat.factionAssistMessage) {
+        promises.push(manageStats("factionAssistMessage", -1));
+      }
+
+      if (beforeStat.retalsNotification) {
+        promises.push(manageStats("retalsNotification", -1));
+      }
+
       if (beforeStat.platform === "android") {
         promises.push(manageStats("android", -1));
       }
@@ -106,73 +114,85 @@ export const playersGroup = {
       if (beforeStat.alertsEnabled !== afterStat.alertsEnabled)
         promises.push(
           manageStats("alertsEnabled", afterStat.alertsEnabled ? 1 : -1)
-      );
+        );
 
       if (beforeStat.energyNotification !== afterStat.energyNotification)
         promises.push(
           manageStats("energyNotification", afterStat.energyNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.nerveNotification !== afterStat.nerveNotification)
         promises.push(
           manageStats("nerveNotification", afterStat.nerveNotification ? 1 : -1
-        )
-      );
-      
+          )
+        );
+
       if (beforeStat.travelNotification !== afterStat.travelNotification)
         promises.push(
           manageStats("travelNotification", afterStat.travelNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.foreignRestockNotification !== afterStat.foreignRestockNotification)
         promises.push(
           manageStats("foreignRestockNotification", afterStat.foreignRestockNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.hospitalNotification !== afterStat.hospitalNotification)
         promises.push(
           manageStats("hospitalNotification", afterStat.hospitalNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.drugsNotification !== afterStat.drugsNotification)
         promises.push(
           manageStats("drugsNotification", afterStat.drugsNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.racingNotification !== afterStat.racingNotification)
         promises.push(
           manageStats("racingNotification", afterStat.racingNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.messagesNotification !== afterStat.messagesNotification)
         promises.push(
           manageStats("messagesNotification", afterStat.messagesNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.eventsNotification !== afterStat.eventsNotification)
         promises.push(
           manageStats("eventsNotification", afterStat.eventsNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.refillsNotification !== afterStat.refillsNotification)
         promises.push(
           manageStats("refillsNotification", afterStat.refillsNotification ? 1 : -1
-        )
-      );
+          )
+        );
 
       if (beforeStat.stockMarketNotification !== afterStat.stockMarketNotification)
         promises.push(
           manageStats("stockMarketNotification", afterStat.stockMarketNotification ? 1 : -1
-        )
-      );
+          )
+        );
+
+      if (beforeStat.factionAssistMessage !== afterStat.factionAssistMessage)
+        promises.push(
+          manageStats("factionAssistMessage", afterStat.factionAssistMessage ? 1 : -1
+          )
+        );
+
+      if (beforeStat.retalsNotification !== afterStat.retalsNotification)
+        promises.push(
+          manageStats("retalsNotification", afterStat.retalsNotification ? 1 : -1
+          )
+        );
 
       if (
         !afterStat.energyNotification &&
@@ -186,6 +206,9 @@ export const playersGroup = {
         !afterStat.eventsNotification &&
         !afterStat.refillsNotification &&
         !afterStat.stockMarketNotification &&
+        // NOTE: do NOT include here notifications that are outside of the main notification loop
+        // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
+        // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
         afterStat.alertsEnabled
       )
         promises.push(
@@ -200,18 +223,22 @@ export const playersGroup = {
 
       if (
         (afterStat.energyNotification
-         || afterStat.nerveNotification 
-         || afterStat.travelNotification
-         || afterStat.foreignRestockNotification
-         || afterStat.hospitalNotification
-         || afterStat.drugsNotification
-         || afterStat.racingNotification
-         || afterStat.messagesNotification
-         || afterStat.eventsNotification
-         || afterStat.refillsNotification
-         || afterStat.stockMarketNotification) 
-         && !afterStat.alertsEnabled
-      )
+          || afterStat.nerveNotification
+          || afterStat.travelNotification
+          || afterStat.foreignRestockNotification
+          || afterStat.hospitalNotification
+          || afterStat.drugsNotification
+          || afterStat.racingNotification
+          || afterStat.messagesNotification
+          || afterStat.eventsNotification
+          || afterStat.refillsNotification
+          || afterStat.stockMarketNotification
+          // NOTE: do NOT include here notifications that are outside of the main notification loop
+          // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
+          // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
+        )
+        && !afterStat.alertsEnabled
+      ) {
         promises.push(
           admin
             .firestore()
@@ -221,6 +248,17 @@ export const playersGroup = {
               alertsEnabled: true,
             })
         );
+      }
+
+      if (afterStat.retalsNotification) {
+        const firebaseAdmin = require("firebase-admin");
+        const db = firebaseAdmin.database();
+        db.ref(`retals/factions/${afterStat.faction}`).once("value", snapshot => {
+          if (!snapshot.exists()) {
+            db.ref(`retals/factions/${afterStat.faction}`).set("");
+          }
+        });;
+      }
 
       await Promise.all(promises);
     }),

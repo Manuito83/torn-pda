@@ -35,7 +35,6 @@ class AttacksProvider extends ChangeNotifier {
 
   AttackSortType _currentSort;
 
-  String _userKey = '';
   String _ownId = '';
 
   OwnProfileBasic _userDetails;
@@ -43,7 +42,7 @@ class AttacksProvider extends ChangeNotifier {
 
   void initializeAttacks() async {
     await restoreSharedPreferences();
-    dynamic attacksResult = await TornApiCaller.attacks(_userKey).getAttacks;
+    dynamic attacksResult = await TornApiCaller().getAttacks();
     if (attacksResult is AttackModel) {
       _apiError = false;
       _attacks.clear();
@@ -135,6 +134,7 @@ class AttacksProvider extends ChangeNotifier {
       double levelD = exp(4 * baseRespect - 1);
       thisAttack.targetLevel = levelD.round();
     } else {
+      thisAttack.respectGain = 0;
       thisAttack.targetLevel = -1;
     }
   }
@@ -214,7 +214,6 @@ class AttacksProvider extends ChangeNotifier {
 
   Future<void> restoreSharedPreferences() async {
     // User key
-    _userKey = _userDetails.userApiKey;
     _ownId = _userDetails.playerId.toString();
 
     // Attack sort

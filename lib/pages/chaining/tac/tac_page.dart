@@ -1,3 +1,4 @@
+/*
 // Dart imports:
 import 'dart:async';
 
@@ -23,7 +24,7 @@ import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_filters_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_in_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
-import 'package:torn_pda/private/tac_config.dart';
+//import 'package:torn_pda/private/tac_config.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -107,13 +108,14 @@ class _TacPageState extends State<TacPage> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
 
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'tac'});
+    analytics.setCurrentScreen(screenName: 'tac');
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -122,23 +124,26 @@ class _TacPageState extends State<TacPage> {
               child: buildAppBar(),
             )
           : null,
-      body: FutureBuilder(
-          future: _preferencesLoaded,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: MediaQuery.of(context).orientation == Orientation.portrait
-                    ? _mainColumn()
-                    : SingleChildScrollView(
-                        child: _mainColumn(),
-                      ),
-              );
-            } else {
-              return Center(child: CircularProgressIndicator());
-            }
-          }),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: FutureBuilder(
+            future: _preferencesLoaded,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: MediaQuery.of(context).orientation == Orientation.portrait
+                      ? _mainColumn()
+                      : SingleChildScrollView(
+                          child: _mainColumn(),
+                        ),
+                );
+              } else {
+                return Center(child: CircularProgressIndicator());
+              }
+            }),
+      ),
     );
   }
 
@@ -148,7 +153,6 @@ class _TacPageState extends State<TacPage> {
         SizedBox(height: 5),
         ChainWidget(
           key: _chainWidgetKey,
-          userKey: widget.userKey,
           alwaysDarkBackground: false,
         ),
         _filtersCard(),
@@ -418,10 +422,7 @@ class _TacPageState extends State<TacPage> {
 
     for (var i = 0; i < _tacProvider.targetsList.length; i++) {
       if (mounted) {
-        dynamic target = await TornApiCaller.target(
-          _userProvider.basic.userApiKey,
-          _tacProvider.targetsList[i].id.toString(),
-        ).getTarget;
+        dynamic target = await TornApiCaller().getTarget(playerId: _tacProvider.targetsList[i].id.toString());
 
         if (target is TargetModel) {
           _tacProvider.getSingleStatus(i, target);
@@ -651,7 +652,7 @@ class _TacPageState extends State<TacPage> {
       _targetCards.clear();
     });
     int currentChainHit = 0;
-    var chainResponse = await TornApiCaller.chain(widget.userKey).getChainStatus;
+    var chainResponse = await TornApiCaller().getChainStatus();
     if (chainResponse is ChainModel) {
       currentChainHit = chainResponse.chain.current;
     }
@@ -664,7 +665,7 @@ class _TacPageState extends State<TacPage> {
     if (_tacFilters.useOptimal) optimal = 1;
 
     var url = 'https://tornattackcentral.eu/pdaintegration.php?'
-        'password=${TacConfig.password}'
+        //'password=${TacConfig.password}'
         '&userid=${_userProvider.basic.playerId}'
         '&optimallevel=${_tacFilters.optimalLevel}'
         '&optimal=$optimal'
@@ -962,3 +963,4 @@ class _TacPageState extends State<TacPage> {
     }
   }
 }
+*/

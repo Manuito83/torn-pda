@@ -1,14 +1,16 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:dart_ping/dart_ping.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:android_intent/android_intent.dart';
 import 'package:device_info/device_info.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,6 +18,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/alerts/discrete_info.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:vibration/vibration.dart';
 
 // Project imports:
@@ -48,6 +55,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _userToLoad = false;
   bool _apiError = false;
   String _errorReason = '';
+  String _errorDetails = '';
   bool _apiIsLoading = false;
   OwnProfileBasic _userProfile;
 
@@ -65,6 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
+  ThemeProvider _themeProvider;
 
   var _expandableController = ExpandableController();
 
@@ -83,12 +92,14 @@ class _SettingsPageState extends State<SettingsPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'settings'});
+    analytics.setCurrentScreen(screenName: 'settings');
   }
 
   @override
   Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: new Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -97,175 +108,194 @@ class _SettingsPageState extends State<SettingsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: FutureBuilder(
-        future: _preferencesRestored,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(height: _extraMargin),
-                    _apiKeyWidget(),
-                    SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'BROWSER',
-                          style: TextStyle(fontSize: 10),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Flexible(
-                                child: Text(
-                                  "Web browser",
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.info_outline),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return BrowserInfoDialog();
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                          ),
-                          Flexible(
-                            child: _openBrowserDropdown(),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: FutureBuilder(
+          future: _preferencesRestored,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(height: _extraMargin),
+                      _apiKeyWidget(),
+                      SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'BROWSER',
+                            style: TextStyle(fontSize: 10),
                           ),
                         ],
                       ),
-                    ),
-                    if (_openBrowserValue == "0")
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 10),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
-                            Text(
-                              "Advanced browser settings",
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Text(
+                                    "Web browser",
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.info_outline),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return BrowserInfoDialog();
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
-                            IconButton(
-                                icon: Icon(Icons.keyboard_arrow_right_outlined),
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (BuildContext context) => SettingsBrowserPage(),
-                                    ),
-                                  );
-                                }),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _openBrowserDropdown(),
+                            ),
                           ],
                         ),
                       ),
-                    SizedBox(height: 15),
-                    Divider(),
-                    SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'TIME',
-                          style: TextStyle(fontSize: 10),
+                      if (_openBrowserValue == "0")
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                "Advanced browser settings",
+                              ),
+                              IconButton(
+                                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (BuildContext context) => SettingsBrowserPage(),
+                                      ),
+                                    );
+                                  }),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "Time format",
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                          ),
-                          Flexible(
-                            child: _timeFormatDropdown(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "Time zone",
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                          ),
-                          Flexible(
-                            flex: 2,
-                            child: _timeZoneDropdown(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "Show date in clock",
-                            ),
-                          ),
-                          Flexible(
-                            flex: 2,
-                            child: _dateInClockDropdown(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Flexible(
-                            child: Text(
-                              'Add an extra row for the date wherever the TCT clock is shown. You can also specify '
-                              'the desired format (day/month or month/day)',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
+                          Text(
+                            'TIME',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Time format",
                               ),
                             ),
-                          ),
-                        ],
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _timeFormatDropdown(),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 15),
-                    // TODO: this is conditional now because it only affects Android.
-                    // In the future it might be needed to show always the Divider and
-                    // SizedBox and only hide the actual Android elements
-                    if (Platform.isAndroid)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Time zone",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _timeZoneDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Show date in clock",
+                              ),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _dateInClockDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'Add an extra row for the date wherever the TCT clock is shown. You can also specify '
+                                'the desired format (day/month or month/day)',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Seconds in clock",
+                              ),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _secondsInClockDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      // TODO: this is conditional now because it only affects Android.
+                      // In the future it might be needed to show always the Divider and
+                      // SizedBox and only hide the actual Android elements
+
                       Column(
                         children: [
                           Divider(),
@@ -279,22 +309,40 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ],
                           ),
+                          SizedBox(height: 5),
                           Padding(
                             padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Flexible(
-                                  child: Text(
-                                    "Remove notifications on launch",
+                                  child: Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          "Discrete notifications",
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.info_outline),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return DiscreteInfo();
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 Switch(
-                                  value: _removeNotificationsLaunch,
+                                  value: _settingsProvider.discreteNotifications,
                                   onChanged: (value) {
-                                    _settingsProvider.changeRemoveNotificationsOnLaunch = value;
                                     setState(() {
-                                      _removeNotificationsLaunch = value;
+                                      _settingsProvider.discreteNotifications = value;
+                                      firestore.toggleDiscrete(value);
                                     });
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
@@ -303,272 +351,570 @@ class _SettingsPageState extends State<SettingsPage> {
                               ],
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                              'This will remove all Torn PDA notifications from your notifications bar '
-                              'when you launch the app. Deactivate it if you would prefer to keep them '
-                              'and erase them later manually',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 5),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Flexible(
-                                  child: Text(
-                                    "Alerts vibration",
+                          if (Platform.isAndroid)
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Flexible(
+                                        child: Text(
+                                          "Remove notifications on launch",
+                                        ),
+                                      ),
+                                      Switch(
+                                        value: _removeNotificationsLaunch,
+                                        onChanged: (value) {
+                                          _settingsProvider.changeRemoveNotificationsOnLaunch = value;
+                                          setState(() {
+                                            _removeNotificationsLaunch = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.only(left: 20),
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Text(
+                                    'This will remove all Torn PDA notifications from your notifications bar '
+                                    'when you launch the app. Deactivate it if you would prefer to keep them '
+                                    'and erase them later manually',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
                                 ),
-                                Flexible(
-                                  flex: 2,
-                                  child: _vibrationDropdown(),
+                                SizedBox(height: 5),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Flexible(
+                                        child: Text(
+                                          "Alerts vibration",
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 20),
+                                      ),
+                                      Flexible(
+                                        flex: 2,
+                                        child: _vibrationDropdown(),
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Text(
+                                    'This vibration applies to the automatic alerts only, with the '
+                                    'app in use or in the background',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 5),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Manual alarm sound"),
+                                      Switch(
+                                        value: _manualAlarmSound,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _manualAlarmSound = value;
+                                          });
+                                          Prefs().setManualAlarmSound(value);
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Manual alarm vibration"),
+                                      Switch(
+                                        value: _manualAlarmVibration,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _manualAlarmVibration = value;
+                                          });
+                                          Prefs().setManualAlarmVibration(value);
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      text: 'Applies to manually activated alarms in all sections '
+                                          '(Travel, Loot, Profile, etc.). '
+                                          'Some Android clock applications do not work well '
+                                          'with more than 1 timer or do not allow to choose '
+                                          'between sound and vibration for alarms. If you experience '
+                                          'any issue, it is recommended to install ',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                      children: <TextSpan>[
+                                        TextSpan(
+                                          text: 'Google\'s Clock application',
+                                          style: TextStyle(color: Colors.blue),
+                                          recognizer: TapGestureRecognizer()
+                                            ..onTap = () async {
+                                              AndroidIntent intent = AndroidIntent(
+                                                action: 'action_view',
+                                                data: 'https://play.google.com/store'
+                                                    '/apps/details?id=com.google.android.deskclock',
+                                              );
+                                              await intent.launch();
+                                            },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 15),
                               ],
-                            ),
+                            )
+                        ],
+                      ),
+
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'SPIES',
+                            style: TextStyle(fontSize: 10),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                              'This vibration applies to the automatic alerts only, with the '
-                              'app in use or in the background',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Spies source",
                               ),
                             ),
-                          ),
-                          SizedBox(height: 5),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Manual alarm sound"),
-                                Switch(
-                                  value: _manualAlarmSound,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _manualAlarmSound = value;
-                                    });
-                                    Prefs().setManualAlarmSound(value);
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Manual alarm vibration"),
-                                Switch(
-                                  value: _manualAlarmVibration,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _manualAlarmVibration = value;
-                                    });
-                                    Prefs().setManualAlarmVibration(value);
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
+                            Flexible(
+                              flex: 2,
+                              child: _spiesSourceDropdown(),
                             ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Choose the source of spied stats. This affects the stats shown when you visit a profile '
+                          'in the browser, as well as those shown in the War section (Chaining)',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: RichText(
-                              text: TextSpan(
-                                text: 'Applies to manually activated alarms in all sections '
-                                    '(Travel, Loot, Profile, etc.). '
-                                    'Some Android clock applications do not work well '
-                                    'with more than 1 timer or do not allow to choose '
-                                    'between sound and vibration for alarms. If you experience '
-                                    'any issue, it is recommended to install ',
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'MISC',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            const Flexible(
+                              child: Text(
+                                "Sync theme and web themes",
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Switch(
+                              value: _settingsProvider.syncTheme,
+                              onChanged: (enabled) async {
+                                setState(() {
+                                  _settingsProvider.syncTheme = enabled;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_settingsProvider.syncTheme)
+                        Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Flexible(
+                                    child: Text(
+                                      "Dark theme equivalent",
+                                    ),
+                                  ),
+                                  Flexible(
+                                    flex: 2,
+                                    child: _themeToSyncDropdown(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'Specifies which of the two dark themes is activated in the app when the web is switched to dark',
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 12,
                                   fontStyle: FontStyle.italic,
                                 ),
-                                children: <TextSpan>[
-                                  TextSpan(
-                                    text: 'Google\'s Clock application',
-                                    style: TextStyle(color: Colors.blue),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () async {
-                                        AndroidIntent intent = AndroidIntent(
-                                          action: 'action_view',
-                                          data: 'https://play.google.com/store'
-                                              '/apps/details?id=com.google.android.deskclock',
-                                        );
-                                        await intent.launch();
-                                      },
-                                  ),
-                                ],
                               ),
                             ),
-                          ),
-                          SizedBox(height: 15),
-                        ],
-                      )
-                    else
-                      SizedBox.shrink(),
-                    Divider(),
-                    SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'MISC',
-                          style: TextStyle(fontSize: 10),
+                          ],
                         ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "App bar position",
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "App bar position",
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                          ),
-                          Flexible(
-                            flex: 2,
-                            child: _appBarPositionDropdown(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Note: this will affect other quick access items such as '
-                        'the quick crimes bar in the browser',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _appBarPositionDropdown(),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "Default launch section",
-                            ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Note: this will affect other quick access items such as '
+                          'the quick crimes bar in the browser',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
-                          ),
-                          Flexible(
-                            child: _openSectionDropdown(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "Allow auto rotation",
-                            ),
-                          ),
-                          Switch(
-                            value: _settingsProvider.allowScreenRotation,
-                            onChanged: (value) {
-                              setState(() {
-                                _settingsProvider.changeAllowScreenRotation = value;
-                              });
-                            },
-                            activeTrackColor: Colors.lightGreenAccent,
-                            activeColor: Colors.green,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
-                        'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
-                        'to be manually scrolled and some elements might look too big)',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
                         ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "On app exit",
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Default launch section",
+                              ),
                             ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _openSectionDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Allow auto rotation",
+                              ),
+                            ),
+                            Switch(
+                              value: _settingsProvider.allowScreenRotation,
+                              onChanged: (value) {
+                                setState(() {
+                                  _settingsProvider.changeAllowScreenRotation = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
+                          'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
+                          'to be manually scrolled and some elements might look too big)',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 20),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "On app exit",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _appExitDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          "Note: this will only have effect in certain devices, depending on "
+                          "your configuration. Dictates how to proceed when the app detects a back button "
+                          "press or swipe that would otherwise close the app. "
+                          "If you choose 'ask', a dialog will be shown next time",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
                           ),
-                          Flexible(
-                            child: _appExitDropdown(),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'EXTERNAL PARTNERS',
+                            style: TextStyle(fontSize: 10),
                           ),
                         ],
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        "Note: this will only have effect in certain devices, depending on "
-                        "your configuration. Dictates how to proceed when the app detects a back button "
-                        "press or swipe that would otherwise close the app. "
-                        "If you choose 'ask', a dialog will be shown next time",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text(
+                              "Alternative API keys",
+                            ),
+                            IconButton(
+                                icon: Icon(Icons.keyboard_arrow_right_outlined),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (BuildContext context) => AlternativeKeysPage(),
+                                    ),
+                                  );
+                                }),
+                          ],
                         ),
                       ),
-                    ),
-                    SizedBox(height: 50),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          "Use this section to configure alternative API keys for the external partners that "
+                          "Torn PDA connects with. CAUTION: ensure this other keys are working correctly, as Torn PDA "
+                          "won't be able to check for errors and certain sections might stop working",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'TROUBLESHOOTING',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Test API",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            ElevatedButton(
+                              child: Text("PING"),
+                              onPressed: () async {
+                                BotToast.showText(
+                                  text: "Please wait...",
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.blue,
+                                  duration: Duration(seconds: 1),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                                final ping = Ping('api.torn.com', count: 4);
+                                ping.stream.listen((event) {
+                                  if (event.summary != null || event.error != null) {
+                                    String message = "";
+                                    if (event.error != null) {
+                                      message = "CONNECTION PROBLEM\n\n${event.error}";
+                                    } else {
+                                      if (event.summary.transmitted == event.summary.received) {
+                                        message = "SUCCESS\n\n${event.summary}";
+                                      } else {
+                                        message = "CONNECTION PROBLEM\n\n${event.summary}";
+                                      }
+                                    }
+
+                                    BotToast.showText(
+                                      clickClose: true,
+                                      text: message,
+                                      textStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.blue,
+                                      duration: Duration(seconds: 10),
+                                      contentPadding: EdgeInsets.all(10),
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          "In case that you are facing connection problems, this will ping Torn's API and show whether "
+                          "it is reachable from your device. If it isn't, it might be because of your DNS servers (you "
+                          "can try switching from WiFi to data)",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            const Flexible(
+                              child: Text(
+                                "Enable debug messages",
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Switch(
+                              value: _settingsProvider.debugMessages,
+                              onChanged: (enabled) async {
+                                setState(() {
+                                  _settingsProvider.debugMessages = enabled;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Enable specific debug messages for app failure testing. This is an advanced feature that might create '
+                          'additional error messages: avoid using it unless you have been requested to do so',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 50),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        },
+              );
+            } else {
+              return Center(child: CircularProgressIndicator());
+            }
+          },
+        ),
       ),
     );
   }
@@ -682,7 +1028,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     FocusScope.of(context).requestFocus(new FocusNode());
                                     if (_formKey.currentState.validate()) {
                                       _myCurrentKey = _apiKeyInputController.text;
-                                      _getApiDetails(userTriggered: true);
+                                      _getApiDetails(userTriggered: true, reload: true);
                                     }
                                   },
                                 ),
@@ -862,12 +1208,24 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             Text("Error: $_errorReason"),
+            if (_errorDetails.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(
+                  "$_errorDetails",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
           ],
         ),
       );
     } else if (_myCurrentKey == '') {
       return Padding(
-        padding: EdgeInsetsDirectional.fromSTEB(30, 30, 30, 0),
+        padding: EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
         child: Column(
           children: <Widget>[
             Text(
@@ -877,6 +1235,47 @@ class _SettingsPageState extends State<SettingsPage> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
+            ),
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "\nYou can get your API key in the Torn website by tapping your profile picture (upper right corner)"
+                        " and going to Settings, API Keys. Torn PDA only needs a Limited Access key.\n",
+                      ),
+                      RichText(
+                        text: TextSpan(
+                          style: DefaultTextStyle.of(context).style,
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Tap here',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () async {
+                                  var url = 'https://www.torn.com/preferences.php#tab=api';
+                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        useDialog: _settingsProvider.useQuickBrowser,
+                                      );
+                                },
+                            ),
+                            TextSpan(
+                              text: ' to be redirected',
+                              style: DefaultTextStyle.of(context).style,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             Text('\nIn any case, please make sure to '
                 'follow Torn\'s staff recommendations on how to protect your key '
@@ -984,6 +1383,19 @@ class _SettingsPageState extends State<SettingsPage> {
             width: 60,
             child: Text(
               "Awards",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "6",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Items",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -1239,6 +1651,45 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  DropdownButton _secondsInClockDropdown() {
+    return DropdownButton<bool>(
+      value: _settingsProvider.showSecondsInClock,
+      items: [
+        DropdownMenuItem(
+          value: true,
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Show",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: false,
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Hide",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.changeShowSecondsInClock = value;
+        });
+      },
+    );
+  }
+
   Widget _vibrationDropdown() {
     if (_androidSdk < 26) {
       return Text(
@@ -1329,6 +1780,89 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  DropdownButton _spiesSourceDropdown() {
+    return DropdownButton<SpiesSource>(
+      value: _settingsProvider.spiesSource,
+      items: [
+        DropdownMenuItem(
+          value: SpiesSource.yata,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "YATA",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: SpiesSource.tornStats,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "Torn Stats",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          if (value == SpiesSource.yata) {
+            _settingsProvider.changeSpiesSource = SpiesSource.yata;
+          } else {
+            _settingsProvider.changeSpiesSource = SpiesSource.tornStats;
+          }
+        });
+      },
+    );
+  }
+
+  DropdownButton _themeToSyncDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.themeToSync,
+      items: const [
+        DropdownMenuItem(
+          value: "dark",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Dark",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "extraDark",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Extra Dark",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _settingsProvider.themeToSync = value;
+        });
+      },
+    );
+  }
+
   DropdownButton _appBarPositionDropdown() {
     return DropdownButton<String>(
       value: _appBarPosition,
@@ -1376,13 +1910,13 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _getApiDetails({@required bool userTriggered}) async {
+  void _getApiDetails({@required bool userTriggered, bool reload = false}) async {
     try {
       setState(() {
         _apiIsLoading = true;
       });
 
-      dynamic myProfile = await TornApiCaller.ownBasic(_myCurrentKey).getProfileBasic;
+      dynamic myProfile = await TornApiCaller().getProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
@@ -1398,15 +1932,23 @@ class _SettingsPageState extends State<SettingsPage> {
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
-          User mFirebaseUser = await firebaseAuth.signInAnon();
-          firestore.setUID(mFirebaseUser.uid);
+          var user = await firebaseAuth.getUID();
+          // Only sign in if there is currently no user registered (to avoid duplicates)
+          if (user == null || (user is User && user.uid.isEmpty)) {
+            User mFirebaseUser = await firebaseAuth.signInAnon();
+            firestore.setUID(mFirebaseUser.uid);
+            // Returns UID to Drawer so that it can be passed to settings
+            widget.changeUID(mFirebaseUser.uid);
+            log("Settings: signed in with UID ${mFirebaseUser.uid}");
+          } else {
+            log("Settings: existing user UID ${user}");
+          }
+
           await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
           await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
           if (Platform.isAndroid) {
             firestore.setVibrationPattern(_vibrationValue);
           }
-          // Returns UID to Drawer so that it can be passed to settings
-          widget.changeUID(mFirebaseUser.uid);
         }
       } else if (myProfile is ApiError) {
         setState(() {
@@ -1414,6 +1956,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _userToLoad = false;
           _apiError = true;
           _errorReason = myProfile.errorReason;
+          _errorDetails = myProfile.pdaErrorDetails;
           _expandableController.expanded = true;
         });
         // We'll only remove the user if the key is invalid, otherwise we

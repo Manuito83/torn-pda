@@ -1,3 +1,4 @@
+/*
 // Dart imports:
 import 'dart:async';
 import 'dart:io';
@@ -37,7 +38,6 @@ class TornWebViewAttack extends StatefulWidget {
   final List<String> attackNotesList;
   final List<String> attackNotesColorList;
   final Function(List<String>) attacksCallback;
-  final String userKey;
   final bool war;
   final bool panic;
   final bool showNotes;
@@ -52,7 +52,6 @@ class TornWebViewAttack extends StatefulWidget {
     @required this.attackNotesList,
     @required this.attackNotesColorList,
     this.attacksCallback,
-    @required this.userKey,
     this.war = false,
     this.panic = false,
     @required this.showNotes,
@@ -101,6 +100,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   // NOT APPLICABLE UNLESS USING ON PROGRESS
   // bool _quickItemsTriggered = false;
   var _quickItemsActive = false;
+  var _quickItemsFaction = false;
   var _quickItemsController = ExpandableController();
 
   Widget _profileAttackWidget = SizedBox.shrink();
@@ -144,12 +144,13 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -161,7 +162,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               builder: (BuildContext context) {
                 return Container(
                   // Background color for all browser widgets
-                  color: Colors.grey[900],
+                  color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
                   child: Column(
                     children: [
                       ExpandablePanel(
@@ -175,7 +176,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                         header: SizedBox.shrink(),
                         expanded: ChainWidget(
                           key: _chainWidgetKey,
-                          userKey: widget.userKey,
                           alwaysDarkBackground: true,
                         ),
                       ),
@@ -195,9 +195,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                               expanded: _quickItemsActive
                                   ? QuickItemsWidget(
                                       webViewController: _webViewController,
-                                      appBarTop: _settingsProvider.appBarTop,
-                                      browserDialog: false,
                                       webviewType: 'attacks',
+                                      faction: _quickItemsFaction,
                                     )
                                   : SizedBox.shrink(),
                             )
@@ -207,6 +206,40 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                         child: WebView(
                           initialUrl: _initialUrl,
                           javascriptMode: JavascriptMode.unrestricted,
+                          javascriptChannels: Set.from([
+                            JavascriptChannel(
+                              name: 'loadoutChangeHandler',
+                              onMessageReceived: (JavascriptMessage message) async {
+                                if (message.message.contains("equippedSet")) {
+                                  final regex = RegExp(r'"equippedSet":(\d)');
+                                  final match = regex.firstMatch(message.message);
+                                  final loadout = match.group(1);
+                                  _webViewController.reload();
+                                  BotToast.showText(
+                                    text: "Loadout $loadout activated!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.blue[600],
+                                    duration: Duration(seconds: 1),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                } else {
+                                  BotToast.showText(
+                                    text: "There was a problem activating the loadout, are you already using it?",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.red[600],
+                                    duration: Duration(seconds: 2),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                }
+                              },
+                            )
+                          ]),
                           onWebViewCreated: (WebViewController c) {
                             _webViewController = c;
                           },
@@ -235,9 +268,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                               expanded: _quickItemsActive
                                   ? QuickItemsWidget(
                                       webViewController: _webViewController,
-                                      appBarTop: _settingsProvider.appBarTop,
-                                      browserDialog: false,
                                       webviewType: 'attacks',
+                                      faction: _quickItemsFaction,
                                     )
                                   : SizedBox.shrink(),
                             )
@@ -262,7 +294,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     String hlMap = '[ { name: "${_userProv.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
-      _webViewController.evaluateJavascript(
+      _webViewController.runJavascript(
         chatHighlightJS(highlightMap: hlMap),
       );
     }
@@ -270,7 +302,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   void _hideChat() {
     if (_chatRemovalEnabled && _chatRemovalActive) {
-      _webViewController.evaluateJavascript(removeChatOnLoadStartJS());
+      _webViewController.runJavascript(removeChatOnLoadStartJS());
     }
   }
 
@@ -403,7 +435,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     var url = await _webViewController.currentUrl();
     return showDialog<void>(
       context: context,
-      barrierDismissible: true, // user must tap button!
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _currentPageTitle,
@@ -427,7 +459,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         child: GestureDetector(
           child: Icon(MdiIcons.chatOutline),
           onTap: () async {
-            _webViewController.evaluateJavascript(removeChatJS());
+            _webViewController.runJavascript(removeChatJS());
             Prefs().setChatRemovalActive(true);
             setState(() {
               _chatRemovalActive = true;
@@ -444,7 +476,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
             color: Colors.orange[500],
           ),
           onTap: () async {
-            _webViewController.evaluateJavascript(restoreChatJS());
+            _webViewController.runJavascript(restoreChatJS());
             Prefs().setChatRemovalActive(false);
             setState(() {
               _chatRemovalActive = false;
@@ -521,7 +553,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget = await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[i]).getTarget;
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -533,8 +565,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user =
-                await TornApiCaller.target(_userProv.basic.userApiKey, _userProv.basic.playerId.toString()).getTarget;
+            var user = await TornApiCaller().getTarget(playerId: _userProv.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -617,7 +648,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     // This will show the note of the first target, if applicable
     if (widget.showNotes) {
       if (widget.showOnlineFactionWarning) {
-        var nextTarget = await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[0]).getTarget;
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.attackIdList[0]);
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
           _lastOnline = nextTarget.lastAction.timestamp;
@@ -645,8 +676,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget =
-            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1]).getTarget;
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -658,8 +688,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user =
-                await TornApiCaller.target(_userProv.basic.userApiKey, _userProv.basic.playerId.toString()).getTarget;
+            var user = await TornApiCaller().getTarget(playerId: _userProv.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -730,8 +759,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     // from the API
     else {
       if (widget.showOnlineFactionWarning) {
-        var nextTarget =
-            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1]).getTarget;
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
@@ -909,7 +937,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   Future _assessQuickItems(String pageUrl) async {
     if (mounted) {
       //var pageTitle = (await _getPageTitle(document)).toLowerCase();
-      if (!pageUrl.contains('item.php')) {
+      if (!pageUrl.contains('item.php') && !pageUrl.contains('tab=armoury')) {
         setState(() {
           _quickItemsController.expanded = false;
           _quickItemsActive = false;
@@ -920,7 +948,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       }
 
       var title = await _webViewController.getTitle();
-      if (!title.contains('Items')) {
+      if (!title.contains('Items') && !title.contains('Faction')) {
         return;
       }
 
@@ -935,12 +963,12 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       */
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
-      var key = _userProv.basic.userApiKey;
-      quickItemsProvider.loadItems(apiKey: key);
+      quickItemsProvider.loadItems();
 
       setState(() {
         _quickItemsController.expanded = true;
         _quickItemsActive = true;
+        _quickItemsFaction = title.contains('Faction');
       });
     }
   }
@@ -1066,3 +1094,4 @@ class HealingPages {
     }
   }
 }
+*/

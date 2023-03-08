@@ -1,16 +1,14 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
+import 'dart:developer';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
-import 'package:flutter/painting.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -21,9 +19,9 @@ import 'package:speech_bubble/speech_bubble.dart';
 // Project imports:
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
-import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -61,6 +59,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   Future _apiCalled;
   bool _apiSuccess;
+  bool _yataTimeOut = false;
 
   var _activeRestocks = Map<String, dynamic>();
 
@@ -80,8 +79,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   bool _inventoryEnabled = true;
   bool _showArrivalTime = true;
+  bool _showBarsCooldownAnalysis = true;
   InventoryModel _inventory;
-  TravelModel _travelModel;
+  //OwnProfileExtended _travelModel;
+  OwnProfileExtended _profile;
   int _capacity;
 
   final _filteredTypes = List<bool>.filled(4, true, growable: false);
@@ -157,11 +158,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -169,53 +173,94 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                   child: buildAppBar(),
                 )
               : null,
-          body: Stack(
-            alignment: Alignment.topCenter,
-            children: <Widget>[
-              FutureBuilder(
-                future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiSuccess) {
-                      return BubbleShowcase(
-                        // KEEP THIS UNIQUE
-                        bubbleShowcaseId: 'foreign_stock_showcase',
-                        // WILL SHOW IF VERSION CHANGED
-                        bubbleShowcaseVersion: 2,
-                        showCloseButton: false,
-                        doNotReopenOnClose: true,
-                        bubbleSlides: [
-                          AbsoluteBubbleSlide(
-                            positionCalculator: (size) => Position(
-                              top: 0,
-                              right: size.width,
-                              bottom: size.height,
-                              left: size.width,
-                            ),
-                            child: RelativeBubbleSlideChild(
-                              direction: AxisDirection.right,
-                              widget: Padding(
-                                padding: const EdgeInsets.only(right: 75),
-                                child: SpeechBubble(
-                                  width: 200,
-                                  nipLocation: NipLocation.RIGHT,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(10),
-                                    child: Text(
-                                      'Did you know?\n\n'
-                                      'Click any flag to go directly to the travel agency and '
-                                      'get a check on how much money you need for that particular '
-                                      'item (based on your preset capacity)!',
-                                      style: TextStyle(color: Colors.white),
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: <Widget>[
+                FutureBuilder(
+                  future: _apiCalled,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_apiSuccess) {
+                        return BubbleShowcase(
+                          // KEEP THIS UNIQUE
+                          bubbleShowcaseId: 'foreign_stock_showcase',
+                          // WILL SHOW IF VERSION CHANGED
+                          bubbleShowcaseVersion: 2,
+                          showCloseButton: false,
+                          doNotReopenOnClose: true,
+                          bubbleSlides: [
+                            AbsoluteBubbleSlide(
+                              positionCalculator: (size) => Position(
+                                top: 0,
+                                right: size.width,
+                                bottom: size.height,
+                                left: size.width,
+                              ),
+                              child: RelativeBubbleSlideChild(
+                                direction: AxisDirection.right,
+                                widget: Padding(
+                                  padding: const EdgeInsets.only(right: 75),
+                                  child: SpeechBubble(
+                                    width: 200,
+                                    nipLocation: NipLocation.RIGHT,
+                                    color: Colors.blue,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Text(
+                                        'Did you know?\n\n'
+                                        'Click any flag to go directly to the travel agency and '
+                                        'get a check on how much money you need for that particular '
+                                        'item (based on your preset capacity)!',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
+                          ],
+                          child: SmartRefresher(
+                            enablePullDown: true,
+                            header: WaterDropMaterialHeader(
+                              backgroundColor: Theme.of(context).primaryColor,
+                            ),
+                            controller: _refreshController,
+                            onRefresh: _onRefresh,
+                            child: ListView(
+                              children: _stockItems(),
+                            ),
                           ),
-                        ],
-                        child: SmartRefresher(
+                        );
+                      } else {
+                        var errorTiles = <Widget>[];
+                        errorTiles.add(
+                          Center(
+                            child: Column(
+                              children: [
+                                Image.asset(
+                                  'images/icons/airplane.png',
+                                  height: 100,
+                                ),
+                                SizedBox(height: 15),
+                                Text(
+                                  'OOPS!',
+                                  style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                                  child: Text(
+                                    'There was an error getting the information, please '
+                                    'try again later or pull to refresh!',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+
+                        return SmartRefresher(
                           enablePullDown: true,
                           header: WaterDropMaterialHeader(
                             backgroundColor: Theme.of(context).primaryColor,
@@ -223,132 +268,94 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                           controller: _refreshController,
                           onRefresh: _onRefresh,
                           child: ListView(
-                            children: _stockItems(),
-                          ),
-                        ),
-                      );
-                    } else {
-                      var errorTiles = <Widget>[];
-                      errorTiles.add(
-                        Center(
-                          child: Column(
                             children: [
-                              Image.asset(
-                                'images/icons/airplane.png',
-                                height: 100,
-                              ),
-                              SizedBox(height: 15),
-                              Text(
-                                'OPS!',
-                                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                                child: Text(
-                                  'There was an error getting the information, please '
-                                  'try again later or pull to refresh!',
+                              SizedBox(
+                                height: MediaQuery.of(context).size.height / 2,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: errorTiles,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      );
-
-                      return SmartRefresher(
-                        enablePullDown: true,
-                        header: WaterDropMaterialHeader(
-                          backgroundColor: Theme.of(context).primaryColor,
-                        ),
-                        controller: _refreshController,
-                        onRefresh: _onRefresh,
-                        child: ListView(
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height / 2,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: errorTiles,
-                              ),
-                            ),
+                        );
+                      }
+                    } else {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text('Fetching data...'),
+                            SizedBox(height: 30),
+                            CircularProgressIndicator(),
                           ],
                         ),
                       );
                     }
-                  } else {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text('Fetching data...'),
-                          SizedBox(height: 30),
-                          CircularProgressIndicator(),
-                        ],
-                      ),
-                    );
-                  }
-                },
-              ),
+                  },
+                ),
 
-              // Sliding panel
-              FutureBuilder(
-                future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiSuccess) {
-                      return SlidingUpPanel(
-                        controller: _pc,
-                        maxHeight: _panelHeightOpen,
-                        minHeight: _panelHeightClosed,
-                        renderPanelSheet: false,
-                        backdropEnabled: true,
-                        parallaxEnabled: true,
-                        parallaxOffset: .5,
-                        panelBuilder: (sc) => _bottomPanel(sc),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(18.0),
-                          topRight: Radius.circular(18.0),
-                        ),
-                        onPanelSlide: (double pos) => setState(() {
-                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                        }),
-                      );
+                // Sliding panel
+                FutureBuilder(
+                  future: _apiCalled,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_apiSuccess) {
+                        return SlidingUpPanel(
+                          controller: _pc,
+                          maxHeight: _panelHeightOpen,
+                          minHeight: _panelHeightClosed,
+                          renderPanelSheet: false,
+                          backdropEnabled: true,
+                          parallaxEnabled: true,
+                          parallaxOffset: .5,
+                          panelBuilder: (sc) => _bottomPanel(sc),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(18.0),
+                            topRight: Radius.circular(18.0),
+                          ),
+                          onPanelSlide: (double pos) => setState(() {
+                            _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                          }),
+                        );
+                      } else {
+                        return SizedBox.shrink();
+                      }
                     } else {
                       return SizedBox.shrink();
                     }
-                  } else {
-                    return SizedBox.shrink();
-                  }
-                },
-              ),
+                  },
+                ),
 
-              // FAB
-              FutureBuilder(
-                future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiSuccess) {
-                      return Positioned(
-                        right: 35.0,
-                        bottom: _fabHeight,
-                        child: FloatingActionButton.extended(
-                          icon: Icon(Icons.filter_list),
-                          label: Text("Filter"),
-                          elevation: 4,
-                          onPressed: () {
-                            _pc.isPanelOpen ? _pc.close() : _pc.open();
-                          },
-                          backgroundColor: Colors.orange,
-                        ),
-                      );
+                // FAB
+                FutureBuilder(
+                  future: _apiCalled,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_apiSuccess) {
+                        return Positioned(
+                          right: 35.0,
+                          bottom: _fabHeight,
+                          child: FloatingActionButton.extended(
+                            icon: Icon(Icons.filter_list),
+                            label: Text("Filter"),
+                            elevation: 4,
+                            onPressed: () {
+                              _pc.isPanelOpen ? _pc.close() : _pc.open();
+                            },
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      } else {
+                        return SizedBox.shrink();
+                      }
                     } else {
                       return SizedBox.shrink();
                     }
-                  } else {
-                    return SizedBox.shrink();
-                  }
-                },
-              ),
-            ],
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -405,7 +412,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
-          color: _themeProvider.background,
+          color: _themeProvider.secondBackground,
           borderRadius: BorderRadius.all(Radius.circular(24.0)),
           boxShadow: [
             BoxShadow(
@@ -755,14 +762,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           capacity: _capacity,
           inventoryEnabled: _inventoryEnabled,
           showArrivalTime: _showArrivalTime,
-          moneyOnHand: _travelModel.moneyOnhand,
+          showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
+          profile: _profile,
           flagPressedCallback: _onFlagPressed,
           requestMoneyRefresh: _refreshMoney,
           ticket: _settingsProvider.travelTicket,
           activeRestocks: _activeRestocks,
-          travellingTimeStamp: _travelModel.timeStamp,
-          travellingCountry: _returnCountryName(_travelModel.destination),
-          travellingCountryFullName: _travelModel.destination,
+          travellingTimeStamp: _profile.travel.timestamp,
+          travellingCountry: _returnCountryName(_profile.travel.destination),
+          travellingCountryFullName: _profile.travel.destination,
           key: UniqueKey(),
         ),
       );
@@ -776,36 +784,22 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   Future<void> _fetchApiInformation() async {
     try {
-      Future yataAPI() async {
-        String yataURL = 'https://yata.yt/api/v1/travel/export/';
-        var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
-        if (responseDB.statusCode == 200) {
-          _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
-          _apiSuccess = true;
-        } else {
-          _apiSuccess = false;
-        }
+      // Get all APIs
+      await yataAPI();
+      if (_yataTimeOut) {
+        return;
       }
 
-      Future tornItems() async {
-        _allTornItems = await TornApiCaller.items(widget.apiKey).getItems;
-      }
-
-      Future inventory() async {
-        _inventory = await TornApiCaller.inventory(widget.apiKey).getInventory;
-      }
-
-      Future profileMisc() async {
-        _travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
-      }
-
-      // Get all APIs at the same time
       await Future.wait<void>([
-        yataAPI(),
         tornItems(),
         inventory(),
         profileMisc(),
       ]);
+
+      if (!_apiSuccess) {
+        log("Unsuccessful Torn API replies");
+        return;
+      }
 
       // We need to calculate several additional values before sorting the list
       // for the first time, as this values don't come straight
@@ -915,7 +909,197 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       _filterAndSortTopLists();
     } catch (e) {
       _apiSuccess = false;
+
+      if (_settingsProvider.debugMessages) {
+        BotToast.showText(
+          text: "YATA debug catch: $e",
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
     }
+  }
+
+  Future yataAPI() async {
+    try {
+      _yataTimeOut = false;
+      String yataURL = 'https://yata.yt/api/v1/travel/export/';
+      var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
+      if (responseDB.statusCode == 200) {
+        _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
+        _apiSuccess = true;
+      } else {
+        _apiSuccess = false;
+
+        if (_settingsProvider.debugMessages) {
+          BotToast.showText(
+            text: "YATA debug error: ${responseDB.body}",
+            textStyle: TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+            ),
+            contentColor: Colors.red[800],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+        }
+      }
+    } catch (e) {
+      _apiSuccess = false;
+      if (e is TimeoutException) {
+        _yataTimeOut = true;
+        BotToast.showText(
+          text: "YATA connection timed out, the server might be busy.\n\nPlease try again later!",
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+    }
+  }
+
+  Future tornItems() async {
+    dynamic itemsResponse = await TornApiCaller().getItems();
+
+    String error = "";
+    if (itemsResponse is ApiError) {
+      // Torn API generates lots of errors with this query (JAN 2023)
+      ApiError e = itemsResponse as ApiError;
+      error = e.errorReason;
+      log("Recalling API due to items error: ${e.errorReason}");
+      BotToast.showText(
+        text: "Torn API replied with error, retrying after a few seconds, please wait...",
+        onlyOne: true,
+        textStyle: TextStyle(
+          fontSize: 13,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+      await Future.delayed(const Duration(seconds: 8));
+      itemsResponse = await TornApiCaller().getItems();
+    }
+
+    if (itemsResponse is ApiError) {
+      _apiSuccess = false;
+      if (itemsResponse.errorReason.isNotEmpty) {
+        BotToast.showText(
+          text: "Torn API response with error: $error",
+          onlyOne: true,
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+      return;
+    }
+
+    _allTornItems = itemsResponse;
+  }
+
+  Future inventory() async {
+    dynamic inventoryResponse = await TornApiCaller().getInventory();
+
+    String error = "";
+    if (inventoryResponse is ApiError) {
+      // Torn API generates lots of errors with this query (JAN 2023)
+      ApiError e = inventoryResponse as ApiError;
+      error = e.errorReason;
+      log("Recalling API due to profile error: ${e.errorReason}");
+      BotToast.showText(
+        text: "Torn API replied with error, retrying after a few seconds, please wait...",
+        onlyOne: true,
+        textStyle: TextStyle(
+          fontSize: 13,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+      await Future.delayed(const Duration(seconds: 8));
+      inventoryResponse = await TornApiCaller().getInventory();
+    }
+
+    if (inventoryResponse is ApiError) {
+      _apiSuccess = false;
+      if (inventoryResponse.errorReason.isNotEmpty) {
+        BotToast.showText(
+          text: "Torn API response with error: $error",
+          onlyOne: true,
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+      return;
+    }
+
+    _inventory = inventoryResponse;
+  }
+
+  Future profileMisc() async {
+    dynamic profileResponse = await TornApiCaller().getProfileExtended(limit: 3);
+
+    String error = "";
+    if (profileResponse is ApiError) {
+      // Torn API generates lots of errors with this query (JAN 2023)
+      ApiError e = profileResponse as ApiError;
+      error = e.errorReason;
+      log("Recalling API due to profile error: ${e.errorReason}");
+      BotToast.showText(
+        text: "Torn API replied with error, retrying after a few seconds, please wait...",
+        onlyOne: true,
+        textStyle: TextStyle(
+          fontSize: 13,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+      await Future.delayed(const Duration(seconds: 8));
+      profileResponse = await TornApiCaller().getProfileExtended(limit: 3);
+    }
+
+    if (profileResponse is ApiError) {
+      _apiSuccess = false;
+      if (profileResponse.errorReason.isNotEmpty) {
+        BotToast.showText(
+          text: "Torn API response with error: $error",
+          onlyOne: true,
+          textStyle: TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800],
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+      return;
+    }
+
+    _profile = profileResponse;
   }
 
   void _filterAndSortTopLists() {
@@ -1162,6 +1346,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _capacity = await Prefs().getStockCapacity();
     _inventoryEnabled = await Prefs().getShowForeignInventory();
     _showArrivalTime = await Prefs().getShowArrivalTime();
+    _showBarsCooldownAnalysis = await Prefs().getShowBarsCooldownAnalysis();
 
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
   }
@@ -1183,6 +1368,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               callBack: _onStocksOptionsChanged,
               inventoryEnabled: _inventoryEnabled,
               showArrivalTime: _showArrivalTime,
+              showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
               settingsProvider: _settingsProvider,
             ),
           ),
@@ -1191,11 +1377,13 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onStocksOptionsChanged(int newCapacity, bool inventoryEnabled, bool showArrivalTime) {
+  void _onStocksOptionsChanged(
+      int newCapacity, bool inventoryEnabled, bool showArrivalTime, bool showBarsCooldownAnalysis) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;
       _showArrivalTime = showArrivalTime;
+      _showBarsCooldownAnalysis = showBarsCooldownAnalysis;
     });
   }
 
@@ -1278,10 +1466,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   _refreshMoney() async {
-    var travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
-    if (travelModel is TravelModel && mounted) {
+    var profileModel = await TornApiCaller().getProfileExtended(limit: 3);
+    if (profileModel is OwnProfileExtended && mounted) {
       setState(() {
-        _travelModel = travelModel;
+        _profile = profileModel;
       });
     }
   }

@@ -49,12 +49,12 @@ class TargetsOptions {
 }
 
 class TargetsPage extends StatefulWidget {
-  final String userKey;
+  final Function retaliationCallback;
   //final Function tabCallback;
 
   const TargetsPage({
     Key key,
-    @required this.userKey,
+    @required this.retaliationCallback,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -93,12 +93,16 @@ class _TargetsPageState extends State<TargetsPage> {
     TargetSort(type: TargetSortType.levelAsc),
     TargetSort(type: TargetSortType.respectDes),
     TargetSort(type: TargetSortType.respectAsc),
+    TargetSort(type: TargetSortType.ffDes),
+    TargetSort(type: TargetSortType.ffAsc),
     TargetSort(type: TargetSortType.nameDes),
     TargetSort(type: TargetSortType.nameAsc),
     TargetSort(type: TargetSortType.lifeDes),
     TargetSort(type: TargetSortType.lifeAsc),
     TargetSort(type: TargetSortType.colorAsc),
     TargetSort(type: TargetSortType.colorDes),
+    TargetSort(type: TargetSortType.onlineAsc),
+    TargetSort(type: TargetSortType.onlineDes),
   ];
 
   final _popupOptionsChoices = <TargetsOptions>[
@@ -125,6 +129,7 @@ class _TargetsPageState extends State<TargetsPage> {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -133,14 +138,17 @@ class _TargetsPageState extends State<TargetsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-        child: MediaQuery.of(context).orientation == Orientation.portrait
-            ? _mainColumn()
-            : SingleChildScrollView(
-                child: _mainColumn(),
-              ),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          child: MediaQuery.of(context).orientation == Orientation.portrait
+              ? _mainColumn()
+              : SingleChildScrollView(
+                  child: _mainColumn(),
+                ),
+        ),
       ),
     );
   }
@@ -157,7 +165,7 @@ class _TargetsPageState extends State<TargetsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.background,
+                  primary: _themeProvider.secondBackground,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -179,7 +187,7 @@ class _TargetsPageState extends State<TargetsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.background,
+                  primary: _themeProvider.secondBackground,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -229,7 +237,6 @@ class _TargetsPageState extends State<TargetsPage> {
         ),
         ChainWidget(
           key: _chainWidgetKey,
-          userKey: widget.userKey,
           alwaysDarkBackground: false,
           callBackOptions: _callBackChainOptions,
         ),
@@ -445,7 +452,7 @@ class _TargetsPageState extends State<TargetsPage> {
                     ),
                     margin: const EdgeInsets.only(top: 30),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -540,7 +547,7 @@ class _TargetsPageState extends State<TargetsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.mainText,
                       radius: 22,
@@ -549,7 +556,7 @@ class _TargetsPageState extends State<TargetsPage> {
                         width: 28,
                         child: Image.asset(
                           'images/icons/ic_target_account_black_48dp.png',
-                          color: _themeProvider.background,
+                          color: _themeProvider.secondBackground,
                         ),
                       ),
                     ),
@@ -581,6 +588,12 @@ class _TargetsPageState extends State<TargetsPage> {
       case TargetSortType.respectAsc:
         _targetsProvider.sortTargets(TargetSortType.respectAsc);
         break;
+      case TargetSortType.ffDes:
+        _targetsProvider.sortTargets(TargetSortType.ffDes);
+        break;
+      case TargetSortType.ffAsc:
+        _targetsProvider.sortTargets(TargetSortType.ffAsc);
+        break;
       case TargetSortType.nameDes:
         _targetsProvider.sortTargets(TargetSortType.nameDes);
         break;
@@ -598,6 +611,12 @@ class _TargetsPageState extends State<TargetsPage> {
         break;
       case TargetSortType.colorAsc:
         _targetsProvider.sortTargets(TargetSortType.colorAsc);
+        break;
+      case TargetSortType.onlineDes:
+        _targetsProvider.sortTargets(TargetSortType.onlineDes);
+        break;
+      case TargetSortType.onlineAsc:
+        _targetsProvider.sortTargets(TargetSortType.onlineAsc);
         break;
     }
   }
@@ -635,6 +654,7 @@ class _TargetsPageState extends State<TargetsPage> {
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
+        widget.retaliationCallback(newOptions.retaliationEnabled);
         //widget.tabCallback(newOptions.tacEnabled);
         break;
       case "Filter":
@@ -785,7 +805,7 @@ class _TargetsPageState extends State<TargetsPage> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -847,9 +867,9 @@ class _TargetsPageState extends State<TargetsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,

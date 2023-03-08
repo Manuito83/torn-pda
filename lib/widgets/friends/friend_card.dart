@@ -45,8 +45,7 @@ class _FriendCardState extends State<FriendCard> {
   @override
   void initState() {
     super.initState();
-    _ticker = new Timer.periodic(
-        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
@@ -64,16 +63,16 @@ class _FriendCardState extends State<FriendCard> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Slidable(
-      actionPane: SlidableDrawerActionPane(),
-      actionExtentRatio: 0.25,
-      actions: <Widget>[
-        IconSlideAction(
-            caption: 'Remove',
-            color: Colors.red,
+      startActionPane: ActionPane(
+        extentRatio: 0.25,
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            label: 'Remove',
+            backgroundColor: Colors.red,
             icon: Icons.delete,
-            onTap: () {
-              Provider.of<FriendsProvider>(context, listen: false)
-                  .deleteFriend(_friend);
+            onPressed: (context) {
+              Provider.of<FriendsProvider>(context, listen: false).deleteFriend(_friend);
               BotToast.showText(
                 text: 'Deleted ${_friend.name}!',
                 textStyle: TextStyle(
@@ -84,14 +83,15 @@ class _FriendCardState extends State<FriendCard> {
                 duration: Duration(seconds: 3),
                 contentPadding: EdgeInsets.all(10),
               );
-            }),
-      ],
+            },
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
         child: Card(
           shape: RoundedRectangleBorder(
-              side: BorderSide(color: _cardBorderColor(), width: 1.5),
-              borderRadius: BorderRadius.circular(4.0)),
+              side: BorderSide(color: _cardBorderColor(), width: 1.5), borderRadius: BorderRadius.circular(4.0)),
           elevation: 2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,8 +128,7 @@ class _FriendCardState extends State<FriendCard> {
                           OpenContainer(
                             transitionDuration: Duration(milliseconds: 500),
                             transitionType: ContainerTransitionType.fadeThrough,
-                            openBuilder:
-                                (BuildContext context, VoidCallback _) {
+                            openBuilder: (BuildContext context, VoidCallback _) {
                               return FriendDetailsPage(friend: _friend);
                             },
                             closedElevation: 0,
@@ -139,8 +138,7 @@ class _FriendCardState extends State<FriendCard> {
                               ),
                             ),
                             closedColor: Colors.transparent,
-                            closedBuilder: (BuildContext context,
-                                VoidCallback openContainer) {
+                            closedBuilder: (BuildContext context, VoidCallback openContainer) {
                               return SizedBox(
                                 height: 20,
                                 width: 20,
@@ -208,8 +206,7 @@ class _FriendCardState extends State<FriendCard> {
                           width: 14,
                           height: 14,
                           decoration: BoxDecoration(
-                            color:
-                                _returnStatusColor(_friend.lastAction.status),
+                            color: _returnStatusColor(_friend.lastAction.status),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -222,8 +219,7 @@ class _FriendCardState extends State<FriendCard> {
                         Text(
                           _friend.lastAction.relative == "0 minutes ago"
                               ? 'now'
-                              : _friend.lastAction.relative
-                                  .replaceAll(' ago', ''),
+                              : _friend.lastAction.relative.replaceAll(' ago', ''),
                         ),
                       ],
                     ),
@@ -306,17 +302,17 @@ class _FriendCardState extends State<FriendCard> {
         ),
         onTap: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
-            context: context,
-            url: tradeUrl,
-            useDialog: _settingsProvider.useQuickBrowser,
-          );
+                context: context,
+                url: tradeUrl,
+                useDialog: _settingsProvider.useQuickBrowser,
+              );
         },
         onLongPress: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
-            context: context,
-            url: tradeUrl,
-            useDialog: false,
-          );
+                context: context,
+                url: tradeUrl,
+                useDialog: false,
+              );
         },
       ),
     );
@@ -335,25 +331,24 @@ class _FriendCardState extends State<FriendCard> {
         ),
         onTap: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
-            context: context,
-            url: messageUrl,
-            useDialog: _settingsProvider.useQuickBrowser,
-          );
+                context: context,
+                url: messageUrl,
+                useDialog: _settingsProvider.useQuickBrowser,
+              );
         },
         onLongPress: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
-            context: context,
-            url: messageUrl,
-            useDialog: false,
-          );
+                context: context,
+                url: messageUrl,
+                useDialog: false,
+              );
         },
       ),
     );
   }
 
   Widget _visitProfileIcon() {
-    String profileUrl =
-        'https://www.torn.com/profiles.php?XID=${_friend.playerId}';
+    String profileUrl = 'https://www.torn.com/profiles.php?XID=${_friend.playerId}';
     return SizedBox(
       height: 20,
       width: 20,
@@ -364,17 +359,17 @@ class _FriendCardState extends State<FriendCard> {
         ),
         onTap: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
-            context: context,
-            url: profileUrl,
-            useDialog: _settingsProvider.useQuickBrowser,
-          );
+                context: context,
+                url: profileUrl,
+                useDialog: _settingsProvider.useQuickBrowser,
+              );
         },
         onLongPress: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
-            context: context,
-            url: profileUrl,
-            useDialog: false,
-          );
+                context: context,
+                url: profileUrl,
+                useDialog: false,
+              );
         },
       ),
     );
@@ -407,8 +402,7 @@ class _FriendCardState extends State<FriendCard> {
       }
 
       void showFactionToast() {
-        if (_friend.faction.factionId ==
-            _userProvider.basic.faction.factionId) {
+        if (_friend.faction.factionId == _userProvider.basic.faction.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_friend.name} belongs to your same faction "
                 "(${_friend.faction.factionName}) as "
@@ -532,10 +526,7 @@ class _FriendCardState extends State<FriendCard> {
       child: Container(
         width: 13,
         height: 13,
-        decoration: BoxDecoration(
-            color: stateColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.black)),
+        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
       ),
     );
 
@@ -650,5 +641,4 @@ class _FriendCardState extends State<FriendCard> {
       _returnLastUpdated();
     });
   }
-
 }

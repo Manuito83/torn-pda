@@ -4,12 +4,14 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 class FirebaseUserModel extends OwnProfileExtended {
   String token;
   String uid;
+  bool discrete = false;
   bool travelNotification = false;
   bool foreignRestockNotification = false;
   bool energyNotification = false;
   bool energyLastCheckFull = true;
   bool nerveNotification = false;
   bool nerveLastCheckFull = true;
+  List lootAlerts = [];
   bool hospitalNotification = false;
   bool drugsNotification = false;
   bool drugsInfluence = false;
@@ -24,6 +26,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool stockMarketNotification = false;
   List stockMarketShares = [];
   bool factionAssistMessage = true;
+  bool retalsNotification = false;
 
   FirebaseUserModel();
 
@@ -43,12 +46,14 @@ class FirebaseUserModel extends OwnProfileExtended {
       "level": level,
       "token": token,
       "status": status,
+      "discrete": discrete,
       "travelNotification": travelNotification,
       "foreignRestockNotification": foreignRestockNotification,
       "energyNotification": energyNotification,
       "energyLastCheckFull": energyLastCheckFull,
       "nerveNotification": nerveNotification,
       "nerveLastCheckFull": nerveLastCheckFull,
+      "lootAlerts": lootAlerts,
       "hospitalNotification": hospitalNotification,
       "drugsNotification": drugsNotification,
       "drugsInfluence": drugsInfluence,
@@ -63,17 +68,20 @@ class FirebaseUserModel extends OwnProfileExtended {
       "stockMarketNotification": stockMarketNotification,
       "stockMarketShares": stockMarketShares,
       "factionAssistMessage": factionAssistMessage,
+      "retalsNotification": retalsNotification,
     };
   }
 
   static FirebaseUserModel fromMap(Map data) {
     return FirebaseUserModel()
+      ..discrete = data["discrete"] ?? false
       ..travelNotification = data["travelNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
       ..energyNotification = data["energyNotification"] ?? false
       ..energyLastCheckFull = data["energyLastCheckFull"] ?? false
       ..nerveNotification = data["nerveNotification"] ?? false
       ..nerveLastCheckFull = data["nerveLastCheckFull"] ?? false
+      ..lootAlerts = data["lootAlerts"] ?? []
       ..hospitalNotification = data["hospitalNotification"] ?? false
       ..drugsNotification = data["drugsNotification"] ?? false
       ..drugsInfluence = data["drugsInfluence"] ?? false
@@ -92,6 +100,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..life.current = data["life"]
       ..stockMarketNotification = data["stockMarketNotification"] ?? false
       ..stockMarketShares = data["stockMarketShares"] ?? []
-      ..factionAssistMessage = data["factionAssistMessage"] ?? true;
+      ..factionAssistMessage = data["factionAssistMessage"] ?? true
+      ..retalsNotification = data["retalsNotification"] ?? false;
   }
 }

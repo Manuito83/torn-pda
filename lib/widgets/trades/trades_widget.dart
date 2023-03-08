@@ -962,5 +962,4 @@ class _TradesWidgetState extends State<TradesWidget> {
   void _backFromAwhWithMessage() async {
     await widget.webView.evaluateJavascript(source: "chat.r(${_tradesProv.container.sellerId})");
   }
-
 }

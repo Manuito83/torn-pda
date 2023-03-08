@@ -5,7 +5,7 @@
 // Dart imports:
 import 'dart:convert';
 
-import 'package:torn_pda/models/profile/other_profile_model.dart';
+import '../profile/own_profile_basic.dart';
 
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
@@ -33,7 +33,7 @@ class FactionModel {
 
   int id;
   String name;
-  String tag;
+  dynamic tag;
   int leader;
   int coLeader;
   int respect;
@@ -100,6 +100,7 @@ class Member {
     this.personalNoteColor,
     this.hidden,
     this.statsEstimated,
+    this.spiesSource,
     this.statsExactTotal,
     this.statsExactTotalKnown,
     this.statsExactUpdated,
@@ -120,6 +121,8 @@ class Member {
     this.myEnhancement,
     this.memberEcstasy,
     this.memberLsd,
+    this.memberCans,
+    this.myCans,
     //
     this.name,
     this.level,
@@ -147,6 +150,7 @@ class Member {
   String personalNoteColor = "";
   bool hidden = false;
   String statsEstimated = "";
+  String spiesSource = "yata";
   int statsExactTotal = -1;
   int statsExactTotalKnown = -1;
   int statsExactUpdated = 0;
@@ -167,6 +171,8 @@ class Member {
   int myEnhancement = 0;
   int memberEcstasy = 0;
   int memberLsd = 0;
+  int memberCans = 0;
+  int myCans = 0;
 
   String name;
   int level;
@@ -194,6 +200,7 @@ class Member {
         personalNoteColor: json["personalNoteColor"] ?? "",
         hidden: json["hidden"] ?? false,
         statsEstimated: json["statsEstimated"] ?? "",
+        spiesSource: json["spiesSource"] ?? "yata",
         statsExactTotal: json["statsExactTotal"] ?? -1,
         statsExactTotalKnown: json["statsExactTotalKnown"] ?? -1,
         statsExactUpdated: json["statsExactUpdated"] ?? 0,
@@ -213,6 +220,8 @@ class Member {
         myEnhancement: json["myEnhancement"] ?? 0,
         memberEcstasy: json["memberEcstasy"] ?? 0,
         memberLsd: json["memberLsd"] ?? 0,
+        memberCans: json["memberCans"] ?? 0,
+        myCans: json["myCans"] ?? 0,
         //
         name: json["name"],
         level: json["level"] == null ? null : json["level"],
@@ -238,6 +247,7 @@ class Member {
         "personalNoteColor": personalNoteColor,
         "hidden": hidden,
         "statsEstimated": statsEstimated,
+        "spiesSource": spiesSource,
         "statsExactTotal": statsExactTotal,
         "statsExactTotalKnown": statsExactTotalKnown,
         "statsExactUpdated": statsExactUpdated,
@@ -257,6 +267,8 @@ class Member {
         "myEnhancement": myEnhancement,
         "memberEcstasy": memberEcstasy,
         "memberLsd": memberLsd,
+        "memberCans": memberCans,
+        "myCans": myCans,
         //
         "name": name,
         "level": level == null ? null : level,
@@ -288,38 +300,6 @@ class LastAction {
         "status": status,
         "timestamp": timestamp,
         "relative": relative,
-      };
-}
-
-class Status {
-  Status({
-    this.description,
-    this.details,
-    this.state,
-    this.color,
-    this.until,
-  });
-
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
-
-  factory Status.fromJson(Map<String, dynamic> json) => Status(
-        description: json["description"],
-        details: json["details"],
-        state: json["state"],
-        color: json["color"],
-        until: json["until"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "description": description,
-        "details": details,
-        "state": state,
-        "color": color,
-        "until": until,
       };
 }
 

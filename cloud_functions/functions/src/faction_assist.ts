@@ -93,12 +93,19 @@ export const factionAssistGroup = {
         for (const key of Array.from(factionMembers.keys())) {
             const thisMember = factionMembers[key];
 
+            let title = `Attack assist request!`;
+            let body = `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking ${attackName}!` +
+                `${attackLevelAge}${attackLife}${estimatedStats}${exactStats}`;
+            if (thisMember.discrete) {
+                title = `Assist`;
+                body = `${attackLevelAge}`;
+            }
+
             promises.push(
                 sendNotificationToUser(
                     thisMember.token,
-                    `Attack assist request!`,
-                    `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking ${attackName}!` +
-                    `${attackLevelAge}${attackLife}${estimatedStats}${exactStats}`,
+                    title,
+                    body,
                     "notification_assist",
                     "#FF0000",
                     "Alerts assists",

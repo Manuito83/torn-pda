@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 
 enum BrowserSetting {
   app,
@@ -60,6 +61,16 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _restoreSessionCookie = false;
+  bool get restoreSessionCookie => _restoreSessionCookie;
+  set restoreSessionCookie(bool enabled) {
+    _restoreSessionCookie = enabled;
+    Prefs().setRestoreSessionCookie(_restoreSessionCookie);
+    if (!enabled) {
+      Prefs().setWebViewSessionCookie("");
+    }
+  }
+
   var _clearCacheNextOpportunity = false;
   bool get getClearCacheNextOpportunityAndReset {
     if (_clearCacheNextOpportunity) {
@@ -73,6 +84,20 @@ class SettingsProvider extends ChangeNotifier {
   set setClearCacheNextOpportunity(bool active) {
     _clearCacheNextOpportunity = active;
     Prefs().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
+  }
+
+  var _androidBrowserScale = 0;
+  int get androidBrowserScale => _androidBrowserScale;
+  set setAndroidBrowserScale(int scale) {
+    _androidBrowserScale = scale;
+    Prefs().setAndroidBrowserScale(_androidBrowserScale);
+  }
+
+  var _iosBrowserPinch = false;
+  bool get iosBrowserPinch => _iosBrowserPinch;
+  set setIosBrowserPinch(bool pinch) {
+    _iosBrowserPinch = pinch;
+    Prefs().setIosBrowserPinch(_iosBrowserPinch);
   }
 
   var _disableTravelSection = false;
@@ -134,6 +159,30 @@ class SettingsProvider extends ChangeNotifier {
   set changeShowDateInClock(String value) {
     _showDateInClock = value;
     Prefs().setShowDateInClock(value);
+    notifyListeners();
+  }
+
+  var _discreteNotifications = false;
+  bool get discreteNotifications => _discreteNotifications;
+  set discreteNotifications(bool value) {
+    _discreteNotifications = value;
+    Prefs().setDiscreteNotifications(value);
+    notifyListeners();
+  }
+
+  var _showSecondsInClock = true;
+  bool get showSecondsInClock => _showSecondsInClock;
+  set changeShowSecondsInClock(bool value) {
+    _showSecondsInClock = value;
+    Prefs().setShowSecondsInClock(value);
+    notifyListeners();
+  }
+
+  SpiesSource _spiesSource = SpiesSource.yata;
+  SpiesSource get spiesSource => _spiesSource;
+  set changeSpiesSource(SpiesSource value) {
+    _spiesSource = value;
+    _spiesSource == SpiesSource.yata ? Prefs().setSpiesSource('yata') : Prefs().setSpiesSource('tornstats');
     notifyListeners();
   }
 
@@ -383,6 +432,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _rankedWarsInMenu = false;
+  bool get rankedWarsInMenu => _rankedWarsInMenu;
+  set changeRankedWarsInMenu(bool choice) {
+    _rankedWarsInMenu = choice;
+    Prefs().setRankedWarsInMenu(_rankedWarsInMenu);
+    notifyListeners();
+  }
+
   var _stockExchangeInMenu = false;
   bool get stockExchangeInMenu => _stockExchangeInMenu;
   set changeStockExchangeInMenu(bool choice) {
@@ -452,11 +509,75 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _tornStatsChartDateTime = 0;
+  int get tornStatsChartDateTime => _tornStatsChartDateTime;
+  set setTornStatsChartDateTime(int timeStamp) {
+    Prefs().setTornStatsChartDateTime(timeStamp);
+    _tornStatsChartDateTime = timeStamp;
+    notifyListeners();
+  }
+
+  var _tornStatsChartEnabled = true;
+  bool get tornStatsChartEnabled => _tornStatsChartEnabled;
+  set setTornStatsChartEnabled(bool value) {
+    _tornStatsChartEnabled = value;
+    Prefs().setTornStatsChartEnabled(tornStatsChartEnabled);
+    notifyListeners();
+  }
+
+  var _tornStatsChartInCollapsedMiscCard = true;
+  bool get tornStatsChartInCollapsedMiscCard => _tornStatsChartInCollapsedMiscCard;
+  set setTornStatsChartInCollapsedMiscCard(bool value) {
+    _tornStatsChartInCollapsedMiscCard = value;
+    Prefs().setTornStatsChartEnabled(tornStatsChartInCollapsedMiscCard);
+    notifyListeners();
+  }
+
+  var _retaliationSectionEnabled = true;
+  bool get retaliationSectionEnabled => _retaliationSectionEnabled;
+  set setRetaliationSectionEnabled(bool value) {
+    _retaliationSectionEnabled = value;
+    Prefs().setRetaliationSectionEnabled(value);
+    notifyListeners();
+  }
+
+  var _singleRetaliationOpensBrowser = false;
+  bool get singleRetaliationOpensBrowser => _singleRetaliationOpensBrowser;
+  set setSingleRetaliationOpensBrowser(bool value) {
+    _singleRetaliationOpensBrowser = value;
+    Prefs().setSingleRetaliationOpensBrowser(value);
+    notifyListeners();
+  }
+
   int _lastAppUse = 0;
   int get lastAppUse => _lastAppUse;
   set updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     _lastAppUse = timeStamp;
+    notifyListeners();
+  }
+
+  var _syncTheme = true;
+  bool get syncTheme => _syncTheme;
+  set syncTheme(bool value) {
+    _syncTheme = value;
+    Prefs().setSyncTheme(_syncTheme);
+    notifyListeners();
+  }
+
+  var _themeToSync = "dark";
+  String get themeToSync => _themeToSync;
+  set themeToSync(String value) {
+    _themeToSync = value;
+    Prefs().setThemeToSync(value);
+    notifyListeners();
+  }
+
+  var _debugMessages = false;
+  bool get debugMessages => _debugMessages;
+  set debugMessages(bool value) {
+    _debugMessages = value;
+    Prefs().setDebugMessages(_debugMessages);
     notifyListeners();
   }
 
@@ -477,7 +598,12 @@ class SettingsProvider extends ChangeNotifier {
 
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
+    _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
     _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
+
+    _androidBrowserScale = await Prefs().getAndroidBrowserScale();
+
+    _iosBrowserPinch = await Prefs().getIosBrowserPinch();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 
@@ -546,7 +672,17 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
+    String spiesSourceSaved = await Prefs().getSpiesSource();
+    if (spiesSourceSaved == "yata") {
+      _spiesSource = SpiesSource.yata;
+    } else {
+      _spiesSource = SpiesSource.tornStats;
+    }
+
+    _discreteNotifications = await Prefs().getDiscreteNotifications();
+
     _showDateInClock = await Prefs().getShowDateInClock();
+    _showSecondsInClock = await Prefs().getShowSecondsInClock();
 
     String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
@@ -566,6 +702,8 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
+
+    _rankedWarsInMenu = await Prefs().getRankedWarsInMenu();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 
@@ -591,6 +729,18 @@ class SettingsProvider extends ChangeNotifier {
 
     _targetSkippingAll = await Prefs().getTargetSkippingAll();
     _targetSkippingFirst = await Prefs().getTargetSkippingFirst();
+
+    _tornStatsChartDateTime = await Prefs().getTornStatsChartDateTime();
+    _tornStatsChartEnabled = await Prefs().getTornStatsChartEnabled();
+    _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
+
+    _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
+    _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
+
+    _syncTheme = await Prefs().getSyncTheme();
+    _themeToSync = await Prefs().getThemeToSync();
+
+    _debugMessages = await Prefs().getDebugMessages();
 
     notifyListeners();
   }

@@ -17,6 +17,7 @@ import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
@@ -37,17 +38,20 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
+  WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+
     _preferencesRestored = _restorePreferences();
   }
 
   @override
   Widget build(BuildContext context) {
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
@@ -55,12 +59,13 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -68,64 +73,76 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: FutureBuilder(
-              future: _preferencesRestored,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          SizedBox(height: 15),
-                          _general(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 15),
-                          _tabs(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _userScripts(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _chat(context),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _travel(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _gym(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _profile(),
-                          if (Platform.isIOS)
-                            Column(
-                              children: [
-                                SizedBox(height: 15),
-                                Divider(),
-                                SizedBox(height: 10),
-                                _linkPreview(),
-                              ],
-                            ),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _maintenance(),
-                          SizedBox(height: 40),
-                        ],
+            body: Container(
+              color: _themeProvider.canvas,
+              child: FutureBuilder(
+                future: _preferencesRestored,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            SizedBox(height: 15),
+                            _general(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 15),
+                            _tabs(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _userScripts(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _chat(context),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _travel(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _gym(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _profile(),
+                            if (Platform.isIOS)
+                              Column(
+                                children: [
+                                  SizedBox(height: 15),
+                                  Divider(),
+                                  SizedBox(height: 10),
+                                  _linkPreview(),
+                                ],
+                              ),
+                            if (Platform.isIOS)
+                              Column(
+                                children: [
+                                  SizedBox(height: 15),
+                                  Divider(),
+                                  SizedBox(height: 10),
+                                  _pinchGesture(),
+                                ],
+                              ),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _maintenance(),
+                            SizedBox(height: 40),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
+                    );
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                },
+              ),
             ),
           ),
         ),
@@ -199,7 +216,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       children: [
                         Flexible(
                           child: Text(
-                            "If 'all stats' is selected, you will be shown either spied stats (supported by YATA) or estimated stats "
+                            "If 'all stats' is selected, you will be shown either spied stats (supported by YATA and Torn Stats) or estimated stats "
                             "(which might be inaccurate) if the former can't be found. Alternatively, select only spied stats or hide all stats entirely.",
                             style: TextStyle(
                               color: Colors.grey[600],
@@ -240,7 +257,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
                       'You will see a note if you are visiting the profile of a '
-                      'friendly faction\'s player, or a warning if you are about to attack, ',
+                      'friendly faction\'s player, or a warning if you are about to attack',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 12,
@@ -416,6 +433,45 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
+  Column _pinchGesture() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'GESTURES',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Zoom in/out pinch gestures"),
+                  Switch(
+                    value: _settingsProvider.iosBrowserPinch,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.setIosBrowserPinch = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Column _maintenance() {
     return Column(
       children: [
@@ -436,6 +492,37 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
+                  Text("Restore session cookie"),
+                  Switch(
+                    value: _settingsProvider.restoreSessionCookie,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.restoreSessionCookie = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Enable this option if you are getting logged out from Torn consistently; '
+                'Torn PDA will try to reestablish your session ID when the browser opens',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
                   Text("Browser cache"),
                   ElevatedButton(
                     child: Text("Clear"),
@@ -444,6 +531,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       _settingsProvider.setClearCacheNextOpportunity = true;
                       // Clear tabs now
                       Prefs().setWebViewSecondaryTabs('{"tabsSave": []}');
+                      // Clear session cookie
+                      Prefs().setWebViewSessionCookie('');
 
                       BotToast.showText(
                         text: "Browser cache and tabs have been reset!",
@@ -912,6 +1001,36 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
+                    Text("Only load tabs when used"),
+                    Switch(
+                      value: _webViewProvider.onlyLoadTabsWhenUsed,
+                      onChanged: (value) {
+                        _webViewProvider.onlyLoadTabsWhenUsed = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Text(
+                  'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, '
+                  'they will retrieve the web content when first used (tapped). This could add a small delay when the '
+                  'tab is pressed visited the first time, but should improve the overall browser performance',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
                     Text("Allow hiding tabs"),
                     Switch(
                       value: _settingsProvider.useTabsHideFeature,
@@ -1003,7 +1122,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   _settingsProvider.changeTabsHideBarColor = color.value;
                 });
               },
-              showLabel: true,
               pickerAreaHeightPercent: 0.8,
             ),
           ),
@@ -1037,7 +1155,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   pickerColor = color;
                 });
               },
-              showLabel: true,
               pickerAreaHeightPercent: 0.8,
             ),
           ),

@@ -8,12 +8,12 @@ import 'package:bot_toast/bot_toast.dart';
 // Useful for functions debugging
 // ignore: unused_import
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,6 +30,7 @@ import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -44,11 +45,11 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.6.1';
-const String androidVersion = '156';
-const String iosVersion = '166';
+const String appVersion = '2.9.6';
+const String androidCompilation = '282';
+const String iosCompilation = '282';
 
-final FirebaseAnalytics analytics = FirebaseAnalytics();
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -99,18 +100,22 @@ Future<void> main() async {
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
-  HttpOverrides.global = MyHttpOverrides();
+  // TODO: remove class?
+  //HttpOverrides.global = MyHttpOverrides();
+  ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+  SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
+
+  // Needs to register plugin for iOS
+  if (Platform.isIOS) {
+    DartPingIOS.register();
+  }
 
   runApp(
     MultiProvider(
       providers: [
         // UserDetailsProvider has to go first to initialize the others!
         ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
-        ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
-          create: (context) => TargetsProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider, TargetsProvider targetsProvider) =>
-              TargetsProvider(userProvider.basic),
-        ),
+        ChangeNotifierProvider<TargetsProvider>(create: (context) => TargetsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
           create: (context) => AttacksProvider(OwnProfileBasic()),
           update: (BuildContext context, UserDetailsProvider userProvider, AttacksProvider attacksProvider) =>
@@ -134,6 +139,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<QuickItemsProvider>(
           create: (context) => QuickItemsProvider(),
+        ),
+        ChangeNotifierProvider<QuickItemsProviderFaction>(
+          create: (context) => QuickItemsProviderFaction(),
         ),
         ChangeNotifierProvider<TradesProvider>(
           create: (context) => TradesProvider(),
@@ -165,6 +173,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  ThemeProvider _themeProvider;
+
   @override
   void initState() {
     super.initState();
@@ -172,17 +182,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-
-    return MediaQuery(
+    MediaQuery mq = MediaQuery(
       data: MediaQueryData.fromWindow(ui.window),
       child: Directionality(
         textDirection: TextDirection.ltr,
@@ -194,9 +196,10 @@ class _MyAppState extends State<MyApp> {
               title: 'Torn PDA',
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
+                cardColor: _themeProvider.cardColor,
                 appBarTheme: AppBarTheme(
                   systemOverlayStyle: SystemUiOverlayStyle.light,
-                  color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                  color: _themeProvider.statusBar,
                 ),
                 primarySwatch: Colors.blueGrey,
                 visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -209,15 +212,23 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
-  }
-}
 
-// Avoid HTTP Handshake errors
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: _themeProvider.statusBar,
+        systemNavigationBarColor:
+            mq.data.orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: mq.data.orientation == Orientation.landscape
+            ? _themeProvider.currentTheme == AppTheme.light
+                ? Brightness.dark
+                : Brightness.light
+            : Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+
+    return mq;
   }
 }
 

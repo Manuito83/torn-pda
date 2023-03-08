@@ -1,9 +1,9 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:math';
 
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -17,10 +17,13 @@ import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -29,7 +32,6 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 import '../notes_dialog.dart';
 
 class WarCard extends StatefulWidget {
@@ -51,6 +53,7 @@ class _WarCardState extends State<WarCard> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ChainStatusProvider _chainProvider;
+  WebViewProvider _webViewProvider;
 
   Timer _updatedTicker;
   Timer _lifeTicker;
@@ -66,6 +69,7 @@ class _WarCardState extends State<WarCard> {
   @override
   void initState() {
     super.initState();
+    _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -85,101 +89,107 @@ class _WarCardState extends State<WarCard> {
     _returnLastUpdated();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Slidable(
-      actionPane: SlidableDrawerActionPane(),
-      actionExtentRatio: 0.25,
-      // Issues with Percent Indicator
-      /*
-      dismissal: SlidableDismissal(
-        child: SlidableDrawerDismissal(),
-        resizeDuration: Duration(seconds: 1),
-        onDismissed: (actionType) {
-          _w.hideMember(_member);
-        },
-        // Only dismiss left
-        dismissThresholds: <SlideActionType, double>{SlideActionType.primary: 0.0},
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        extentRatio: 0.5,
+        // Issues with Percent Indicator
+        /*
+              dismissal: SlidableDismissal(
+                child: SlidableDrawerDismissal(),
+                resizeDuration: Duration(seconds: 1),
+                onDismissed: (actionType) {
+                  _w.hideMember(_member);
+                },
+                // Only dismiss left
+                dismissThresholds: <SlideActionType, double>{SlideActionType.primary: 0.0},
+              ),
+              */
+        children: [
+          SlidableAction(
+            label: 'Hide',
+            backgroundColor: Colors.blue,
+            icon: Icons.delete,
+            onPressed: (context) {
+              _w.hideMember(_member);
+            },
+          ),
+        ],
       ),
-      */
-      actions: <Widget>[
-        IconSlideAction(
-          caption: 'Hide',
-          color: Colors.blue,
-          icon: Icons.delete,
-          onTap: () {
-            _w.hideMember(_member);
-          },
-        ),
-      ],
-      secondaryActions: <Widget>[
-        _chainProvider.panicTargets.where((t) => t.name == _member.name).length == 0
-            ? IconSlideAction(
-                caption: 'Add to panic!',
-                color: Colors.blue,
-                icon: MdiIcons.alphaPCircleOutline,
-                onTap: () {
-                  String message = "Added ${_member.name} as a Panic Mode target!";
-                  Color messageColor = Colors.green;
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        extentRatio: 0.5,
+        children: [
+          _chainProvider.panicTargets.where((t) => t.name == _member.name).length == 0
+              ? SlidableAction(
+                  label: 'Add to panic!',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.alphaPCircleOutline,
+                  onPressed: (context) {
+                    String message = "Added ${_member.name} as a Panic Mode target!";
+                    Color messageColor = Colors.green;
 
-                  if (_chainProvider.panicTargets.length < 10) {
+                    if (_chainProvider.panicTargets.length < 10) {
+                      setState(() {
+                        _chainProvider.addPanicTarget(
+                          PanicTargetModel()
+                            ..name = _member.name
+                            ..level = _member.level
+                            ..id = _member.memberId
+                            ..factionName = _member.factionName,
+                        );
+                        // Convert to target with the needed fields
+                      });
+                    } else {
+                      message = "There are already 10 targets in the Panic Mode list, remove some!";
+                      messageColor = Colors.orange[700];
+                    }
+
+                    BotToast.showText(
+                      clickClose: true,
+                      text: message,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: messageColor,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                )
+              : SlidableAction(
+                  label: 'PANIC TARGET',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.alphaPCircleOutline,
+                  onPressed: (context) {
+                    String message = "Removed ${_member.name} as a Panic Mode target!";
+                    Color messageColor = Colors.green;
+
                     setState(() {
-                      _chainProvider.addPanicTarget(
+                      _chainProvider.removePanicTarget(
                         PanicTargetModel()
                           ..name = _member.name
                           ..level = _member.level
                           ..id = _member.memberId
                           ..factionName = _member.factionName,
                       );
-                      // Convert to target with the needed fields
                     });
-                  } else {
-                    message = "There are already 10 targets in the Panic Mode list, remove some!";
-                    messageColor = Colors.orange[700];
-                  }
 
-                  BotToast.showText(
-                    clickClose: true,
-                    text: message,
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: messageColor,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-              )
-            : IconSlideAction(
-                caption: 'PANIC TARGET',
-                color: Colors.blue,
-                icon: MdiIcons.alphaPCircleOutline,
-                onTap: () {
-                  String message = "Removed ${_member.name} as a Panic Mode target!";
-                  Color messageColor = Colors.green;
-
-                  setState(() {
-                    _chainProvider.removePanicTarget(
-                      PanicTargetModel()
-                        ..name = _member.name
-                        ..level = _member.level
-                        ..id = _member.memberId
-                        ..factionName = _member.factionName,
+                    BotToast.showText(
+                      clickClose: true,
+                      text: message,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: messageColor,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
                     );
-                  });
-
-                  BotToast.showText(
-                    clickClose: true,
-                    text: message,
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: messageColor,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-              ),
-      ],
+                  },
+                ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
         child: Card(
@@ -708,6 +718,8 @@ class _WarCardState extends State<WarCard> {
       children: <Widget>[
         Flexible(
           child: LinearPercentIndicator(
+            padding: null,
+            barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 14,
             progressColor: lifeBarColor,
@@ -756,6 +768,10 @@ class _WarCardState extends State<WarCard> {
       _lifeTicker?.cancel();
     }
 
+    if (_member.status.state == "Traveling" || _member.status.state == "Abroad") {
+      lifeBarColor = Colors.blue[300];
+    }
+
     // Found players in federal jail with a higher life than their maximum. Correct it if it's the
     // case to avoid issues with percentage bar
     double lifePercentage;
@@ -778,6 +794,8 @@ class _WarCardState extends State<WarCard> {
         ),
         Flexible(
           child: LinearPercentIndicator(
+            padding: null,
+            barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 14,
             progressColor: lifeBarColor,
@@ -794,8 +812,10 @@ class _WarCardState extends State<WarCard> {
   }
 
   Widget _travelIcon() {
-    if (_member.status.color == "blue") {
-      var destination = _member.status.description;
+    var country = countryCheck(_member.status);
+
+    if (_member.status.color == "blue" || (country != "Torn" && _member.status.color == "red")) {
+      var destination = _member.status.color == "blue" ? _member.status.description : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -1083,6 +1103,27 @@ class _WarCardState extends State<WarCard> {
         );
       }
 
+      Widget sourceWidget = SizedBox.shrink();
+      if (widget.memberModel.spiesSource.isNotEmpty) {
+        sourceWidget = Row(
+          children: [
+            Text(
+              "Source: ",
+              style: TextStyle(fontSize: 12),
+            ),
+            SizedBox(
+              height: 16,
+              width: 16,
+              child: Image.asset(
+                widget.memberModel.spiesSource == "yata"
+                    ? 'images/icons/yata_logo.png'
+                    : 'images/icons/tornstats_logo.png',
+              ),
+            ),
+          ],
+        );
+      }
+
       BotToast.showAnimationWidget(
         clickClose: false,
         allowClick: false,
@@ -1154,6 +1195,10 @@ class _WarCardState extends State<WarCard> {
                 padding: const EdgeInsets.only(top: 20, left: 4),
                 child: totalWidget,
               ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: sourceWidget,
+              ),
             ],
           ),
           actions: <Widget>[
@@ -1177,16 +1222,31 @@ class _WarCardState extends State<WarCard> {
           (_userProvider.basic.total <= _member.statsExactTotalKnown + _member.statsExactTotalKnown * 0.1)) {
         exactColor = Colors.orange[700];
       }
+
+      int totalToShow = 0;
+      if (_member.statsExactTotal != -1) {
+        // TornStats adds all 4 stats into total if total is unknown, but then rounds. So it might happen that the
+        // total sum is actually higher than the one calculated and rounded by TS
+        totalToShow = max(_member.statsExactTotal, _member.statsExactTotalKnown);
+      } else {
+        totalToShow = _member.statsExactTotalKnown;
+      }
+
+      bool someStatUnknown = false;
+      if (_member.statsStr == -1 || _member.statsDef == -1 || _member.statsDex == -1 || _member.statsSpd == -1) {
+        someStatUnknown = true;
+      }
+
       return Row(
         children: [
           Text(
-            "${formatBigNumbers(_member.statsExactTotalKnown)}",
+            "${formatBigNumbers(totalToShow)}",
             style: TextStyle(
               fontSize: 12,
               color: exactColor,
             ),
           ),
-          if (_member.statsExactTotalKnown != _member.statsExactTotal)
+          if (someStatUnknown)
             Padding(
               padding: const EdgeInsets.only(left: 2),
               child: Text(
@@ -1228,6 +1288,8 @@ class _WarCardState extends State<WarCard> {
       Color refillColor = Colors.orange;
       int enhancementComparison = 0;
       Color enhancementColor = _themeProvider.mainText;
+      int cansComparison = 0;
+      Color cansColor = Colors.orange;
       Color sslColor = Colors.green;
       bool sslProb = true;
       int ecstasy = 0;
@@ -1277,6 +1339,20 @@ class _WarCardState extends State<WarCard> {
         style: TextStyle(color: enhancementColor, fontSize: 11),
       );
 
+      // CANS
+      int otherCans = _member.memberCans;
+      int myCans = _member.myCans;
+      cansComparison = otherCans - myCans;
+      if (cansComparison < 0) {
+        cansColor = Colors.green;
+      } else if (cansComparison > 0) {
+        cansColor = Colors.red;
+      }
+      Text cansText = Text(
+        "C",
+        style: TextStyle(color: cansColor, fontSize: 11),
+      );
+
       /// SSL
       /// If (xan + esc) > 150, SSL is blank;
       /// if (esc + xan) < 150 & LSD < 50, SSL is green;
@@ -1308,6 +1384,8 @@ class _WarCardState extends State<WarCard> {
       additional.add(refillText);
       additional.add(SizedBox(width: 5));
       additional.add(enhancementText);
+      additional.add(SizedBox(width: 5));
+      additional.add(cansText);
       additional.add(SizedBox(width: 5));
       additional.add(sslWidget);
       additional.add(SizedBox(width: 5));
@@ -1345,6 +1423,8 @@ class _WarCardState extends State<WarCard> {
                 refillColor,
                 enhancementComparison,
                 enhancementColor,
+                cansComparison,
+                cansColor,
                 sslColor,
                 sslProb,
                 _member,
@@ -1422,22 +1502,6 @@ class _WarCardState extends State<WarCard> {
       duration: Duration(seconds: 3),
       contentPadding: EdgeInsets.all(10),
     );
-  }
-
-  void _updateSeveralTargets(List<String> attackedIds) async {
-    BotToast.showText(
-      clickClose: true,
-      text: '${attackedIds.length} attacked targets will auto update in a few seconds!',
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.grey[800],
-      duration: Duration(seconds: 4),
-      contentPadding: EdgeInsets.all(10),
-    );
-
-    _w.updateSomeMembersAfterAttack(attackedIds);
   }
 
   void _timerUpdateInformation() {
@@ -1523,20 +1587,44 @@ class _WarCardState extends State<WarCard> {
           attackNotes.add(tar.personalNote);
           attacksNotesColor.add(tar.personalNoteColor);
         }
-        Get.to(
-          TornWebViewAttack(
-            attackIdList: attacksIds,
-            attackNameList: attacksNames,
-            attackNotesList: attackNotes,
-            attackNotesColorList: attacksNotesColor,
-            attacksCallback: _updateSeveralTargets,
-            userKey: _userProvider.basic.userApiKey,
-            war: true,
-            showNotes: await Prefs().getShowTargetsNotes(),
-            showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
-            showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
-          ),
+
+        bool showNotes = await Prefs().getShowTargetsNotes();
+        bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
+        bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+
+        await _webViewProvider.openBrowserPreference(
+          awaitable: true,
+          context: context,
+          url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+          useDialog: false,
+          recallLastSession: false,
+          isChainingBrowser: true,
+          chainingPayload: ChainingPayload()
+            ..war = true
+            ..attackIdList = attacksIds
+            ..attackNameList = attacksNames
+            ..attackNotesList = attackNotes
+            ..attackNotesColorList = attacksNotesColor
+            ..showNotes = showNotes
+            ..showBlankNotes = showBlankNotes
+            ..showOnlineFactionWarning = showOnlineFactionWarning,
         );
+
+        if (_w.lastAttackedTargets.length > 0) {
+          BotToast.showText(
+            text: '${_w.lastAttackedTargets.length} attacked targets will auto update in a few seconds!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[800],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+
+          _w.updateSomeMembersAfterAttack();
+        }
+
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_member.memberId}';
@@ -1583,6 +1671,8 @@ class _WarCardState extends State<WarCard> {
     Color refillColor,
     int enhancementCompare,
     Color enhancementColor,
+    int cansCompare,
+    Color cansColor,
     Color sslColor,
     bool sslProb,
     Member member,
@@ -1647,6 +1737,27 @@ class _WarCardState extends State<WarCard> {
           child: Text(
             "$enhancementRelative",
             style: TextStyle(color: enhancementColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    String cansRelative = "SAME as you";
+    if (cansCompare > 0) {
+      cansRelative = "${cansCompare.abs()} MORE than you";
+    } else if (cansCompare < 0) {
+      cansRelative = "${cansCompare.abs()} LESS than you";
+    }
+    Widget cansWidget = Row(
+      children: [
+        Text(
+          "> Cans: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$cansRelative",
+            style: TextStyle(color: cansColor, fontSize: 14),
           ),
         ),
       ],
@@ -1731,7 +1842,7 @@ class _WarCardState extends State<WarCard> {
       toastBuilder: (cancelFunc) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         title: Text(member.name),
-        backgroundColor: _themeProvider.background,
+        backgroundColor: _themeProvider.secondBackground,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1763,6 +1874,10 @@ class _WarCardState extends State<WarCard> {
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
               child: enhancementWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: cansWidget,
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),

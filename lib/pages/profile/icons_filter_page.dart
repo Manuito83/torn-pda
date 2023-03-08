@@ -33,12 +33,13 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: widget.settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: widget.settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !widget.settingsProvider.appBarTop
                 ? SizedBox(
@@ -47,6 +48,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                   )
                 : null,
             body: Container(
+              color: _themeProvider.canvas,
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

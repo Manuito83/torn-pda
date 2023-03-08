@@ -9,6 +9,8 @@
 .buildlog/
 .history
 .svn/
+.VSCodeCounter/
+.fvm
 
 # IntelliJ related
 *.iml

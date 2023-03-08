@@ -9,18 +9,24 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
+import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
+import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 
 class WarOptions {
   String description;
@@ -34,17 +40,21 @@ class WarOptions {
       case "Hidden targets":
         iconData = Icons.undo_outlined;
         break;
+      case "Nuke revive":
+        // Own icon in widget
+        break;
+      case "UHC revive":
+        // Own icon in widget
+        break;
     }
   }
 }
 
 class WarPage extends StatefulWidget {
-  final String userKey;
   //final Function tabCallback;
 
   const WarPage({
     Key key,
-    @required this.userKey,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -66,6 +76,7 @@ class _WarPageState extends State<WarPage> {
   WarController _w;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+  WebViewProvider _webViewProvider;
 
   bool _quickUpdateActive = false;
 
@@ -80,19 +91,24 @@ class _WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.lifeAsc),
     WarSort(type: WarSortType.statsDes),
     WarSort(type: WarSortType.statsAsc),
+    WarSort(type: WarSortType.onlineDes),
+    WarSort(type: WarSortType.onlineAsc),
     WarSort(type: WarSortType.colorAsc),
     WarSort(type: WarSortType.colorDes),
   ];
 
   final _popupOptionsChoices = <WarOptions>[
-    WarOptions(description: "Toggle chain widget"),
+    //WarOptions(description: "Toggle chain widget"),
     WarOptions(description: "Hidden targets"),
+    WarOptions(description: "Nuke revive"),
+    WarOptions(description: "UHC revive"),
   ];
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _webViewProvider = context.read<WebViewProvider>();
   }
 
   @override
@@ -106,7 +122,11 @@ class _WarPageState extends State<WarPage> {
 
   @override
   Widget build(BuildContext context) {
-    _w = Get.put(WarController());
+    if (_w == null) {
+      _w = Get.put(WarController());
+      _performQuickUpdate(firstTime: true);
+    }
+
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return ShowCaseWidget(
       builder: Builder(builder: (_) {
@@ -118,6 +138,7 @@ class _WarPageState extends State<WarPage> {
           });
         }
         return Scaffold(
+          backgroundColor: _themeProvider.canvas,
           drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
@@ -126,14 +147,17 @@ class _WarPageState extends State<WarPage> {
                   child: buildAppBar(_),
                 )
               : null,
-          body: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-            child: MediaQuery.of(context).orientation == Orientation.portrait
-                ? _mainColumn()
-                : SingleChildScrollView(
-                    child: _mainColumn(),
-                  ),
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: MediaQuery.of(context).orientation == Orientation.portrait
+                  ? _mainColumn()
+                  : SingleChildScrollView(
+                      child: _mainColumn(),
+                    ),
+            ),
           ),
         );
       }),
@@ -171,19 +195,351 @@ class _WarPageState extends State<WarPage> {
           if (w.showChainWidget)
             ChainWidget(
               key: _chainWidgetKey,
-              userKey: widget.userKey,
               alwaysDarkBackground: false,
               callBackOptions: _callBackChainOptions,
             ),
-          context.orientation == Orientation.portrait
-              ? Flexible(
-                  child: WarTargetsList(warController: w),
-                )
-              : WarTargetsList(warController: w),
-          SizedBox(height: 50),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _onlineFilter(),
+              SizedBox(width: 10),
+              _okayFilter(w),
+              SizedBox(width: 10),
+              _countryFilter(w),
+              SizedBox(width: 5),
+              _travelingFilter(w),
+              SizedBox(width: 10),
+              _chainWidgetToggler(w),
+            ],
+          ),
+          if (context.orientation == Orientation.portrait)
+            Flexible(
+              child: WarTargetsList(
+                warController: w,
+                offlineSelector: w.onlineFilter,
+                okayFilterActive: w.okayFilter,
+                countryFilterActive: w.countryFilter,
+                travelingFilterActive: w.travelingFilter,
+              ),
+            )
+          else
+            WarTargetsList(
+              warController: w,
+              offlineSelector: w.onlineFilter,
+              okayFilterActive: w.okayFilter,
+              countryFilterActive: w.countryFilter,
+              travelingFilterActive: w.travelingFilter,
+            ),
+          if (_settingsProvider.appBarTop) SizedBox(height: 50),
         ],
       );
     });
+  }
+
+  Widget _onlineFilter() {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32, 32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: _w.onlineFilter == 0
+            ? null
+            : _w.onlineFilter == 1
+                ? 0
+                : 1,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 2,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            Icons.circle,
+            color: Colors.green,
+            size: 12,
+          ),
+          Icon(
+            Icons.circle,
+            color: Colors.red,
+            size: 12,
+          )
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            _w.setOnlineFilter(0);
+          } else if (index == 0) {
+            _w.setOnlineFilter(1);
+          } else if (index == 1) {
+            _w.setOnlineFilter(2);
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Showing all targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _okayFilter(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !w.okayFilter ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.accountCheckOutline,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            _w.setOkayFilterActive(false);
+          } else {
+            _w.setOkayFilterActive(true);
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Showing all targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _countryFilter(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !w.countryFilter ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.earth,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            w.setCountryFilterActive(false);
+          } else {
+            w.setCountryFilterActive(true);
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Showing all targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _travelingFilter(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !w.travelingFilter ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.red[200]]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.red[500]]
+                : [Colors.red[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.airplane,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            w.setTravelingFilterActive(false);
+          } else {
+            w.setTravelingFilterActive(true);
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Hiding traveling targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _chainWidgetToggler(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !w.showChainWidget ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.linkVariant,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          _w.toggleChainWidget();
+        },
+      ),
+    );
   }
 
   AppBar buildAppBar(BuildContext _) {
@@ -201,17 +557,18 @@ class _WarPageState extends State<WarPage> {
       ),
       actions: <Widget>[
         Showcase(
+          disableMovingAnimation: true,
           key: _showCaseAddFaction,
           title: 'Welcome to War!',
           description: "\nThe first thing you'll want to do is to add an enemy faction to your list. You can do so by "
-              "taping this icon."
+              "tapping this icon."
               "\n\nIf you don't know the faction's ID, you can optionally insert one of it's members' "
               "ID (look for the 'person' icon)."
               "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.background,
+          tooltipBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
-          contentPadding: EdgeInsets.all(20),
+          tooltipPadding: EdgeInsets.all(20),
           child: IconButton(
             icon: Image.asset(
               'images/icons/faction.png',
@@ -225,6 +582,7 @@ class _WarPageState extends State<WarPage> {
           ),
         ),
         Showcase(
+          disableMovingAnimation: true,
           key: _showCaseUpdate,
           title: 'Updating targets!',
           description: "\nThere are a couple of ways to update war targets.\n\nWith a short tap, you can perform "
@@ -232,9 +590,9 @@ class _WarPageState extends State<WarPage> {
               "A long-press will start a slower but full update of all targets.\n\n"
               "Alternatively, you can update targets individually.",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.background,
+          tooltipBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
-          contentPadding: EdgeInsets.all(20),
+          tooltipPadding: EdgeInsets.all(20),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: GetBuilder<WarController>(
@@ -255,48 +613,8 @@ class _WarPageState extends State<WarPage> {
                     // Quick update
                     onTap: _quickUpdateActive
                         ? null
-                        : () async {
-                            setState(() {
-                              _quickUpdateActive = true;
-                            });
-
-                            int updatedMembers = await _w.updateAllMembersEasy();
-
-                            String message = "";
-                            Color messageColor = Colors.green;
-                            // Count all members
-                            int allMembers = _w.orderedCardsDetails.length;
-
-                            if (allMembers == 0) {
-                              message = "No targets to update!";
-                              messageColor = Colors.orange[700];
-                            } else if (updatedMembers > 0 && updatedMembers == allMembers) {
-                              message = 'Successfully updated $updatedMembers war targets!\n\n'
-                                  'A quick update was performed (only stats, state and online status).';
-                            } else if (updatedMembers > 0 && updatedMembers < allMembers) {
-                              message =
-                                  'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!\n\n'
-                                  'A quick update was performed (only stats, state and online status).';
-                              messageColor = Colors.orange[700];
-                            }
-
-                            if (mounted) {
-                              BotToast.showText(
-                                clickClose: true,
-                                text: message,
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: messageColor,
-                                duration: const Duration(seconds: 5),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            }
-
-                            setState(() {
-                              _quickUpdateActive = false;
-                            });
+                        : () {
+                            _performQuickUpdate();
                           },
                     // Full update
                     onLongPress: () async {
@@ -380,19 +698,54 @@ class _WarPageState extends State<WarPage> {
           icon: const Icon(Icons.settings),
           onSelected: (selection) {
             switch (selection.description) {
+              /*
               case "Toggle chain widget":
                 _w.toggleChainWidget();
                 break;
+              */
               case "Hidden targets":
                 _showHiddenMembersDialogs(context);
+                break;
+              case "Nuke revive":
+                // Gesture not activated
                 break;
             }
           },
           itemBuilder: (BuildContext context) {
             return _popupOptionsChoices.map((WarOptions choice) {
+              // Don't return hidden members option if there is none
               if (choice.description.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
                 return null;
               }
+              // Nuke revive
+              if (choice.description.contains("Nuke")) {
+                if (!_w.nukeReviveActive) {
+                  return null;
+                }
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: NukeReviveButton(
+                    themeProvider: _themeProvider,
+                    settingsProvider: _settingsProvider,
+                    webViewProvider: _webViewProvider,
+                  ),
+                );
+              }
+              // UHC revive
+              if (choice.description.contains("UHC")) {
+                if (!_w.uhcReviveActive) {
+                  return null;
+                }
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: UhcReviveButton(
+                    themeProvider: _themeProvider,
+                    settingsProvider: _settingsProvider,
+                    webViewProvider: _webViewProvider,
+                  ),
+                );
+              }
+              // Everything else
               return PopupMenuItem<WarOptions>(
                 value: choice,
                 child: Row(
@@ -405,9 +758,73 @@ class _WarPageState extends State<WarPage> {
               );
             }).toList();
           },
-        )
+        ),
+        IconButton(
+          icon: Icon(MdiIcons.earth),
+          onPressed: () => Get.to(() => RankedWarsPage()),
+        ),
       ],
     );
+  }
+
+  Future<void> _performQuickUpdate({bool firstTime = false}) async {
+    setState(() {
+      _quickUpdateActive = true;
+    });
+
+    if (mounted && !firstTime) {
+      BotToast.showText(
+        clickClose: true,
+        text: "Fetching information, please wait...",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[700],
+        duration: const Duration(seconds: 3),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+
+    int updatedMembers = await _w.updateAllMembersEasy();
+
+    String message = "";
+    Color messageColor = Colors.green;
+    // Count all members
+    int allMembers = _w.orderedCardsDetails.length;
+
+    if (allMembers == -1) {
+      message = "There was a problem getting information from the API, please try again later!";
+      messageColor = Colors.orange[700];
+    } else if (allMembers == 0) {
+      message = "No targets to update!";
+      messageColor = Colors.orange[700];
+    } else if (updatedMembers > 0 && updatedMembers >= allMembers) {
+      message = 'Successfully updated $updatedMembers war targets!\n\n'
+          'A quick update was performed (only stats, state and online status).';
+    } else if (updatedMembers > 0 && updatedMembers < allMembers) {
+      message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!\n\n'
+          'A quick update was performed (only stats, state and online status).';
+      messageColor = Colors.orange[700];
+    }
+
+    if (mounted && !firstTime) {
+      BotToast.showText(
+        clickClose: true,
+        text: message,
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: messageColor,
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+
+    setState(() {
+      _quickUpdateActive = false;
+    });
   }
 
   Future<void> _showAddDialog(BuildContext _) {
@@ -474,6 +891,12 @@ class _WarPageState extends State<WarPage> {
       case WarSortType.statsAsc:
         _w.sortTargets(WarSortType.statsAsc);
         break;
+      case WarSortType.onlineDes:
+        _w.sortTargets(WarSortType.onlineDes);
+        break;
+      case WarSortType.onlineAsc:
+        _w.sortTargets(WarSortType.onlineAsc);
+        break;
       case WarSortType.colorDes:
         _w.sortTargets(WarSortType.colorDes);
         break;
@@ -506,7 +929,6 @@ class AddFactionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
     final targets = context.read<TargetsProvider>().allTargets; // To retrieve existing notes and FF/R
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -524,7 +946,7 @@ class AddFactionDialog extends StatelessWidget {
         ),
         margin: const EdgeInsets.only(top: 30),
         decoration: BoxDecoration(
-          color: themeProvider.background,
+          color: themeProvider.secondBackground,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
@@ -597,7 +1019,12 @@ class AddFactionDialog extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16.0),
-              Expanded(
+              if (warController.toggleAddUserActive)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5),
+                  child: CircularProgressIndicator(),
+                ),
+              Flexible(
                 child: factionCards(),
               ),
               const SizedBox(height: 16.0),
@@ -608,6 +1035,20 @@ class AddFactionDialog extends StatelessWidget {
                     child: const Text("Add"),
                     onPressed: () async {
                       if (addFormKey.currentState.validate()) {
+                        warController.setAddUserActive(true);
+
+                        BotToast.showText(
+                          clickClose: true,
+                          text: "Fetching information, please wait...",
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.grey[700],
+                          duration: const Duration(seconds: 3),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+
                         FocusScopeNode currentFocus = FocusScope.of(context);
                         if (!currentFocus.hasPrimaryFocus) {
                           currentFocus.unfocus();
@@ -620,7 +1061,7 @@ class AddFactionDialog extends StatelessWidget {
 
                         // If an user ID was inserted, we need to transform it first
                         if (warController.addFromUserId) {
-                          dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
+                          dynamic target = await TornApiCaller().getTarget(playerId: inputId);
                           String convertError = "";
                           if (target is TargetModel) {
                             inputId = target.faction.factionId.toString();
@@ -643,6 +1084,7 @@ class AddFactionDialog extends StatelessWidget {
                               duration: const Duration(seconds: 3),
                               contentPadding: const EdgeInsets.all(10),
                             );
+                            warController.setAddUserActive(false);
                             return;
                           }
                         }
@@ -677,6 +1119,7 @@ class AddFactionDialog extends StatelessWidget {
                           duration: Duration(seconds: time),
                           contentPadding: const EdgeInsets.all(10),
                         );
+                        warController.setAddUserActive(false);
                       }
                     },
                   ),
@@ -716,13 +1159,13 @@ class AddFactionDialog extends StatelessWidget {
             SizedBox(width: 5),
             Flexible(
               child: Card(
-                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     children: [
                       Text(
-                        faction.name,
+                        HtmlParser.fix(faction.name),
                         textAlign: TextAlign.center,
                       ),
                       Text(
@@ -746,7 +1189,7 @@ class AddFactionDialog extends StatelessWidget {
         ),
       );
     }
-    return ListView(children: factionCards);
+    return ListView(shrinkWrap: true, children: factionCards);
   }
 }
 
@@ -765,7 +1208,7 @@ class HiddenMembersDialog extends StatelessWidget {
     final List<Member> hiddenMembers = warController.getHiddenMembersDetails();
     List<Widget> hiddenCards = buildCards(hiddenMembers, context);
     return AlertDialog(
-      backgroundColor: themeProvider.background,
+      backgroundColor: themeProvider.secondBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -788,10 +1231,11 @@ class HiddenMembersDialog extends StatelessWidget {
               style: TextStyle(fontSize: 14),
             ),
             SizedBox(height: 20),
-            ListView(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              children: hiddenCards,
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: hiddenCards,
+              ),
             ),
           ],
         ),
@@ -817,7 +1261,7 @@ class HiddenMembersDialog extends StatelessWidget {
             ),
             Expanded(
               child: Card(
-                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
                   child: Column(
@@ -866,9 +1310,19 @@ class HiddenMembersDialog extends StatelessWidget {
 }
 
 class WarTargetsList extends StatelessWidget {
-  WarTargetsList({@required this.warController});
+  WarTargetsList({
+    @required this.warController,
+    @required this.offlineSelector,
+    @required this.okayFilterActive,
+    @required this.countryFilterActive,
+    @required this.travelingFilterActive,
+  });
 
   final WarController warController;
+  final int offlineSelector;
+  final bool okayFilterActive;
+  final bool countryFilterActive;
+  final bool travelingFilterActive;
 
   @override
   Widget build(BuildContext context) {
@@ -902,14 +1356,37 @@ class WarTargetsList extends StatelessWidget {
 
     List<WarCard> filteredCards = <WarCard>[];
 
-    for (var thisMember in members) {
-      if (!thisMember.hidden)
-        filteredCards.add(
-          WarCard(
-            key: UniqueKey(),
-            memberModel: thisMember,
-          ),
-        );
+    for (Member thisMember in members) {
+      if (thisMember.hidden) continue;
+      if (thisMember.status.state.contains("Federal") && thisMember.status.state.contains("Fallen")) continue;
+
+      if ((thisMember.lastAction.status.contains("Online") || thisMember.lastAction.status.contains("Idle")) &&
+          offlineSelector == 2) {
+        continue;
+      }
+
+      if ((thisMember.lastAction.status.contains("Offline") && offlineSelector == 1)) {
+        continue;
+      }
+
+      if (okayFilterActive && thisMember.status.color == "red") {
+        continue;
+      }
+
+      if (countryFilterActive && countryCheck(thisMember.status) != warController.playerLocation) {
+        continue;
+      }
+
+      if (travelingFilterActive && travelingCheck(thisMember.status)) {
+        continue;
+      }
+
+      filteredCards.add(
+        WarCard(
+          key: UniqueKey(),
+          memberModel: thisMember,
+        ),
+      );
     }
 
     switch (warController.currentSort) {
@@ -942,6 +1419,12 @@ class WarTargetsList extends StatelessWidget {
         break;
       case WarSortType.statsAsc:
         filteredCards.sort((a, b) => a.memberModel.statsSort.compareTo(b.memberModel.statsSort));
+        break;
+      case WarSortType.onlineDes:
+        filteredCards.sort((a, b) => b.memberModel.lastAction.timestamp.compareTo(a.memberModel.lastAction.timestamp));
+        break;
+      case WarSortType.onlineAsc:
+        filteredCards.sort((a, b) => a.memberModel.lastAction.timestamp.compareTo(b.memberModel.lastAction.timestamp));
         break;
       case WarSortType.colorDes:
         filteredCards.sort((a, b) =>

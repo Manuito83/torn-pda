@@ -9,6 +9,7 @@ import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -35,16 +36,19 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
 
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -54,14 +58,17 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
               : null,
           body: Builder(
             builder: (BuildContext context) {
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(height: 10),
-                    _setupContainer(),
-                    SizedBox(height: 50),
-                  ],
+              return Container(
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      SizedBox(height: 10),
+                      _setupContainer(),
+                      SizedBox(height: 50),
+                    ],
+                  ),
                 ),
               );
             },

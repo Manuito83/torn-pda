@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class VaultOptionsPage extends StatefulWidget {
@@ -22,6 +23,7 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
   bool _vaultEnabled = true;
 
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
   Future _preferencesLoaded;
 
   @override
@@ -33,12 +35,14 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -48,63 +52,66 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
               : null,
           body: Builder(
             builder: (BuildContext context) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: FutureBuilder(
-                  future: _preferencesLoaded,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            if (!widget.vaultDetected)
-                              Column(
-                                children: [
-                                  SizedBox(height: 20),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                                    child: Text(
-                                      "NOTE: Torn PDA did not detect a vault in your property, either "
-                                      "because there is none, you don\'t have access to it or there "
-                                      "no transactions listed.",
-                                      style: TextStyle(color: Colors.orange),
+              return Container(
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              if (!widget.vaultDetected)
+                                Column(
+                                  children: [
+                                    SizedBox(height: 20),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      child: Text(
+                                        "NOTE: Torn PDA did not detect a vault in your property, either "
+                                        "because there is none, you don\'t have access to it or there "
+                                        "no transactions listed.",
+                                        style: TextStyle(color: Colors.orange),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                              SizedBox(height: 10),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Use vault share"),
+                                    Switch(
+                                      value: _vaultEnabled,
+                                      onChanged: (value) {
+                                        Prefs().setVaultEnabled(value);
+                                        setState(() {
+                                          _vaultEnabled = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            SizedBox(height: 10),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Use vault share"),
-                                  Switch(
-                                    value: _vaultEnabled,
-                                    onChanged: (value) {
-                                      Prefs().setVaultEnabled(value);
-                                      setState(() {
-                                        _vaultEnabled = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 50),
-                          ],
-                        ),
-                      );
-                    } else {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  },
+                              SizedBox(height: 50),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
                 ),
               );
             },
