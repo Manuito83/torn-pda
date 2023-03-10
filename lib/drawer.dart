@@ -245,8 +245,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _loadWidgetData();
 
     // TODO!
-    print("bu");
-    var lala = platform.invokeMethod('cuac').then((value) => print("cuac dice " + value));
+    //print("bu");
+    //var lala = platform.invokeMethod('cuac').then((value) => print("cuac dice " + value));
   }
 
   @override
