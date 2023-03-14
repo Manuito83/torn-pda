@@ -275,6 +275,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         } else {
           _webViewProvider.addTab(
             url: _webViewProvider.tabList[0].currentUrl,
+            sleepTab: true, // Needs sleep tab or it will crash in iOS 15.5 to 15.9
             chatRemovalActive: _webViewProvider.tabList[0].chatRemovalActiveTab,
             historyBack: _webViewProvider.tabList[0].historyBack,
             historyForward: _webViewProvider.tabList[0].historyForward,
