@@ -73,7 +73,8 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
                                 Padding(
                                   padding: const EdgeInsets.all(20.0),
                                   child: Text('Here you can specify your preferred notification'
-                                      ' launch time before the loot level is reached'),
+                                      ' launch time before the loot level is reached '
+                                      '(also applies to Loot Rangers, is available)'),
                                 ),
                                 _rowsWithTypes(),
                                 SizedBox(height: 50),

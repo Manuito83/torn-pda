@@ -21,6 +21,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
+import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -318,10 +319,12 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               SizedBox(width: 5),
                               GestureDetector(
                                 onTap: () async {
-                                  if (await canLaunchUrl(Uri.parse("https://discord.gg/ANcQdwKgAw"))) {
-                                    await launchUrl(Uri.parse("https://discord.gg/ANcQdwKgAw"),
-                                        mode: LaunchMode.externalApplication);
-                                  }
+                                  await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return LootRangersExplanationDialog(themeProvider: _themeProvider);
+                                    },
+                                  );
                                 },
                                 child: Icon(
                                   Icons.info_outline,

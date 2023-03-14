@@ -29,8 +29,8 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
+import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
 
@@ -137,6 +137,16 @@ class _LootPageState extends State<LootPage> {
                           )
                         else
                           SizedBox.shrink(),
+                        if (_lootRangersIdOrder.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+                            child: Text(
+                              "NPCs sorted by Loot Rangers' order",
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                         Padding(
                           padding: const EdgeInsets.all(5),
                           child: _returnNpcCards(),
@@ -284,9 +294,21 @@ class _LootPageState extends State<LootPage> {
       // Final card of every NPC
       var npcBoxes = <Widget>[];
 
-      // Loop every NPC
-      var npcModels = <LootModel>[];
+      // If Loot Rangers is active, return LR's order
+      if (_lootRangersIdOrder.isNotEmpty) {
+        final sortedMap = Map<String, LootModel>();
+        final originalMap = Map<String, LootModel>.of(_mainLootInfo);
+        for (var id in _lootRangersIdOrder) {
+          originalMap.forEach((npcId, npcDetails) {
+            if (id == npcId) {
+              sortedMap.addAll({npcId: npcDetails});
+            }
+          });
+        }
+        _mainLootInfo = Map.from(sortedMap);
+      }
 
+      // Loop every NPC
       _mainLootInfo.forEach((npcId, npcDetails) {
         if (!_filterOutIds.contains(npcId)) {
           // Get npcLevels in a column and format them
@@ -587,7 +609,6 @@ class _LootPageState extends State<LootPage> {
               ),
             ),
           );
-          npcModels.add(npcDetails);
         }
       });
 
@@ -704,7 +725,7 @@ class _LootPageState extends State<LootPage> {
                   499,
                   '499-${_lootRangersIdOrder.join(",")}-${_lootRangersNameOrder.join(",")}-$time',
                   "Loot Rangers attack!",
-                  "Order ${_lootRangersNameOrder.join(", ")}",
+                  "Order: ${_lootRangersNameOrder.join(", ")}",
                 );
               }
 
@@ -774,9 +795,12 @@ class _LootPageState extends State<LootPage> {
               SizedBox(width: 5),
               GestureDetector(
                 onTap: () async {
-                  if (await canLaunchUrl(Uri.parse("https://discord.gg/ANcQdwKgAw"))) {
-                    await launchUrl(Uri.parse("https://discord.gg/ANcQdwKgAw"), mode: LaunchMode.externalApplication);
-                  }
+                  await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return LootRangersExplanationDialog(themeProvider: _themeProvider);
+                    },
+                  );
                 },
                 child: Icon(
                   Icons.info_outline,

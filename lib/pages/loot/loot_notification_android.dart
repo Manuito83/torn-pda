@@ -76,7 +76,8 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                 Padding(
                                   padding: const EdgeInsets.all(20.0),
                                   child: Text('Here you can specify your preferred alerting '
-                                      'method and launch time before the loot level is reached'),
+                                      'method and launch time before the loot level is reached '
+                                      '(also applies to Loot Rangers, is available)'),
                                 ),
                                 _rowsWithTypes(),
                                 SizedBox(height: 50),
