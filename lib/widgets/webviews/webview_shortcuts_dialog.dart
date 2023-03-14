@@ -57,27 +57,30 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
           ? Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'No shortcuts configured, add some!',
-                      style: TextStyle(
-                        color: Colors.orange[900],
-                        fontStyle: FontStyle.italic,
-                        fontSize: 13,
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'No shortcuts configured, add some!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.orange[900],
+                          fontStyle: FontStyle.italic,
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Tap the icon to configure',
-                      style: TextStyle(
-                        color: Colors.orange[900],
-                        fontStyle: FontStyle.italic,
-                        fontSize: 10,
+                      Text(
+                        'Tap the icon to configure',
+                        style: TextStyle(
+                          color: Colors.orange[900],
+                          fontStyle: FontStyle.italic,
+                          fontSize: 10,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 GestureDetector(
                   child: IconButton(
