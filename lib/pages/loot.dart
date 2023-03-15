@@ -141,7 +141,7 @@ class _LootPageState extends State<LootPage> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
                             child: Text(
-                              "NPCs sorted by Loot Rangers' order",
+                              "NPCs sorted by Loot Rangers' attack order",
                               style: TextStyle(
                                 fontSize: 12,
                               ),
