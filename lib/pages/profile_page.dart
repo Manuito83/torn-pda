@@ -31,6 +31,7 @@ import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
+import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
@@ -224,6 +225,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   bool _nukeReviveActive = false;
   bool _uhcReviveActive = false;
+  bool _helaReviveActive = false;
+
   bool _warnAboutChains = false;
   bool _shortcutsEnabled = false;
   bool _showHeaderWallet = false;
@@ -638,8 +641,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             );
             widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {
-              _nukeReviveActive = newOptions.nukeReviveEnabled;
-              _uhcReviveActive = newOptions.uhcReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
               _showHeaderWallet = newOptions.showHeaderWallet;
@@ -1070,6 +1071,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
+                  if (_user.status.state == 'Hospital' && _helaReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: HelaReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1208,7 +1219,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.cardColor,
+                  backgroundColor: _themeProvider.cardColor,
                   side: BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
@@ -1325,7 +1336,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.cardColor,
+                  backgroundColor: _themeProvider.cardColor,
                   side: BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
@@ -5525,6 +5536,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _nukeReviveActive = await Prefs().getUseNukeRevive();
     _uhcReviveActive = await Prefs().getUseUhcRevive();
+    _helaReviveActive = await Prefs().getUseHelaRevive();
+
     _warnAboutChains = await Prefs().getWarnAboutChains();
     _shortcutsEnabled = await Prefs().getEnableShortcuts();
     _showHeaderWallet = await Prefs().getShowHeaderWallet();

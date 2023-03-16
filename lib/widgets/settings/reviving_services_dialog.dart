@@ -1,0 +1,159 @@
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Project imports:
+import 'package:torn_pda/utils/shared_prefs.dart';
+
+class RevivingServicesDialog extends StatefulWidget {
+  @override
+  _RevivingServicesDialogState createState() => _RevivingServicesDialogState();
+}
+
+class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
+  Future _preferencesLoaded;
+  bool _nukeReviveEnabled = true;
+  bool _uhcReviveEnabled = true;
+  bool _helaReviveEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _preferencesLoaded = _restorePreferences();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Reviving services"),
+      content: FutureBuilder(
+        future: _preferencesLoaded,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) return SizedBox.shrink();
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                Text(
+                  "Choose which reviving services you might want to use. "
+                  "If enabled, when you are in hospital you\'ll have the option to call "
+                  "one of their revivers from several places (e.g. Profile and Chaining sections).",
+                  style: TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "Nuke Reviving Services",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _nukeReviveEnabled,
+                        onChanged: (value) {
+                          Prefs().setUseNukeRevive(value);
+                          setState(() {
+                            _nukeReviveEnabled = value;
+                          });
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "UHC Reviving Services",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _uhcReviveEnabled,
+                        onChanged: (value) {
+                          Prefs().setUseUhcRevive(value);
+                          setState(() {
+                            _uhcReviveEnabled = value;
+                          });
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "HeLa Reviving Services",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _helaReviveEnabled,
+                        onChanged: (value) {
+                          Prefs().setUseHelaRevive(value);
+                          setState(() {
+                            _helaReviveEnabled = value;
+                          });
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  "NOTE: Torn PDA is not affiliated to any of these services in any form",
+                  style: TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 15),
+          child: TextButton(
+            child: Text("Close"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        )
+      ],
+    );
+  }
+
+  Future _restorePreferences() async {
+    var useNuke = await Prefs().getUseNukeRevive();
+    var useUhc = await Prefs().getUseUhcRevive();
+
+    setState(() {
+      _nukeReviveEnabled = useNuke;
+      _uhcReviveEnabled = useUhc;
+    });
+  }
+}

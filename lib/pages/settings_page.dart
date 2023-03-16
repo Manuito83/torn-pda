@@ -25,6 +25,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-login/native_login_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
+import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:vibration/vibration.dart';
 
 // Project imports:
@@ -592,6 +593,53 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Text(
                           'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each '
                           'member of your faction available to plan an organized crime',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'REVIVING SERVICES',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text(
+                              "Choose reviving providers",
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.keyboard_arrow_right_outlined),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return RevivingServicesDialog();
+                                  },
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          "Choose which reviving services you might want to use. "
+                          "If enabled, when you are in hospital you\'ll have the option to call "
+                          "one of their revivers from several places (e.g. Profile and Chaining sections).",
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,

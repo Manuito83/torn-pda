@@ -134,8 +134,7 @@ class Prefs {
   final String _kShortcutTile = "pda_shortcutTile";
   final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
-  final String _kUseNukeRevive = "pda_useNukeRevive";
-  final String _kUseUhcRevive = "pda_useUhcRevive";
+
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
   final String _kWarnAboutExcessEnergyThreshold = "pda_warnAboutExcessEnergyThreshold";
@@ -173,6 +172,10 @@ class Prefs {
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+  // Reviving
+  final String _kUseNukeRevive = "pda_useNukeRevive";
+  final String _kUseUhcRevive = "pda_useUhcRevive";
+  final String _kUseHelaRevive = "pda_useHelaRevive";
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
@@ -1550,26 +1553,6 @@ class Prefs {
     return prefs.setBool(_kDisableTravelSection, value);
   }
 
-  Future<bool> getUseNukeRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseNukeRevive) ?? true;
-  }
-
-  Future<bool> setUseNukeRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseNukeRevive, value);
-  }
-
-  Future<bool> getUseUhcRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseUhcRevive) ?? false;
-  }
-
-  Future<bool> setUseUhcRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseUhcRevive, value);
-  }
-
   Future<bool> getWarnAboutChains() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kWarnAboutChains) ?? true;
@@ -1668,6 +1651,40 @@ class Prefs {
   Future<bool> setExpandNetworth(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExpandNetworth, value);
+  }
+
+  /// ----------------------------
+  /// Methods for reviving
+  /// ----------------------------
+
+  Future<bool> getUseNukeRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseNukeRevive) ?? true;
+  }
+
+  Future<bool> setUseNukeRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseNukeRevive, value);
+  }
+
+  Future<bool> getUseUhcRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseUhcRevive) ?? false;
+  }
+
+  Future<bool> setUseUhcRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseUhcRevive, value);
+  }
+
+  Future<bool> getUseHelaRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseHelaRevive) ?? false;
+  }
+
+  Future<bool> setUseHelaRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseHelaRevive, value);
   }
 
   /// ----------------------------
