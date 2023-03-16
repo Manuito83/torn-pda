@@ -451,6 +451,22 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.onlineAsc:
         _targets.sort((a, b) => a.lastAction.timestamp.compareTo(b.lastAction.timestamp));
         break;
+      case TargetSortType.notesDes:
+        _targets.sort((a, b) => b.personalNote.toLowerCase().compareTo(a.personalNote.toLowerCase()));
+        break;
+      case TargetSortType.notesAsc:
+        _targets.sort((a, b) {
+          if (a.personalNote.isEmpty && b.personalNote.isNotEmpty) {
+            return 1;
+          } else if (a.personalNote.isNotEmpty && b.personalNote.isEmpty) {
+            return -1;
+          } else if (a.personalNote.isEmpty && b.personalNote.isEmpty) {
+            return 0;
+          } else {
+            return a.personalNote.toLowerCase().compareTo(b.personalNote.toLowerCase());
+          }
+        });
+        break;
     }
     _saveSortSharedPrefs();
     _saveTargetsSharedPrefs();

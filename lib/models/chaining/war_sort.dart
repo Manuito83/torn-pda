@@ -13,6 +13,8 @@ enum WarSortType {
   onlineAsc,
   lifeDes,
   lifeAsc,
+  notesDes,
+  notesAsc,
 }
 
 class WarSort {
@@ -62,6 +64,12 @@ class WarSort {
         break;
       case WarSortType.lifeAsc:
         description = 'Sort by life (asc)';
+        break;
+      case WarSortType.notesDes:
+        description = 'Sort by note (des)';
+        break;
+      case WarSortType.notesAsc:
+        description = 'Sort by note (asc)';
         break;
     }
   }

@@ -95,6 +95,8 @@ class _WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.onlineAsc),
     WarSort(type: WarSortType.colorAsc),
     WarSort(type: WarSortType.colorDes),
+    WarSort(type: WarSortType.notesDes),
+    WarSort(type: WarSortType.notesAsc),
   ];
 
   final _popupOptionsChoices = <WarOptions>[
@@ -903,6 +905,12 @@ class _WarPageState extends State<WarPage> {
       case WarSortType.colorAsc:
         _w.sortTargets(WarSortType.colorAsc);
         break;
+      case WarSortType.notesDes:
+        _w.sortTargets(WarSortType.notesDes);
+        break;
+      case WarSortType.notesAsc:
+        _w.sortTargets(WarSortType.notesAsc);
+        break;
     }
   }
 
@@ -1438,6 +1446,23 @@ class WarTargetsList extends StatelessWidget {
       case WarSortType.colorAsc:
         filteredCards.sort((a, b) =>
             a.memberModel.personalNoteColor.toLowerCase().compareTo(b.memberModel.personalNoteColor.toLowerCase()));
+        break;
+      case WarSortType.notesDes:
+        filteredCards.sort(
+            (a, b) => b.memberModel.personalNote.toLowerCase().compareTo(a.memberModel.personalNote.toLowerCase()));
+        break;
+      case WarSortType.notesAsc:
+        filteredCards.sort((a, b) {
+          if (a.memberModel.personalNote.isEmpty && b.memberModel.personalNote.isNotEmpty) {
+            return 1;
+          } else if (a.memberModel.personalNote.isNotEmpty && b.memberModel.personalNote.isEmpty) {
+            return -1;
+          } else if (a.memberModel.personalNote.isEmpty && b.memberModel.personalNote.isEmpty) {
+            return 0;
+          } else {
+            return a.memberModel.personalNote.toLowerCase().compareTo(b.memberModel.personalNote.toLowerCase());
+          }
+        });
         break;
     }
 
