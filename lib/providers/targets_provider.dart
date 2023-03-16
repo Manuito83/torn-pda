@@ -542,6 +542,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.onlineAsc:
         sortToSave = 'onlineAsc';
         break;
+      case TargetSortType.notesDes:
+        sortToSave = 'notesDes';
+        break;
+      case TargetSortType.notesAsc:
+        sortToSave = 'notesAsc';
+        break;
     }
     Prefs().setTargetsSort(sortToSave);
   }

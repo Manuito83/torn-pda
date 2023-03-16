@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as dev;
 import 'dart:math';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
@@ -736,6 +735,12 @@ class WarController extends GetxController {
       case 'colorAsc':
         currentSort = WarSortType.colorAsc;
         break;
+      case 'notesDes':
+        currentSort = WarSortType.notesDes;
+        break;
+      case 'notesAsc':
+        currentSort = WarSortType.notesAsc;
+        break;
     }
 
     if (_spiesSource == SpiesSource.yata) {
@@ -821,6 +826,12 @@ class WarController extends GetxController {
         break;
       case WarSortType.colorAsc:
         sortToSave = 'colorAsc';
+        break;
+      case WarSortType.notesDes:
+        sortToSave = 'notesDes';
+        break;
+      case WarSortType.notesAsc:
+        sortToSave = 'notesAsc';
         break;
     }
     Prefs().setWarMembersSort(sortToSave);

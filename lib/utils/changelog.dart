@@ -53,10 +53,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_0_0_6 = "Added natural nerve information to OC planning";
     String feat3_0_0_7 = "Players can now be added to several lists from their profile widget";
     String feat3_0_0_8 = "Ranked Wars sorting and own faction identification has been improved";
-    String feat3_0_0_9 = "Moved reviving services to Settings and added HeLa Revive";
-    String feat3_0_0_10 = "Fixed dark theme sync with Torn";
-    String feat3_0_0_11 = "Fixed target level calculation in recent attacks";
-    String feat3_0_0_12 = "Fixed other reported issues";
+    String feat3_0_0_9 = "Targets can now be sorted by note";
+    String feat3_0_0_10 = "Moved reviving services to Settings and added HeLa Revive";
+    String feat3_0_0_11 = "Fixed dark theme sync with Torn";
+    String feat3_0_0_12 = "Fixed target level calculation in recent attacks";
+    String feat3_0_0_13 = "Fixed other reported issues";
     v3_0_0.features.add(feat3_0_0_1);
     v3_0_0.features.add(feat3_0_0_2);
     v3_0_0.features.add(feat3_0_0_3);
@@ -70,6 +71,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_0_0.features.add(feat3_0_0_11);
     v3_0_0.features.add(feat3_0_0_11);
     v3_0_0.features.add(feat3_0_0_12);
+    v3_0_0.features.add(feat3_0_0_13);
 
     // VERSION 2.9.6
     var v2_9_6 = ChangeLogItem();
