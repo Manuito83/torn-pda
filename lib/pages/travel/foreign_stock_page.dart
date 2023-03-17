@@ -138,6 +138,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   RefreshController _refreshController = RefreshController(initialRefresh: false);
 
+  List<ForeignStock> _hiddenStocks = <ForeignStock>[];
+
   @override
   void initState() {
     super.initState();
@@ -356,6 +358,24 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           },
         ),
         IconButton(
+          icon: Icon(MdiIcons.eyeRemoveOutline),
+          onPressed: _hiddenStocks.isEmpty
+              ? null
+              : () {
+                  return showDialog<void>(
+                    context: context,
+                    barrierDismissible: true, // user must tap button!
+                    builder: (BuildContext context) {
+                      return HiddenForeignStockDialog(
+                        hiddenStocks: _hiddenStocks,
+                        themeProvider: _themeProvider,
+                        unhide: _unhideMember,
+                      );
+                    },
+                  );
+                },
+        ),
+        IconButton(
           icon: Icon(Icons.settings),
           onPressed: () {
             _showOptionsDialog();
@@ -406,7 +426,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                   child: GestureDetector(
                     child: Icon(
                       MdiIcons.filterVariant,
-                      size: 23,
+                      size: 30,
                     ),
                     onTap: () {
                       var orderType = "";
@@ -501,17 +521,17 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     var flags = [];
     if (_alphabeticalFilter) {
       flags = [
-        Image.asset('images/flags/stock/argentina.png', width: 20),
-        Image.asset('images/flags/stock/canada.png', width: 20),
-        Image.asset('images/flags/stock/cayman.png', width: 20),
-        Image.asset('images/flags/stock/china.png', width: 20),
-        Image.asset('images/flags/stock/hawaii.png', width: 20),
-        Image.asset('images/flags/stock/japan.png', width: 20),
-        Image.asset('images/flags/stock/mexico.png', width: 20),
-        Image.asset('images/flags/stock/south-africa.png', width: 20),
-        Image.asset('images/flags/stock/switzerland.png', width: 20),
-        Image.asset('images/flags/stock/uae.png', width: 20),
-        Image.asset('images/flags/stock/uk.png', width: 20),
+        Image.asset('images/flags/stock/argentina.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/canada.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/cayman.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/china.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/hawaii.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/japan.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/mexico.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/south-africa.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/switzerland.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uae.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uk.png', width: 25, height: 25),
         Icon(
           Icons.select_all,
           color: _themeProvider.mainText,
@@ -519,17 +539,17 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       ];
     } else {
       flags = [
-        Image.asset('images/flags/stock/mexico.png', width: 20),
-        Image.asset('images/flags/stock/cayman.png', width: 20),
-        Image.asset('images/flags/stock/canada.png', width: 20),
-        Image.asset('images/flags/stock/hawaii.png', width: 20),
-        Image.asset('images/flags/stock/uk.png', width: 20),
-        Image.asset('images/flags/stock/argentina.png', width: 20),
-        Image.asset('images/flags/stock/switzerland.png', width: 20),
-        Image.asset('images/flags/stock/japan.png', width: 20),
-        Image.asset('images/flags/stock/china.png', width: 20),
-        Image.asset('images/flags/stock/uae.png', width: 20),
-        Image.asset('images/flags/stock/south-africa.png', width: 20),
+        Image.asset('images/flags/stock/mexico.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/cayman.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/canada.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/hawaii.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uk.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/argentina.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/switzerland.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/japan.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/china.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uae.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/south-africa.png', width: 25, height: 25),
         Icon(
           Icons.select_all,
           color: _themeProvider.mainText,
@@ -603,17 +623,20 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         children: [
           Image.asset(
             'images/icons/ic_flower_black_48dp.png',
-            width: 20,
+            width: 25,
+            height: 25,
             color: _themeProvider.mainText,
           ),
           Image.asset(
             'images/icons/ic_dog_black_48dp.png',
-            width: 20,
+            width: 25,
+            height: 25,
             color: _themeProvider.mainText,
           ),
           Image.asset(
             'images/icons/ic_pill_black_48dp.png',
-            width: 20,
+            width: 25,
+            height: 25,
             color: _themeProvider.mainText,
           ),
           Icon(
@@ -707,12 +730,40 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       ),
     );
 
+    Widget hiddenDetails = SizedBox.shrink();
+    if (_hiddenStocks.isNotEmpty) {
+      hiddenDetails = Padding(
+        padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
+        child: Row(
+          children: <Widget>[
+            Text(
+              'There ${_hiddenStocks.length == 1 ? "is" : "are"} '
+              '${_hiddenStocks.length}'
+              ' hidden stock${_hiddenStocks.length == 1 ? "" : "s"}',
+              style: TextStyle(fontSize: 11, color: Colors.orange[800]),
+            ),
+          ],
+        ),
+      );
+    }
+
     thisStockList.add(lastUpdateDetails);
     thisStockList.add(countriesFilterDetails);
     thisStockList.add(typesFilterDetails);
+    thisStockList.add(hiddenDetails);
 
     bool displayShowcase = true; // Add showcase to first card only
     for (var stock in _filteredStocksCards) {
+      // Do not show hidden stock cards
+      bool hidden = false;
+      for (var h in _hiddenStocks) {
+        if (h.id == stock.id && h.countryCode == stock.countryCode) {
+          hidden = true;
+          break;
+        }
+      }
+      if (hidden) continue;
+
       thisStockList.add(
         ForeignStockCard(
           foreignStock: stock,
@@ -723,6 +774,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           profile: _profile,
           flagPressedCallback: _onFlagPressed,
           requestMoneyRefresh: _refreshMoney,
+          memberHiddenCallback: _hideMember,
           ticket: _settingsProvider.travelTicket,
           activeRestocks: _activeRestocks,
           travellingTimeStamp: _profile.travel.timestamp,
@@ -1308,6 +1360,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _showBarsCooldownAnalysis = await Prefs().getShowBarsCooldownAnalysis();
 
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
+
+    List<String> savedHiddenRaw = await Prefs().getHiddenForeignStocks();
+    for (var s in savedHiddenRaw) {
+      _hiddenStocks.add(foreignStockFromJson(s));
+    }
   }
 
   Future<void> _showOptionsDialog() {
@@ -1431,5 +1488,138 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         _profile = profileModel;
       });
     }
+  }
+
+  _hideMember(ForeignStock stock) async {
+    for (var s in _hiddenStocks) {
+      // Repeated hiding attempt!
+      if (s.id == stock.id && s.id == stock.countryCode) return;
+    }
+
+    setState(() {
+      _hiddenStocks.add(stock);
+    });
+
+    var hiddenSaveList = <String>[];
+    for (var h in _hiddenStocks) {
+      hiddenSaveList.add(foreignStockToJson(h));
+    }
+    Prefs().setHiddenForeignStocks(hiddenSaveList);
+  }
+
+  _unhideMember(int id, String countryCode) {
+    setState(() {
+      _hiddenStocks.removeWhere((element) => element.id == id && element.countryCode == countryCode);
+    });
+  }
+}
+
+class HiddenForeignStockDialog extends StatefulWidget {
+  final ThemeProvider themeProvider;
+  final List<ForeignStock> hiddenStocks;
+  final Function(int, String) unhide;
+
+  const HiddenForeignStockDialog({
+    Key key,
+    @required this.themeProvider,
+    @required this.hiddenStocks,
+    @required this.unhide,
+  }) : super(key: key);
+
+  @override
+  State<HiddenForeignStockDialog> createState() => _HiddenForeignStockDialogState();
+}
+
+class _HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> hiddenCards = buildCards(widget.hiddenStocks, context);
+    return AlertDialog(
+      backgroundColor: widget.themeProvider.secondBackground,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      actions: [
+        TextButton(
+          child: const Text("Close"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+      elevation: 0.0,
+      content: Container(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Reset hidden targets",
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 15),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: hiddenCards,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> buildCards(List<ForeignStock> hiddenStocks, BuildContext context) {
+    List<Widget> hiddenCards = <Widget>[];
+    for (ForeignStock s in hiddenStocks) {
+      hiddenCards.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            IconButton(
+              icon: Icon(Icons.undo),
+              onPressed: () {
+                setState(() {
+                  widget.unhide(s.id, s.countryCode);
+                });
+
+                if (widget.hiddenStocks.isEmpty) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            Expanded(
+              child: Card(
+                color: widget.themeProvider.cardColor,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Text(
+                            s.name,
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          CountryCodeAndFlag(
+                            stock: s,
+                            dense: true,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return hiddenCards;
   }
 }

@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +39,7 @@ class ForeignStockCard extends StatefulWidget {
   final OwnProfileExtended profile;
   final Function flagPressedCallback;
   final Function requestMoneyRefresh;
+  final Function(ForeignStock) memberHiddenCallback;
   final TravelTicket ticket;
   final Map<String, dynamic> activeRestocks;
 
@@ -47,23 +49,24 @@ class ForeignStockCard extends StatefulWidget {
 
   final bool displayShowcase;
 
-  ForeignStockCard(
-      {@required this.foreignStock,
-      @required this.inventoryEnabled,
-      @required this.showArrivalTime,
-      @required this.showBarsCooldownAnalysis,
-      @required this.capacity,
-      @required this.profile,
-      @required this.flagPressedCallback,
-      @required this.requestMoneyRefresh,
-      @required this.ticket,
-      @required this.activeRestocks,
-      @required this.travellingTimeStamp,
-      @required this.travellingCountry,
-      @required this.travellingCountryFullName,
-      @required this.displayShowcase,
-      @required Key key})
-      : super(key: key);
+  ForeignStockCard({
+    @required this.foreignStock,
+    @required this.inventoryEnabled,
+    @required this.showArrivalTime,
+    @required this.showBarsCooldownAnalysis,
+    @required this.capacity,
+    @required this.profile,
+    @required this.flagPressedCallback,
+    @required this.requestMoneyRefresh,
+    @required this.memberHiddenCallback,
+    @required this.ticket,
+    @required this.activeRestocks,
+    @required this.travellingTimeStamp,
+    @required this.travellingCountry,
+    @required this.travellingCountryFullName,
+    @required this.displayShowcase,
+    @required Key key,
+  }) : super(key: key);
 
   @override
   _ForeignStockCardState createState() => _ForeignStockCardState();
@@ -112,6 +115,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   GlobalKey _showcaseMoneyIcon = GlobalKey();
   GlobalKey _showcaseFlagIcon = GlobalKey();
   GlobalKey _showcaseExpandIcon = GlobalKey();
+  GlobalKey _showcaseHideStock = GlobalKey();
 
   @override
   void initState() {
@@ -145,24 +149,59 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       builder: Builder(
         builder: (_) {
           _launchShowCases(_);
-          return Card(
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: widget.activeRestocks.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(4.0),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ExpandablePanel(
-                collapsed: null,
-                controller: _expandableController,
-                theme: ExpandableThemeData(
-                  hasIcon: false,
+          return Slidable(
+            startActionPane: ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.5,
+              children: [
+                SlidableAction(
+                  label: 'Hide',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.eyeRemoveOutline,
+                  onPressed: (context) {
+                    widget.memberHiddenCallback(widget.foreignStock);
+                  },
                 ),
-                header: _header(),
-                expanded: _footer(),
+              ],
+            ),
+            child: Card(
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: widget.activeRestocks.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(4.0),
+              ),
+              child: Row(
+                children: [
+                  Showcase(
+                    key: _showcaseHideStock,
+                    title: 'Swipe to hide',
+                    description: '\nSwipe right to hide stocks you don\'t want to see.\n\nYou can restore them '
+                        'later at any time by using the \'eye\' icon in the app bar.',
+                    targetPadding: const EdgeInsets.all(10),
+                    disableMovingAnimation: true,
+                    textColor: _themeProvider.mainText,
+                    tooltipBackgroundColor: _themeProvider.secondBackground,
+                    descTextStyle: TextStyle(fontSize: 13),
+                    tooltipPadding: EdgeInsets.all(20),
+                    child: SizedBox(height: 80),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ExpandablePanel(
+                        collapsed: null,
+                        controller: _expandableController,
+                        theme: ExpandableThemeData(
+                          hasIcon: false,
+                        ),
+                        header: _header(),
+                        expanded: _footer(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -171,9 +210,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  void _launchShowCases(BuildContext _) {
+  void _launchShowCases(BuildContext _) async {
     if (!widget.displayShowcase) return;
-    Future.delayed(Duration(seconds: 1), () async {
+    await Future.delayed(Duration(seconds: 1), () async {
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
 
       if (!_settingsProvider.showCases.contains("foreign_flagIcon")) {
@@ -189,6 +228,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       if (!_settingsProvider.showCases.contains("foreign_expandIcon")) {
         _settingsProvider.addShowCase = "foreign_expandIcon";
         showCases.add(_showcaseExpandIcon);
+      }
+
+      if (!_settingsProvider.showCases.contains("foreign_swipeToHide")) {
+        _settingsProvider.addShowCase = "foreign_swipeToHide";
+        showCases.add(_showcaseHideStock);
       }
 
       if (showCases.isNotEmpty) {
@@ -772,57 +816,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Widget _countryFlagAndArrow(ForeignStock stock) {
-    String countryCode;
-    String flag;
-    switch (stock.country) {
-      case CountryName.JAPAN:
-        countryCode = 'JPN';
-        flag = 'images/flags/stock/japan.png';
-        break;
-      case CountryName.HAWAII:
-        countryCode = 'HAW';
-        flag = 'images/flags/stock/hawaii.png';
-        break;
-      case CountryName.CHINA:
-        countryCode = 'CHN';
-        flag = 'images/flags/stock/china.png';
-        break;
-      case CountryName.ARGENTINA:
-        countryCode = 'ARG';
-        flag = 'images/flags/stock/argentina.png';
-        break;
-      case CountryName.UNITED_KINGDOM:
-        countryCode = 'UK';
-        flag = 'images/flags/stock/uk.png';
-        break;
-      case CountryName.CAYMAN_ISLANDS:
-        countryCode = 'CAY';
-        flag = 'images/flags/stock/cayman.png';
-        break;
-      case CountryName.SOUTH_AFRICA:
-        countryCode = 'AFR';
-        flag = 'images/flags/stock/south-africa.png';
-        break;
-      case CountryName.SWITZERLAND:
-        countryCode = 'SWI';
-        flag = 'images/flags/stock/switzerland.png';
-        break;
-      case CountryName.MEXICO:
-        countryCode = 'MEX';
-        flag = 'images/flags/stock/mexico.png';
-        break;
-      case CountryName.UAE:
-        countryCode = 'UAE';
-        flag = 'images/flags/stock/uae.png';
-        break;
-      case CountryName.CANADA:
-        countryCode = 'CAN';
-        flag = 'images/flags/stock/canada.png';
-        break;
-      case CountryName.TORN:
-        break;
-    }
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -837,15 +830,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             tooltipBackgroundColor: _themeProvider.secondBackground,
             descTextStyle: TextStyle(fontSize: 13),
             tooltipPadding: EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Text(countryCode),
-                Image.asset(
-                  flag,
-                  width: 30,
-                ),
-              ],
-            ),
+            child: CountryCodeAndFlag(stock: stock),
           ),
           onLongPress: () {
             _launchMoneyWarning(stock);
@@ -2031,5 +2016,119 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     if (mounted) {
       widget.requestMoneyRefresh();
     }
+  }
+}
+
+class CountryCodeAndFlag extends StatelessWidget {
+  final ForeignStock stock;
+  final bool dense;
+
+  const CountryCodeAndFlag({@required this.stock, this.dense = false});
+
+  @override
+  Widget build(BuildContext context) {
+    String countryCode;
+    String flag;
+
+    if (stock.country != null) {
+      switch (stock.country) {
+        case CountryName.JAPAN:
+          countryCode = 'JPN';
+          flag = 'images/flags/stock/japan.png';
+          break;
+        case CountryName.HAWAII:
+          countryCode = 'HAW';
+          flag = 'images/flags/stock/hawaii.png';
+          break;
+        case CountryName.CHINA:
+          countryCode = 'CHN';
+          flag = 'images/flags/stock/china.png';
+          break;
+        case CountryName.ARGENTINA:
+          countryCode = 'ARG';
+          flag = 'images/flags/stock/argentina.png';
+          break;
+        case CountryName.UNITED_KINGDOM:
+          countryCode = 'UK';
+          flag = 'images/flags/stock/uk.png';
+          break;
+        case CountryName.CAYMAN_ISLANDS:
+          countryCode = 'CAY';
+          flag = 'images/flags/stock/cayman.png';
+          break;
+        case CountryName.SOUTH_AFRICA:
+          countryCode = 'AFR';
+          flag = 'images/flags/stock/south-africa.png';
+          break;
+        case CountryName.SWITZERLAND:
+          countryCode = 'SWI';
+          flag = 'images/flags/stock/switzerland.png';
+          break;
+        case CountryName.MEXICO:
+          countryCode = 'MEX';
+          flag = 'images/flags/stock/mexico.png';
+          break;
+        case CountryName.UAE:
+          countryCode = 'UAE';
+          flag = 'images/flags/stock/uae.png';
+          break;
+        case CountryName.CANADA:
+          countryCode = 'CAN';
+          flag = 'images/flags/stock/canada.png';
+          break;
+        case CountryName.TORN:
+          break;
+      }
+    } else if (stock.countryCode != null) {
+      // Requested from hidden stocks
+      countryCode = stock.countryCode.toUpperCase();
+      switch (stock.countryCode.toUpperCase()) {
+        case 'JPN':
+          flag = 'images/flags/stock/japan.png';
+          break;
+        case 'HAW':
+          flag = 'images/flags/stock/hawaii.png';
+          break;
+        case 'CHN':
+          flag = 'images/flags/stock/china.png';
+          break;
+        case 'ARG':
+          flag = 'images/flags/stock/argentina.png';
+          break;
+        case 'UK':
+          flag = 'images/flags/stock/uk.png';
+          break;
+        case 'CAY':
+          flag = 'images/flags/stock/cayman.png';
+          break;
+        case 'AFR':
+          flag = 'images/flags/stock/south-africa.png';
+          break;
+        case 'SWI':
+          flag = 'images/flags/stock/switzerland.png';
+          break;
+        case 'MEX':
+          flag = 'images/flags/stock/mexico.png';
+          break;
+        case 'UAE':
+          flag = 'images/flags/stock/uae.png';
+          break;
+        case 'CAN':
+          flag = 'images/flags/stock/canada.png';
+          break;
+      }
+    } else {
+      return SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        Text(countryCode, style: TextStyle(fontSize: dense ? 12 : 14)),
+        Image.asset(
+          flag,
+          width: dense ? 20 : 30,
+        ),
+      ],
+    );
   }
 }

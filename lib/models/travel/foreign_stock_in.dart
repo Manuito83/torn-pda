@@ -8,8 +8,7 @@ import 'dart:convert';
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 
-ForeignStockInModel foreignStockInModelFromJson(String str) =>
-    ForeignStockInModel.fromJson(json.decode(str));
+ForeignStockInModel foreignStockInModelFromJson(String str) => ForeignStockInModel.fromJson(json.decode(str));
 
 String foreignStockInModelToJson(ForeignStockInModel data) => json.encode(data.toJson());
 
@@ -25,15 +24,13 @@ class ForeignStockInModel {
   factory ForeignStockInModel.fromJson(Map<String, dynamic> json) => ForeignStockInModel(
         countries: json["stocks"] == null
             ? null
-            : Map.from(json["stocks"])
-                .map((k, v) => MapEntry<String, CountryDetails>(k, CountryDetails.fromJson(v))),
+            : Map.from(json["stocks"]).map((k, v) => MapEntry<String, CountryDetails>(k, CountryDetails.fromJson(v))),
         timestamp: json["timestamp"] == null ? null : json["timestamp"],
       );
 
   Map<String, dynamic> toJson() => {
-        "stocks": countries == null
-            ? null
-            : Map.from(countries).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "stocks":
+            countries == null ? null : Map.from(countries).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
         "timestamp": timestamp == null ? null : timestamp,
       };
 }
@@ -59,6 +56,9 @@ class CountryDetails {
         "stocks": stocks == null ? null : List<dynamic>.from(stocks.map((x) => x.toJson())),
       };
 }
+
+ForeignStock foreignStockFromJson(String str) => ForeignStock.fromJson(json.decode(str));
+String foreignStockToJson(ForeignStock data) => json.encode(data.toJson());
 
 class ForeignStock {
   ForeignStock({

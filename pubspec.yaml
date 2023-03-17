@@ -56,7 +56,7 @@ dependencies:
       ref: manuito-beta22
   flutter_local_notifications: 9.2.0
   flutter_secure_storage: ^6.0.0
-  flutter_slidable: ^1.2.1
+  flutter_slidable: ^2.0.0
   flutter_speed_dial: ^6.0.0
   font_awesome_flutter: ^10.1.0
   get: ^4.6.3

@@ -102,6 +102,7 @@ class Prefs {
   final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
   final String _kActiveRestocks = "pda_activeRestocks";
+  final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
   final String _kRestocksEnabled = "pda_restocksEnabled";
   final String _kTravelNotificationType = "pda_travelNotificationType";
@@ -1268,6 +1269,16 @@ class Prefs {
   Future<bool> setActiveRestocks(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kActiveRestocks, value);
+  }
+
+  Future<List<String>> getHiddenForeignStocks() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHiddenForeignStocks) ?? [];
+  }
+
+  Future<bool> setHiddenForeignStocks(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kHiddenForeignStocks, value);
   }
 
   Future<bool> getCountriesAlphabeticalFilter() async {
