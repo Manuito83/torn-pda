@@ -43,7 +43,7 @@ class LootRangersExplanationDialog extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Understood"),
+            child: Text("Awesome!"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },
