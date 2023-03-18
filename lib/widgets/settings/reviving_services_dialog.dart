@@ -150,10 +150,12 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
   Future _restorePreferences() async {
     var useNuke = await Prefs().getUseNukeRevive();
     var useUhc = await Prefs().getUseUhcRevive();
+    var useHela = await Prefs().getUseHelaRevive();
 
     setState(() {
       _nukeReviveEnabled = useNuke;
       _uhcReviveEnabled = useUhc;
+      _helaReviveEnabled = useHela;
     });
   }
 }
