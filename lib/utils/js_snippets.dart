@@ -81,14 +81,14 @@ String buyMaxAbroadJS() {
         addStyle(`
           .max-buy {
             position: absolute;
-            width: 62px;
+            width: 36px;
             text-align: center;
             border-left: 2px solid #ccc;
-            height: 15px;
-            line-height: 15px;
-            bottom: -17px;
-            right: 0px;
-            font-size: 9px;
+            height: 14px;
+            line-height: 13px;
+            bottom: -15px;
+            right: -1px;
+            font-size: 10px;
           }
         `);
         
@@ -105,22 +105,11 @@ String buyMaxAbroadJS() {
             let bought = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(3)").innerText);
             let limit = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(4)").innerText) - bought;
             
-            max = max > limit ? limit:max;
-            max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
+            let max_can_buy = Math.round(user_money / price);
 
             let current = max_span.innerHTML;
-            if (current.includes('class="max-buy"') && current.includes('FILL')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max);
-              max_span.innerHTML = '<a class="max-buy">+3</a>';
-            } else if (current.includes('class="max-buy"') && current.includes('+3')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 3);
-              max_span.innerHTML = '<a class="max-buy">+5</a>';
-            } else if (current.includes('class="max-buy"') && current.includes('+5')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 5);
-              max_span.innerHTML = '<a class="max-buy">+10</a>';
-            } else if (current.includes('class="max-buy"') && current.includes('+10')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 10);
-              max_span.innerHTML = '<a class="max-buy">FILL</a>';
+            if (current.includes('class="max-buy"')) {
+              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max_can_buy);
             }
         });
       }
@@ -141,23 +130,12 @@ String buyMaxAbroadJS() {
             let bought = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(3)").innerText);
             let limit = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(4)").innerText) - bought;
             
-            max = max > limit ? limit:max;
-            max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
+			let max_can_buy = Math.round(user_money / price);
             
             let current = max_span.innerHTML;
             if (current.includes('class="torn-btn"') && current.includes('MAX')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max);
-              max_span.innerHTML = '<button class="torn-btn">+3</button>';
-            } else if (current.includes('class="torn-btn"') && current.includes('+3')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 3);
-              max_span.innerHTML = '<button class="torn-btn">+5</button>';
-            } else if (current.includes('class="torn-btn"') && current.includes('+5')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 5);
-              max_span.innerHTML = '<button class="torn-btn">+10</button>';
-            } else if (current.includes('class="torn-btn"') && current.includes('+10')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 10);
-              max_span.innerHTML = '<button class="torn-btn">MAX</button>';
-            }
+              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max_can_buy);
+            } 
           });
         }
       }
