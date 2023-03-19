@@ -22,6 +22,7 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
@@ -238,15 +239,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // Handle notifications
     _getBackGroundNotifications();
     _removeExistingNotifications();
-
-    // Handle home widget
-    HomeWidget.setAppGroupId('torn_pda');
-    //HomeWidget.registerBackgroundCallback(backgroundCallback);
-    _loadWidgetData();
-
-    // TODO!
-    //print("bu");
-    //var lala = platform.invokeMethod('cuac').then((value) => print("cuac dice " + value));
   }
 
   @override
@@ -1439,28 +1431,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       FlutterAppBadger.removeBadge();
     } catch (e) {
       // Not supported?
-    }
-  }
-
-  Future<void> _loadWidgetData() async {
-    try {
-      bool enabled = await HomeWidget.getWidgetData<bool>('enabled');
-      log(enabled.toString());
-
-      HomeWidget.getWidgetData<String>('title', defaultValue: '').then((value) async {
-        print(value);
-        UserController _u = Get.put(UserController());
-        String apiKey = _u.apiKey;
-        if (apiKey.isNotEmpty) {
-          var apiResponse = await TornApiCaller.ownExtended(apiKey, 3).getProfileExtended;
-          if (apiResponse is OwnProfileExtended) {
-            HomeWidget.saveWidgetData<String>('title', apiResponse.energy.current.toString());
-            HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
-          }
-        }
-      });
-    } on PlatformException catch (exception) {
-      log('Error Getting Data. $exception');
     }
   }
 

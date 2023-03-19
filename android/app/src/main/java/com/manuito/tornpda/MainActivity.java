@@ -55,25 +55,19 @@ public class MainActivity extends FlutterActivity {
                         deleteNotificationChannels();
                     }
 
-                    if (call.method.equals("cuac")) {
-                        cuac();
+                    if (call.method.equals("widgetCount")) {
+                        AppWidgetManager lala = AppWidgetManager.getInstance(this);
+                        ComponentName name = new ComponentName(this, HomeWidgetTornPda.class);
+                        result.success(lala.getAppWidgetIds(name));
                     }
                 });
     }
 
-    private void cuac() {
-        AppWidgetManager lala = AppWidgetManager.getInstance(this);
-        ComponentName name = new ComponentName(this, HomeWidgetTornPda.class);
-        myResult.success(lala.getAppWidgetIds(name));
-    }
-
     // This cancel Firebase notifications upon request from the Flutter app, as the
-    // local plugins also cancels its
-    // scheduled ones when cancelAll() is called.
+    // local plugins also cancels its scheduled ones when cancelAll() is called.
     // Note: It is also possible to use "cancel("TAG", 0)" but giving a TAG in FCM
-    // Android options overwrittes the
-    // notifications with same tag. There is an alternative which is preparing
-    // multiple tags.
+    // Android options overwrites the notifications with same tag.
+    // There is an alternative which is preparing multiple tags.
     private void cancelNotifications() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancelAll();
@@ -81,8 +75,7 @@ public class MainActivity extends FlutterActivity {
 
     // Deletes all notification channels
     private void deleteNotificationChannels() {
-        // Oreo or above, otherwise it will fail (can't be catched in Flutter)
-        // Refer to
+        // Oreo or above, otherwise it will fail (can't be cached in Flutter)
         // https://developer.android.com/reference/android/os/Build.VERSION_CODES#O
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager notificationManager = (NotificationManager) getSystemService(

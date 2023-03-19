@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:ui' as ui;
 // Package imports:
@@ -19,9 +20,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/utils/api_caller.dart';
+import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -70,8 +76,52 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
+/// Used for Background Updates using Workmanager Plugin
+@pragma("vm:entry-point")
+void callbackDispatcher() {
+  Workmanager().executeTask((taskName, inputData) async {
+    DateTime now = DateTime.now();
+    log("EXECUTED $taskName AT ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}");
+    await HomeWidget.saveWidgetData(
+      'title',
+      'Updated from Background',
+    );
+    await HomeWidget.saveWidgetData(
+      'message',
+      '$taskName: ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}'
+          ':${now.second.toString().padLeft(2, '0')}',
+    );
+    await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+    log("$taskName finished @ ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}");
+    return true;
+  });
+}
+
+/// Called when Doing Background Work initiated from Widget
+@pragma("vm:entry-point")
+void backgroundCallback(Uri data) async {
+  print(data);
+
+  if (data.host == 'titleclicked') {
+    var now = DateTime.now();
+    HomeWidget.saveWidgetData(
+      'title',
+      'Widget clicked @',
+    );
+    HomeWidget.saveWidgetData(
+      'message',
+      '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}'
+          ':${now.second.toString().padLeft(2, '0')}',
+    );
+
+    //await HomeWidget.saveWidgetData<String>('title', selectedGreeting);
+    await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Workmanager().initialize(callbackDispatcher, isInDebugMode: kDebugMode);
   tz.initializeTimeZones();
   const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
   const initializationSettingsIOS = IOSInitializationSettings();
@@ -92,7 +142,7 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
-    // TODO: ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
+    // ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
     //FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
@@ -178,6 +228,23 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+
+    // Handle home widget
+    HomeWidget.setAppGroupId('torn_pda');
+    HomeWidget.registerBackgroundCallback(backgroundCallback);
+
+    // Home widget ***
+    // Check whether the user is using a widget
+    const platform = MethodChannel('tornpda.channel');
+    platform.invokeMethod('widgetCount').then((value) {
+      var list = value as List<int>;
+      log("Installed widgets count: ${list.length}");
+      // TODO: more here all other actions?
+    });
+
+    _loadWidgetData();
+    _startBackgroundUpdate();
+    // Home widget END ***
   }
 
   @override
@@ -229,6 +296,37 @@ class _MyAppState extends State<MyApp> {
     );
 
     return mq;
+  }
+
+  Future<void> _loadWidgetData() async {
+    try {
+      HomeWidget.getWidgetData<String>('title', defaultValue: '').then((value) async {
+        log(value);
+        UserController _u = Get.put(UserController());
+        String apiKey = _u.apiKey;
+        if (apiKey.isNotEmpty) {
+          var apiResponse = await TornApiCaller().getProfileExtended(limit: 3);
+          if (apiResponse is OwnProfileExtended) {
+            HomeWidget.saveWidgetData<String>('title', apiResponse.energy.current.toString());
+            HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+          }
+        }
+      });
+    } on PlatformException catch (exception) {
+      log('Error Getting Data. $exception');
+    }
+  }
+
+  void _startBackgroundUpdate() async {
+    await Workmanager().cancelAll();
+    Workmanager().registerPeriodicTask('pdaWidget_1', 'widgetBackgroundUpdate').then((value) async {
+      Future.delayed(Duration(minutes: 5)).then((value) async {
+        Workmanager().registerPeriodicTask('pdaWidget_2', 'widgetBackgroundUpdate');
+        Future.delayed(Duration(minutes: 5)).then((value) {
+          Workmanager().registerPeriodicTask('pdaWidget_3', 'widgetBackgroundUpdate');
+        });
+      });
+    });
   }
 }
 
