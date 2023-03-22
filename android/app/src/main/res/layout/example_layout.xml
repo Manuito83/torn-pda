@@ -24,4 +24,12 @@
         android:layout_height="wrap_content"
         android:textSize="18sp"
         tools:text="Message" />
+
+    <ProgressBar
+        android:id="@+id/widget_life_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:progress="25"
+        android:progressTint="#00FF00" />
 </LinearLayout>
