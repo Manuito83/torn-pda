@@ -31,7 +31,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   dart_ping: ^6.1.1
   dart_ping_ios: ^1.0.0
-  dio: ^4.0.6
+  dio: ^5.0.3
   device_info: ^2.0.3
   dotted_border: ^2.0.0+2
   easy_rich_text: ^1.0.1
