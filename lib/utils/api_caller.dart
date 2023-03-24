@@ -5,8 +5,8 @@ import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
-import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -689,16 +689,17 @@ class TornApiCaller {
     try {
       Dio dio = Dio(
         BaseOptions(
-          connectTimeout: 30000,
-          //receiveTimeout: 30000, // Causing errors?
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
           responseType: ResponseType.plain,
         ),
       );
 
-      (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
-        client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-        return client;
-      };
+      dio.httpClientAdapter = IOHttpClientAdapter()
+        ..onHttpClientCreate = (HttpClient client) {
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+          return client;
+        };
 
       final response = await dio.get(url);
 
