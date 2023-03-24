@@ -1590,7 +1590,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               Padding(
                 padding: const EdgeInsets.all(2),
                 child: Text(
-                  "Online: ${otherProfile.lastAction.relative.replaceAll("0 minutes ago", "now")}",
+                  "Online: ${otherProfile.lastAction.relative.replaceAll(RegExp('0 minutes ago'), "now")}",
                   style: TextStyle(fontSize: 12),
                 ),
               ),
