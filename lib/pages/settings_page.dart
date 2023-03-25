@@ -20,9 +20,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/torn-pda-login/native_login_widget.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
@@ -43,8 +44,13 @@ import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
   final Function changeUID;
+  final StatsController statsController;
 
-  SettingsPage({@required this.changeUID, Key key}) : super(key: key);
+  SettingsPage({
+    @required this.changeUID,
+    @required this.statsController,
+    Key key,
+  }) : super(key: key);
 
   @override
   _SettingsPageState createState() => _SettingsPageState();
@@ -2107,6 +2113,9 @@ class _SettingsPageState extends State<SettingsPage> {
           if (Platform.isAndroid) {
             firestore.setVibrationPattern(_vibrationValue);
           }
+
+          // Signal stat counter initialization
+          widget.statsController.logFirstLoginEver();
         }
       } else if (myProfile is ApiError) {
         setState(() {

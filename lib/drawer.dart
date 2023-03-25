@@ -38,12 +38,13 @@ import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/torn-pda-login/native_auth_provider.dart';
-import 'package:torn_pda/torn-pda-login/native_user_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
@@ -85,6 +86,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "About",
     "Tips"
   ];
+
+  final StatsController _statsController = StatsController();
 
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
@@ -128,6 +131,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Start stats counting
+    _statsController.logCheckIn();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // STARTS QUICK ACTIONS
       final QuickActions quickActions = QuickActions();
@@ -148,8 +156,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       });
     });
     // ENDS QUICK ACTIONS
-
-    WidgetsBinding.instance.addObserver(this);
 
     _allowSectionsWithoutKey = [
       _settingsPosition,
@@ -291,6 +297,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _s.stopTimer();
         log("Stakeouts stopped");
       }
+
+      // Stop stats counting
+      _statsController.logCheckOut();
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
@@ -304,6 +313,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _s.startTimer();
         log("Stakeouts resumed");
       }
+
+      // Resume stats counting
+      _statsController.logCheckIn();
     }
   }
 
@@ -1333,7 +1345,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 11:
-        return SettingsPage(changeUID: changeUID);
+        return SettingsPage(
+          changeUID: changeUID,
+          statsController: _statsController,
+        );
         break;
       case 12:
         return AboutPage(uid: _userUID);

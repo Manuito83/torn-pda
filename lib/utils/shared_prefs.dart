@@ -221,6 +221,10 @@ class Prefs {
   final String _kStakeoutsFetchDelayLimit = "pda_stakeoutsFetchDelayLimit";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
+  // Stats
+  final String _kStatsFirstLoginTimestamp = "pda_statsFirstLoginTimestamp";
+  final String _kStatsCumulatedAppUseSeconds = "pda_statsCumulatedAppUseSeconds";
+  final String _kStatsEventsAchieved = "pda_statsEventsAchieved";
 
   // Alternative keys
   final String _kAlternativeYataKeyEnabled = "pda_alternativeYataKeyEnabled";
@@ -2513,5 +2517,46 @@ class Prefs {
   Future<bool> setShowCases(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kShowCases, value);
+  }
+
+  /// ----------------------------
+  /// Methods for stats analytics
+  /// ----------------------------
+  Future<int> getStatsFirstLoginTimestamp() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStatsFirstLoginTimestamp) ?? 0;
+  }
+
+  Future<bool> setStatsFirstLoginTimestamp(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStatsFirstLoginTimestamp, value);
+  }
+
+  Future<int> getStatsCumulatedAppUseSeconds() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStatsCumulatedAppUseSeconds) ?? 0;
+  }
+
+  Future<bool> setStatsCumulatedAppUseSeconds(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStatsCumulatedAppUseSeconds, value);
+  }
+
+  /// Current valid events:
+  /// `Active_15m_in_4h` active for 15 minutes or more within 4 hours of first login
+  /// `Active_30m_in_24h` active for 30 minutes or more within 24 hours of first login
+  /// `Active_1h_in_3d` active for 1 hour or more within 3 days of first login
+  /// `Active_2h_in_5d` active for 2 hours or more within 5 days of first login
+  /// `Active_4h_in_7d` active for 4 hours or more within 7 days of first login
+  ///
+  /// List formatting: ["15m_4h", "30m_24h", "1h_3d", "2h_5d", "4h_7d"]
+  Future<List<String>> getStatsEventsAchieved() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kStatsEventsAchieved) ?? [];
+  }
+
+  Future<bool> setStatsCumulatedEventsAchieved(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kStatsEventsAchieved, value);
   }
 }

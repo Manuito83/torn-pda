@@ -50,9 +50,9 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/torn-pda-login/native_auth_models.dart';
-import 'package:torn_pda/torn-pda-login/native_auth_provider.dart';
-import 'package:torn_pda/torn-pda-login/native_user_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -3586,7 +3586,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
 
       membersString += "}";
-      
+
       // On iOS, when using the new menu icon for OC, the html doc does not respond for some reason
       // We just wait a second and then add the script (should not be noticeable)
       await Future.delayed(Duration(milliseconds: 1000));
