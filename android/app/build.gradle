@@ -13,7 +13,7 @@ if (flutterRoot == null) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '290'
+    flutterVersionCode = '291'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
@@ -85,6 +85,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.core:core-splashscreen:1.0.0'
+    implementation 'com.google.android.play:integrity:1.1.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
