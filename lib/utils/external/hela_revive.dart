@@ -47,8 +47,12 @@ class HelaRevive {
         } else {
           return "Request has been sent to HeLa. Please pay your reviver a Xanax or 1 million TCD. Thank you!";
         }
+      } else if (response.statusCode == 400) {
+        return "Error: bad payload sent";
       } else if (response.statusCode == 401) {
         return "Error: request denied, please contact HeLa leadership";
+      } else if (response.statusCode == 403) {
+        return "Error: blocked by vendor";
       } else if (response.statusCode == 429) {
         return "Error: you have already submitted a request to be revived";
       } else if (response.statusCode == 499) {
