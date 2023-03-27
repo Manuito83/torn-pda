@@ -7,14 +7,14 @@
     android:layout_margin="8dp"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="8dp"
+    android:padding="10dp"
     android:id="@+id/widget_container">
 
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="36sp"
+        android:textSize="12sp"
         android:textStyle="bold"
         tools:text="Title" />
 
@@ -25,11 +25,18 @@
         android:textSize="18sp"
         tools:text="Message" />
 
-    <ProgressBar
-        android:id="@+id/widget_life_bar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="150dp"
+    <TextView
+        android:id="@+id/widget_energy_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:progress="25"
+        android:textSize="18sp"
+        tools:text="0" />
+
+    <ProgressBar
+        android:id="@+id/widget_energy_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="75dp"
+        android:layout_height="wrap_content"
+        android:progress="0"
         android:progressTint="#00FF00" />
 </LinearLayout>
