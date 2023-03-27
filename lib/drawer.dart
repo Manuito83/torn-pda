@@ -1221,11 +1221,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
 
-    // Set up UserProvider. If key is empty, redirect to the Settings page.
-    // Else, open the default
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    await _userProvider.loadPreferences();
-
+    // User Provider was started in Main
+    // If key is empty, redirect to the Settings page.
     if (!_userProvider.basic.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;

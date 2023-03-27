@@ -58,7 +58,10 @@ dependencies:
   workmanager: ^0.5.1
   font_awesome_flutter: ^10.1.0
   get: ^4.6.3
-  home_widget: ^0.2.0+1
+  home_widget:
+    git:
+      url: https://github.com/Manuito83/home_widget.git
+      ref: manuito
   html: ^0.15.0
   http: ^0.13.4
   lint: ^1.8.1

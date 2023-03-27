@@ -224,6 +224,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeProvider _themeProvider;
+  UserDetailsProvider _userProvider;
 
   @override
   void initState() {
@@ -242,8 +243,11 @@ class _MyAppState extends State<MyApp> {
       // TODO: more here all other actions?
     });
 
-    _loadWidgetData();
-    _startBackgroundUpdate();
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _userProvider.loadPreferences().then((value) {
+      _loadWidgetData();
+      //_startBackgroundUpdate(); TODO
+    });
     // Home widget END ***
   }
 
@@ -299,21 +303,29 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _loadWidgetData() async {
-    try {
-      HomeWidget.getWidgetData<String>('title', defaultValue: '').then((value) async {
-        log(value);
-        UserController _u = Get.put(UserController());
-        String apiKey = _u.apiKey;
-        if (apiKey.isNotEmpty) {
-          var apiResponse = await TornApiCaller().getProfileExtended(limit: 3);
-          if (apiResponse is OwnProfileExtended) {
-            HomeWidget.saveWidgetData<String>('title', apiResponse.energy.current.toString());
-            HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
-          }
-        }
-      });
-    } on PlatformException catch (exception) {
-      log('Error Getting Data. $exception');
+    if (_userProvider.basic.userApiKey.isNotEmpty) {
+      var apiResponse = await TornApiCaller().getProfileExtended(limit: 3);
+      if (apiResponse is OwnProfileExtended) {
+        HomeWidget.saveWidgetData<String>('title', apiResponse.name);
+        HomeWidget.saveWidgetData<String>('message', apiResponse.status.description);
+
+        // Energy
+        int currentEnergy = apiResponse.energy.current;
+        int maxEnergy = apiResponse.energy.maximum;
+        HomeWidget.saveWidgetData<int>('energy_current', currentEnergy);
+        HomeWidget.saveWidgetData<int>('energy_max', maxEnergy);
+        HomeWidget.saveWidgetData<String>('energy_text', "$currentEnergy/$maxEnergy");
+
+        // Nerve
+        int currentNerve = apiResponse.nerve.current;
+        int maxNerve = apiResponse.nerve.maximum;
+        HomeWidget.saveWidgetData<int>('nerve_current', currentNerve);
+        HomeWidget.saveWidgetData<int>('nerve_max', maxNerve);
+        HomeWidget.saveWidgetData<String>('nerve_text', "$currentNerve/$maxNerve");
+
+        // Update widget
+        HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+      }
     }
   }
 
