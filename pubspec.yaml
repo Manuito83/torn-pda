@@ -24,14 +24,15 @@ dependencies:
   animations: ^2.0.2
   audioplayers: ^0.20.1
   bot_toast: ^4.0.1
-  bubble_showcase: ^1.1.0
   cloud_firestore: 4.3.1
   cloud_functions: 4.0.7
+  connectivity_plus: ^2.3.7
   cookie_jar: ^3.0.1
   cupertino_icons: ^1.0.2
   dart_ping: ^6.1.1
   dart_ping_ios: ^1.0.0
-  dio: ^4.0.6
+  dbcrypt: ^2.0.0
+  dio: ^5.0.3
   device_info: ^2.0.3
   dotted_border: ^2.0.0+2
   easy_rich_text: ^1.0.1
@@ -54,7 +55,8 @@ dependencies:
       url: https://github.com/Manuito83/flutter_inappwebview.git
       ref: manuito-beta22
   flutter_local_notifications: 9.2.0
-  flutter_slidable: ^1.2.1
+  flutter_secure_storage: ^6.0.0
+  flutter_slidable: ^2.0.0
   flutter_speed_dial: ^6.0.0
   font_awesome_flutter: ^10.1.0
   get: ^4.6.3
@@ -75,7 +77,6 @@ dependencies:
   shared_preferences: ^2.0.15
   showcaseview: 2.0.0+1
   sliding_up_panel: ^2.0.0+1
-  speech_bubble: 0.0.9
   timeline_tile: ^2.0.0
   timezone: ^0.8.0
   toggle_switch: ^2.0.1

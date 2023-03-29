@@ -12,9 +12,14 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool nerveNotification = false;
   bool nerveLastCheckFull = true;
   List lootAlerts = [];
+  bool lootRangersAlerts = false;
   bool hospitalNotification = false;
   bool drugsNotification = false;
   bool drugsInfluence = false;
+  bool medicalNotification = false;
+  bool medicalInfluence = false;
+  bool boosterNotification = false;
+  bool boosterInfluence = false;
   bool racingNotification = false;
   bool messagesNotification = false;
   bool eventsNotification = false;
@@ -54,9 +59,14 @@ class FirebaseUserModel extends OwnProfileExtended {
       "nerveNotification": nerveNotification,
       "nerveLastCheckFull": nerveLastCheckFull,
       "lootAlerts": lootAlerts,
+      "lootRangersNotification": lootRangersAlerts,
       "hospitalNotification": hospitalNotification,
       "drugsNotification": drugsNotification,
       "drugsInfluence": drugsInfluence,
+      "medicalNotification": medicalNotification,
+      "medicalInfluence": medicalInfluence,
+      "boosterNotification": boosterNotification,
+      "boosterInfluence": boosterInfluence,
       "racingNotification": racingNotification,
       "messagesNotification": messagesNotification,
       "eventsNotification": eventsNotification,
@@ -82,9 +92,14 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..nerveNotification = data["nerveNotification"] ?? false
       ..nerveLastCheckFull = data["nerveLastCheckFull"] ?? false
       ..lootAlerts = data["lootAlerts"] ?? []
+      ..lootRangersAlerts = data["lootRangersNotification"] ?? false
       ..hospitalNotification = data["hospitalNotification"] ?? false
       ..drugsNotification = data["drugsNotification"] ?? false
       ..drugsInfluence = data["drugsInfluence"] ?? false
+      ..medicalNotification = data["medicalNotification"] ?? false
+      ..medicalInfluence = data["medicalInfluence"] ?? false
+      ..boosterNotification = data["boosterNotification"] ?? false
+      ..boosterInfluence = data["boosterInfluence"] ?? false
       ..racingNotification = data["racingNotification"] ?? false
       ..messagesNotification = data["messagesNotification"] ?? false
       ..eventsNotification = data["eventsNotification"] ?? false

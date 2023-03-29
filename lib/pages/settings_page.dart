@@ -18,11 +18,15 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check.dart';
+import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:vibration/vibration.dart';
 
 // Project imports:
@@ -40,8 +44,13 @@ import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
   final Function changeUID;
+  final StatsController statsController;
 
-  SettingsPage({@required this.changeUID, Key key}) : super(key: key);
+  SettingsPage({
+    @required this.changeUID,
+    @required this.statsController,
+    Key key,
+  }) : super(key: key);
 
   @override
   _SettingsPageState createState() => _SettingsPageState();
@@ -123,6 +132,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       SizedBox(height: _extraMargin),
                       _apiKeyWidget(),
                       SizedBox(height: 15),
+                      if (_userToLoad)
+                        Column(
+                          children: [
+                            NativeLoginWidget(),
+                            SizedBox(height: 15),
+                          ],
+                        ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -503,7 +519,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             )
                         ],
                       ),
-
                       Divider(),
                       SizedBox(height: 5),
                       Row(
@@ -540,6 +555,97 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Text(
                           'Choose the source of spied stats. This affects the stats shown when you visit a profile '
                           'in the browser, as well as those shown in the War section (Chaining)',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'ORGANIZED CRIMES',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Nerve bar source",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _naturalNerveBarSourceDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each '
+                          'member of your faction available to plan an organized crime',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'REVIVING SERVICES',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text(
+                              "Choose reviving providers",
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.keyboard_arrow_right_outlined),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return RevivingServicesDialog();
+                                  },
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          "Choose which reviving services you might want to use. "
+                          "If enabled, when you are in hospital you\'ll have the option to call "
+                          "one of their revivers from several places (e.g. Profile and Chaining sections).",
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
@@ -953,7 +1059,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_userToLoad) {
       _expandableController.expanded = false;
       return Padding(
-        padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+        padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
         child: Card(
           child: ExpandablePanel(
             collapsed: null,
@@ -1823,9 +1929,67 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  DropdownButton _naturalNerveBarSourceDropdown() {
+    return DropdownButton<NaturalNerveBarSource>(
+      value: _settingsProvider.naturalNerveBarSource,
+      items: [
+        DropdownMenuItem(
+          value: NaturalNerveBarSource.off,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "Disabled",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: NaturalNerveBarSource.yata,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "YATA",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: NaturalNerveBarSource.tornStats,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "Torn Stats",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          if (value == NaturalNerveBarSource.yata) {
+            _settingsProvider.naturalNerveBarSource = NaturalNerveBarSource.yata;
+          } else if (value == NaturalNerveBarSource.tornStats) {
+            _settingsProvider.naturalNerveBarSource = NaturalNerveBarSource.tornStats;
+          } else {
+            _settingsProvider.naturalNerveBarSource = NaturalNerveBarSource.off;
+          }
+        });
+      },
+    );
+  }
+
   DropdownButton _themeToSyncDropdown() {
     return DropdownButton<String>(
-      value: _settingsProvider.themeToSync,
+      value: _settingsProvider.darkThemeToSyncFromWeb,
       items: const [
         DropdownMenuItem(
           value: "dark",
@@ -1857,7 +2021,7 @@ class _SettingsPageState extends State<SettingsPage> {
       onChanged: (value) {
         if (value == null) return;
         setState(() {
-          _settingsProvider.themeToSync = value;
+          _settingsProvider.darkThemeToSyncFromWeb = value;
         });
       },
     );
@@ -1916,7 +2080,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
 
-      dynamic myProfile = await TornApiCaller().getProfileBasic(forcedApiKey: _myCurrentKey);
+      dynamic myProfile = await TornApiCaller().getOwnProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
@@ -1949,6 +2113,9 @@ class _SettingsPageState extends State<SettingsPage> {
           if (Platform.isAndroid) {
             firestore.setVibrationPattern(_vibrationValue);
           }
+
+          // Signal stat counter initialization
+          widget.statsController.logFirstLoginEver();
         }
       } else if (myProfile is ApiError) {
         setState(() {

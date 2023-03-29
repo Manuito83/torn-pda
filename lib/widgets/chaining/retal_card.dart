@@ -624,7 +624,7 @@ class _RetalCardState extends State<RetalCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(_retal.status);
+    var country = countryCheck(state: _retal.status.state, description: _retal.status.description);
 
     if (_retal.status.color == "blue" || (country != "Torn" && _retal.status.color == "red")) {
       var destination = _retal.status.color == "blue" ? _retal.status.description : country;
@@ -1413,9 +1413,11 @@ class _RetalCardState extends State<RetalCard> {
     bool sslProb,
     Retal retal,
   ) {
-    String xanaxRelative = "SAME as you";
+    String xanaxRelative = "";
     if (xanaxCompare > 0) {
       xanaxRelative = "${xanaxCompare.abs()} MORE than you";
+    } else if (xanaxCompare == 0) {
+      xanaxRelative = "SAME as you";
     } else {
       xanaxRelative = "${xanaxCompare.abs()} LESS than you";
     }
@@ -1435,9 +1437,11 @@ class _RetalCardState extends State<RetalCard> {
     );
     ;
 
-    String refillRelative = "SAME as you";
+    String refillRelative = "";
     if (refillCompare > 0) {
       refillRelative = "${refillCompare.abs()} MORE than you";
+    } else if (refillCompare == 0) {
+      refillRelative = "SAME as you";
     } else {
       refillRelative = "${refillCompare.abs()} LESS than you";
     }
@@ -1456,10 +1460,12 @@ class _RetalCardState extends State<RetalCard> {
       ],
     );
 
-    String enhancementRelative = "SAME as you";
+    String enhancementRelative = "";
     if (enhancementColor == Colors.white) enhancementColor = _themeProvider.mainText;
     if (enhancementCompare > 0) {
       enhancementRelative = "${enhancementCompare.abs()} MORE than you";
+    } else if (enhancementCompare == 0) {
+      enhancementRelative = "SAME as you";
     } else if (enhancementCompare < 0) {
       enhancementRelative = "${enhancementCompare.abs()} LESS than you";
     }
@@ -1478,9 +1484,11 @@ class _RetalCardState extends State<RetalCard> {
       ],
     );
 
-    String cansRelative = "SAME as you";
+    String cansRelative = "";
     if (cansCompare > 0) {
       cansRelative = "${cansCompare.abs()} MORE than you";
+    } else if (cansCompare == 0) {
+      cansRelative = "SAME as you";
     } else if (cansCompare < 0) {
       cansRelative = "${cansCompare.abs()} LESS than you";
     }

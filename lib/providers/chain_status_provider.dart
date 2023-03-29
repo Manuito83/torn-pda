@@ -205,6 +205,12 @@ class ChainStatusProvider extends ChangeNotifier {
     _saveSettings();
   }
 
+  void removePanicTargetById(int id) {
+    panicTargets.removeWhere((element) => element.id == id);
+    notifyListeners();
+    _saveSettings();
+  }
+
   void reorderPanicTarget(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       // removing the item at oldIndex will shorten the list by 1

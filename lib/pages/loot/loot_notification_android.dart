@@ -50,8 +50,6 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -78,7 +76,8 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                 Padding(
                                   padding: const EdgeInsets.all(20.0),
                                   child: Text('Here you can specify your preferred alerting '
-                                      'method and launch time before the loot level is reached'),
+                                      'method and launch time before the loot level is reached '
+                                      '(also applies to Loot Rangers, if available)'),
                                 ),
                                 _rowsWithTypes(),
                                 SizedBox(height: 50),

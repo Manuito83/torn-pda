@@ -16,7 +16,7 @@ import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/stats_calculator.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 
 class WarCardDetails {
   int cardPosition;
@@ -67,10 +67,16 @@ class WarController extends GetxController {
 
   String playerLocation = "";
 
+  bool initialised = false;
+  bool _initWithIntegrity = true;
+  WarController({bool initWithIntegrity = true}) {
+    _initWithIntegrity = initWithIntegrity;
+  }
+
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-    initialise();
+    initialise(needsIntegrityCheck: _initWithIntegrity);
   }
 
   Future<String> addFaction(String factionId, List<TargetModel> targets) async {
@@ -183,7 +189,7 @@ class WarController extends GetxController {
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller().getOtherProfile(playerId: memberKey);
+      dynamic updatedTarget = await TornApiCaller().getOtherProfileExtended(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
@@ -345,12 +351,15 @@ class WarController extends GetxController {
     int numberUpdated = 0;
 
     // Get player's current location
-    final apiPlayer = await TornApiCaller().getProfileBasic();
+    final apiPlayer = await TornApiCaller().getOwnProfileBasic();
     if (apiPlayer is ApiError) {
       return -1;
     }
     final profile = apiPlayer as OwnProfileBasic;
-    playerLocation = countryCheck(profile.status);
+    playerLocation = countryCheck(
+      state: profile.status.state,
+      description: profile.status.description,
+    );
 
     for (FactionModel f in factions) {
       final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
@@ -657,7 +666,9 @@ class WarController extends GetxController {
     update();
   }
 
-  Future initialise() async {
+  /// [needsIntegrityCheck] calls the API. Might not be necessary for simple controller uses
+  /// (e.g.: profile widget)
+  Future initialise({bool needsIntegrityCheck = true}) async {
     String spiesSource = await Prefs().getSpiesSource();
     spiesSource == "yata" ? _spiesSource = SpiesSource.yata : _spiesSource = SpiesSource.tornStats;
 
@@ -724,6 +735,12 @@ class WarController extends GetxController {
       case 'colorAsc':
         currentSort = WarSortType.colorAsc;
         break;
+      case 'notesDes':
+        currentSort = WarSortType.notesDes;
+        break;
+      case 'notesAsc':
+        currentSort = WarSortType.notesAsc;
+        break;
     }
 
     if (_spiesSource == SpiesSource.yata) {
@@ -743,8 +760,11 @@ class WarController extends GetxController {
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
 
-    _integrityCheck();
+    if (needsIntegrityCheck) {
+      _integrityCheck();
+    }
 
+    initialised = true;
     update();
   }
 
@@ -806,6 +826,12 @@ class WarController extends GetxController {
         break;
       case WarSortType.colorAsc:
         sortToSave = 'colorAsc';
+        break;
+      case WarSortType.notesDes:
+        sortToSave = 'notesDes';
+        break;
+      case WarSortType.notesAsc:
+        sortToSave = 'notesAsc';
         break;
     }
     Prefs().setWarMembersSort(sortToSave);

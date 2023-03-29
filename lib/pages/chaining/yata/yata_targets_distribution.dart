@@ -46,8 +46,6 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           drawer: Drawer(),

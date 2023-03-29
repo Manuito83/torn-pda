@@ -13,6 +13,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/tabs_excess_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
@@ -39,8 +41,6 @@ class WebViewStackView extends StatefulWidget {
 }
 
 class _WebViewStackViewState extends State<WebViewStackView> with TickerProviderStateMixin {
-  GlobalKey _showcaseTabsGeneral = GlobalKey();
-
   ThemeProvider _themeProvider;
   WebViewProvider _webViewProvider;
   SettingsProvider _settingsProvider;
@@ -52,6 +52,12 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
 
   AnimationController _animationController;
   Animation<double> _secondaryTabsOpacity;
+
+  // Showcases
+  bool _showCasesNeedToWait = false;
+  GlobalKey _showcaseTabsGeneral = GlobalKey();
+  GlobalKey _showCaseFavoritesButton = GlobalKey();
+  GlobalKey _showCaseNewTabButton = GlobalKey();
 
   @override
   void initState() {
@@ -99,11 +105,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
         child: ShowCaseWidget(
-          builder: Builder(
-            builder: (_) => Scaffold(
+          builder: Builder(builder: (_) {
+            _launchShowCases(_);
+            return Scaffold(
               backgroundColor: _themeProvider.canvas,
               body: FutureBuilder(
                 future: providerInitialised,
@@ -186,11 +191,39 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                   }
                 },
               ),
-            ),
-          ),
+            );
+          }),
         ),
       ),
     );
+  }
+
+  void _launchShowCases(BuildContext _) {
+    Future.delayed(Duration(seconds: 1), () async {
+      List showCases = <GlobalKey<State<StatefulWidget>>>[];
+      // Check that there is no pending showcases to show by the browser
+      // If there is, wait until we open the browser for the next time
+      if ((widget.dialog && !_settingsProvider.showCases.contains("webview_closeButton")) ||
+          (!widget.dialog && !_settingsProvider.showCases.contains("webview_titleBar"))) {
+        _showCasesNeedToWait = true;
+      }
+
+      // Show tab bar showcases
+      if (!_showCasesNeedToWait) {
+        if (!_settingsProvider.showCases.contains("tabs_favoritesButton")) {
+          _settingsProvider.addShowCase = "tabs_favoritesButton";
+          showCases.add(_showCaseFavoritesButton);
+        }
+        if (!_settingsProvider.showCases.contains("tabs_newTabButton")) {
+          _settingsProvider.addShowCase = "tabs_newTabButton";
+          showCases.add(_showCaseNewTabButton);
+        }
+      }
+
+      if (showCases.isNotEmpty) {
+        ShowCaseWidget.of(_).startShowCase(showCases);
+      }
+    });
   }
 
   void _closeWithError() {
@@ -242,6 +275,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         } else {
           _webViewProvider.addTab(
             url: _webViewProvider.tabList[0].currentUrl,
+            sleepTab: true, // Needs sleep tab or it will crash in iOS 15.5 to 15.9
             chatRemovalActive: _webViewProvider.tabList[0].chatRemovalActiveTab,
             historyBack: _webViewProvider.tabList[0].historyBack,
             historyForward: _webViewProvider.tabList[0].historyForward,
@@ -437,53 +471,124 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                 ),
               ),
             ),
-            Row(
-              children: [
-                VerticalDivider(
-                  width: 2,
-                  thickness: 2,
-                  color: _themeProvider.mainText,
+            if (_settingsProvider.showFavoritesInTabBar)
+              Showcase(
+                key: _showCaseFavoritesButton,
+                title: 'Favorites menu',
+                description: '\nTap to show a quick list of shortcuts.'
+                    '\n\nLong-press to add a new shortcut to the current page.',
+                targetPadding: const EdgeInsets.all(10),
+                disableMovingAnimation: true,
+                textColor: _themeProvider.mainText,
+                tooltipBackgroundColor: _themeProvider.secondBackground,
+                descTextStyle: TextStyle(fontSize: 13),
+                tooltipPadding: EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    VerticalDivider(
+                      width: 2,
+                      thickness: 2,
+                      color: _themeProvider.mainText,
+                    ),
+                    GestureDetector(
+                      child: Container(
+                        color: _themeProvider.navSelected,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            width: 24,
+                            child: Icon(
+                              MdiIcons.heartPlusOutline,
+                              color: _themeProvider.mainText,
+                            ),
+                          ),
+                        ),
+                      ),
+                      onTap: () async {
+                        return showDialog<void>(
+                          context: context,
+                          barrierDismissible: false, // user must tap button!
+                          builder: (BuildContext context) {
+                            return WebviewShortcutsDialog(fromShortcut: true);
+                          },
+                        );
+                      },
+                      onLongPress: () {
+                        return showDialog<void>(
+                          context: context,
+                          barrierDismissible: false, // user must tap button!
+                          builder: (BuildContext context) {
+                            return CustomShortcutDialog(
+                              themeProvider: _themeProvider,
+                              title: _webViewProvider.currentTabTitle(),
+                              url: _webViewProvider.currentTabUrl(),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                GestureDetector(
-                  child: Container(
-                    color: _themeProvider.navSelected,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        width: 24,
-                        child: Icon(
-                          Icons.add_circle_outline,
-                          color: _themeProvider.mainText,
+              ),
+            Showcase(
+              key: _showCaseNewTabButton,
+              title: 'New tab button',
+              description: '\nTap to add a new tab.'
+                  '\n\nLong-press to change between icons and page titles in your tabs.',
+              targetPadding: const EdgeInsets.all(10),
+              disableMovingAnimation: true,
+              textColor: _themeProvider.mainText,
+              tooltipBackgroundColor: _themeProvider.secondBackground,
+              descTextStyle: TextStyle(fontSize: 13),
+              tooltipPadding: EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  VerticalDivider(
+                    width: _settingsProvider.showFavoritesInTabBar ? 1 : 2,
+                    thickness: _settingsProvider.showFavoritesInTabBar ? 1 : 2,
+                    color: _themeProvider.mainText,
+                  ),
+                  GestureDetector(
+                    child: Container(
+                      color: _themeProvider.navSelected,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          width: 24,
+                          child: Icon(
+                            Icons.add_circle_outline,
+                            color: _themeProvider.mainText,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  onTap: () async {
-                    _webViewProvider.addTab();
-                    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                    if (!_settingsProvider.showCases.contains("tabs_general")) {
-                      ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
-                      _settingsProvider.addShowCase = "tabs_general";
-                    }
+                    onTap: () async {
+                      _webViewProvider.addTab();
+                      _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                      if (!_settingsProvider.showCases.contains("tabs_general")) {
+                        ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
+                        _settingsProvider.addShowCase = "tabs_general";
+                      }
 
-                    if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
-                      Prefs().setExcessTabsAlerted(true);
-                      return showDialog<void>(
-                        context: _,
-                        barrierDismissible: false,
-                        builder: (BuildContext context) {
-                          return const TabsExcessDialog();
-                        },
-                      );
-                    }
-                  },
-                  onLongPress: () {
-                    _webViewProvider.useTabIcons
-                        ? _webViewProvider.changeUseTabIcons(false)
-                        : _webViewProvider.changeUseTabIcons(true);
-                  },
-                ),
-              ],
+                      if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
+                        Prefs().setExcessTabsAlerted(true);
+                        return showDialog<void>(
+                          context: _,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return const TabsExcessDialog();
+                          },
+                        );
+                      }
+                    },
+                    onLongPress: () {
+                      _webViewProvider.useTabIcons
+                          ? _webViewProvider.changeUseTabIcons(false)
+                          : _webViewProvider.changeUseTabIcons(true);
+                    },
+                  ),
+                ],
+              ),
             ),
           ],
         ),

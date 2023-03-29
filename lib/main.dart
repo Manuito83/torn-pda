@@ -41,12 +41,14 @@ import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.9.6';
-const String androidCompilation = '282';
-const String iosCompilation = '282';
+const String appVersion = '3.0.0';
+const String androidCompilation = '291';
+const String iosCompilation = '291';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -99,10 +101,9 @@ Future<void> main() async {
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
-  // TODO: remove class?
-  //HttpOverrides.global = MyHttpOverrides();
-  ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
-  SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
+  // TODO: remove certificate?
+  //ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+  //SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
 
   // Needs to register plugin for iOS
   if (Platform.isIOS) {
@@ -160,6 +161,10 @@ Future<void> main() async {
         ChangeNotifierProvider<WebViewProvider>(
           create: (context) => WebViewProvider(),
         ),
+        // Native login
+        ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
+        ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
+        // ------------
       ],
       child: MyApp(),
     ),
@@ -201,7 +206,6 @@ class _MyAppState extends State<MyApp> {
                   color: _themeProvider.statusBar,
                 ),
                 primarySwatch: Colors.blueGrey,
-                visualDensity: VisualDensity.adaptivePlatformDensity,
                 brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
               ),
               home: DrawerPage(),
@@ -212,18 +216,23 @@ class _MyAppState extends State<MyApp> {
       ),
     );
 
+    var orientation = mq.data.orientation;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: _themeProvider.statusBar,
         systemNavigationBarColor:
-            mq.data.orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
-        systemNavigationBarIconBrightness: mq.data.orientation == Orientation.landscape
+            orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: orientation == Orientation.landscape
             ? _themeProvider.currentTheme == AppTheme.light
                 ? Brightness.dark
                 : Brightness.light
             : Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+            ? orientation == Orientation.portrait
+                ? Brightness.dark
+                : Brightness.light
+            : Brightness.dark,
+        statusBarIconBrightness: orientation == Orientation.portrait ? Brightness.light : Brightness.light,
       ),
     );
 

@@ -12,6 +12,9 @@ class Prefs {
   final String _kAppVersion = "pda_appVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  // Native login
+  final String _kNativePlayerEmail = "pda_nativePlayerEmail";
+  final String _kLastAuthRedirect = "pda_lastAuthRedirect";
   // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
@@ -62,6 +65,7 @@ class Prefs {
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kDebugMessages = "pda_debugMessages";
+  final String _kShowFavoritesInTabBar = "pda_showFavoritesInTabBar";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
@@ -98,6 +102,7 @@ class Prefs {
   final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
   final String _kActiveRestocks = "pda_activeRestocks";
+  final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
   final String _kRestocksEnabled = "pda_restocksEnabled";
   final String _kTravelNotificationType = "pda_travelNotificationType";
@@ -130,8 +135,7 @@ class Prefs {
   final String _kShortcutTile = "pda_shortcutTile";
   final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
-  final String _kUseNukeRevive = "pda_useNukeRevive";
-  final String _kUseUhcRevive = "pda_useUhcRevive";
+
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
   final String _kWarnAboutExcessEnergyThreshold = "pda_warnAboutExcessEnergyThreshold";
@@ -169,6 +173,10 @@ class Prefs {
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+  // Reviving
+  final String _kUseNukeRevive = "pda_useNukeRevive";
+  final String _kUseUhcRevive = "pda_useUhcRevive";
+  final String _kUseHelaRevive = "pda_useHelaRevive";
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
@@ -200,8 +208,23 @@ class Prefs {
   final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
+  // NNB
+  final String _kNaturalNerveBarSource = "pda_naturalNerveBarSource";
+  final String _kNaturalNerveYataTime = "pda_naturalNerveYataTime";
+  final String _kNaturalNerveYataModel = "pda_naturalNerveYataModel";
+  final String _kNaturalNerveTornStatsTime = "pda_naturalNerveTornStatsTime";
+  final String _kNaturalNerveTornStatsModel = "pda_naturalNerveTornStatsModel";
+  // Stakeouts
+  final String _kStakeoutsEnabled = "pda_stakeoutsEnabled";
+  final String _kStakeouts = "pda_stakeouts";
+  final String _kStakeoutsSleepTime = "pda_stakeoutsSleepTime";
+  final String _kStakeoutsFetchDelayLimit = "pda_stakeoutsFetchDelayLimit";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
+  // Stats
+  final String _kStatsFirstLoginTimestamp = "pda_statsFirstLoginTimestamp";
+  final String _kStatsCumulatedAppUseSeconds = "pda_statsCumulatedAppUseSeconds";
+  final String _kStatsEventsAchieved = "pda_statsEventsAchieved";
 
   // Alternative keys
   final String _kAlternativeYataKeyEnabled = "pda_alternativeYataKeyEnabled";
@@ -267,6 +290,29 @@ class Prefs {
   Future<bool> setLastAppUse(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kLastAppUse, value);
+  }
+
+  /// ----------------------------
+  /// Methods for native login
+  /// ----------------------------
+  Future<String> getNativePlayerEmail() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNativePlayerEmail) ?? '';
+  }
+
+  Future<bool> setNativePlayerEmail(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNativePlayerEmail, value);
+  }
+
+  Future<int> getLastAuthRedirect() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kLastAuthRedirect) ?? 0;
+  }
+
+  Future<bool> setLastAuthRedirect(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kLastAuthRedirect, value);
   }
 
   /// ----------------------------
@@ -708,6 +754,19 @@ class Prefs {
   }
 
   /// ----------------------------
+  /// Methods for favorites icon in tab bar
+  /// ----------------------------
+  Future<bool> getShowFavoritesInTabBar() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowFavoritesInTabBar) ?? true;
+  }
+
+  Future<bool> setShowFavoritesInTabBar(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowFavoritesInTabBar, value);
+  }
+
+  /// ----------------------------
   /// Methods for default browser
   /// ----------------------------
   Future<String> getDefaultBrowser() async {
@@ -880,6 +939,59 @@ class Prefs {
   Future<bool> setSpiesSource(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kSpiesSource, value);
+  }
+
+  /// ----------------------------
+  /// Methods for OC Crimes NNB Source
+  /// ----------------------------
+  Future<String> getNaturalNerveBarSource() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNaturalNerveBarSource) ?? 'yata';
+  }
+
+  Future<bool> setNaturalNerveBarSource(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNaturalNerveBarSource, value);
+  }
+
+  Future<int> getNaturalNerveYataTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kNaturalNerveYataTime) ?? 0;
+  }
+
+  Future<bool> setNaturalNerveYataTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kNaturalNerveYataTime, value);
+  }
+
+  Future<String> getNaturalNerveYataModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNaturalNerveYataModel) ?? '';
+  }
+
+  Future<bool> setNaturalNerveYataModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNaturalNerveYataModel, value);
+  }
+
+  Future<int> getNaturalNerveTornStatsTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kNaturalNerveTornStatsTime) ?? 0;
+  }
+
+  Future<bool> setNaturalNerveTornStatsTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kNaturalNerveTornStatsTime, value);
+  }
+
+  Future<String> getNaturalNerveTornStatsModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNaturalNerveTornStatsModel) ?? '';
+  }
+
+  Future<bool> setNaturalNerveTornStatsModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNaturalNerveTornStatsModel, value);
   }
 
   /// ----------------------------
@@ -1161,6 +1273,16 @@ class Prefs {
   Future<bool> setActiveRestocks(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kActiveRestocks, value);
+  }
+
+  Future<List<String>> getHiddenForeignStocks() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHiddenForeignStocks) ?? [];
+  }
+
+  Future<bool> setHiddenForeignStocks(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kHiddenForeignStocks, value);
   }
 
   Future<bool> getCountriesAlphabeticalFilter() async {
@@ -1446,26 +1568,6 @@ class Prefs {
     return prefs.setBool(_kDisableTravelSection, value);
   }
 
-  Future<bool> getUseNukeRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseNukeRevive) ?? true;
-  }
-
-  Future<bool> setUseNukeRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseNukeRevive, value);
-  }
-
-  Future<bool> getUseUhcRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseUhcRevive) ?? false;
-  }
-
-  Future<bool> setUseUhcRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseUhcRevive, value);
-  }
-
   Future<bool> getWarnAboutChains() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kWarnAboutChains) ?? true;
@@ -1564,6 +1666,40 @@ class Prefs {
   Future<bool> setExpandNetworth(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExpandNetworth, value);
+  }
+
+  /// ----------------------------
+  /// Methods for reviving
+  /// ----------------------------
+
+  Future<bool> getUseNukeRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseNukeRevive) ?? true;
+  }
+
+  Future<bool> setUseNukeRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseNukeRevive, value);
+  }
+
+  Future<bool> getUseUhcRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseUhcRevive) ?? false;
+  }
+
+  Future<bool> setUseUhcRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseUhcRevive, value);
+  }
+
+  Future<bool> getUseHelaRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseHelaRevive) ?? false;
+  }
+
+  Future<bool> setUseHelaRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseHelaRevive, value);
   }
 
   /// ----------------------------
@@ -1828,6 +1964,49 @@ class Prefs {
   Future<bool> setPinnedItems(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kPinnedItems, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Stakeouts
+  /// ----------------------------
+  Future<bool> getStakeoutsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStakeoutsEnabled) ?? true;
+  }
+
+  Future<bool> setStakeoutsEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStakeoutsEnabled, value);
+  }
+
+  Future<List<String>> getStakeouts() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kStakeouts) ?? [];
+  }
+
+  Future<bool> setStakeouts(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kStakeouts, value);
+  }
+
+  Future<int> getStakeoutsSleepTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStakeoutsSleepTime) ?? 0;
+  }
+
+  Future<bool> setStakeoutsSleepTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStakeoutsSleepTime, value);
+  }
+
+  Future<int> getStakeoutsFetchDelayLimit() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStakeoutsFetchDelayLimit) ?? 60;
+  }
+
+  Future<bool> setStakeoutsFetchDelayLimit(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStakeoutsFetchDelayLimit, value);
   }
 
   /// ----------------------------
@@ -2338,5 +2517,46 @@ class Prefs {
   Future<bool> setShowCases(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kShowCases, value);
+  }
+
+  /// ----------------------------
+  /// Methods for stats analytics
+  /// ----------------------------
+  Future<int> getStatsFirstLoginTimestamp() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStatsFirstLoginTimestamp) ?? 0;
+  }
+
+  Future<bool> setStatsFirstLoginTimestamp(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStatsFirstLoginTimestamp, value);
+  }
+
+  Future<int> getStatsCumulatedAppUseSeconds() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStatsCumulatedAppUseSeconds) ?? 0;
+  }
+
+  Future<bool> setStatsCumulatedAppUseSeconds(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStatsCumulatedAppUseSeconds, value);
+  }
+
+  /// Current valid events:
+  /// `Active_15m_in_4h` active for 15 minutes or more within 4 hours of first login
+  /// `Active_30m_in_24h` active for 30 minutes or more within 24 hours of first login
+  /// `Active_1h_in_3d` active for 1 hour or more within 3 days of first login
+  /// `Active_2h_in_5d` active for 2 hours or more within 5 days of first login
+  /// `Active_4h_in_7d` active for 4 hours or more within 7 days of first login
+  ///
+  /// List formatting: ["15m_4h", "30m_24h", "1h_3d", "2h_5d", "4h_7d"]
+  Future<List<String>> getStatsEventsAchieved() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kStatsEventsAchieved) ?? [];
+  }
+
+  Future<bool> setStatsCumulatedEventsAchieved(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kStatsEventsAchieved, value);
   }
 }

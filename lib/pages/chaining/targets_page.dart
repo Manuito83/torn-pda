@@ -99,10 +99,12 @@ class _TargetsPageState extends State<TargetsPage> {
     TargetSort(type: TargetSortType.nameAsc),
     TargetSort(type: TargetSortType.lifeDes),
     TargetSort(type: TargetSortType.lifeAsc),
-    TargetSort(type: TargetSortType.colorAsc),
-    TargetSort(type: TargetSortType.colorDes),
     TargetSort(type: TargetSortType.onlineAsc),
     TargetSort(type: TargetSortType.onlineDes),
+    TargetSort(type: TargetSortType.colorAsc),
+    TargetSort(type: TargetSortType.colorDes),
+    TargetSort(type: TargetSortType.notesDes),
+    TargetSort(type: TargetSortType.notesAsc),
   ];
 
   final _popupOptionsChoices = <TargetsOptions>[
@@ -617,6 +619,12 @@ class _TargetsPageState extends State<TargetsPage> {
         break;
       case TargetSortType.onlineAsc:
         _targetsProvider.sortTargets(TargetSortType.onlineAsc);
+        break;
+      case TargetSortType.notesDes:
+        _targetsProvider.sortTargets(TargetSortType.notesDes);
+        break;
+      case TargetSortType.notesAsc:
+        _targetsProvider.sortTargets(TargetSortType.notesAsc);
         break;
     }
   }

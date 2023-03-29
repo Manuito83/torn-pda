@@ -10,6 +10,7 @@ import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_card.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_options.dart';
@@ -26,16 +27,22 @@ class RankedWarsPage extends StatefulWidget {
 class _RankedWarsPageState extends State<RankedWarsPage> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+  UserDetailsProvider _userProvider;
 
   Future _rankedWarsFetched;
   RankedWarsModel _rankedWarsModel = RankedWarsModel();
 
   int _timeNow;
+  int _ownFaction = 0;
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _ownFaction = _userProvider.basic.faction.factionId ?? 0;
+
     _rankedWarsFetched = _fetchRankedWards();
     _timeNow = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   }
@@ -51,19 +58,19 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
           if (_rankedWarsModel != null) {
             return DefaultTabController(
               length: 3,
-              child: Scaffold(
-                backgroundColor: _themeProvider.canvas,
-                appBar: _settingsProvider.appBarTop
-                    ? buildAppBarSuccess(context)
-                    : new PreferredSize(
-                        preferredSize: Size.fromHeight(kToolbarHeight),
-                        child: new Container(
-                          color: _themeProvider.currentTheme == AppTheme.light
-                              ? MediaQuery.of(context).orientation == Orientation.portrait
-                                  ? Colors.blueGrey
-                                  : _themeProvider.canvas
-                              : _themeProvider.canvas,
-                          child: new SafeArea(
+              child: SafeArea(
+                child: Scaffold(
+                  backgroundColor: _themeProvider.canvas,
+                  appBar: _settingsProvider.appBarTop
+                      ? buildAppBarSuccess(context)
+                      : new PreferredSize(
+                          preferredSize: Size.fromHeight(kToolbarHeight),
+                          child: Container(
+                            color: _themeProvider.currentTheme == AppTheme.light
+                                ? MediaQuery.of(context).orientation == Orientation.portrait
+                                    ? Colors.blueGrey
+                                    : _themeProvider.canvas
+                                : _themeProvider.canvas,
                             child: Column(
                               children: <Widget>[
                                 Expanded(child: new Container()),
@@ -78,45 +85,49 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                             ),
                           ),
                         ),
-                      ),
-                bottomNavigationBar: !_settingsProvider.appBarTop
-                    ? SizedBox(
-                        height: AppBar().preferredSize.height,
-                        child: buildAppBarSuccess(context),
-                      )
-                    : null,
-                body: Container(
-                  color: _themeProvider.canvas,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: TabBarView(
-                          children: [
-                            _tabActive(),
-                            _tabUpcoming(),
-                            _tabFinished(),
-                          ],
+                  bottomNavigationBar: !_settingsProvider.appBarTop
+                      ? SizedBox(
+                          height: AppBar().preferredSize.height,
+                          child: buildAppBarSuccess(context),
+                        )
+                      : null,
+                  body: Container(
+                    color: _themeProvider.canvas,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              _tabActive(),
+                              _tabUpcoming(),
+                              _tabFinished(),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             );
           } else {
-            return Scaffold(
-              backgroundColor: _themeProvider.canvas,
-              appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-              body: Container(color: _themeProvider.canvas, child: _fetchError()),
+            return SafeArea(
+              child: Scaffold(
+                backgroundColor: _themeProvider.canvas,
+                appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
+                body: Container(color: _themeProvider.canvas, child: _fetchError()),
+              ),
             );
           }
         } else {
-          return Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-            body: Container(
-                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-                child: Center(child: CircularProgressIndicator())),
+          return SafeArea(
+            child: Scaffold(
+              backgroundColor: _themeProvider.canvas,
+              appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
+              body: Container(
+                  color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                  child: Center(child: CircularProgressIndicator())),
+            ),
           );
         }
       },
@@ -126,13 +137,37 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabActive() {
     List<Widget> activeWarsCards = <Widget>[];
 
-    _rankedWarsModel.rankedwars.forEach((key, value) {
-      if (value.war.start < _timeNow && value.war.end == 0) {
+    var sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars.entries.toList()
+      ..sort((e1, e2) => e1.value.war.start.compareTo(e2.value.war.start)));
+
+    sortedByValueMap.forEach((key, value) {
+      if (value.war.start < _timeNow && value.war.end == 0 && value.factions.containsKey(_ownFaction.toString())) {
+        activeWarsCards.add(
+          Column(
+            children: [
+              SizedBox(height: 10),
+              RankedWarCard(
+                rankedWar: value,
+                status: RankedWarStatus.active,
+                warId: key,
+                ownFactionId: _ownFaction,
+                key: UniqueKey(),
+              ),
+              Divider(),
+            ],
+          ),
+        );
+      }
+    });
+
+    sortedByValueMap.forEach((key, value) {
+      if (value.war.start < _timeNow && value.war.end == 0 && !value.factions.containsKey(_ownFaction.toString())) {
         activeWarsCards.add(
           RankedWarCard(
             rankedWar: value,
             status: RankedWarStatus.active,
             warId: key,
+            ownFactionId: _ownFaction,
             key: UniqueKey(),
           ),
         );
@@ -143,7 +178,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       children: <Widget>[
         Expanded(
           child: ListView(
-            children: activeWarsCards.reversed.toList(),
+            children: activeWarsCards,
           ),
         ),
       ],
@@ -153,13 +188,37 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabUpcoming() {
     List<Widget> upComingWars = <Widget>[];
 
-    _rankedWarsModel.rankedwars.forEach((key, value) {
-      if (value.war.start > _timeNow) {
+    var sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars.entries.toList()
+      ..sort((e1, e2) => e1.value.war.start.compareTo(e2.value.war.start)));
+
+    sortedByValueMap.forEach((key, value) {
+      if (value.war.start > _timeNow && value.factions.containsKey(_ownFaction.toString())) {
+        upComingWars.add(
+          Column(
+            children: [
+              SizedBox(height: 10),
+              RankedWarCard(
+                rankedWar: value,
+                status: RankedWarStatus.active,
+                warId: key,
+                ownFactionId: _ownFaction,
+                key: UniqueKey(),
+              ),
+              Divider(),
+            ],
+          ),
+        );
+      }
+    });
+
+    sortedByValueMap.forEach((key, value) {
+      if (value.war.start > _timeNow && !value.factions.containsKey(_ownFaction.toString())) {
         upComingWars.add(
           RankedWarCard(
             rankedWar: value,
-            status: RankedWarStatus.upcoming,
+            status: RankedWarStatus.active,
             warId: key,
+            ownFactionId: _ownFaction,
             key: UniqueKey(),
           ),
         );
@@ -170,7 +229,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       children: <Widget>[
         Expanded(
           child: ListView(
-            children: upComingWars.reversed.toList(),
+            children: upComingWars,
           ),
         ),
       ],
@@ -180,13 +239,37 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabFinished() {
     List<Widget> finishedWars = <Widget>[];
 
-    _rankedWarsModel.rankedwars.forEach((key, value) {
-      if (value.war.end != 0 && value.war.end < _timeNow) {
+    var sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars.entries.toList()
+      ..sort((e1, e2) => e1.value.war.start.compareTo(e2.value.war.start)));
+
+    sortedByValueMap.forEach((key, value) {
+      if (value.war.end != 0 && value.war.end < _timeNow && value.factions.containsKey(_ownFaction.toString())) {
+        finishedWars.add(
+          Column(
+            children: [
+              SizedBox(height: 10),
+              RankedWarCard(
+                rankedWar: value,
+                status: RankedWarStatus.active,
+                warId: key,
+                ownFactionId: _ownFaction,
+                key: UniqueKey(),
+              ),
+              Divider(),
+            ],
+          ),
+        );
+      }
+    });
+
+    sortedByValueMap.forEach((key, value) {
+      if (value.war.end != 0 && value.war.end < _timeNow && !value.factions.containsKey(_ownFaction.toString())) {
         finishedWars.add(
           RankedWarCard(
             rankedWar: value,
-            status: RankedWarStatus.finished,
+            status: RankedWarStatus.active,
             warId: key,
+            ownFactionId: _ownFaction,
             key: UniqueKey(),
           ),
         );

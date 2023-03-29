@@ -47,8 +47,6 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -75,7 +73,8 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
                                 Padding(
                                   padding: const EdgeInsets.all(20.0),
                                   child: Text('Here you can specify your preferred notification'
-                                      ' launch time before the loot level is reached'),
+                                      ' launch time before the loot level is reached '
+                                      '(also applies to Loot Rangers, if available)'),
                                 ),
                                 _rowsWithTypes(),
                                 SizedBox(height: 50),

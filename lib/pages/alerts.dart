@@ -21,6 +21,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
+import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import 'alerts/stockmarket_alerts_page.dart';
@@ -232,6 +235,52 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.medicalNotification ?? false,
+                          title: const Text("Medical cooldown"),
+                          subtitle: const Text(
+                            "Get notified when your medical cooldown "
+                            "has expired",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.medicalNotification = value;
+                            });
+                            firestore.subscribeToMedicalNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.boosterNotification ?? false,
+                          title: const Text("Booster cooldown"),
+                          subtitle: const Text(
+                            "Get notified when your booster cooldown "
+                            "has expired",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.boosterNotification = value;
+                            });
+                            firestore.subscribeToBoosterNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.lootAlerts.isNotEmpty ?? false,
                           title: const Text("Loot"),
                           subtitle: const Text(
@@ -255,6 +304,48 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               // Refresh lootAlerts (check or uncheck box)
                             });
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.lootRangersAlerts ?? false,
+                          title: Row(
+                            children: [
+                              const Text("Loot Rangers attack"),
+                              SizedBox(width: 5),
+                              GestureDetector(
+                                onTap: () async {
+                                  await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return LootRangersExplanationDialog(themeProvider: _themeProvider);
+                                    },
+                                  );
+                                },
+                                child: Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                ),
+                              )
+                            ],
+                          ),
+                          subtitle: Text(
+                            "Get notified shortly before a Loot Ranger attack is about to take place "
+                            ", including attack order",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) async {
+                            setState(() {
+                              _firebaseUserModel?.lootRangersAlerts = value;
+                            });
+                            firestore.subscribeToLootRangersNotification(value);
                           },
                         ),
                       ),
@@ -908,7 +999,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               // We save the key because the API call will reset it
               final savedKey = _userProv.basic.userApiKey;
 
-              final dynamic myProfile = await TornApiCaller().getProfileBasic();
+              final dynamic myProfile = await TornApiCaller().getOwnProfileBasic();
 
               if (myProfile is OwnProfileBasic) {
                 myProfile

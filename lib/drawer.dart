@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -32,13 +33,18 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
+import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/stakeouts_controller.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
@@ -47,8 +53,10 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -56,8 +64,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  final int _settingsPosition = 10;
-  final int _aboutPosition = 11;
+  final int _settingsPosition = 11;
+  final int _aboutPosition = 12;
   var _allowSectionsWithoutKey = <int>[];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -68,6 +76,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Chaining",
     "Loot",
     "Friends",
+    "Stakeouts",
     "Awards",
     "Items",
     "Ranked Wars",
@@ -78,11 +87,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Tips"
   ];
 
+  final StatsController _statsController = StatsController();
+
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
   WebViewProvider _webViewProvider;
+  StakeoutsController _s;
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -119,6 +131,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Start stats counting
+    _statsController.logCheckIn();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // STARTS QUICK ACTIONS
       final QuickActions quickActions = QuickActions();
@@ -139,8 +156,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       });
     });
     // ENDS QUICK ACTIONS
-
-    WidgetsBinding.instance.addObserver(this);
 
     _allowSectionsWithoutKey = [
       _settingsPosition,
@@ -261,8 +276,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                   : _themeProvider.currentTheme == AppTheme.light
                       ? Brightness.dark
                       : Brightness.light,
-          statusBarBrightness: Brightness.dark,
-          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+              ? MediaQuery.of(context).orientation == Orientation.landscape
+                  ? Brightness.dark
+                  : Brightness.light
+              : Brightness.dark,
+          statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+              ? Brightness.light
+              : Brightness.light,
         ),
       );
     });
@@ -270,13 +291,31 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.paused) {
+      // Stop stakeouts
+      if (_s != null) {
+        _s.stopTimer();
+        log("Stakeouts stopped");
+      }
+
+      // Stop stats counting
+      _statsController.logCheckOut();
+    } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
 
       // Handle notifications
       _getBackGroundNotifications();
       _removeExistingNotifications();
+
+      // Resume stakeouts
+      if (_s != null) {
+        _s.startTimer();
+        log("Stakeouts resumed");
+      }
+
+      // Resume stats counting
+      _statsController.logCheckIn();
     }
   }
 
@@ -409,6 +448,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool nerve = false;
     bool energy = false;
     bool drugs = false;
+    bool medical = false;
+    bool booster = false;
     bool refills = false;
     bool stockMarket = false;
     bool assists = false;
@@ -455,6 +496,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       energy = true;
     } else if (channel.contains("Alerts drugs")) {
       drugs = true;
+    } else if (channel.contains("Alerts medical")) {
+      medical = true;
+    } else if (channel.contains("Alerts booster")) {
+      booster = true;
     } else if (channel.contains("Alerts refills")) {
       refills = true;
     } else if (channel.contains("Alerts stocks")) {
@@ -505,6 +550,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (drugs) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#drugs-items";
+    } else if (medical) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+    } else if (booster) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#boosters-items";
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
@@ -569,22 +620,28 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             }
 
             String xanaxString = "";
-            if (xanaxComparison.isNegative) {
+            if (xanaxComparison < 0) {
               xanaxString = "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
+            } else if (xanaxComparison == 0) {
+              xanaxString = "\n- Xanax: SAME as you";
             } else {
               xanaxString = "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
             }
 
             String refillsString = "";
-            if (refillsComparison.isNegative) {
+            if (refillsComparison < 0) {
               refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+            } else if (refillsComparison == 0) {
+              refillsString = "\n- Refills (E): SAME as you";
             } else {
               refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
             }
 
             String drinksString = "";
-            if (drinksComparison.isNegative) {
+            if (drinksComparison < 0) {
               drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+            } else if (drinksComparison == 0) {
+              drinksString = "\n- Drinks (E): SAME as you";
             } else {
               drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
             }
@@ -618,8 +675,45 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         contentPadding: const EdgeInsets.all(10),
       );
     } else if (loot) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      var incomingIds = assistId.split(",");
+      if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
+        // This is a standard loot alert for a single NPC
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      } else if (incomingIds[0].contains("[")) {
+        // This is a Loot Rangers alert for one or more NPCs
+        var ids = <String>[];
+        var names = <String>[];
+        var notes = <String>[];
+        var colors = <String>[];
+        for (var i = 0; i < incomingIds.length; i++) {
+          var parts = incomingIds[i].split("[");
+          names.add(parts[0]);
+          ids.add(parts[1].replaceAll("]", ""));
+          colors.add("green");
+          if (i == 0) {
+            notes.add("Attacks due to commence at $bulkDetails TCT!");
+          } else {
+            notes.add("");
+          }
+        }
+
+        // Open chaining browser for Loot Rangers
+        _webViewProvider.openBrowserPreference(
+            context: context,
+            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+            useDialog: false,
+            isChainingBrowser: true,
+            awaitable: true,
+            chainingPayload: ChainingPayload()
+              ..attackIdList = ids
+              ..attackNameList = names
+              ..attackNotesList = notes
+              ..attackNotesColorList = colors
+              ..showNotes = true
+              ..showBlankNotes = false
+              ..showOnlineFactionWarning = false);
+      }
     }
 
     if (launchBrowser) {
@@ -663,11 +757,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('drugs')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';
-        // Medical is only in manual notifications, payload comes from Profile
       } else if (payload.contains('medical')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#medical-items';
-        // Booster is only in manual notifications, payload comes from Profile
       } else if (payload.contains('booster')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#boosters-items';
@@ -681,6 +773,46 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         launchBrowser = true;
         final npcId = payload.split('-')[1];
         browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+      } else if (payload.contains('499-')) {
+        // Loot Rangers payload is (split by -)
+        // [0] 499
+        // [1] id list
+        // [2] name list
+        // [3] timestamp
+
+        final lootRangersNpcsIds = payload.split('-')[1].split(",");
+        final lootRangersNpcsNames = payload.split('-')[2].split(",");
+        final lootRangersTime = payload.split('-')[3];
+        final timeNote = "Attacks due to commence at $lootRangersTime!";
+
+        var notes = <String>[];
+        var colors = <String>[];
+        for (var i = 0; i < lootRangersNpcsIds.length; i++) {
+          colors.add("green");
+          if (i == 0) {
+            notes.add(timeNote);
+          } else {
+            notes.add("");
+          }
+        }
+
+        // Open chaining browser for Loot Rangers
+        _webViewProvider.openBrowserPreference(
+            context: context,
+            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
+            useDialog: false,
+            isChainingBrowser: true,
+            awaitable: true,
+            chainingPayload: ChainingPayload()
+              ..attackIdList = lootRangersNpcsIds
+              ..attackNameList = lootRangersNpcsNames
+              ..attackNotesList = notes
+              ..attackNotesColorList = colors
+              ..showNotes = true
+              ..showBlankNotes = false
+              ..showOnlineFactionWarning = false);
+
+        browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$lootRangersNpcsIds';
       } else if (payload.contains('tornMessageId:')) {
         launchBrowser = true;
         final messageId = payload.split(':');
@@ -774,22 +906,28 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
               }
 
               String xanaxString = "";
-              if (xanaxComparison.isNegative) {
+              if (xanaxComparison < 0) {
                 xanaxString = "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
+              } else if (xanaxComparison == 0) {
+                xanaxString = "\n- Xanax: SAME as you";
               } else {
                 xanaxString = "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
               }
 
               String refillsString = "";
-              if (refillsComparison.isNegative) {
+              if (refillsComparison < 0) {
                 refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+              } else if (refillsComparison == 0) {
+                refillsString = "\n- Refills (E): SAME as you";
               } else {
                 refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
               }
 
               String drinksString = "";
-              if (drinksComparison.isNegative) {
+              if (drinksComparison < 0) {
                 drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+              } else if (drinksComparison == 0) {
+                drinksString = "\n- Drinks (E): SAME as you";
               } else {
                 drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
               }
@@ -822,9 +960,48 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           contentPadding: const EdgeInsets.all(10),
         );
       } else if (payload.contains('lootId:')) {
-        launchBrowser = true;
-        final assistId = payload.split(':');
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
+        final assistSplit = payload.split('###');
+        final assistId = assistSplit[0].split(':');
+        final bulkDetails = assistSplit[1].split('bulkDetails:');
+        var incomingIds = assistId[1].split(",");
+        if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
+          // This is a standard loot alert for a single NPC
+          launchBrowser = true;
+          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        } else if (incomingIds[0].contains("[")) {
+          // This is a Loot Rangers alert for one or more NPCs
+          var ids = <String>[];
+          var names = <String>[];
+          var notes = <String>[];
+          var colors = <String>[];
+          for (var i = 0; i < incomingIds.length; i++) {
+            var parts = incomingIds[i].split("[");
+            names.add(parts[0]);
+            ids.add(parts[1].replaceAll("]", ""));
+            colors.add("green");
+            if (i == 0) {
+              notes.add("Attacks due to commence at ${bulkDetails[1]} TCT!");
+            } else {
+              notes.add("");
+            }
+          }
+
+          // Open chaining browser for Loot Rangers
+          _webViewProvider.openBrowserPreference(
+              context: context,
+              url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+              useDialog: false,
+              isChainingBrowser: true,
+              awaitable: true,
+              chainingPayload: ChainingPayload()
+                ..attackIdList = ids
+                ..attackNameList = names
+                ..attackNotesList = notes
+                ..attackNotesColorList = colors
+                ..showNotes = true
+                ..showBlankNotes = false
+                ..showOnlineFactionWarning = false);
+        }
       }
 
       if (launchBrowser) {
@@ -837,10 +1014,32 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     });
   }
 
+  void _openBrowserFromToast(String url) async {
+    var browserType = _settingsProvider.currentBrowser;
+    switch (browserType) {
+      case BrowserSetting.app:
+        await _webViewProvider.openBrowserPreference(
+          context: context,
+          useDialog: _settingsProvider.useQuickBrowser,
+          url: url,
+        );
+        break;
+      case BrowserSetting.external:
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
+    if (_s == null) {
+      _s = Get.put(StakeoutsController(), permanent: true);
+      _s.callbackBrowser = _openBrowserFromToast;
+    }
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: FutureBuilder(
@@ -856,7 +1055,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       : _themeProvider.canvas
                   : _themeProvider.canvas,
               child: SafeArea(
-                top: !_settingsProvider.appBarTop || false,
                 child: Scaffold(
                   key: _scaffoldKey,
                   body: _getPages(),
@@ -878,7 +1076,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             return Container(
               color: _themeProvider.secondBackground,
               child: SafeArea(
-                top: _settingsProvider.appBarTop || true,
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),
@@ -994,8 +1191,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                               ? Brightness.dark
                                               : Brightness.light
                                           : Brightness.light,
-                                  statusBarBrightness: Brightness.dark,
-                                  statusBarIconBrightness: Brightness.light,
+                                  statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+                                      ? MediaQuery.of(context).orientation == Orientation.portrait
+                                          ? Brightness.dark
+                                          : Brightness.light
+                                      : Brightness.dark,
+                                  statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.portrait
+                                      ? Brightness.light
+                                      : Brightness.light,
                                 ),
                               );
                             });
@@ -1124,27 +1327,33 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return FriendsPage();
         break;
       case 5:
-        return AwardsPage();
+        return StakeoutsPage();
         break;
       case 6:
-        return ItemsPage();
+        return AwardsPage();
         break;
       case 7:
-        return RankedWarsPage(calledFromMenu: true);
+        return ItemsPage();
         break;
       case 8:
-        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
+        return RankedWarsPage(calledFromMenu: true);
         break;
       case 9:
-        return AlertsSettings(_onChangeStockMarketInMenu);
+        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
         break;
       case 10:
-        return SettingsPage(changeUID: changeUID);
+        return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 11:
-        return AboutPage(uid: _userUID);
+        return SettingsPage(
+          changeUID: changeUID,
+          statsController: _statsController,
+        );
         break;
       case 12:
+        return AboutPage(uid: _userUID);
+        break;
+      case 13:
         return TipsPage();
         break;
 
@@ -1171,27 +1380,30 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return const Icon(Icons.people);
         break;
       case 5:
-        return const Icon(MdiIcons.trophy);
+        return const Icon(MdiIcons.cctv);
         break;
       case 6:
-        return const Icon(MdiIcons.packageVariantClosed);
+        return const Icon(MdiIcons.trophy);
         break;
       case 7:
-        return const Icon(MaterialCommunityIcons.sword_cross);
+        return const Icon(MdiIcons.packageVariantClosed);
         break;
       case 8:
-        return const Icon(MdiIcons.bankTransfer);
+        return const Icon(MaterialCommunityIcons.sword_cross);
         break;
       case 9:
-        return const Icon(Icons.notifications_active);
+        return const Icon(MdiIcons.bankTransfer);
         break;
       case 10:
-        return const Icon(Icons.settings);
+        return const Icon(Icons.notifications_active);
         break;
       case 11:
-        return const Icon(Icons.info_outline);
+        return const Icon(Icons.settings);
         break;
       case 12:
+        return const Icon(Icons.info_outline);
+        break;
+      case 13:
         return const Icon(Icons.question_answer_outlined);
         break;
       default:
@@ -1266,6 +1478,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         }
       });
 
+      // Native user status check and auth time check
+      NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+      NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+      await nativeUser.loadPreferences();
+      await nativeAuth.loadPreferences();
+      if (nativeUser.isNativeUserEnabled()) {
+        nativeAuth.authStatus = NativeAuthStatus.loggedIn;
+      }
+      // ------------------------
+
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)
       _updateLastActiveTime();
@@ -1311,7 +1533,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider.basic.userApiKey;
-    final dynamic prof = await TornApiCaller().getProfileBasic();
+    final dynamic prof = await TornApiCaller().getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof

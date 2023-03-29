@@ -47,8 +47,6 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           drawer: Drawer(),

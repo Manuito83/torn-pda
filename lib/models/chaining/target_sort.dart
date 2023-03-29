@@ -13,6 +13,8 @@ enum TargetSortType {
   colorDes,
   onlineDes,
   onlineAsc,
+  notesDes,
+  notesAsc,
 }
 
 class TargetSort {
@@ -62,6 +64,12 @@ class TargetSort {
         break;
       case TargetSortType.onlineAsc:
         description = 'Sort offline';
+        break;
+      case TargetSortType.notesDes:
+        description = 'Sort by note (des)';
+        break;
+      case TargetSortType.notesAsc:
+        description = 'Sort by note (asc)';
         break;
     }
   }

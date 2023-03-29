@@ -18,8 +18,6 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
-  bool nukeReviveEnabled;
-  bool uhcReviveEnabled;
   bool warnAboutChainsEnabled;
   bool warnAboutExcessEnergyEnabled;
   bool shortcutsEnabled;
@@ -49,8 +47,6 @@ class ProfileOptionsPage extends StatefulWidget {
 }
 
 class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
-  bool _nukeReviveEnabled = true;
-  bool _uhcReviveEnabled = true;
   bool _warnAboutChainsEnabled = true;
   bool _shortcutsEnabled = true;
   bool _showHeaderWallet = true;
@@ -92,8 +88,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -214,7 +208,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Text(
                                     'Enable configurable shortcuts in the Profile section to '
-                                    'quickly access your favourite sections in game. '
+                                    'quickly access your favorite sections in game. '
                                     'Tip: if enabled in settings, short-press shortcuts for quick browser '
                                     'window, long-press for full browser with app bar',
                                     style: TextStyle(
@@ -448,7 +442,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      'BARS BEHAVIOUR',
+                                      'BARS BEHAVIOR',
                                       style: TextStyle(fontSize: 10),
                                     ),
                                   ],
@@ -478,84 +472,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   child: Text(
                                     "Choose which medical section to open when tapping on the life bar. "
                                     "If 'ask' is chosen a dialog will appear every time",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 15),
-                                Divider(),
-                                SizedBox(height: 5),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'REVIVING SERVICES',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Text("Use Nuke Reviving Services"),
-                                      Switch(
-                                        value: _nukeReviveEnabled,
-                                        onChanged: (value) {
-                                          Prefs().setUseNukeRevive(value);
-                                          setState(() {
-                                            _nukeReviveEnabled = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'If active, when you are in hospital you\'ll have the option to call '
-                                    'a reviver from Central Hospital. NOTE: this is an external '
-                                    'service not affiliated to Torn PDA',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Text("Use UHC Reviving Services"),
-                                      Switch(
-                                        value: _uhcReviveEnabled,
-                                        onChanged: (value) {
-                                          Prefs().setUseUhcRevive(value);
-                                          setState(() {
-                                            _uhcReviveEnabled = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'If active, when you are in hospital you\'ll have the option to call '
-                                    'a reviver from Universal Health Care. NOTE: this is an external '
-                                    'service not affiliated to Torn PDA',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -1101,8 +1017,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   }
 
   Future _restorePreferences() async {
-    var useNuke = await Prefs().getUseNukeRevive();
-    var useUhc = await Prefs().getUseUhcRevive();
     var warnChains = await Prefs().getWarnAboutChains();
     var shortcuts = await Prefs().getEnableShortcuts();
     var headerWallet = await Prefs().getShowHeaderWallet();
@@ -1118,8 +1032,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var sectionList = await Prefs().getProfileSectionOrder();
 
     setState(() {
-      _nukeReviveEnabled = useNuke;
-      _uhcReviveEnabled = useUhc;
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
       _showHeaderWallet = headerWallet;
@@ -1236,8 +1148,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   Future<bool> _willPopCallback() async {
     Navigator.of(context).pop(
       ProfileOptionsReturn()
-        ..nukeReviveEnabled = _nukeReviveEnabled
-        ..uhcReviveEnabled = _uhcReviveEnabled
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
         ..shortcutsEnabled = _shortcutsEnabled
         ..showHeaderWallet = _showHeaderWallet

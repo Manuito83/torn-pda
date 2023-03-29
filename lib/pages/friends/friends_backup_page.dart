@@ -68,8 +68,6 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
         child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

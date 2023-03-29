@@ -367,6 +367,22 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
                         ),
                       ],
                     ),
+                    Column(
+                      children: [
+                        Text(
+                          "Loot Rangers",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "Title: LR",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        Text(
+                          "(blank body)",
+                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: 20),
                     Column(
                       children: [
