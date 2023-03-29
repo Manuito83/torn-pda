@@ -24,7 +24,7 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
 class WebViewPanic extends StatefulWidget {
@@ -136,8 +136,6 @@ class _WebViewPanicState extends State<WebViewPanic> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
@@ -913,8 +911,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
         } catch (e) {
           userId = 0;
         }
-      } else if (page.contains('loader.php?sid=attack&user2ID=') || 
-                 page.contains('loader2.php?sid=getInAttack&user2ID=')) {
+      } else if (page.contains('loader.php?sid=attack&user2ID=') ||
+          page.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (page == _lastProfileVisited) {
           return;
         }

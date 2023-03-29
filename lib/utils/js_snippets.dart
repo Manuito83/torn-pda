@@ -81,14 +81,14 @@ String buyMaxAbroadJS() {
         addStyle(`
           .max-buy {
             position: absolute;
-            width: 62px;
+            width: 36px;
             text-align: center;
             border-left: 2px solid #ccc;
-            height: 15px;
-            line-height: 15px;
-            bottom: -17px;
-            right: 0px;
-            font-size: 9px;
+            height: 14px;
+            line-height: 13px;
+            bottom: -15px;
+            right: -1px;
+            font-size: 10px;
           }
         `);
         
@@ -105,22 +105,11 @@ String buyMaxAbroadJS() {
             let bought = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(3)").innerText);
             let limit = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(4)").innerText) - bought;
             
-            max = max > limit ? limit:max;
-            max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
+            let max_can_buy = Math.round(user_money / price);
 
             let current = max_span.innerHTML;
-            if (current.includes('class="max-buy"') && current.includes('FILL')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max);
-              max_span.innerHTML = '<a class="max-buy">+3</a>';
-            } else if (current.includes('class="max-buy"') && current.includes('+3')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 3);
-              max_span.innerHTML = '<a class="max-buy">+5</a>';
-            } else if (current.includes('class="max-buy"') && current.includes('+5')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 5);
-              max_span.innerHTML = '<a class="max-buy">+10</a>';
-            } else if (current.includes('class="max-buy"') && current.includes('+10')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 10);
-              max_span.innerHTML = '<a class="max-buy">FILL</a>';
+            if (current.includes('class="max-buy"')) {
+              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max_can_buy);
             }
         });
       }
@@ -141,23 +130,12 @@ String buyMaxAbroadJS() {
             let bought = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(3)").innerText);
             let limit = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(4)").innerText) - bought;
             
-            max = max > limit ? limit:max;
-            max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
+			let max_can_buy = Math.round(user_money / price);
             
             let current = max_span.innerHTML;
             if (current.includes('class="torn-btn"') && current.includes('MAX')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max);
-              max_span.innerHTML = '<button class="torn-btn">+3</button>';
-            } else if (current.includes('class="torn-btn"') && current.includes('+3')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 3);
-              max_span.innerHTML = '<button class="torn-btn">+5</button>';
-            } else if (current.includes('class="torn-btn"') && current.includes('+5')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 5);
-              max_span.innerHTML = '<button class="torn-btn">+10</button>';
-            } else if (current.includes('class="torn-btn"') && current.includes('+10')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 10);
-              max_span.innerHTML = '<button class="torn-btn">MAX</button>';
-            }
+              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max_can_buy);
+            } 
           });
         }
       }
@@ -1181,5 +1159,179 @@ String bountiesJS({
 
     // Return to avoid iOS WKErrorDomain
     123;
+  ''';
+}
+
+String ocNNB({@required String members}) {
+  return '''
+    // Credits: some functions and logic thanks to Torn Tools
+
+    (function() {
+
+      var data = $members;
+	
+      function loadNNB () {
+
+        // Avoid adding NNB twice
+        var savedFound = document.querySelector(".pdaNNBListener") !== null;
+        if (!savedFound) {
+          var save = document.querySelector(".faction-crimes-wrap");
+          save.classList.add("pdaNNBListener");
+          console.log("Torn PDA: adding NNB!");
+        } else {
+          console.log("PDA NNB found, returning");
+          return;
+        }
+	
+        // Add style nnb title
+        function addStyle(styleString) {
+          const style = document.createElement('style');
+          style.textContent = styleString;
+          document.head.append(style);
+        }
+
+        addStyle(
+          `.pda-nnb-title {
+          text-align: right;
+          width: 30px;
+          }`
+        );
+
+        addStyle(
+          `.pda-nnb-value {
+          width: 30px;
+          }`
+        );
+
+        addStyle(
+          `.member.pda-modified {
+          width: 80px !important;
+          }`
+        );
+
+        addStyle(
+          `.level.pda-modified {
+          width: 15px !important;
+          }`
+        );
+
+        addStyle(
+          `.offences.pda-modified {
+          width: 50px !important;
+          }`
+        );
+
+        addStyle(
+          `.act.pda-modified {
+          width: 29px !important;
+          }`
+        );
+        
+        addStyle(
+          `.stat.pda-modified {
+          width: 50px !important;
+          }`
+        );
+
+
+        function createNerveTitle () {
+          var newDiv = document.createElement("li");
+          var newContent = document.createTextNode("NNB");
+          newDiv.className = "pda-nnb-title";
+          newDiv.appendChild(newContent);
+          return newDiv;
+        }
+
+        function createNerveValue (value) {
+          var newDiv = document.createElement("li");
+          var newContent = document.createTextNode(value);
+          newDiv.className = "pda-nnb-value";
+          newDiv.appendChild(newContent);
+          return newDiv;
+        }
+        
+        var member = document.querySelectorAll('.member');
+        for (var m of member) {
+          // Crimes scheduled
+          var row = m.closest(".organize-wrap .crimes-list .details-list > li > ul");
+          if (row !== null) 
+          {
+            row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.stat`).forEach((element) => element.classList.add("pda-modified"));
+            
+            let stat = row.querySelector(".stat");
+            if (stat === null) continue; 
+            
+            if (row.classList.contains("title")) {
+            stat.parentElement.insertBefore(
+              createNerveTitle(),
+              stat
+            );
+            continue;
+            }
+            
+            const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
+            
+            var found = false;
+            for (const [key, value] of Object.entries(data)) {
+            if (id === key) {
+              stat.insertAdjacentElement("beforebegin", createNerveValue(value));
+              found = true;
+              continue;
+            } 
+            }
+            if (!found) {
+            stat.insertAdjacentElement("beforebegin", createNerveValue("unk"));
+            }
+            continue;
+          }
+          
+            
+          // Crimes available
+          var row = m.closest(".plans-list .item");
+          if (row !== null) {
+            row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
+            row.querySelectorAll(`.act`).forEach((element) => element.classList.add("pda-modified"));
+              
+            let act = row.querySelector(".act");
+            if (act === null) continue; 
+            
+            if (row.classList.contains("title")) {
+            act.parentElement.insertBefore(
+              createNerveTitle(),
+              act
+            );
+            continue;
+            }
+            
+            const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
+            
+            var found = false;
+            for (const [key, value] of Object.entries(data)) {
+            if (id === key) {
+              act.insertAdjacentElement("beforebegin", createNerveValue(value));
+              found = true;
+              continue;
+            } 
+            }
+            if (!found) {
+            act.insertAdjacentElement("beforebegin", createNerveValue("unk"));
+            }
+          }	    
+        }  
+      }
+
+      let waitForOCAndRun = setInterval(() => {
+        if (document.querySelector(".faction-crimes-wrap")) {
+          loadNNB();
+          return clearInterval(waitForOCAndRun);
+        }
+      }, 300);
+
+    })();
   ''';
 }

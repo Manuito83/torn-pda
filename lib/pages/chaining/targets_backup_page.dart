@@ -70,8 +70,6 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
         child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

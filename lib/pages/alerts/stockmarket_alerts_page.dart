@@ -68,8 +68,6 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsP.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsP.appBarTop ? buildAppBar() : null,

@@ -5,6 +5,7 @@ import 'dart:io';
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/models/loot/loot_rangers_model.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
@@ -27,6 +29,8 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
+import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
 
@@ -67,7 +71,11 @@ class _LootPageState extends State<LootPage> {
   bool _alarmSound;
   bool _alarmVibration;
 
-  // Payload is: 400idlevel
+  int _lootRangersTime = 0;
+  List<String> _lootRangersIdOrder = <String>[];
+  List<String> _lootRangersNameOrder = <String>[];
+
+  // Payload is: 400idlevel (new: 499 for Loot Rangers)
   var _activeNotificationsIds = <int>[];
 
   @override
@@ -75,6 +83,7 @@ class _LootPageState extends State<LootPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _getInitialLootInformation = _getLoot();
+    _getLootRangers();
     analytics.setCurrentScreen(screenName: 'loot');
     _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
   }
@@ -107,12 +116,14 @@ class _LootPageState extends State<LootPage> {
                 return RefreshIndicator(
                   onRefresh: () async {
                     await _getLoot();
+                    _getLootRangers();
                     await Future.delayed(Duration(seconds: 1));
                   },
                   child: SingleChildScrollView(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
+                        _lootRangersWidget(),
                         if (activeNpcsFiltered())
                           Padding(
                             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
@@ -126,6 +137,16 @@ class _LootPageState extends State<LootPage> {
                           )
                         else
                           SizedBox.shrink(),
+                        if (_lootRangersIdOrder.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+                            child: Text(
+                              "NPCs sorted by Loot Rangers' attack order",
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                         Padding(
                           padding: const EdgeInsets.all(5),
                           child: _returnNpcCards(),
@@ -136,7 +157,12 @@ class _LootPageState extends State<LootPage> {
                   ),
                 );
               } else {
-                return _connectError();
+                return Column(
+                  children: [
+                    _lootRangersWidget(),
+                    _connectError(),
+                  ],
+                );
               }
             } else {
               return Center(child: CircularProgressIndicator());
@@ -268,9 +294,21 @@ class _LootPageState extends State<LootPage> {
       // Final card of every NPC
       var npcBoxes = <Widget>[];
 
-      // Loop every NPC
-      var npcModels = <LootModel>[];
+      // If Loot Rangers is active, return LR's order
+      if (_lootRangersIdOrder.isNotEmpty) {
+        final sortedMap = Map<String, LootModel>();
+        final originalMap = Map<String, LootModel>.of(_mainLootInfo);
+        for (var id in _lootRangersIdOrder) {
+          originalMap.forEach((npcId, npcDetails) {
+            if (id == npcId) {
+              sortedMap.addAll({npcId: npcDetails});
+            }
+          });
+        }
+        _mainLootInfo = Map.from(sortedMap);
+      }
 
+      // Loop every NPC
       _mainLootInfo.forEach((npcId, npcDetails) {
         if (!_filterOutIds.contains(npcId)) {
           // Get npcLevels in a column and format them
@@ -571,7 +609,6 @@ class _LootPageState extends State<LootPage> {
               ),
             ),
           );
-          npcModels.add(npcDetails);
         }
       });
 
@@ -581,6 +618,248 @@ class _LootPageState extends State<LootPage> {
       BotToast.showText(text: "Error loading @npcCards: $e");
       return SizedBox.shrink();
     }
+  }
+
+  Future _getLootRangers() async {
+    final response = await http.get(Uri.parse("https://api.lzpt.io/loot"));
+    if (response.statusCode == 200) {
+      final lrJson = lootRangersFromJson(response.body);
+
+      _lootRangersTime = lrJson.time.clear * 1000;
+
+      _lootRangersNameOrder.clear();
+      for (int i = 0; i < lrJson.order.length; i++) {
+        var id = lrJson.order[i];
+        lrJson.npcs.forEach((key, value) {
+          if (key.toString() == id.toString()) {
+            _lootRangersNameOrder.add(value.name);
+            _lootRangersIdOrder.add(key);
+          }
+        });
+      }
+    }
+  }
+
+  Widget _lootRangersWidget() {
+    if (_lootRangersNameOrder.isEmpty) return SizedBox.shrink();
+
+    String timeString = "";
+    var lrDateTime = DateTime.fromMillisecondsSinceEpoch(_lootRangersTime);
+    var timeDiff = lrDateTime.difference(DateTime.now());
+    var diffFormatted = _formatDuration(timeDiff);
+    if (_lootTimeType == LootTimeType.timer) {
+      timeString += "in $diffFormatted";
+    } else {
+      var time = TimeFormatter(
+        inputTime: DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+        timeFormatSetting: _settingsProvider.currentTimeFormat,
+        timeZoneSetting: _settingsProvider.currentTimeZone,
+      ).formatHour;
+      timeString += "at $time";
+    }
+
+    // Loot Rangers notification icon
+    String typeString;
+    IconData iconData;
+    switch (_lootNotificationType) {
+      case NotificationType.notification:
+        typeString = 'notification';
+        iconData = Icons.chat_bubble_outline;
+        break;
+      case NotificationType.alarm:
+        typeString = 'alarm';
+        iconData = Icons.notifications_none;
+        break;
+      case NotificationType.timer:
+        typeString = 'timer';
+        iconData = Icons.timer;
+        break;
+    }
+
+    Widget notificationIcon;
+    bool isPending = false;
+    for (var id in _activeNotificationsIds) {
+      if (id == int.parse('499')) {
+        isPending = true;
+      }
+    }
+    notificationIcon = InkWell(
+      splashColor: Colors.transparent,
+      child: Icon(
+        iconData,
+        size: 20,
+        color: _lootNotificationType == NotificationType.notification && isPending ? Colors.green : null,
+      ),
+      onTap: () async {
+        switch (_lootNotificationType) {
+          case NotificationType.notification:
+            if (isPending) {
+              setState(() {
+                isPending = false;
+              });
+              await flutterLocalNotificationsPlugin.cancel(499);
+              _activeNotificationsIds.removeWhere((element) => element == 499);
+            } else {
+              setState(() {
+                isPending = true;
+              });
+              _activeNotificationsIds.add(499);
+
+              String time = TimeFormatter(
+                inputTime: DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+                timeFormatSetting: _settingsProvider.currentTimeFormat,
+                timeZoneSetting: _settingsProvider.currentTimeZone,
+              ).formatHour;
+
+              if (_settingsProvider.discreteNotifications) {
+                _scheduleNotification(
+                  DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+                  499,
+                  '499-${_lootRangersIdOrder.join(",")}-${_lootRangersNameOrder.join(",")}-$time',
+                  "LR",
+                  "",
+                );
+              } else {
+                _scheduleNotification(
+                  DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+                  499,
+                  '499-${_lootRangersIdOrder.join(",")}-${_lootRangersNameOrder.join(",")}-$time',
+                  "Loot Rangers attack!",
+                  "Order: ${_lootRangersNameOrder.join(", ")}",
+                );
+              }
+
+              BotToast.showText(
+                clickClose: true,
+                text: 'Loot Rangers $typeString set!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green[700],
+                duration: Duration(milliseconds: 1500),
+                contentPadding: EdgeInsets.all(10),
+              );
+            }
+            break;
+          case NotificationType.alarm:
+            _setAlarm(
+              DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+              "Loot Rangers",
+            );
+            BotToast.showText(
+              clickClose: true,
+              text: 'Loot Rangers $typeString set!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.green[700],
+              duration: Duration(milliseconds: 1500),
+              contentPadding: EdgeInsets.all(10),
+            );
+            break;
+          case NotificationType.timer:
+            _setTimer(
+              DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+              "Loot Rangers",
+            );
+            BotToast.showText(
+              clickClose: true,
+              text: 'Loot Rangers $typeString set!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.green[700],
+              duration: Duration(milliseconds: 1500),
+              contentPadding: EdgeInsets.all(10),
+            );
+            break;
+        }
+      },
+    );
+
+    int minutesRemaining = DateTime.fromMicrosecondsSinceEpoch(
+      _lootRangersTime * 1000,
+    ).difference(DateTime.now()).inMinutes;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Loot Rangers", style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(width: 5),
+              GestureDetector(
+                onTap: () async {
+                  await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return LootRangersExplanationDialog(themeProvider: _themeProvider);
+                    },
+                  );
+                },
+                child: Icon(
+                  Icons.info_outline,
+                  size: 20,
+                ),
+              )
+            ],
+          ),
+          Text("Next attack $timeString"),
+          Text("Order: ${_lootRangersNameOrder.join(", ")}"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  child: Icon(
+                    MdiIcons.knifeMilitary,
+                    size: 20,
+                    color: minutesRemaining > 0 && minutesRemaining < 2 ? Colors.red : _themeProvider.mainText,
+                  ),
+                  onTap: () async {
+                    // This is a Loot Rangers alert for one or more NPCs
+                    var notes = <String>[];
+                    var colors = <String>[];
+                    for (var i = 0; i < _lootRangersNameOrder.length; i++) {
+                      colors.add("green");
+                      if (i == 0) {
+                        notes.add("Attacks due to commence at $timeString!");
+                      } else {
+                        notes.add("");
+                      }
+                    }
+
+                    // Open chaining browser for Loot Rangers
+                    context.read<WebViewProvider>().openBrowserPreference(
+                        context: context,
+                        url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
+                        useDialog: false,
+                        isChainingBrowser: true,
+                        awaitable: true,
+                        chainingPayload: ChainingPayload()
+                          ..attackIdList = _lootRangersIdOrder
+                          ..attackNameList = _lootRangersNameOrder
+                          ..attackNotesList = notes
+                          ..attackNotesColorList = colors
+                          ..showNotes = true
+                          ..showBlankNotes = false
+                          ..showOnlineFactionWarning = false);
+                  },
+                ),
+              ),
+              SizedBox(width: 15),
+              notificationIcon,
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future _getLoot() async {
@@ -897,7 +1176,7 @@ class _LootPageState extends State<LootPage> {
 
       for (var not in pendingNotificationRequests) {
         var id = not.id.toString();
-        if (id.length > 3 && id.substring(0, 3) == '400') {
+        if (id.length > 3 && id.substring(0, 3) == '400' || id.contains("499")) {
           _activeNotificationsIds.add(not.id);
         }
       }

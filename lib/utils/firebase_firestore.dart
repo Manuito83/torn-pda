@@ -5,7 +5,6 @@ import 'dart:io';
 
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
@@ -63,6 +62,8 @@ class _FirestoreHelper {
         "energyLastCheckFull": _firebaseUserModel.energyLastCheckFull, // Defaults
         "nerveLastCheckFull": _firebaseUserModel.nerveLastCheckFull, // Defaults
         "drugsInfluence": _firebaseUserModel.drugsInfluence, // Defaults
+        "medicalInfluence": _firebaseUserModel.medicalInfluence, // Defaults
+        "boosterInfluence": _firebaseUserModel.boosterInfluence, // Defaults
         "racingSent": _firebaseUserModel.racingSent, // Defaults
         "platform": platform,
         "version": appVersion,
@@ -145,6 +146,22 @@ class _FirestoreHelper {
       "drugsNotification": subscribe,
       // Same reason for this than in Nerve (see comment)
       "drugsInfluence": false,
+    });
+  }
+
+  Future<void> subscribeToMedicalNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "medicalNotification": subscribe,
+      // Same reason for this than in Nerve (see comment)
+      "medicalInfluence": false,
+    });
+  }
+
+  Future<void> subscribeToBoosterNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "boosterNotification": subscribe,
+      // Same reason for this than in Nerve (see comment)
+      "boosterInfluence": false,
     });
   }
 
@@ -318,5 +335,11 @@ class _FirestoreHelper {
         "lootAlerts": _firebaseUserModel.lootAlerts,
       });
     }
+  }
+
+  Future<void> subscribeToLootRangersNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "lootRangersNotification": subscribe,
+    });
   }
 }

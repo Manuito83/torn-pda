@@ -62,8 +62,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -935,7 +933,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
           child: Text(
             'Tabs increase memory and processor usage. If you notice performance issues, consider disabling them '
             'at least in the browser dialog for better results. Also, be sure that you get familiar with how tabs work '
@@ -1001,11 +999,13 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text("Only load tabs when used"),
+                    Text("Show favorites in tab bar"),
                     Switch(
-                      value: _webViewProvider.onlyLoadTabsWhenUsed,
+                      value: _settingsProvider.showFavoritesInTabBar,
                       onChanged: (value) {
-                        _webViewProvider.onlyLoadTabsWhenUsed = value;
+                        setState(() {
+                          _settingsProvider.showFavoritesInTabBar = value;
+                        });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
                       activeColor: Colors.green,
@@ -1014,11 +1014,9 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
                 child: Text(
-                  'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, '
-                  'they will retrieve the web content when first used (tapped). This could add a small delay when the '
-                  'tab is pressed visited the first time, but should improve the overall browser performance',
+                  'Shows a favorites icon in the tab bar that opens a quick menu with shortcuts',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -1026,6 +1024,76 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ),
               ),
+              if (_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog)
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text("Only load tabs when used"),
+                          Switch(
+                            value: _webViewProvider.onlyLoadTabsWhenUsed,
+                            onChanged: (value) {
+                              _webViewProvider.onlyLoadTabsWhenUsed = value;
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                      child: Text(
+                        'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, '
+                        'they will retrieve the web content when first used (tapped). This could add a small delay when the '
+                        'tab is pressed visited the first time, but should improve the overall browser performance',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text("Allow hiding tabs"),
+                          Switch(
+                            value: _settingsProvider.useTabsHideFeature,
+                            onChanged: (value) {
+                              setState(() {
+                                _settingsProvider.changeUseTabsHideFeature = value;
+                              });
+                              // Show tabs if this feature is disabled
+                              if (!value) {
+                                Prefs().setHideTabs(false);
+                              }
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                      child: Text(
+                        'Allow to temporarily hide tabs by swiping in the title bar (full browser) or in the lower bar '
+                        '(quick browser)',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -1050,7 +1118,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 5, 20, 0),
                 child: Text(
                   'Allow to temporarily hide tabs by swiping in the title bar (full browser) or in the lower bar '
                   '(quick browser)',

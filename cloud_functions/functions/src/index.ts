@@ -6,6 +6,7 @@ import { staleGroup } from "./stale_users"
 import { playersGroup } from "./players";
 import { foreignStocksGroup } from "./foreign_stocks";
 import { lootGroup } from "./loot";
+import { lootRangersGroup } from "./loot_rangers";
 import { refillsGroup } from "./refills";
 import { factionAssistGroup } from "./faction_assist";
 import { retalsGroup } from "./retals";
@@ -26,6 +27,7 @@ export const stale = staleGroup;
 export const players = playersGroup;
 export const stocks = foreignStocksGroup;
 export const loot = lootGroup;
+export const lootRangers = lootRangersGroup;
 export const refills = refillsGroup;
 export const factionAssist = factionAssistGroup;
 export const retals = retalsGroup;

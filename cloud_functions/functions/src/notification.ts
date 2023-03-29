@@ -396,6 +396,136 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
+export async function sendMedicalNotification(userStats: any, subscriber: any) {
+  const cooldowns = userStats.cooldowns;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      cooldowns.medical === 0 &&
+      (subscriber.medicalInfluence === true)
+    ) {
+
+      let title = `Medical cooldown expired`;
+      let body = `Your medical cooldown has expired, are you feeling better now?!`;
+      if (subscriber.discrete) {
+        title = `Med`;
+        body = `Exp`;
+      }
+
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          title,
+          body,
+          "notification_medical",
+          "#FF00c3",
+          "Alerts medical",
+          "",
+          "",
+          "",
+          "",
+          subscriber.vibration,
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            medicalInfluence: false,
+          })
+      );
+    }
+
+    if (
+      cooldowns.medical > 0 &&
+      (subscriber.medicalInfluence === false)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            medicalInfluence: true,
+          })
+      );
+    }
+
+  } catch (error) {
+    functions.logger.warn(`ERROR MEDICAL \n${subscriber.uid} \n${error}`);
+  }
+
+  return Promise.all(promises);
+}
+
+export async function sendBoosterNotification(userStats: any, subscriber: any) {
+  const cooldowns = userStats.cooldowns;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      cooldowns.booster === 0 &&
+      (subscriber.boosterInfluence === true)
+    ) {
+
+      let title = `Booster cooldown expired`;
+      let body = `Your booster cooldown has expired, you are not special anymore!`;
+      if (subscriber.discrete) {
+        title = `B`;
+        body = `Exp`;
+      }
+
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          title,
+          body,
+          "notification_booster",
+          "#FF00c3",
+          "Alerts booster",
+          "",
+          "",
+          "",
+          "",
+          subscriber.vibration,
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            boosterInfluence: false,
+          })
+      );
+    }
+
+    if (
+      cooldowns.booster > 0 &&
+      (subscriber.boosterInfluence === false)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            boosterInfluence: true,
+          })
+      );
+    }
+
+  } catch (error) {
+    functions.logger.warn(`ERROR BOOSTER \n${subscriber.uid} \n${error}`);
+  }
+
+  return Promise.all(promises);
+}
+
 export async function sendRacingNotification(userStats: any, subscriber: any) {
   const icons = userStats.icons;
   const promises: Promise<any>[] = [];

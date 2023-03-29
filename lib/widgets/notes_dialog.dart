@@ -9,21 +9,30 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
+import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 
-enum PersonalNoteType { target, friend, factionMember }
+enum PersonalNoteType { target, friend, stakeout, factionMember }
 
 class PersonalNotesDialog extends StatefulWidget {
   final TargetModel targetModel;
   final FriendModel friendModel;
+  final Stakeout stakeoutModel;
   final Member memberModel;
   final PersonalNoteType noteType;
 
   /// Specify the model type in [noteType] and pass accordingly
-  PersonalNotesDialog({@required this.noteType, this.targetModel, this.friendModel, this.memberModel});
+  PersonalNotesDialog({
+    @required this.noteType,
+    this.targetModel,
+    this.friendModel,
+    this.stakeoutModel,
+    this.memberModel,
+  });
 
   @override
   _PersonalNotesDialogState createState() => _PersonalNotesDialogState();
@@ -32,9 +41,11 @@ class PersonalNotesDialog extends StatefulWidget {
 class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
   TargetModel _target;
   FriendModel _friend;
+  Stakeout _stakeout;
   Member _factionMember;
   TargetsProvider _targetsProvider;
   FriendsProvider _friendsProvider;
+  StakeoutsController _s;
   WarController _w;
   ThemeProvider _themeProvider;
 
@@ -51,6 +62,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _w = Get.put(WarController());
+    _s = Get.put(StakeoutsController());
 
     if (widget.noteType == PersonalNoteType.target) {
       _target = widget.targetModel;
@@ -64,6 +76,9 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
       _factionMember = widget.memberModel;
       _personalNotesController.text = _factionMember.personalNote;
       _myTempChosenColor = _factionMember.personalNoteColor;
+    } else if (widget.noteType == PersonalNoteType.stakeout) {
+      _stakeout = widget.stakeoutModel;
+      _personalNotesController.text = _stakeout.personalNote;
     }
 
     checkIfSameTargetAndWar();
@@ -278,6 +293,12 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                             } else if (widget.noteType == PersonalNoteType.factionMember) {
                               _w.setMemberNote(
                                 _factionMember,
+                                _personalNotesController.text,
+                                _myTempChosenColor,
+                              );
+                            } else if (widget.noteType == PersonalNoteType.stakeout) {
+                              _s.setStakeoutNote(
+                                _stakeout,
                                 _personalNotesController.text,
                                 _myTempChosenColor,
                               );

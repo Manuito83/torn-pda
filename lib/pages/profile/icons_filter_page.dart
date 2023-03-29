@@ -36,8 +36,6 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                 : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          top: widget.settingsProvider.appBarTop ? false : true,
-          bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: widget.settingsProvider.appBarTop ? buildAppBar() : null,

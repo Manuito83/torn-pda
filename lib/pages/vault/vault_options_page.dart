@@ -39,8 +39,6 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

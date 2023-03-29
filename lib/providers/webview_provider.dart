@@ -465,6 +465,30 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  void loadCurrentTabUrl(String url) {
+    var tab = _tabList[_currentTab];
+    if (tab.currentUrl != null) {
+      tab.webViewKey.currentState?.loadFromExterior(url: url, omitHistory: false);
+      _saveTabs();
+    }
+  }
+
+  String currentTabUrl() {
+    var tab = _tabList[_currentTab];
+    if (tab.currentUrl != null) {
+      return tab.webViewKey.currentState?.reportCurrentUrl();
+    }
+    return "";
+  }
+
+  String currentTabTitle() {
+    var tab = _tabList[_currentTab];
+    if (tab.currentUrl != null) {
+      return tab.webViewKey.currentState?.reportCurrentTitle();
+    }
+    return "";
+  }
+
   void _saveTabs() {
     // Make sure we don't save just the first tab before the secondaries are saved, otherwise (as secondary take one
     // second to initialise after the main), we'll just save the main and lose the rest if the phone is too quick in
