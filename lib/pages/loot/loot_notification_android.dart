@@ -11,9 +11,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsAndroid extends StatefulWidget {
   final Function callback;
+  final bool lootRangersEnabled;
 
   LootNotificationsAndroid({
     @required this.callback,
+    @required this.lootRangersEnabled,
   });
 
   @override
@@ -61,6 +63,13 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                 : null,
             body: Builder(
               builder: (BuildContext context) {
+                String message = 'Here you can specify your preferred alerting '
+                    'method and launch time before the loot level is reached';
+
+                if (widget.lootRangersEnabled) {
+                  message += ' (also applies to Loot Rangers, if available)';
+                }
+
                 return Container(
                   color: _themeProvider.canvas,
                   child: GestureDetector(
@@ -75,9 +84,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                               children: <Widget>[
                                 Padding(
                                   padding: const EdgeInsets.all(20.0),
-                                  child: Text('Here you can specify your preferred alerting '
-                                      'method and launch time before the loot level is reached '
-                                      '(also applies to Loot Rangers, if available)'),
+                                  child: Text(message),
                                 ),
                                 _rowsWithTypes(),
                                 SizedBox(height: 50),
