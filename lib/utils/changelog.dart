@@ -39,43 +39,44 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 291- 27/03/2023
+    // Build 293- 30/03/2023
 
-    // VERSION 3.0.0
-    var v3_0_0 = ChangeLogItem();
-    v3_0_0.version = 'Torn PDA v3.0.0';
-    v3_0_0.date = '01 APR 2023';
-    String feat3_0_0_1 = "Added stakeouts section";
-    String feat3_0_0_2 = "Added native Torn authentication (see Settings)";
-    String feat3_0_0_3 = "Added alerts for medical and booster cooldowns";
-    String feat3_0_0_4 = "Added Loot Rangers attack information, alerts and notifications";
-    String feat3_0_0_5 = "Added quick favorites menu in the browser tab bar";
-    String feat3_0_0_6 = "Added natural nerve information to OC planning";
-    String feat3_0_0_7 = "Foreign stocks can now be hidden (right swipe)";
-    String feat3_0_0_8 = "Players can now be added to several lists from their profile widget";
-    String feat3_0_0_9 = "Ranked Wars sorting and own faction identification has been improved";
-    String feat3_0_0_10 = "Targets can now be sorted by note";
-    String feat3_0_0_11 = "Moved reviving services to Settings and added HeLa Revive";
-    String feat3_0_0_12 = "Simplified the 'max' button behavior when buying items abroad";
-    String feat3_0_0_13 = "Fixed dark theme sync with Torn";
-    String feat3_0_0_14 = "Fixed target level calculation in recent attacks";
-    String feat3_0_0_15 = "Fixed other reported issues";
-    v3_0_0.features.add(feat3_0_0_1);
-    v3_0_0.features.add(feat3_0_0_2);
-    v3_0_0.features.add(feat3_0_0_3);
-    v3_0_0.features.add(feat3_0_0_4);
-    v3_0_0.features.add(feat3_0_0_5);
-    v3_0_0.features.add(feat3_0_0_6);
-    v3_0_0.features.add(feat3_0_0_7);
-    v3_0_0.features.add(feat3_0_0_8);
-    v3_0_0.features.add(feat3_0_0_9);
-    v3_0_0.features.add(feat3_0_0_10);
-    v3_0_0.features.add(feat3_0_0_11);
-    v3_0_0.features.add(feat3_0_0_11);
-    v3_0_0.features.add(feat3_0_0_12);
-    v3_0_0.features.add(feat3_0_0_13);
-    v3_0_0.features.add(feat3_0_0_14);
-    v3_0_0.features.add(feat3_0_0_15);
+    // VERSION 3.0.1
+    var v3_0_1 = ChangeLogItem();
+    v3_0_1.version = 'Torn PDA v3.0.1';
+    v3_0_1.date = '01 APR 2023';
+    v3_0_1.infoString = "Hotfix for issues with hidden foreign stocks and stakeouts";
+    String feat3_0_1_1 = "Added stakeouts section";
+    String feat3_0_1_2 = "Added native Torn authentication (see Settings)";
+    String feat3_0_1_3 = "Added alerts for medical and booster cooldowns";
+    String feat3_0_1_4 = "Added Loot Rangers attack information, alerts and notifications";
+    String feat3_0_1_5 = "Added quick favorites menu in the browser tab bar";
+    String feat3_0_1_6 = "Added natural nerve information to OC planning";
+    String feat3_0_1_7 = "Foreign stocks can now be hidden (right swipe)";
+    String feat3_0_1_8 = "Players can now be added to several lists from their profile widget";
+    String feat3_0_1_9 = "Ranked Wars sorting and own faction identification has been improved";
+    String feat3_0_1_10 = "Targets can now be sorted by note";
+    String feat3_0_1_11 = "Moved reviving services to Settings and added HeLa Revive";
+    String feat3_0_1_12 = "Simplified the 'max' button behavior when buying items abroad";
+    String feat3_0_1_13 = "Fixed dark theme sync with Torn";
+    String feat3_0_1_14 = "Fixed target level calculation in recent attacks";
+    String feat3_0_1_15 = "Fixed other reported issues";
+    v3_0_1.features.add(feat3_0_1_1);
+    v3_0_1.features.add(feat3_0_1_2);
+    v3_0_1.features.add(feat3_0_1_3);
+    v3_0_1.features.add(feat3_0_1_4);
+    v3_0_1.features.add(feat3_0_1_5);
+    v3_0_1.features.add(feat3_0_1_6);
+    v3_0_1.features.add(feat3_0_1_7);
+    v3_0_1.features.add(feat3_0_1_8);
+    v3_0_1.features.add(feat3_0_1_9);
+    v3_0_1.features.add(feat3_0_1_10);
+    v3_0_1.features.add(feat3_0_1_11);
+    v3_0_1.features.add(feat3_0_1_11);
+    v3_0_1.features.add(feat3_0_1_12);
+    v3_0_1.features.add(feat3_0_1_13);
+    v3_0_1.features.add(feat3_0_1_14);
+    v3_0_1.features.add(feat3_0_1_15);
 
     // VERSION 2.9.6
     var v2_9_6 = ChangeLogItem();
@@ -1338,7 +1339,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v3_0_0);
+    itemList.add(v3_0_1);
     itemList.add(v2_9_6);
     itemList.add(v2_9_5);
     itemList.add(v2_9_3);

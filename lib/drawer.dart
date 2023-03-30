@@ -167,8 +167,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     _webViewProvider = context.read<WebViewProvider>();
 
-    _handleChangelog();
-    _finishedWithPreferences = _loadInitPreferences();
+    // Ensures Shared Prefs are ready for changelog data saving
+    Prefs().reload().then((_) {
+      _handleChangelog();
+      _finishedWithPreferences = _loadInitPreferences();
+    });
 
     // Deep Linking
     _deepLinksInit();
@@ -1553,18 +1556,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   Future<void> _handleChangelog() async {
     final String savedCompilation = await Prefs().getAppCompilation();
-
     String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
 
     if (savedCompilation != currentCompilation) {
       Prefs().setAppCompilation(currentCompilation);
 
-      // Exceptions were we don't show a changelog
-      /*
-      if (savedVersion == 'xxx') {
-        return;
+      // Corrections for hot-fixes
+      if (savedCompilation == '291') {
+        // Clear hidden foreign stocks in 291 > 292+ due to a bug with persistence
+        Prefs().setHiddenForeignStocks([]);
       }
-      */
 
       // Will trigger an extra upload to Firebase when version changes
       _forceFireUserReload = true;

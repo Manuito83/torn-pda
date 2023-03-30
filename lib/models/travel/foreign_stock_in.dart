@@ -67,6 +67,7 @@ class ForeignStock {
     this.name,
     this.quantity,
     this.cost,
+    this.countryCode,
   });
 
   // NOT INCLUDED WITH YATA IMPORT
@@ -91,6 +92,7 @@ class ForeignStock {
         name: json["name"] == null ? null : json["name"],
         quantity: json["quantity"] == null ? null : json["quantity"],
         cost: json["cost"] == null ? null : json["cost"],
+        countryCode: json["countryCode"] == null ? null : json["countryCode"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -98,6 +100,7 @@ class ForeignStock {
         "name": name == null ? null : name,
         "quantity": quantity == null ? null : quantity,
         "cost": cost == null ? null : cost,
+        "countryCode": countryCode == null ? null : countryCode,
       };
 }
 

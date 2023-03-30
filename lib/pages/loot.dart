@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
@@ -50,6 +51,8 @@ class _LootPageState extends State<LootPage> {
   var _images = <NpcImagesModel>[];
 
   final databaseReference = FirebaseDatabase.instance.ref();
+
+  bool _dbLootRangersEnabled = false;
 
   Map<String, LootModel> _mainLootInfo = Map<String, LootModel>();
   Map<String, int> _dbLootInfo = Map<String, int>();
@@ -137,7 +140,7 @@ class _LootPageState extends State<LootPage> {
                           )
                         else
                           SizedBox.shrink(),
-                        if (_lootRangersIdOrder.isNotEmpty)
+                        if (_lootRangersIdOrder.isNotEmpty && _dbLootRangersEnabled)
                           Padding(
                             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
                             child: Text(
@@ -236,6 +239,7 @@ class _LootPageState extends State<LootPage> {
                       builder: (context) {
                         return LootNotificationsAndroid(
                           callback: _callBackFromNotificationOptions,
+                          lootRangersEnabled: _dbLootRangersEnabled,
                         );
                       },
                     ),
@@ -256,6 +260,7 @@ class _LootPageState extends State<LootPage> {
                       builder: (context) {
                         return LootNotificationsIOS(
                           callback: _callBackFromNotificationOptions,
+                          lootRangersEnabled: _dbLootRangersEnabled,
                         );
                       },
                     ),
@@ -295,7 +300,7 @@ class _LootPageState extends State<LootPage> {
       var npcBoxes = <Widget>[];
 
       // If Loot Rangers is active, return LR's order
-      if (_lootRangersIdOrder.isNotEmpty) {
+      if (_lootRangersIdOrder.isNotEmpty && _dbLootRangersEnabled) {
         final sortedMap = Map<String, LootModel>();
         final originalMap = Map<String, LootModel>.of(_mainLootInfo);
         for (var id in _lootRangersIdOrder) {
@@ -305,7 +310,15 @@ class _LootPageState extends State<LootPage> {
             }
           });
         }
+
         _mainLootInfo = Map.from(sortedMap);
+
+        // Add the NPCs that might be missing in LootRangers
+        originalMap.forEach((npcId, npcDetails) {
+          if (!_lootRangersIdOrder.contains(npcId)) {
+            _mainLootInfo.addAll({npcId: npcDetails});
+          }
+        });
       }
 
       // Loop every NPC
@@ -641,7 +654,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   Widget _lootRangersWidget() {
-    if (_lootRangersNameOrder.isEmpty) return SizedBox.shrink();
+    if (_lootRangersNameOrder.isEmpty || !_dbLootRangersEnabled) return SizedBox.shrink();
 
     String timeString = "";
     var lrDateTime = DateTime.fromMillisecondsSinceEpoch(_lootRangersTime);
@@ -952,6 +965,9 @@ class _LootPageState extends State<LootPage> {
       dbHopsResult.forEach((key, value) {
         _dbLootInfo[key.toString()] = value;
       });
+
+      _dbLootRangersEnabled =
+          (await FirebaseDatabase.instance.ref().child("loot/lootRangersActive").once()).snapshot.value;
 
       return true;
     } catch (e) {
