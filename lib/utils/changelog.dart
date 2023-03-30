@@ -39,13 +39,13 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 291- 30/03/2023
+    // Build 292- 30/03/2023
 
     // VERSION 3.0.1
     var v3_0_1 = ChangeLogItem();
     v3_0_1.version = 'Torn PDA v3.0.1';
     v3_0_1.date = '01 APR 2023';
-    v3_0_1.infoString = "Hotfix for hidden foreign stocks persistence";
+    v3_0_1.infoString = "Hotfix for issues with hidden foreign stocks and stakeouts";
     String feat3_0_1_1 = "Added stakeouts section";
     String feat3_0_1_2 = "Added native Torn authentication (see Settings)";
     String feat3_0_1_3 = "Added alerts for medical and booster cooldowns";
