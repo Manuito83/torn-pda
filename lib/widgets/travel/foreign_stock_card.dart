@@ -2082,40 +2082,51 @@ class CountryCodeAndFlag extends StatelessWidget {
           break;
       }
     } else if (stock.countryCode != null) {
-      // Requested from hidden stocks
-      countryCode = stock.countryCode.toUpperCase();
+      // Requested from hidden stocks, codes differ!
+
       switch (stock.countryCode.toUpperCase()) {
-        case 'JPN':
+        case 'JAP':
+          countryCode = 'JPN';
           flag = 'images/flags/stock/japan.png';
           break;
         case 'HAW':
+          countryCode = 'HAW';
           flag = 'images/flags/stock/hawaii.png';
           break;
-        case 'CHN':
+        case 'CHI':
+          countryCode = 'CHN';
           flag = 'images/flags/stock/china.png';
           break;
         case 'ARG':
+          countryCode = 'ARG';
           flag = 'images/flags/stock/argentina.png';
           break;
-        case 'UK':
+        case 'UNI':
+          countryCode = 'UK';
           flag = 'images/flags/stock/uk.png';
           break;
         case 'CAY':
+          countryCode = 'CAY';
           flag = 'images/flags/stock/cayman.png';
           break;
-        case 'AFR':
+        case 'SOU':
+          countryCode = 'AFR';
           flag = 'images/flags/stock/south-africa.png';
           break;
         case 'SWI':
+          countryCode = 'SWI';
           flag = 'images/flags/stock/switzerland.png';
           break;
         case 'MEX':
+          countryCode = 'MEX';
           flag = 'images/flags/stock/mexico.png';
           break;
         case 'UAE':
+          countryCode = 'UAE';
           flag = 'images/flags/stock/uae.png';
           break;
         case 'CAN':
+          countryCode = 'CAN';
           flag = 'images/flags/stock/canada.png';
           break;
       }
