@@ -132,8 +132,6 @@ class StakeoutsController extends GetxController {
   }
 
   Future<AddStakeoutResult> addStakeout({@required String inputId}) async {
-    // TODO: error if already 15 stakeouts!
-
     // Return custom error code if stakeout already exists
     for (Stakeout st in stakeouts) {
       if (st.id.toString() == inputId) {
@@ -461,55 +459,70 @@ class StakeoutsController extends GetxController {
   void _alertStakeout({@required Stakeout alertStakeout, @required BasicProfileModel tornProfile}) {
     List<String> alerts = [];
     List<Widget> icons = <Widget>[];
+
     // Send alerts
-    bool okayNow = tornProfile.status.state == "Okay";
-    if (!alertStakeout.okayLast && okayNow) {
-      alerts.add("${alertStakeout.name} is now OK!");
-      icons.add(Icon(Icons.check, color: Colors.green));
+    if (alertStakeout.okayEnabled) {
+      bool okayNow = tornProfile.status.state == "Okay";
+      if (!alertStakeout.okayLast && okayNow) {
+        alerts.add("${alertStakeout.name} is now OK!");
+        icons.add(Icon(Icons.check, color: Colors.green));
+      }
     }
 
-    bool hospitalNow = tornProfile.status.state == "Hospital";
-    if (!alertStakeout.hospitalLast && hospitalNow) {
-      alerts.add("${alertStakeout.name} has been hospitalized!");
-      icons.add(Icon(FontAwesome.ambulance, color: Colors.red, size: 18));
+    if (alertStakeout.hospitalEnabled) {
+      bool hospitalNow = tornProfile.status.state == "Hospital";
+      if (!alertStakeout.hospitalLast && hospitalNow) {
+        alerts.add("${alertStakeout.name} has been hospitalized!");
+        icons.add(Icon(FontAwesome.ambulance, color: Colors.red, size: 18));
+      }
     }
 
-    bool revivableNow = tornProfile.revivable == 1;
-    if (!alertStakeout.revivableLast && revivableNow) {
-      alerts.add("${alertStakeout.name} is now revivable!");
-      icons.add(Icon(Icons.monitor_heart_outlined, color: Colors.green));
+    if (alertStakeout.revivableEnabled) {
+      bool revivableNow = tornProfile.revivable == 1;
+      if (!alertStakeout.revivableLast && revivableNow) {
+        alerts.add("${alertStakeout.name} is now revivable!");
+        icons.add(Icon(Icons.monitor_heart_outlined, color: Colors.green));
+      }
     }
 
-    bool landedNow = tornProfile.status.state != "Traveling";
-    if (!alertStakeout.landedLast && landedNow) {
-      alerts.add("${alertStakeout.name} has landed!");
-      icons.add(Icon(MdiIcons.airplaneLanding, color: Colors.blue));
+    if (alertStakeout.landedEnabled) {
+      bool landedNow = tornProfile.status.state != "Traveling";
+      if (!alertStakeout.landedLast && landedNow) {
+        alerts.add("${alertStakeout.name} has landed!");
+        icons.add(Icon(MdiIcons.airplaneLanding, color: Colors.blue));
+      }
     }
 
-    bool onlineNow = tornProfile.lastAction.status == "Online";
-    if (!alertStakeout.onlineLast && onlineNow) {
-      alerts.add("${alertStakeout.name} is online!");
-      icons.add(Icon(MdiIcons.circle, color: Colors.green));
+    if (alertStakeout.onlineEnabled) {
+      bool onlineNow = tornProfile.lastAction.status == "Online";
+      if (!alertStakeout.onlineLast && onlineNow) {
+        alerts.add("${alertStakeout.name} is online!");
+        icons.add(Icon(MdiIcons.circle, color: Colors.green));
+      }
     }
 
-    bool lifeBelowPercentageNow = tornProfile.life.current < alertStakeout.lifeBelowPercentageLimit;
-    if (!alertStakeout.lifeBelowPercentageLast && lifeBelowPercentageNow) {
-      alerts.add("${alertStakeout.name} life is below ${alertStakeout.lifeBelowPercentageLimit}%!");
-      icons.add(
-        Container(
-          child: Transform.rotate(
-            angle: 90 * math.pi / 180,
-            child: Icon(MdiIcons.glassStange, color: Colors.red),
+    if (alertStakeout.lifeBelowPercentageEnabled) {
+      bool lifeBelowPercentageNow = tornProfile.life.current < alertStakeout.lifeBelowPercentageLimit;
+      if (!alertStakeout.lifeBelowPercentageLast && lifeBelowPercentageNow) {
+        alerts.add("${alertStakeout.name} life is below ${alertStakeout.lifeBelowPercentageLimit}%!");
+        icons.add(
+          Container(
+            child: Transform.rotate(
+              angle: 90 * math.pi / 180,
+              child: Icon(MdiIcons.glassStange, color: Colors.red),
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
 
-    bool offlineLongerThanNow =
-        _getOfflineTimeInHours(lastAction: tornProfile.lastAction) > alertStakeout.offlineLongerThanLimit;
-    if (!alertStakeout.offlineLongerThanLast && offlineLongerThanNow) {
-      alerts.add("${alertStakeout.name} offline for longer than ${alertStakeout.offlineLongerThanLimit} hours!");
-      icons.add(Icon(Icons.hourglass_bottom_outlined, color: Colors.orange[800]));
+    if (alertStakeout.offlineLongerThanEnabled) {
+      bool offlineLongerThanNow =
+          _getOfflineTimeInHours(lastAction: tornProfile.lastAction) > alertStakeout.offlineLongerThanLimit;
+      if (!alertStakeout.offlineLongerThanLast && offlineLongerThanNow) {
+        alerts.add("${alertStakeout.name} offline for longer than ${alertStakeout.offlineLongerThanLimit} hours!");
+        icons.add(Icon(Icons.hourglass_bottom_outlined, color: Colors.orange[800]));
+      }
     }
 
     if (alerts.isNotEmpty) {
