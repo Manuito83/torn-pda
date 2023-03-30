@@ -25,7 +25,6 @@ import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:torn_pda/models/profile/own_profile_model.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
@@ -118,7 +117,52 @@ void backgroundCallback(Uri data) async {
 
     //await HomeWidget.saveWidgetData<String>('title', selectedGreeting);
     await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+  } else if (data.host == 'reloadClicked') {
+    fetchWidgetData();
   }
+}
+
+Future<void> fetchWidgetData({@required String apiKey}) async {
+  if (apiKey == null) apiKey = "";
+  if (apiKey.isNotEmpty) {
+    var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: 3);
+    if (apiResponse is OwnProfileExtended) {
+      HomeWidget.saveWidgetData<bool>('main_layout_visibility', true);
+      HomeWidget.saveWidgetData<bool>('error_layout_visibility', false);
+
+      HomeWidget.saveWidgetData<String>('title', apiResponse.name);
+      HomeWidget.saveWidgetData<String>('message', apiResponse.status.description);
+
+      // Energy
+      int currentEnergy = apiResponse.energy.current;
+      int maxEnergy = apiResponse.energy.maximum;
+      HomeWidget.saveWidgetData<int>('energy_current', currentEnergy);
+      HomeWidget.saveWidgetData<int>('energy_max', maxEnergy);
+      HomeWidget.saveWidgetData<String>('energy_text', "$currentEnergy/$maxEnergy");
+
+      // Nerve
+      int currentNerve = apiResponse.nerve.current;
+      int maxNerve = apiResponse.nerve.maximum;
+      HomeWidget.saveWidgetData<int>('nerve_current', currentNerve);
+      HomeWidget.saveWidgetData<int>('nerve_max', maxNerve);
+      HomeWidget.saveWidgetData<String>('nerve_text', "$currentNerve/$maxNerve");
+    } else {
+      // In case of API error
+      var error = apiResponse as ApiError;
+      HomeWidget.saveWidgetData<bool>('main_layout_visibility', false);
+      HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
+      HomeWidget.saveWidgetData<String>('error_message', "API error: ${error.errorReason}");
+      // TODO
+    }
+  } else {
+    // If API key is empty
+    HomeWidget.saveWidgetData<bool>('main_layout_visibility', false);
+    HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
+    HomeWidget.saveWidgetData<String>('error_message', "No API key found!");
+  }
+
+  // Update widget
+  HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
 }
 
 Future<void> main() async {
@@ -250,7 +294,7 @@ class _MyAppState extends State<MyApp> {
 
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _userProvider.loadPreferences().then((value) {
-      _loadWidgetData();
+      fetchWidgetData(apiKey: _userProvider.basic.userApiKey);
       //_startBackgroundUpdate(); TODO
     });
     // Home widget END ***
@@ -309,33 +353,6 @@ class _MyAppState extends State<MyApp> {
     );
 
     return mq;
-  }
-
-  Future<void> _loadWidgetData() async {
-    if (_userProvider.basic.userApiKey.isNotEmpty) {
-      var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: 3);
-      if (apiResponse is OwnProfileExtended) {
-        HomeWidget.saveWidgetData<String>('title', apiResponse.name);
-        HomeWidget.saveWidgetData<String>('message', apiResponse.status.description);
-
-        // Energy
-        int currentEnergy = apiResponse.energy.current;
-        int maxEnergy = apiResponse.energy.maximum;
-        HomeWidget.saveWidgetData<int>('energy_current', currentEnergy);
-        HomeWidget.saveWidgetData<int>('energy_max', maxEnergy);
-        HomeWidget.saveWidgetData<String>('energy_text', "$currentEnergy/$maxEnergy");
-
-        // Nerve
-        int currentNerve = apiResponse.nerve.current;
-        int maxNerve = apiResponse.nerve.maximum;
-        HomeWidget.saveWidgetData<int>('nerve_current', currentNerve);
-        HomeWidget.saveWidgetData<int>('nerve_max', maxNerve);
-        HomeWidget.saveWidgetData<String>('nerve_text', "$currentNerve/$maxNerve");
-
-        // Update widget
-        HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
-      }
-    }
   }
 
   void _startBackgroundUpdate() async {
