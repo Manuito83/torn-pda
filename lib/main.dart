@@ -46,9 +46,9 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.0.0';
-const String androidCompilation = '291';
-const String iosCompilation = '291';
+const String appVersion = '3.0.1';
+const String androidCompilation = '292';
+const String iosCompilation = '292';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 

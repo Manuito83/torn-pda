@@ -1500,17 +1500,23 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       _hiddenStocks.add(stock);
     });
 
-    var hiddenSaveList = <String>[];
-    for (var h in _hiddenStocks) {
-      hiddenSaveList.add(foreignStockToJson(h));
-    }
-    Prefs().setHiddenForeignStocks(hiddenSaveList);
+    _saveHiddenStocks();
   }
 
   _unhideMember(int id, String countryCode) {
     setState(() {
       _hiddenStocks.removeWhere((element) => element.id == id && element.countryCode == countryCode);
     });
+
+    _saveHiddenStocks();
+  }
+
+  _saveHiddenStocks() {
+    var hiddenSaveList = <String>[];
+    for (var h in _hiddenStocks) {
+      hiddenSaveList.add(foreignStockToJson(h));
+    }
+    Prefs().setHiddenForeignStocks(hiddenSaveList);
   }
 }
 

@@ -213,6 +213,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   void _launchShowCases(BuildContext _) async {
     if (!widget.displayShowcase) return;
     await Future.delayed(Duration(seconds: 1), () async {
+      if (!mounted) return;
+
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
 
       if (!_settingsProvider.showCases.contains("foreign_flagIcon")) {
