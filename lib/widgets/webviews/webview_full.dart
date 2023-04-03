@@ -373,7 +373,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       useWideViewPort: false,
       allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
       disableLongPressContextMenuOnLinks: true,
-      ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
+      ignoresViewportScaleLimits: true,
+      disallowOverScroll: true,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -1124,7 +1125,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
             return true;
           },
-          onCloseWindow: (controller) {
+          onCloseWindow: (controller) async {
+            await Future.delayed(Duration(seconds: 2));
             _webViewProvider.removeTab(calledFromTab: true);
           },
           onLoadStart: (c, uri) async {
