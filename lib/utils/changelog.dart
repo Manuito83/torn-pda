@@ -39,8 +39,17 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 293- 30/03/2023
+    // Build 294 - 04/04/2023
 
+    // VERSION 3.0.2
+    var v3_0_2 = ChangeLogItem();
+    v3_0_2.version = 'Torn PDA v3.0.2';
+    v3_0_2.date = '10 APR 2023';
+    String feat3_0_2_1 = "Added option to disallow lateral overscroll issues with iOS 16 (see Settings)";
+    String feat3_0_2_2 = "Fixed issues with several dialogs in the browser";
+    if (Platform.isIOS) v3_0_2.features.add(feat3_0_2_1);
+    v3_0_2.features.add(feat3_0_2_2);
+    
     // VERSION 3.0.1
     var v3_0_1 = ChangeLogItem();
     v3_0_1.version = 'Torn PDA v3.0.1';
@@ -1339,6 +1348,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_0_2);
     itemList.add(v3_0_1);
     itemList.add(v2_9_6);
     itemList.add(v2_9_5);

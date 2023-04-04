@@ -73,6 +73,7 @@ class Prefs {
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
+  final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
@@ -857,6 +858,16 @@ class Prefs {
   Future<bool> setIosBrowserPinch(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kIosBrowserPinch, value);
+  }
+
+  Future<bool> getIosDisallowOverscroll() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kIosDisallowOverscroll) ?? false;
+  }
+
+  Future<bool> setIosDisallowOverscroll(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kIosDisallowOverscroll, value);
   }
 
   /// ----------------------------

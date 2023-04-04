@@ -115,7 +115,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                   SizedBox(height: 15),
                                   Divider(),
                                   SizedBox(height: 10),
-                                  _linkPreview(),
+                                  _linkPreview(),                                  
                                 ],
                               ),
                             if (Platform.isIOS)
@@ -125,6 +125,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                   Divider(),
                                   SizedBox(height: 10),
                                   _pinchGesture(),
+                                  _iosDisallowOverScroll(),
                                 ],
                               ),
                             SizedBox(height: 15),
@@ -462,6 +463,49 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     activeColor: Colors.green,
                   ),
                 ],
+              ),
+            ),            
+          ],
+        ),
+      ],
+    );
+  }
+
+  Column _iosDisallowOverScroll() {
+    return Column(
+      children: [
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Disallow overscroll"),
+                  Switch(
+                    value: _settingsProvider.iosDisallowOverscroll,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.setIosDisallowOverscroll = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Certain iOS versions (e.g.: iOS 16) might have issues with Torn overscrolling horizontally. '
+                'By using this option you might get rid of such behavior. NOTE: this will restrict pull-to-refresh '
+                'to work only from swipes at the top part of the browser.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
           ],

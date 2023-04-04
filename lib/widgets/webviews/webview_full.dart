@@ -373,8 +373,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       useWideViewPort: false,
       allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
       disableLongPressContextMenuOnLinks: true,
-      ignoresViewportScaleLimits: true,
-      disallowOverScroll: true,
+      ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
+      disallowOverScroll: _settingsProvider.iosDisallowOverscroll,
     );
 
     _pullToRefreshController = PullToRefreshController(
