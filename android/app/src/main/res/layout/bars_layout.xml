@@ -3,10 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="8dp"
+    android:layout_margin="0dp"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="10dp">
+    android:padding="15dp">
 
     <!-- MAIN LAYOUT -->
     <LinearLayout
@@ -15,34 +15,131 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@drawable/widget_background"
-        android:visibility="gone">
+        android:visibility="visible">
 
-        <TextView
-            android:id="@+id/widget_title"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            tools:text="Title" />
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/widget_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            tools:text="Message" />
+            <ImageView
+                android:id="@+id/widget_pda_logo_main"
+                android:layout_width="20dp"
+                android:layout_height="18dp"
+                android:adjustViewBounds="true"
+                android:src="@drawable/torn_pda" />
+
+            <ImageView
+                android:id="@+id/widget_status_icon_main"
+                android:layout_width="20dp"
+                android:layout_height="18dp"
+                android:padding="2dp"
+                android:adjustViewBounds="true"
+                android:visibility="visible"
+                android:layout_toEndOf="@id/widget_pda_logo_main"
+                android:src="@drawable/plane_left" />
+
+            <ImageView
+                android:id="@+id/widget_status_extra_icon_main"
+                android:layout_width="20dp"
+                android:layout_height="18dp"
+                android:padding="2dp"
+                android:adjustViewBounds="true"
+                android:visibility="visible"
+                android:layout_toEndOf="@id/widget_status_icon_main"
+                android:src="@drawable/hospital" />
+
+            <!--
+            <TextView
+                android:id="@+id/widget_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#000000"
+                android:layout_marginLeft="5dp"
+                android:layout_toEndOf="@id/widget_pda_logo_main"
+                tools:text="Player" />
+
+            <TextView
+                android:id="@+id/widget_title_dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:layout_toEndOf="@id/widget_title"
+                android:text=" - " />
+            -->
+
+            <TextView
+                android:id="@+id/widget_status_green"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textStyle="normal"
+                android:textColor="#000000"
+                android:layout_marginLeft="2dp"
+                android:ellipsize="end"
+                android:visibility="visible"
+                android:singleLine="true"
+                android:layout_toEndOf="@id/widget_status_extra_icon_main"
+                android:layout_toStartOf="@id/widget_icon_messages"
+                tools:text="Status" />
+
+            <TextView
+                android:id="@+id/widget_status_red"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#C60303"
+                android:layout_marginLeft="2dp"
+                android:ellipsize="end"
+                android:visibility="gone"
+                android:singleLine="true"
+                android:layout_toEndOf="@id/widget_status_icon_main"
+                android:layout_toStartOf="@id/widget_icon_messages"
+                tools:text="Status" />
+
+            <TextView
+                android:id="@+id/widget_status_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#03A9F4"
+                android:layout_marginLeft="2dp"
+                android:ellipsize="end"
+                android:visibility="gone"
+                android:singleLine="true"
+                android:layout_toEndOf="@id/widget_status_icon_main"
+                android:layout_toStartOf="@id/widget_icon_messages"
+                tools:text="Status" />
+
+            <ImageView
+                android:id="@+id/widget_icon_messages"
+                android:src="@drawable/icon_reload"
+                android:layout_width="wrap_content"
+                android:layout_height="12dp"
+                android:layout_marginTop="3dp"
+                android:adjustViewBounds="true"
+                android:layout_alignParentRight="true"
+                />
+        </RelativeLayout>
+
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2">
+            android:layout_marginTop="4dp"
+            android:weightSum="4">
 
             <LinearLayout
+                android:id="@+id/widget_energy_box"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:layout_marginRight="5dp"
+                android:layout_marginRight="10dp"
                 android:orientation="vertical"
                 android:layout_weight="1">
 
@@ -50,7 +147,9 @@
                     android:id="@+id/widget_energy_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
+                    android:layout_marginBottom="-3dp"
+                    android:textSize="11sp"
+                    android:textColor="#000000"
                     tools:text="0" />
 
                 <ProgressBar
@@ -58,14 +157,16 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:progress="0"
-                    android:progressTint="#00FF00" />
+                    android:progress="50"
+                    android:progressTint="#01C301" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/widget_nerve_box"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
+                android:layout_marginRight="10dp"
                 android:orientation="vertical"
                 android:layout_weight="1">
 
@@ -73,7 +174,9 @@
                     android:id="@+id/widget_nerve_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
+                    android:layout_marginBottom="-3dp"
+                    android:textSize="11sp"
+                    android:textColor="#000000"
                     tools:text="0" />
 
                 <ProgressBar
@@ -81,9 +184,88 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:progress="0"
-                    android:progressTint="#FF0000" />
+                    android:progress="50"
+                    android:progressTint="#C60303" />
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_happy_box"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginRight="10dp"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/widget_happy_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="-3dp"
+                    android:textSize="11sp"
+                    android:textColor="#000000"
+                    tools:text="0" />
+
+                <ProgressBar
+                    android:id="@+id/widget_happy_bar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:progress="50"
+                    android:progressTint="#E6AD02" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_life_box"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/widget_life_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="-3dp"
+                    android:textSize="11sp"
+                    android:textColor="#000000"
+                    tools:text="0" />
+
+                <ProgressBar
+                    android:id="@+id/widget_life_bar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:progress="50"
+                    android:progressTint="#03A9F4" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp"
+            android:weightSum="2">
+
+            <ImageView
+                android:id="@+id/widget_icon_reload"
+                android:layout_width="wrap_content"
+                android:layout_height="12dp"
+                android:layout_marginTop="3dp"
+                android:layout_marginRight="5dp"
+                android:adjustViewBounds="true"
+                android:src="@drawable/icon_reload" />
+
+            <TextView
+                android:id="@+id/widget_last_updated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="#000000"
+                android:text="Last update" />
         </LinearLayout>
 
     </LinearLayout>
@@ -91,12 +273,13 @@
     <!-- ERROR LAYOUT -->
     <LinearLayout
         android:id="@+id/widget_error_layout"
-        android:visibility="visible"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
         <ImageView
+            android:id="@+id/widget_pda_logo_error"
             android:layout_width="41dp"
             android:layout_height="41dp"
             android:layout_marginLeft="10dp"
@@ -117,20 +300,37 @@
                 android:layout_marginTop="15dp"
                 android:textSize="12sp"
                 android:textStyle="bold"
+                android:textColor="#000000"
                 tools:text="Loading..." />
 
-            <ImageView
-                android:id="@+id/widget_icon_reload"
-                android:layout_width="12dp"
-                android:layout_height="12dp"
-                android:layout_marginLeft="5dp"
-                android:layout_marginTop="5dp"
-                android:adjustViewBounds="true"
-                android:src="@drawable/icon_reload" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/widget_error_action_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginTop="3dp"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#000000"
+                    android:text="Reload" />
+
+                <ImageView
+                    android:id="@+id/widget_icon_reload_error"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginTop="5dp"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/icon_reload" />
+
+            </LinearLayout>
 
         </LinearLayout>
-
-
 
     </LinearLayout>
 

@@ -9,20 +9,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Intent;
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:home_widget/home_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
+import 'package:receive_intent/receive_intent.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
@@ -42,7 +41,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -52,6 +50,7 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/home_widget/pda_widget.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
@@ -130,6 +129,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   // Platform channel with MainActivity.java
   static const platform = MethodChannel('tornpda.channel');
+
+  // Intent receiver subscription
+  StreamSubscription _intentListenerSub;
 
   @override
   void initState() {
@@ -256,6 +258,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // Handle notifications
     _getBackGroundNotifications();
     _removeExistingNotifications();
+
+    // Init intent listener (for appWidget)
+    _initIntentListenerSubscription();
+    _initIntentReceiverOnLaunch();
   }
 
   @override
@@ -263,6 +269,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     selectNotificationSubject.close();
     WidgetsBinding.instance.removeObserver(this);
     _deepLinkSub.cancel();
+    _intentListenerSub.cancel();
     super.dispose();
   }
 
@@ -322,10 +329,64 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       // Resume stats counting
       _statsController.logCheckIn();
+
+      // App widget - reset background updater
+      pdaWidget_handleBackgroundUpdateStatus();
     }
   }
 
-  // Deep links
+  // ## Intent Listener (for appWidget)
+  Future<void> _initIntentReceiverOnLaunch() async {
+    final intent = await ReceiveIntent.getInitialIntent();
+    if (!mounted || intent.data == null) return;
+    log("Intent received: ${intent.data}");
+    await _assessIntent(intent);
+  }
+
+  Future<void> _initIntentListenerSubscription() async {
+    _intentListenerSub = ReceiveIntent.receivedIntentStream.listen((Intent intent) async {
+      if (!mounted || intent.data == null) return;
+      await _assessIntent(intent);
+    }, onError: (err) {
+      log(err);
+    });
+  }
+
+  Future<void> _assessIntent(Intent intent) async {
+    log("Intent received: ${intent.data}");
+
+    bool launchBrowser = false;
+    var browserUrl = "https://www.torn.com";
+
+    if (intent.data.contains("pdaWidget://energy-box-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/gym.php";
+    } else if (intent.data.contains("pdaWidget://blue-status-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/";
+    }
+
+    if (launchBrowser) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      if (Platform.isAndroid) {
+        await Future.delayed(const Duration(milliseconds: 2000));
+      } else if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 2500));
+      }
+
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      if (launchBrowser) {
+        _webViewProvider.openBrowserPreference(
+          context: context,
+          url: browserUrl,
+          useDialog: _settingsProvider?.useQuickBrowser ?? true,
+        );
+      }
+    }
+  }
+  // ## END Intent Listener (for appWidget)
+
+  // ## Deep links
   Future _deepLinksInit() async {
     if (_deepLinkInitOnce) return;
     _deepLinkInitOnce = true;
@@ -395,7 +456,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       print(e);
     }
   }
-  // END Deep links
+  // ## END Deep links
 
   Future<void> _removeExistingNotifications() async {
     // Get rid of iOS badge (notifications will be removed by the system)
@@ -1434,6 +1495,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // Set up UserScriptsProvider so that user preferences are applied
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
+
+    // Set up UserProvider. If key is empty, redirect to the Settings page.
+    // Else, open the default
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    await _userProvider.loadPreferences();
 
     // User Provider was started in Main
     // If key is empty, redirect to the Settings page.

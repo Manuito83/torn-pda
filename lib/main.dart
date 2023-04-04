@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 import 'dart:ui' as ui;
 // Package imports:
@@ -24,8 +23,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:torn_pda/models/profile/own_profile_model.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/home_widget/pda_widget.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
@@ -77,97 +75,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
-/// Used for Background Updates using Workmanager Plugin
-@pragma("vm:entry-point")
-void callbackDispatcher() {
-  Workmanager().executeTask((taskName, inputData) async {
-    DateTime now = DateTime.now();
-    log("EXECUTED $taskName AT ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}");
-    await HomeWidget.saveWidgetData(
-      'title',
-      'Updated from Background',
-    );
-    await HomeWidget.saveWidgetData(
-      'message',
-      '$taskName: ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}'
-          ':${now.second.toString().padLeft(2, '0')}',
-    );
-    await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
-    log("$taskName finished @ ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}");
-    return true;
-  });
-}
-
-/// Called when Doing Background Work initiated from Widget
-@pragma("vm:entry-point")
-void backgroundCallback(Uri data) async {
-  print(data);
-
-  if (data.host == 'titleclicked') {
-    var now = DateTime.now();
-    HomeWidget.saveWidgetData(
-      'title',
-      'Widget clicked @',
-    );
-    HomeWidget.saveWidgetData(
-      'message',
-      '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}'
-          ':${now.second.toString().padLeft(2, '0')}',
-    );
-
-    //await HomeWidget.saveWidgetData<String>('title', selectedGreeting);
-    await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
-  } else if (data.host == 'reloadClicked') {
-    fetchWidgetData();
-  }
-}
-
-Future<void> fetchWidgetData({@required String apiKey}) async {
-  if (apiKey == null) apiKey = "";
-  if (apiKey.isNotEmpty) {
-    var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: 3);
-    if (apiResponse is OwnProfileExtended) {
-      HomeWidget.saveWidgetData<bool>('main_layout_visibility', true);
-      HomeWidget.saveWidgetData<bool>('error_layout_visibility', false);
-
-      HomeWidget.saveWidgetData<String>('title', apiResponse.name);
-      HomeWidget.saveWidgetData<String>('message', apiResponse.status.description);
-
-      // Energy
-      int currentEnergy = apiResponse.energy.current;
-      int maxEnergy = apiResponse.energy.maximum;
-      HomeWidget.saveWidgetData<int>('energy_current', currentEnergy);
-      HomeWidget.saveWidgetData<int>('energy_max', maxEnergy);
-      HomeWidget.saveWidgetData<String>('energy_text', "$currentEnergy/$maxEnergy");
-
-      // Nerve
-      int currentNerve = apiResponse.nerve.current;
-      int maxNerve = apiResponse.nerve.maximum;
-      HomeWidget.saveWidgetData<int>('nerve_current', currentNerve);
-      HomeWidget.saveWidgetData<int>('nerve_max', maxNerve);
-      HomeWidget.saveWidgetData<String>('nerve_text', "$currentNerve/$maxNerve");
-    } else {
-      // In case of API error
-      var error = apiResponse as ApiError;
-      HomeWidget.saveWidgetData<bool>('main_layout_visibility', false);
-      HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
-      HomeWidget.saveWidgetData<String>('error_message', "API error: ${error.errorReason}");
-      // TODO
-    }
-  } else {
-    // If API key is empty
-    HomeWidget.saveWidgetData<bool>('main_layout_visibility', false);
-    HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
-    HomeWidget.saveWidgetData<String>('error_message', "No API key found!");
-  }
-
-  // Update widget
-  HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
-}
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Workmanager().initialize(callbackDispatcher, isInDebugMode: kDebugMode);
+  Workmanager().initialize(pdaWidget_backgroundUpdate, isInDebugMode: kDebugMode);
   tz.initializeTimeZones();
   const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
   const initializationSettingsIOS = IOSInitializationSettings();
@@ -273,7 +183,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeProvider _themeProvider;
-  UserDetailsProvider _userProvider;
 
   @override
   void initState() {
@@ -281,23 +190,8 @@ class _MyAppState extends State<MyApp> {
 
     // Handle home widget
     HomeWidget.setAppGroupId('torn_pda');
-    HomeWidget.registerBackgroundCallback(backgroundCallback);
-
-    // Home widget ***
-    // Check whether the user is using a widget
-    const platform = MethodChannel('tornpda.channel');
-    platform.invokeMethod('widgetCount').then((value) {
-      var list = value as List<int>;
-      log("Installed widgets count: ${list.length}");
-      // TODO: more here all other actions?
-    });
-
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    _userProvider.loadPreferences().then((value) {
-      fetchWidgetData(apiKey: _userProvider.basic.userApiKey);
-      //_startBackgroundUpdate(); TODO
-    });
-    // Home widget END ***
+    HomeWidget.registerBackgroundCallback(pdaWidget_callback);
+    pdaWidget_handleBackgroundUpdateStatus();
   }
 
   @override
@@ -353,18 +247,6 @@ class _MyAppState extends State<MyApp> {
     );
 
     return mq;
-  }
-
-  void _startBackgroundUpdate() async {
-    await Workmanager().cancelAll();
-    Workmanager().registerPeriodicTask('pdaWidget_1', 'widgetBackgroundUpdate').then((value) async {
-      Future.delayed(Duration(minutes: 5)).then((value) async {
-        Workmanager().registerPeriodicTask('pdaWidget_2', 'widgetBackgroundUpdate');
-        Future.delayed(Duration(minutes: 5)).then((value) {
-          Workmanager().registerPeriodicTask('pdaWidget_3', 'widgetBackgroundUpdate');
-        });
-      });
-    });
   }
 }
 

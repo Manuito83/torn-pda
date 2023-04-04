@@ -190,9 +190,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> getOwnProfileExtended({@required int limit}) async {
+  Future<dynamic> getOwnProfileExtended({@required int limit, String forcedApiKey = ""}) async {
     dynamic apiResult;
-    await _apiCall(apiSelection: ApiSelection.ownExtended, limit: limit).then((value) {
+    await _apiCall(apiSelection: ApiSelection.ownExtended, limit: limit, forcedApiKey: forcedApiKey).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {

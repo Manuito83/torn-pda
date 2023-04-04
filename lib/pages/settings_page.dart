@@ -24,6 +24,7 @@ import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
+import 'package:torn_pda/utils/home_widget/pda_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
@@ -2116,6 +2117,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
           // Signal stat counter initialization
           widget.statsController.logFirstLoginEver();
+
+          // Update the home widget if it's installed
+          if ((await pdaWidget_numberInstalled()) > 0) {
+            pdaWidget_fetchData();
+          }
         }
       } else if (myProfile is ApiError) {
         setState(() {
