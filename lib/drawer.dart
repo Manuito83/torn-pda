@@ -303,7 +303,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused) {
       // Stop stakeouts
       if (_s != null) {
@@ -313,6 +313,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       // Stop stats counting
       _statsController.logCheckOut();
+
+      // Refresh widget to have up to date info when we exit
+      if (await pdaWidget_numberInstalled() > 0) {
+        pdaWidget_startBackgroundUpdate();
+      }
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();

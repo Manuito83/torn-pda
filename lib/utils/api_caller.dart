@@ -10,6 +10,7 @@ import 'package:dio/io.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
@@ -52,6 +53,7 @@ enum ApiType {
 */
 
 enum ApiSelection {
+  appWidget,
   travel,
   ownBasic,
   ownExtended,
@@ -156,6 +158,23 @@ class ApiError {
 }
 
 class TornApiCaller {
+  Future<dynamic> getAppWidgetInfo({@required int limit, @required String forcedApiKey}) async {
+    dynamic apiResult;
+    await _apiCall(apiSelection: ApiSelection.appWidget, limit: limit, forcedApiKey: forcedApiKey).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return AppWidgetApiModel.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> getTravel() async {
     dynamic apiResult;
     await _apiCall(apiSelection: ApiSelection.travel).then((value) {
@@ -605,6 +624,9 @@ class TornApiCaller {
     String url = 'https://api.torn.com:443/';
 
     switch (apiSelection) {
+      case ApiSelection.appWidget:
+        url += 'user/?selections=profile,icons,bars,cooldowns,newevents,newmessages,travel,money';
+        break;
       case ApiSelection.travel:
         url += 'user/?selections=money,travel';
         break;
