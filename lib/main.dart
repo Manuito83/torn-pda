@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:ui' as ui;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -13,7 +14,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show PlatformDispatcher, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -47,8 +48,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.0.2';
-const String androidCompilation = '294';
-const String iosCompilation = '294';
+const String androidCompilation = '295';
+const String iosCompilation = '295';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -57,7 +58,8 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (message.data["channelId"].contains("Alerts stocks") == true) {
+  try {
+    if (message.data["channelId"].contains("Alerts stocks") == true) {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
     final oldData = await Prefs().getDataStockMarket();
@@ -69,6 +71,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     }
     Prefs().setDataStockMarket(newData);
   }
+  } catch (e) {
+    FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");
+    FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+  }  
 }
 
 Future<void> main() async {
@@ -100,6 +106,23 @@ Future<void> main() async {
   }
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // Catch errors that happen outside of the Flutter context
+  Isolate.current.addErrorListener(RawReceivePort((pair) async {
+  final List<dynamic> errorAndStacktrace = pair;
+  await FirebaseCrashlytics.instance.recordError(
+    errorAndStacktrace.first,
+    errorAndStacktrace.last,
+    fatal: true,
+  );
+  }).sendPort);
+
 
   // TODO: remove certificate?
   //ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');

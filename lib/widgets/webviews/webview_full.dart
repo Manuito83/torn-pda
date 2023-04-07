@@ -10,6 +10,7 @@ import 'package:bot_toast/bot_toast.dart';
 //import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -397,11 +398,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    webView = null;
-    _findController.dispose();
-    _chainWidgetController.dispose();
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
+    try {
+      webView = null;
+      _findController.dispose();
+      _chainWidgetController.dispose();
+      WidgetsBinding.instance.removeObserver(this);
+      super.dispose();
+    } catch (e) {
+      FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+    }
   }
 
   @override
