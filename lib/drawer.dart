@@ -32,6 +32,7 @@ import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
@@ -362,13 +363,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     bool launchBrowser = false;
     var browserUrl = "https://www.torn.com";
-
     if (intent.data.contains("pdaWidget://energy-box-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
     } else if (intent.data.contains("pdaWidget://blue-status-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/";
+    } else if (intent.data.contains("pdaWidget://empty-shortcuts-clicked")) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
+      return;
     }
 
     if (launchBrowser) {

@@ -7,9 +7,11 @@ import 'dart:io';
 // Package imports:
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 
 // Project imports:
@@ -167,6 +169,9 @@ class TornApiCaller {
       try {
         return AppWidgetApiModel.fromJson(apiResult);
       } catch (e, trace) {
+        // Need to initialize Firebase in the isolate for Crashlytics (Api Caller) to work in this isolate
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
@@ -706,7 +711,7 @@ class TornApiCaller {
         url += 'torn/?selections=rankedwars';
         break;
     }
-    url += '&key=$apiKey&comment=PDA-App&limit=$limit';
+    url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit';
 
     try {
       Dio dio = Dio(

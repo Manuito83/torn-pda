@@ -209,14 +209,14 @@ class Chain {
   int current;
   int maximum;
   int timeout;
-  int modifier;
+  double modifier;
   int cooldown;
 
   factory Chain.fromJson(Map<String, dynamic> json) => Chain(
         current: json["current"],
         maximum: json["maximum"],
         timeout: json["timeout"],
-        modifier: json["modifier"],
+        modifier: json["modifier"].toDouble(),
         cooldown: json["cooldown"],
       );
 

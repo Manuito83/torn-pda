@@ -116,6 +116,9 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         PendingIntent eventsIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://events-clicked"));
         view.setOnClickPendingIntent(R.id.widget_main_events_box, eventsIntent);
 
+        PendingIntent emptyShortcutsIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://empty-shortcuts-clicked"));
+        view.setOnClickPendingIntent(R.id.widget_shortcuts_empty_box, emptyShortcutsIntent);
+
         // ## MAIN LAYOUT ##
         // Main layout visibility
         boolean main_visibility = prefs.getBoolean("main_layout_visibility", false);
@@ -159,9 +162,9 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                         view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_canada);
                     }
                 } else if (status.contains("Torn in")) {
-                    view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_right);
-                } else {
                     view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_left);
+                } else {
+                    view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_right);
                 }
                 view.setViewVisibility(R.id.widget_status_green, View.GONE);
                 view.setViewVisibility(R.id.widget_status_red, View.GONE);
@@ -374,6 +377,123 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             view.setViewVisibility(R.id.widget_icon_booster4, View.VISIBLE);
         } else if (boosterLevel == 5) {
             view.setViewVisibility(R.id.widget_icon_booster5, View.VISIBLE);
+        }
+
+        // ## SHORTCUTS
+        int shortcutsNumber = prefs.getInt("shortcuts_number", 0);
+        if (shortcutsNumber == 0) {
+            view.setTextViewText(R.id.widget_shortcuts_empty_text, "No shortcuts configured, add some?");
+            view.setViewVisibility(R.id.widget_shortcuts_empty_box, View.VISIBLE);
+        } else {
+            view.setViewVisibility(R.id.widget_shortcuts_empty_box, View.GONE);
+            
+            // Short 1
+            String shortcut1_name = prefs.getString("shortcut1_name", "");
+            if (!shortcut1_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut1_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut1_text, shortcut1_name);
+                String shortcut1_url = prefs.getString("shortcut1_url", "");
+                PendingIntent shortcut1_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut1_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut1_text, shortcut1_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut1_text, View.INVISIBLE);
+            }
+
+            // Short 2
+            String shortcut2_name = prefs.getString("shortcut2_name", "");
+            if (!shortcut2_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut2_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut2_text, shortcut2_name);
+                String shortcut2_url = prefs.getString("shortcut2_url", "");
+                PendingIntent shortcut2_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut2_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut2_text, shortcut2_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut2_text, View.INVISIBLE);
+            }
+
+            // Short 3
+            String shortcut3_name = prefs.getString("shortcut3_name", "");
+            if (!shortcut3_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut3_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut3_text, shortcut3_name);
+                String shortcut3_url = prefs.getString("shortcut3_url", "");
+                PendingIntent shortcut3_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut3_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut3_text, shortcut3_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut3_text, View.INVISIBLE);
+            }
+
+            // Short 4
+            String shortcut4_name = prefs.getString("shortcut4_name", "");
+            if (!shortcut4_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut4_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut4_text, shortcut4_name);
+                String shortcut4_url = prefs.getString("shortcut4_url", "");
+                PendingIntent shortcut4_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut4_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut4_text, shortcut4_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut4_text, View.INVISIBLE);
+            }
+
+            // Short 5
+            String shortcut5_name = prefs.getString("shortcut5_name", "");
+            if (!shortcut5_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut5_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut5_text, shortcut5_name);
+                String shortcut5_url = prefs.getString("shortcut5_url", "");
+                PendingIntent shortcut5_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut5_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut5_text, shortcut5_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut5_text, View.INVISIBLE);
+            }
+
+            // Short 6
+            String shortcut6_name = prefs.getString("shortcut6_name", "");
+            if (!shortcut6_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut6_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut6_text, shortcut6_name);
+                String shortcut6_url = prefs.getString("shortcut6_url", "");
+                PendingIntent shortcut6_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut6_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut6_text, shortcut6_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut6_text, View.INVISIBLE);
+            }
+
+            // Short 7
+            String shortcut7_name = prefs.getString("shortcut7_name", "");
+            if (!shortcut7_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut7_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut7_text, shortcut7_name);
+                String shortcut7_url = prefs.getString("shortcut7_url", "");
+                PendingIntent shortcut7_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut7_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut7_text, shortcut7_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut7_text, View.INVISIBLE);
+            }
+
+            // Short 8
+            String shortcut8_name = prefs.getString("shortcut8_name", "");
+            if (!shortcut8_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut8_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut8_text, shortcut8_name);
+                String shortcut8_url = prefs.getString("shortcut8_url", "");
+                PendingIntent shortcut8_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut8_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut8_text, shortcut8_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut8_text, View.INVISIBLE);
+            }
+
+            // Short 9
+            String shortcut9_name = prefs.getString("shortcut9_name", "");
+            if (!shortcut9_name.isEmpty()) {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut9_text, View.VISIBLE);
+                view.setTextViewText(R.id.widget_shortcuts_shortcut9_text, shortcut9_name);
+                String shortcut9_url = prefs.getString("shortcut9_url", "");
+                PendingIntent shortcut9_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut9_url));
+                view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut9_text, shortcut9_intent);
+            } else {
+                view.setViewVisibility(R.id.widget_shortcuts_shortcut9_text, View.INVISIBLE);
+            }
         }
 
         // ## ERROR LAYOUT ##

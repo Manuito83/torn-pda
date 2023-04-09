@@ -1,10 +1,9 @@
 import 'dart:developer';
-
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/country_check.dart';
@@ -70,7 +69,6 @@ void pdaWidget_backgroundUpdate() {
 @pragma("vm:entry-point")
 void pdaWidget_callback(Uri data) async {
   log(data.toString());
-
   if (data.host == 'reload-clicked') {
     HomeWidget.saveWidgetData<bool>('reloading', true);
     HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
@@ -175,10 +173,18 @@ Future<void> pdaWidget_fetchData() async {
 
         // Chain
         int currentChain = user.chain.current;
-        int maxChain = user.chain.maximum;
+        int maxChain = 10;
+        // TODO
+        if (currentChain > 1000 && currentChain <= 2500) {
+          maxChain = 2500;
+        }
         HomeWidget.saveWidgetData<int>('chain_current', currentChain);
         HomeWidget.saveWidgetData<int>('chain_max', maxChain);
-        HomeWidget.saveWidgetData<String>('chain_text', "$currentChain");
+        if (user.chain.cooldown > 0) {
+          HomeWidget.saveWidgetData<String>('chain_text', "COOLDOWN");
+        } else {
+          HomeWidget.saveWidgetData<String>('chain_text', "$currentChain");
+        }
 
         // Last Updated
         String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
@@ -290,6 +296,40 @@ Future<void> pdaWidget_fetchData() async {
 
         HomeWidget.saveWidgetData<int>('booster_level', boosterLevel);
         HomeWidget.saveWidgetData<String>('booster_string', boosterString);
+
+        // SHORTCUTS
+        var savedShortcuts = await Prefs().getActiveShortcutsList();
+        List<Shortcut> shortcuts = <Shortcut>[];
+        for (var savedShortRaw in savedShortcuts) {
+          shortcuts.add(shortcutFromJson(savedShortRaw));
+        }
+        // Send total number of shortcuts to determine whether the section is present
+        HomeWidget.saveWidgetData<int>('shortcuts_number', shortcuts.length);
+
+        // Reset all shortcuts
+        for (int i = 0; i < 9; i++) {
+          HomeWidget.saveWidgetData<String>('shortcut${i + 1}_name', "");
+          HomeWidget.saveWidgetData<String>('shortcut${i + 1}_url', "");
+        }
+
+        // Set the current active shortcuts
+        for (int i = 0; i < shortcuts.length; i++) {
+          HomeWidget.saveWidgetData<String>('shortcut${i + 1}_name', shortcuts[i].nickname);
+          String url = shortcuts[i].url;
+          if (shortcuts[i].addPlayerId != null) {
+            // Avoid null objects coming before the introduction of this replacement (v2.9.4)
+            if (shortcuts[i].addPlayerId) {
+              url = url.replaceAll("##P##", user.playerId.toString());
+            }
+            if (shortcuts[i].addFactionId) {
+              url = url.replaceAll("##F##", user.faction.factionId.toString());
+            }
+            if (shortcuts[i].addCompanyId) {
+              url = url.replaceAll("##C##", user.job.companyId.toString());
+            }
+          }
+          HomeWidget.saveWidgetData<String>('shortcut${i + 1}_url', url);
+        }
       } else {
         // In case of API error
         var error = user as ApiError;

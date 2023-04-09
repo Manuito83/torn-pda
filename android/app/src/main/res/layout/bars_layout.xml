@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="15dp">
+    android:padding="12dp">
 
     <!-- MAIN LAYOUT -->
     <RelativeLayout
@@ -56,7 +56,7 @@
                 android:textSize="12sp"
                 android:textStyle="normal"
                 android:textColor="#000000"
-                android:layout_marginLeft="2dp"
+                android:layout_marginStart="2dp"
                 android:ellipsize="end"
                 android:visibility="visible"
                 android:singleLine="true"
@@ -71,7 +71,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#C60303"
-                android:layout_marginLeft="2dp"
+                android:layout_marginStart="2dp"
                 android:ellipsize="end"
                 android:visibility="gone"
                 android:singleLine="true"
@@ -86,7 +86,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#03A9F4"
-                android:layout_marginLeft="2dp"
+                android:layout_marginStart="2dp"
                 android:ellipsize="end"
                 android:visibility="gone"
                 android:singleLine="true"
@@ -112,7 +112,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="13sp"
-                        android:layout_marginRight="-1dp"
+                        android:layout_marginEnd="-1dp"
                         android:textColor="#01C301"
                         android:textStyle="bold"
                         android:visibility="visible"
@@ -130,7 +130,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="17dp"
                             android:layout_marginTop="2dp"
-                            android:layout_marginRight="3dp"
+                            android:layout_marginEnd="3dp"
                             android:visibility="visible"
                             android:adjustViewBounds="true" />
 
@@ -140,7 +140,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="17dp"
                             android:layout_marginTop="2dp"
-                            android:layout_marginRight="3dp"
+                            android:layout_marginEnd="3dp"
                             android:visibility="gone"
                             android:adjustViewBounds="true" />
                         
@@ -158,7 +158,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="13sp"
-                        android:layout_marginRight="-1dp"
+                        android:layout_marginEnd="-1dp"
                         android:textColor="#01C301"
                         android:textStyle="bold"
                         android:visibility="visible"
@@ -201,13 +201,13 @@
             android:layout_below="@id/widget_main_container_top"
             android:orientation="horizontal"
             android:layout_marginTop="4dp"
-            android:weightSum="4">
+            android:weightSum="4"
+            android:baselineAligned="false">
 
             <LinearLayout
                 android:id="@+id/widget_container_bars_left"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/widget_main_container_top"
                 android:orientation="vertical"
                 android:layout_weight="4">
 
@@ -215,7 +215,6 @@
                     android:id="@+id/widget_container_bars_stats"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/widget_main_container_top"
                     android:orientation="horizontal"
                     android:gravity="center">
 
@@ -231,7 +230,7 @@
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
-                            android:layout_marginLeft="11dp"
+                            android:layout_marginStart="11dp"
                             android:gravity="center"
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
@@ -248,7 +247,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="10dp"
                                 android:layout_marginTop="3dp"
-                                android:layout_marginRight="2dp"
+                                android:layout_marginEnd="2dp"
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/energy_mini" />
 
@@ -274,7 +273,7 @@
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
-                            android:layout_marginLeft="11dp"
+                            android:layout_marginStart="11dp"
                             android:gravity="center"
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
@@ -291,7 +290,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="10dp"
                                 android:layout_marginTop="3dp"
-                                android:layout_marginRight="2dp"
+                                android:layout_marginEnd="2dp"
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/nerve_mini" />
 
@@ -317,7 +316,7 @@
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
-                            android:layout_marginLeft="11dp"
+                            android:layout_marginStart="11dp"
                             android:gravity="center"
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
@@ -334,7 +333,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="10dp"
                                 android:layout_marginTop="3dp"
-                                android:layout_marginRight="2dp"
+                                android:layout_marginEnd="2dp"
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/happy_mini" />
 
@@ -353,7 +352,7 @@
                     android:id="@+id/widget_container_bars_bottom"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="3dp"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -373,7 +372,7 @@
                                 android:id="@+id/widget_icon_reload"
                                 android:layout_width="20dp"
                                 android:layout_height="15dp"
-                                android:layout_marginRight="5dp"
+                                android:layout_marginEnd="5dp"
                                 android:src="@drawable/icon_reload"
                                 android:visibility="visible" />
 
@@ -389,7 +388,6 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:layout_toEndOf="@id/widget_icon_reload"
                             android:text="Last update"
                             android:textColor="#000000"
                             android:textSize="12sp" />
@@ -399,7 +397,7 @@
                         android:id="@+id/widget_cooldowns_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
                         android:layout_toRightOf="@id/widget_update_box"
                         android:orientation="horizontal">
 
@@ -450,7 +448,7 @@
                             android:id="@+id/widget_medical_box"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginLeft="10dp"
+                            android:layout_marginStart="10dp"
                             android:orientation="horizontal">
 
                             <ImageView
@@ -494,7 +492,7 @@
                             android:id="@+id/widget_booster_box"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginLeft="10dp"
+                            android:layout_marginStart="10dp"
                             android:orientation="horizontal">
 
                             <ImageView
@@ -557,7 +555,7 @@
                         android:layout_width="60dp"
                         android:layout_height="wrap_content"
                         android:textSize="10sp"
-                        android:layout_marginLeft="6dp"
+                        android:layout_marginStart="6dp"
                         android:gravity="center"
                         android:layout_marginBottom="-4dp"
                         android:textColor="#000000"
@@ -574,7 +572,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="10dp"
                             android:layout_marginTop="3dp"
-                            android:layout_marginRight="2dp"
+                            android:layout_marginEnd="2dp"
                             android:adjustViewBounds="true"
                             android:src="@drawable/life_mini" />
 
@@ -591,10 +589,9 @@
                 <LinearLayout
                     android:id="@+id/widget_chain_box"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="0dp"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:layout_alignParentRight="true"
                     android:layout_weight="1">
 
                     <TextView
@@ -602,7 +599,7 @@
                         android:layout_width="60dp"
                         android:layout_height="wrap_content"
                         android:textSize="10sp"
-                        android:layout_marginLeft="6dp"
+                        android:layout_marginStart="6dp"
                         android:gravity="center"
                         android:layout_marginBottom="-4dp"
                         android:textColor="#000000"
@@ -619,7 +616,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="10dp"
                             android:layout_marginTop="3dp"
-                            android:layout_marginRight="2dp"
+                            android:layout_marginEnd="2dp"
                             android:adjustViewBounds="true"
                             android:src="@drawable/chain_mini" />
 
@@ -638,23 +635,262 @@
         <LinearLayout
             android:id="@+id/widget_shortcuts_box"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="300dp"
+            android:paddingTop="3dp"
+            android:gravity="center"
             android:layout_below="@id/widget_main_container_bars"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/widget_shortcuts_empty_message"
+            <LinearLayout
+                android:id="@+id/widget_shortcuts_empty_box"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="#000000"
-                android:visibility="visible"
+                android:layout_height="match_parent"
                 android:gravity="center"
-                tools:text="Shorcuts" />
+                android:visibility="gone"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/widget_shortcuts_empty_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textColor="#000000"
+                    android:layout_marginEnd="5dp"
+                    tools:text="No shortcuts configured, add some?" />
+
+                <ImageView
+                    android:id="@+id/widget_shortcuts_empty_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginStart="5dp"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/shortcut_icon" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_shortcuts_top_box"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="3dp"
+                android:paddingBottom="1dp"
+                android:visibility="visible"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut1_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut2_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 2" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut3_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 3" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_shortcuts_middle_box"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="3dp"
+                android:paddingBottom="1dp"
+                android:visibility="visible"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut4_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 4" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center">
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut5_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 5" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut6_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 6" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_shortcuts_bottom_box"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="3dp"
+                android:paddingBottom="1dp"
+                android:visibility="visible"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut7_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 7" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut8_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 8" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center" >
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut9_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:textSize="9sp"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:layout_marginEnd="2dp"
+                        android:gravity="center"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:visibility="visible"
+                        android:background="@drawable/shortcut_background"
+                        tools:text="Shortcut 9" />
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
-
     </RelativeLayout>
 
     <!-- ERROR LAYOUT -->
@@ -669,7 +905,7 @@
             android:id="@+id/widget_pda_logo_error"
             android:layout_width="41dp"
             android:layout_height="41dp"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
             android:layout_marginTop="12dp"
             android:adjustViewBounds="true"
             android:src="@drawable/torn_pda" />
@@ -683,7 +919,7 @@
                 android:id="@+id/widget_error_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
                 android:layout_marginTop="15dp"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -699,7 +935,7 @@
                     android:id="@+id/widget_error_action_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginStart="5dp"
                     android:layout_marginTop="3dp"
                     android:textSize="11sp"
                     android:textStyle="bold"
@@ -710,7 +946,7 @@
                     android:id="@+id/widget_icon_reload_error"
                     android:layout_width="12dp"
                     android:layout_height="12dp"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginStart="5dp"
                     android:layout_marginTop="5dp"
                     android:adjustViewBounds="true"
                     android:layout_toEndOf="@id/widget_error_action_text"

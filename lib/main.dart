@@ -23,6 +23,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/utils/home_widget/pda_widget.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
@@ -94,7 +95,7 @@ Future<void> main() async {
 
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
