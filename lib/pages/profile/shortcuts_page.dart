@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
@@ -179,68 +180,70 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
           var activeShortcuts = <Widget>[];
           for (var short in shortcutProvider.activeShortcuts) {
             activeShortcuts.add(
-              Slidable(
+              Scrollable(
                 key: UniqueKey(),
-                startActionPane: ActionPane(
-                  motion: const ScrollMotion(),
-                  extentRatio: 0.25,
-                  children: [
-                    SlidableAction(
-                      backgroundColor: Colors.red,
-                      icon: Icons.remove_circle_outline_outlined,
-                      onPressed: (context) {
-                        _shortcutsProvider.deactivateShortcut(short);
-                      },
-                    ),
-                  ],
-                ),
-                endActionPane: ActionPane(
-                  motion: const ScrollMotion(),
-                  extentRatio: 0.25,
-                  children: [
-                    SlidableAction(
-                      backgroundColor: Colors.blue,
-                      icon: Icons.edit,
-                      onPressed: (context) {
-                        _customNameController.text = short.nickname;
-                        _customURLController.text = short.url;
-                        _openEditDialog(short);
-                      },
-                    ),
-                  ],
-                ),
-                child: Container(
-                  height: 50,
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(color: short.color, width: 1.5),
-                      borderRadius: BorderRadius.circular(4.0),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.all(2),
-                            child: Image.asset(
-                              short.iconUrl,
-                              width: 18,
-                              height: 18,
-                              color: _themeProvider.mainText,
+                viewportBuilder: (BuildContext context, ViewportOffset position) => Slidable(
+                  startActionPane: ActionPane(
+                    motion: const ScrollMotion(),
+                    extentRatio: 0.25,
+                    children: [
+                      SlidableAction(
+                        backgroundColor: Colors.red,
+                        icon: Icons.remove_circle_outline_outlined,
+                        onPressed: (context) {
+                          _shortcutsProvider.deactivateShortcut(short);
+                        },
+                      ),
+                    ],
+                  ),
+                  endActionPane: ActionPane(
+                    motion: const ScrollMotion(),
+                    extentRatio: 0.25,
+                    children: [
+                      SlidableAction(
+                        backgroundColor: Colors.blue,
+                        icon: Icons.edit,
+                        onPressed: (context) {
+                          _customNameController.text = short.nickname;
+                          _customURLController.text = short.url;
+                          _openEditDialog(short);
+                        },
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    height: 50,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(color: short.color, width: 1.5),
+                        borderRadius: BorderRadius.circular(4.0),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(2),
+                              child: Image.asset(
+                                short.iconUrl,
+                                width: 18,
+                                height: 18,
+                                color: _themeProvider.mainText,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Flexible(child: Text(short.name)),
-                                Icon(Icons.reorder),
-                              ],
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Flexible(child: Text(short.name)),
+                                  Icon(Icons.reorder),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
