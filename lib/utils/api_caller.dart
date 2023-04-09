@@ -684,7 +684,7 @@ class TornApiCaller {
         url += 'torn/?selections=rankedwars';
         break;
     }
-    url += '&key=$apiKey&comment=PDA-App&limit=$limit';
+    url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit';
 
     try {
       Dio dio = Dio(
