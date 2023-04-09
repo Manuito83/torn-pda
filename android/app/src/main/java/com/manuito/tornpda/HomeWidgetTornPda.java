@@ -137,7 +137,10 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         String status = prefs.getString("status", "Status");
         String statusColor = prefs.getString("status_color", "green");
         String country = prefs.getString("country", "Torn");
+
+        // If we are ABROAD
         if (!country.equals("Torn")) {
+            // Abroad but NOT IN HOSPITAL
             if (!statusColor.equals("red")) {
                 // If we are flying to/from or visiting a country (not in hospital)
                 if (status.contains("Visiting")) {
@@ -164,50 +167,63 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                     } else if (country.contains("Canada")) {
                         view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_canada);
                     }
-                } else if (status.contains("Torn in")) {
+                } else if (status.contains("Torn in")) { // Returning
                     view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_left);
-                } else {
+                } else { // Flying abroad
                     view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_right);
                 }
+                view.setTextViewText(R.id.widget_status_blue, status);
+
                 view.setViewVisibility(R.id.widget_status_green, View.GONE);
                 view.setViewVisibility(R.id.widget_status_red, View.GONE);
                 view.setViewVisibility(R.id.widget_status_blue, View.VISIBLE);
-                view.setTextViewText(R.id.widget_status_blue, status);
+                view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
+                view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
 
                 PendingIntent blueStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-icon-clicked"));
                 view.setOnClickPendingIntent(R.id.widget_status_icon_main, blueStatusIconIntent);
-                view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
-                view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
+                view.setOnClickPendingIntent(R.id.widget_status_blue, blueStatusIconIntent);
+            // Abroad AND IN HOSPITAL
             } else {
                 // Special case for when we are hospitalized abroad
+                view.setTextViewText(R.id.widget_status_red, status);
+
                 view.setViewVisibility(R.id.widget_status_green, View.GONE);
                 view.setViewVisibility(R.id.widget_status_red, View.VISIBLE);
                 view.setViewVisibility(R.id.widget_status_blue, View.GONE);
-                view.setTextViewText(R.id.widget_status_red, status);
+                view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
+                view.setViewVisibility(R.id.widget_status_extra_icon_main, View.VISIBLE);
 
                 // TODO??? Or to hospital??
                 // Report blue status clicked, even though we are in hospital, so that the browser opens to the country
-                PendingIntent blueStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-icon-clicked"));
-                view.setOnClickPendingIntent(R.id.widget_status_icon_main, blueStatusIconIntent);
-                view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
-                view.setViewVisibility(R.id.widget_status_extra_icon_main, View.VISIBLE);
+                PendingIntent abroadHospitalStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-icon-clicked"));
+                view.setOnClickPendingIntent(R.id.widget_status_icon_main, abroadHospitalStatusIconIntent);
+                view.setOnClickPendingIntent(R.id.widget_status_red, abroadHospitalStatusIconIntent);
+                view.setOnClickPendingIntent(R.id.widget_status_extra_icon_main, abroadHospitalStatusIconIntent);
             }
+        // We are NOT ABROAD, AND RED
         } else if (statusColor.equals("red")) {
+            view.setTextViewText(R.id.widget_status_red, status);
+
             view.setViewVisibility(R.id.widget_status_green, View.GONE);
             view.setViewVisibility(R.id.widget_status_red, View.VISIBLE);
             view.setViewVisibility(R.id.widget_status_blue, View.GONE);
-            view.setTextViewText(R.id.widget_status_red, status);
-            if (status.contains("Hospital")) {
-                view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.hospital);
-                PendingIntent redStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://hospital-status-icon-clicked"));
-                view.setOnClickPendingIntent(R.id.widget_status_icon_main, redStatusIconIntent);
-            } else if (status.contains("Jail")) {
-                view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.jail);
-                PendingIntent redStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://jail-status-icon-clicked"));
-                view.setOnClickPendingIntent(R.id.widget_status_icon_main, redStatusIconIntent);
-            }
             view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
             view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
+
+            if (status.contains("Hospital")) {
+                view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.hospital);
+                PendingIntent hospitalStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://hospital-status-icon-clicked"));
+                view.setOnClickPendingIntent(R.id.widget_status_icon_main, hospitalStatusIconIntent);
+                view.setOnClickPendingIntent(R.id.widget_status_red, hospitalStatusIconIntent);
+            } else if (status.contains("Jail")) {
+                view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.jail);
+                PendingIntent jailStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://jail-status-icon-clicked"));
+                view.setOnClickPendingIntent(R.id.widget_status_icon_main, jailStatusIconIntent);
+                view.setOnClickPendingIntent(R.id.widget_status_red, jailStatusIconIntent);
+            }
+
+        // We are OKAY
         } else {
             view.setViewVisibility(R.id.widget_status_green, View.VISIBLE);
             view.setViewVisibility(R.id.widget_status_red, View.GONE);
