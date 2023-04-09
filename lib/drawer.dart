@@ -366,9 +366,47 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     if (intent.data.contains("pdaWidget://energy-box-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
-    } else if (intent.data.contains("pdaWidget://blue-status-clicked")) {
+    } else if (intent.data.contains("pdaWidget://nerve-box-clicked")) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/";
+      browserUrl = "https://www.torn.com/crimes.php";
+    } else if (intent.data.contains("pdaWidget://happy-box-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#candy-items";
+    } else if (intent.data.contains("pdaWidget://life-box-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+    } else if (intent.data.contains("pdaWidget://blue-status-clicked") ||
+        intent.data.contains("pdaWidget://blue-status-icon-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com";
+    } else if (intent.data.contains("pdaWidget://hospital-status-icon-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/hospitalview.php";
+    } else if (intent.data.contains("pdaWidget://jail-status-icon-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/jailview.php";
+    } else if (intent.data.contains("pdaWidget://messages-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/messages.php";
+    } else if (intent.data.contains("pdaWidget://events-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/events.php";
+    } else if (intent.data.contains("pdaWidget://shortcut:")) {
+      String shortcutUrl = intent.data.split("pdaWidget://shortcut:")[1];
+      launchBrowser = true;
+      browserUrl = shortcutUrl;
+    } else if (intent.data.contains("pdaWidget://drug-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#drugs-items";
+    } else if (intent.data.contains("pdaWidget://medical-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+    } else if (intent.data.contains("pdaWidget://booster-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#boosters-items";
+    } else if (intent.data.contains("pdaWidget://chain-box-clicked")) {
+      _callSectionFromOutside(2); // Chaining
+      return;
     } else if (intent.data.contains("pdaWidget://empty-shortcuts-clicked")) {
       Navigator.of(context).push(
         MaterialPageRoute(

@@ -173,11 +173,36 @@ Future<void> pdaWidget_fetchData() async {
 
         // Chain
         int currentChain = user.chain.current;
+
+        // We do it manually to avoid an extra API call to Faction/Chain
+        // (in User/Bars the chain max is the one achieved by the user)
         int maxChain = 10;
-        // TODO
-        if (currentChain > 1000 && currentChain <= 2500) {
+        if (currentChain >= 10 && currentChain < 25) {
+          maxChain = 25;
+        } else if (currentChain >= 25 && currentChain < 50) {
+          maxChain = 50;
+        } else if (currentChain >= 50 && currentChain < 100) {
+          maxChain = 100;
+        } else if (currentChain >= 100 && currentChain < 250) {
+          maxChain = 250;
+        } else if (currentChain >= 250 && currentChain < 500) {
+          maxChain = 500;
+        } else if (currentChain >= 500 && currentChain < 1000) {
+          maxChain = 1000;
+        } else if (currentChain >= 1000 && currentChain < 2500) {
           maxChain = 2500;
+        } else if (currentChain >= 2500 && currentChain < 5000) {
+          maxChain = 5000;
+        } else if (currentChain >= 5000 && currentChain < 10000) {
+          maxChain = 10000;
+        } else if (currentChain >= 10000 && currentChain < 25000) {
+          maxChain = 25000;
+        } else if (currentChain >= 25000 && currentChain < 50000) {
+          maxChain = 50000;
+        } else if (currentChain >= 50000 && currentChain < 100000) {
+          maxChain = 100000;
         }
+
         HomeWidget.saveWidgetData<int>('chain_current', currentChain);
         HomeWidget.saveWidgetData<int>('chain_max', maxChain);
         if (user.chain.cooldown > 0) {

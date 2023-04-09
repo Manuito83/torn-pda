@@ -107,6 +107,9 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         PendingIntent lifeBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://life-box-clicked"));
         view.setOnClickPendingIntent(R.id.widget_life_box, lifeBoxIntent);
 
+        PendingIntent chainBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://chain-box-clicked"));
+        view.setOnClickPendingIntent(R.id.widget_chain_box, chainBoxIntent);
+
         PendingIntent blueStatusIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-clicked"));
         view.setOnClickPendingIntent(R.id.widget_status_blue, blueStatusIntent);
 
