@@ -1454,7 +1454,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onLongPressHitTestResult: (controller, result) async {
             var focus = await controller.requestFocusNodeHref();
 
-            if (result.extra != null) {
+            if (result.extra != null && focus != null) {
               // If not in this page already
               if (result.extra.replaceAll("#", "") != _currentUrl &&
                   // And the link does not go to a profile (in which case the mini profile opens)
@@ -1463,7 +1463,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       // Or, if it goes to an image, it's not an award image (let mini profiles work)
                       (result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE &&
                           !result.extra.contains("awardimages")))) {
-                _showLongPressCard(focus.src, focus.url);
+                if (focus.url != null) {
+                  _showLongPressCard(focus.src, focus.url);
+                }
               }
             }
           },
