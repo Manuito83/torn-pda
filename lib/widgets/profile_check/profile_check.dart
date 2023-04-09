@@ -6,7 +6,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +24,6 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
-import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
@@ -59,6 +57,8 @@ class ProfileAttackCheckWidget extends StatefulWidget {
 }
 
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
+  final navigatorKey = GlobalKey<NavigatorState>();
+  
   Future _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
@@ -1298,93 +1298,71 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
     }
 
-    BotToast.showAnimationWidget(
-      clickClose: false,
-      allowClick: false,
-      onlyOne: true,
-      wrapToastAnimation: (controller, cancel, child) => Stack(
-        children: <Widget>[
-          GestureDetector(
-            onTap: () {
-              cancel();
-            },
-            child: AnimatedBuilder(
-              builder: (_, child) => Opacity(
-                opacity: controller.value,
-                child: child,
-              ),
-              child: DecoratedBox(
-                decoration: BoxDecoration(color: Colors.black26),
-                child: SizedBox.expand(),
-              ),
-              animation: controller,
-            ),
-          ),
-          CustomOffsetAnimation(
-            controller: controller,
-            child: child,
-          )
-        ],
-      ),
-      toastBuilder: (cancelFunc) => AlertDialog(
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true, 
+      builder: (BuildContext context) {
+        return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         title: name.isNotEmpty ? Text(name) : Text("Spied stats"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (factionName != "0" && factionName.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(4),
-                child: Text(
-                  "Faction: ${factionName}",
-                  style: TextStyle(fontSize: 12),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (factionName != "0" && factionName.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    "Faction: ${factionName}",
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
-              ),
-            if (lastUpdated.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(4),
-                child: Text(
-                  "Updated: $lastUpdated",
-                  style: TextStyle(fontSize: 12),
+              if (lastUpdated.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    "Updated: $lastUpdated",
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
+                child: strWidget,
               ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
-              child: strWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
-              child: spdWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
-              child: defWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
-              child: dexWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: totalWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: sourceWidget,
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: spdWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: defWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: dexWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: totalWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: sourceWidget,
+              ),
+            ],
+          ),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              cancelFunc();
+              Navigator.pop(context);
             },
             child: const Text('Thanks'),
           ),
         ],
-      ),
-      animationDuration: Duration(milliseconds: 300),
+      );
+      },
     );
   }
 
@@ -1543,89 +1521,68 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       ],
     );
 
-    BotToast.showAnimationWidget(
-      clickClose: false,
-      allowClick: false,
-      onlyOne: true,
-      wrapToastAnimation: (controller, cancel, child) => Stack(
-        children: <Widget>[
-          GestureDetector(
-            onTap: () {
-              cancel();
-            },
-            child: AnimatedBuilder(
-              builder: (_, child) => Opacity(
-                opacity: controller.value,
-                child: child,
-              ),
-              child: DecoratedBox(
-                decoration: BoxDecoration(color: Colors.black26),
-                child: SizedBox.expand(),
-              ),
-              animation: controller,
-            ),
-          ),
-          CustomOffsetAnimation(
-            controller: controller,
-            child: child,
-          )
-        ],
-      ),
-      toastBuilder: (cancelFunc) => AlertDialog(
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) {
+        return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         title: Text(otherProfile.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (otherProfile.faction.factionName != "0")
-              Padding(
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  "Faction: ${otherProfile.faction.factionName}",
-                  style: TextStyle(fontSize: 12),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (otherProfile.faction.factionName != "0")
+                Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Text(
+                    "Faction: ${otherProfile.faction.factionName}",
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
-              ),
-            if (otherProfile.lastAction.relative.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  "Online: ${otherProfile.lastAction.relative.replaceAll(RegExp('0 minutes ago'), "now")}",
-                  style: TextStyle(fontSize: 12),
+              if (otherProfile.lastAction.relative.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Text(
+                    "Online: ${otherProfile.lastAction.relative.replaceAll(RegExp('0 minutes ago'), "now")}",
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                child: xanaxWidget,
               ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-              child: xanaxWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-              child: refillWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-              child: enhancementWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-              child: cansWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-              child: sslWidget,
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                child: refillWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                child: enhancementWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                child: cansWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                child: sslWidget,
+              ),
+            ],
+          ),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              cancelFunc();
+              Navigator.pop(context);
             },
             child: const Text('Thanks'),
           ),
         ],
-      ),
-      animationDuration: Duration(milliseconds: 300),
+      );
+      },
     );
   }
+  
 }

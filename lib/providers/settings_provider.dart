@@ -101,6 +101,13 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setIosBrowserPinch(_iosBrowserPinch);
   }
 
+  var _iosDisallowOverscroll = false;
+  bool get iosDisallowOverscroll => _iosDisallowOverscroll;
+  set setIosDisallowOverscroll(bool disallow) {
+    _iosDisallowOverscroll = disallow;
+    Prefs().setIosDisallowOverscroll(_iosDisallowOverscroll);
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {
@@ -623,6 +630,7 @@ class SettingsProvider extends ChangeNotifier {
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
 
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
+    _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 

@@ -1134,7 +1134,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   onPressed: () {
                                     FocusScope.of(context).requestFocus(new FocusNode());
                                     if (_formKey.currentState.validate()) {
-                                      _myCurrentKey = _apiKeyInputController.text;
+                                      _myCurrentKey = _apiKeyInputController.text.trim();
                                       _getApiDetails(userTriggered: true, reload: true);
                                     }
                                   },

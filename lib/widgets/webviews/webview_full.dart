@@ -10,6 +10,7 @@ import 'package:bot_toast/bot_toast.dart';
 //import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -374,6 +375,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
       disableLongPressContextMenuOnLinks: true,
       ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
+      disallowOverScroll: _settingsProvider.iosDisallowOverscroll,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -396,11 +398,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    webView = null;
-    _findController.dispose();
-    _chainWidgetController.dispose();
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
+    try {
+      webView = null;
+      _findController.dispose();
+      _chainWidgetController.dispose();
+      WidgetsBinding.instance.removeObserver(this);
+      super.dispose();
+    } catch (e) {
+      FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+    }
   }
 
   @override
@@ -1124,7 +1131,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
             return true;
           },
-          onCloseWindow: (controller) {
+          onCloseWindow: (controller) async {
+            await Future.delayed(Duration(seconds: 2));
             _webViewProvider.removeTab(calledFromTab: true);
           },
           onLoadStart: (c, uri) async {
@@ -1446,7 +1454,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onLongPressHitTestResult: (controller, result) async {
             var focus = await controller.requestFocusNodeHref();
 
-            if (result.extra != null) {
+            if (result.extra != null && focus != null) {
               // If not in this page already
               if (result.extra.replaceAll("#", "") != _currentUrl &&
                   // And the link does not go to a profile (in which case the mini profile opens)
@@ -1455,7 +1463,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       // Or, if it goes to an image, it's not an award image (let mini profiles work)
                       (result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE &&
                           !result.extra.contains("awardimages")))) {
-                _showLongPressCard(focus.src, focus.url);
+                if (focus.url != null) {
+                  _showLongPressCard(focus.src, focus.url);
+                }
               }
             }
           },

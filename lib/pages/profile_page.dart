@@ -5147,7 +5147,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (splitPayload.length < 2) {
         continue;
       }
-      var oldTimeStamp = int.parse(splitPayload[1]);
+      var stringTs = splitPayload[1];
+      var oldTimeStamp = int.tryParse(stringTs);
+      if (oldTimeStamp == null) {
+        continue;
+      }
 
       // ENERGY
       if (notification.payload.contains('energy')) {
