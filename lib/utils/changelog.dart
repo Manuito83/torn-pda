@@ -50,13 +50,15 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_0_2_3 = "Fixed issues when requesting spied stats";
     String feat3_0_2_4 = "Fixed NNB layout margins";
     String feat3_0_2_5 = "Fixed issues with several dialogs in the browser";
-    String feat3_0_2_6 = "Fixed rendering issues when sorting items";
+    String feat3_0_2_6 = "Fixed information shown in Ranked Wars cards";
+    String feat3_0_2_7 = "Fixed rendering issues when sorting items";
     if (Platform.isIOS) v3_0_2.features.add(feat3_0_2_1);
     v3_0_2.features.add(feat3_0_2_2);
     v3_0_2.features.add(feat3_0_2_3);
     v3_0_2.features.add(feat3_0_2_4);
     v3_0_2.features.add(feat3_0_2_5);
     v3_0_2.features.add(feat3_0_2_6);
+    v3_0_2.features.add(feat3_0_2_7);
 
     // VERSION 3.0.1
     var v3_0_1 = ChangeLogItem();
