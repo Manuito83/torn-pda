@@ -48,8 +48,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.0.2';
-const String androidCompilation = '295';
-const String iosCompilation = '295';
+const String androidCompilation = '296';
+const String iosCompilation = '296';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -60,21 +60,21 @@ final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     if (message.data["channelId"].contains("Alerts stocks") == true) {
-    // Reload isolate (as we are reading from background)
-    await Prefs().reload();
-    final oldData = await Prefs().getDataStockMarket();
-    var newData = "";
-    if (oldData.isNotEmpty) {
-      newData = "$oldData\n${message.notification.body}";
-    } else {
-      newData = "$oldData${message.notification.body}";
+      // Reload isolate (as we are reading from background)
+      await Prefs().reload();
+      final oldData = await Prefs().getDataStockMarket();
+      var newData = "";
+      if (oldData.isNotEmpty) {
+        newData = "$oldData\n${message.notification.body}";
+      } else {
+        newData = "$oldData${message.notification.body}";
+      }
+      Prefs().setDataStockMarket(newData);
     }
-    Prefs().setDataStockMarket(newData);
-  }
   } catch (e) {
     FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");
     FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
-  }  
+  }
 }
 
 Future<void> main() async {
@@ -115,14 +115,13 @@ Future<void> main() async {
 
   // Catch errors that happen outside of the Flutter context
   Isolate.current.addErrorListener(RawReceivePort((pair) async {
-  final List<dynamic> errorAndStacktrace = pair;
-  await FirebaseCrashlytics.instance.recordError(
-    errorAndStacktrace.first,
-    errorAndStacktrace.last,
-    fatal: true,
-  );
+    final List<dynamic> errorAndStacktrace = pair;
+    await FirebaseCrashlytics.instance.recordError(
+      errorAndStacktrace.first,
+      errorAndStacktrace.last,
+      fatal: true,
+    );
   }).sendPort);
-
 
   // TODO: remove certificate?
   //ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');

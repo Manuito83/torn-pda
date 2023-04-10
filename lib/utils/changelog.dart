@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 295 - 07/04/2023
+    // Build 296 - 10/04/2023
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();
     v3_0_2.version = 'Torn PDA v3.0.2';
-    v3_0_2.date = '15 APR 2023';
+    v3_0_2.date = '18 APR 2023';
     String feat3_0_2_1 = "Added option to disallow lateral overscroll issues with iOS 16 (see Settings)";
     String feat3_0_2_2 = "Updated missing Torn icons";
     String feat3_0_2_3 = "Fixed issues when requesting spied stats";
