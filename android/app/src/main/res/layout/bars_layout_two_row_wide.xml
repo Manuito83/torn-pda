@@ -635,7 +635,7 @@
         <LinearLayout
             android:id="@+id/widget_shortcuts_box"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="150dp"
             android:paddingTop="3dp"
             android:gravity="center"
             android:layout_below="@id/widget_main_container_bars"
@@ -682,21 +682,22 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
+
                     <TextView
                         android:id="@+id/widget_shortcuts_shortcut1_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:textSize="9sp"
-                        android:textAllCaps="true"
-                        android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:background="@drawable/shortcut_background"
+                        android:ellipsize="end"
+                        android:gravity="center"
                         android:paddingLeft="2dip"
                         android:paddingRight="2dip"
-                        android:gravity="center"
-                        android:ellipsize="end"
                         android:singleLine="true"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:textSize="9sp"
                         android:visibility="visible"
-                        android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 1" />
                 </LinearLayout>
 
