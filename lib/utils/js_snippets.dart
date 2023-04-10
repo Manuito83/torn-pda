@@ -1172,6 +1172,8 @@ String ocNNB({@required String members}) {
 	
       function loadNNB () {
 
+		    var iw = window.innerWidth;
+
         // Avoid adding NNB twice
         var savedFound = document.querySelector(".pdaNNBListener") !== null;
         if (!savedFound) {
@@ -1204,16 +1206,52 @@ String ocNNB({@required String members}) {
         );
 
         addStyle(
-          `.member.pda-modified {
-          width: 80px !important;
+          `.member.pda-modified-top-narrow {
+          width: 140px !important;
           }`
         );
+		
+        addStyle(
+              `.member.pda-modified-top-wide {
+              width: 200px !important;
+              }`
+            );
+        
+        addStyle(
+              `.member.pda-modified-bottom-narrow {
+              width: 80px !important;
+              }`
+            );
+		
+        addStyle(
+              `.member.pda-modified-bottom-wide {
+              width: 140px !important;
+              }`
+            );
 
         addStyle(
-          `.level.pda-modified {
+          `.level.pda-modified-top-narrow {
           width: 15px !important;
           }`
         );
+        
+        addStyle(
+              `.level.pda-modified-top-wide {
+              width: 25px !important;
+              }`
+            );
+		
+        addStyle(
+            `.level.pda-modified-bottom-narrow {
+              width: 15px !important;
+              }`
+            );
+        
+        addStyle(
+            `.level.pda-modified-bottom-wide {
+              width: 25px !important;
+              }`
+            );
 
         addStyle(
           `.offences.pda-modified {
@@ -1257,8 +1295,20 @@ String ocNNB({@required String members}) {
           if (row !== null) 
           {
             row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
+            
             row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
-            row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
+                  if (iw < 785) {
+              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-top-narrow"));
+            } else {
+              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-top-wide"));
+            }
+                  
+            if (iw < 387) {
+              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-top-narrow"));
+            } else {
+              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-top-wide"));
+            }				
+                  
             row.querySelectorAll(`.stat`).forEach((element) => element.classList.add("pda-modified"));
             
             let stat = row.querySelector(".stat");
@@ -1293,8 +1343,20 @@ String ocNNB({@required String members}) {
           var row = m.closest(".plans-list .item");
           if (row !== null) {
             row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
+            
             row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
-            row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified"));
+                  if (iw < 785) {
+              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-bottom-narrow"));
+            } else {
+              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-bottom-wide"));
+            }
+                  
+            if (iw < 387) {
+              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-bottom-narrow"));
+            } else {
+              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-bottom-wide"));
+            }	
+                  
             row.querySelectorAll(`.act`).forEach((element) => element.classList.add("pda-modified"));
               
             let act = row.querySelector(".act");
