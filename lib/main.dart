@@ -119,7 +119,8 @@ Future<void> main() async {
   await FirebaseCrashlytics.instance.recordError(
     errorAndStacktrace.first,
     errorAndStacktrace.last,
-    fatal: true,
+    reason: "Outside of Flutter Context",
+    fatal: false,
   );
   }).sendPort);
 
