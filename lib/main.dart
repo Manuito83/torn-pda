@@ -115,13 +115,13 @@ Future<void> main() async {
 
   // Catch errors that happen outside of the Flutter context
   Isolate.current.addErrorListener(RawReceivePort((pair) async {
-  final List<dynamic> errorAndStacktrace = pair;
-  await FirebaseCrashlytics.instance.recordError(
-    errorAndStacktrace.first,
-    errorAndStacktrace.last,
-    reason: "Outside of Flutter Context",
-    fatal: false,
-  );
+    final List<dynamic> errorAndStacktrace = pair;
+    await FirebaseCrashlytics.instance.recordError(
+      errorAndStacktrace.first,
+      errorAndStacktrace.last,
+      reason: "Outside of Flutter Context",
+      fatal: false,
+    );
   }).sendPort);
 
   // TODO: remove certificate?
