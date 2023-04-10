@@ -39,17 +39,27 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 295 - 07/04/2023
+    // Build 296 - 10/04/2023
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();
     v3_0_2.version = 'Torn PDA v3.0.2';
-    v3_0_2.date = '15 APR 2023';
+    v3_0_2.date = '18 APR 2023';
     String feat3_0_2_1 = "Added option to disallow lateral overscroll issues with iOS 16 (see Settings)";
-    String feat3_0_2_2 = "Fixed issues with several dialogs in the browser";
+    String feat3_0_2_2 = "Updated missing Torn icons";
+    String feat3_0_2_3 = "Fixed issues when requesting spied stats";
+    String feat3_0_2_4 = "Fixed NNB layout margins";
+    String feat3_0_2_5 = "Fixed issues with several dialogs in the browser";
+    String feat3_0_2_6 = "Fixed information shown in Ranked Wars cards";
+    String feat3_0_2_7 = "Fixed rendering issues when sorting items";
     if (Platform.isIOS) v3_0_2.features.add(feat3_0_2_1);
     v3_0_2.features.add(feat3_0_2_2);
-    
+    v3_0_2.features.add(feat3_0_2_3);
+    v3_0_2.features.add(feat3_0_2_4);
+    v3_0_2.features.add(feat3_0_2_5);
+    v3_0_2.features.add(feat3_0_2_6);
+    v3_0_2.features.add(feat3_0_2_7);
+
     // VERSION 3.0.1
     var v3_0_1 = ChangeLogItem();
     v3_0_1.version = 'Torn PDA v3.0.1';

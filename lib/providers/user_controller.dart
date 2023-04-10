@@ -12,9 +12,9 @@ class UserController extends GetxController {
   }
 
   String _alternativeYataKey = "";
-  String get alternativeYataKey => _alternativeYataKey;
+  String get alternativeYataKey => _alternativeYataKey.trim();
   set alternativeYataKey(String key) {
-    _alternativeYataKey = key;
+    _alternativeYataKey = key.trim();
     update();
   }
 
@@ -27,9 +27,9 @@ class UserController extends GetxController {
   }
 
   String _alternativeTornStatsKey = "";
-  String get alternativeTornStatsKey => _alternativeTornStatsKey;
+  String get alternativeTornStatsKey => _alternativeTornStatsKey.trim();
   set alternativeTornStatsKey(String key) {
-    _alternativeTornStatsKey = key;
+    _alternativeTornStatsKey = key.trim();
     update();
   }
 }

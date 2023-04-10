@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -228,73 +229,75 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
             var activeItems = <Widget>[];
             for (var item in itemsProviderFaction.activeQuickItemsFaction) {
               activeItems.add(
-                Slidable(
+                Scrollable(
                   key: UniqueKey(),
-                  startActionPane: ActionPane(
-                    motion: const ScrollMotion(),
-                    extentRatio: 0.25,
-                    children: [
-                      SlidableAction(
-                        backgroundColor: Colors.red,
-                        icon: Icons.remove_circle_outline_outlined,
-                        onPressed: (context) {
-                          itemsProviderFaction.deactivateQuickItem(item);
-                        },
-                      ),
-                    ],
-                  ),
-                  child: Container(
-                    height: 60,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
-                      child: Card(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(2),
-                                child: item.isEnergyPoints || item.isNervePoints
-                                    ? SizedBox(
-                                        width: 25,
-                                        child: Icon(
-                                          MdiIcons.alphaPCircleOutline,
-                                          color: item.isEnergyPoints ? Colors.green : Colors.red,
-                                        ),
-                                      )
-                                    : Image.asset(
-                                        'images/torn_items/small/${item.number}_small.png',
-                                        width: 35,
-                                        height: 35,
-                                      ),
-                              ),
-                              SizedBox(width: 10),
-                              Flexible(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Flexible(
-                                      child: Row(
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              item.name,
-                                              style: TextStyle(fontSize: 13),
-                                            ),
+                  viewportBuilder: (BuildContext context, ViewportOffset position) => Slidable(
+                    startActionPane: ActionPane(
+                      motion: const ScrollMotion(),
+                      extentRatio: 0.25,
+                      children: [
+                        SlidableAction(
+                          backgroundColor: Colors.red,
+                          icon: Icons.remove_circle_outline_outlined,
+                          onPressed: (context) {
+                            itemsProviderFaction.deactivateQuickItem(item);
+                          },
+                        ),
+                      ],
+                    ),
+                    child: Container(
+                      height: 60,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
+                        child: Card(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(2),
+                                  child: item.isEnergyPoints || item.isNervePoints
+                                      ? SizedBox(
+                                          width: 25,
+                                          child: Icon(
+                                            MdiIcons.alphaPCircleOutline,
+                                            color: item.isEnergyPoints ? Colors.green : Colors.red,
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                        )
+                                      : Image.asset(
+                                          'images/torn_items/small/${item.number}_small.png',
+                                          width: 35,
+                                          height: 35,
+                                        ),
                                 ),
-                              ),
-                              SizedBox(width: 10),
-                              SizedBox(width: 10),
-                              Icon(Icons.reorder),
-                              SizedBox(width: 10),
-                            ],
+                                SizedBox(width: 10),
+                                Flexible(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Flexible(
+                                        child: Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                item.name,
+                                                style: TextStyle(fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                SizedBox(width: 10),
+                                Icon(Icons.reorder),
+                                SizedBox(width: 10),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -333,102 +336,104 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
             var activeItems = <Widget>[];
             for (var item in itemsProvider.activeQuickItems) {
               activeItems.add(
-                Slidable(
+                Scrollable(
                   key: UniqueKey(),
-                  startActionPane: ActionPane(
-                    motion: const ScrollMotion(),
-                    extentRatio: 0.25,
-                    children: [
-                      SlidableAction(
-                        backgroundColor: Colors.red,
-                        icon: Icons.remove_circle_outline_outlined,
-                        onPressed: (context) {
-                          _itemsProvider.deactivateQuickItem(item);
-                        },
-                      ),
-                    ],
-                  ),
-                  child: Container(
-                    height: 60,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
-                      child: Card(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(2),
-                                child: Image.asset(
-                                  item.isLoadout
-                                      ? 'images/icons/loadout.png'
-                                      : 'images/torn_items/small/${item.number}_small.png',
-                                  width: item.isLoadout ? 25 : 35,
-                                  height: item.isLoadout ? 25 : 35,
+                  viewportBuilder: (BuildContext context, ViewportOffset position) => Slidable(
+                    startActionPane: ActionPane(
+                      motion: const ScrollMotion(),
+                      extentRatio: 0.25,
+                      children: [
+                        SlidableAction(
+                          backgroundColor: Colors.red,
+                          icon: Icons.remove_circle_outline_outlined,
+                          onPressed: (context) {
+                            _itemsProvider.deactivateQuickItem(item);
+                          },
+                        ),
+                      ],
+                    ),
+                    child: Container(
+                      height: 60,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
+                        child: Card(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(2),
+                                  child: Image.asset(
+                                    item.isLoadout
+                                        ? 'images/icons/loadout.png'
+                                        : 'images/torn_items/small/${item.number}_small.png',
+                                    width: item.isLoadout ? 25 : 35,
+                                    height: item.isLoadout ? 25 : 35,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 10),
-                              Flexible(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Flexible(
-                                      child: Row(
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              item.isLoadout ? item.loadoutName : item.name,
-                                              style: TextStyle(fontSize: 13),
+                                SizedBox(width: 10),
+                                Flexible(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Flexible(
+                                        child: Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                item.isLoadout ? item.loadoutName : item.name,
+                                                style: TextStyle(fontSize: 13),
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
+                                      if (!item.isLoadout)
+                                        Text(
+                                          "(inv: x${item.inventory})",
+                                          style: TextStyle(fontSize: 10),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                if (!item.isLoadout)
+                                  GestureDetector(
+                                    onTap: () {
+                                      BotToast.showText(
+                                        text: '${item.name}\n\n${item.description}\n\n'
+                                            'You have ${item.inventory} in your inventory',
+                                        textStyle: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                        contentColor: Colors.green[800],
+                                        duration: Duration(seconds: 5),
+                                        contentPadding: EdgeInsets.all(10),
+                                      );
+                                    },
+                                    child: Icon(
+                                      Icons.info_outline,
+                                      size: 19,
                                     ),
-                                    if (!item.isLoadout)
-                                      Text(
-                                        "(inv: x${item.inventory})",
-                                        style: TextStyle(fontSize: 10),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              if (!item.isLoadout)
-                                GestureDetector(
-                                  onTap: () {
-                                    BotToast.showText(
-                                      text: '${item.name}\n\n${item.description}\n\n'
-                                          'You have ${item.inventory} in your inventory',
-                                      textStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.green[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  },
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    size: 19,
+                                  )
+                                else if (item.isLoadout)
+                                  GestureDetector(
+                                    onTap: () {
+                                      _openLoadoutsNameDialog(item);
+                                    },
+                                    child: Icon(
+                                      Icons.edit,
+                                      size: 19,
+                                    ),
                                   ),
-                                )
-                              else if (item.isLoadout)
-                                GestureDetector(
-                                  onTap: () {
-                                    _openLoadoutsNameDialog(item);
-                                  },
-                                  child: Icon(
-                                    Icons.edit,
-                                    size: 19,
-                                  ),
-                                ),
-                              SizedBox(width: 10),
-                              Icon(Icons.reorder),
-                              SizedBox(width: 10),
-                            ],
+                                SizedBox(width: 10),
+                                Icon(Icons.reorder),
+                                SizedBox(width: 10),
+                              ],
+                            ),
                           ),
                         ),
                       ),
