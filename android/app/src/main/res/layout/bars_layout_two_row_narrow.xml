@@ -230,7 +230,6 @@
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
-                            android:layout_marginStart="11dp"
                             android:gravity="center"
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
@@ -241,15 +240,6 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
-
-                            <ImageView
-                                android:id="@+id/widget_energy_mini"
-                                android:layout_width="wrap_content"
-                                android:layout_height="10dp"
-                                android:layout_marginTop="3dp"
-                                android:layout_marginEnd="2dp"
-                                android:adjustViewBounds="true"
-                                android:src="@drawable/energy_mini" />
 
                             <ProgressBar
                                 android:id="@+id/widget_energy_bar"
@@ -273,7 +263,6 @@
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
-                            android:layout_marginStart="11dp"
                             android:gravity="center"
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
@@ -284,15 +273,6 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
-
-                            <ImageView
-                                android:id="@+id/widget_nerve_mini"
-                                android:layout_width="wrap_content"
-                                android:layout_height="10dp"
-                                android:layout_marginTop="3dp"
-                                android:layout_marginEnd="2dp"
-                                android:adjustViewBounds="true"
-                                android:src="@drawable/nerve_mini" />
 
                             <ProgressBar
                                 android:id="@+id/widget_nerve_bar"
@@ -316,7 +296,6 @@
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:textSize="10sp"
-                            android:layout_marginStart="11dp"
                             android:gravity="center"
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
@@ -327,15 +306,6 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
-
-                            <ImageView
-                                android:id="@+id/widget_happy_mini"
-                                android:layout_width="wrap_content"
-                                android:layout_height="10dp"
-                                android:layout_marginTop="3dp"
-                                android:layout_marginEnd="2dp"
-                                android:adjustViewBounds="true"
-                                android:src="@drawable/happy_mini" />
 
                             <ProgressBar
                                 android:id="@+id/widget_happy_bar"
@@ -555,7 +525,7 @@
                         android:layout_width="60dp"
                         android:layout_height="wrap_content"
                         android:textSize="10sp"
-                        android:layout_marginStart="6dp"
+
                         android:gravity="center"
                         android:layout_marginBottom="-4dp"
                         android:textColor="#000000"
@@ -566,15 +536,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
-                        <ImageView
-                            android:id="@+id/widget_life_mini"
-                            android:layout_width="wrap_content"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="3dp"
-                            android:layout_marginEnd="2dp"
-                            android:adjustViewBounds="true"
-                            android:src="@drawable/life_mini" />
 
                         <ProgressBar
                             android:id="@+id/widget_life_bar"
@@ -690,6 +651,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -711,6 +674,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -732,6 +697,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -764,6 +731,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -785,6 +754,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -806,6 +777,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -838,6 +811,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -859,6 +834,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"
@@ -880,6 +857,8 @@
                         android:textAllCaps="true"
                         android:textColor="#000000"
                         android:layout_marginEnd="2dp"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
                         android:gravity="center"
                         android:ellipsize="end"
                         android:singleLine="true"

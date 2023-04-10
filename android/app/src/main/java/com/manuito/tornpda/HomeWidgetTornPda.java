@@ -4,22 +4,15 @@ import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.Typeface;
 import android.net.Uri;
-import android.opengl.Visibility;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SizeF;
 import android.view.View;
 import android.widget.RemoteViews;
-
-import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.collection.ArrayMap;
 
-import java.util.List;
 import java.util.Map;
 
 import es.antonborri.home_widget.HomeWidgetBackgroundIntent;
@@ -45,35 +38,30 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         }
     }
 
-    private void setClickListeners(View view, List<View.OnClickListener> clickListeners){
-        view.setOnClickListener(v -> {
-            for(View.OnClickListener listener: clickListeners){
-                listener.onClick(v);
-            }
-        });
-    }
-
     // Creates the RemoteViews for the given size
     private void createRemoteViews(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        RemoteViews smallView = new RemoteViews(context.getPackageName(), R.layout.bars_layout);
-        RemoteViews mediumView = new RemoteViews(context.getPackageName(), R.layout.bars_layout);
-        RemoteViews largeView = new RemoteViews(context.getPackageName(), R.layout.bars_layout);
+        RemoteViews oneRowNarrow = new RemoteViews(context.getPackageName(), R.layout.bars_layout_one_row_narrow);
+        RemoteViews oneRowWide = new RemoteViews(context.getPackageName(), R.layout.bars_layout_one_row_wide);
+        RemoteViews twoRowNarrow = new RemoteViews(context.getPackageName(), R.layout.bars_layout_two_row_narrow);
+        RemoteViews twoRowWide = new RemoteViews(context.getPackageName(), R.layout.bars_layout_two_row_wide);
 
-        smallView = loadWidgetData(smallView, context);
-        mediumView = loadWidgetData(mediumView, context);
-        largeView = loadWidgetData(largeView, context);
+        oneRowNarrow = loadWidgetData(oneRowNarrow, context);
+        oneRowWide = loadWidgetData(oneRowWide, context);
+        twoRowNarrow = loadWidgetData(twoRowNarrow, context);
+        twoRowWide = loadWidgetData(twoRowWide, context);
 
         Map<SizeF, RemoteViews> viewMapping = new ArrayMap<>();
-        viewMapping.put(new SizeF(120f, 110f), smallView);
-        viewMapping.put(new SizeF(270f, 110f), mediumView);
-        viewMapping.put(new SizeF(270f, 280f), largeView);
+        viewMapping.put(new SizeF(60f, 40f), oneRowNarrow);
+        viewMapping.put(new SizeF(300f, 40f), oneRowWide);
+        viewMapping.put(new SizeF(60f, 150f), twoRowNarrow);
+        viewMapping.put(new SizeF(300f, 150f), twoRowWide);
 
         RemoteViews remoteViews;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             remoteViews = new RemoteViews(viewMapping);
         } else {
             // Old SDK do not get customization
-            remoteViews = new RemoteViews(context.getPackageName(), R.layout.bars_layout);
+            remoteViews = new RemoteViews(context.getPackageName(), R.layout.bars_layout_two_row_wide);
             remoteViews = loadWidgetData(remoteViews, context);
         }
 
