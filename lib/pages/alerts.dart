@@ -22,8 +22,6 @@ import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import 'alerts/stockmarket_alerts_page.dart';

@@ -730,37 +730,26 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
     Object.keys(userStats.events).forEach(function (key) {
       allTornKeys.push(key);
-      if (userStats.events[key].seen === 0 &&
-        !knownEvents.includes(key)) {
+      if (!knownEvents.includes(key)) {
+        // Event not yet notified (known), notify!
         changes = true;
         newGeneralEvents++;
         knownEvents.push(key);
         newEventsDescriptions.push(userStats.events[key].event);
       }
-      // From v2.5.1, using 'new', this should in theory not be applicable
-      else if (userStats.events[key].seen === 1 &&
-        knownEvents.includes(key)) {
-        changes = true;
-        for (let i = 0; i < knownEvents.length; i++) {
-          if (knownEvents[i] === key) {
-            knownEvents.splice(i, 1);
-            break;
-          }
-        }
-      }
     });
 
-    // Ensure that deleted messages are deleted from the database, as they
-    // won't be caught by the conditions above if they get deleted immediately
+    // Ensure that deleted messages are deleted from the database
 
     // Note: for messages & events we've changed to 'new' in v2.5.1, so this
     // will theoretically be the only way of removing them from the db
-    for (const key of knownEvents) {
-      if (!allTornKeys.includes(key)) {
+    for (var i = 0; i < knownEvents.length; i++) {
+      if (!allTornKeys.includes(knownEvents[i])) {
         changes = true;
-        for (let i = 0; i < knownEvents.length; i++) {
-          if (knownEvents[i] === key) {
+        for (let j = 0; j < knownEvents.length; i++) {
+          if (knownEvents[i] === knownEvents[j]) {
             knownEvents.splice(i, 1);
+            i--;
             break;
           }
         }
@@ -794,14 +783,20 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
       for (let i = 0; i < newGeneralEvents; i++) {
 
         // Change trades notification from one list to another
+        // as trades events come with a different icon and color
         const tradeCheck = stripHtml(newEventsDescriptions[i]).result;
         if (tradeCheck.includes('has initiated a trade titled') ||
           tradeCheck.includes('has accepted the trade') ||
           tradeCheck.includes('has canceled the trade') ||
           tradeCheck.includes('commented on your pending trade')
         ) {
-          newTradesEvents++;
-          newTradesDescriptions.push(newEventsDescriptions[i]);
+
+          // But change to the other list only if we are not filtering them outs
+          if (!filters.includes('trades')) {
+            newTradesEvents++;
+            newTradesDescriptions.push(newEventsDescriptions[i]);
+          }
+
           newEventsDescriptions.splice(i--, 1);
           newGeneralEvents--;
           continue;
