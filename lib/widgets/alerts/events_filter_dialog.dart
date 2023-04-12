@@ -193,6 +193,32 @@ class _EventsFilterDialogState extends State<EventsFilterDialog> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Trades"),
+                  Switch(
+                    value: _firebaseUserModel.eventsFilter.contains('trades'),
+                    onChanged: (value) {
+                      if (value) {
+                        setState(() {
+                          firestore.addToEventsFilter('trades');
+                        });
+                      } else {
+                        setState(() {
+                          firestore.removeFromEventsFilter('trades');
+                        });
+                      }
+                    },
+                    activeTrackColor: Colors.redAccent[100],
+                    activeColor: Colors.red,
+                    inactiveThumbColor: Colors.green[100],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

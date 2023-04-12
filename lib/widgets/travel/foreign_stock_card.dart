@@ -681,7 +681,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                   color: Colors.white,
                 ),
                 contentColor: moneyToBuyColor,
-                duration: Duration(seconds: 6),
+                duration: Duration(seconds: 4),
                 contentPadding: EdgeInsets.all(10),
               );
             },
@@ -888,7 +888,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         color: Colors.white,
       ),
       contentColor: moneyToBuyColor,
-      duration: Duration(seconds: 6),
+      duration: Duration(seconds: 4),
       contentPadding: EdgeInsets.all(10),
     );
   }
