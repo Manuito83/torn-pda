@@ -612,7 +612,8 @@ class TornApiCaller {
         url += 'user/?selections=profile,battlestats';
         break;
       case ApiSelection.ownExtended:
-        url += 'user/?selections=profile,bars,networth,cooldowns,events,travel,icons,money,education,messages';
+        url += 'user/?selections=profile,bars,networth,cooldowns,events,notifications'
+            ',travel,icons,money,education,messages';
         break;
       case ApiSelection.ownPersonalStats:
         url += 'user/?selections=personalstats';

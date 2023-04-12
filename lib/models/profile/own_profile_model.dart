@@ -46,6 +46,7 @@ class OwnProfileExtended {
     this.cooldowns,
     this.events,
     this.messages,
+    this.notifications,
     this.travel,
     this.icons,
   });
@@ -83,6 +84,7 @@ class OwnProfileExtended {
   Cooldowns cooldowns;
   dynamic events;
   dynamic messages;
+  Notifications notifications;
   Travel travel;
   dynamic icons;
 
@@ -123,6 +125,7 @@ class OwnProfileExtended {
       cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
       events: json["events"],
       messages: json["messages"],
+      notifications: json["notifications"] == null ? null : Notifications.fromJson(json["notifications"]),
       travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
       // If it's List<dynamic>, it's empty [], so we initialise values to null (there is a null check
       // afterwards in Profile). Otherwise, it's a map that can be generated from the class.
@@ -169,6 +172,7 @@ class OwnProfileExtended {
         "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
         "events": events,
         "messages": messages,
+        "notifications": notifications,
         "travel": travel == null ? null : travel.toJson(),
         "icons": icons == null ? null : icons.toJson(),
       };
@@ -378,23 +382,19 @@ class Event {
   Event({
     this.timestamp,
     this.event,
-    this.seen,
   });
 
   int timestamp;
   String event;
-  int seen;
 
   factory Event.fromJson(Map<String, dynamic> json) => Event(
         timestamp: json["timestamp"] == null ? null : json["timestamp"],
         event: json["event"] == null ? null : json["event"],
-        seen: json["seen"] == null ? null : json["seen"],
       );
 
   Map<String, dynamic> toJson() => {
         "timestamp": timestamp == null ? null : timestamp,
         "event": event == null ? null : event,
-        "seen": seen == null ? null : seen,
       };
 }
 
@@ -435,6 +435,34 @@ class TornMessage {
         "title": title,
         "seen": seen == null ? null : seen,
         "read": read == null ? null : read,
+      };
+}
+
+class Notifications {
+  Notifications({
+    this.messages,
+    this.events,
+    this.awards,
+    this.competition,
+  });
+
+  int messages;
+  int events;
+  int awards;
+  int competition;
+
+  factory Notifications.fromJson(Map<String, dynamic> json) => Notifications(
+        messages: json["messages"],
+        events: json["events"],
+        awards: json["awards"],
+        competition: json["competition"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "messages": messages,
+        "events": events,
+        "awards": awards,
+        "competition": competition,
       };
 }
 
