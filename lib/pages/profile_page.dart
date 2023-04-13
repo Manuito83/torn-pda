@@ -4444,13 +4444,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
 
         // Assess properties async, but wait some more time
-        if (_rentedPropertiesTick == 0) {
-          _checkProperties(miscApiResponse);
-        } else if (_rentedPropertiesTick > 30) {
-          _checkProperties(miscApiResponse);
-          _rentedPropertiesTick = 0;
+        if (miscApiResponse.properties != null) {
+          if (_rentedPropertiesTick == 0) {
+            _checkProperties(miscApiResponse);
+          } else if (_rentedPropertiesTick > 30) {
+            _checkProperties(miscApiResponse);
+            _rentedPropertiesTick = 0;
+          }
+          _rentedPropertiesTick++;
         }
-        _rentedPropertiesTick++;
 
         setState(() {
           _miscModel = miscApiResponse;
