@@ -34,6 +34,7 @@ class ForeignStockButton extends StatelessWidget {
         ),
       ),
       onClosed: (ReturnFlagPressed returnFlag) async {
+        if (returnFlag == null) return;
         if (returnFlag.flagPressed) {
           var url = 'https://www.torn.com/travelagency.php';
           if (settingsProv.currentBrowser == BrowserSetting.external) {

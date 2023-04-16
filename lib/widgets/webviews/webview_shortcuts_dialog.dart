@@ -173,14 +173,17 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
     return InkWell(
       onLongPress: () {
         String url = thisShortcut.url;
-        if (thisShortcut.addPlayerId) {
-          url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
-        }
-        if (thisShortcut.addFactionId) {
-          url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
-        }
-        if (thisShortcut.addCompanyId) {
-          url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+
+        if (thisShortcut.addPlayerId != null) {
+          if (thisShortcut.addPlayerId) {
+            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          }
+          if (thisShortcut.addFactionId) {
+            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+          }
+          if (thisShortcut.addCompanyId) {
+            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+          }
         }
 
         if (widget.inAppWebView != null) {
@@ -197,14 +200,17 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
       },
       onTap: () async {
         String url = thisShortcut.url;
-        if (thisShortcut.addPlayerId) {
-          url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
-        }
-        if (thisShortcut.addFactionId) {
-          url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
-        }
-        if (thisShortcut.addCompanyId) {
-          url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+
+        if (thisShortcut.addPlayerId != null) {
+          if (thisShortcut.addPlayerId) {
+            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          }
+          if (thisShortcut.addFactionId) {
+            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+          }
+          if (thisShortcut.addCompanyId) {
+            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+          }
         }
 
         if (widget.inAppWebView != null) {

@@ -2,6 +2,7 @@
 import 'dart:async';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -770,63 +771,68 @@ class _WarPageState extends State<WarPage> {
   }
 
   Future<void> _performQuickUpdate({bool firstTime = false}) async {
-    setState(() {
-      _quickUpdateActive = true;
-    });
+    try {
+      setState(() {
+        _quickUpdateActive = true;
+      });
 
-    if (mounted && !firstTime) {
-      BotToast.showText(
-        clickClose: true,
-        text: "Fetching information, please wait...",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[700],
-        duration: const Duration(seconds: 3),
-        contentPadding: const EdgeInsets.all(10),
-      );
+      if (mounted && !firstTime) {
+        BotToast.showText(
+          clickClose: true,
+          text: "Fetching information, please wait...",
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[700],
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(10),
+        );
+      }
+
+      int updatedMembers = await _w.updateAllMembersEasy();
+
+      String message = "";
+      Color messageColor = Colors.green;
+      // Count all members
+      int allMembers = _w.orderedCardsDetails.length;
+
+      if (allMembers == -1) {
+        message = "There was a problem getting information from the API, please try again later!";
+        messageColor = Colors.orange[700];
+      } else if (allMembers == 0) {
+        message = "No targets to update!";
+        messageColor = Colors.orange[700];
+      } else if (updatedMembers > 0 && updatedMembers >= allMembers) {
+        message = 'Successfully updated $updatedMembers war targets!\n\n'
+            'A quick update was performed (only stats, state and online status).';
+      } else if (updatedMembers > 0 && updatedMembers < allMembers) {
+        message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!\n\n'
+            'A quick update was performed (only stats, state and online status).';
+        messageColor = Colors.orange[700];
+      }
+
+      if (mounted && !firstTime) {
+        BotToast.showText(
+          clickClose: true,
+          text: message,
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: messageColor,
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
+        );
+      }
+
+      setState(() {
+        _quickUpdateActive = false;
+      });
+    } catch (e) {
+      FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
     }
-
-    int updatedMembers = await _w.updateAllMembersEasy();
-
-    String message = "";
-    Color messageColor = Colors.green;
-    // Count all members
-    int allMembers = _w.orderedCardsDetails.length;
-
-    if (allMembers == -1) {
-      message = "There was a problem getting information from the API, please try again later!";
-      messageColor = Colors.orange[700];
-    } else if (allMembers == 0) {
-      message = "No targets to update!";
-      messageColor = Colors.orange[700];
-    } else if (updatedMembers > 0 && updatedMembers >= allMembers) {
-      message = 'Successfully updated $updatedMembers war targets!\n\n'
-          'A quick update was performed (only stats, state and online status).';
-    } else if (updatedMembers > 0 && updatedMembers < allMembers) {
-      message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!\n\n'
-          'A quick update was performed (only stats, state and online status).';
-      messageColor = Colors.orange[700];
-    }
-
-    if (mounted && !firstTime) {
-      BotToast.showText(
-        clickClose: true,
-        text: message,
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: messageColor,
-        duration: const Duration(seconds: 5),
-        contentPadding: const EdgeInsets.all(10),
-      );
-    }
-
-    setState(() {
-      _quickUpdateActive = false;
-    });
   }
 
   Future<void> _showAddDialog(BuildContext _) {

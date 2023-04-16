@@ -53,8 +53,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.0.2';
-const String androidCompilation = '295';
-const String iosCompilation = '295';
+const String androidCompilation = '298';
+const String iosCompilation = '298';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -122,16 +122,6 @@ Future<void> main() async {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };
-
-  // Catch errors that happen outside of the Flutter context
-  Isolate.current.addErrorListener(RawReceivePort((pair) async {
-    final List<dynamic> errorAndStacktrace = pair;
-    await FirebaseCrashlytics.instance.recordError(
-      errorAndStacktrace.first,
-      errorAndStacktrace.last,
-      fatal: true,
-    );
-  }).sendPort);
 
   // TODO: remove certificate?
   //ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');

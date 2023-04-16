@@ -199,7 +199,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
               SizedBox(height: 10),
               RankedWarCard(
                 rankedWar: value,
-                status: RankedWarStatus.active,
+                status: RankedWarStatus.upcoming,
                 warId: key,
                 ownFactionId: _ownFaction,
                 key: UniqueKey(),
@@ -216,7 +216,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
         upComingWars.add(
           RankedWarCard(
             rankedWar: value,
-            status: RankedWarStatus.active,
+            status: RankedWarStatus.upcoming,
             warId: key,
             ownFactionId: _ownFaction,
             key: UniqueKey(),
@@ -250,7 +250,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
               SizedBox(height: 10),
               RankedWarCard(
                 rankedWar: value,
-                status: RankedWarStatus.active,
+                status: RankedWarStatus.finished,
                 warId: key,
                 ownFactionId: _ownFaction,
                 key: UniqueKey(),
@@ -267,7 +267,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
         finishedWars.add(
           RankedWarCard(
             rankedWar: value,
-            status: RankedWarStatus.active,
+            status: RankedWarStatus.finished,
             warId: key,
             ownFactionId: _ownFaction,
             key: UniqueKey(),

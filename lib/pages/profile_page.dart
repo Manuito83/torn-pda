@@ -2599,6 +2599,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var timeline = <Widget>[];
 
     int unreadCount = 0;
+    if (_user.notifications != null) {
+      unreadCount = _user.notifications.events;
+    }
+
     int loopCount = 1;
     int maxCount;
 
@@ -2610,10 +2614,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     for (var e in events.values) {
-      if (e.seen == 0) {
-        unreadCount++;
-      }
-
       String message = HtmlParser.fix(e.event);
       message = message;
       message = message.replaceAll('View the details here!', '');
@@ -2661,7 +2661,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               message,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: e.seen == 0 ? FontWeight.bold : FontWeight.normal,
+                fontWeight: unreadCount >= loopCount ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -2673,7 +2673,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _occurrenceTimeFormatted(eventTime),
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: e.seen == 0 ? FontWeight.bold : FontWeight.normal,
+                fontWeight: unreadCount >= loopCount == 0 ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -4444,13 +4444,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
 
         // Assess properties async, but wait some more time
-        if (_rentedPropertiesTick == 0) {
-          _checkProperties(miscApiResponse);
-        } else if (_rentedPropertiesTick > 30) {
-          _checkProperties(miscApiResponse);
-          _rentedPropertiesTick = 0;
+        if (miscApiResponse.properties != null) {
+          if (_rentedPropertiesTick == 0) {
+            _checkProperties(miscApiResponse);
+          } else if (_rentedPropertiesTick > 30) {
+            _checkProperties(miscApiResponse);
+            _rentedPropertiesTick = 0;
+          }
+          _rentedPropertiesTick++;
         }
-        _rentedPropertiesTick++;
 
         setState(() {
           _miscModel = miscApiResponse;
