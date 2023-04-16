@@ -604,7 +604,7 @@ class _LootPageState extends State<LootPage> {
                             child: Row(
                               children: [
                                 Text(
-                                  '${npcDetails.name} [${npcId}]',
+                                  '${npcDetails.name} [${npcId ?? "?"}]',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 SizedBox(width: 10),
@@ -813,7 +813,10 @@ class _LootPageState extends State<LootPage> {
                   await showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      return LootRangersExplanationDialog(themeProvider: _themeProvider);
+                      return LootRangersExplanationDialog(
+                        themeProvider: _themeProvider,
+                        currentOrder: _lootRangersIdOrder,
+                      );
                     },
                   );
                 },

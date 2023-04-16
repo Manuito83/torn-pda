@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -6,17 +7,24 @@ import 'package:url_launcher/url_launcher.dart';
 
 class LootRangersExplanationDialog extends StatelessWidget {
   const LootRangersExplanationDialog({
-    Key key,
+    @required List<String> currentOrder,
     @required ThemeProvider themeProvider,
+    Key key,
   })  : _themeProvider = themeProvider,
+        _currentOrder = currentOrder,
         super(key: key);
 
   final ThemeProvider _themeProvider;
+  final List<String> _currentOrder;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Loot Rangers"),
+      title: GestureDetector(
+          onDoubleTap: () {
+            BotToast.showText(text: _currentOrder.toString());
+          },
+          child: Text("Loot Rangers")),
       content: SingleChildScrollView(
         child: EasyRichText(
           "The Loot Rangers Discord server is a community of Torn City players who come together to "
