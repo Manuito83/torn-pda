@@ -604,7 +604,7 @@ class _LootPageState extends State<LootPage> {
                             child: Row(
                               children: [
                                 Text(
-                                  '${npcDetails.name}',
+                                  '${npcDetails.name} [${npcId}]',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 SizedBox(width: 10),
@@ -654,7 +654,9 @@ class _LootPageState extends State<LootPage> {
   }
 
   Widget _lootRangersWidget() {
-    if (_lootRangersNameOrder.isEmpty || !_dbLootRangersEnabled) return SizedBox.shrink();
+    if (_lootRangersNameOrder.isEmpty || _lootRangersIdOrder.isEmpty || !_dbLootRangersEnabled) {
+      return SizedBox.shrink();
+    }
 
     String timeString = "";
     var lrDateTime = DateTime.fromMillisecondsSinceEpoch(_lootRangersTime);
