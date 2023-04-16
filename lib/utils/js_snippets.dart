@@ -1397,3 +1397,48 @@ String ocNNB({@required String members}) {
     })();
   ''';
 }
+
+String barsDoubleClickRedirect() {
+  return '''
+    (function() {
+      
+      function addBarsListener() {
+        function onEnergyClick(event) {
+          window.open("https://www.torn.com/gym.php", "_self");
+        }
+        
+        function onNerveClick(event) {
+          window.open("https://www.torn.com/crimes.php", "_self");
+        }
+          
+        var savedFound = document.querySelector(".pdaListenerBarsDoubleClick") !== null;
+        var energyBar = document.querySelector(`[id*="barEnergy"]`);
+        var nerveBar = document.querySelector(`[id*="barNerve"]`);
+        
+        if (!savedFound && energyBar !== null && nerveBar !== null) {
+          var save = document.querySelector(".content-wrapper");
+          save.classList.add("pdaListenerBarsDoubleClick");
+          energyBar.addEventListener("dblclick", onEnergyClick);
+          nerveBar.addEventListener("dblclick", onNerveClick);
+        } 
+      }
+
+      let pass = 0;
+      let waitForBarsAndRun = setInterval(() => {
+        if (document.querySelector(`[id*="barEnergy"]`)) {
+          addBarsListener();
+          return clearInterval(waitForBarsAndRun);
+        } else {
+          pass++;
+        }
+
+        // End the interval after a few unsuccessful seconds
+        if (pass > 20) {
+          return clearInterval(waitForBarsAndRun);
+        }
+
+      }, 300);
+
+    })();
+  ''';
+}

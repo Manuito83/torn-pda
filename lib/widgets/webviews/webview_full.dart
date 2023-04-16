@@ -2063,6 +2063,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _assessTravel(document);
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
+    _assessBarsRedirect(document);
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -3257,6 +3258,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           userId = 0;
         }
       }
+    }
+  }
+
+  // TRAVEL
+  Future _assessBarsRedirect(dom.Document document) async {
+    final inTorn = _currentUrl.contains("torn.com");
+    if (inTorn) {
+      webView.evaluateJavascript(source: barsDoubleClickRedirect());
     }
   }
 
