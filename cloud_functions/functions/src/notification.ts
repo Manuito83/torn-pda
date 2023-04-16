@@ -725,7 +725,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     let changes = false;
     let newGeneralEvents = 0;
     const newEventsDescriptions: any[] = [];
-    const knownEvents = subscriber.knownEvents || [];
+    let knownEvents = subscriber.knownEvents || [];
     const allTornKeys: any[] = [];
 
     Object.keys(userStats.events).forEach(function (key) {
@@ -739,21 +739,14 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
       }
     });
 
-    // Ensure that deleted messages are deleted from the database
-
-    // Note: for messages & events we've changed to 'new' in v2.5.1, so this
-    // will theoretically be the only way of removing them from the db
-    for (var i = 0; i < knownEvents.length; i++) {
-      if (!allTornKeys.includes(knownEvents[i])) {
-        changes = true;
-        for (let j = 0; j < knownEvents.length; i++) {
-          if (knownEvents[i] === knownEvents[j]) {
-            knownEvents.splice(i, 1);
-            i--;
-            break;
-          }
-        }
-      }
+    // Ensure that deleted events are deleted from the database!
+    // Creates a set tornKeySet an array and filters knownEvents by checking
+    // if its elements exist in the set, removing any that do not exist
+    const tornKeySet = new Set(allTornKeys);
+    const filteredEvents = knownEvents.filter(event => tornKeySet.has(event));
+    if (knownEvents.length !== filteredEvents.length) {
+      changes = true;
+      knownEvents = filteredEvents;
     }
 
     if (changes) {
