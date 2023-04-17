@@ -45,7 +45,7 @@
                 android:layout_height="18dp"
                 android:padding="2dp"
                 android:adjustViewBounds="true"
-                android:visibility="gone"
+                android:visibility="visible"
                 android:layout_toEndOf="@id/widget_status_icon_main"
                 android:src="@drawable/hospital" />
 
@@ -90,7 +90,7 @@
                 android:ellipsize="end"
                 android:visibility="gone"
                 android:singleLine="true"
-                android:layout_toEndOf="@id/widget_status_icon_main"
+                android:layout_toEndOf="@id/widget_status_extra_icon_main"
                 android:layout_toStartOf="@id/widget_main_events_messages"
                 tools:text="Status" />
 
@@ -635,7 +635,7 @@
         <LinearLayout
             android:id="@+id/widget_shortcuts_box"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
+            android:layout_height="250dp"
             android:paddingTop="3dp"
             android:gravity="center"
             android:layout_below="@id/widget_main_container_bars"

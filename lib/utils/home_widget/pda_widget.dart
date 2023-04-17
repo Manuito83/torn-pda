@@ -93,25 +93,27 @@ Future<void> pdaWidget_fetchData() async {
         HomeWidget.saveWidgetData<bool>('main_layout_visibility', true);
         HomeWidget.saveWidgetData<bool>('error_layout_visibility', false);
 
-        //HomeWidget.saveWidgetData<String>('title', apiResponse.name);
         String statusDescription = user.status.description;
         String state = user.status.state;
         String country = countryCheck(state: state, description: statusDescription);
 
         if (!country.contains("Torn")) {
+          // We are flying abroad or in another country
+
+          // And not in a (foreign hospital)
           if (state != "Hospital") {
             var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel.timestamp * 1000);
             var timeDifference = dateTimeArrival.difference(DateTime.now());
             String twoDigits(int n) => n.toString().padLeft(2, "0");
             String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
             if (statusDescription.contains("Traveling to")) {
-              statusDescription = statusDescription.replaceAll("Traveling to", "");
+              statusDescription = statusDescription.replaceAll("Traveling to ", "");
               statusDescription += ' in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
-            } else if (statusDescription.contains("Returning to")) {
-              statusDescription = "Torn in";
-              statusDescription += ' ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+              statusDescription = statusDescription.replaceAll("00h ", "");
+              HomeWidget.saveWidgetData<String>("travel", "right");
             } else if (state == "Abroad") {
               statusDescription = "Visiting $country";
+              HomeWidget.saveWidgetData<String>("travel", "visiting");
             }
           } else {
             // Special case for when we are hospitalized abroad
@@ -120,18 +122,40 @@ Future<void> pdaWidget_fetchData() async {
             String twoDigits(int n) => n.toString().padLeft(2, "0");
             String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
             statusDescription = "Hospital in $country: ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m";
+            statusDescription = statusDescription.replaceAll("00h ", "");
           }
-        } else if (user.status.color == "red") {
-          var redEnd = DateTime.fromMillisecondsSinceEpoch(user.status.until * 1000);
-          var timeDifference = redEnd.difference(DateTime.now());
-          String twoDigits(int n) => n.toString().padLeft(2, "0");
-          String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-          if (user.status.state.contains("Hospital")) {
-            statusDescription = 'Hospital for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
-          } else if (statusDescription.contains("Jail")) {
-            statusDescription = 'Jail for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+        } else {
+          // Country is reported as Torn
+
+          // Flying back
+          if (statusDescription.contains("Returning to")) {
+            var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel.timestamp * 1000);
+            var timeDifference = dateTimeArrival.difference(DateTime.now());
+            String twoDigits(int n) => n.toString().padLeft(2, "0");
+            String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+            statusDescription = "Torn in";
+            statusDescription += ' ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+            statusDescription = statusDescription.replaceAll("00h ", "");
+            HomeWidget.saveWidgetData<String>("travel", "left");
+          } else {
+            // At home in Torn
+            HomeWidget.saveWidgetData<String>("travel", "no");
+
+            // In hospital in Torn
+            if (user.status.color == "red") {
+              var redEnd = DateTime.fromMillisecondsSinceEpoch(user.status.until * 1000);
+              var timeDifference = redEnd.difference(DateTime.now());
+              String twoDigits(int n) => n.toString().padLeft(2, "0");
+              String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+              if (user.status.state.contains("Hospital")) {
+                statusDescription = 'Hospital for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+              } else if (statusDescription.contains("Jail")) {
+                statusDescription = 'Jail for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+              }
+            }
           }
         }
+
         HomeWidget.saveWidgetData<String>('country', country);
         HomeWidget.saveWidgetData<String>('status', statusDescription);
         HomeWidget.saveWidgetData<String>('status_color', user.status.color);

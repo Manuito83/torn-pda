@@ -125,70 +125,82 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         String status = prefs.getString("status", "Status");
         String statusColor = prefs.getString("status_color", "green");
         String country = prefs.getString("country", "Torn");
+        String travel = prefs.getString("travel", "no");
+
+        // Main icon is normally visible, and extra is gone
+        // unless we decide the opposite in the code below
+        view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
+        view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
 
         // If we are ABROAD
-        if (!country.equals("Torn")) {
+        if (!travel.equals("no")) {
+
+            // Assign flag in case we need to show it
+            if (country.contains("Japan")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_japan);
+            } else if (country.contains("Hawaii")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_hawaii);
+            } else if (country.contains("China")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_china);
+            } else if (country.contains("Argentina")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_argentina);
+            } else if (country.contains("United Kingdom")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_uk);
+            } else if (country.contains("Cayman")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_cayman);
+            } else if (country.contains("South Africa")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_south_africa);
+            } else if (country.contains("Switzerland")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_switzerland);
+            } else if (country.contains("Mexico")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_mexico);
+            } else if (country.contains("UAE")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_uae);
+            } else if (country.contains("Canada")) {
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_canada);
+            }
+
+            if (travel.equals("right")) {
+                // Show plane and flag
+                view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_right);
+                view.setViewVisibility(R.id.widget_status_extra_icon_main, View.VISIBLE);
+            } else if (travel.equals("left")) {
+                // Only show plane
+                view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_left);
+            } else if (travel.equals("visiting")) {
+                // Only show flag
+                view.setViewVisibility(R.id.widget_status_icon_main, View.GONE);
+                view.setViewVisibility(R.id.widget_status_extra_icon_main, View.VISIBLE);
+            }
+
+            // Travel == "no"
             // Abroad but NOT IN HOSPITAL
             if (!statusColor.equals("red")) {
-                // If we are flying to/from or visiting a country (not in hospital)
-                if (status.contains("Visiting")) {
-                    if (country.contains("Japan")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_japan);
-                    } else if (country.contains("Hawaii")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_hawaii);
-                    } else if (country.contains("China")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_china);
-                    } else if (country.contains("Argentina")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_argentina);
-                    } else if (country.contains("United Kingdom")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_uk);
-                    } else if (country.contains("Cayman")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_cayman);
-                    } else if (country.contains("South Africa")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_south_africa);
-                    } else if (country.contains("Switzerland")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_switzerland);
-                    } else if (country.contains("Mexico")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_mexico);
-                    } else if (country.contains("UAE")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_uae);
-                    } else if (country.contains("Canada")) {
-                        view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.flag_canada);
-                    }
-                } else if (status.contains("Torn in")) { // Returning
-                    view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_left);
-                } else { // Flying abroad
-                    view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.plane_right);
-                }
                 view.setTextViewText(R.id.widget_status_blue, status);
-
                 view.setViewVisibility(R.id.widget_status_green, View.GONE);
                 view.setViewVisibility(R.id.widget_status_red, View.GONE);
                 view.setViewVisibility(R.id.widget_status_blue, View.VISIBLE);
-                view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
-                view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
 
                 PendingIntent blueStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-icon-clicked"));
                 view.setOnClickPendingIntent(R.id.widget_status_icon_main, blueStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_blue, blueStatusIconIntent);
-            // Abroad AND IN HOSPITAL
+                // Abroad AND IN HOSPITAL
             } else {
                 // Special case for when we are hospitalized abroad
                 view.setTextViewText(R.id.widget_status_red, status);
-
                 view.setViewVisibility(R.id.widget_status_green, View.GONE);
                 view.setViewVisibility(R.id.widget_status_red, View.VISIBLE);
                 view.setViewVisibility(R.id.widget_status_blue, View.GONE);
-                view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
                 view.setViewVisibility(R.id.widget_status_extra_icon_main, View.VISIBLE);
 
-                // TODO??? Or to hospital??
                 // Report blue status clicked, even though we are in hospital, so that the browser opens to the country
                 PendingIntent abroadHospitalStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-icon-clicked"));
                 view.setOnClickPendingIntent(R.id.widget_status_icon_main, abroadHospitalStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_red, abroadHospitalStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_extra_icon_main, abroadHospitalStatusIconIntent);
             }
+
+
         // We are NOT ABROAD, AND RED
         } else if (statusColor.equals("red")) {
             view.setTextViewText(R.id.widget_status_red, status);
@@ -196,8 +208,6 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             view.setViewVisibility(R.id.widget_status_green, View.GONE);
             view.setViewVisibility(R.id.widget_status_red, View.VISIBLE);
             view.setViewVisibility(R.id.widget_status_blue, View.GONE);
-            view.setViewVisibility(R.id.widget_status_icon_main, View.VISIBLE);
-            view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
 
             if (status.contains("Hospital")) {
                 view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.hospital);
@@ -218,7 +228,6 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             view.setViewVisibility(R.id.widget_status_blue, View.GONE);
             view.setTextViewText(R.id.widget_status_green, status);
             view.setViewVisibility(R.id.widget_status_icon_main, View.GONE);
-            view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
         }
 
         // ## MESSAGES

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:minWidth="250dp"
     android:minHeight="40dp"
-    android:maxResizeWidth="530dp"
+    android:maxResizeWidth="700dp"
     android:maxResizeHeight="120dp"
     android:targetCellWidth="5"
     android:targetCellHeight="2"
