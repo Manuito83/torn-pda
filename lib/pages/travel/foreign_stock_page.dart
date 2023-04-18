@@ -1434,6 +1434,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     await Future.delayed(Duration(milliseconds: 500));
     await _fetchApiInformation();
 
+    if (!mounted) return;
+
     setState(() {});
     _refreshController.refreshCompleted();
     // Initialize the controller again to avoid errors
