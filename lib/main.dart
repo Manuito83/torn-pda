@@ -15,7 +15,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show PlatformDispatcher, kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -52,8 +52,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.0.2';
-const String androidCompilation = '298';
-const String iosCompilation = '298';
+const String androidCompilation = '299';
+const String iosCompilation = '299';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -137,7 +137,7 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
-    // ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
+    // ! ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
     //FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
@@ -145,15 +145,15 @@ Future<void> main() async {
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
+  // ! Consider disabling for public release - Enable in beta to get plugins' method channel errors in Crashlytics
   // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  // https://docs.flutter.dev/testing/errors#errors-not-caught-by-flutter
+  /*
   PlatformDispatcher.instance.onError = (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
+    return false;
   };
-
-  // TODO: remove certificate?
-  //ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
-  //SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
+  */
 
   // Needs to register plugin for iOS
   if (Platform.isIOS) {
