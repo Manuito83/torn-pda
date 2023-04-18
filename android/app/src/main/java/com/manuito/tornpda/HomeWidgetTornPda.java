@@ -1,5 +1,6 @@
 package com.manuito.tornpda;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.widget.RemoteViews;
 import androidx.annotation.NonNull;
 import androidx.collection.ArrayMap;
+import androidx.core.app.ActivityCompat;
 
 import java.util.Map;
 

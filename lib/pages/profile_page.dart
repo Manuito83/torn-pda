@@ -280,7 +280,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _webViewProvider = context.read<WebViewProvider>();
 
-    _requestIOSPermissions();
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -307,16 +306,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _miscTick = 0;
       }
     });
-  }
-
-  void _requestIOSPermissions() {
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
   }
 
   @override
@@ -5015,9 +5004,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
     if (notificationId == 201) {
-      iOSPlatformChannelSpecifics = IOSNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
+      iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
     }
 
     var platformChannelSpecifics = NotificationDetails(

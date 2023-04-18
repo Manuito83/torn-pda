@@ -182,7 +182,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     // This starts a stream that listens for tap on local notifications (i.e.:
     // when the app is open)
-    _fireOnTapLocalNotifications();
+    _onForegroundNotification();
 
     // Configure all notifications channels so that Firebase alerts have already
     // and assign channel where to land
@@ -208,13 +208,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     _messaging.getInitialMessage().then((RemoteMessage message) {
       if (message != null && message.data.isNotEmpty) {
-        _fireLaunchResumeNotifications(message.data);
+        _onFirebaseBackgroundNotification(message.data);
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       if (message != null && message.data.isNotEmpty) {
-        _fireLaunchResumeNotifications(message.data);
+        _onFirebaseBackgroundNotification(message.data);
       }
     });
 
@@ -257,7 +257,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     });
 
     // Handle notifications
-    _getBackGroundNotifications();
+    _getBackgroundNotificationSavedData();
     _removeExistingNotifications();
 
     // Init intent listener (for appWidget)
@@ -267,7 +267,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    selectNotificationSubject.close();
+    selectNotificationStream.close();
     WidgetsBinding.instance.removeObserver(this);
     _deepLinkSub.cancel();
     _intentListenerSub.cancel();
@@ -324,7 +324,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _updateLastActiveTime();
 
       // Handle notifications
-      _getBackGroundNotifications();
+      _getBackgroundNotificationSavedData();
       _removeExistingNotifications();
 
       // Resume stakeouts
@@ -539,7 +539,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _getBackGroundNotifications() async {
+  Future<void> _getBackgroundNotificationSavedData() async {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
     // Get the save alerts
@@ -551,7 +551,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _fireLaunchResumeNotifications(Map<String, dynamic> message) async {
+  Future<void> _onFirebaseBackgroundNotification(Map<String, dynamic> message) async {
     bool launchBrowser = false;
     var browserUrl = "https://www.torn.com";
 
@@ -854,8 +854,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   // Fires if notification from local_notifications package is tapped (i.e.:
   // when the app is open). Also for manual notifications when app is open.
-  Future<void> _fireOnTapLocalNotifications() async {
-    selectNotificationSubject.stream.listen((String payload) async {
+  Future<void> _onForegroundNotification() async {
+    selectNotificationStream.stream.listen((String payload) async {
       var launchBrowser = false;
       var browserUrl = '';
 

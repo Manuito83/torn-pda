@@ -886,7 +886,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       presentSound: true,
       sound: 'aircraft_seatbelt.aiff',
     );

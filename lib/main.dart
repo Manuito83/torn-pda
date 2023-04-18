@@ -1,7 +1,7 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:ui' as ui;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -22,7 +22,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/utils/home_widget/pda_widget.dart';
@@ -60,7 +59,24 @@ final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
+final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
+    StreamController<ReceivedNotification>.broadcast();
+
+final StreamController<String> selectNotificationStream = StreamController<String>.broadcast();
+
+class ReceivedNotification {
+  ReceivedNotification({
+    @required this.id,
+    @required this.title,
+    @required this.body,
+    @required this.payload,
+  });
+
+  final int id;
+  final String title;
+  final String body;
+  final String payload;
+}
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
@@ -89,19 +105,31 @@ Future<void> main() async {
   // [isInDebugMode] sends notifications each time a task is performed
   Workmanager().initialize(pdaWidget_backgroundUpdate, isInDebugMode: false);
 
+  // Flutter Local Notifications
+  final AndroidFlutterLocalNotificationsPlugin androidImplementation =
+      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+  await androidImplementation.requestPermission();
+
   tz.initializeTimeZones();
   const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-  const initializationSettingsIOS = IOSInitializationSettings();
+  const initializationSettingsIOS = DarwinInitializationSettings();
 
   const initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
     iOS: initializationSettingsIOS,
   );
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onSelectNotification: (String payload) async {
-    selectNotificationSubject.add(payload);
-  });
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+      final String payload = notificationResponse.payload;
+      if (notificationResponse.payload != null) {
+        log('Notification payload: $payload');
+        selectNotificationStream.add(payload);
+      }
+    },
+  );
+  // END # Flutter Local Notifications
 
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized

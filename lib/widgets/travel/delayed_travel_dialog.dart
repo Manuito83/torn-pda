@@ -347,7 +347,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       presentSound: true,
       sound: 'aircraft_seatbelt.aiff',
     );

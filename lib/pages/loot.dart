@@ -1165,14 +1165,14 @@ class _LootPageState extends State<LootPage> {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+    const DarwinNotificationDetails darwinNotificationDetails = DarwinNotificationDetails(
       presentSound: true,
       sound: 'slow_spring_board.aiff',
     );
 
     var platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
-      iOS: iOSPlatformChannelSpecifics,
+      iOS: darwinNotificationDetails,
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(

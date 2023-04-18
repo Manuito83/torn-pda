@@ -607,7 +607,7 @@ class ChainStatusProvider extends ChangeNotifier {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       presentSound: true,
       sound: 'slow_spring_board.aiff',
     );

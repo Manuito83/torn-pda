@@ -229,7 +229,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (Platform.isIOS) {
     var platformChannelSpecifics = NotificationDetails(
       android: null,
-      iOS: IOSNotificationDetails(
+      iOS: DarwinNotificationDetails(
         presentSound: true,
         sound: 'slow_spring_board.aiff',
       ),
@@ -237,7 +237,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     if (channelName.contains("travel")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'aircraft_seatbelt.aiff',
         ),
@@ -245,7 +245,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     } else if (channelName.contains("assists")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
@@ -253,7 +253,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     } else if (channelName.contains("loot")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
@@ -261,7 +261,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     } else if (channelName.contains("retals")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
