@@ -264,6 +264,7 @@ class Prefs {
 
   // Appwidget
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
+  final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -2602,5 +2603,17 @@ class Prefs {
   Future<bool> setAppwidgetDarkMode(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kAppwidgetDarkMode, value);
+  }
+
+  // ---
+
+  Future<bool> getAppwidgetExplanationShown() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetExplanationShown) ?? false;
+  }
+
+  Future<bool> setAppwidgetExplanationShown(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetExplanationShown, value);
   }
 }

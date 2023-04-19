@@ -24,7 +24,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:torn_pda/firebase_options.dart';
-import 'package:torn_pda/utils/home_widget/pda_widget.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';

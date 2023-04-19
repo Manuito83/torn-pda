@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -48,10 +49,11 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
-import 'package:torn_pda/utils/home_widget/pda_widget.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
@@ -1695,6 +1697,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       _changelogIsActive = true;
       _showChangeLogDialog(context);
+    } else {
+      // Other dialogs we need to show when the dialog is not being displayed
+      if (!await Prefs().getAppwidgetExplanationShown()) {
+        int widgets = await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+        if (widgets > 0) {
+          _showAppwidgetExplanationDialog(context);
+          Prefs().setAppwidgetExplanationShown(true);
+        }
+      }
     }
   }
 
@@ -1710,6 +1721,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     setState(() {
       _changelogIsActive = false;
     });
+  }
+
+  Future<void> _showAppwidgetExplanationDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AppwidgetExplanationDialog();
+      },
+    );
   }
 
   void _callSectionFromOutside(int section) {
