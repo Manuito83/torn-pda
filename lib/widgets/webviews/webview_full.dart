@@ -3799,6 +3799,57 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       ),
                     SizedBox(width: 150, child: Divider(color: Colors.white)),
                     Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                      child: GestureDetector(
+                        child: Text(
+                          "Add as shortcut",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () async {
+                          String open = url.toString() ?? src;
+
+                          bool error = false;
+                          if (open == null) error = true;
+                          if (open != null) {
+                            if (!open.contains("http")) {
+                              error = true;
+                            }
+                          }
+
+                          if (!error) {
+                            String u = open.replaceAll("http:", "https:");
+                            return showDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (BuildContext context) {
+                                return CustomShortcutDialog(
+                                  themeProvider: _themeProvider,
+                                  title: "",
+                                  url: u,
+                                );
+                              },
+                            );
+                          } else {
+                            BotToast.showText(
+                              text: "URL error!",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.orange[800],
+                              duration: Duration(seconds: 2),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          }
+                          textCancel();
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 150, child: Divider(color: Colors.white)),
+                    Padding(
                       padding: const EdgeInsets.fromLTRB(0, 5, 0, 20),
                       child: GestureDetector(
                         child: Text(
