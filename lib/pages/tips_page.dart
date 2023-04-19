@@ -2,6 +2,7 @@
 import 'dart:io';
 
 // Flutter imports:
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +20,7 @@ enum TipClass {
   general,
   browserGeneral,
   browserTabs,
+  appwidget,
   travel,
   profile,
   factionCommunication,
@@ -93,6 +95,7 @@ class _TipsPageState extends State<TipsPage> {
   var _generalTipList = <TipTextBuilder>[];
   var _browserGeneralTipList = <TipTextBuilder>[];
   var _browserTabsTipList = <TipTextBuilder>[];
+  var _appwidgetTipsList = <TipTextBuilder>[];
   var _travelTipsList = <TipTextBuilder>[];
   var _profileTipsList = <TipTextBuilder>[];
   var _factionCommunicationTipsList = <TipTextBuilder>[];
@@ -108,6 +111,7 @@ class _TipsPageState extends State<TipsPage> {
     _generalTipList = buildGeneralTips();
     _browserGeneralTipList = buildBrowserGeneralTips();
     _browserTabsTipList = buildBrowserTabsTips();
+    _appwidgetTipsList = buildAppwidgetSectionTips();
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
     _factionCommunicationTipsList = buildFactionCommunicationTips();
@@ -162,6 +166,16 @@ class _TipsPageState extends State<TipsPage> {
                 Text("BROWSER - TABS"),
                 SizedBox(height: 10),
                 tipsPanels(TipClass.browserTabs),
+                SizedBox(height: 25),
+                if (Platform.isAndroid)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("HOME SCREEN WIDGET"),
+                      SizedBox(height: 10),
+                      tipsPanels(TipClass.appwidget),
+                    ],
+                  ),
                 SizedBox(height: 25),
                 Text("TRAVEL SECTION"),
                 SizedBox(height: 10),
@@ -230,6 +244,9 @@ class _TipsPageState extends State<TipsPage> {
         break;
       case TipClass.browserTabs:
         listToShow = _browserTabsTipList;
+        break;
+      case TipClass.appwidget:
+        listToShow = _appwidgetTipsList;
         break;
       case TipClass.travel:
         listToShow = _travelTipsList;
@@ -450,6 +467,79 @@ class _TipsPageState extends State<TipsPage> {
             "Quick browser: tap and hold the bottom bar (where the 'close' button is), then slide up or down.",
       ),
     );
+    return tips;
+  }
+
+  List<ComplexExpandableTip> buildAppwidgetSectionTips() {
+    var tips = <ComplexExpandableTip>[];
+    tips.add(ComplexExpandableTip(
+      headerValue: "Battery restrictions",
+      buildExpandedText: () {
+        return Text.rich(
+          TextSpan(
+            text: "Please be aware that the home screen widget has been built taking battery consumption into "
+                "consideration. It fetches the API and updates the layout once every few minutes, trying to minimize the "
+                "use of background tasks.\n\n"
+                "However, depending on your device model or launcher selection, further restrictions might be applied; if "
+                "that it the case, the widget might not update as much as expected.\n\n"
+                "This is also the case for widget initialization after the device is rebooted, which is restricted by "
+                "some launchers.\n\n"
+                "Check your ",
+            style: TextStyle(
+              fontSize: 13,
+            ),
+            children: [
+              TextSpan(
+                text: "Android's app settings",
+                style: TextStyle(
+                  decoration: TextDecoration.underline,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () async {
+                    AppSettings.openAppSettings();
+                  },
+              ),
+              TextSpan(
+                text: ".",
+              ),
+            ],
+          ),
+        );
+      },
+    ));
+
+    tips.add(ComplexExpandableTip(
+      headerValue: "Widget interaction",
+      buildExpandedText: () {
+        return Text.rich(
+          TextSpan(
+            text: "As in the app, you can interact with almost every item in the widget (e.g.: tap the energy "
+                "bar to launch the app and access the gym).\n\n"
+                "Also, your 9 top shortcuts in the main shortcuts list (which you can configure in Settings) will "
+                "be shown in the widget. If you can't see the shortcuts in the widget, "
+                "ensure you expand it vertically!",
+            style: TextStyle(
+              fontSize: 13,
+            ),
+          ),
+        );
+      },
+    ));
+
+    tips.add(ComplexExpandableTip(
+      headerValue: "Widget theme",
+      buildExpandedText: () {
+        return Text.rich(
+          TextSpan(
+            text: "You can change the home widget theme in the Settings menu in Torn PDA!",
+            style: TextStyle(
+              fontSize: 13,
+            ),
+          ),
+        );
+      },
+    ));
+
     return tips;
   }
 
