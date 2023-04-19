@@ -8,17 +8,21 @@ class Prefs {
   ///
   /// Instantiation of the SharedPreferences library
   ///
+
   // General
   final String _kAppVersion = "pda_appVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+
   // Native login
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
   final String _kLastAuthRedirect = "pda_lastAuthRedirect";
+
   // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kTargetsColorFilter = "pda_targetsColorFilter";
+
   // War targets
   final String _kWarFactions = "pda_warFactions";
   final String _kFilterListInWars = "pda_filterListInWars";
@@ -34,9 +38,11 @@ class Prefs {
   final String _kTornStatsSpiesTime = "pda_tornStatsSpiesTime";
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
   final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
+
   // Retaliation
   final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
   final String _kSingleRetaliationOpensBrowser = "pda_singleRetaliationOpensBrowser";
+
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
@@ -174,20 +180,26 @@ class Prefs {
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+
   // Reviving
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kUseUhcRevive = "pda_useUhcRevive";
   final String _kUseHelaRevive = "pda_useHelaRevive";
+
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
+
   // Jail
   final String _kJailModel = "pda_jailOptions";
+
   // Bounties
   final String _kBountiesModel = "pda_bountiesOptions";
+
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
+
   // WebView Tabs
   final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
@@ -204,24 +216,29 @@ class Prefs {
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
+
   // Items
   final String _kItemsSort = "pda_itemssSort";
   final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
+
   // NNB
   final String _kNaturalNerveBarSource = "pda_naturalNerveBarSource";
   final String _kNaturalNerveYataTime = "pda_naturalNerveYataTime";
   final String _kNaturalNerveYataModel = "pda_naturalNerveYataModel";
   final String _kNaturalNerveTornStatsTime = "pda_naturalNerveTornStatsTime";
   final String _kNaturalNerveTornStatsModel = "pda_naturalNerveTornStatsModel";
+
   // Stakeouts
   final String _kStakeoutsEnabled = "pda_stakeoutsEnabled";
   final String _kStakeouts = "pda_stakeouts";
   final String _kStakeoutsSleepTime = "pda_stakeoutsSleepTime";
   final String _kStakeoutsFetchDelayLimit = "pda_stakeoutsFetchDelayLimit";
+
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
+
   // Stats
   final String _kStatsFirstLoginTimestamp = "pda_statsFirstLoginTimestamp";
   final String _kStatsCumulatedAppUseSeconds = "pda_statsCumulatedAppUseSeconds";
@@ -244,6 +261,9 @@ class Prefs {
   final String _kTACEnabled = "pda_tacEnabled";
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
+
+  // Appwidget
+  final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -2569,5 +2589,18 @@ class Prefs {
   Future<bool> setStatsCumulatedEventsAchieved(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kStatsEventsAchieved, value);
+  }
+
+  /// ----------------------------
+  /// Methods for appwidget
+  /// ----------------------------
+  Future<bool> getAppwidgetDarkMode() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetDarkMode) ?? false;
+  }
+
+  Future<bool> setAppwidgetDarkMode(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetDarkMode, value);
   }
 }

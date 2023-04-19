@@ -607,6 +607,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _appwidgetDarkMode = false;
+  bool get appwidgetDarkMode => _appwidgetDarkMode;
+  set appwidgetDarkMode(bool value) {
+    _appwidgetDarkMode = value;
+    Prefs().setAppwidgetDarkMode(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -779,6 +787,8 @@ class SettingsProvider extends ChangeNotifier {
     _debugMessages = await Prefs().getDebugMessages();
 
     _showFavoritesInTabBar = await Prefs().getShowFavoritesInTabBar();
+
+    _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
 
     notifyListeners();
   }
