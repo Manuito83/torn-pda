@@ -233,10 +233,12 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    // Handle home widget
-    HomeWidget.setAppGroupId('torn_pda');
-    HomeWidget.registerBackgroundCallback(pdaWidget_callback);
-    pdaWidget_handleBackgroundUpdateStatus();
+    if (Platform.isAndroid) {
+      // Handle home widget
+      HomeWidget.setAppGroupId('torn_pda');
+      HomeWidget.registerBackgroundCallback(pdaWidget_callback);
+      pdaWidget_handleBackgroundUpdateStatus();
+    }
   }
 
   @override

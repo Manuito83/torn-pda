@@ -1699,11 +1699,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _showChangeLogDialog(context);
     } else {
       // Other dialogs we need to show when the dialog is not being displayed
-      if (!await Prefs().getAppwidgetExplanationShown()) {
-        int widgets = await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
-        if (widgets > 0) {
-          _showAppwidgetExplanationDialog(context);
-          Prefs().setAppwidgetExplanationShown(true);
+
+      // Appwidget dialog
+      if (Platform.isAndroid) {
+        if (!await Prefs().getAppwidgetExplanationShown()) {
+          int widgets = await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+          if (widgets > 0) {
+            _showAppwidgetExplanationDialog(context);
+            Prefs().setAppwidgetExplanationShown(true);
+          }
         }
       }
     }
