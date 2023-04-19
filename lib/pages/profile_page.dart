@@ -228,7 +228,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _helaReviveActive = false;
 
   bool _warnAboutChains = false;
-  bool _shortcutsEnabled = false;
   bool _showHeaderWallet = false;
   bool _showHeaderIcons = false;
   bool _dedicatedTravelCard = false;
@@ -631,7 +630,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
-              _shortcutsEnabled = newOptions.shortcutsEnabled;
               _showHeaderWallet = newOptions.showHeaderWallet;
               _showHeaderIcons = newOptions.showHeaderIcons;
               _dedicatedTravelCard = newOptions.dedicatedTravelCard;
@@ -5534,7 +5532,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _helaReviveActive = await Prefs().getUseHelaRevive();
 
     _warnAboutChains = await Prefs().getWarnAboutChains();
-    _shortcutsEnabled = await Prefs().getEnableShortcuts();
     _showHeaderWallet = await Prefs().getShowHeaderWallet();
     _showHeaderIcons = await Prefs().getShowHeaderIcons();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
@@ -6315,7 +6312,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var sectionSort = <Widget>[];
 
     for (var section in _userSectionOrder) {
-      if (section == "Shortcuts" && _shortcutsEnabled) {
+      if (section == "Shortcuts" && _settingsProvider.shortcutsEnabledProfile) {
         sectionSort.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),

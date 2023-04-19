@@ -71,7 +71,6 @@ class Prefs {
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kDebugMessages = "pda_debugMessages";
-  final String _kShowFavoritesInTabBar = "pda_showFavoritesInTabBar";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
@@ -133,16 +132,11 @@ class Prefs {
   final String _kJailTimerAhead = "pda_jailTimesAhead";
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
-  final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
   final String _kShowHeaderIcons = "pda_showHeaderIcons";
   final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
   final String _kDisableTravelSection = "pda_disableTravelSection";
-  final String _kShortcutTile = "pda_shortcutTile";
-  final String _kShortcutMenu = "pda_shortcutMenu";
-  final String _kActiveShortcutsList = "pda_activeShortcutsList";
-
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
   final String _kWarnAboutExcessEnergyThreshold = "pda_warnAboutExcessEnergyThreshold";
@@ -180,6 +174,13 @@ class Prefs {
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+
+  // Shortcuts
+  final String _kEnableShortcuts = "pda_enableShortcuts";
+  final String _kShowFavoritesInTabBar = "pda_showFavoritesInTabBar";
+  final String _kShortcutTile = "pda_shortcutTile";
+  final String _kShortcutMenu = "pda_shortcutMenu";
+  final String _kActiveShortcutsList = "pda_activeShortcutsList";
 
   // Reviving
   final String _kUseNukeRevive = "pda_useNukeRevive";
@@ -773,19 +774,6 @@ class Prefs {
   Future<bool> setDebugMessages(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kDebugMessages, value);
-  }
-
-  /// ----------------------------
-  /// Methods for favorites icon in tab bar
-  /// ----------------------------
-  Future<bool> getShowFavoritesInTabBar() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowFavoritesInTabBar) ?? true;
-  }
-
-  Future<bool> setShowFavoritesInTabBar(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowFavoritesInTabBar, value);
   }
 
   /// ----------------------------
@@ -1540,16 +1528,6 @@ class Prefs {
     return prefs.setBool(_kManualAlarmSound, value);
   }
 
-  Future<bool> getEnableShortcuts() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kEnableShortcuts) ?? true;
-  }
-
-  Future<bool> setEnableShortcuts(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kEnableShortcuts, value);
-  }
-
   Future<bool> getShowHeaderWallet() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kShowHeaderWallet) ?? true;
@@ -1737,6 +1715,16 @@ class Prefs {
   /// ----------------------------
   /// Methods for shortcuts
   /// ----------------------------
+  Future<bool> getShortcutsEnabledProfile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kEnableShortcuts) ?? true;
+  }
+
+  Future<bool> setShortcutsEnabledProfile(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kEnableShortcuts, value);
+  }
+
   Future<String> getShortcutTile() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kShortcutTile) ?? 'both';
@@ -1765,6 +1753,16 @@ class Prefs {
   Future<bool> setActiveShortcutsList(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kActiveShortcutsList, value);
+  }
+
+  Future<bool> getShowFavoritesInTabBar() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowFavoritesInTabBar) ?? true;
+  }
+
+  Future<bool> setShowFavoritesInTabBar(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowFavoritesInTabBar, value);
   }
 
   /// ----------------------------

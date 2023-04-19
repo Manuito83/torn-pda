@@ -599,6 +599,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _shortcutsEnabledProfile = true;
+  bool get shortcutsEnabledProfile => _shortcutsEnabledProfile;
+  set shortcutsEnabledProfile(bool value) {
+    _shortcutsEnabledProfile = value;
+    Prefs().setShortcutsEnabledProfile(value);
+    notifyListeners();
+  }
+
   var _showFavoritesInTabBar = true;
   bool get showFavoritesInTabBar => _showFavoritesInTabBar;
   set showFavoritesInTabBar(bool value) {
@@ -786,6 +794,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _debugMessages = await Prefs().getDebugMessages();
 
+    _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
     _showFavoritesInTabBar = await Prefs().getShowFavoritesInTabBar();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();

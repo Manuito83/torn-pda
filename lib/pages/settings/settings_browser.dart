@@ -115,7 +115,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                   SizedBox(height: 15),
                                   Divider(),
                                   SizedBox(height: 10),
-                                  _linkPreview(),                                  
+                                  _linkPreview(),
                                 ],
                               ),
                             if (Platform.isIOS)
@@ -464,7 +464,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ],
               ),
-            ),            
+            ),
           ],
         ),
       ],
@@ -1038,36 +1038,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         if (_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog)
           Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text("Show favorites in tab bar"),
-                    Switch(
-                      value: _settingsProvider.showFavoritesInTabBar,
-                      onChanged: (value) {
-                        setState(() {
-                          _settingsProvider.showFavoritesInTabBar = value;
-                        });
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
-                child: Text(
-                  'Shows a favorites icon in the tab bar that opens a quick menu with shortcuts',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
               if (_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog)
                 Column(
                   children: [

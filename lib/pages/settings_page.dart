@@ -20,7 +20,9 @@ import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -85,6 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ThemeProvider _themeProvider;
+  ShortcutsProvider _shortcutsProvider;
 
   var _expandableController = ExpandableController();
 
@@ -101,6 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     analytics.setCurrentScreen(screenName: 'settings');
@@ -142,6 +146,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       _browserSection(context),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      _shortcutsSection(context),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
@@ -635,6 +643,141 @@ class _SettingsPageState extends State<SettingsPage> {
             "Use this section to configure alternative API keys for the external partners that "
             "Torn PDA connects with. CAUTION: ensure this other keys are working correctly, as Torn PDA "
             "won't be able to check for errors and certain sections might stop working",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _shortcutsSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'SHORTCUTS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Configure shortcuts"),
+              IconButton(
+                icon: Icon(Icons.switch_access_shortcut_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => ShortcutsPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Use Profile section shortcuts"),
+              Switch(
+                value: _settingsProvider.shortcutsEnabledProfile,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.shortcutsEnabledProfile = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Enable configurable shortcuts in the Profile section to quickly access your favorite sections in Torn',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        if (_settingsProvider.shortcutsEnabledProfile)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 30, top: 0, right: 20, bottom: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        "Profile shortcuts menu",
+                      ),
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: _shortcutMenuDropdown(),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 30, top: 0, right: 20, bottom: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        "Profile tile type",
+                      ),
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: _shortcutTileDropdown(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Use browser shortcuts"),
+              Switch(
+                value: _settingsProvider.showFavoritesInTabBar,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.showFavoritesInTabBar = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Shows a favorites icon in the tab bar that opens a quick menu with shortcuts. NOTE: this will only '
+            'be accessible if you are using tabs!',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -2355,5 +2498,96 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_myCurrentKey != '') {
       _getApiDetails(userTriggered: false);
     }
+  }
+
+  DropdownButton _shortcutTileDropdown() {
+    return DropdownButton<String>(
+      value: _shortcutsProvider.shortcutTile,
+      items: [
+        DropdownMenuItem(
+          value: "both",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Icon and text",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "icon",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Only icon",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "text",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Only text",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _shortcutsProvider.changeShortcutTile(value);
+        });
+      },
+    );
+  }
+
+  DropdownButton _shortcutMenuDropdown() {
+    return DropdownButton<String>(
+      value: _shortcutsProvider.shortcutMenu,
+      items: [
+        DropdownMenuItem(
+          value: "carousel",
+          child: SizedBox(
+            width: 67,
+            child: Text(
+              "Carousel",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "grid",
+          child: SizedBox(
+            width: 67,
+            child: Text(
+              "Grid",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _shortcutsProvider.changeShortcutMenu(value);
+        });
+      },
+    );
   }
 }
