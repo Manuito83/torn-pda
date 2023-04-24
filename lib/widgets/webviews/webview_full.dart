@@ -1531,6 +1531,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     String originalInitUrl = _initialUrl.url.toString();
     if (!originalInitUrl.contains("torn.com")) return;
+    // Auth redirects to attack pages might fail
+    if (originalInitUrl.contains("loader.php?sid=attack&user")) return;
 
     int elapsedSinceLastAuth = DateTime.now().difference(_nativeAuth.lastAuthRedirect).inHours;
     if (_nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
