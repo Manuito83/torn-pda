@@ -115,7 +115,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                   SizedBox(height: 15),
                                   Divider(),
                                   SizedBox(height: 10),
-                                  _linkPreview(),                                  
+                                  _linkPreview(),
                                 ],
                               ),
                             if (Platform.isIOS)
@@ -464,7 +464,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ],
               ),
-            ),            
+            ),
           ],
         ),
       ],
@@ -1138,41 +1138,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     ),
                   ],
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text("Allow hiding tabs"),
-                    Switch(
-                      value: _settingsProvider.useTabsHideFeature,
-                      onChanged: (value) {
-                        setState(() {
-                          _settingsProvider.changeUseTabsHideFeature = value;
-                        });
-                        // Show tabs if this feature is disabled
-                        if (!value) {
-                          Prefs().setHideTabs(false);
-                        }
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 5, 20, 0),
-                child: Text(
-                  'Allow to temporarily hide tabs by swiping in the title bar (full browser) or in the lower bar '
-                  '(quick browser)',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
             ],
           ),
         if ((_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog) &&
