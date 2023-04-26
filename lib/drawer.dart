@@ -424,21 +424,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
 
     if (launchBrowser) {
-      // iOS seems to open a blank WebView unless we allow some time onResume
-      if (Platform.isAndroid) {
-        await Future.delayed(const Duration(milliseconds: 2000));
-      } else if (Platform.isIOS) {
-        await Future.delayed(const Duration(milliseconds: 2500));
-      }
-
-      // Works best if we get SharedPrefs directly instead of SettingsProvider
-      if (launchBrowser) {
+      _preferencesCompleter.future.whenComplete(() {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
-          useDialog: _settingsProvider?.useQuickBrowser ?? true,
+          useDialog: _settingsProvider.useQuickBrowser,
         );
-      }
+      });
     }
   }
   // ## END Intent Listener (for appWidget)
