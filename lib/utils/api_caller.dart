@@ -755,6 +755,7 @@ class TornApiCaller {
         }
         return ApiError(
             errorId: 0,
+            // We limit to a bit more here (it might get shown to the user)
             pdaErrorDetails: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]");
       }
 
@@ -775,27 +776,36 @@ class TornApiCaller {
             'response_body': jsonResponse.length > 99 ? jsonResponse.substring(0, 99) : jsonResponse,
           },
         );
-        return ApiError(errorId: 0, pdaErrorDetails: "API STATUS ERROR\n[${response.statusCode}: ${response.data}]");
+
+        String e = response.data.toString();
+        return ApiError(
+          errorId: 0,
+          // We limit to a bit more here (it might get shown to the user)
+          pdaErrorDetails: "API STATUS ERROR\n[${response.statusCode}: ${e.length > 300 ? e.substring(0, 300) : e}]",
+        );
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
     } catch (e) {
       // ERROR HANDLING 3: exception from http call
 
-      log("API CALL ERROR (URL was $url): [$e]");
+      log("API CALL ERROR: [$e]");
       // Analytics limits at 100 chars
       String platform = Platform.isAndroid ? "a" : "i";
-      String versionError = "$appVersion$platform (URL was $url): $e";
+      String versionError = "$appVersion$platform: $e";
       analytics.logEvent(
         name: 'api_call_error',
         parameters: {
           'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
         },
       );
-      // We limit to a bit more here (it will be shown to the user)
+
       String error = e.toString();
       return ApiError(
-          errorId: 0, pdaErrorDetails: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : e}]");
+        errorId: 0,
+        // We limit to a bit more here (it might get shown to the user)
+        pdaErrorDetails: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : error}]",
+      );
     }
   }
 }
