@@ -3,10 +3,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 // Package imports:
-import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -715,26 +714,15 @@ class TornApiCaller {
     url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit';
 
     try {
-      Dio dio = Dio(
-        BaseOptions(
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          responseType: ResponseType.plain,
-        ),
-      );
-
-      dio.httpClientAdapter = IOHttpClientAdapter()
-        ..onHttpClientCreate = (HttpClient client) {
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-          return client;
-        };
-
-      final response = await dio.get(url);
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"source-app": "torn-pda"},
+      ).timeout(const Duration(seconds: 15));
 
       // ERROR HANDLING 1: verify whether API reply has a correct JSON structure
       dynamic jsonResponse;
       try {
-        jsonResponse = json.decode(response.data);
+        jsonResponse = json.decode(response.body);
       } catch (e) {
         log("API REPLY ERROR [$e]");
         // Analytics limits at 100 chars
@@ -747,7 +735,7 @@ class TornApiCaller {
           },
         );
         // We limit to a bit more here (it will be shown to the user)
-        String error = response == null ? "null" : response.data.toString();
+        String error = response == null ? "null" : response.body.toString();
         if (error.isEmpty) {
           error = "Torn API is returning an empty string, please try again in a while. You can check "
               "if there are issues with the API directly in Torn, by visiting https://api.torn.com and trying "
@@ -768,7 +756,7 @@ class TornApiCaller {
         // Otherwise, return a good json response
         return jsonResponse;
       } else {
-        log("Api code ${response.statusCode}: ${response.data}");
+        log("Api code ${response.statusCode}: ${response.body}");
         analytics.logEvent(
           name: 'api_status_error',
           parameters: {
@@ -777,7 +765,7 @@ class TornApiCaller {
           },
         );
 
-        String e = response.data.toString();
+        String e = response.body.toString();
         return ApiError(
           errorId: 0,
           // We limit to a bit more here (it might get shown to the user)
