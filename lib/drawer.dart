@@ -500,12 +500,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           return;
         }
         _deepLinkSubTriggeredTime = DateTime.now();
-        await Future.delayed(const Duration(milliseconds: 2000));
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: url,
-          useDialog: _settingsProvider.useQuickBrowser,
-        );
+        _preferencesCompleter.future.whenComplete(() async {
+          _webViewProvider.openBrowserPreference(
+            context: context,
+            url: url,
+            useDialog: _settingsProvider.useQuickBrowser,
+          );
+        });
       }
     } catch (e) {
       print(e);
@@ -689,27 +690,28 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // If we have the section manually deactivated
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
-      await Future.delayed(Duration(seconds: 2));
-      if (!_settingsProvider.retaliationSectionEnabled ||
+      _preferencesCompleter.future.whenComplete(() async {
+        if (!_settingsProvider.retaliationSectionEnabled ||
           (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
-        launchBrowser = true;
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
-      } else {
-        // Even if we meet above requirements, call the API and assess whether the user
-        // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-        var attacksResult = await TornApiCaller().getFactionAttacks();
-        if (attacksResult is! FactionAttacksModel) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
-          // If we pass all checks above, redirect to the retals section
-          _retalsRedirection = true;
-          _callSectionFromOutside(2);
-          Future.delayed(Duration(seconds: 2)).then((value) {
-            _retalsRedirection = false;
-          });
+          // Even if we meet above requirements, call the API and assess whether the user
+          // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+          var attacksResult = await TornApiCaller().getFactionAttacks();
+          if (attacksResult is! FactionAttacksModel) {
+            launchBrowser = true;
+            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          } else {
+            // If we pass all checks above, redirect to the retals section
+            _retalsRedirection = true;
+            _callSectionFromOutside(2);
+            Future.delayed(Duration(seconds: 2)).then((value) {
+              _retalsRedirection = false;
+            });
+          }
         }
-      }
+      });
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
