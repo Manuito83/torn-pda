@@ -2377,8 +2377,10 @@ class _SettingsPageState extends State<SettingsPage> {
           widget.statsController.logFirstLoginEver();
 
           // Update the home widget if it's installed
-          if ((await pdaWidget_numberInstalled()) > 0) {
-            pdaWidget_fetchData();
+          if (Platform.isAndroid) {
+            if ((await pdaWidget_numberInstalled()) > 0) {
+              pdaWidget_fetchData();
+            }
           }
         }
       } else if (myProfile is ApiError) {
