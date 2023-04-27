@@ -1009,7 +1009,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           windowId: widget.windowId,
           initialUrlRequest: _initialUrl,
           initialUserScripts: _userScriptsProvider.getContinuousSources(
-            apiKey: _userProvider.basic.userApiKey,
+            apiKey: _userProvider?.basic?.userApiKey ?? "",
           ),
           pullToRefreshController: _pullToRefreshController,
           findInteractionController: _findInteractionController,
@@ -1023,7 +1023,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl.url.toString(),
-                apiKey: _userProvider.basic.userApiKey,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
@@ -1103,7 +1103,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: request.request.url.toString(),
-                apiKey: _userProvider.basic.userApiKey,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
@@ -1215,13 +1215,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
-                apiKey: _userProvider.basic.userApiKey,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.end,
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (var script in scriptsToAdd) {
                 await webView.evaluateJavascript(
-                  source: _userScriptsProvider.adaptSource(script.source, _userProvider.basic.userApiKey),
+                  source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
                 );
               }
 
@@ -1531,6 +1531,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     String originalInitUrl = _initialUrl.url.toString();
     if (!originalInitUrl.contains("torn.com")) return;
+    // Auth redirects to attack pages might fail
+    if (originalInitUrl.contains("loader.php?sid=attack&user")) return;
 
     int elapsedSinceLastAuth = DateTime.now().difference(_nativeAuth.lastAuthRedirect).inHours;
     if (_nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
@@ -3225,7 +3227,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProvider.basic.userApiKey,
+              apiKey: _userProvider?.basic?.userApiKey ?? "",
               profileCheckType: ProfileCheckType.profile,
               themeProvider: _themeProvider,
             );
@@ -3249,7 +3251,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProvider.basic.userApiKey,
+              apiKey: _userProvider?.basic?.userApiKey ?? "",
               profileCheckType: ProfileCheckType.attack,
               themeProvider: _themeProvider,
             );
@@ -3668,7 +3670,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
-        apiKey: _userProvider.basic.userApiKey,
+        apiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.end,
       );
       await webView.addUserScripts(userScripts: scriptsToAdd);
@@ -3797,6 +3799,57 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
+                    SizedBox(width: 150, child: Divider(color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                      child: GestureDetector(
+                        child: Text(
+                          "Add as shortcut",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () async {
+                          String open = url.toString() ?? src;
+
+                          bool error = false;
+                          if (open == null) error = true;
+                          if (open != null) {
+                            if (!open.contains("http")) {
+                              error = true;
+                            }
+                          }
+
+                          if (!error) {
+                            String u = open.replaceAll("http:", "https:");
+                            return showDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (BuildContext context) {
+                                return CustomShortcutDialog(
+                                  themeProvider: _themeProvider,
+                                  title: "",
+                                  url: u,
+                                );
+                              },
+                            );
+                          } else {
+                            BotToast.showText(
+                              text: "URL error!",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.orange[800],
+                              duration: Duration(seconds: 2),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          }
+                          textCancel();
+                        },
+                      ),
+                    ),
                     SizedBox(width: 150, child: Divider(color: Colors.white)),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 5, 0, 20),

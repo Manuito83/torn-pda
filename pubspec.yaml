@@ -22,6 +22,7 @@ dependencies:
     sdk: flutter
   android_intent_plus: ^3.1.5
   animations: ^2.0.2
+  app_settings: ^4.2.0
   audioplayers: ^0.20.1
   bot_toast: ^4.0.1
   cloud_firestore: 4.5.0
@@ -133,7 +134,6 @@ flutter:
     - userscripts/TornPDA_Ready.js
     - userscripts/TornPDA_API.js
     - userscripts/TornPDA_EvaluateJavascript.js
-    - assets/ca/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

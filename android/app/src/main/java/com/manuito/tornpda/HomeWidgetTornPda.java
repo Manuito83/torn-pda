@@ -22,11 +22,14 @@ import es.antonborri.home_widget.HomeWidgetLaunchIntent;
 import es.antonborri.home_widget.HomeWidgetProvider;
 
 public class HomeWidgetTornPda extends HomeWidgetProvider {
+    private static SharedPreferences prefs;
+
     // Fires when widget is resized
     @Override
     public void onAppWidgetOptionsChanged(
             Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
 
+        prefs = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE);
         createRemoteViews(context, appWidgetManager, appWidgetId);
     }
 
@@ -35,6 +38,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
     public void onUpdate(@NonNull Context context, @NonNull AppWidgetManager appWidgetManager, int[] appWidgetIds,
                          @NonNull SharedPreferences widgetData) {
 
+        prefs = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE);
         for (int widgetId : appWidgetIds) {
             createRemoteViews(context, appWidgetManager, widgetId);
         }
@@ -42,10 +46,12 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
 
     // Creates the RemoteViews for the given size
     private void createRemoteViews(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        RemoteViews oneRowNarrow = new RemoteViews(context.getPackageName(), R.layout.bars_layout_one_row_narrow);
-        RemoteViews oneRowWide = new RemoteViews(context.getPackageName(), R.layout.bars_layout_one_row_wide);
-        RemoteViews twoRowNarrow = new RemoteViews(context.getPackageName(), R.layout.bars_layout_two_row_narrow);
-        RemoteViews twoRowWide = new RemoteViews(context.getPackageName(), R.layout.bars_layout_two_row_wide);
+        boolean dark = prefs.getBoolean("darkMode", false);
+
+        RemoteViews oneRowNarrow = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_one_row_narrow_dark : R.layout.bars_layout_one_row_narrow);
+        RemoteViews oneRowWide = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_one_row_wide_dark : R.layout.bars_layout_one_row_wide);
+        RemoteViews twoRowNarrow = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_two_row_narrow_dark : R.layout.bars_layout_two_row_narrow);
+        RemoteViews twoRowWide = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_two_row_wide_dark : R.layout.bars_layout_two_row_wide);
 
         oneRowNarrow = loadWidgetData(oneRowNarrow, context);
         oneRowWide = loadWidgetData(oneRowWide, context);
@@ -72,7 +78,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
 
     // Assigns data fields
     public RemoteViews loadWidgetData(RemoteViews view, Context context) {
-        SharedPreferences prefs = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE);
+
         boolean backgroundServiceRunning = prefs.getBoolean("background_active", false);
 
         // ## Open App on Widget Click with no URI ##
