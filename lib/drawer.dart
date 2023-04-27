@@ -261,8 +261,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _removeExistingNotifications();
 
     // Init intent listener (for appWidget)
-    _initIntentListenerSubscription();
-    _initIntentReceiverOnLaunch();
+    if (Platform.isAndroid) {
+      _initIntentListenerSubscription();
+      _initIntentReceiverOnLaunch();
+    }
   }
 
   @override
@@ -316,8 +318,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _statsController.logCheckOut();
 
       // Refresh widget to have up to date info when we exit
-      if (await pdaWidget_numberInstalled() > 0) {
-        pdaWidget_startBackgroundUpdate();
+      if (Platform.isAndroid) {
+        if (await pdaWidget_numberInstalled() > 0) {
+          pdaWidget_startBackgroundUpdate();
+        }
       }
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
@@ -337,7 +341,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _statsController.logCheckIn();
 
       // App widget - reset background updater
-      pdaWidget_handleBackgroundUpdateStatus();
+      if (Platform.isAndroid) {
+        pdaWidget_handleBackgroundUpdateStatus();
+      }
     }
   }
 

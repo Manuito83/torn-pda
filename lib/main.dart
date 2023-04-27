@@ -106,9 +106,11 @@ Future<void> main() async {
   Workmanager().initialize(pdaWidget_backgroundUpdate, isInDebugMode: false);
 
   // Flutter Local Notifications
-  final AndroidFlutterLocalNotificationsPlugin androidImplementation =
+  if (Platform.isAndroid) {
+    final AndroidFlutterLocalNotificationsPlugin androidImplementation =
       flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-  await androidImplementation.requestPermission();
+    await androidImplementation.requestPermission();
+  }
 
   tz.initializeTimeZones();
   const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
@@ -234,9 +236,11 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     // Handle home widget
-    HomeWidget.setAppGroupId('torn_pda');
-    HomeWidget.registerBackgroundCallback(pdaWidget_callback);
-    pdaWidget_handleBackgroundUpdateStatus();
+    if (Platform.isAndroid) {
+      HomeWidget.setAppGroupId('torn_pda');
+      HomeWidget.registerBackgroundCallback(pdaWidget_callback);
+      pdaWidget_handleBackgroundUpdateStatus();
+    }
   }
 
   @override

@@ -23,6 +23,7 @@ import Flutter
   channel.invokeMethod("launch", arguments: shortcutItem.type)
   }
     
+    /*
     override func applicationDidBecomeActive(_ application: UIApplication) {
         if #available(iOS 14.0, *) {
             WidgetCenter.shared.getCurrentConfigurations { (result) in
@@ -33,6 +34,7 @@ import Flutter
             }
         }
     }
+    */
 }
 
 // Flutter 2.2.3 USB keyboard fix
