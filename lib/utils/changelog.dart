@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 300 - 28/04/2023
+    // Build 301 - 28/04/2023
 
     // VERSION 3.1.0
     var v3_1_0 = ChangeLogItem();
-    v3_1_0.version = 'Torn PDA v3.0.2';
-    v3_1_0.date = '25 APR 2023';
+    v3_1_0.version = 'Torn PDA v3.1.0';
+    v3_1_0.date = '15 MAY 2023';
     String feat3_1_0_1 = "Added home screen widget (see Tips)";
     String feat3_1_0_2 = "Shortcuts page and all related options have been moved to Settings";
     String feat3_1_0_3 = "Browser long-press menu now also adds a shortcut to the target link";
