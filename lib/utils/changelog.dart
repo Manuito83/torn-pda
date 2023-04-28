@@ -39,7 +39,22 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 299 - 18/04/2023
+    // Build 300 - 28/04/2023
+
+    // VERSION 3.1.0
+    var v3_1_0 = ChangeLogItem();
+    v3_1_0.version = 'Torn PDA v3.0.2';
+    v3_1_0.date = '25 APR 2023';
+    String feat3_1_0_1 = "Added home screen widget (see Tips)";
+    String feat3_1_0_2 = "Shortcuts page and all related options have been moved to Settings";
+    String feat3_1_0_3 = "Browser long-press menu now also adds a shortcut to the target link";
+    String feat3_1_0_4 = "Fixed issues redirecting to attack pages in certain conditions";
+    String feat3_1_0_5 = "Fixed issues when launching the app from a notification";
+    if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
+    v3_1_0.features.add(feat3_1_0_2);
+    v3_1_0.features.add(feat3_1_0_3);
+    v3_1_0.features.add(feat3_1_0_4);
+    v3_1_0.features.add(feat3_1_0_5);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();
@@ -1362,6 +1377,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_1_0);
     itemList.add(v3_0_2);
     itemList.add(v3_0_1);
     itemList.add(v2_9_6);

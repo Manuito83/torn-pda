@@ -51,9 +51,9 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.0.2';
-const String androidCompilation = '299';
-const String iosCompilation = '299';
+const String appVersion = '3.1.0';
+const String androidCompilation = '300';
+const String iosCompilation = '300';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -108,7 +108,7 @@ Future<void> main() async {
   // Flutter Local Notifications
   if (Platform.isAndroid) {
     final AndroidFlutterLocalNotificationsPlugin androidImplementation =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     await androidImplementation.requestPermission();
   }
 
