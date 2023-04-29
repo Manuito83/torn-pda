@@ -357,6 +357,50 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
+                                      'RANKED WAR WIDGET',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Show next Ranked War"),
+                                      Switch(
+                                        value: _settingsProvider.rankedWarsInProfile,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.changeRankedWarsInProfile = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'Show a mini widget in the Status card with information regarding the approaching '
+                                    'Ranked War, including notifications. When the Ranked War is active, a scoreboard '
+                                    'is shown. It can be clicked to access the war in Torn.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 15),
+                                Divider(),
+                                SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
                                       'BARS BEHAVIOR',
                                       style: TextStyle(fontSize: 10),
                                     ),
@@ -431,8 +475,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   child: Text(
                                     'Shown in the miscellaneous card and in status when the time approaches. '
                                     'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
-                                    'the participants\' status. Otherwise, it will be calculated based on received events (it might be prone to errors '
-                                    'if you delete them)',
+                                    'the participants\' status. Otherwise, it will be calculated based on received events',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,

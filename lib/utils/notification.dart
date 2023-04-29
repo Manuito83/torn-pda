@@ -14,7 +14,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // IDS
-// 101 -> 108 profile cooldowns
+// 101 -> 109 profile cooldowns
 // 201 travel arrival
 // 211 travel departure
 // 400 loot
@@ -472,6 +472,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual jail ${modifier.channelIdModifier}',
       'Manual jail ${modifier.channelIdModifier}',
       description: 'Manual notifications for jail',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual war ${modifier.channelIdModifier}',
+      'Manual war ${modifier.channelIdModifier}',
+      description: 'Manual notifications for war',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

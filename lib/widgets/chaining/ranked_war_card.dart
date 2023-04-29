@@ -50,7 +50,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
   SettingsProvider _settingsProvider;
   WebViewProvider _webViewProvider;
 
-  List<Faction> _factions = <Faction>[];
+  List<WarFaction> _factions = <WarFaction>[];
   List<String> _factionsIds = <String>[];
 
   String _titleString = "";

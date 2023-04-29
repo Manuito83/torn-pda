@@ -37,7 +37,10 @@ class Prefs {
   final String _kTornStatsSpies = "pda_tornStatsSpies";
   final String _kTornStatsSpiesTime = "pda_tornStatsSpiesTime";
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
+
+  // Ranked war extra access
   final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
+  final String _kRankedWarsInProfile = "pda_rankedWarsInProfile";
 
   // Retaliation
   final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
@@ -111,6 +114,8 @@ class Prefs {
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
   final String _kRestocksEnabled = "pda_restocksEnabled";
+
+  // Profile notifications
   final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
   final String _kEnergyNotificationValue = "pda_energyNotificationValue";
@@ -130,6 +135,11 @@ class Prefs {
   final String _kJailNotificationAhead = "pda_jailNotificationAhead";
   final String _kJailAlarmAhead = "pda_jailAlarmAhead";
   final String _kJailTimerAhead = "pda_jailTimesAhead";
+  final String _kRankedWarNotificationType = "pda_rankedWarNotificationType";
+  final String _kRankedWarNotificationAhead = "pda_rankedWarNotificationAhead";
+  final String _kRankedWarAlarmAhead = "pda_rankedWarAlarmAhead";
+  final String _kRankedWarTimerAhead = "pda_rankedWarTimesAhead";
+
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
@@ -1508,6 +1518,49 @@ class Prefs {
     return prefs.setInt(_kJailTimerAhead, value);
   }
 
+  // Ranked War notification
+  Future<String> getRankedWarNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kRankedWarNotificationType) ?? '0';
+  }
+
+  Future<bool> setRankedWarNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kRankedWarNotificationType, value);
+  }
+
+  Future<int> getRankedWarNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRankedWarNotificationAhead) ?? 60;
+  }
+
+  Future<bool> setRankedWarNotificationAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRankedWarNotificationAhead, value);
+  }
+
+  Future<int> getRankedWarAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRankedWarAlarmAhead) ?? 1;
+  }
+
+  Future<bool> setRankedWarAlarmAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRankedWarAlarmAhead, value);
+  }
+
+  Future<int> getRankedWarTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRankedWarTimerAhead) ?? 60;
+  }
+
+  Future<bool> setRankedWarTimerAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRankedWarTimerAhead, value);
+  }
+
+  //
+
   Future<bool> getManualAlarmVibration() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kManualAlarmVibration) ?? true;
@@ -2344,7 +2397,7 @@ class Prefs {
   }
 
   /// -----------------------------
-  /// METHODS FOR RANKED WARD
+  /// METHODS FOR EXTRA ACCESS TO RANKED WAR
   /// -----------------------------
   Future<bool> getRankedWarsInMenu() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -2354,6 +2407,16 @@ class Prefs {
   Future<bool> setRankedWarsInMenu(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRankedWarsInMenu, value);
+  }
+
+  Future<bool> getRankedWarsInProfile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRankedWarsInProfile) ?? true;
+  }
+
+  Future<bool> setRankedWarsInProfile(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRankedWarsInProfile, value);
   }
 
   /// -----------------------

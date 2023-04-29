@@ -417,6 +417,23 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
                         ),
                       ],
                     ),
+                    SizedBox(height: 20),
+                    Column(
+                      children: [
+                        Text(
+                          "Ranked War",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "Title: W",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        Text(
+                          "App",
+                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),

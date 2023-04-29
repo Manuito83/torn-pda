@@ -22,6 +22,7 @@ import 'package:share/share.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/user_controller.dart';
@@ -29,6 +30,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
+import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
@@ -71,6 +73,7 @@ enum ProfileNotification {
   drugs,
   medical,
   booster,
+  rankedWar,
 }
 
 enum NotificationType {
@@ -154,6 +157,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _boosterNotificationTime;
   DateTime _hospitalReleaseTime;
   DateTime _jailReleaseTime;
+  DateTime _rankedWarTime;
 
   int _hospitalNotificationAhead;
   int _hospitalTimerAhead;
@@ -161,6 +165,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _jailNotificationAhead;
   int _jailTimerAhead;
   int _jailAlarmAhead;
+  int _rankedWarNotificationAhead;
+  int _rankedWarTimerAhead;
+  int _rankedWarAlarmAhead;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -171,6 +178,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _boosterNotificationsPending = false;
   bool _hospitalNotificationsPending = false;
   bool _jailNotificationsPending = false;
+  bool _rankedWarNotificationsPending = false;
 
   NotificationType _travelNotificationType;
   NotificationType _energyNotificationType;
@@ -181,6 +189,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   NotificationType _boosterNotificationType;
   NotificationType _hospitalNotificationType;
   NotificationType _jailNotificationType;
+  NotificationType _rankedWarNotificationType;
 
   int _customEnergyTrigger;
   int _customNerveTrigger;
@@ -197,6 +206,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   IconData _boosterNotificationIcon;
   IconData _hospitalNotificationIcon;
   IconData _jailNotificationIcon;
+  IconData _rankedWarNotificationIcon;
 
   bool _alarmSound;
   bool _alarmVibration;
@@ -268,6 +278,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   StatsChartTornStats _statsChartModel;
   Future _statsChartDataFetched;
 
+  RankedWar _factionRankedWar;
+
   // Showcases
   GlobalKey _showcaseProfileBars = GlobalKey();
   GlobalKey _showcaseProfileClock = GlobalKey();
@@ -302,6 +314,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _miscTick++;
       } else {
         _getMiscCardInfo();
+        _getRankedWars();
         _miscTick = 0;
       }
     });
@@ -324,6 +337,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         // stay with the app on the background for hours/days and only use the Profile section
         _getMiscCardInfo();
         _getStatsChart();
+        _getRankedWars();
       }
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
@@ -375,6 +389,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       onRefresh: () async {
                         _fetchApi();
                         _getMiscCardInfo();
+                        _getRankedWars();
                         _miscTick = 0;
                         await Future.delayed(Duration(seconds: 1));
                       },
@@ -992,6 +1007,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
+    bool warInFuture = false;
+    if (_factionRankedWar != null) {
+      int ts = DateTime.now().millisecondsSinceEpoch;
+      warInFuture = _factionRankedWar.war.start * 1000 > ts;
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -1000,12 +1021,45 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(bottom: 15),
-              child: Text(
-                'STATUS',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'STATUS',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (_factionRankedWar != null && _settingsProvider.rankedWarsInProfile)
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onLongPress: () => _launchBrowser(
+                            url: 'https://www.torn.com/factions.php?step=your#/war/rank',
+                            dialogRequested: false,
+                          ),
+                          onTap: () {
+                            _launchBrowser(
+                              url: 'https://www.torn.com/factions.php?step=your#/war/rank',
+                              dialogRequested: true,
+                            );
+                          },
+                          child: RankedWarMini(
+                            rankedWar: _factionRankedWar,
+                            playerFactionName: _user.faction.factionName,
+                          ),
+                        ),
+                        if (warInFuture)
+                          Row(
+                            children: [
+                              SizedBox(width: 10),
+                              _notificationIcon(ProfileNotification.rankedWar),
+                            ],
+                          ),
+                      ],
+                    ),
+                ],
               ),
             ),
             Padding(
@@ -2209,6 +2263,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Jail release timer set for $formattedTimeTimer';
         notificationType = _jailNotificationType;
         notificationIcon = _jailNotificationIcon;
+        break;
+
+      case ProfileNotification.rankedWar:
+        _rankedWarTime = DateTime.fromMillisecondsSinceEpoch(_factionRankedWar.war.start * 1000);
+        secondsToGo = _rankedWarTime.difference(DateTime.now()).inSeconds;
+        notificationsPending = _rankedWarNotificationsPending;
+
+        var notificationTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        var formattedTime = TimeFormatter(
+          inputTime: notificationTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        var alarmTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        var formattedTimeAlarm = TimeFormatter(
+          inputTime: alarmTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        var timerTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        var formattedTimeTimer = TimeFormatter(
+          inputTime: timerTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        notificationSetString = 'Ranked war notification set for $formattedTime';
+        notificationCancelString = 'Ranked war  notification cancelled!';
+        alarmSetString = 'Ranked war  alarm set for $formattedTimeAlarm';
+        timerSetString = 'Ranked war  timer set for $formattedTimeTimer';
+        notificationType = _rankedWarNotificationType;
+        notificationIcon = _rankedWarNotificationIcon;
         break;
     }
 
@@ -4409,6 +4497,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
       _statsChartDataFetched = _getStatsChart();
+      _getRankedWars();
     }
 
     _retrievePendingNotifications();
@@ -4483,6 +4572,34 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } catch (e) {
       // Returns null
     }
+  }
+
+  Future _getRankedWars() async {
+    try {
+      if (_user.faction.factionId == 0) return;
+      if (!_settingsProvider.rankedWarsInProfile) return;
+
+      dynamic apiResponse = await TornApiCaller().getRankedWars();
+      if (apiResponse is RankedWarsModel) {
+        for (var warMap in apiResponse.rankedwars.entries) {
+          if (warMap.value.factions.keys.contains(_user.faction.factionId.toString())) {
+            int ts = DateTime.now().millisecondsSinceEpoch;
+            bool warInFuture = warMap.value.war.start * 1000 > ts;
+            bool warActive = warMap.value.war.start < ts && warMap.value.war.end == 0;
+            if (warInFuture || warActive) {
+              setState(() {
+                _factionRankedWar = warMap.value;
+              });
+            }
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      // Returns null
+    }
+    _factionRankedWar = null;
+    return;
   }
 
   Future<void> _getFactionCrimes() async {
@@ -4976,6 +5093,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from jail!';
         notificationPayload += 'jail';
         break;
+      case ProfileNotification.rankedWar:
+        notificationId = 109;
+        secondsToNotification = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarNotificationAhead;
+        channelTitle = 'Manual war';
+        channelSubtitle = 'Manual war';
+        channelDescription = 'Manual notifications for war';
+        notificationTitle = _settingsProvider.discreteNotifications ? "W" : 'Ranked War';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "App" : 'Ranked war is about to start!';
+        notificationPayload += 'war';
+        break;
     }
 
     var modifier = await getNotificationChannelsModifiers();
@@ -5111,6 +5238,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.jail:
         await flutterLocalNotificationsPlugin.cancel(108);
+        break;
+      case ProfileNotification.rankedWar:
+        await flutterLocalNotificationsPlugin.cancel(109);
         break;
     }
 
@@ -5524,6 +5654,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _jailAlarmAhead = await Prefs().getJailAlarmAhead();
     _jailTimerAhead = await Prefs().getJailTimerAhead();
 
+    var rankedWar = await Prefs().getRankedWarNotificationType();
+    _rankedWarNotificationAhead = await Prefs().getRankedWarNotificationAhead();
+    _rankedWarAlarmAhead = await Prefs().getRankedWarAlarmAhead();
+    _rankedWarTimerAhead = await Prefs().getRankedWarTimerAhead();
+
     _alarmSound = await Prefs().getManualAlarmSound();
     _alarmVibration = await Prefs().getManualAlarmVibration();
 
@@ -5645,6 +5780,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _jailNotificationIcon = Icons.timer;
       }
 
+      if (rankedWar == '0') {
+        _rankedWarNotificationType = NotificationType.notification;
+        _rankedWarNotificationIcon = Icons.chat_bubble_outline;
+      } else if (rankedWar == '1') {
+        _rankedWarNotificationType = NotificationType.alarm;
+        _rankedWarNotificationIcon = Icons.notifications_none;
+      } else if (rankedWar == '2') {
+        _rankedWarNotificationType = NotificationType.timer;
+        _rankedWarNotificationIcon = Icons.timer;
+      }
+
       _eventsExpController.expanded = expandEvents;
       _eventsShowNumber = eventsNumber;
       _messagesExpController.expanded = expandMessages;
@@ -5707,6 +5853,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Jail';
+        break;
+      case ProfileNotification.rankedWar:
+        var alarmTime = _rankedWarTime.add(Duration(minutes: -_rankedWarAlarmAhead));
+        hour = alarmTime.hour;
+        minute = alarmTime.minute;
+        message = 'Torn PDA War';
         break;
     }
 
@@ -5795,6 +5947,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.jail:
         totalSeconds = _jailReleaseTime.difference(DateTime.now()).inSeconds - _jailTimerAhead;
         message = 'Torn PDA Jail';
+        break;
+      case ProfileNotification.rankedWar:
+        totalSeconds = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarTimerAhead;
+        message = 'Torn PDA War';
         break;
     }
 
