@@ -300,9 +300,19 @@ class WarController extends GetxController {
     List<WarCardDetails> thisCards = List.from(orderedCardsDetails);
     List<FactionModel> thisFactions = List.from(factions);
 
-    for (WarCardDetails card in thisCards) {
+    int batchSize = 0;
+    if (thisCards.length > 80) {
+      // If there are more than 80 members, split them into 3 batches of equal size
+      batchSize = (thisCards.length / 3).floor();
+    }
+
+    List<Future<bool>> updateTasks = [];
+
+    for (int i = 0; i < thisCards.length; i++) {
+      WarCardDetails card = thisCards[i];
       for (FactionModel f in thisFactions) {
         if (_stopUpdate) {
+          // If the update was stopped, return the current progress
           _stopUpdate = false;
           updating = false;
           update();
@@ -310,22 +320,27 @@ class WarController extends GetxController {
         }
 
         if (f.members.containsKey(card.memberId.toString())) {
-          bool memberSuccess = await updateSingleMemberFull(
+          // If the member is found in the faction, add the update task to the list
+          updateTasks.add(updateSingleMemberFull(
             f.members[card.memberId.toString()],
             allAttacks: allAttacksSuccess,
             ownStats: ownStatsSuccess,
-          );
-          if (memberSuccess) {
-            numberUpdated++;
-          }
-          if (orderedCardsDetails.length > 60) {
-            await Future.delayed(Duration(seconds: 1));
-          }
+          ));
           break;
         }
+        // If the member is not found in the faction, continue searching
         continue;
       }
+
+      if (batchSize > 0 && (i + 1) % batchSize == 0) {
+        // If we've processed a full batch, wait 5 seconds before continuing with the next batch
+        await Future.delayed(Duration(seconds: 5));
+      }
     }
+
+    // Execute all update tasks concurrently and count the number of successful updates
+    List<bool> results = await Future.wait(updateTasks);
+    numberUpdated = results.where((r) => r == true).length;
 
     _stopUpdate = false;
     updating = false;
@@ -934,27 +949,23 @@ class WarController extends GetxController {
       return;
     }
 
-    for (FactionModel f in factions) {
-      final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
+    for (FactionModel faction in factions) {
+      final apiResult = await TornApiCaller().getFaction(factionId: faction.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return;
       }
-      FactionModel imported = apiResult as FactionModel;
+      FactionModel apiImport = apiResult as FactionModel;
 
-      Map<String, Member> thisMembers = Map.from(f.members);
+      Map<String, Member> oldFactionMembers = Map.from(faction.members);
 
       // Remove members that do not longer belong to the faction
-      thisMembers.forEach((memberId, memberDetails) {
-        if (!imported.members.containsKey(memberId)) {
-          f.members.removeWhere((key, value) => key == memberId);
-        }
-      });
+      oldFactionMembers.removeWhere((memberId, memberDetails) => !apiImport.members.containsKey(memberId));
 
       // Add new members that were not here before
-      imported.members.forEach((key, value) {
-        if (!thisMembers.containsKey(key)) {
-          f.members[key] = imported.members[key];
-          updateSingleMemberFull(f.members[key]);
+      apiImport.members.forEach((key, value) {
+        if (!oldFactionMembers.containsKey(key)) {
+          faction.members[key] = apiImport.members[key];
+          updateSingleMemberFull(faction.members[key]);
         }
       });
     }
