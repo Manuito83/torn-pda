@@ -149,9 +149,9 @@ Future<void> pdaWidget_fetchData() async {
               String twoDigits(int n) => n.toString().padLeft(2, "0");
               String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
               if (user.status.state.contains("Hospital")) {
-                statusDescription = 'Hospital for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+                statusDescription = 'Hospital ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               } else if (statusDescription.contains("Jail")) {
-                statusDescription = 'Jail for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+                statusDescription = 'Jail ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               }
             }
           }

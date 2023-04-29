@@ -5,7 +5,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="12dp">
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
     <!-- MAIN LAYOUT -->
     <RelativeLayout
@@ -389,7 +392,240 @@
 
                 </RelativeLayout>
             </LinearLayout>
+        </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/widget_shortcuts_box"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:paddingTop="4dp"
+            android:gravity="center"
+            android:layout_below="@id/widget_main_container_bars"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/widget_shortcuts_empty_box"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:visibility="gone"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/widget_shortcuts_empty_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textColor="#000000"
+                    android:layout_marginEnd="5dp"
+                    tools:text="No shortcuts configured, add some?" />
+
+                <ImageView
+                    android:id="@+id/widget_shortcuts_empty_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginStart="5dp"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/shortcut_icon" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_shortcuts_top_box"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:paddingBottom="1dp"
+                android:visibility="visible">
+
+                <LinearLayout
+                    android:id="@+id/widget_cooldowns_box"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:orientation="horizontal">
+
+                    <RelativeLayout
+                        android:id="@+id/widget_drugs_box"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/widget_icon_drugs1"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/drug1"
+                            android:visibility="visible" />
+                        <ImageView
+                            android:id="@+id/widget_icon_drugs2"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/drug2"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_drugs3"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/drug3"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_drugs4"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/drug4"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_drugs5"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/drug5"
+                            android:visibility="gone" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/widget_medical_box"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/widget_icon_medical1"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/medical1"
+                            android:visibility="visible" />
+                        <ImageView
+                            android:id="@+id/widget_icon_medical2"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/medical2"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_medical3"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/medical3"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_medical4"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/medical4"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_medical5"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/medical5"
+                            android:visibility="gone" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/widget_booster_box"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/widget_icon_booster1"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/booster1"
+                            android:visibility="visible" />
+                        <ImageView
+                            android:id="@+id/widget_icon_booster2"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/booster2"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_booster3"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/booster3"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_booster4"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/booster4"
+                            android:visibility="gone" />
+                        <ImageView
+                            android:id="@+id/widget_icon_booster5"
+                            android:layout_width="25dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="3dp"
+                            android:src="@drawable/booster5"
+                            android:visibility="gone" />
+                    </RelativeLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut1_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/shortcut_background"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
+                        android:singleLine="true"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:textSize="9sp"
+                        android:visibility="visible"
+                        tools:text="Shortcut 1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/widget_shortcuts_shortcut2_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/shortcut_background"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:paddingLeft="2dip"
+                        android:paddingRight="2dip"
+                        android:singleLine="true"
+                        android:textAllCaps="true"
+                        android:textColor="#000000"
+                        android:textSize="9sp"
+                        android:visibility="visible"
+                        tools:text="Shortcut 2" />
+                </LinearLayout>
+            </LinearLayout>
 
         </LinearLayout>
 
