@@ -1776,9 +1776,20 @@ class _SettingsPageState extends State<SettingsPage> {
       value: _openSectionValue,
       items: [
         DropdownMenuItem(
+          value: "browser",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Browser",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "0",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Profile",
               textAlign: TextAlign.right,
@@ -1791,7 +1802,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "1",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Travel",
               textAlign: TextAlign.right,
@@ -1804,7 +1815,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "2",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Chaining",
               textAlign: TextAlign.right,
@@ -1817,7 +1828,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "3",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Loot",
               textAlign: TextAlign.right,
@@ -1830,7 +1841,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "4",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Friends",
               textAlign: TextAlign.right,
@@ -1843,7 +1854,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "5",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Awards",
               textAlign: TextAlign.right,
@@ -1856,7 +1867,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "6",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Items",
               textAlign: TextAlign.right,

@@ -613,7 +613,7 @@ class WebViewProvider extends ChangeNotifier {
     // Checking _tabList might not be enough to ensure that the browser is closed. We might get duplicates
     // with double presses or even notifications, try to open the browser twice (creating repeated keys)
     // This ensures that a browser open request only happens once
-    if (_lastBrowserOpenedTime != null && (DateTime.now().difference(_lastBrowserOpenedTime).inSeconds) < 1) {
+    if (_lastBrowserOpenedTime != null && (DateTime.now().difference(_lastBrowserOpenedTime).inMilliseconds) < 1500) {
       return;
     }
     _lastBrowserOpenedTime = DateTime.now();

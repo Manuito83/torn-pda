@@ -1605,7 +1605,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
-      final defaultSection = await Prefs().getDefaultSection();
+      String defaultSection = await Prefs().getDefaultSection();
+      if (defaultSection == "browser") {
+        // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
+        // and recall the last session
+        _preferencesCompleter.future.whenComplete(() async {
+          bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
+          // Add a small delay to avoid racing conditions with browser launched from messages
+          await Future.delayed(Duration(milliseconds: 300));
+          _webViewProvider.openBrowserPreference(
+            context: context,
+            url: "https://www.torn.com",
+            recallLastSession: true,
+            useDialog: lastSessionWasDialog,
+          );
+        });
+        // Change to Profile as a base for loading the browser
+        defaultSection = "0";
+      }
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
