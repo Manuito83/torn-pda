@@ -17,6 +17,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
@@ -39,7 +40,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
@@ -88,6 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
   UserDetailsProvider _userProvider;
   ThemeProvider _themeProvider;
   ShortcutsProvider _shortcutsProvider;
+  ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   var _expandableController = ExpandableController();
 
@@ -187,6 +189,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       Divider(),
                       SizedBox(height: 5),
                       _externalPartnersSection(context),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      _apiRateSection(),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
@@ -469,6 +475,98 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Text(
             'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each '
             'member of your faction available to plan an organized crime',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _apiRateSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'API CALL RATE',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Display API call rate",
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Switch(
+                value: _apiController.showApiRateInDrawer.value,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _apiController.showApiRateInDrawer = RxBool(enabled);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Enables a small progress bar on top of Torn PDA's logo in the main drawer menu, with real-time count "
+            "of the number of API calls performed in the last minute",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Warn max. call rate",
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Switch(
+                value: _apiController.showApiMaxCallWarning,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _apiController.showApiMaxCallWarning = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "If enabled, a quick message will be shown when approaching (95 calls in 60 seconds) the maximum "
+            "API call rate. This message will be then inhibited for 30 seconds",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -2339,7 +2437,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
 
-      dynamic myProfile = await TornApiCaller().getOwnProfileBasic(forcedApiKey: _myCurrentKey);
+      dynamic myProfile = await _apiController.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey

@@ -6,6 +6,7 @@ import 'dart:io';
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 // Package imports:
@@ -25,7 +26,7 @@ import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -986,7 +987,7 @@ class _LootPageState extends State<LootPage> {
     try {
       for (var id in _npcIds) {
         // Get each target from our static list from Torn
-        var tornTarget = await TornApiCaller().getTarget(playerId: id.toString());
+        var tornTarget = await Get.find<ApiCallerController>().getTarget(playerId: id.toString());
 
         var newNpcLoot = LootModel();
         if (tornTarget is TargetModel) {

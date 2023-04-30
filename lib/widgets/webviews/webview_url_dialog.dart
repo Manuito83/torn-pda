@@ -24,7 +24,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -157,7 +157,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Navigator.of(context).pop();
 
                             String attackId = widget.url.split("user2ID=")[1];
-                            var t = await TornApiCaller().getOtherProfileExtended(playerId: attackId);
+                            var t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
 
                             // Get stats from YATA
                             var spyModel = YataSpyModel();

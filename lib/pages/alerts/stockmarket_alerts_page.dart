@@ -1,6 +1,7 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
@@ -14,7 +15,7 @@ import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
@@ -277,8 +278,8 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       _fbUser = await firestore.getUserProfile(force: false); // We are NOT getting updated stocks every time
     }
 
-    var allStocksReply = await TornApiCaller().getAllStocks();
-    var userStocksReply = await TornApiCaller().getUserStocks();
+    var allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
+    var userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
 
     if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
       _errorInitialising = true;

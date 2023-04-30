@@ -5,6 +5,7 @@ import 'dart:developer';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:get/get.dart';
 
 // Package imports:
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -19,7 +20,7 @@ import 'package:torn_pda/models/items_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/items/item_card.dart';
 
@@ -520,8 +521,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   Future _getAllItems() async {
     // First get all Torn items
-    var apiItems = await TornApiCaller().getItems();
-    var apiInventory = await TornApiCaller().getInventory();
+    var apiItems = await Get.find<ApiCallerController>().getItems();
+    var apiInventory = await Get.find<ApiCallerController>().getInventory();
 
     if (apiItems is! ItemsModel) {
       ApiError error = apiItems as ApiError;

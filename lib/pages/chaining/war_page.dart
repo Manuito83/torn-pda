@@ -21,7 +21,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
@@ -1075,7 +1075,7 @@ class AddFactionDialog extends StatelessWidget {
 
                         // If an user ID was inserted, we need to transform it first
                         if (warController.addFromUserId) {
-                          dynamic target = await TornApiCaller().getTarget(playerId: inputId);
+                          dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
                           String convertError = "";
                           if (target is TargetModel) {
                             inputId = target.faction.factionId.toString();

@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'package:receive_intent/receive_intent.dart';
@@ -48,7 +50,7 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
@@ -100,6 +102,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   UserScriptsProvider _userScriptsProvider;
   WebViewProvider _webViewProvider;
   StakeoutsController _s;
+  ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -692,13 +695,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // >> Open browser
       _preferencesCompleter.future.whenComplete(() async {
         if (!_settingsProvider.retaliationSectionEnabled ||
-          (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+            (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          var attacksResult = await TornApiCaller().getFactionAttacks();
+          var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowser = true;
             browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
@@ -726,7 +729,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          var own = await TornApiCaller().getOwnPersonalStats();
+          var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
             int xanaxComparison = otherXanax - own.personalstats.xantaken;
             int refillsComparison = otherRefills - own.personalstats.refills;
@@ -973,7 +976,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          var attacksResult = await TornApiCaller().getFactionAttacks();
+          var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowser = true;
             browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
@@ -1004,7 +1007,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            var own = await TornApiCaller().getOwnPersonalStats();
+            var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
               int xanaxComparison = otherXanax - own.personalstats.xantaken;
               int refillsComparison = otherRefills - own.personalstats.refills;
@@ -1212,6 +1215,50 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
+            Obx(
+              () {
+                if (_apiController.showApiRateInDrawer.isTrue) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StreamBuilder<int>(
+                          stream: _apiController.callCountStream,
+                          initialData: 0,
+                          builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                            int callCount = snapshot.data ?? 0;
+                            double progress = math.min(callCount / 100, 1.0);
+                            return LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
+                              center: Text(
+                                "${callCount}",
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              lineHeight: 14.0,
+                              percent: progress,
+                              backgroundColor:
+                                  _themeProvider.currentTheme == AppTheme.light ? Colors.grey[400] : Colors.grey[800],
+                              progressColor: callCount >= 95 ? Colors.red[400] : Colors.green,
+                            );
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 1),
+                          child: Text(
+                            "API CALLS (60s)",
+                            style: TextStyle(fontSize: 9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
+              },
+            ),
             const Flexible(
               child: Image(
                 image: AssetImage('images/icons/torn_pda.png'),
@@ -1653,7 +1700,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider.basic.userApiKey;
-    final dynamic prof = await TornApiCaller().getOwnProfileBasic();
+    final dynamic prof = await Get.find<ApiCallerController>().getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof

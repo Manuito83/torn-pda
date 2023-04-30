@@ -54,7 +54,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
@@ -2976,7 +2976,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      final dynamic apiResponse = await TornApiCaller().getItems();
+      final dynamic apiResponse = await Get.find<ApiCallerController>().getItems();
       if (apiResponse is ItemsModel) {
         apiResponse.items.forEach((key, value) {
           // Assign correct ids
@@ -3410,7 +3410,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
-      final stats = await TornApiCaller().getBars();
+      final stats = await Get.find<ApiCallerController>().getBars();
       if (stats is BarsModel) {
         var message = "";
         if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
@@ -3976,7 +3976,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget = await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[i]);
+        var nextTarget =
+            await Get.find<ApiCallerController>().getTarget(playerId: widget.chainingPayload.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -3988,7 +3989,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user = await TornApiCaller().getTarget(playerId: _userProvider.basic.playerId.toString());
+            var user =
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -4076,7 +4078,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // This will show the note of the first target, if applicable
     if (widget.chainingPayload.showNotes) {
       if (widget.chainingPayload.showOnlineFactionWarning) {
-        var nextTarget = await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[0]);
+        var nextTarget =
+            await Get.find<ApiCallerController>().getTarget(playerId: widget.chainingPayload.attackIdList[0]);
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
           _lastOnline = nextTarget.lastAction.timestamp;
@@ -4104,8 +4107,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget =
-            await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+        var nextTarget = await Get.find<ApiCallerController>()
+            .getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -4117,7 +4120,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user = await TornApiCaller().getTarget(playerId: _userProvider.basic.playerId.toString());
+            var user =
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -4188,8 +4192,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // from the API
     else {
       if (widget.chainingPayload.showOnlineFactionWarning) {
-        var nextTarget =
-            await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+        var nextTarget = await Get.find<ApiCallerController>()
+            .getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;

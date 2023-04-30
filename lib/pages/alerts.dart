@@ -5,6 +5,7 @@ import 'package:bot_toast/bot_toast.dart';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
@@ -14,7 +15,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -997,7 +998,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               // We save the key because the API call will reset it
               final savedKey = _userProv.basic.userApiKey;
 
-              final dynamic myProfile = await TornApiCaller().getOwnProfileBasic();
+              final dynamic myProfile = await Get.find<ApiCallerController>().getOwnProfileBasic();
 
               if (myProfile is OwnProfileBasic) {
                 myProfile
@@ -1174,7 +1175,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
   Future _getFactionApiAccess() async {
     // Assess whether we have permits
-    var attacksResult = await TornApiCaller().getFactionAttacks();
+    var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       _factionApiAccess = true;
     } else if (attacksResult is ApiError) {

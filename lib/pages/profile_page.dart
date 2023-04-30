@@ -25,6 +25,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
@@ -53,7 +54,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -4448,8 +4449,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber > limit) limit = _messagesShowNumber;
     if (_eventsShowNumber > limit) limit = _eventsShowNumber;
 
-    var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: limit);
-    var apiChain = await TornApiCaller().getChainStatus();
+    var apiResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: limit);
+
+    // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
+    // Otherwise, call the API
+    dynamic chain;
+    ChainStatusProvider chainProvider = context.read<ChainStatusProvider>();
+    if (chainProvider.chainModel is ChainModel) {
+      chain = chainProvider.chainModel;
+    } else {
+      chain = await Get.find<ApiCallerController>().getChainStatus();
+    }
 
     if (mounted) {
       setState(() {
@@ -4469,8 +4479,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Prefs().setNerveNotificationValue(_customNerveTrigger);
           }
 
-          if (apiChain is ChainModel) {
-            _chainModel = apiChain;
+          if (chain is ChainModel) {
+            _chainModel = chain;
           } else {
             // Default to empty chain, with all parameters at 0
             _chainModel = ChainModel();
@@ -4506,10 +4516,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getMiscCardInfo() async {
     try {
-      var miscApiResponse = await TornApiCaller().getOwnProfileMisc();
+      var miscApiResponse = await Get.find<ApiCallerController>().getOwnProfileMisc();
 
       if (_tornEducationModel == null) {
-        _tornEducationModel = await TornApiCaller().getEducation();
+        _tornEducationModel = await Get.find<ApiCallerController>().getEducation();
       }
 
       // The ones that are inside this condition, show in the MISC card (which
@@ -4580,7 +4590,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_user.faction.factionId == 0) return;
       if (!_settingsProvider.rankedWarsInProfile) return;
 
-      dynamic apiResponse = await TornApiCaller().getRankedWars();
+      dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
       if (apiResponse is RankedWarsModel) {
         for (var warMap in apiResponse.rankedwars.entries) {
           if (warMap.value.factions.keys.contains(_user.faction.factionId.toString())) {
@@ -4605,7 +4615,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _getFactionCrimes() async {
     try {
-      var factionCrimes = await TornApiCaller().getFactionCrimes(playerId: _user.playerId.toString());
+      var factionCrimes = await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
@@ -6557,7 +6567,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (element) async {
-      var rentDetails = await TornApiCaller().getProperty(propertyId: element.toString());
+      var rentDetails = await Get.find<ApiCallerController>().getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         var timeLeft = rentDetails.property.rented.daysLeft;

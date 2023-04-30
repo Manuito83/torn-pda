@@ -422,7 +422,7 @@ class _TacPageState extends State<TacPage> {
 
     for (var i = 0; i < _tacProvider.targetsList.length; i++) {
       if (mounted) {
-        dynamic target = await TornApiCaller().getTarget(playerId: _tacProvider.targetsList[i].id.toString());
+        dynamic target = await Get.find<TornApiCaller>().getTarget(playerId: _tacProvider.targetsList[i].id.toString());
 
         if (target is TargetModel) {
           _tacProvider.getSingleStatus(i, target);
@@ -652,7 +652,7 @@ class _TacPageState extends State<TacPage> {
       _targetCards.clear();
     });
     int currentChainHit = 0;
-    var chainResponse = await TornApiCaller().getChainStatus();
+    var chainResponse = await Get.find<TornApiCaller>().getChainStatus();
     if (chainResponse is ChainModel) {
       currentChainHit = chainResponse.chain.current;
     }

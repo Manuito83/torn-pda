@@ -47,11 +47,12 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.date = '15 MAY 2023';
     String feat3_1_0_1 = "Added home screen widget (see Tips)";
     String feat3_1_0_2 = "Added Ranked War information and notifications to Profile page";
-    String feat3_1_0_3 = "Shortcuts page and all related options have been moved to Settings";
-    String feat3_1_0_4 = "Browser long-press menu now also adds a shortcut to the target link";
-    String feat3_1_0_5 = "Full update in War now updates all members faster";
-    String feat3_1_0_6 = "Fixed issues redirecting to attack pages in certain conditions";
-    String feat3_1_0_7 = "Fixed issues when launching the app from a notification";
+    String feat3_1_0_3 = "Added API call rate bar widget and warning (see Settings)";
+    String feat3_1_0_4 = "Shortcuts page and all related options have been moved to Settings";
+    String feat3_1_0_5 = "Browser long-press menu now also adds a shortcut to the target link";
+    String feat3_1_0_6 = "Full update in War now updates all members faster";
+    String feat3_1_0_7 = "Fixed issues redirecting to attack pages in certain conditions";
+    String feat3_1_0_8 = "Fixed issues when launching the app from a notification";
     if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
     v3_1_0.features.add(feat3_1_0_2);
     v3_1_0.features.add(feat3_1_0_3);
@@ -59,6 +60,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.features.add(feat3_1_0_5);
     v3_1_0.features.add(feat3_1_0_6);
     v3_1_0.features.add(feat3_1_0_7);
+    v3_1_0.features.add(feat3_1_0_8);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 
@@ -13,7 +14,7 @@ import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
@@ -527,7 +528,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
 
       // If an user ID was inserted, we need to transform it first
       if (_addFromUserId) {
-        dynamic target = await TornApiCaller().getTarget(playerId: inputId);
+        dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
         String convertError = "";
         if (target is TargetModel) {
           inputId = target.faction.factionId.toString();
@@ -584,7 +585,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         }
       }
 
-      var retrievedFaction = await TornApiCaller().getFaction(factionId: inputId);
+      var retrievedFaction = await Get.find<ApiCallerController>().getFaction(factionId: inputId);
 
       if (retrievedFaction is FactionModel) {
         if (retrievedFaction.name.isNotEmpty) {

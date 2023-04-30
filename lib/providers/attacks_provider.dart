@@ -4,12 +4,13 @@ import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum AttackTypeFilter {
@@ -42,7 +43,7 @@ class AttacksProvider extends ChangeNotifier {
 
   void initializeAttacks() async {
     await restoreSharedPreferences();
-    dynamic attacksResult = await TornApiCaller().getAttacks();
+    dynamic attacksResult = await Get.find<ApiCallerController>().getAttacks();
     if (attacksResult is AttackModel) {
       _apiError = false;
       _attacks.clear();

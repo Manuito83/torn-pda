@@ -24,6 +24,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:torn_pda/firebase_options.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
@@ -161,6 +162,8 @@ Future<void> main() async {
   if (Platform.isIOS) {
     DartPingIOS.register();
   }
+
+  Get.put(ApiCallerController(), permanent: true);
 
   runApp(
     MultiProvider(

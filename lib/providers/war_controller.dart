@@ -11,7 +11,7 @@ import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
@@ -91,7 +91,7 @@ class WarController extends GetxController {
       }
     }
 
-    final apiResult = await TornApiCaller().getFaction(factionId: factionId);
+    final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: factionId);
     if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
       return "";
     }
@@ -189,7 +189,7 @@ class WarController extends GetxController {
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller().getOtherProfileExtended(playerId: memberKey);
+      dynamic updatedTarget = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
@@ -288,6 +288,7 @@ class WarController extends GetxController {
   Future<List<int>> updateAllMembersFull() async {
     await _integrityCheck(force: true);
 
+    // Get all attacks and own stats from the API
     dynamic allAttacksSuccess = await getAllAttacks();
     dynamic ownStatsSuccess = await getOwnStats();
     int numberUpdated = 0;
@@ -300,47 +301,82 @@ class WarController extends GetxController {
     List<WarCardDetails> thisCards = List.from(orderedCardsDetails);
     List<FactionModel> thisFactions = List.from(factions);
 
-    int batchSize = 0;
-    if (thisCards.length > 80) {
-      // If there are more than 80 members, split them into 3 batches of equal size
-      batchSize = (thisCards.length / 3).floor();
+    int callsPerBatch = 0;
+    int delayBetweenCalls = 0;
+
+    // If there are less than or equal to 75 members, set the batch size and delay accordingly
+    if (thisCards.length <= 75) {
+      callsPerBatch = thisCards.length;
+      // No delay for less than 75 members
+      delayBetweenCalls = 0;
+    } else {
+      // Limit the calls to 75 per minute
+      callsPerBatch = 75;
+      // Calculate the required delay between calls
+      delayBetweenCalls = (60 / callsPerBatch).floor();
     }
 
-    List<Future<bool>> updateTasks = [];
+    // If there are less than 75 members, make API calls concurrently
+    if (thisCards.length <= 75) {
+      // Create a list to store the update tasks
+      List<Future<bool>> updateTasks = [];
 
-    for (int i = 0; i < thisCards.length; i++) {
-      WarCardDetails card = thisCards[i];
-      for (FactionModel f in thisFactions) {
-        if (_stopUpdate) {
-          // If the update was stopped, return the current progress
-          _stopUpdate = false;
-          updating = false;
-          update();
-          return [thisCards.length, numberUpdated];
-        }
-
-        if (f.members.containsKey(card.memberId.toString())) {
+      // Loop through each card in thisCards
+      for (WarCardDetails card in thisCards) {
+        // Loop through each faction in thisFactions
+        for (FactionModel f in thisFactions) {
           // If the member is found in the faction, add the update task to the list
-          updateTasks.add(updateSingleMemberFull(
-            f.members[card.memberId.toString()],
-            allAttacks: allAttacksSuccess,
-            ownStats: ownStatsSuccess,
-          ));
-          break;
+          if (f.members.containsKey(card.memberId.toString())) {
+            updateTasks.add(updateSingleMemberFull(
+              f.members[card.memberId.toString()],
+              allAttacks: allAttacksSuccess,
+              ownStats: ownStatsSuccess,
+            ));
+            break;
+          }
         }
-        // If the member is not found in the faction, continue searching
-        continue;
       }
 
-      if (batchSize > 0 && (i + 1) % batchSize == 0) {
-        // If we've processed a full batch, wait 5 seconds before continuing with the next batch
-        await Future.delayed(Duration(seconds: 5));
+      // Execute all update tasks concurrently and store the results
+      List<bool> results = await Future.wait(updateTasks);
+      // Count the number of successful updates
+      numberUpdated = results.where((result) => result).length;
+    } else {
+      // If there are more than 60 members, use the rate limiting logic
+      for (int i = 0; i < thisCards.length; i++) {
+        WarCardDetails card = thisCards[i];
+        for (FactionModel f in thisFactions) {
+          // If the update process is stopped, reset the state and return the results
+          if (_stopUpdate) {
+            _stopUpdate = false;
+            updating = false;
+            update();
+            return [thisCards.length, numberUpdated];
+          }
+
+          // If the member is found in the faction, update the member
+          if (f.members.containsKey(card.memberId.toString())) {
+            bool result = await updateSingleMemberFull(
+              f.members[card.memberId.toString()],
+              allAttacks: allAttacksSuccess,
+              ownStats: ownStatsSuccess,
+            );
+            // If the update is successful, increment the numberUpdated counter
+            if (result) {
+              numberUpdated++;
+            }
+            break;
+          }
+          // If the member is not found in the faction, continue searching
+          continue;
+        }
+
+        // Add a delay between calls if required
+        if (callsPerBatch > 0 && (i + 1) % callsPerBatch == 0) {
+          await Future.delayed(Duration(seconds: delayBetweenCalls));
+        }
       }
     }
-
-    // Execute all update tasks concurrently and count the number of successful updates
-    List<bool> results = await Future.wait(updateTasks);
-    numberUpdated = results.where((r) => r == true).length;
 
     _stopUpdate = false;
     updating = false;
@@ -366,7 +402,7 @@ class WarController extends GetxController {
     int numberUpdated = 0;
 
     // Get player's current location
-    final apiPlayer = await TornApiCaller().getOwnProfileBasic();
+    final apiPlayer = await Get.find<ApiCallerController>().getOwnProfileBasic();
     if (apiPlayer is ApiError) {
       return -1;
     }
@@ -377,7 +413,7 @@ class WarController extends GetxController {
     );
 
     for (FactionModel f in factions) {
-      final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
+      final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return -1;
       }
@@ -611,7 +647,7 @@ class WarController extends GetxController {
   }
 
   dynamic getAllAttacks() async {
-    var result = await TornApiCaller().getAttacks();
+    var result = await Get.find<ApiCallerController>().getAttacks();
     if (result is AttackModel) {
       return result;
     }
@@ -619,7 +655,7 @@ class WarController extends GetxController {
   }
 
   dynamic getOwnStats() async {
-    var result = await TornApiCaller().getOwnPersonalStats();
+    var result = await Get.find<ApiCallerController>().getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -950,7 +986,7 @@ class WarController extends GetxController {
     }
 
     for (FactionModel faction in factions) {
-      final apiResult = await TornApiCaller().getFaction(factionId: faction.id.toString());
+      final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: faction.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return;
       }

@@ -3,12 +3,13 @@ import 'dart:collection';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class QuickItemsProvider extends ChangeNotifier {
@@ -161,7 +162,7 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   Future _getAllTornItems() async {
-    var allTornItems = await TornApiCaller().getItems();
+    var allTornItems = await Get.find<ApiCallerController>().getItems();
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsList.clear();
@@ -222,7 +223,7 @@ class QuickItemsProvider extends ChangeNotifier {
   /// [fullUpdate] is true, it will also update the inactive/stock items, which are not
   /// visible in the widget. Only makes sense if entering the options page
   Future updateInventoryQuantities({bool fullUpdate = false}) async {
-    var inventoryItems = await TornApiCaller().getInventory();
+    var inventoryItems = await Get.find<ApiCallerController>().getInventory();
     if (inventoryItems is InventoryModel) {
       if (fullUpdate) {
         for (var quickItem in _fullQuickItemsList) {

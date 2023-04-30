@@ -22,7 +22,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
@@ -58,7 +58,7 @@ class ProfileAttackCheckWidget extends StatefulWidget {
 
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   final navigatorKey = GlobalKey<NavigatorState>();
-  
+
   Future _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
@@ -204,7 +204,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    var otherProfile = await TornApiCaller().getOtherProfileExtended(playerId: widget.profileId.toString());
+    var otherProfile =
+        await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: widget.profileId.toString());
 
     // FRIEND CHECK
     if (!mounted) return; // We could be unmounted when rapidly skipping the first target
@@ -881,7 +882,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         int lsd = 0;
 
         List<Widget> additional = <Widget>[];
-        var own = await TornApiCaller().getOwnPersonalStats();
+        var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
         if (own is OwnPersonalStatsModel) {
           // XANAX
           int otherXanax = otherProfile.personalstats.xantaken;
@@ -1300,68 +1301,68 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     showDialog<void>(
       context: context,
-      barrierDismissible: true, 
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: name.isNotEmpty ? Text(name) : Text("Spied stats"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (factionName != "0" && factionName.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    "Faction: ${factionName}",
-                    style: TextStyle(fontSize: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          title: name.isNotEmpty ? Text(name) : Text("Spied stats"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (factionName != "0" && factionName.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Text(
+                      "Faction: ${factionName}",
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
-                ),
-              if (lastUpdated.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    "Updated: $lastUpdated",
-                    style: TextStyle(fontSize: 12),
+                if (lastUpdated.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Text(
+                      "Updated: $lastUpdated",
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
+                  child: strWidget,
                 ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
-                child: strWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: spdWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: defWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: dexWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4),
-                child: totalWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4),
-                child: sourceWidget,
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 10),
+                  child: spdWidget,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 10),
+                  child: defWidget,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 10),
+                  child: dexWidget,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4),
+                  child: totalWidget,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4),
+                  child: sourceWidget,
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Thanks'),
-          ),
-        ],
-      );
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Thanks'),
+            ),
+          ],
+        );
       },
     );
   }
@@ -1526,63 +1527,62 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       barrierDismissible: true,
       builder: (_) {
         return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: Text(otherProfile.name),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (otherProfile.faction.factionName != "0")
-                Padding(
-                  padding: const EdgeInsets.all(2),
-                  child: Text(
-                    "Faction: ${otherProfile.faction.factionName}",
-                    style: TextStyle(fontSize: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          title: Text(otherProfile.name),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (otherProfile.faction.factionName != "0")
+                  Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Text(
+                      "Faction: ${otherProfile.faction.factionName}",
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
-                ),
-              if (otherProfile.lastAction.relative.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(2),
-                  child: Text(
-                    "Online: ${otherProfile.lastAction.relative.replaceAll(RegExp('0 minutes ago'), "now")}",
-                    style: TextStyle(fontSize: 12),
+                if (otherProfile.lastAction.relative.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Text(
+                      "Online: ${otherProfile.lastAction.relative.replaceAll(RegExp('0 minutes ago'), "now")}",
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  child: xanaxWidget,
                 ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-                child: xanaxWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-                child: refillWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-                child: enhancementWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-                child: cansWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
-                child: sslWidget,
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  child: refillWidget,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  child: enhancementWidget,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  child: cansWidget,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  child: sslWidget,
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Thanks'),
-          ),
-        ],
-      );
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Thanks'),
+            ),
+          ],
+        );
       },
     );
   }
-  
 }

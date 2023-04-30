@@ -11,7 +11,7 @@ import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_card.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_options.dart';
 
@@ -352,7 +352,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   }
 
   Future _fetchRankedWards() async {
-    dynamic apiResponse = await TornApiCaller().getRankedWars();
+    dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
 
     if (apiResponse is RankedWarsModel) {
       _rankedWarsModel = apiResponse;

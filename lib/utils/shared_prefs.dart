@@ -277,6 +277,10 @@ class Prefs {
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
   final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
 
+  // Api Rate
+  final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
+  final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -2676,5 +2680,30 @@ class Prefs {
   Future<bool> setAppwidgetExplanationShown(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kAppwidgetExplanationShown, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Api Rate
+  /// ----------------------------
+  Future<bool> getShowApiRateInDrawer() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowApiRateInDrawer) ?? false;
+  }
+
+  Future<bool> setShowApiRateInDrawer(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowApiRateInDrawer, value);
+  }
+
+  // ---
+
+  Future<bool> getShowApiMaxCallWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowApiMaxCallWarning) ?? false;
+  }
+
+  Future<bool> setShowApiMaxCallWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowApiMaxCallWarning, value);
   }
 }

@@ -10,7 +10,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 
 // Project imports:
@@ -135,6 +135,8 @@ class ChainStatusProvider extends ChangeNotifier {
   bool _wereWeChaining = false;
 
   Timer _tickerDecreaseCount;
+
+  int _currentApiCallPeriod = 10;
   Timer _tickerCallChainApi;
 
   Future activateStatus() async {
@@ -146,7 +148,7 @@ class ChainStatusProvider extends ChangeNotifier {
     // Activate timers
     _tickerCallChainApi?.cancel();
     _tickerDecreaseCount?.cancel();
-    _tickerCallChainApi = new Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
+    _tickerCallChainApi = new Timer.periodic(Duration(seconds: _currentApiCallPeriod), (Timer t) => _getAllStatus());
     _tickerDecreaseCount = new Timer.periodic(
       Duration(seconds: 1),
       (Timer t) {
@@ -269,18 +271,31 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   Future _getAllStatus() async {
+    // Adapt API calls depending on the Chain count
+    if ((chainModel.chain.current < 10 || chainModel.chain.cooldown > 0) && _currentApiCallPeriod != 30) {
+      _tickerCallChainApi?.cancel();
+      _currentApiCallPeriod = 30;
+      _tickerCallChainApi = new Timer.periodic(Duration(seconds: 30), (Timer t) => _getAllStatus());
+      log("Decreasing Chain Status calls to every 30 seconds");
+    } else if (chainModel.chain.current >= 10 && _currentApiCallPeriod != 10) {
+      _tickerCallChainApi?.cancel();
+      _currentApiCallPeriod = 10;
+      _tickerCallChainApi = new Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
+      log("Increasing Chain Status calls to every 10 seconds");
+    }
+
     getChainStatus();
     getEnergy();
   }
 
   Future<void> getEnergy() async {
-    dynamic myBars = await TornApiCaller().getBars();
+    dynamic myBars = await Get.find<ApiCallerController>().getBars();
     _barsModel = myBars;
     notifyListeners();
   }
 
   Future<void> getChainStatus() async {
-    var chainResponse = await TornApiCaller().getChainStatus();
+    var chainResponse = await Get.find<ApiCallerController>().getChainStatus();
 
     if (chainResponse is ChainModel) {
       _accumulatedErrors = 0;

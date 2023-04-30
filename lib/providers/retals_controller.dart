@@ -14,7 +14,7 @@ import 'package:torn_pda/models/profile/other_profile_model.dart' as other;
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -74,7 +74,7 @@ class RetalsController extends GetxController {
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller().getOtherProfileExtended(playerId: retalKey);
+      dynamic updatedTarget = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: retalKey);
       if (updatedTarget is other.OtherProfileModel) {
         retal.name = updatedTarget.name;
         retal.level = updatedTarget.level;
@@ -232,7 +232,7 @@ class RetalsController extends GetxController {
   }
 
   dynamic getAllAttacks() async {
-    var result = await TornApiCaller().getAttacks();
+    var result = await Get.find<ApiCallerController>().getAttacks();
     if (result is am.AttackModel) {
       return result;
     }
@@ -240,7 +240,7 @@ class RetalsController extends GetxController {
   }
 
   dynamic getOwnStats() async {
-    var result = await TornApiCaller().getOwnPersonalStats();
+    var result = await Get.find<ApiCallerController>().getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -311,7 +311,7 @@ class RetalsController extends GetxController {
   Future<String> _getApiEvaluateRetals(BuildContext context) async {
     List<Retal> newList = <Retal>[];
 
-    var attacksResult = await TornApiCaller().getFactionAttacks();
+    var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       dynamic allAttacksSuccess = await getAllAttacks();
       dynamic ownStatsSuccess = await getOwnStats();

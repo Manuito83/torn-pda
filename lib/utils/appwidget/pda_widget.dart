@@ -1,12 +1,13 @@
 import 'dart:developer';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -89,7 +90,7 @@ Future<void> pdaWidget_fetchData() async {
     }
 
     if (apiKey.isNotEmpty) {
-      var user = await TornApiCaller().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
+      var user = await Get.find<ApiCallerController>().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
       if (user is AppWidgetApiModel) {
         HomeWidget.saveWidgetData<bool>('main_layout_visibility', true);
         HomeWidget.saveWidgetData<bool>('error_layout_visibility', false);
@@ -149,9 +150,9 @@ Future<void> pdaWidget_fetchData() async {
               String twoDigits(int n) => n.toString().padLeft(2, "0");
               String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
               if (user.status.state.contains("Hospital")) {
-                statusDescription = 'Hospital ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+                statusDescription = 'Hospital for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               } else if (statusDescription.contains("Jail")) {
-                statusDescription = 'Jail ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+                statusDescription = 'Jail for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               }
             }
           }
