@@ -93,7 +93,7 @@
                 android:ellipsize="end"
                 android:visibility="gone"
                 android:singleLine="true"
-                android:layout_toEndOf="@id/widget_status_icon_main"
+                android:layout_toEndOf="@id/widget_status_extra_icon_main"
                 android:layout_toStartOf="@id/widget_main_events_messages"
                 tools:text="Status" />
 
