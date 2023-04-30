@@ -1048,6 +1048,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: RankedWarMini(
                             rankedWar: _factionRankedWar,
                             playerFactionName: _user.faction.factionName,
+                            playerFactionTag: _user.faction.factionTag,
                           ),
                         ),
                         if (warInFuture)

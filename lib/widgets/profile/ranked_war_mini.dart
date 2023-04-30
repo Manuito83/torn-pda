@@ -7,10 +7,12 @@ import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 class RankedWarMini extends StatefulWidget {
   final RankedWar rankedWar;
   final String playerFactionName;
+  final String playerFactionTag;
 
   RankedWarMini({
     @required this.rankedWar,
     @required this.playerFactionName,
+    @required this.playerFactionTag,
     Key key,
   }) : super(key: key);
 
@@ -97,14 +99,26 @@ class _RankedWarMiniState extends State<RankedWarMini> {
             Column(
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      "${_playerFaction.score}",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: _playerFaction.score >= _enemyFaction.score ? Colors.green : Colors.red,
-                      ),
+                    Column(
+                      children: [
+                        if (widget.playerFactionTag.isNotEmpty)
+                          Text(
+                            "${widget.playerFactionTag.toUpperCase()}",
+                            style: TextStyle(
+                              fontSize: 8,
+                            ),
+                          ),
+                        Text(
+                          "${_playerFaction.score}",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: _playerFaction.score >= _enemyFaction.score ? Colors.green : Colors.red,
+                          ),
+                        ),
+                      ],
                     ),
                     Text(
                       " vs ",

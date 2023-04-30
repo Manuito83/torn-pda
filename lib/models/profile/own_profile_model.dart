@@ -472,18 +472,21 @@ class Faction {
     this.factionId,
     this.daysInFaction,
     this.factionName,
+    this.factionTag,
   });
 
   String position;
   int factionId;
   int daysInFaction;
   String factionName;
+  String factionTag;
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
         position: json["position"] == null ? null : json["position"],
         factionId: json["faction_id"] == null ? null : json["faction_id"],
         daysInFaction: json["days_in_faction"] == null ? null : json["days_in_faction"],
         factionName: json["faction_name"] == null ? null : json["faction_name"],
+        factionTag: json["faction_tag"] ?? "",
       );
 
   Map<String, dynamic> toJson() => {
@@ -491,6 +494,7 @@ class Faction {
         "faction_id": factionId == null ? null : factionId,
         "days_in_faction": daysInFaction == null ? null : daysInFaction,
         "faction_name": factionName == null ? null : factionName,
+        "faction_tag": factionTag ?? "",
       };
 }
 
