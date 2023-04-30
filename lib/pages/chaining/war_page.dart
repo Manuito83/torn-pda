@@ -826,9 +826,11 @@ class _WarPageState extends State<WarPage> {
         );
       }
 
-      setState(() {
-        _quickUpdateActive = false;
-      });
+      if (mounted) {
+        setState(() {
+          _quickUpdateActive = false;
+        });
+      }
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);

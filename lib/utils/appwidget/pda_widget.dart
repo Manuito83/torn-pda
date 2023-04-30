@@ -1,6 +1,4 @@
 import 'dart:developer';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
@@ -90,7 +88,9 @@ Future<void> pdaWidget_fetchData() async {
     }
 
     if (apiKey.isNotEmpty) {
-      var user = await Get.find<ApiCallerController>().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
+      // NOTE: we don't use the ApiCallerController with Getx here, but instead call directly
+      var user = await ApiCallerController().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
+
       if (user is AppWidgetApiModel) {
         HomeWidget.saveWidgetData<bool>('main_layout_visibility', true);
         HomeWidget.saveWidgetData<bool>('error_layout_visibility', false);
@@ -129,8 +129,8 @@ Future<void> pdaWidget_fetchData() async {
         } else {
           // Country is reported as Torn
 
-          // Flying back
           if (statusDescription.contains("Returning to")) {
+            // Are we flying back?
             var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel.timestamp * 1000);
             var timeDifference = dateTimeArrival.difference(DateTime.now());
             String twoDigits(int n) => n.toString().padLeft(2, "0");
@@ -140,18 +140,18 @@ Future<void> pdaWidget_fetchData() async {
             statusDescription = statusDescription.replaceAll("00h ", "");
             HomeWidget.saveWidgetData<String>("travel", "left");
           } else {
-            // At home in Torn
+            // We at home in Torn
             HomeWidget.saveWidgetData<String>("travel", "no");
 
-            // In hospital in Torn
+            // Red status in Torn (hospital/jail)
             if (user.status.color == "red") {
               var redEnd = DateTime.fromMillisecondsSinceEpoch(user.status.until * 1000);
               var timeDifference = redEnd.difference(DateTime.now());
               String twoDigits(int n) => n.toString().padLeft(2, "0");
               String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-              if (user.status.state.contains("Hospital")) {
+              if (state == "Hospital") {
                 statusDescription = 'Hospital for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
-              } else if (statusDescription.contains("Jail")) {
+              } else if (state == "Jail") {
                 statusDescription = 'Jail for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               }
             }
