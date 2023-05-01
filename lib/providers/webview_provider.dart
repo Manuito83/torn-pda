@@ -132,7 +132,10 @@ class WebViewProvider extends ChangeNotifier {
     _hideTabs = await Prefs().getHideTabs();
 
     // This saves if we are using a dialog or not, so that the next session can replicate if we recall from T menu
-    Prefs().setWebViewLastSessionUsedDialog(dialog);
+    // Chaining browser does not count as an user preference, as it is always full
+    if (!isChainingBrowser) {
+      Prefs().setWebViewLastSessionUsedDialog(dialog);
+    }
 
     // Add the main opener
     String url = initUrl;
