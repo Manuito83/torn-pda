@@ -1843,7 +1843,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "Friends",
+              "Awards",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -1856,7 +1856,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "Awards",
+              "Items",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
