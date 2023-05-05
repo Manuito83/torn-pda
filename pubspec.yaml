@@ -59,7 +59,7 @@ dependencies:
   flutter_slidable: ^2.0.0
   flutter_speed_dial: ^6.0.0
   workmanager: ^0.5.1
-  font_awesome_flutter: ^10.1.0
+  font_awesome_flutter: ^10.4.0
   get: ^4.6.3
   home_widget:
     git:

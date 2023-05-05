@@ -140,8 +140,7 @@ class Prefs {
   final String _kRankedWarAlarmAhead = "pda_rankedWarAlarmAhead";
   final String _kRankedWarTimerAhead = "pda_rankedWarTimesAhead";
 
-  final String _kManualAlarmVibration = "pda_manualAlarmVibration";
-  final String _kManualAlarmSound = "pda_manualAlarmSound";
+  // Profile options
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
   final String _kShowHeaderIcons = "pda_showHeaderIcons";
   final String _kIconsFiltered = "pda_iconsFiltered";
@@ -150,13 +149,18 @@ class Prefs {
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
   final String _kWarnAboutExcessEnergyThreshold = "pda_warnAboutExcessEnergyThreshold";
-  final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
   final String _kMessagesShowNumber = "pda_messagesShowNumber";
   final String _kEventsShowNumber = "pda_eventsShowNumber";
   final String _kExpandBasicInfo = "pda_ExpandBasicInfo";
   final String _kExpandNetworth = "pda_ExpandNetworth";
+  final String _kJobAddictionValue = "pda_jobAddiction";
+  final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
+
+  final String _kManualAlarmVibration = "pda_manualAlarmVibration";
+  final String _kManualAlarmSound = "pda_manualAlarmSound";
+  final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kQuickItemsList = "pda_quickItemsList";
   final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
@@ -1733,6 +1737,31 @@ class Prefs {
   Future<bool> setExpandNetworth(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExpandNetworth, value);
+  }
+
+  /// ----------------------------
+  /// Methods job addiction in Profile
+  /// ----------------------------
+  Future<int> getJobAddictionValue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJobAddictionValue) ?? 0;
+  }
+
+  Future<bool> setJobAdditionValue(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJobAddictionValue, value);
+  }
+
+  //--
+
+  Future<int> getJobAddictionNextCallTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJobAddictionNextCallTime) ?? 0;
+  }
+
+  Future<bool> setJobAddictionNextCallTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJobAddictionNextCallTime, value);
   }
 
   /// ----------------------------

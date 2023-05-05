@@ -24,6 +24,7 @@ import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/company/employees_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
@@ -86,6 +87,7 @@ enum ApiSelection {
   marketItem,
   perks,
   rankedWars,
+  companyEmployees,
 }
 
 class ApiError {
@@ -787,6 +789,23 @@ class ApiCallerController extends GetxController {
     }
   }
 
+  Future<dynamic> getCompanyEmployees() async {
+    dynamic apiResult;
+    await enqueueApiCall(apiSelection: ApiSelection.companyEmployees).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return CompanyEmployees.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> _launchApiCall({
     @required ApiSelection apiSelection,
     String prefix = "",
@@ -885,6 +904,9 @@ class ApiCallerController extends GetxController {
         break;
       case ApiSelection.rankedWars:
         url += 'torn/?selections=rankedwars';
+        break;
+      case ApiSelection.companyEmployees:
+        url += 'company/?selections=employees';
         break;
     }
     url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit';

@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
@@ -23,6 +24,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
+import 'package:torn_pda/models/company/employees_model.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
@@ -281,6 +283,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   RankedWar _factionRankedWar;
 
+  int _companyAddiction;
+
   // Showcases
   GlobalKey _showcaseProfileBars = GlobalKey();
   GlobalKey _showcaseProfileClock = GlobalKey();
@@ -316,6 +320,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       } else {
         _getMiscCardInfo();
         _getRankedWars();
+        _getCompanyAddiction();
         _miscTick = 0;
       }
     });
@@ -339,6 +344,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _getMiscCardInfo();
         _getStatsChart();
         _getRankedWars();
+        _getCompanyAddiction();
       }
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
@@ -3397,6 +3403,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               SizedBox(height: 4),
               _jobPoints(),
+              SizedBox(height: 4),
+              _companyAddictionWidget(),
               SizedBox(height: 8),
               SelectableText('Battle Stats: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
@@ -3499,6 +3507,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: _jobPoints(),
+              ),
+              SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: _companyAddictionWidget(),
               ),
               SizedBox(height: 20),
               Padding(
@@ -4509,6 +4522,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       await _getMiscCardInfo();
       _statsChartDataFetched = _getStatsChart();
       _getRankedWars();
+      _getCompanyAddiction();
     }
 
     _retrievePendingNotifications();
@@ -4611,6 +4625,53 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
     _factionRankedWar = null;
     return;
+  }
+
+  Future _getCompanyAddiction() async {
+    try {
+      if (_user.job.companyId == 0) return;
+
+      final nextFetchTime = await Prefs().getJobAddictionNextCallTime();
+
+      int currentTimeMillis = DateTime.now().toUtc().millisecondsSinceEpoch;
+      bool shouldCallApi = currentTimeMillis >= nextFetchTime;
+
+      // If we should call the API, fetch the data and update SharedPreferences
+      if (shouldCallApi || nextFetchTime == 0) {
+        log("Fetching job addiction!");
+        dynamic apiResponse = await Get.find<ApiCallerController>().getCompanyEmployees();
+        if (apiResponse is CompanyEmployees) {
+          for (var eMap in apiResponse.companyEmployees.entries) {
+            // Loop until we find the user
+            if (eMap.key != _user.playerId.toString()) continue;
+            if (eMap.value.effectiveness.addiction == null) continue;
+
+            // Calculate the next allowed API call time
+            DateTime now = DateTime.now().toUtc();
+            DateTime nextAllowedTime = DateTime.utc(now.year, now.month, now.day, 18, 30);
+            if (now.isAfter(nextAllowedTime)) {
+              nextAllowedTime = nextAllowedTime.add(Duration(days: 1));
+            }
+            int nextAllowedTimeMillis = nextAllowedTime.millisecondsSinceEpoch;
+
+            Prefs().setJobAddictionNextCallTime(nextAllowedTimeMillis);
+            Prefs().setJobAdditionValue(eMap.value.effectiveness.addiction);
+            setState(() {
+              _companyAddiction = eMap.value.effectiveness.addiction;
+            });
+            return;
+          }
+        }
+      } else {
+        int savedAddition = await Prefs().getJobAddictionValue();
+        setState(() {
+          _companyAddiction = savedAddition;
+        });
+      }
+    } catch (e) {
+      _companyAddiction = null;
+      return;
+    }
   }
 
   Future<void> _getFactionCrimes() async {
@@ -6354,6 +6415,37 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           ),
         ],
+      );
+    } catch (e) {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _companyAddictionWidget() {
+    try {
+      if (_companyAddiction == null) return SizedBox.shrink();
+
+      Color c = _themeProvider.mainText;
+      if (_companyAddiction < -1) c = Colors.orange[700];
+      if (_companyAddiction < -12) c = Colors.red[700];
+
+      return Padding(
+        padding: const EdgeInsets.only(left: 2),
+        child: Row(
+          children: [
+            Image.asset(
+              'images/icons/chart_down.png',
+              height: 18,
+              color: Colors.brown[300],
+            ),
+            SizedBox(width: 9),
+            Text("Company Addiction: "),
+            Text(
+              "$_companyAddiction",
+              style: TextStyle(color: c),
+            ),
+          ],
+        ),
       );
     } catch (e) {
       return SizedBox.shrink();

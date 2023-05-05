@@ -50,10 +50,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_1_0_3 = "Added API call rate bar widget and warning (see Settings)";
     String feat3_1_0_4 = "The browser can now be chosen as the default app's launch section (Settings)";
     String feat3_1_0_5 = "Shortcuts page and all related options have been moved to Settings";
-    String feat3_1_0_6 = "Browser long-press menu now also adds a shortcut to the target link";
-    String feat3_1_0_7 = "Full update in War now updates all members faster";
-    String feat3_1_0_8 = "Fixed issues redirecting to attack pages in certain conditions";
-    String feat3_1_0_9 = "Fixed issues when launching the app from a notification";
+    String feat3_1_0_6 = "Added company addiction to Profile (Basic Info card)";
+    String feat3_1_0_7 = "Browser long-press menu now also adds a shortcut to the target link";
+    String feat3_1_0_8 = "Full update in War now updates all members faster";
+    String feat3_1_0_9 = "Fixed issues redirecting to attack pages in certain conditions";
+    String feat3_1_0_10 = "Fixed issues when launching the app from a notification";
     if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
     v3_1_0.features.add(feat3_1_0_2);
     v3_1_0.features.add(feat3_1_0_3);
@@ -63,6 +64,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.features.add(feat3_1_0_7);
     v3_1_0.features.add(feat3_1_0_8);
     v3_1_0.features.add(feat3_1_0_9);
+    v3_1_0.features.add(feat3_1_0_10);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();
