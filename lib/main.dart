@@ -26,6 +26,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
+import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
@@ -164,6 +165,8 @@ Future<void> main() async {
   }
 
   Get.put(ApiCallerController(), permanent: true);
+
+  HttpOverrides.global = MyHttpOverrides();
 
   runApp(
     MultiProvider(
