@@ -167,7 +167,7 @@ class _RankedWarMiniState extends State<RankedWarMini> {
     var dt = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
     var timeDifference = dt.difference(DateTime.now());
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitHours = twoDigits(timeDifference.inHours.remainder(60));
+    String twoDigitHours = twoDigits(timeDifference.inHours.remainder(24));
     String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(timeDifference.inSeconds.remainder(60));
     String diff = '${timeDifference.inDays}d ${twoDigitHours}h '
