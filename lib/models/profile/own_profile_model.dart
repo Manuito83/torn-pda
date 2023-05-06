@@ -8,8 +8,10 @@ import 'dart:convert';
 import 'own_profile_basic.dart';
 
 OwnProfileExtended ownProfileExtendedFromJson(String str) => OwnProfileExtended.fromJson(json.decode(str));
-
 String ownProfileExtendedToJson(OwnProfileExtended data) => json.encode(data.toJson());
+
+Event eventFromJson(String str) => Event.fromJson(json.decode(str));
+String eventToJson(Event data) => json.encode(data.toJson());
 
 class OwnProfileExtended {
   OwnProfileExtended({
@@ -82,7 +84,7 @@ class OwnProfileExtended {
   Chain chain;
   Map<String, double> networth;
   Cooldowns cooldowns;
-  dynamic events;
+  List<Event> events;
   dynamic messages;
   Notifications notifications;
   Travel travel;
@@ -500,18 +502,21 @@ class Faction {
 
 class Job {
   Job({
+    this.job,
     this.position,
     this.companyId,
     this.companyName,
     this.companyType,
   });
 
+  String job;
   String position;
   int companyId;
   String companyName;
   int companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
+        job: json["job"] == null ? null : json["job"],
         position: json["position"] == null ? null : json["position"],
         companyId: json["company_id"] == null ? null : json["company_id"],
         companyName: json["company_name"] == null ? null : json["company_name"].toString(),
@@ -519,6 +524,7 @@ class Job {
       );
 
   Map<String, dynamic> toJson() => {
+        "job": job == null ? null : job,
         "position": position == null ? null : position,
         "company_id": companyId == null ? null : companyId,
         "company_name": companyName == null ? null : companyName,

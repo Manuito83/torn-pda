@@ -468,7 +468,7 @@ class _FriendCardState extends State<FriendCard> {
       BotToast.showText(
         text: HtmlParser.fix("${_friend.name} belongs to your same company "
             "(${_friend.job.companyName}) as "
-            "${_friend.job.position}"),
+            "${_friend.job.job}"),
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,

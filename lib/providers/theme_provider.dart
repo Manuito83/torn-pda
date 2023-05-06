@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -109,6 +110,7 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _restoreSharedPreferences() async {
     String restoredTheme = await Prefs().getAppTheme();
+    await analytics.setUserProperty(name: "theme", value: restoredTheme);
     switch (restoredTheme) {
       case 'light':
         _currentTheme = AppTheme.light;

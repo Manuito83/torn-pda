@@ -99,7 +99,6 @@ class Prefs {
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
-  final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
@@ -153,11 +152,26 @@ class Prefs {
   final String _kExpandMessages = "pda_ExpandMessages";
   final String _kMessagesShowNumber = "pda_messagesShowNumber";
   final String _kEventsShowNumber = "pda_eventsShowNumber";
+  final String _kEventsLastRetrieved = "pda_eventsLastRetrieved";
+  final String _kEventsSave = "pda_eventsSave";
   final String _kExpandBasicInfo = "pda_ExpandBasicInfo";
   final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kJobAddictionValue = "pda_jobAddiction";
   final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
+  final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
+  final String _kOCrimesEnabled = "pda_OCrimesEnabled";
+  final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
+  final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
 
+  // Loot
+  final String _kLootTimerType = "pda_lootTimerType";
+  final String _kLootNotificationType = "pda_lootNotificationType";
+  final String _kLootNotificationAhead = "pda_lootNotificationAhead";
+  final String _kLootAlarmAhead = "pda_lootAlarmAhead";
+  final String _kLootTimerAhead = "pda_lootTimerAhead";
+  final String _kLootFiltered = "pda_lootFiltered";
+
+  // Browser scripts and widgets
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kTerminalEnabled = "pda_terminalEnabled";
@@ -165,12 +179,6 @@ class Prefs {
   final String _kQuickItemsList = "pda_quickItemsList";
   final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
-  final String _kLootTimerType = "pda_lootTimerType";
-  final String _kLootNotificationType = "pda_lootNotificationType";
-  final String _kLootNotificationAhead = "pda_lootNotificationAhead";
-  final String _kLootAlarmAhead = "pda_lootAlarmAhead";
-  final String _kLootTimerAhead = "pda_lootTimerAhead";
-  final String _kLootFiltered = "pda_lootFiltered";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
@@ -185,9 +193,6 @@ class Prefs {
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
-  final String _kOCrimesEnabled = "pda_OCrimesEnabled";
-  final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
-  final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -1679,6 +1684,8 @@ class Prefs {
     return prefs.setBool(_kTerminalEnabled, value);
   }
 
+  // -- Events
+
   Future<bool> getExpandEvents() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kExpandEvents) ?? false;
@@ -1698,6 +1705,28 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kEventsShowNumber, value);
   }
+
+  Future<int> getEventsLastRetrieved() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kEventsLastRetrieved) ?? 0;
+  }
+
+  Future<bool> setEventsLastRetrieved(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kEventsLastRetrieved, value);
+  }
+
+  Future<List<String>> getEventsSave() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kEventsSave) ?? [];
+  }
+
+  Future<bool> setEventsSave(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kEventsSave, value);
+  }
+
+  // --
 
   Future<bool> getExpandMessages() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -272,7 +272,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       return Column(
         children: <Widget>[
           Text('Company: ${HtmlParser.fix(widget.friend.job.companyName)}'),
-          Text('Position: ${widget.friend.job.position}'),
+          Text('Position: ${widget.friend.job.job}'),
         ],
       );
     } else {

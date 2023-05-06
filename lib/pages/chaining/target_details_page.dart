@@ -271,7 +271,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       return Column(
         children: <Widget>[
           Text('Company: ${HtmlParser.fix(widget.target.job.companyName)}'),
-          Text('Position: ${widget.target.job.position}'),
+          Text('Position: ${widget.target.job.job}'),
         ],
       );
     } else {

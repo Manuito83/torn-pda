@@ -215,26 +215,34 @@ class Faction {
 }
 
 class Job {
-  String position;
-  int companyId;
-  String companyName;
-
   Job({
+    this.job,
     this.position,
     this.companyId,
     this.companyName,
+    this.companyType,
   });
 
+  String job;
+  String position;
+  int companyId;
+  String companyName;
+  int companyType;
+
   factory Job.fromJson(Map<String, dynamic> json) => Job(
+        job: json["job"],
         position: json["position"],
         companyId: json["company_id"],
-        companyName: json["company_name"].toString(),
+        companyName: json["company_name"],
+        companyType: json["company_type"],
       );
 
   Map<String, dynamic> toJson() => {
+        "job": job,
         "position": position,
         "company_id": companyId,
         "company_name": companyName,
+        "company_type": companyType,
       };
 }
 

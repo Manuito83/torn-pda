@@ -64,6 +64,7 @@ enum ApiSelection {
   travel,
   ownBasic,
   ownExtended,
+  events,
   ownPersonalStats,
   ownMisc,
   bazaar,
@@ -170,6 +171,7 @@ class _ApiCallRequest {
   final ApiSelection apiSelection;
   final String prefix;
   final int limit;
+  final int from;
   final String forcedApiKey;
   final DateTime timestamp;
 
@@ -179,6 +181,7 @@ class _ApiCallRequest {
     @required this.apiSelection,
     this.prefix = "",
     this.limit = 100,
+    this.from,
     this.forcedApiKey = "",
   });
 }
@@ -233,6 +236,7 @@ class ApiCallerController extends GetxController {
     @required ApiSelection apiSelection,
     String prefix = "",
     int limit = 100,
+    int from,
     String forcedApiKey = "",
   }) async {
     // Remove timestamps older than 60 seconds and add the current timestamp
@@ -258,6 +262,7 @@ class ApiCallerController extends GetxController {
         apiSelection: apiSelection,
         prefix: prefix,
         limit: limit,
+        from: from,
         forcedApiKey: forcedApiKey,
       );
       _callQueue.add(apiCallRequest);
@@ -271,6 +276,7 @@ class ApiCallerController extends GetxController {
         apiSelection: apiSelection,
         prefix: prefix,
         limit: limit,
+        from: from,
         forcedApiKey: forcedApiKey,
       );
       _callCount.value--;
@@ -399,6 +405,29 @@ class ApiCallerController extends GetxController {
     if (apiResult is! ApiError) {
       try {
         return OwnProfileExtended.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> getEvents({@required int limit, int from}) async {
+    dynamic apiResult;
+    await enqueueApiCall(apiSelection: ApiSelection.events, limit: limit, from: from).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        List<Event> eventsList = <Event>[];
+        if (apiResult['events'].length > 0) {
+          for (Map<String, dynamic> eventData in apiResult['events'].values) {
+            eventsList.add(Event.fromJson(eventData));
+          }
+        }
+        return eventsList;
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -810,6 +839,7 @@ class ApiCallerController extends GetxController {
     @required ApiSelection apiSelection,
     String prefix = "",
     int limit = 100,
+    int from,
     String forcedApiKey = "",
   }) async {
     String apiKey = "";
@@ -833,8 +863,11 @@ class ApiCallerController extends GetxController {
         url += 'user/?selections=profile,battlestats';
         break;
       case ApiSelection.ownExtended:
-        url += 'user/?selections=profile,bars,networth,cooldowns,events,notifications'
-            ',travel,icons,money,education,messages';
+        url += 'user/?selections=profile,bars,networth,cooldowns,notifications,'
+            'travel,icons,money,education,messages';
+        break;
+      case ApiSelection.events:
+        url += 'user/?selections=events';
         break;
       case ApiSelection.ownPersonalStats:
         url += 'user/?selections=personalstats';
@@ -909,7 +942,7 @@ class ApiCallerController extends GetxController {
         url += 'company/?selections=employees';
         break;
     }
-    url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit';
+    url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit${from != null ? "&from=$from" : ""}';
 
     try {
       final response = await http.get(

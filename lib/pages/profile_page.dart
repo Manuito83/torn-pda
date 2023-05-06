@@ -5,13 +5,13 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
-import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
@@ -135,10 +135,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _apiRetries = 0;
 
   OwnProfileExtended _user;
+  List<Event> _events;
 
   DateTime _serverTime;
 
   Timer _tickerCallApi;
+  Stream _browserHasClosed;
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -215,7 +217,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _alarmVibration;
 
   bool _miscApiFetchedOnce = false;
-  var _miscTick = 0;
+  DateTime _miscTickLastTime = DateTime.now();
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
 
@@ -304,26 +306,50 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
-    _startApiTimer();
+    // Initialise periodic API refresh
+    _resetApiTimer();
+
+    // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
+    // So that we can 1) refresh the API, 2) start the API timer again
+    _browserHasClosed = _webViewProvider.browserHasClosedStream.stream;
+    _browserHasClosed.listen((event) {
+      log("Browser has closed in Profile, resuming API calls!");
+      _resetApiTimer(initCall: true);
+    });
 
     analytics.setCurrentScreen(screenName: 'profile');
   }
 
-  void _startApiTimer() {
+  /// Restarts the API timer (to be executed after 20 minutes)
+  /// If [initCall] is true, a call is placed also at the start
+  /// (unless the browser is open)
+  void _resetApiTimer({bool initCall = false}) {
+    if (initCall && _webViewProvider.tabList.isEmpty) {
+      _apiRefreshPeriodic(forceMisc: true);
+    }
+
     _tickerCallApi?.cancel();
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
-      _fetchApi();
-
-      // Fetch misc every minute
-      if (_miscTick < 2) {
-        _miscTick++;
-      } else {
-        _getMiscCardInfo();
-        _getRankedWars();
-        _getCompanyAddiction();
-        _miscTick = 0;
+      // Only refresh if the browser is not open!
+      if (_webViewProvider.tabList.isEmpty) {
+        _apiRefreshPeriodic();
       }
     });
+  }
+
+  void _apiRefreshPeriodic({bool forceMisc = false}) {
+    _fetchApi();
+    _refreshEvents();
+
+    // Fetch misc every minute
+    int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
+    if (secondsSinceLastMiscFetch > 60 || forceMisc) {
+      _miscTickLastTime = DateTime.now();
+      _getMiscCardInfo();
+      _getStatsChart();
+      _getRankedWars();
+      _getCompanyAddiction();
+    }
   }
 
   @override
@@ -336,16 +362,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      await _fetchApi();
-      _startApiTimer();
-      if (_apiGoodData) {
-        // We get miscellaneous information when we open the app for those cases where users
-        // stay with the app on the background for hours/days and only use the Profile section
-        _getMiscCardInfo();
-        _getStatsChart();
-        _getRankedWars();
-        _getCompanyAddiction();
-      }
+      _resetApiTimer(initCall: true);
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
     }
@@ -394,10 +411,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   if (_apiGoodData) {
                     return RefreshIndicator(
                       onRefresh: () async {
-                        _fetchApi();
-                        _getMiscCardInfo();
-                        _getRankedWars();
-                        _miscTick = 0;
+                        _resetApiTimer(initCall: true);
                         await Future.delayed(Duration(seconds: 1));
                       },
                       child: SingleChildScrollView(
@@ -2642,13 +2656,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Card _eventsTimeline() {
     int maxToShow = _eventsShowNumber;
 
-    // Some users might an empty events map. This is why we have the events parameters as dynamic
-    // in OwnProfile Model. We need to check if it contains several elements, in which case we
-    // create a map in a new variable. Otherwise, we return an empty Card.
-    var events = Map<String, Event>();
-    if (_user.events.length > 0) {
-      events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
-    } else {
+    if (_events == null) {
       return Card(
         child: Row(
           children: [
@@ -2668,11 +2676,41 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
                   child: Text(
-                    "You have no events",
-                    style: TextStyle(color: Colors.green),
+                    "Loading...",
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      );
+    } else if (_events.length == 0) {
+      return Card(
+        child: Row(
+          children: [
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Text(
+                      'EVENTS',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+                    child: Text(
+                      "You have no recent events or there was a problem fetching them from the API",
+                      style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -2689,14 +2727,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int loopCount = 1;
     int maxCount;
 
-    if (events.length > maxToShow) {
+    if (_events.length > maxToShow) {
       maxCount = maxToShow;
     } else {
-      maxCount = events.length;
-      maxToShow = events.length;
+      maxCount = _events.length;
+      maxToShow = _events.length;
     }
 
-    for (var e in events.values) {
+    for (Event e in _events) {
       String message = HtmlParser.fix(e.event);
       message = message;
       message = message.replaceAll('View the details here!', '');
@@ -4518,11 +4556,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //  - (sync) Education, money and skills with miscInfo call
     //  - (async) OC Crimes (both types) with AA call or from events
     //  - (async) Bazaar
+    //  - (async) RankedWars
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
       _statsChartDataFetched = _getStatsChart();
       _getRankedWars();
       _getCompanyAddiction();
+      _refreshEvents();
     }
 
     _retrievePendingNotifications();
@@ -4644,7 +4684,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           for (var eMap in apiResponse.companyEmployees.entries) {
             // Loop until we find the user
             if (eMap.key != _user.playerId.toString()) continue;
-            if (eMap.value.effectiveness.addiction == null) continue;
 
             // Calculate the next allowed API call time
             DateTime now = DateTime.now().toUtc();
@@ -4655,9 +4694,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             int nextAllowedTimeMillis = nextAllowedTime.millisecondsSinceEpoch;
 
             Prefs().setJobAddictionNextCallTime(nextAllowedTimeMillis);
-            Prefs().setJobAdditionValue(eMap.value.effectiveness.addiction);
+            Prefs().setJobAdditionValue(eMap.value.effectiveness.addiction ?? 0);
             setState(() {
-              _companyAddiction = eMap.value.effectiveness.addiction;
+              _companyAddiction = eMap.value.effectiveness.addiction ?? 0;
             });
             return;
           }
@@ -4674,8 +4713,81 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
+  /// To be restrictive with API calls, we will only perform a full events update if > 30 minutes from last
+  /// In between, we will only update new events from X timestamp
+  Future _refreshEvents() async {
+    try {
+      // Get the saved events from shared prefs
+      List<Event> eventsSave = <Event>[];
+      List<String> save = await Prefs().getEventsSave();
+      for (var s in save) {
+        eventsSave.add(eventFromJson(s));
+      }
+
+      // Calculate time difference from last time we obtained events
+      DateTime lastEventsTs = DateTime.fromMillisecondsSinceEpoch(await Prefs().getEventsLastRetrieved());
+      int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
+
+      // If less than 30 minutes have elapse, we'll just query for new events and fill the list
+      if (minutesDiff < 30) {
+        // Get the last saved event, find out what's the TS
+        if (eventsSave.isEmpty) return;
+        int lastTs = eventsSave[0].timestamp;
+
+        // Get new events after that and add them
+        dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs + 1);
+        if (newEventsResponse is List<Event>) {
+          if (newEventsResponse.isNotEmpty) {
+            for (int i = 0; i < newEventsResponse.length; i++) {
+              eventsSave.insert(i, newEventsResponse[i]);
+            }
+
+            List<String> eventsListToSave = [];
+            for (Event e in eventsSave) {
+              eventsListToSave.add(eventToJson(e));
+            }
+            Prefs().setEventsSave(eventsListToSave);
+          }
+          // Save last retrieved date as now
+          Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
+        }
+
+        // Refresh events (even if no additions have been made, as we might be starting
+        // the app with [_events] with a null value)
+        setState(() {
+          _events = List<Event>.from(eventsSave);
+        });
+        return;
+      }
+
+      // If more than 30 minutes elapsed, we get the whole pack
+      // Calculate one month ago
+      log("Events save elapse more than 30 minutes, getting all events");
+      int monthAgo = ((DateTime.now().subtract(Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
+      dynamic allEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: monthAgo);
+      if (allEventsResponse is List<Event>) {
+        // Save events and last retrieved timestamp
+        List<String> eventsListToSave = [];
+        for (Event e in allEventsResponse) {
+          eventsListToSave.add(eventToJson(e));
+        }
+        Prefs().setEventsSave(eventsListToSave);
+        Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
+      }
+      // Refresh events
+      setState(() {
+        _events = List<Event>.from(allEventsResponse);
+      });
+    } catch (e, trace) {
+      log("Error at Profile Events: $e >> $trace");
+      FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
+  }
+
   Future<void> _getFactionCrimes() async {
     try {
+      if (_user == null) return;
       var factionCrimes = await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
@@ -4764,32 +4876,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
 
         // Try to find quick crimes in events
-        var events = Map<String, Event>();
-        if (_user.events.length > 0) {
-          events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
-        }
-
         bool foundExpired = false;
         bool foundProgress = false;
         bool error = false;
 
         // Try to find our crime by reviewing the last 100 events. The first one we
         // can find is the one that counts
-        events.forEach((key, value) {
+        for (Event e in _events) {
           if (!foundExpired && !foundProgress && !error) {
-            if (value.event.contains("You and your team") ||
-                (value.event.contains("canceled the") && value.event.contains("that you were selected for"))) {
+            if (e.event.contains("You and your team") ||
+                (e.event.contains("canceled the") && e.event.contains("that you were selected for"))) {
               foundExpired = true;
-            } else if (value.event.contains("You have been selected")) {
+            } else if (e.event.contains("You have been selected")) {
               RegExp strRaw = RegExp(r"([0-9]+) hours");
-              var matches = strRaw.allMatches(value.event);
+              var matches = strRaw.allMatches(e.event);
               if (matches.length > 0) {
                 for (var match in matches) {
                   var hoursString = match.group(1);
                   try {
                     var hours = int.parse(hoursString);
-                    simpleTime =
-                        DateTime.fromMillisecondsSinceEpoch(value.timestamp * 1000).add(Duration(hours: hours));
+                    simpleTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp * 1000).add(Duration(hours: hours));
                     foundProgress = true;
                     simpleExists = true;
                     _settingsProvider.changeOCrimeLastKnown = simpleTime.millisecondsSinceEpoch;
@@ -4803,7 +4909,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             }
           }
-        });
+        }
 
         // If we haven't found anything in 100 events (including no cancellations), but we are still
         // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
@@ -6336,11 +6442,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       bool unemployed = false;
 
       if (_user.job.companyId == 0) {
-        if (_user.job.position == "None") {
+        if (_user.job.job == "None") {
           unemployed = true;
         }
 
-        switch (_user.job.position.toLowerCase()) {
+        switch (_user.job.job.toLowerCase()) {
           case "army":
             currentPoints = _miscModel.jobpoints.jobs.army;
             break;

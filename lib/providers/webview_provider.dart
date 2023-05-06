@@ -1,11 +1,13 @@
 // Dart imports:
 
 // Flutter imports:
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -55,6 +57,8 @@ class SleepingWebView {
 class WebViewProvider extends ChangeNotifier {
   List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
+
+  StreamController browserHasClosedStream = StreamController.broadcast();
 
   bool chatRemovalEnabledGlobal = false;
   bool chatRemovalActiveGlobal = false;
@@ -629,6 +633,7 @@ class WebViewProvider extends ChangeNotifier {
       } else {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
+          analytics.setCurrentScreen(screenName: 'browser_dialog');
           if (awaitable) {
             await openBrowserDialog(
               context,
@@ -643,6 +648,7 @@ class WebViewProvider extends ChangeNotifier {
             );
           }
         } else {
+          analytics.setCurrentScreen(screenName: 'browser_full');
           if (awaitable) {
             await Navigator.of(context).push(
               MaterialPageRoute(

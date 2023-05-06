@@ -256,6 +256,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   @override
   Future dispose() async {
     _webViewProvider.clearOnDispose();
+    _webViewProvider.browserHasClosedStream.add(true);
     _animationController.dispose();
     super.dispose();
   }
@@ -507,7 +508,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                       onTap: () async {
                         return showDialog<void>(
                           context: context,
-                          barrierDismissible: true, 
+                          barrierDismissible: true,
                           builder: (BuildContext context) {
                             return WebviewShortcutsDialog(fromShortcut: true);
                           },
