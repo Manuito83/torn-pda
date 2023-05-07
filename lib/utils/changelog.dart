@@ -47,11 +47,11 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.date = '15 MAY 2023';
     String feat3_1_0_1 = "Added home screen widget (see Tips)";
     String feat3_1_0_2 = "Added Ranked War information and notifications to Profile page";
-    String feat3_1_0_3 = "Added API call rate bar widget and warning (see Settings)";
     String feat3_1_0_4 = "The browser can now be chosen as the default app's launch section (Settings)";
     String feat3_1_0_5 = "Shortcuts page and all related options have been moved to Settings";
     String feat3_1_0_6 = "Added dual score slider and option to ignore oneself to the Jail widget";
     String feat3_1_0_7 = "Added company addiction to Profile (Basic Info card)";
+    String feat3_1_0_3 = "Added API call rate bar widget and warning (see Settings)";
     String feat3_1_0_8 = "Browser long-press menu now also adds a shortcut to the target link";
     String feat3_1_0_9 = "Full update in War now updates all members faster";
     String feat3_1_0_10 = "Fixed Loot Rangers loot order in certain conditions";
