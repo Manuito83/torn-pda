@@ -145,7 +145,7 @@ class _LootPageState extends State<LootPage> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
                             child: Text(
-                              "NPCs sorted by${_lootRangersTime == 0 ? ' previous ' : ''}Loot Rangers' attack order",
+                              "NPCs sorted by ${_lootRangersTime == 0 ? 'previous ' : ''}Loot Rangers' attack order",
                               style: TextStyle(
                                 fontSize: 12,
                               ),
