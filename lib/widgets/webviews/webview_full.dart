@@ -1228,6 +1228,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _hideChat();
               _highlightChat();
 
+              // If we are using pull-to-refresh in a short page (that does not scroll), add a bit of body
+              // height so that the pull-to-refresh triggers properly
+              if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
+                _addExtraHeightForPullToRefresh();
+              }
+
               final html = await webView.getHtml();
               final document = parse(html);
 
@@ -1625,6 +1631,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         return;
       },
     );
+  }
+
+  _addExtraHeightForPullToRefresh() {
+    webView.evaluateJavascript(source: addHeightForPullToRefresh());
   }
 
   void _addLoadoutChangeHandler(InAppWebViewController webView) {

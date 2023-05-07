@@ -518,6 +518,22 @@ String removeChatOnLoadStartJS() {
   ''';
 }
 
+String addHeightForPullToRefresh() {
+  return '''
+    (function() {
+      // Get the height of the viewport
+      var viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+      // Check if the website content overflows the viewport
+      if (document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+        // If not, add 10px to the body height
+        console.log("Adding extra height for pull-to-refresh");
+        document.body.style.height = `\${viewportHeight + 20}px`;
+      }
+    })();
+  ''';
+}
+
 String removeChatJS() {
   return '''
     try {
