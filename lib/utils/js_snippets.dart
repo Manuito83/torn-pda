@@ -877,9 +877,12 @@ String jailJS({
   @required int levelMax,
   @required int timeMin,
   @required int timeMax,
+  @required int scoreMin,
   @required int scoreMax,
   @required bool bailTicked,
   @required bool bustTicked,
+  @required bool excludeSelf,
+  @required String excludeName,
 }) {
   return '''
     // Credit to TornTools for implementation logic
@@ -938,9 +941,16 @@ String jailJS({
 
         // Score
         var score = level * seconds / 60
-        if (score > $scoreMax) {
+        if (score > $scoreMax || score < $scoreMin) {
           shouldHide = true;
         }
+        
+        // Exclude own player
+        var name = player.querySelector(".user.name").innerText;
+        if ($excludeSelf && name === "$excludeName" && shouldHide) {
+          shouldHide = false;
+        }
+                
         if (shouldHide) {
           //player.hidden = true; // Not allowed with new user agent on iOS
           player.style.display = "none"; 

@@ -3451,6 +3451,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _jailExpandable = JailWidget(
           webview: webView,
           fireScriptCallback: _fireJailScriptCallback,
+          playerName: _userProvider.basic.name.toUpperCase(),
         );
       });
     }
@@ -3471,9 +3472,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         levelMax: _jailModel.levelMax,
         timeMin: _jailModel.timeMin,
         timeMax: _jailModel.timeMax,
+        scoreMin: _jailModel.scoreMin,
         scoreMax: _jailModel.scoreMax,
         bailTicked: _jailModel.bailTicked,
         bustTicked: _jailModel.bustTicked,
+        excludeSelf: _jailModel.excludeSelf,
+        excludeName: _jailModel.excludeName,
       ),
     );
   }
