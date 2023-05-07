@@ -56,6 +56,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_1_0_9 = "Full update in War now updates all members faster";
     String feat3_1_0_10 = "Fixed issues redirecting to attack pages in certain conditions";
     String feat3_1_0_11 = "Fixed issues when launching the app from a notification";
+    String feat3_1_0_12 = "Fixed pull-to-refresh in short pages";
     if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
     v3_1_0.features.add(feat3_1_0_2);
     v3_1_0.features.add(feat3_1_0_3);
@@ -67,6 +68,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.features.add(feat3_1_0_9);
     v3_1_0.features.add(feat3_1_0_10);
     v3_1_0.features.add(feat3_1_0_11);
+    v3_1_0.features.add(feat3_1_0_12);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();

@@ -405,7 +405,7 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Pull to refresh",
         expandedValue: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
-            "There are certain (short) pages in Torn, with no scroll, that won't activate this feature; if that's "
+            "There are certain (short) pages in Torn, with no scroll, that might not activate this feature; if that's "
             "the case, try pulling down from Torn's appbar at the very top!",
       ),
     );
