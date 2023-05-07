@@ -22,7 +22,7 @@ void pdaWidget_backgroundUpdate() {
   Workmanager().executeTask((taskName, inputData) async {
     DateTime now = DateTime.now();
     String timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-    log("Widget $taskName update @$timeString ");
+    //log("Widget $taskName update @$timeString ");
 
     int count = await pdaWidget_numberInstalled();
     if (count == 0) return true;

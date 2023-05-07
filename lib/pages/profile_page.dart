@@ -141,6 +141,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Timer _tickerCallApi;
   Stream _browserHasClosed;
+  StreamSubscription _browserHasClosedSubscription;
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -312,7 +313,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
     // So that we can 1) refresh the API, 2) start the API timer again
     _browserHasClosed = _webViewProvider.browserHasClosedStream.stream;
-    _browserHasClosed.listen((event) {
+    _browserHasClosedSubscription = _browserHasClosed.listen((event) {
       log("Browser has closed in Profile, resuming API calls!");
       _resetApiTimer(initCall: true);
     });
@@ -355,6 +356,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _tickerCallApi?.cancel();
+    _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
