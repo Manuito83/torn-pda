@@ -145,7 +145,7 @@ class _LootPageState extends State<LootPage> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
                             child: Text(
-                              "NPCs sorted by Loot Rangers' attack order",
+                              "NPCs sorted by${_lootRangersTime == 0 ? ' previous ' : ''}Loot Rangers' attack order",
                               style: TextStyle(
                                 fontSize: 12,
                               ),
@@ -639,15 +639,22 @@ class _LootPageState extends State<LootPage> {
     if (response.statusCode == 200) {
       final lrJson = lootRangersFromJson(response.body);
 
-      _lootRangersTime = lrJson.time.clear * 1000;
+      if (lrJson.time.clear == 0) {
+        _lootRangersTime = 0;
+      } else {
+        _lootRangersTime = lrJson.time.clear * 1000;
+      }
 
       _lootRangersNameOrder.clear();
       for (int i = 0; i < lrJson.order.length; i++) {
         var id = lrJson.order[i];
         lrJson.npcs.forEach((key, value) {
-          if (key.toString() == id.toString()) {
-            _lootRangersNameOrder.add(value.name);
-            _lootRangersIdOrder.add(key);
+          // If [clear] is false, the NPC won't participate in this attack
+          if (value.clear) {
+            if (key.toString() == id.toString()) {
+              _lootRangersNameOrder.add(value.name);
+              _lootRangersIdOrder.add(key);
+            }
           }
         });
       }
@@ -828,54 +835,58 @@ class _LootPageState extends State<LootPage> {
               )
             ],
           ),
-          Text("Next attack $timeString"),
-          Text("Order: ${_lootRangersNameOrder.join(", ")}"),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  child: Icon(
-                    MdiIcons.knifeMilitary,
-                    size: 20,
-                    color: minutesRemaining > 0 && minutesRemaining < 2 ? Colors.red : _themeProvider.mainText,
-                  ),
-                  onTap: () async {
-                    // This is a Loot Rangers alert for one or more NPCs
-                    var notes = <String>[];
-                    var colors = <String>[];
-                    for (var i = 0; i < _lootRangersNameOrder.length; i++) {
-                      colors.add("green");
-                      if (i == 0) {
-                        notes.add("Attacks due to commence at $timeString!");
-                      } else {
-                        notes.add("");
+          if (_lootRangersTime == 0)
+            Text("Next attack not set!", style: TextStyle(color: Colors.orange[700]))
+          else
+            Text("Next attack $timeString"),
+          if (_lootRangersTime > 0) Text("Order: ${_lootRangersNameOrder.join(", ")}"),
+          if (_lootRangersTime > 0)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GestureDetector(
+                    child: Icon(
+                      MdiIcons.knifeMilitary,
+                      size: 20,
+                      color: minutesRemaining > 0 && minutesRemaining < 2 ? Colors.red : _themeProvider.mainText,
+                    ),
+                    onTap: () async {
+                      // This is a Loot Rangers alert for one or more NPCs
+                      var notes = <String>[];
+                      var colors = <String>[];
+                      for (var i = 0; i < _lootRangersNameOrder.length; i++) {
+                        colors.add("green");
+                        if (i == 0) {
+                          notes.add("Attacks due to commence $timeString!");
+                        } else {
+                          notes.add("");
+                        }
                       }
-                    }
 
-                    // Open chaining browser for Loot Rangers
-                    context.read<WebViewProvider>().openBrowserPreference(
-                        context: context,
-                        url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
-                        useDialog: false,
-                        isChainingBrowser: true,
-                        awaitable: true,
-                        chainingPayload: ChainingPayload()
-                          ..attackIdList = _lootRangersIdOrder
-                          ..attackNameList = _lootRangersNameOrder
-                          ..attackNotesList = notes
-                          ..attackNotesColorList = colors
-                          ..showNotes = true
-                          ..showBlankNotes = false
-                          ..showOnlineFactionWarning = false);
-                  },
+                      // Open chaining browser for Loot Rangers
+                      context.read<WebViewProvider>().openBrowserPreference(
+                          context: context,
+                          url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
+                          useDialog: false,
+                          isChainingBrowser: true,
+                          awaitable: true,
+                          chainingPayload: ChainingPayload()
+                            ..attackIdList = _lootRangersIdOrder
+                            ..attackNameList = _lootRangersNameOrder
+                            ..attackNotesList = notes
+                            ..attackNotesColorList = colors
+                            ..showNotes = true
+                            ..showBlankNotes = false
+                            ..showOnlineFactionWarning = false);
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(width: 15),
-              notificationIcon,
-            ],
-          ),
+                SizedBox(width: 15),
+                notificationIcon,
+              ],
+            ),
         ],
       ),
     );
@@ -916,7 +927,7 @@ class _LootPageState extends State<LootPage> {
       } else {
         // We update Torn every 30 seconds, in case there are some changes
         _tornTicks++;
-        if (_tornTicks > 30) {
+        if (_tornTicks > 40) {
           await _cancelPassedNotifications();
           await _updateWithTornApi(tsNow);
           _tornTicks = 0;
