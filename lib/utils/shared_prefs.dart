@@ -205,6 +205,7 @@ class Prefs {
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kUseUhcRevive = "pda_useUhcRevive";
   final String _kUseHelaRevive = "pda_useHelaRevive";
+  final String _kUseWtfRevive = "pda_useWtfRevive";
 
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
@@ -1825,6 +1826,16 @@ class Prefs {
   Future<bool> setUseHelaRevive(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseHelaRevive, value);
+  }
+
+  Future<bool> getUseWtfRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseWtfRevive) ?? false;
+  }
+
+  Future<bool> setUseWtfRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseWtfRevive, value);
   }
 
   /// ----------------------------

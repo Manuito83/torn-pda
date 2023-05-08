@@ -39,6 +39,7 @@ import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
+import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
 import 'package:http/http.dart' as http;
@@ -242,6 +243,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _nukeReviveActive = false;
   bool _uhcReviveActive = false;
   bool _helaReviveActive = false;
+  bool _wtfReviveActive = false;
 
   bool _warnAboutChains = false;
   bool _showHeaderWallet = false;
@@ -1140,6 +1142,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: HelaReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
+                  if (_user.status.state == 'Hospital' && _wtfReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: WtfReviveButton(
                         themeProvider: _themeProvider,
                         user: _user,
                         webViewProvider: _webViewProvider,
@@ -5845,6 +5857,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _nukeReviveActive = await Prefs().getUseNukeRevive();
     _uhcReviveActive = await Prefs().getUseUhcRevive();
     _helaReviveActive = await Prefs().getUseHelaRevive();
+    _wtfReviveActive = await Prefs().getUseWtfRevive();
 
     _warnAboutChains = await Prefs().getWarnAboutChains();
     _showHeaderWallet = await Prefs().getShowHeaderWallet();

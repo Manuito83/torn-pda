@@ -54,10 +54,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_1_0_3 = "Added API call rate bar widget and warning (see Settings)";
     String feat3_1_0_8 = "Browser long-press menu now also adds a shortcut to the target link";
     String feat3_1_0_9 = "Full update in War now updates all members faster";
-    String feat3_1_0_10 = "Fixed Loot Rangers loot order in certain conditions";
-    String feat3_1_0_11 = "Fixed issues redirecting to attack pages in certain conditions";
-    String feat3_1_0_12 = "Fixed issues when launching the app from a notification";
-    String feat3_1_0_13 = "Fixed pull-to-refresh in short pages";
+    String feat3_1_0_10 = "Added WTF Revive";
+    String feat3_1_0_11 = "Fixed Loot Rangers loot order in certain conditions";
+    String feat3_1_0_12 = "Fixed issues redirecting to attack pages in certain conditions";
+    String feat3_1_0_13 = "Fixed issues when launching the app from a notification";
+    String feat3_1_0_14 = "Fixed pull-to-refresh in short pages";
     if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
     v3_1_0.features.add(feat3_1_0_2);
     v3_1_0.features.add(feat3_1_0_3);
@@ -71,6 +72,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.features.add(feat3_1_0_11);
     v3_1_0.features.add(feat3_1_0_12);
     v3_1_0.features.add(feat3_1_0_13);
+    v3_1_0.features.add(feat3_1_0_14);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();
