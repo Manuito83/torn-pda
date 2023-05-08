@@ -362,7 +362,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
-      /// hospital timer, company applications, etc. There is a but on iOS if we activate it
+      /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
       /// and deactivate it dynamically, where onLoadResource stops triggering!
       //useShouldInterceptAjaxRequest: false,
       mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
@@ -720,15 +720,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ],
                       ),
                     ),
-                    onTap: () async {
-                      setState(() {
-                        _closeButtonTriggered = true;
-                      });
-                      await Future.delayed(const Duration(milliseconds: 200));
-                      if (mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
+                    onTap: _closeButtonTriggered
+                        ? null
+                        : () async {
+                            setState(() {
+                              _closeButtonTriggered = true;
+                            });
+                            await Future.delayed(const Duration(milliseconds: 200));
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          },
                   ),
                 ),
               ),
@@ -1451,7 +1453,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           },
           onConsoleMessage: (controller, consoleMessage) async {
             if (consoleMessage.message != "") {
-              if (!consoleMessage.message.contains("Refused to connect to ")) {
+              if (!consoleMessage.message.contains("Refused to connect to ") &&
+                  !consoleMessage.message.contains("for scope ('https://www.torn.com/') with script "
+                      "('https://www.torn.com/js/serviceWorkers/main_sw.js')")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
@@ -1476,41 +1480,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
           },
           /*
-              shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-                // VAULT EVENTS
-                if (_vaultTriggered) {
-                  if (x.data.toString().contains("step=vaultProperty&withdraw") ||
-                      x.data.toString().contains("step=vaultProperty&deposit")) {
-                    // Wait a couple of seconds to let the html load
-                    Future.delayed(Duration(seconds: 2)).then((value) async {
-                      // Reset _vaultTriggered so that we can call _assessVault() again
-                      _reassessVault();
-                    });
-                  }
-                }
-            
-                /*
-                // This will intercept ajax calls performed when the bazaar reached 100 items
-                // and needs to be reloaded, so that we can remove and add again the fill buttons
-                if (x == null) return x;
-                if (x.data == null) return x;
-                if (x.url == null) return x;
-            
-                if (x.data.contains("step=getList&type=All&start=") &&
-                    x.url.contains('inventory.php') &&
-                    _bazaarActive &&
-                    _bazaarFillActive) {
-                  webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
-                  Future.delayed(const Duration(seconds: 2)).then((value) {
-                    webView.evaluateJavascript(source: addBazaarFillButtonsJS());
-                  });
-                }
-                */
-            
-                // MAIN AJAX REQUEST RETURN
-                return x;
-              },
-              */
+            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+              // MAIN AJAX REQUEST RETURN
+              return x;
+            },
+          */
         ),
         // Some pages (e.g. travel or by double clicking a cooldown icon) don't have any scroll and the
         // pull to refresh does not trigger. In this case, we setup an area at the top, over Torn's top bar
@@ -1873,33 +1847,35 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         systemOverlayStyle: SystemUiOverlayStyle.light,
         leading: IconButton(
           icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
-          onPressed: () async {
-            // Normal behavior is just to pop and go to previous page
-            if (_backButtonPopsContext) {
-              if (widget.customCallBack != null) {
-                widget.customCallBack();
-              }
-              setState(() {
-                _closeButtonTriggered = true;
-              });
-              await Future.delayed(const Duration(milliseconds: 200));
-              if (mounted) {
-                Navigator.of(context).pop();
-              }
-            } else {
-              // But we can change and go back to previous page in certain
-              // situations (e.g. when going for the vault while trading),
-              // in which case we need to return to previous target
-              final backPossible = await webView.canGoBack();
-              if (backPossible) {
-                webView.goBack();
-              } else {
-                if (!mounted) return;
-                Navigator.pop(context);
-              }
-              _backButtonPopsContext = true;
-            }
-          },
+          onPressed: _closeButtonTriggered
+              ? null
+              : () async {
+                  // Normal behavior is just to pop and go to previous page
+                  if (_backButtonPopsContext) {
+                    if (widget.customCallBack != null) {
+                      widget.customCallBack();
+                    }
+                    setState(() {
+                      _closeButtonTriggered = true;
+                    });
+                    await Future.delayed(const Duration(milliseconds: 200));
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  } else {
+                    // But we can change and go back to previous page in certain
+                    // situations (e.g. when going for the vault while trading),
+                    // in which case we need to return to previous target
+                    final backPossible = await webView.canGoBack();
+                    if (backPossible) {
+                      webView.goBack();
+                    } else {
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                    }
+                    _backButtonPopsContext = true;
+                  }
+                },
         ),
         title: GestureDetector(
           onTap: () {
