@@ -37,17 +37,24 @@ class WtfRevive {
 
     try {
       var response = await http.post(
-        Uri.parse('https://port203.de/wtfapi/revive'),
+        Uri.parse('https://what-the-f.de/wtfapi/revive'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: bodyOut,
       );
 
-      return [response.statusCode.toString(), json.decode(response.body)["message"]];
+      String code = response.statusCode.toString();
+      String message = json.decode(response.body)["message"];
+
+      if (code == "500") {
+        message = "Error: an unknown error has occurred, please report this to WTF leadership";
+      }
+
+      return [code, message];
     } catch (e) {
       log(e.toString());
     }
-    return ["Error", "There was an error contacting WTF, please contact them for more information!"];
+    return ["Error", "Error: an unknown error has occurred, please report this to WTF leadership"];
   }
 }

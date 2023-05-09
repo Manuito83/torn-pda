@@ -136,7 +136,7 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                                 style: TextStyle(color: Colors.blue),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async {
-                                    var url = 'https://discord.gg/ryswZcSM';
+                                    var url = 'https://discord.gg/S5Qp6aZd';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }

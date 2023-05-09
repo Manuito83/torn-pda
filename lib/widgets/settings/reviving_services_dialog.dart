@@ -129,7 +129,7 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          "Wtf Reviving Services",
+                          "WTF Reviving Services",
                           style: TextStyle(
                             fontSize: 13,
                           ),
