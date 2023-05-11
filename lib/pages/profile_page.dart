@@ -4787,11 +4787,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
         Prefs().setEventsSave(eventsListToSave);
         Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
+
+        // Refresh events
+        setState(() {
+          _events = List<Event>.from(allEventsResponse);
+        });
+      } else {
+        // In case of error, return what's saved
+        setState(() {
+          _events = List<Event>.from(eventsSave);
+        });
       }
-      // Refresh events
-      setState(() {
-        _events = List<Event>.from(allEventsResponse);
-      });
     } catch (e, trace) {
       log("Error at Profile Events: $e >> $trace");
       FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");

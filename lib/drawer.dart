@@ -279,10 +279,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    selectNotificationStream.close();
+    selectNotificationStream?.close();
     WidgetsBinding.instance.removeObserver(this);
-    _deepLinkSub.cancel();
-    _intentListenerSub.cancel();
+    _deepLinkSub?.cancel();
+    _intentListenerSub?.cancel();
     super.dispose();
   }
 
