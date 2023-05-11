@@ -6,6 +6,7 @@ import 'dart:developer';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
@@ -19,6 +20,11 @@ import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+enum UiMode {
+  window,
+  fullScreen,
+}
 
 class TabDetails {
   bool sleepTab = false;
@@ -58,12 +64,42 @@ class WebViewProvider extends ChangeNotifier {
   List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
+  bool usingDialog = false;
+
+  UiMode _currentUiMode = UiMode.window;
+  UiMode get currentUiMode => _currentUiMode;
+  set currentUiMode(UiMode value) {
+    _currentUiMode = value;
+    _currentUiMode == UiMode.fullScreen
+        ? SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)
+        : SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    notifyListeners();
+  }
+
+  // Vertical expanding menu (menu button)
+  bool verticalMenuIsOpen = false;
+
+  verticalMenuOpen() {
+    verticalMenuIsOpen = true;
+    notifyListeners();
+  }
+
+  verticalMenuClose() {
+    verticalMenuIsOpen = false;
+    notifyListeners();
+  }
+
   StreamController browserHasClosedStream = StreamController.broadcast();
 
   bool chatRemovalEnabledGlobal = false;
-  bool chatRemovalActiveGlobal = false;
+  bool chatRemovalWhileFullScreen = false;
 
-  bool _useDialog = false;
+  bool _chatRemovalActiveGlobal = false;
+  bool get chatRemovalActiveGlobal => _chatRemovalActiveGlobal;
+  set chatRemovalActiveGlobal(bool value) {
+    _chatRemovalActiveGlobal = value;
+    notifyListeners();
+  }
 
   String pendingThemeSync = "";
 
@@ -127,7 +163,7 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
 
-    _useDialog = dialog;
+    usingDialog = dialog;
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
@@ -241,7 +277,7 @@ class WebViewProvider extends ChangeNotifier {
                 windowId: windowId,
                 customUrl: url,
                 key: key,
-                dialog: _useDialog,
+                dialog: usingDialog,
                 useTabs: true,
                 chatRemovalActive: chatRemovalActive,
                 isChainingBrowser: isChainingBrowser,
@@ -251,7 +287,7 @@ class WebViewProvider extends ChangeNotifier {
             ? SleepingWebView(
                 customUrl: url,
                 key: key,
-                dialog: _useDialog,
+                dialog: usingDialog,
                 useTabs: true,
                 chatRemovalActive: chatRemovalActive,
                 isChainingBrowser: isChainingBrowser,
@@ -330,6 +366,14 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     _tabList.removeAt(position);
+    notifyListeners();
+    _saveTabs();
+  }
+
+  void wipeTabs() async {
+    _currentTab = 0;
+    _tabList[0]?.webViewKey?.currentState?.resumeWebview();
+    _tabList.removeRange(1, _tabList.length);
     notifyListeners();
     _saveTabs();
   }
@@ -418,6 +462,20 @@ class WebViewProvider extends ChangeNotifier {
     }
     _saveTabs();
     notifyListeners();
+  }
+
+  void removeAllChatsFullScreen() {
+    chatRemovalWhileFullScreen = true;
+    for (var tab in _tabList) {
+      tab.webViewKey.currentState?.hideChatWhileFullScreen();
+    }
+  }
+
+  void showAllChatsFullScreen() {
+    chatRemovalWhileFullScreen = false;
+    for (var tab in _tabList) {
+      tab.webViewKey.currentState?.showChatAfterFullScreen();
+    }
   }
 
   bool tryGoBack() {

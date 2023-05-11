@@ -852,37 +852,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Text("Use browser shortcuts"),
-              Switch(
-                value: _settingsProvider.showFavoritesInTabBar,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.showFavoritesInTabBar = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Shows a favorites icon in the tab bar that opens a quick menu with shortcuts. NOTE: this will only '
-            'be accessible if you are using tabs!',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
       ],
     );
   }

@@ -196,7 +196,6 @@ class Prefs {
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
-  final String _kShowFavoritesInTabBar = "pda_showFavoritesInTabBar";
   final String _kShortcutTile = "pda_shortcutTile";
   final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
@@ -237,6 +236,10 @@ class Prefs {
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
+  final String _kShowQuickMenuInTabBar = "pda_showQuickMenuInTabBar";
+  final String _kFullScreenExplanationShown = "pda_fullScreenExplanationShown";
+  final String _kFullScreenRemovesWidgets = "pda_fullScreenRemovesWidgets";
+  final String _kFullScreenRemovesChat = "pda_fullScreenRemovesChat";
 
   // Items
   final String _kItemsSort = "pda_itemssSort";
@@ -1881,16 +1884,6 @@ class Prefs {
     return prefs.setStringList(_kActiveShortcutsList, value);
   }
 
-  Future<bool> getShowFavoritesInTabBar() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowFavoritesInTabBar) ?? true;
-  }
-
-  Future<bool> setShowFavoritesInTabBar(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowFavoritesInTabBar, value);
-  }
-
   /// ----------------------------
   /// Methods for easy crimes
   /// ----------------------------
@@ -2669,6 +2662,48 @@ class Prefs {
   Future<bool> setReminderAboutHideTabFeature(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kReminderAboutHideTabFeature, value);
+  }
+
+  // -- Quick menu tab
+
+  Future<bool> getShowQuickMenuInTabBar() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowQuickMenuInTabBar) ?? true;
+  }
+
+  Future<bool> setShowQuickMenuInTabBar(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowQuickMenuInTabBar, value);
+  }
+
+  Future<bool> getFullScreenExplanationShown() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenExplanationShown) ?? false;
+  }
+
+  Future<bool> setFullScreenExplanationShown(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenExplanationShown, value);
+  }
+
+  Future<bool> getFullScreenRemovesWidgets() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenRemovesWidgets) ?? true;
+  }
+
+  Future<bool> setFullScreenRemovesWidgets(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenRemovesWidgets, value);
+  }
+
+  Future<bool> getFullScreenRemovesChat() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenRemovesChat) ?? true;
+  }
+
+  Future<bool> setFullScreenRemovesChat(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenRemovesChat, value);
   }
 
   /// ----------------------------

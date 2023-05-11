@@ -270,6 +270,30 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showQuickMenuInTabBar = true;
+  bool get showQuickMenuInTabBar => _showQuickMenuInTabBar;
+  set showQuickMenuInTabBar(bool value) {
+    _showQuickMenuInTabBar = value;
+    Prefs().setShowQuickMenuInTabBar(_showQuickMenuInTabBar);
+    notifyListeners();
+  }
+
+  var _fullScreenRemovesWidgets = true;
+  bool get fullScreenRemovesWidgets => _fullScreenRemovesWidgets;
+  set fullScreenRemovesWidgets(bool value) {
+    _fullScreenRemovesWidgets = value;
+    Prefs().setFullScreenRemovesWidgets(_fullScreenRemovesWidgets);
+    notifyListeners();
+  }
+
+  var _fullScreenRemovesChat = true;
+  bool get fullScreenRemovesChat => _fullScreenRemovesChat;
+  set fullScreenRemovesChat(bool value) {
+    _fullScreenRemovesChat = value;
+    Prefs().setFullScreenRemovesChat(_fullScreenRemovesChat);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -615,14 +639,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _showFavoritesInTabBar = true;
-  bool get showFavoritesInTabBar => _showFavoritesInTabBar;
-  set showFavoritesInTabBar(bool value) {
-    _showFavoritesInTabBar = value;
-    Prefs().setShowFavoritesInTabBar(_showFavoritesInTabBar);
-    notifyListeners();
-  }
-
   var _appwidgetDarkMode = false;
   bool get appwidgetDarkMode => _appwidgetDarkMode;
   set appwidgetDarkMode(bool value) {
@@ -662,6 +678,9 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
+    _showQuickMenuInTabBar = await Prefs().getShowQuickMenuInTabBar();
+    _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
+    _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
@@ -804,7 +823,6 @@ class SettingsProvider extends ChangeNotifier {
     _debugMessages = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
-    _showFavoritesInTabBar = await Prefs().getShowFavoritesInTabBar();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
 

@@ -76,7 +76,7 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
         animation: _animation,
         builder: (context, child) {
           return Transform.scale(
-            scale: 1.015 - (_controller.value * 0.015),
+            scale: 0.995 + (_controller.value * 0.005),
             child: child,
           );
         },

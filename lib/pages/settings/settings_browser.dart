@@ -88,11 +88,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 15),
-                            _tabs(),
+                            _userScripts(),
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 10),
-                            _userScripts(),
+                            _tabs(),
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 10),
@@ -1149,7 +1149,100 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ],
             ),
-          )
+          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Show quick menu tab"),
+              Switch(
+                value: _settingsProvider.showQuickMenuInTabBar,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.showQuickMenuInTabBar = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Shows an extra tab that opens a quick menu with shortcuts, full screen mode and more. NOTE: this will '
+            'only be accessible if you are using tabs!',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Full screen removes widgets"),
+              Switch(
+                value: _settingsProvider.fullScreenRemovesWidgets,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenRemovesWidgets = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode in the browser, when enabled, should also get rid of all of '
+            'Torn PDA widgets',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Full screen removes chat"),
+              Switch(
+                value: _settingsProvider.fullScreenRemovesChat,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenRemovesChat = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode in the browser, when enabled, should also get rid of all of '
+            'Torn chat bubbles in game',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

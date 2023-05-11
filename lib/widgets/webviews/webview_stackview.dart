@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +15,11 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_fixed.dart';
+import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
+import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
 import 'package:torn_pda/widgets/webviews/tabs_excess_dialog.dart';
+import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 
@@ -56,8 +63,11 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   // Showcases
   bool _showCasesNeedToWait = false;
   GlobalKey _showcaseTabsGeneral = GlobalKey();
-  GlobalKey _showCaseFavoritesButton = GlobalKey();
+  GlobalKey _showQuickMenuButton = GlobalKey();
   GlobalKey _showCaseNewTabButton = GlobalKey();
+
+  Animation<double> _menuTabOpacity;
+  AnimationController _menuTabAnimationController;
 
   @override
   void initState() {
@@ -89,6 +99,17 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       chainingPayload: widget.chainingPayload,
       restoreSessionCookie: _settingsProvider.restoreSessionCookie,
     );
+
+    _menuTabAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5),
+    );
+
+    _menuTabOpacity = CurvedAnimation(
+      parent: _menuTabAnimationController,
+      curve: Curves.easeIn,
+    );
+    _menuTabAnimationController.forward();
   }
 
   @override
@@ -110,86 +131,96 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
             _launchShowCases(_);
             return Scaffold(
               backgroundColor: _themeProvider.canvas,
-              body: FutureBuilder(
-                future: providerInitialised,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    var allWebViews = <Widget>[];
-                    for (var tab in _webViewProvider.tabList) {
-                      if (tab.webView == null) {
-                        allWebViews.add(SizedBox.shrink());
+              body: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  FutureBuilder(
+                    future: providerInitialised,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        var allWebViews = <Widget>[];
+                        for (var tab in _webViewProvider.tabList) {
+                          if (tab.webView == null) {
+                            allWebViews.add(SizedBox.shrink());
+                          } else {
+                            allWebViews.add(tab.webView);
+                          }
+                        }
+
+                        if (allWebViews.isEmpty) _closeWithError();
+
+                        if (!secondaryInitialised) {
+                          secondaryInitialised = true;
+                          _initialiseSecondary();
+                        }
+
+                        if (_useTabs) {
+                          try {
+                            return AnimatedIndexedStack(
+                              index: _webViewProvider.currentTab,
+                              children: allWebViews,
+                              duration: 100,
+                              errorCallback: _closeWithError,
+                            );
+                          } catch (e) {
+                            FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
+                            FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                            _closeWithError();
+                          }
+                        } else {
+                          try {
+                            return AnimatedIndexedStack(
+                              index: 0,
+                              children: [
+                                allWebViews[0],
+                              ],
+                              duration: 100,
+                              errorCallback: _closeWithError,
+                            );
+                            /*
+                            return IndexedStack(
+                              index: 0,
+                              children: [
+                                allWebViews[0],
+                              ],
+                            );
+                            */
+                          } catch (e) {
+                            FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
+                            FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                            _closeWithError();
+                          }
+                        }
                       } else {
-                        allWebViews.add(tab.webView);
+                        return Center(child: CircularProgressIndicator());
                       }
-                    }
-
-                    if (allWebViews.isEmpty) _closeWithError();
-
-                    if (!secondaryInitialised) {
-                      secondaryInitialised = true;
-                      _initialiseSecondary();
-                    }
-
-                    if (_useTabs) {
-                      try {
-                        return AnimatedIndexedStack(
-                          index: _webViewProvider.currentTab,
-                          children: allWebViews,
-                          duration: 100,
-                          errorCallback: _closeWithError,
-                        );
-                      } catch (e) {
-                        FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
-                        FirebaseCrashlytics.instance.recordError(e.toString(), null);
-                        _closeWithError();
-                      }
-                    } else {
-                      try {
-                        return AnimatedIndexedStack(
-                          index: 0,
-                          children: [
-                            allWebViews[0],
-                          ],
-                          duration: 100,
-                          errorCallback: _closeWithError,
-                        );
-                        /*
-                        return IndexedStack(
-                          index: 0,
-                          children: [
-                            allWebViews[0],
-                          ],
-                        );
-                        */
-                      } catch (e) {
-                        FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
-                        FirebaseCrashlytics.instance.recordError(e.toString(), null);
-                        _closeWithError();
-                      }
-                    }
-                  } else {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  return SizedBox.shrink();
-                },
-              ),
-              bottomNavigationBar: FutureBuilder(
-                future: providerInitialised,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done && _useTabs) {
-                    if (_webViewProvider.hideTabs) {
-                      return Divider(
-                        color: Color(_settingsProvider.tabsHideBarColor),
-                        thickness: 4,
-                        height: 4,
-                      );
-                    } else {
-                      return _bottomNavBar(_);
-                    }
-                  } else {
-                    return SizedBox.shrink();
-                  }
-                },
+                      return SizedBox.shrink();
+                    },
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: _webViewProvider.usingDialog && _webViewProvider.currentUiMode == UiMode.window ? 38 : 0,
+                    ),
+                    child: FutureBuilder(
+                      future: providerInitialised,
+                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done && _useTabs) {
+                          if (_webViewProvider.hideTabs) {
+                            return Divider(
+                              color: Color(_settingsProvider.tabsHideBarColor),
+                              thickness: 4,
+                              height: 4,
+                            );
+                          } else {
+                            return _bottomNavBar(_);
+                          }
+                        } else {
+                          return SizedBox.shrink();
+                        }
+                      },
+                    ),
+                  )
+                ],
               ),
             );
           }),
@@ -210,9 +241,9 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
 
       // Show tab bar showcases
       if (!_showCasesNeedToWait) {
-        if (!_settingsProvider.showCases.contains("tabs_favoritesButton")) {
-          _settingsProvider.addShowCase = "tabs_favoritesButton";
-          showCases.add(_showCaseFavoritesButton);
+        if (!_settingsProvider.showCases.contains("tabs_quickMenuButton")) {
+          _settingsProvider.addShowCase = "tabs_quickMenuButton";
+          showCases.add(_showQuickMenuButton);
         }
         if (!_settingsProvider.showCases.contains("tabs_newTabButton")) {
           _settingsProvider.addShowCase = "tabs_newTabButton";
@@ -256,16 +287,19 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   @override
   Future dispose() async {
     _webViewProvider.clearOnDispose();
+    _webViewProvider.verticalMenuIsOpen = false;
     _webViewProvider.browserHasClosedStream.add(true);
     _animationController.dispose();
     super.dispose();
   }
 
   Widget _bottomNavBar(BuildContext _) {
+    // Main tab
     var mainTab = GestureDetector(
       key: UniqueKey(),
       onTap: () {
         _webViewProvider.activateTab(0);
+        _webViewProvider.verticalMenuClose();
       },
       onLongPress: () {
         String message = "Added duplicated tab!";
@@ -282,6 +316,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
             historyForward: _webViewProvider.tabList[0].historyForward,
           );
         }
+        _webViewProvider.verticalMenuClose();
 
         BotToast.showText(
           crossPage: false,
@@ -295,44 +330,62 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
           contentPadding: EdgeInsets.all(10),
         );
       },
-      child: Container(
-        color: _webViewProvider.currentTab == 0
-            ? _themeProvider.navSelected
-            : _themeProvider.currentTheme == AppTheme.extraDark
-                ? Colors.black
-                : _themeProvider.canvas,
-        child: Row(
-          children: [
-            Padding(
-              padding: _webViewProvider.useTabIcons
-                  ? const EdgeInsets.all(10.0)
-                  : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-              child: _webViewProvider.useTabIcons
-                  ? SizedBox(width: 24, child: _getIcon(0))
-                  : Container(
-                      constraints: BoxConstraints(maxWidth: 100, minWidth: 24),
-                      child: Text(
-                        _webViewProvider.tabList[0].pageTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _webViewProvider.tabList[0].currentUrl.contains("sid=attack&user2ID=2225097") ||
-                                  _webViewProvider.tabList[0].currentUrl.contains("profiles.php?XID=2225097") ||
-                                  _webViewProvider.tabList[0].currentUrl.contains("https://www.torn.com/forums.php#/"
-                                      "p=threads&f=67&t=16163503&b=0&a=0")
-                              ? Colors.pink
-                              : _themeProvider.mainText,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Container(
+            color: _webViewProvider.currentTab == 0
+                ? _themeProvider.navSelected
+                : _themeProvider.currentTheme == AppTheme.extraDark
+                    ? Colors.black
+                    : _themeProvider.canvas,
+            child: Row(
+              children: [
+                Padding(
+                  padding: _webViewProvider.useTabIcons
+                      ? const EdgeInsets.all(10.0)
+                      : const EdgeInsets.symmetric(horizontal: 5),
+                  child: _webViewProvider.useTabIcons
+                      ? SizedBox(width: 24, height: 20, child: _getIcon(0))
+                      : SizedBox(
+                          height: 40,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Container(
+                                constraints: BoxConstraints(maxWidth: 100, minWidth: 24),
+                                child: Text(
+                                  _webViewProvider.tabList[0].pageTitle,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        _webViewProvider.tabList[0].currentUrl.contains("sid=attack&user2ID=2225097") ||
+                                                _webViewProvider.tabList[0].currentUrl
+                                                    .contains("profiles.php?XID=2225097") ||
+                                                _webViewProvider.tabList[0].currentUrl
+                                                    .contains("https://www.torn.com/forums.php#/"
+                                                        "p=threads&f=67&t=16163503&b=0&a=0")
+                                            ? Colors.pink
+                                            : _themeProvider.mainText,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: Colors.grey[400],
+                ),
+              ],
             ),
-            VerticalDivider(
-              width: 1,
-              thickness: 1,
-              color: Colors.grey[400],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
 
@@ -356,51 +409,61 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         child: GestureDetector(
           onTap: () {
             _webViewProvider.activateTab(i);
+            _webViewProvider.verticalMenuClose();
           },
           onDoubleTap: () {
             if (_webViewProvider.tabList.length > 0) {
+              _webViewProvider.verticalMenuClose();
               _webViewProvider.removeTab(position: i);
             }
           },
-          child: Container(
-            color: _webViewProvider.currentTab == i
-                ? _themeProvider.navSelected
-                : _themeProvider.currentTheme == AppTheme.extraDark
-                    ? Colors.black
-                    : _themeProvider.canvas,
-            child: Row(
-              children: [
-                Padding(
-                  padding: _webViewProvider.useTabIcons
-                      ? const EdgeInsets.all(10.0)
-                      : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  child: _webViewProvider.useTabIcons
-                      ? SizedBox(width: 24, child: _getIcon(i))
-                      : Container(
-                          constraints: BoxConstraints(maxWidth: 100, minWidth: 34),
-                          child: Text(
-                            _webViewProvider.tabList[i].pageTitle,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _webViewProvider.tabList[i].currentUrl.contains("sid=attack&user2ID=2225097") ||
-                                      _webViewProvider.tabList[i].currentUrl.contains("profiles.php?XID=2225097") ||
-                                      _webViewProvider.tabList[i].currentUrl
-                                          .contains("https://www.torn.com/forums.php#/"
-                                              "p=threads&f=67&t=16163503&b=0&a=0")
-                                  ? Colors.pink
-                                  : _themeProvider.mainText,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Container(
+                color: _webViewProvider.currentTab == i
+                    ? _themeProvider.navSelected
+                    : _themeProvider.currentTheme == AppTheme.extraDark
+                        ? Colors.black
+                        : _themeProvider.canvas,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      child: _webViewProvider.useTabIcons
+                          ? SizedBox(width: 24, child: _getIcon(i))
+                          : Container(
+                              constraints: BoxConstraints(maxWidth: 100, minWidth: 34),
+                              child: Text(
+                                _webViewProvider.tabList[i].pageTitle,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _webViewProvider.tabList[i].currentUrl
+                                              .contains("sid=attack&user2ID=2225097") ||
+                                          _webViewProvider.tabList[i].currentUrl.contains("profiles.php?XID=2225097") ||
+                                          _webViewProvider.tabList[i].currentUrl
+                                              .contains("https://www.torn.com/forums.php#/"
+                                                  "p=threads&f=67&t=16163503&b=0&a=0")
+                                      ? Colors.pink
+                                      : _themeProvider.mainText,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                    ),
+                    SizedBox(
+                      height: 40,
+                      child: VerticalDivider(
+                        width: 1,
+                        thickness: 1,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
                 ),
-                VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  color: Colors.grey[400],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
@@ -419,179 +482,292 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
           "\n\nVisit the Tips section for more information!\n",
       descTextStyle: TextStyle(fontSize: 13),
       tooltipPadding: EdgeInsets.all(20),
-      child: Container(
-        height: 40,
-        decoration: new BoxDecoration(
-          color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-          border: Border(
-            top: BorderSide(
-              color: Colors.grey,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Expanded(
-              child: Container(
-                // Container with color so that scaling on browser scaling does not interfere with are with no tabs
-                // (happens with full browser)
+      child: GestureDetector(
+        onTap: () async {
+          // We need to wait longer than the [_menuTabAnimationController] animation to avoid
+          // notifying listeners during widget build
+          await Future.delayed(Duration(milliseconds: 100));
+          if (mounted) _webViewProvider.verticalMenuClose();
+        },
+        child: Container(
+          color: Colors.transparent,
+          height: _webViewProvider.verticalMenuIsOpen ? 300 : 40,
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              Container(
+                height: 40,
                 color: _themeProvider.canvas,
-                child: Row(
-                  children: [
-                    mainTab,
-                    VerticalDivider(
-                      width: 2,
-                      thickness: 2,
-                      color: _themeProvider.mainText,
-                    ),
-                    Expanded(
-                      child: ReorderableListView(
-                        scrollDirection: Axis.horizontal,
-                        children: secondaryTabs,
-                        onReorder: (start, end) {
-                          if (start == 0 || end == 0) return;
-                          // Save where the current active tab is
-                          var activeKey = _webViewProvider.tabList[_webViewProvider.currentTab].webView.key;
-                          // Removing the item at oldIndex will shorten the list by 1
-                          if (start < end) end -= 1;
-                          // Do the move
-                          _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
-                          // Make sure we continue in our previous active tab
-                          for (var i = 0; i < _webViewProvider.tabList.length; i++) {
-                            if (_webViewProvider.tabList[i].webView?.key == activeKey) {
-                              _webViewProvider.activateTab(i);
-                              break;
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
-            if (_settingsProvider.showFavoritesInTabBar)
-              Showcase(
-                key: _showCaseFavoritesButton,
-                title: 'Favorites menu',
-                description: '\nTap to show a quick list of shortcuts.'
-                    '\n\nLong-press to add a new shortcut to the current page.',
-                targetPadding: const EdgeInsets.all(10),
-                disableMovingAnimation: true,
-                textColor: _themeProvider.mainText,
-                tooltipBackgroundColor: _themeProvider.secondBackground,
-                descTextStyle: TextStyle(fontSize: 13),
-                tooltipPadding: EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    VerticalDivider(
-                      width: 2,
-                      thickness: 2,
-                      color: _themeProvider.mainText,
-                    ),
-                    GestureDetector(
-                      child: Container(
-                        color: _themeProvider.navSelected,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            width: 24,
-                            child: Icon(
-                              MdiIcons.heartPlusOutline,
-                              color: _themeProvider.mainText,
-                            ),
-                          ),
-                        ),
-                      ),
-                      onTap: () async {
-                        return showDialog<void>(
-                          context: context,
-                          barrierDismissible: true,
-                          builder: (BuildContext context) {
-                            return WebviewShortcutsDialog(fromShortcut: true);
-                          },
-                        );
-                      },
-                      onLongPress: () {
-                        return showDialog<void>(
-                          context: context,
-                          barrierDismissible: false, // user must tap button!
-                          builder: (BuildContext context) {
-                            return CustomShortcutDialog(
-                              themeProvider: _themeProvider,
-                              title: _webViewProvider.currentTabTitle(),
-                              url: _webViewProvider.currentTabUrl(),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            Showcase(
-              key: _showCaseNewTabButton,
-              title: 'New tab button',
-              description: '\nTap to add a new tab.'
-                  '\n\nLong-press to change between icons and page titles in your tabs.',
-              targetPadding: const EdgeInsets.all(10),
-              disableMovingAnimation: true,
-              textColor: _themeProvider.mainText,
-              tooltipBackgroundColor: _themeProvider.secondBackground,
-              descTextStyle: TextStyle(fontSize: 13),
-              tooltipPadding: EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  VerticalDivider(
-                    width: _settingsProvider.showFavoritesInTabBar ? 1 : 2,
-                    thickness: _settingsProvider.showFavoritesInTabBar ? 1 : 2,
-                    color: _themeProvider.mainText,
-                  ),
-                  GestureDetector(
-                    child: Container(
-                      color: _themeProvider.navSelected,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          width: 24,
-                          child: Icon(
-                            Icons.add_circle_outline,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        mainTab,
+                        SizedBox(
+                          height: 40,
+                          child: VerticalDivider(
+                            width: 2,
+                            thickness: 2,
                             color: _themeProvider.mainText,
                           ),
                         ),
+                        Flexible(
+                          child: ReorderableListView(
+                            scrollDirection: Axis.horizontal,
+                            children: secondaryTabs,
+                            onReorder: (start, end) {
+                              if (start == 0 || end == 0) return;
+                              // Save where the current active tab is
+                              var activeKey = _webViewProvider.tabList[_webViewProvider.currentTab].webView.key;
+                              // Removing the item at oldIndex will shorten the list by 1
+                              if (start < end) end -= 1;
+                              // Do the move
+                              _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
+                              // Make sure we continue in our previous active tab
+                              for (var i = 0; i < _webViewProvider.tabList.length; i++) {
+                                if (_webViewProvider.tabList[i].webView?.key == activeKey) {
+                                  _webViewProvider.activateTab(i);
+                                  break;
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_settingsProvider.showQuickMenuInTabBar)
+                    Showcase(
+                      key: _showQuickMenuButton,
+                      title: 'Quick menu',
+                      description: '\nTap to show a quick list of quick actions, including shortcuts, '
+                          'fullscreen mode and more!',
+                      targetPadding: const EdgeInsets.all(10),
+                      disableMovingAnimation: true,
+                      textColor: _themeProvider.mainText,
+                      tooltipBackgroundColor: _themeProvider.secondBackground,
+                      descTextStyle: TextStyle(fontSize: 13),
+                      tooltipPadding: EdgeInsets.all(20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            height: 40,
+                            child: VerticalDivider(
+                              width: 2,
+                              thickness: 2,
+                              color: _themeProvider.mainText,
+                            ),
+                          ),
+                          FadeTransition(
+                            key: UniqueKey(),
+                            opacity: _menuTabOpacity,
+                            child: CircularMenuFixed(
+                              webViewProvider: _webViewProvider,
+                              alignment: Alignment.centerLeft,
+                              toggleButtonColor: Colors.transparent,
+                              toggleButtonIconColor: Colors.transparent,
+                              // Adds a return to windowed mode if we are in fullscreen with a double tap
+                              // Otherwise, the default double tap behavior applies
+                              doubleTapped: _webViewProvider.currentUiMode == UiMode.window
+                                  ? null
+                                  : () {
+                                      _webViewProvider.verticalMenuClose();
+                                      _webViewProvider.currentUiMode = UiMode.window;
+                                      if (_settingsProvider.fullScreenRemovesChat) {
+                                        _webViewProvider.showAllChatsFullScreen();
+                                      }
+                                    },
+                              backgroundWidget: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Container(
+                                    color: _themeProvider.navSelected,
+                                    child: Row(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                                          child: _webViewProvider.currentUiMode == UiMode.window
+                                              ? Icon(MdiIcons.dotsHorizontal)
+                                              : Icon(
+                                                  MdiIcons.dotsHorizontalCircleOutline,
+                                                  color: Colors.orange[800],
+                                                ),
+                                        ),
+                                        SizedBox(
+                                          height: 40,
+                                          child: VerticalDivider(
+                                            width: 1,
+                                            thickness: 1,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              items: [
+                                CircularMenuItem(
+                                  icon: MdiIcons.heartOutline,
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    return showDialog<void>(
+                                      context: context,
+                                      barrierDismissible: true,
+                                      builder: (BuildContext context) {
+                                        return WebviewShortcutsDialog(fromShortcut: true);
+                                      },
+                                    );
+                                  },
+                                ),
+                                CircularMenuItem(
+                                  icon: MdiIcons.heartPlusOutline,
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    return showDialog<void>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return CustomShortcutDialog(
+                                          themeProvider: _themeProvider,
+                                          title: _webViewProvider.currentTabTitle(),
+                                          url: _webViewProvider.currentTabUrl(),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                                CircularMenuItem(
+                                  icon: _webViewProvider.currentUiMode == UiMode.window
+                                      ? MdiIcons.fullscreen
+                                      : MdiIcons.fullscreenExit,
+                                  color: _webViewProvider.currentUiMode == UiMode.window ? null : Colors.orange,
+                                  onTap: () async {
+                                    _webViewProvider.verticalMenuClose();
+                                    if (_webViewProvider.currentUiMode == UiMode.window) {
+                                      _webViewProvider.currentUiMode = UiMode.fullScreen;
+                                      if (_settingsProvider.fullScreenRemovesChat) {
+                                        _webViewProvider.removeAllChatsFullScreen();
+                                      }
+                                    } else {
+                                      _webViewProvider.currentUiMode = UiMode.window;
+                                      if (_settingsProvider.fullScreenRemovesChat) {
+                                        _webViewProvider.showAllChatsFullScreen();
+                                      }
+                                    }
+
+                                    if (!await Prefs().getFullScreenExplanationShown()) {
+                                      Prefs().setFullScreenExplanationShown(true);
+                                      return showDialog<void>(
+                                        context: _,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) {
+                                          return const FullScreenExplanationDialog();
+                                        },
+                                      );
+                                    }
+                                  },
+                                ),
+                                CircularMenuItem(
+                                  icon: Icons.delete_forever_outlined,
+                                  color: Colors.red[800],
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    return showDialog<void>(
+                                      context: _,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return const TabsWipeDialog();
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    onTap: () async {
-                      _webViewProvider.addTab();
-                      _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                      if (!_settingsProvider.showCases.contains("tabs_general")) {
-                        ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
-                        _settingsProvider.addShowCase = "tabs_general";
-                      }
+                  Showcase(
+                    key: _showCaseNewTabButton,
+                    title: 'New tab button',
+                    description: '\nTap to add a new tab.'
+                        '\n\nLong-press to change between icons and page titles in your tabs.',
+                    targetPadding: const EdgeInsets.all(10),
+                    disableMovingAnimation: true,
+                    textColor: _themeProvider.mainText,
+                    tooltipBackgroundColor: _themeProvider.secondBackground,
+                    descTextStyle: TextStyle(fontSize: 13),
+                    tooltipPadding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 40,
+                              child: VerticalDivider(
+                                width: _settingsProvider.showQuickMenuInTabBar ? 1 : 2,
+                                thickness: _settingsProvider.showQuickMenuInTabBar ? 1 : 2,
+                                color: _themeProvider.mainText,
+                              ),
+                            ),
+                            GestureDetector(
+                              child: Container(
+                                color: _themeProvider.navSelected,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: SizedBox(
+                                    width: 24,
+                                    child: Icon(
+                                      Icons.add_circle_outline,
+                                      color: _themeProvider.mainText,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              onTap: () async {
+                                _webViewProvider.addTab();
+                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                if (!_settingsProvider.showCases.contains("tabs_general")) {
+                                  ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
+                                  _settingsProvider.addShowCase = "tabs_general";
+                                }
 
-                      if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
-                        Prefs().setExcessTabsAlerted(true);
-                        return showDialog<void>(
-                          context: _,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return const TabsExcessDialog();
-                          },
-                        );
-                      }
-                    },
-                    onLongPress: () {
-                      _webViewProvider.useTabIcons
-                          ? _webViewProvider.changeUseTabIcons(false)
-                          : _webViewProvider.changeUseTabIcons(true);
-                    },
+                                if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
+                                  Prefs().setExcessTabsAlerted(true);
+                                  return showDialog<void>(
+                                    context: _,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) {
+                                      return const TabsExcessDialog();
+                                    },
+                                  );
+                                }
+                                _webViewProvider.verticalMenuClose();
+                              },
+                              onLongPress: () {
+                                _webViewProvider.useTabIcons
+                                    ? _webViewProvider.changeUseTabIcons(false)
+                                    : _webViewProvider.changeUseTabIcons(true);
+                                _webViewProvider.verticalMenuClose();
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

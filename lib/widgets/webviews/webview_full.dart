@@ -194,6 +194,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _bazaarFillActive = false;
 
   var _localChatRemovalActive = false;
+  var _localChatRemoveActiveBeforeFullScreen = false;
 
   var _quickItemsActive = false;
   var _quickItemsFactionActive = false;
@@ -470,34 +471,34 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: widget.dialog
-              // Show appBar only if we are not showing the webView in a dialog
-              ? null
-              : _settingsProvider.appBarTop
-                  ? buildCustomAppBar()
-                  : null,
-          bottomNavigationBar: widget.dialog
-              // Show appBar only if we are not showing the webView in a dialog
-              ? null
-              : !_settingsProvider.appBarTop
-                  ? SizedBox(
-                      height: AppBar().preferredSize.height,
-                      child: buildCustomAppBar(),
-                    )
-                  : null,
-          body: Container(
-            // Background color for all browser widgets
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
-            child: widget.dialog
-                ? Column(
-                    children: [
-                      Expanded(child: mainWebViewColumn()),
-                      _quickBrowserBottomBar(),
-                    ],
-                  )
-                : mainWebViewColumn(),
+        child: Consumer<WebViewProvider>(
+          builder: (context, wv, child) => Scaffold(
+            backgroundColor: _themeProvider.canvas,
+            appBar: widget.dialog || wv.currentUiMode == UiMode.fullScreen
+                // Show appBar only if we are not showing the webView in a dialog
+                ? null
+                : _settingsProvider.appBarTop
+                    ? buildCustomAppBar()
+                    : null,
+            bottomNavigationBar: widget.dialog
+                // Show appBar only if we are not showing the webView in a dialog
+                ? null
+                : !_settingsProvider.appBarTop
+                    ? SizedBox(
+                        height: AppBar().preferredSize.height,
+                        child: buildCustomAppBar(),
+                      )
+                    : null,
+            body: Container(
+                // Background color for all browser widgets
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+                child: Column(
+                  children: [
+                    Expanded(child: mainWebViewColumn()),
+                    SizedBox(height: widget.dialog ? 40 : 0),
+                    if (_webViewProvider.currentUiMode == UiMode.window) _quickBrowserBottomBar(),
+                  ],
+                )),
           ),
         ),
       ),
@@ -726,6 +727,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             setState(() {
                               _closeButtonTriggered = true;
                             });
+                            _webViewProvider.currentUiMode = UiMode.window;
                             await Future.delayed(const Duration(milliseconds: 200));
                             if (mounted) {
                               Navigator.of(context).pop();
@@ -793,113 +795,123 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           )
         else
           const SizedBox.shrink(),
+        // ### WIDGETS
+
         // Profile attack
-        _profileAttackWidget,
-        if (widget.isChainingBrowser)
-          ExpandablePanel(
-            theme: ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: SizedBox.shrink(),
-            controller: _chainWidgetController,
-            header: SizedBox.shrink(),
-            expanded: ChainWidget(
-              key: _chainWidgetKey,
-              alwaysDarkBackground: true,
-            ),
-          ),
-        // Crimes widget. NOTE: this one will open at the bottom if
-        // appBar is at the bottom, so it's duplicated below the actual
-        // webView widget
-        if (_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _crimesController,
-            header: const SizedBox.shrink(),
-            expanded: _crimesActive
-                ? CrimesWidget(
-                    controller: webView,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        ExpandablePanel(
-          theme: const ExpandableThemeData(
-            hasIcon: false,
-            tapBodyToCollapse: false,
-            tapHeaderToExpand: false,
-          ),
-          collapsed: const SizedBox.shrink(),
-          controller: _ocNnbController,
-          header: const SizedBox.shrink(),
-          expanded: _ocNnbTriggered
-              ? FactionCrimesWidget(
-                  source: _ocSource,
+        Visibility(
+          visible: !_fullScreenAndWidgetHide(),
+          child: Column(
+            children: [
+              _profileAttackWidget,
+              if (widget.isChainingBrowser)
+                ExpandablePanel(
+                  theme: ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: SizedBox.shrink(),
+                  controller: _chainWidgetController,
+                  header: SizedBox.shrink(),
+                  expanded: ChainWidget(
+                    key: _chainWidgetKey,
+                    alwaysDarkBackground: true,
+                  ),
+                ),
+              // Crimes widget. NOTE: this one will open at the bottom if
+              // appBar is at the bottom, so it's duplicated below the actual
+              // webView widget
+              if (_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _crimesController,
+                  header: const SizedBox.shrink(),
+                  expanded: _crimesActive
+                      ? CrimesWidget(
+                          controller: webView,
+                        )
+                      : const SizedBox.shrink(),
                 )
-              : const SizedBox.shrink(),
+              else
+                const SizedBox.shrink(),
+              ExpandablePanel(
+                theme: const ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: const SizedBox.shrink(),
+                controller: _ocNnbController,
+                header: const SizedBox.shrink(),
+                expanded: _ocNnbTriggered
+                    ? FactionCrimesWidget(
+                        source: _ocSource,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              // Quick items widget. NOTE: this one will open at the bottom if
+              // appBar is at the bottom, so it's duplicated below the actual
+              // webView widget
+              if (_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: false,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              if (_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsFactionController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsFactionActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: true,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              // Gym widget
+              _gymExpandable,
+              // Trades widget
+              _tradesExpandable,
+              // Vault widget
+              _vaultExpandable,
+              // City widget
+              _cityExpandable,
+              // Jail widget
+              _jailExpandable,
+              // Bounties widget
+              _bountiesExpandable,
+            ],
+          ),
         ),
-        // Quick items widget. NOTE: this one will open at the bottom if
-        // appBar is at the bottom, so it's duplicated below the actual
-        // webView widget
-        if (_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: false,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        if (_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsFactionController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsFactionActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: true,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        // Gym widget
-        _gymExpandable,
-        // Trades widget
-        _tradesExpandable,
-        // Vault widget
-        _vaultExpandable,
-        // City widget
-        _cityExpandable,
-        // Jail widget
-        _jailExpandable,
-        // Bounties widget
-        _bountiesExpandable,
-        // Actual WebView
+
+        // ### ACTUAL WEBVIEW
         Expanded(
           child: _closeButtonTriggered
               ? const SizedBox.shrink()
@@ -914,91 +926,99 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   },
                 ),
         ),
-        // Widgets that go at the bottom if we have changes appbar to bottom
-        if (!_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _crimesController,
-            header: const SizedBox.shrink(),
-            expanded: _crimesActive
-                ? CrimesWidget(
-                    controller: webView,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        if (!_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: false,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        if (!_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsFactionController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsFactionActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: true,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        // Terminal
-        Consumer<SettingsProvider>(
-          builder: (_, value, __) {
-            if (value.terminalEnabled) {
-              return Container(
-                decoration: BoxDecoration(
-                  border: Border.all(width: 2, color: Colors.green[900]),
-                ),
-                height: 100,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            _terminalProvider.terminal,
-                            style: const TextStyle(color: Colors.green, fontSize: 13),
+
+        // ### Widgets that go at the bottom if we have changes appbar to bottom
+        Visibility(
+          visible: !_fullScreenAndWidgetHide(),
+          child: Column(
+            children: [
+              if (!_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _crimesController,
+                  header: const SizedBox.shrink(),
+                  expanded: _crimesActive
+                      ? CrimesWidget(
+                          controller: webView,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              if (!_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: false,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              if (!_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsFactionController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsFactionActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: true,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              // Terminal
+              Consumer<SettingsProvider>(
+                builder: (_, value, __) {
+                  if (value.terminalEnabled) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 2, color: Colors.green[900]),
+                      ),
+                      height: 100,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  _terminalProvider.terminal,
+                                  style: const TextStyle(color: Colors.green, fontSize: 13),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1141,6 +1161,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             log("Start URL: ${uri}");
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
+            _webViewProvider.verticalMenuClose();
             if (!mounted) return;
 
             if (Platform.isAndroid) {
@@ -1152,7 +1173,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
               final html = await webView.getHtml();
 
-              _hideChat();
+              hideChatOnLoad();
 
               final document = parse(html);
               _assessGeneral(document);
@@ -1169,7 +1190,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 webView.evaluateJavascript(source: travelRemovePlaneJS());
               }
 
-              _hideChat();
+              hideChatOnLoad();
 
               if (mounted) {
                 setState(() {
@@ -1227,7 +1248,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 );
               }
 
-              _hideChat();
+              hideChatOnLoad();
               _highlightChat();
 
               // If we are using pull-to-refresh in a short page (that does not scroll), add a bit of body
@@ -1731,9 +1752,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _hideChat() {
-    if (_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) {
+  void hideChatOnLoad() {
+    if ((_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) ||
+        _webViewProvider.chatRemovalWhileFullScreen) {
       webView.evaluateJavascript(source: removeChatOnLoadStartJS());
+    }
+  }
+
+  void hideChatWhileFullScreen() {
+    _localChatRemoveActiveBeforeFullScreen = _localChatRemovalActive;
+    webView.evaluateJavascript(source: removeChatJS());
+  }
+
+  void showChatAfterFullScreen() {
+    _localChatRemovalActive = _localChatRemoveActiveBeforeFullScreen;
+    if (!_localChatRemovalActive) {
+      webView.evaluateJavascript(source: restoreChatJS());
     }
   }
 
@@ -1858,6 +1892,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     setState(() {
                       _closeButtonTriggered = true;
                     });
+                    _webViewProvider.currentUiMode = UiMode.window;
                     await Future.delayed(const Duration(milliseconds: 200));
                     if (mounted) {
                       Navigator.of(context).pop();
@@ -1975,6 +2010,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _tryGoBack() async {
+    _webViewProvider.verticalMenuClose();
     bool success = false;
 
     // It's much more precise to use the native implementation (when not using tabs),
@@ -2011,6 +2047,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _tryGoForward() async {
+    _webViewProvider.verticalMenuClose();
     bool success = false;
     if (widget.useTabs) {
       success = _webViewProvider.tryGoForward();
@@ -3270,6 +3307,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = true;
             });
+            _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
             webView.evaluateJavascript(source: removeChatJS());
@@ -3277,10 +3315,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = true;
             });
+            _webViewProvider.verticalMenuClose();
 
             BotToast.showText(
               crossPage: false,
-              text: "Default chat hide enabled",
+              text: "Default chat hide enabled (new tabs)",
               textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -3306,6 +3345,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = false;
             });
+            _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
             webView.evaluateJavascript(source: restoreChatJS());
@@ -3313,6 +3353,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = false;
             });
+            _webViewProvider.verticalMenuClose();
 
             BotToast.showText(
               crossPage: false,
@@ -3341,9 +3382,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       var currentURI = await webView.getUrl();
       _loadUrl(currentURI.toString());
     }
+    _webViewProvider.verticalMenuClose();
   }
 
   Future<void> _openUrlDialog() async {
+    _webViewProvider.verticalMenuClose();
     final url = await webView.getUrl();
     return showDialog<void>(
       context: context,
@@ -4337,5 +4380,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         window.dispatchEvent(event);
       ''',
     );
+  }
+
+  bool _fullScreenAndWidgetHide() {
+    return _webViewProvider.currentUiMode == UiMode.fullScreen && _settingsProvider.fullScreenRemovesWidgets;
   }
 }

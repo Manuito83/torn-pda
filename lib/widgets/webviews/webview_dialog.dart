@@ -11,14 +11,8 @@ Future<void> openBrowserDialog(
   Function callBack,
   bool recallLastSession = false,
 }) async {
-  double width = MediaQuery.of(_).size.width;
-  double hPad = 15;
-  double frame = 6;
-
-  if (width < 400) {
-    hPad = 6;
-    frame = 2;
-  }
+  double hPad = 5;
+  double frame = 3;
 
   String restoredTheme = await Prefs().getAppTheme();
 
@@ -29,14 +23,14 @@ Future<void> openBrowserDialog(
     barrierDismissible: false,
     builder: (BuildContext context) {
       return Dialog(
-        insetPadding: EdgeInsets.symmetric(horizontal: hPad, vertical: 15),
+        insetPadding: EdgeInsets.symmetric(horizontal: hPad, vertical: 10),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
         ),
         child: Container(
           color: restoredTheme == "extraDark" ? Color(0xFF131313) : Colors.transparent,
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
+            padding: EdgeInsets.symmetric(vertical: 6, horizontal: frame),
             child: WebViewStackView(initUrl: initUrl, dialog: true, recallLastSession: recallLastSession),
           ),
         ),
