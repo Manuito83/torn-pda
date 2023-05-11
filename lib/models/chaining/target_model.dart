@@ -5,6 +5,8 @@
 // Dart imports:
 import 'dart:convert';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
 import '../profile/own_profile_basic.dart';
 
 TargetModel targetModelFromJson(String str) => TargetModel.fromJson(json.decode(str));
@@ -52,6 +54,7 @@ class TargetModel {
   States states;
   LastAction lastAction;
   Discord discord;
+  Competition competition;
 
   TargetModel({
     // This first batch is here to export/import from SharedPreferences,
@@ -90,6 +93,7 @@ class TargetModel {
     this.states,
     this.lastAction,
     this.discord,
+    this.competition,
   });
 
   factory TargetModel.fromJson(Map<String, dynamic> json) => TargetModel(
@@ -104,30 +108,31 @@ class TargetModel {
         hasFaction: json["hasFaction"] == null ? false : json["hasFaction"],
         lifeSort: json["lifeSort"] == null ? Life.fromJson(json["life"]).current : json["lifeSort"],
 
-        rank: json["rank"],
-        level: json["level"],
-        gender: json["gender"],
-        property: json["property"],
-        signup: DateTime.parse(json["signup"]),
-        awards: json["awards"],
-        friends: json["friends"],
-        enemies: json["enemies"],
-        forumPosts: json["forum_posts"],
-        karma: json["karma"],
-        age: json["age"],
-        role: json["role"],
-        donator: json["donator"],
-        playerId: json["player_id"],
-        name: json["name"],
-        propertyId: json["property_id"],
-        life: Life.fromJson(json["life"]),
-        status: Status.fromJson(json["status"]),
-        job: Job.fromJson(json["job"]),
-        faction: Faction.fromJson(json["faction"]),
-        married: Married.fromJson(json["married"]),
-        states: States.fromJson(json["states"]),
-        lastAction: LastAction.fromJson(json["last_action"]),
+        rank: json["rank"] == null ? null : json["rank"],
+        level: json["level"] == null ? null : json["level"],
+        gender: json["gender"] == null ? null : json["gender"],
+        property: json["property"] == null ? null : json["property"],
+        signup: json["signup"] == null ? null : DateTime.parse(json["signup"]),
+        awards: json["awards"] == null ? null : json["awards"],
+        friends: json["friends"] == null ? null : json["friends"],
+        enemies: json["enemies"] == null ? null : json["enemies"],
+        forumPosts: json["forum_posts"] == null ? null : json["forum_posts"],
+        karma: json["karma"] == null ? null : json["karma"],
+        age: json["age"] == null ? null : json["age"],
+        role: json["role"] == null ? null : json["role"],
+        donator: json["donator"] == null ? null : json["donator"],
+        playerId: json["player_id"] == null ? null : json["player_id"],
+        name: json["name"] == null ? null : json["name"],
+        propertyId: json["property_id"] == null ? null : json["property_id"],
+        life: json["life"] == null ? null : Life.fromJson(json["life"]),
+        status: json["status"] == null ? null : Status.fromJson(json["status"]),
+        job: json["job"] == null ? null : Job.fromJson(json["job"]),
+        faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
+        married: json["married"] == null ? null : Married.fromJson(json["married"]),
+        states: json["states"] == null ? null : States.fromJson(json["states"]),
+        lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
         discord: json["discord"] == null ? null : Discord.fromJson(json["discord"]),
+        competition: json["competition"] == null ? null : Competition.fromJson(json["competition"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -163,6 +168,7 @@ class TargetModel {
         "states": states.toJson(),
         "last_action": lastAction.toJson(),
         "discord": discord == null ? null : discord.toJson(),
+        "competition": competition == null ? null : competition.toJson(),
       };
 }
 
@@ -347,5 +353,65 @@ class States {
   Map<String, dynamic> toJson() => {
         "hospital_timestamp": hospitalTimestamp,
         "jail_timestamp": jailTimestamp,
+      };
+}
+
+class Competition {
+  int attacks;
+  String image;
+  String name;
+  double score;
+  int team;
+  String text;
+  int total;
+  int treatsCollectedTotal;
+  int votes;
+  dynamic position;
+
+  Competition({
+    this.attacks,
+    this.image,
+    this.name,
+    this.score,
+    this.team,
+    this.text,
+    this.total,
+    this.treatsCollectedTotal,
+    this.votes,
+    this.position,
+  });
+
+  factory Competition.fromJson(Map<String, dynamic> json) {
+    try {
+      return Competition(
+        attacks: json["attacks"] == null ? null : json["attacks"],
+        image: json["image"] == null ? null : json["image"],
+        name: json["name"] == null ? null : json["name"],
+        score: json["score"] == null ? null : json["score"].toDouble(),
+        team: json["team"] == null ? null : json["team"],
+        text: json["text"] == null ? null : json["text"],
+        total: json["total"] == null ? null : json["total"],
+        treatsCollectedTotal: json["treats_collected_total"] == null ? null : json["treats_collected_total"],
+        votes: json["votes"] == null ? null : json["votes"],
+        position: json["position"] == null ? null : json["position"].toString(),
+      );
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.log("PDA Crash at Competition model");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      return null;
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        "attacks": attacks == null ? null : attacks,
+        "image": image == null ? null : image,
+        "name": name == null ? null : name,
+        "score": score == null ? null : score,
+        "team": team == null ? null : team,
+        "text": text == null ? null : text,
+        "total": total == null ? null : total,
+        "treats_collected_total": treatsCollectedTotal == null ? null : treatsCollectedTotal,
+        "votes": votes == null ? null : votes,
+        "position": position == null ? null : position,
       };
 }

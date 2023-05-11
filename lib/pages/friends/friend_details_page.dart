@@ -122,10 +122,9 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                           '/${widget.friend.enemies}'),
                       SizedBox(height: 20),
                       _returnFaction(),
-                      SizedBox(height: 20),
                       _returnJob(),
-                      SizedBox(height: 20),
                       _returnDiscord(),
+                      _returnCompetition(),
                       SizedBox(height: 50),
                     ],
                   ),
@@ -255,12 +254,15 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
 
   Widget _returnFaction() {
     if (widget.friend.faction.factionId != 0) {
-      return Column(
-        children: <Widget>[
-          Text('Faction: ${HtmlParser.fix(widget.friend.faction.factionName)}'),
-          Text('Position: ${widget.friend.faction.position}'),
-          Text('Joined: ${widget.friend.faction.daysInFaction} days ago'),
-        ],
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Column(
+          children: <Widget>[
+            Text('Faction: ${HtmlParser.fix(widget.friend.faction.factionName)}'),
+            Text('Position: ${widget.friend.faction.position}'),
+            Text('Joined: ${widget.friend.faction.daysInFaction} days ago'),
+          ],
+        ),
       );
     } else {
       return SizedBox.shrink();
@@ -269,11 +271,14 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
 
   Widget _returnJob() {
     if (widget.friend.job.companyId != 0) {
-      return Column(
-        children: <Widget>[
-          Text('Company: ${HtmlParser.fix(widget.friend.job.companyName)}'),
-          Text('Position: ${widget.friend.job.job}'),
-        ],
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Column(
+          children: <Widget>[
+            Text('Company: ${HtmlParser.fix(widget.friend.job.companyName)}'),
+            Text('Position: ${widget.friend.job.job}'),
+          ],
+        ),
       );
     } else {
       return SizedBox.shrink();
@@ -282,39 +287,103 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
 
   Widget _returnDiscord() {
     if (widget.friend.discord.discordId != "") {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text('Discord ID'),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 5),
-            child: SizedBox(
-              width: 30,
-              height: 30,
-              child: IconButton(
-                icon: Icon(Icons.content_copy),
-                iconSize: 20,
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: widget.friend.discord.discordId));
-                  BotToast.showText(
-                    text: "Your friend's Discord ID (${widget.friend.discord.discordId}) has been "
-                        "copied to the clipboard!",
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.green,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('Discord ID'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: SizedBox(
+                width: 30,
+                height: 30,
+                child: IconButton(
+                  icon: Icon(Icons.content_copy),
+                  iconSize: 20,
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: widget.friend.discord.discordId));
+                    BotToast.showText(
+                      text: "Your friend's Discord ID (${widget.friend.discord.discordId}) has been "
+                          "copied to the clipboard!",
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.green,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     } else {
       return SizedBox.shrink();
     }
+  }
+
+  Widget _returnCompetition() {
+    if (widget.friend.competition == null) {
+      return SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'COMPETITION',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (widget.friend.competition.name != null)
+            Text(
+              '"${widget.friend.competition.name}"',
+            ),
+          if (widget.friend.competition.attacks != null)
+            Text(
+              'Attacks: ${widget.friend.competition.attacks}',
+            ),
+          if (widget.friend.competition.image != null)
+            Text(
+              'Image: ${widget.friend.competition.image}',
+            ),
+          if (widget.friend.competition.score != null)
+            Text(
+              'Score: ${widget.friend.competition.score.ceil()}',
+            ),
+          if (widget.friend.competition.team != null)
+            Text(
+              'Team: ${widget.friend.competition.team}',
+            ),
+          if (widget.friend.competition.text != null)
+            Text(
+              'Text: ${widget.friend.competition.text}',
+            ),
+          if (widget.friend.competition.total != null)
+            Text(
+              'Total (accumulated): ${widget.friend.competition.total}',
+            ),
+          if (widget.friend.competition.treatsCollectedTotal != null)
+            Text(
+              'Treats collected: ${widget.friend.competition.treatsCollectedTotal}',
+            ),
+          if (widget.friend.competition.votes != null)
+            Text(
+              'Votes: ${widget.friend.competition.votes}',
+            ),
+          if (widget.friend.competition.position != null)
+            Text(
+              'Position: ${widget.friend.competition.position}',
+            ),
+        ],
+      ),
+    );
   }
 }

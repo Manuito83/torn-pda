@@ -9,7 +9,6 @@ import 'package:get/get.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -43,9 +42,6 @@ class FriendsProvider extends ChangeNotifier {
   String get currentFilter => _currentFilter;
 
   FriendSortType _currentSort;
-
-  OwnProfileBasic _userDetails;
-  FriendsProvider(this._userDetails);
 
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).

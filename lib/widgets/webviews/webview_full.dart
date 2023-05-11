@@ -3290,7 +3290,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future _assessBarsRedirect(dom.Document document) async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
-      webView.evaluateJavascript(source: barsDoubleClickRedirect());
+      webView?.evaluateJavascript(source: barsDoubleClickRedirect());
     }
   }
 

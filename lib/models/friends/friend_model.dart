@@ -5,6 +5,8 @@
 // Dart imports:
 import 'dart:convert';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
 import '../profile/own_profile_basic.dart';
 
 FriendModel friendModelFromJson(String str) => FriendModel.fromJson(json.decode(str));
@@ -56,6 +58,7 @@ class FriendModel {
     this.states,
     this.lastAction,
     this.discord,
+    this.competition,
   });
 
   String rank;
@@ -82,6 +85,7 @@ class FriendModel {
   States states;
   LastAction lastAction;
   Discord discord;
+  Competition competition;
 
   factory FriendModel.fromJson(Map<String, dynamic> json) => FriendModel(
         personalNote: json["personalNote"] == null ? '' : json["personalNote"],
@@ -112,6 +116,7 @@ class FriendModel {
         states: json["states"] == null ? null : States.fromJson(json["states"]),
         lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
         discord: json["discord"] == null ? null : Discord.fromJson(json["discord"]),
+        competition: json["competition"] == null ? null : Competition.fromJson(json["competition"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -143,6 +148,7 @@ class FriendModel {
         "states": states == null ? null : states.toJson(),
         "last_action": lastAction == null ? null : lastAction.toJson(),
         "discord": discord == null ? null : discord.toJson(),
+        "competition": competition == null ? null : competition.toJson(),
       };
 }
 
@@ -327,5 +333,65 @@ class States {
   Map<String, dynamic> toJson() => {
         "hospital_timestamp": hospitalTimestamp == null ? null : hospitalTimestamp,
         "jail_timestamp": jailTimestamp == null ? null : jailTimestamp,
+      };
+}
+
+class Competition {
+  int attacks;
+  String image;
+  String name;
+  double score;
+  int team;
+  String text;
+  int total;
+  int treatsCollectedTotal;
+  int votes;
+  dynamic position;
+
+  Competition({
+    this.attacks,
+    this.image,
+    this.name,
+    this.score,
+    this.team,
+    this.text,
+    this.total,
+    this.treatsCollectedTotal,
+    this.votes,
+    this.position,
+  });
+
+  factory Competition.fromJson(Map<String, dynamic> json) {
+    try {
+      return Competition(
+        attacks: json["attacks"] == null ? null : json["attacks"],
+        image: json["image"] == null ? null : json["image"],
+        name: json["name"] == null ? null : json["name"],
+        score: json["score"] == null ? null : json["score"].toDouble(),
+        team: json["team"] == null ? null : json["team"],
+        text: json["text"] == null ? null : json["text"],
+        total: json["total"] == null ? null : json["total"],
+        treatsCollectedTotal: json["treats_collected_total"] == null ? null : json["treats_collected_total"],
+        votes: json["votes"] == null ? null : json["votes"],
+        position: json["position"] == null ? null : json["position"].toString(),
+      );
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.log("PDA Crash at Competition model");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      return null;
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        "attacks": attacks == null ? null : attacks,
+        "image": image == null ? null : image,
+        "name": name == null ? null : name,
+        "score": score == null ? null : score,
+        "team": team == null ? null : team,
+        "text": text == null ? null : text,
+        "total": total == null ? null : total,
+        "treats_collected_total": treatsCollectedTotal == null ? null : treatsCollectedTotal,
+        "votes": votes == null ? null : votes,
+        "position": position == null ? null : position,
       };
 }

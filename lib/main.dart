@@ -181,10 +181,8 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
-        ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
-          create: (context) => FriendsProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider, FriendsProvider friendsProvider) =>
-              FriendsProvider(userProvider.basic),
+        ChangeNotifierProvider<FriendsProvider>(
+          create: (context) => FriendsProvider(),
         ),
         ChangeNotifierProvider<UserScriptsProvider>(
           create: (context) => UserScriptsProvider(),
