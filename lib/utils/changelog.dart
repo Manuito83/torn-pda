@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 303 - 07/05/2023
+    // Build 304 - 12/05/2023
 
     // VERSION 3.1.0
     var v3_1_0 = ChangeLogItem();
     v3_1_0.version = 'Torn PDA v3.1.0';
-    v3_1_0.date = '15 MAY 2023';
+    v3_1_0.date = '20 MAY 2023';
     String feat3_1_0_1 = "Added home screen widget (see Tips)";
     String feat3_1_0_2 = "Added Ranked War information and notifications to Profile page";
     String feat3_1_0_3 = "The browser can now be chosen as the default app's launch section (Settings)";
@@ -55,11 +55,12 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_1_0_8 = "Added quick menu to browser with several options, including fullscreen mode";
     String feat3_1_0_9 = "Browser long-press menu now also adds a shortcut to the target link";
     String feat3_1_0_10 = "Full update in War now updates all members faster";
-    String feat3_1_0_11 = "Added WTF Revive";
-    String feat3_1_0_12 = "Fixed Loot Rangers loot order in certain conditions";
-    String feat3_1_0_13 = "Fixed issues redirecting to attack pages in certain conditions";
-    String feat3_1_0_14 = "Fixed issues when launching the app from a notification";
-    String feat3_1_0_15 = "Fixed pull-to-refresh in short pages";
+    String feat3_1_0_11 = "Added competition information to targets and friends details";
+    String feat3_1_0_12 = "Added WTF Revive";
+    String feat3_1_0_13 = "Fixed Loot Rangers loot order in certain conditions";
+    String feat3_1_0_14 = "Fixed issues redirecting to attack pages in certain conditions";
+    String feat3_1_0_15 = "Fixed issues when launching the app from a notification";
+    String feat3_1_0_16 = "Fixed pull-to-refresh in short pages";
     if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
     v3_1_0.features.add(feat3_1_0_2);
     v3_1_0.features.add(feat3_1_0_3);
@@ -74,6 +75,8 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.features.add(feat3_1_0_12);
     v3_1_0.features.add(feat3_1_0_13);
     v3_1_0.features.add(feat3_1_0_14);
+    v3_1_0.features.add(feat3_1_0_15);
+    v3_1_0.features.add(feat3_1_0_16);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();
