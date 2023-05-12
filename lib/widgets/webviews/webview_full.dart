@@ -483,20 +483,39 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             bottomNavigationBar: widget.dialog
                 // Show appBar only if we are not showing the webView in a dialog
                 ? null
-                : !_settingsProvider.appBarTop
-                    ? SizedBox(
-                        height: AppBar().preferredSize.height,
-                        child: buildCustomAppBar(),
+                // With appbar bottom, add appbar and some space for tabs
+                : !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: AppBar().preferredSize.height,
+                            child: buildCustomAppBar(),
+                          ),
+                          SizedBox(
+                            height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
+                          ),
+                        ],
                       )
-                    : null,
+                    :
+                    // With appbar top, still add some space below for tabs
+                    SizedBox(
+                        height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
+                      ),
             body: Container(
                 // Background color for all browser widgets
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
                 child: Column(
                   children: [
                     Expanded(child: mainWebViewColumn()),
-                    SizedBox(height: widget.dialog ? 40 : 0),
-                    if (_webViewProvider.currentUiMode == UiMode.window) _quickBrowserBottomBar(),
+                    SizedBox(
+                      height: !widget.dialog
+                          ? 0
+                          : _webViewProvider.hideTabs || !_settingsProvider.useTabsBrowserDialog
+                              ? 0
+                              : 40,
+                    ),
+                    if (_webViewProvider.currentUiMode == UiMode.window && widget.dialog) _quickBrowserBottomBar(),
                   ],
                 )),
           ),
