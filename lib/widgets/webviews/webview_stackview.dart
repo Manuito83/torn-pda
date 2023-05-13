@@ -688,22 +688,22 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                                       if (_settingsProvider.fullScreenRemovesChat) {
                                         _webViewProvider.removeAllChatsFullScreen();
                                       }
+
+                                      if (!await Prefs().getFullScreenExplanationShown()) {
+                                        Prefs().setFullScreenExplanationShown(true);
+                                        return showDialog<void>(
+                                          context: _,
+                                          barrierDismissible: false,
+                                          builder: (BuildContext context) {
+                                            return const FullScreenExplanationDialog();
+                                          },
+                                        );
+                                      }
                                     } else {
                                       _webViewProvider.setCurrentUiMode(UiMode.window, context);
                                       if (_settingsProvider.fullScreenRemovesChat) {
                                         _webViewProvider.showAllChatsFullScreen();
                                       }
-                                    }
-
-                                    if (!await Prefs().getFullScreenExplanationShown()) {
-                                      Prefs().setFullScreenExplanationShown(true);
-                                      return showDialog<void>(
-                                        context: _,
-                                        barrierDismissible: false,
-                                        builder: (BuildContext context) {
-                                          return const FullScreenExplanationDialog();
-                                        },
-                                      );
                                     }
                                   },
                                 ),
