@@ -40,15 +40,22 @@ class FullScreenExplanationDialog extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text("Full screen...!\n"),
+                    const Text("Full screen...!?\n"),
                     const Text(
                       "You've entered the full screen mode (which is best viewed if using the full browser).\n\n"
                       "Bear in mind that by default, all Torn PDA widgets and Torn chats will be deactivated, so that "
                       "you can concentrate on what's important. If you'd like to change this behavior, you can "
                       "do so in the app's Settings menu!\n\n"
+                      "You can also change the safe area's boundaries (top, bottom and sides) you prefer, in case "
+                      "you would like to avoid the front-facing camera or notch getting in the way, or if your phone's "
+                      "rounded corners make tabs difficult to select.\n\n"
+                      "It is also possible to launch the quick or full browser always in full screen mode by default, "
+                      "so you can use them for different purposes.\n\n"
                       "Oh, by the way. You can exit the fullscreen mode by taping again the same icon you just tapped, "
                       "or by double tapping the three-dotted-icon (which is now in orange color), which might be "
-                      "faster to do.",
+                      "faster to do.\n\n"
+                      "If you need to exit the browser quickly, you can do so also from the quick menu whenever "
+                      "you are in full screen mode.",
                       style: TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 16.0),

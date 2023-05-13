@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum TipClass {
@@ -330,102 +331,236 @@ class _TipsPageState extends State<TipsPage> {
     return tips;
   }
 
-  List<ExpandableTip> buildBrowserGeneralTips() {
-    var tips = <ExpandableTip>[];
+  List<ComplexExpandableTip> buildBrowserGeneralTips() {
+    var tips = <ComplexExpandableTip>[];
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "What browser should I use?",
-        expandedValue: "You can choose between 'external' and 'in-app' browser. "
-            "This is accomplished in the Settings section.\n\n"
-            "The earlier will open your mobile phone's default browser application, but you will lose most "
-            "functionalities in Torn PDA (such as quick crimes, trades calculator, city finder...)",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "You can choose between 'external' and 'in-app' browser. "
+                  "This is accomplished in the Settings section.\n\n"
+                  "The earlier will open your mobile phone's default browser application, but you will lose most "
+                  "functionalities in Torn PDA (such as quick crimes, trades calculator, city finder...)",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Chaining browser",
-        expandedValue:
-            "Please be aware that the browser used in the chaining section is focused on improving the chaining experience.\n\nIt does not "
-            "have as many features as the standard browser that you can use in other sections of the app. One exception is the "
-            "Quick Items feature, since this can be helpful while chaining.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text:
+                  "Please be aware that the browser used in the chaining section is focused on improving the chaining experience.\n\nIt does not "
+                  "have as many features as the standard browser that you can use in other sections of the app. One exception is the "
+                  "Quick Items feature, since this can be helpful while chaining.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Quick browser and full browser",
-        expandedValue: "There are two ways of using the 'in-app' browser in Torn PDA: 'quick' and 'full' browser.\n\n"
-            "By default, a short tap in buttons, bars or icons will open the 'quick browser', which loads faster "
-            "and allows to accomplish actions quicker. However, the options bar and its icons are only visible in the "
-            "'full browser' version, which can be opened with a long-press in the same places.\n\n"
-            "This also applies, for example, for the main 'T' menu in the Profile section. After expanding it, you can "
-            "short tap or long-press to use the quick or full browsers.\n\n"
-            "In the Settings section you can disable the quick browser if you prefer to always use the full one.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "There are two ways of using the 'in-app' browser in Torn PDA: 'quick' and 'full' browser.\n\n"
+                  "By default, a short tap in buttons, bars or icons will open the 'quick browser', which loads faster "
+                  "and allows to accomplish actions quicker. However, the options bar and its icons are only visible in the "
+                  "'full browser' version, which can be opened with a long-press in the same places.\n\n"
+                  "This also applies, for example, for the main 'T' menu in the Profile section. After expanding it, you can "
+                  "short tap or long-press to use the quick or full browsers.\n\n"
+                  "In the Settings section you can disable the quick browser if you prefer to always use the full one.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Restore previous browsing session",
-        expandedValue: "You can restore your previous browsing session, including the first tab, active tab and "
-            "type of browser (quick or full) by long-pressing the 'T' menu floating button in the Profile section.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "You can restore your previous browsing session, including the first tab, active tab and "
+                  "type of browser (quick or full) by long-pressing the 'T' menu floating button in the Profile section.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "How can I browse back or forward?",
-        expandedValue:
-            "If using the full browser, swipe your finger right or left across the title bar to browse back or "
-            "forward respectively. If using the quick browser, there are dedicated icons at the bottom.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "If using the full browser, swipe your finger right or left across the title bar to browse back or "
+                  "forward respectively. If using the quick browser, there are dedicated icons at the bottom.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "How do I browse to a custom URL?",
-        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
+                  "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "How do I copy the current URL?",
-        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
+                  "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Save the current URL as a shortcut or navigate to an existing one",
-        expandedValue: "If you are using tabs, a favorites (heart-shaped) icon will appear to the right. Tapping it "
-            "will open your shortcuts menu. Long-press it to add a new custom shortcut to the current page.\n\n"
-            "Alternatively, if you are not using tabs (or if you deactivated the favorites icon), you can also:\n\n"
-            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "If you are using tabs, a quick menu icon (three dots) will appear to the right (unless you "
+                  "disabled it!). Tapping it will open your shortcuts menu. Long-press it to add a new custom shortcut "
+                  "to the current page.\n\n"
+                  "Alternatively, if you are not using tabs (or if you deactivated the favorites icon), you can also:\n\n"
+                  "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
+                  "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Pull to refresh",
-        expandedValue: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
-            "There are certain (short) pages in Torn, with no scroll, that might not activate this feature; if that's "
-            "the case, try pulling down from Torn's appbar at the very top!",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
+                  "There are certain (short) pages in Torn, with no scroll, that might not activate this feature; if that's "
+                  "the case, try pulling down from Torn's appbar at the very top!",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Full screen mode",
-        expandedValue: "The browser supports full screen, which can be activated from the quick menu tab in the "
-            "tab bar. \n\nTo access this feature, you need to have both 'tabs' and 'quick menu tab' enabled in the "
-            "Advanced Browser Settings section (in the app's Settings menu).",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "The browser supports full screen, which can be activated from the quick menu tab in the "
+                  "tab bar. \n\nTo access this feature, you need to have both 'tabs' and 'quick menu tab' enabled in the "
+                  "Advanced Browser Settings section (in the app's Settings menu).",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+              children: [
+                TextSpan(
+                  text: "\n\nFor more information, please ",
+                ),
+                TextSpan(
+                  text: "tab here",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return const FullScreenExplanationDialog();
+                        },
+                      );
+                    },
+                ),
+                TextSpan(
+                  text: "!",
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Use terminal (developers only)",
-        expandedValue: "There is a Terminal window (read only) available for development use (so that you can see "
-            "scripts or section outputs). To activate it:"
-            "\n\nFull browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "There is a Terminal window (read only) available for development use (so that you can see "
+                  "scripts or section outputs). To activate it:"
+                  "\n\nFull browser: short tap the title bar to open a small dialog with several options.\n\n"
+                  "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     return tips;
   }
 
