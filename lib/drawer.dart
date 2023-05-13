@@ -114,8 +114,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   // Used to avoid racing condition with browser launch from notifications (not included in the FutureBuilder), as
   // preferences take time to load
   Completer _preferencesCompleter = Completer();
+  Completer _changelogCompleter = Completer();
   // Used for the main UI loading (FutureBuilder)
   Future _finishedWithPreferences;
+  Future _finishedWithChangelog;
 
   int _activeDrawerIndex = 0;
   int _selected = 0;
@@ -181,7 +183,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     // Ensures Shared Prefs are ready for changelog data saving
     Prefs().reload().then((_) {
-      _handleChangelog();
+      _finishedWithChangelog = _handleChangelog();
+      _changelogCompleter.complete(_finishedWithChangelog);
+
       _finishedWithPreferences = _loadInitPreferences();
       _preferencesCompleter.complete(_finishedWithPreferences);
     });
@@ -445,7 +449,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
 
     if (launchBrowser) {
-      _preferencesCompleter.future.whenComplete(() {
+      _preferencesCompleter.future.whenComplete(() async {
+        await _changelogCompleter.future;
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
@@ -516,6 +521,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         _preferencesCompleter.future.whenComplete(() async {
+          await _changelogCompleter.future;
           _webViewProvider.openBrowserPreference(
             context: context,
             url: url,
@@ -706,6 +712,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
       _preferencesCompleter.future.whenComplete(() async {
+        await _changelogCompleter.future;
         if (!_settingsProvider.retaliationSectionEnabled ||
             (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowser = true;
@@ -856,7 +863,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
 
     if (launchBrowser) {
-      _preferencesCompleter.future.whenComplete(() {
+      _preferencesCompleter.future.whenComplete(() async {
+        await _changelogCompleter.future;
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
@@ -1136,7 +1144,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       if (launchBrowser) {
-        _preferencesCompleter.future.whenComplete(() {
+        _preferencesCompleter.future.whenComplete(() async {
+          await _changelogCompleter.future;
           _webViewProvider.openBrowserPreference(
             context: context,
             url: browserUrl,
@@ -1622,6 +1631,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
         // and recall the last session
         _preferencesCompleter.future.whenComplete(() async {
+          await _changelogCompleter.future;
           bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
           // Add a small delay to avoid racing conditions with browser launched from messages
           await Future.delayed(Duration(milliseconds: 300));
@@ -1771,7 +1781,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       _changelogIsActive = true;
-      _showChangeLogDialog(context);
+      await _showChangeLogDialog(context);
     } else {
       // Other dialogs we need to show when the dialog is not being displayed
 
@@ -1780,11 +1790,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         if (!await Prefs().getAppwidgetExplanationShown()) {
           int widgets = await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
           if (widgets > 0) {
-            _showAppwidgetExplanationDialog(context);
+            await _showAppwidgetExplanationDialog(context);
             Prefs().setAppwidgetExplanationShown(true);
+            return; // Do not show more dialogs below
           }
         }
       }
+
+      // Other dialogs
+      //...
     }
   }
 
