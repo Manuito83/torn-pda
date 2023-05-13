@@ -411,6 +411,14 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
+        headerValue: "Full screen mode",
+        expandedValue: "The browser supports full screen, which can be activated from the quick menu tab in the "
+            "tab bar. \n\nTo access this feature, you need to have both 'tabs' and 'quick menu tab' enabled in the "
+            "Advanced Browser Settings section (in the app's Settings menu).",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
         headerValue: "Use terminal (developers only)",
         expandedValue: "There is a Terminal window (read only) available for development use (so that you can see "
             "scripts or section outputs). To activate it:"

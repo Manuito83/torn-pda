@@ -11,29 +11,20 @@ Future<void> openBrowserDialog(
   Function callBack,
   bool recallLastSession = false,
 }) async {
-  double hPad = 5;
-  double frame = 3;
-
   String restoredTheme = await Prefs().getAppTheme();
 
   return showDialog(
     context: _,
-    // Avoids browser going back if user taps the screen side (in which case, willPopCallback
-    // triggers as if the back button had been pressed
+    // Allows WebViewStack and WebViewFill to control the SafeArea for fullscreen mode
+    useSafeArea: false,
+    // Avoids browser going back if user taps the screen side (in which case, willPopCallback triggers as)
     barrierDismissible: false,
     builder: (BuildContext context) {
-      return Dialog(
-        insetPadding: EdgeInsets.symmetric(horizontal: hPad, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Container(
-          color: restoredTheme == "extraDark" ? Color(0xFF131313) : Colors.transparent,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 6, horizontal: frame),
-            child: WebViewStackView(initUrl: initUrl, dialog: true, recallLastSession: recallLastSession),
-          ),
-        ),
+      return WebViewStackView(
+        initUrl: initUrl,
+        dialog: true,
+        recallLastSession: recallLastSession,
+        restoredTheme: restoredTheme,
       );
     },
   );

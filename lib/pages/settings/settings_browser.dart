@@ -1186,7 +1186,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Full screen removes widgets"),
+              Flexible(child: Text("Full screen removes widgets")),
               Switch(
                 value: _settingsProvider.fullScreenRemovesWidgets,
                 onChanged: (value) {
@@ -1217,7 +1217,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Full screen removes chat"),
+              Flexible(child: Text("Full screen removes chat")),
               Switch(
                 value: _settingsProvider.fullScreenRemovesChat,
                 onChanged: (value) {
@@ -1236,6 +1236,38 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Text(
             'Dictates whether the full screen mode in the browser, when enabled, should also get rid of all of '
             'Torn chat bubbles in game',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen extends over notch")),
+              Switch(
+                value: _settingsProvider.fullScreenOverNotch,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenOverNotch = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode should extend over the front-facing camera and any other sensors '
+            'your mobile device might have placed in the screen (notch). It will extend the view further, but certain '
+            'web elements might be hidden or obscured.',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,

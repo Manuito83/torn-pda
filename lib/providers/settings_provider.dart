@@ -294,6 +294,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenOverNotch = true;
+  bool get fullScreenOverNotch => _fullScreenOverNotch;
+  set fullScreenOverNotch(bool value) {
+    _fullScreenOverNotch = value;
+    Prefs().setFullScreenOverNotch(_fullScreenOverNotch);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -681,6 +689,7 @@ class SettingsProvider extends ChangeNotifier {
     _showQuickMenuInTabBar = await Prefs().getShowQuickMenuInTabBar();
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
     _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
+    _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {

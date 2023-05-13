@@ -1,9 +1,6 @@
-import 'dart:developer';
-
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +24,7 @@ class WebViewStackView extends StatefulWidget {
   final String initUrl;
   final bool dialog;
   final bool recallLastSession;
+  final String restoredTheme;
 
   // Chaining
   final bool isChainingBrowser;
@@ -36,6 +34,7 @@ class WebViewStackView extends StatefulWidget {
     this.initUrl = "https://www.torn.com",
     this.dialog = false,
     this.recallLastSession = false,
+    this.restoredTheme = "",
 
     // Chaining
     this.isChainingBrowser = false,
@@ -65,6 +64,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   GlobalKey _showcaseTabsGeneral = GlobalKey();
   GlobalKey _showQuickMenuButton = GlobalKey();
   GlobalKey _showCaseNewTabButton = GlobalKey();
+  GlobalKey<CircularMenuFixedState> _circularMenuKey = GlobalKey();
 
   Animation<double> _menuTabOpacity;
   AnimationController _menuTabAnimationController;
@@ -102,14 +102,13 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
 
     _menuTabAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 5),
+      value: 1,
     );
 
     _menuTabOpacity = CurvedAnimation(
       parent: _menuTabAnimationController,
       curve: Curves.easeIn,
     );
-    _menuTabAnimationController.forward();
   }
 
   @override
@@ -117,6 +116,40 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
+    if (widget.dialog) {
+      // Return the quick dialog
+      return SafeArea(
+        top: _webViewProvider.currentUiMode != UiMode.fullScreen,
+        bottom: _webViewProvider.currentUiMode != UiMode.fullScreen,
+        left: _webViewProvider.currentUiMode != UiMode.fullScreen,
+        right: _webViewProvider.currentUiMode != UiMode.fullScreen,
+        child: Dialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
+            vertical: _webViewProvider.currentUiMode == UiMode.window ? 10 : 0,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Container(
+            color: widget.restoredTheme == "extraDark" ? Color(0xFF131313) : Colors.transparent,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: _webViewProvider.currentUiMode == UiMode.window ? 6 : 0,
+                horizontal: _webViewProvider.currentUiMode == UiMode.window ? 3 : 0,
+              ),
+              child: stackView(),
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Return the full browser
+      return stackView();
+    }
+  }
+
+  Widget stackView() {
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -126,6 +159,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
+        top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        bottom: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        left: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        right: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
         child: ShowCaseWidget(
           builder: Builder(builder: (_) {
             _launchShowCases(_);
@@ -432,7 +469,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                       child: _webViewProvider.useTabIcons
-                          ? SizedBox(width: 24, child: _getIcon(i))
+                          ? SizedBox(width: 24, height: 20, child: _getIcon(i))
                           : Container(
                               constraints: BoxConstraints(maxWidth: 100, minWidth: 34),
                               child: Text(
@@ -483,12 +520,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       descTextStyle: TextStyle(fontSize: 13),
       tooltipPadding: EdgeInsets.all(20),
       child: GestureDetector(
-        onTap: () async {
-          // We need to wait longer than the [_menuTabAnimationController] animation to avoid
-          // notifying listeners during widget build
-          await Future.delayed(Duration(milliseconds: 100));
-          if (mounted) _webViewProvider.verticalMenuClose();
-        },
+        onTap: () => _webViewProvider.verticalMenuClose(),
         child: Container(
           color: Colors.transparent,
           height: _webViewProvider.verticalMenuIsOpen ? 300 : 40,
@@ -567,6 +599,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                             key: UniqueKey(),
                             opacity: _menuTabOpacity,
                             child: CircularMenuFixed(
+                              key: _circularMenuKey,
                               webViewProvider: _webViewProvider,
                               alignment: Alignment.centerLeft,
                               toggleButtonColor: Colors.transparent,

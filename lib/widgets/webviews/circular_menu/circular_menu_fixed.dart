@@ -50,8 +50,8 @@ class CircularMenuFixed extends StatefulWidget {
     this.alignment = Alignment.bottomCenter,
     this.radius = 50,
     this.backgroundWidget,
-    this.animationDuration = const Duration(milliseconds: 500),
-    this.curve = Curves.bounceOut,
+    this.animationDuration = const Duration(milliseconds: 300),
+    this.curve = Curves.easeInOutQuint,
     this.reverseCurve = Curves.fastOutSlowIn,
     this.toggleButtonOnPressed,
     this.toggleButtonColor,
@@ -73,33 +73,20 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
   AnimationController _animationController;
   Animation<double> _animation;
 
-  /// forward animation
-  void forwardAnimation() {
-    _animationController.forward();
-  }
-
-  /// reverse animation
-  void reverseAnimation() {
-    _animationController.reverse();
-  }
-
   @override
   void initState() {
     _animationController = AnimationController(
       vsync: this,
       duration: widget.animationDuration,
-    )..addListener(() {
-        setState(() {});
-      });
-    _animation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: widget.curve, reverseCurve: widget.reverseCurve),
     );
 
-    if (widget.webViewProvider.verticalMenuIsOpen) {
-      _animationController.forward();
-    } else {
-      _animationController.reverse();
-    }
+    _animation = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: widget.curve,
+        reverseCurve: widget.reverseCurve,
+      ),
+    );
 
     super.initState();
   }
@@ -140,7 +127,7 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
           margin: widget.toggleButtonMargin,
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: 50,
-          onTap: () {
+          onTap: () async {
             if (_animationController.status == AnimationStatus.dismissed) {
               widget.webViewProvider.verticalMenuOpen();
             } else {
@@ -172,11 +159,25 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
+    if (widget.webViewProvider.verticalMenuIsOpen) {
+      _animationController.forward();
+    } else {
+      _animationController.reverse();
+    }
     return Stack(
       children: <Widget>[
-        widget.backgroundWidget ?? Container(),
-        ..._buildMenuItems(),
-        _buildMenuButton(context),
+        AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                widget.backgroundWidget ?? Container(),
+                ..._buildMenuItems(),
+                _buildMenuButton(context),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
