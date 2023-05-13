@@ -302,6 +302,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenOverBottom = true;
+  bool get fullScreenOverBottom => _fullScreenOverBottom;
+  set fullScreenOverBottom(bool value) {
+    _fullScreenOverBottom = value;
+    Prefs().setFullScreenOverBottom(_fullScreenOverBottom);
+    notifyListeners();
+  }
+
+  var _fullScreenOverSides = true;
+  bool get fullScreenOverSides => _fullScreenOverSides;
+  set fullScreenOverSides(bool value) {
+    _fullScreenOverSides = value;
+    Prefs().setFullScreenOverSides(_fullScreenOverSides);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -690,6 +706,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
     _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
     _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
+    _fullScreenOverBottom = await Prefs().getFullScreenOverBottom();
+    _fullScreenOverSides = await Prefs().getFullScreenOverSides();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {

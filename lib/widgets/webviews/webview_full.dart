@@ -472,9 +472,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               : Colors.black,
       child: SafeArea(
         top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        bottom: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        left: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        right: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        bottom: !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        left: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
         child: Consumer<WebViewProvider>(
           builder: (context, wv, child) => Scaffold(
             backgroundColor: _themeProvider.canvas,
@@ -750,7 +750,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             setState(() {
                               _closeButtonTriggered = true;
                             });
-                            _webViewProvider.currentUiMode = UiMode.window;
+                            _webViewProvider.setCurrentUiMode(UiMode.window, context);
                             await Future.delayed(const Duration(milliseconds: 200));
                             if (mounted) {
                               Navigator.of(context).pop();
@@ -1915,7 +1915,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     setState(() {
                       _closeButtonTriggered = true;
                     });
-                    _webViewProvider.currentUiMode = UiMode.window;
+                    _webViewProvider.setCurrentUiMode(UiMode.window, context);
                     await Future.delayed(const Duration(milliseconds: 200));
                     if (mounted) {
                       Navigator.of(context).pop();

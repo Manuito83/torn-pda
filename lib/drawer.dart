@@ -275,6 +275,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _initIntentListenerSubscription();
       _initIntentReceiverOnLaunch();
     }
+
+    // Callback to bring the browser back to a window whenever it is extended to the top
+    // and the user swipes down (except if it's extended top and bottom, which does not trigger)
+    SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
+      // Android requires 1 second wait (see documentation)
+      await Future.delayed(const Duration(seconds: 1));
+      if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
+          systemOverlaysAreVisible &&
+          _settingsProvider.fullScreenOverNotch) {
+        _webViewProvider.setCurrentUiMode(UiMode.window, context);
+      }
+    });
   }
 
   @override

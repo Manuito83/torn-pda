@@ -119,10 +119,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     if (widget.dialog) {
       // Return the quick dialog
       return SafeArea(
-        top: _webViewProvider.currentUiMode != UiMode.fullScreen,
-        bottom: _webViewProvider.currentUiMode != UiMode.fullScreen,
-        left: _webViewProvider.currentUiMode != UiMode.fullScreen,
-        right: _webViewProvider.currentUiMode != UiMode.fullScreen,
+        top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        bottom: !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        left: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        right: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
         child: Dialog(
           insetPadding: EdgeInsets.symmetric(
             horizontal: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
@@ -160,9 +160,9 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
               : Colors.black,
       child: SafeArea(
         top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        bottom: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        left: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        right: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        bottom: !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        left: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
         child: ShowCaseWidget(
           builder: Builder(builder: (_) {
             _launchShowCases(_);
@@ -610,7 +610,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                                   ? null
                                   : () {
                                       _webViewProvider.verticalMenuClose();
-                                      _webViewProvider.currentUiMode = UiMode.window;
+                                      _webViewProvider.setCurrentUiMode(UiMode.window, context);
                                       if (_settingsProvider.fullScreenRemovesChat) {
                                         _webViewProvider.showAllChatsFullScreen();
                                       }
@@ -684,12 +684,12 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                                   onTap: () async {
                                     _webViewProvider.verticalMenuClose();
                                     if (_webViewProvider.currentUiMode == UiMode.window) {
-                                      _webViewProvider.currentUiMode = UiMode.fullScreen;
+                                      _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
                                       if (_settingsProvider.fullScreenRemovesChat) {
                                         _webViewProvider.removeAllChatsFullScreen();
                                       }
                                     } else {
-                                      _webViewProvider.currentUiMode = UiMode.window;
+                                      _webViewProvider.setCurrentUiMode(UiMode.window, context);
                                       if (_settingsProvider.fullScreenRemovesChat) {
                                         _webViewProvider.showAllChatsFullScreen();
                                       }

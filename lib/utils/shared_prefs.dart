@@ -241,6 +241,8 @@ class Prefs {
   final String _kFullScreenRemovesWidgets = "pda_fullScreenRemovesWidgets";
   final String _kFullScreenRemovesChat = "pda_fullScreenRemovesChat";
   final String _kFullScreenOverNotch = "pda_fullScreenOverNotch";
+  final String _kFullScreenOverBottom = "pda_fullScreenOverBottom";
+  final String _kFullScreenOverSides = "pda_fullScreenOverSides";
 
   // Items
   final String _kItemsSort = "pda_itemssSort";
@@ -2715,6 +2717,26 @@ class Prefs {
   Future<bool> setFullScreenOverNotch(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kFullScreenOverNotch, value);
+  }
+
+  Future<bool> getFullScreenOverBottom() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenOverBottom) ?? true;
+  }
+
+  Future<bool> setFullScreenOverBottom(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenOverBottom, value);
+  }
+
+  Future<bool> getFullScreenOverSides() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenOverSides) ?? true;
+  }
+
+  Future<bool> setFullScreenOverSides(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenOverSides, value);
   }
 
   /// ----------------------------

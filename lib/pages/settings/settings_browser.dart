@@ -96,6 +96,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 10),
+                            _fullScreen(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
                             _chat(context),
                             SizedBox(height: 15),
                             Divider(),
@@ -1181,6 +1185,33 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Column _fullScreen() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'FULL SCREEN MODE',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+          child: Text(
+            'NOTE: full screen mode is only accessible if using tabs and through the quick menu tab!',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
           child: Row(
@@ -1248,7 +1279,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Full screen extends over notch")),
+              Flexible(child: Text("Full screen extends to top")),
               Switch(
                 value: _settingsProvider.fullScreenOverNotch,
                 onChanged: (value) {
@@ -1265,9 +1296,71 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'Dictates whether the full screen mode should extend over the front-facing camera and any other sensors '
-            'your mobile device might have placed in the screen (notch). It will extend the view further, but certain '
-            'web elements might be hidden or obscured.',
+            'Dictates whether the full screen mode should extend all the way to the top, which might include '
+            'the front-facing camera and any other sensors (notch). It will extend the view further, but certain '
+            'web elements might be hidden or obscured, as might happen with corners.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen extends to bottom")),
+              Switch(
+                value: _settingsProvider.fullScreenOverBottom,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenOverBottom = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode should extend all the way to the bottom. In certain devices this '
+            'might cause the tabs at the corner to be barely reachable.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen extends to sides")),
+              Switch(
+                value: _settingsProvider.fullScreenOverSides,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenOverSides = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode should extend all the way to the sides, including any possible '
+            'front-facing cameras, notch, etc. Might be useful for landscape mode.',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,

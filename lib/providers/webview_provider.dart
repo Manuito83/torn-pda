@@ -8,8 +8,10 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
@@ -68,11 +70,21 @@ class WebViewProvider extends ChangeNotifier {
 
   UiMode _currentUiMode = UiMode.window;
   UiMode get currentUiMode => _currentUiMode;
-  set currentUiMode(UiMode value) {
+  setCurrentUiMode(UiMode value, BuildContext _) {
     _currentUiMode = value;
-    _currentUiMode == UiMode.fullScreen
-        ? SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)
-        : SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    if (_currentUiMode == UiMode.fullScreen) {
+      SettingsProvider settings = Provider.of<SettingsProvider>(_, listen: false);
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.manual,
+        overlays: [
+          if (!settings.fullScreenOverNotch) SystemUiOverlay.top,
+          if (!settings.fullScreenOverBottom) SystemUiOverlay.bottom,
+        ],
+      );
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+
     notifyListeners();
   }
 
