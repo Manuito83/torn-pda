@@ -1191,6 +1191,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _fullScreen() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1361,6 +1362,66 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Text(
             'Dictates whether the full screen mode should extend all the way to the sides, including any possible '
             'front-facing cameras, notch, etc. Might be useful for landscape mode.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Launch quick browser in full screen")),
+              Switch(
+                value: _settingsProvider.fullScreenDefaultInQuickBrowser,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenDefaultInQuickBrowser = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Opens the quick browser with full screen mode by default.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Launch full browser in full screen")),
+              Switch(
+                value: _settingsProvider.fullScreenDefaultInFullBrowser,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenDefaultInFullBrowser = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Opens the full browser with full screen mode by default.',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,

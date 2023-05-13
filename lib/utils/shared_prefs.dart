@@ -243,6 +243,8 @@ class Prefs {
   final String _kFullScreenOverNotch = "pda_fullScreenOverNotch";
   final String _kFullScreenOverBottom = "pda_fullScreenOverBottom";
   final String _kFullScreenOverSides = "pda_fullScreenOverSides";
+  final String _kFullScreenDefaultInQuickBrowser = "pda_fullScreenDefaultInQuickBrowser";
+  final String _kFullScreenDefaultInFullBrowser = "pda_fullScreenDefaultInFullBrowser";
 
   // Items
   final String _kItemsSort = "pda_itemssSort";
@@ -2737,6 +2739,26 @@ class Prefs {
   Future<bool> setFullScreenOverSides(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kFullScreenOverSides, value);
+  }
+
+  Future<bool> getFullScreenDefaultInQuickBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenDefaultInQuickBrowser) ?? false;
+  }
+
+  Future<bool> setFullScreenDefaultInQuickBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenDefaultInQuickBrowser, value);
+  }
+
+  Future<bool> getFullScreenDefaultInFullBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenDefaultInFullBrowser) ?? false;
+  }
+
+  Future<bool> setFullScreenDefaultInFullBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenDefaultInFullBrowser, value);
   }
 
   /// ----------------------------

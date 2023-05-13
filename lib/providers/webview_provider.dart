@@ -695,6 +695,13 @@ class WebViewProvider extends ChangeNotifier {
     }
     _lastBrowserOpenedTime = DateTime.now();
 
+    // If we are using tabs and selected it by default in the concerning browser type, start with full screen
+    SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
+    if ((useDialog && settings.useTabsBrowserDialog && settings.fullScreenDefaultInQuickBrowser) ||
+        (!useDialog && settings.useTabsFullBrowser && settings.fullScreenDefaultInFullBrowser)) {
+      setCurrentUiMode(UiMode.fullScreen, context);
+    }
+
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
       // First check if the browser (whichever) is open. If it is, load the url in that browser.

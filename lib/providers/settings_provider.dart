@@ -318,6 +318,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenDefaultInQuickBrowser = false;
+  bool get fullScreenDefaultInQuickBrowser => _fullScreenDefaultInQuickBrowser;
+  set fullScreenDefaultInQuickBrowser(bool value) {
+    _fullScreenDefaultInQuickBrowser = value;
+    Prefs().setFullScreenDefaultInQuickBrowser(_fullScreenDefaultInQuickBrowser);
+    notifyListeners();
+  }
+
+  var _fullScreenDefaultInFullBrowser = false;
+  bool get fullScreenDefaultInFullBrowser => _fullScreenDefaultInFullBrowser;
+  set fullScreenDefaultInFullBrowser(bool value) {
+    _fullScreenDefaultInFullBrowser = value;
+    Prefs().setFullScreenDefaultInFullBrowser(_fullScreenDefaultInFullBrowser);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -708,6 +724,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
     _fullScreenOverBottom = await Prefs().getFullScreenOverBottom();
     _fullScreenOverSides = await Prefs().getFullScreenOverSides();
+    _fullScreenDefaultInQuickBrowser = await Prefs().getFullScreenDefaultInQuickBrowser();
+    _fullScreenDefaultInFullBrowser = await Prefs().getFullScreenDefaultInFullBrowser();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
