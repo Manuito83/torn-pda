@@ -707,6 +707,15 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                                     }
                                   },
                                 ),
+                                if (_webViewProvider.currentUiMode == UiMode.fullScreen)
+                                  CircularMenuItem(
+                                    icon: Icons.close,
+                                    color: Colors.orange[900],
+                                    onTap: () {
+                                      _webViewProvider.verticalMenuClose();
+                                      _webViewProvider.closeWebViewFromOutside();
+                                    },
+                                  ),
                                 CircularMenuItem(
                                   icon: Icons.delete_forever_outlined,
                                   color: Colors.red[800],

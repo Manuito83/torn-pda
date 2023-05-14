@@ -377,6 +377,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       disableLongPressContextMenuOnLinks: true,
       ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
       disallowOverScroll: _settingsProvider.iosDisallowOverscroll,
+      overScrollMode: OverScrollMode.NEVER,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -4407,5 +4408,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   bool _fullScreenAndWidgetHide() {
     return _webViewProvider.currentUiMode == UiMode.fullScreen && _settingsProvider.fullScreenRemovesWidgets;
+  }
+
+  void closeBrowserFromOutside() async {
+    setState(() {
+      _closeButtonTriggered = true;
+    });
+    _webViewProvider.setCurrentUiMode(UiMode.window, context);
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 }

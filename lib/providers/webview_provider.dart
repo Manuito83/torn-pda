@@ -765,4 +765,9 @@ class WebViewProvider extends ChangeNotifier {
       pendingThemeSync = "dark";
     }
   }
+
+  void closeWebViewFromOutside() {
+    var tab = _tabList[_currentTab];
+    tab.webViewKey?.currentState?.closeBrowserFromOutside();
+  }
 }
