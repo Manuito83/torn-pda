@@ -500,8 +500,28 @@ class WebViewProvider extends ChangeNotifier {
       tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
       _saveTabs();
+      BotToast.showText(
+        text: "Back",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
+      );
       return true;
     } else {
+      BotToast.showText(
+        text: "Can't go back!",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
+      );
       return false;
     }
   }
@@ -516,8 +536,28 @@ class WebViewProvider extends ChangeNotifier {
       tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
       _saveTabs();
+      BotToast.showText(
+        text: "Forward",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
+      );
       return true;
     } else {
+      BotToast.showText(
+        text: "Can't go forward!",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
+      );
       return false;
     }
   }

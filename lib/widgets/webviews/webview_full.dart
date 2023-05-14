@@ -752,7 +752,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               _closeButtonTriggered = true;
                             });
                             _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                            await Future.delayed(const Duration(milliseconds: 200));
+                            await Future.delayed(const Duration(milliseconds: 150));
                             if (mounted) {
                               Navigator.of(context).pop();
                             }
@@ -1917,7 +1917,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       _closeButtonTriggered = true;
                     });
                     _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                    await Future.delayed(const Duration(milliseconds: 200));
+                    await Future.delayed(const Duration(milliseconds: 150));
                     if (mounted) {
                       Navigator.of(context).pop();
                     }
@@ -2035,73 +2035,28 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Future _tryGoBack() async {
     _webViewProvider.verticalMenuClose();
-    bool success = false;
 
     // It's much more precise to use the native implementation (when not using tabs),
     // since onLoadStop and onLoadResource won't trigger always and need exceptions
     if (widget.useTabs) {
-      success = _webViewProvider.tryGoBack();
+      _webViewProvider.tryGoBack();
     } else {
-      success = await webView.canGoBack();
-    }
-
-    if (success) {
-      BotToast.showText(
-        text: "Back",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-    } else {
-      BotToast.showText(
-        text: "Can't go back!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
+      bool success = await webView.canGoBack();
+      if (success) {
+        await webView.goBack();
+      }
     }
   }
 
   Future _tryGoForward() async {
     _webViewProvider.verticalMenuClose();
-    bool success = false;
     if (widget.useTabs) {
-      success = _webViewProvider.tryGoForward();
+      _webViewProvider.tryGoForward();
     } else {
-      success = await webView.canGoForward();
-    }
-
-    if (success) {
-      await webView.goForward();
-      BotToast.showText(
-        text: "Forward",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-    } else {
-      BotToast.showText(
-        text: "Can't go forward!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
+      bool success = await webView.canGoForward();
+      if (success) {
+        await webView.goForward();
+      }
     }
   }
 
@@ -4415,7 +4370,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _closeButtonTriggered = true;
     });
     _webViewProvider.setCurrentUiMode(UiMode.window, context);
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 150));
     if (mounted) {
       Navigator.of(context).pop();
     }

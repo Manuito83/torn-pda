@@ -14,6 +14,12 @@ class FullScreenExplanationDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       elevation: 0.0,
+      contentPadding: EdgeInsets.only(
+        left: 0.0,
+        top: 2.0,
+        right: 0.0,
+        bottom: 2.0,
+      ),
       backgroundColor: Colors.transparent,
       content: SingleChildScrollView(
         child: Stack(
@@ -51,9 +57,12 @@ class FullScreenExplanationDialog extends StatelessWidget {
                       "rounded corners make tabs difficult to select.\n\n"
                       "It is also possible to launch the quick or full browser always in full screen mode by default, "
                       "so you can use them for different purposes.\n\n"
-                      "Oh, by the way. You can exit the fullscreen mode by taping again the same icon you just tapped, "
+                      "You can exit the fullscreen mode by taping again the same icon you just tapped, "
                       "or by double tapping the three-dotted-icon (which is now in orange color), which might be "
                       "faster to do.\n\n"
+                      "How do I reload, go forward or back, You may be asking yourself. For reloading, consider "
+                      "activating the 'pull-to-refresh' option for the browser. To browse forward or back, try "
+                      "a quick left or right swipe gesture over the tab bar!\n\n"
                       "If you need to exit the browser quickly, you can do so also from the quick menu whenever "
                       "you are in full screen mode.",
                       style: TextStyle(fontSize: 14),

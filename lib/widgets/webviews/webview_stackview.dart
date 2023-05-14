@@ -9,6 +9,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/custom_gesture_recognizers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -249,7 +250,24 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                               height: 4,
                             );
                           } else {
-                            return _bottomNavBar(_);
+                            return RawGestureDetector(
+                              gestures: {
+                                AllowMultipleVerticalDragGestureRecognizer:
+                                    GestureRecognizerFactoryWithHandlers<AllowMultipleVerticalDragGestureRecognizer>(
+                                  () => AllowMultipleVerticalDragGestureRecognizer(),
+                                  (AllowMultipleVerticalDragGestureRecognizer instance) {
+                                    instance.onEnd = (details) async {
+                                      if (details.primaryVelocity < 0) {
+                                        await _webViewProvider.tryGoForward();
+                                      } else if (details.primaryVelocity > 0) {
+                                        await _webViewProvider.tryGoBack();
+                                      }
+                                    };
+                                  },
+                                )
+                              },
+                              child: _bottomNavBar(_),
+                            );
                           }
                         } else {
                           return SizedBox.shrink();
@@ -683,6 +701,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                                   color: _webViewProvider.currentUiMode == UiMode.window ? null : Colors.orange,
                                   onTap: () async {
                                     _webViewProvider.verticalMenuClose();
+                                    await Future.delayed(Duration(milliseconds: 150));
                                     if (_webViewProvider.currentUiMode == UiMode.window) {
                                       _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
                                       if (_settingsProvider.fullScreenRemovesChat) {
