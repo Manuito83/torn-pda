@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 // Flutter imports:
@@ -58,6 +59,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -1794,6 +1796,31 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             Prefs().setAppwidgetExplanationShown(true);
             return; // Do not show more dialogs below
           }
+        }
+      }
+
+      // Announcement dialog
+      // Version hardcoded - only allow users with version 0
+      if ((await Prefs().getAppAnnouncementDialogVersion()) <= 0) {
+        // For version 1, user needs to have 24 hours of app use
+        int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+        if (savedSeconds < 86400) return;
+
+        // If we are still in an old dialog, get DB to see if we can are free to show it
+        int allowed = (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value;
+        if (allowed == 1) {
+          // If we are allowed to proceed, show the dialog
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return AnnouncementDialog(themeProvider: _themeProvider);
+            },
+          );
+
+          // Then update the version to the current one
+          Prefs().setAppAnnouncementDialogVersion(1);
+          return; // Do not show more dialogs below
         }
       }
 

@@ -136,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _apiRetries = 0;
 
   OwnProfileExtended _user;
-  List<Event> _events;
+  List<Event> _events = <Event>[];
 
   DateTime _serverTime;
 
@@ -2670,7 +2670,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Card _eventsTimeline() {
     int maxToShow = _eventsShowNumber;
 
-    if (_events == null) {
+    if (_events.length == 0) {
       return Card(
         child: Row(
           children: [
@@ -2694,37 +2694,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-      );
-    } else if (_events.length == 0) {
-      return Card(
-        child: Row(
-          children: [
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Text(
-                      'EVENTS',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
-                    child: Text(
-                      "You have no recent events or there was a problem fetching them from the API",
-                      style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),

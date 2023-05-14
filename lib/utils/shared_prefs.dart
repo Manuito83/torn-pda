@@ -11,6 +11,7 @@ class Prefs {
 
   // General
   final String _kAppVersion = "pda_appVersion";
+  final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
 
@@ -319,6 +320,20 @@ class Prefs {
   Future<bool> setAppCompilation(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAppVersion, value);
+  }
+
+  /// -------------------------------
+  /// Methods for announcement dialog
+  /// -------------------------------
+
+  Future<int> getAppAnnouncementDialogVersion() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kAppAnnouncementDialogVersion) ?? 0;
+  }
+
+  Future<bool> setAppAnnouncementDialogVersion(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kAppAnnouncementDialogVersion, value);
   }
 
   /// ----------------------------
