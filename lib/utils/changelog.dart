@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 308 - 14/05/2023
+    // Build 309 - 15/05/2023
 
     // VERSION 3.1.0
     var v3_1_0 = ChangeLogItem();
     v3_1_0.version = 'Torn PDA v3.1.0';
-    v3_1_0.date = '20 MAY 2023';
+    v3_1_0.date = '22 MAY 2023';
     String feat3_1_0_1 = "Added home screen widget (see Tips)";
     String feat3_1_0_2 = "Added Ranked War information and notifications to Profile page";
     String feat3_1_0_3 = "The browser can now be chosen as the default app's launch section (Settings)";
