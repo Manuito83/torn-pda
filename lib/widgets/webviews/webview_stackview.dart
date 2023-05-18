@@ -243,7 +243,8 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                       future: providerInitialised,
                       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                         if (snapshot.connectionState == ConnectionState.done && _useTabs) {
-                          if (_webViewProvider.hideTabs) {
+                          // Don't hide to hide tabs on fullscreen, or we might not be able to return to the app!
+                          if (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window) {
                             return Divider(
                               color: Color(_settingsProvider.tabsHideBarColor),
                               thickness: 4,
