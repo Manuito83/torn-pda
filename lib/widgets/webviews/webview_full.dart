@@ -1532,30 +1532,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           */
         ),
         // Container that covers Torn's top bar to serve as a gesture detector
-        if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon)
-          GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onVerticalDragEnd: (_) async {
-              // Pull to refresh for short pages (since v3.1.0 we also add an extra height to short pages via scripts)
-              if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
-                await reload();
-                _pullToRefreshController.beginRefreshing();
+        GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onVerticalDragEnd: (_) async {
+            // Pull to refresh for short pages (since v3.1.0 we also add an extra height to short pages via scripts)
+            if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
+              await reload();
+              _pullToRefreshController.beginRefreshing();
+            }
+          },
+          onDoubleTap: () {
+            // Return to windowed mode
+            if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
+              _webViewProvider.verticalMenuClose();
+              _webViewProvider.setCurrentUiMode(UiMode.window, context);
+              if (_settingsProvider.fullScreenRemovesChat) {
+                _webViewProvider.showAllChatsFullScreen();
               }
-            },
-            onDoubleTap: () {
-              // Return to windowed mode
-              if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
-                _webViewProvider.verticalMenuClose();
-                _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                if (_settingsProvider.fullScreenRemovesChat) {
-                  _webViewProvider.showAllChatsFullScreen();
-                }
-              }
-            },
-            child: Container(
-              height: 32,
-            ),
+            }
+          },
+          child: Container(
+            height: 32,
           ),
+        ),
       ],
     );
   }
