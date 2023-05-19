@@ -21,7 +21,7 @@ Future<int> pdaWidget_numberInstalled() async {
 void pdaWidget_backgroundUpdate() {
   Workmanager().executeTask((taskName, inputData) async {
     DateTime now = DateTime.now();
-    String timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+    //String timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
     //log("Widget $taskName update @$timeString ");
 
     int count = await pdaWidget_numberInstalled();
@@ -145,11 +145,25 @@ Future<void> pdaWidget_fetchData() async {
 
             // Red status in Torn (hospital/jail)
             if (user.status.color == "red") {
+              bool repatriated = false;
+              if (user.travel.timeLeft > 0) {
+                // Repatriated
+                repatriated = true;
+                var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel.timestamp * 1000);
+                var timeDifference = dateTimeArrival.difference(DateTime.now());
+                String twoDigits(int n) => n.toString().padLeft(2, "0");
+                String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+                statusDescription = "Repatriated in";
+                statusDescription += ' ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+                statusDescription = statusDescription.replaceAll("00h ", "");
+                HomeWidget.saveWidgetData<String>("travel", "left");
+              }
+
               var redEnd = DateTime.fromMillisecondsSinceEpoch(user.status.until * 1000);
               var timeDifference = redEnd.difference(DateTime.now());
               String twoDigits(int n) => n.toString().padLeft(2, "0");
               String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-              if (state == "Hospital") {
+              if (state == "Hospital" && !repatriated) {
                 statusDescription = 'Hospital for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               } else if (state == "Jail") {
                 statusDescription = 'Jail for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
@@ -163,11 +177,11 @@ Future<void> pdaWidget_fetchData() async {
         HomeWidget.saveWidgetData<String>('status_color', user.status.color);
 
         // Messages and events
-        int unreadMessages = user.messages.length;
-        HomeWidget.saveWidgetData<int>('messages', unreadMessages);
+        int unreadMessages = user.messages?.length;
+        HomeWidget.saveWidgetData<int>('messages', unreadMessages ?? 0);
 
-        int unreadEvents = user.events.length;
-        HomeWidget.saveWidgetData<int>('events', unreadEvents);
+        int unreadEvents = user.events?.length;
+        HomeWidget.saveWidgetData<int>('events', unreadEvents ?? 0);
 
         // Energy
         int currentEnergy = user.energy.current;

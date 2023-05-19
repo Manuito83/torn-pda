@@ -1012,22 +1012,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
+    bool repatriated = false;
+
     Color stateColor;
     if (_user.status.color == 'red') {
       stateColor = Colors.red;
+      if (_user.travel.timeLeft > 0) {
+        repatriated = true;
+      }
     } else if (_user.status.color == 'green') {
       stateColor = Colors.green;
     } else if (_user.status.color == 'blue') {
       stateColor = Colors.blue;
     }
 
-    Widget stateBall() {
+    Widget stateBall({bool forceBlue = false}) {
       return Padding(
         padding: EdgeInsets.only(left: 8),
         child: Container(
           width: 13,
           height: 13,
-          decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+          decoration: BoxDecoration(
+            color: forceBlue ? Colors.blue : stateColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.black),
+          ),
         ),
       );
     }
@@ -1092,25 +1101,65 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(left: 8),
               child: Column(
                 children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 60,
-                            child: Text('Status: '),
-                          ),
-                          Text(_user.status.state),
-                          stateBall(),
-                        ],
-                      ),
-                      if (_user.status.color == 'red' && _user.status.state == "Hospital")
-                        _notificationIcon(ProfileNotification.hospital),
-                      if (_user.status.color == 'red' && _user.status.state == "Jail")
-                        _notificationIcon(ProfileNotification.hospital),
-                    ],
-                  ),
+                  if (!repatriated)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 60,
+                              child: Text('Status: '),
+                            ),
+                            Text(_user.status.state),
+                            stateBall(),
+                          ],
+                        ),
+                        if (_user.status.color == 'red' && _user.status.state == "Hospital")
+                          _notificationIcon(ProfileNotification.hospital),
+                        if (_user.status.color == 'red' && _user.status.state == "Jail")
+                          _notificationIcon(ProfileNotification.hospital),
+                      ],
+                    )
+                  else
+                    // Travelling while in hospital (repatriation)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 60,
+                                  child: Text('Status: '),
+                                ),
+                                Text(_user.status.state),
+                                stateBall(),
+                              ],
+                            ),
+                            if (_user.status.color == 'red' && _user.status.state == "Hospital")
+                              _notificationIcon(ProfileNotification.hospital),
+                            if (_user.status.color == 'red' && _user.status.state == "Jail")
+                              _notificationIcon(ProfileNotification.hospital),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Row(
+                              children: [
+                                SizedBox(width: 60),
+                                Text("Travel (repatriated)"),
+                                stateBall(forceBlue: true),
+                              ],
+                            ),
+                            _notificationIcon(ProfileNotification.travel),
+                          ],
+                        ),
+                        if (!_dedicatedTravelCard) _travelWidget(repatriated: true),
+                      ],
+                    ),
                   BazaarStatusCard(
                     // Careful, in this card we mixed sync with async items, so the miscModel can still be null
                     bazaarModel: _miscModel?.bazaar,
@@ -1179,8 +1228,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Widget _travelWidget() {
-    if (_user.status.state == 'Traveling') {
+  Widget _travelWidget({bool repatriated = false}) {
+    if (_user.status.state == 'Traveling' || repatriated) {
       var startTime = _user.travel.departed;
       var endTime = _user.travel.timestamp;
       var totalTravelTimeSeconds = endTime - startTime;
@@ -1285,8 +1334,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Card _travelCard() {
     Widget header;
+    bool repatriated = false;
     if (_user.status.state == "Traveling") {
       header = _travelWidget();
+    } else if (_user.status.state == "Hospital" && _user.travel.timeLeft > 0) {
+      header = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 55),
+            child: Text(
+              "REPATRIATED",
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.red,
+              ),
+            ),
+          ),
+          _travelWidget(repatriated: true),
+        ],
+      );
+      repatriated = true;
     } else if (_user.status.state == "Abroad") {
       header = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1554,7 +1622,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     Widget buttonsRow;
-    if (_user.status.state == "Traveling") {
+    if (_user.status.state == "Traveling" || repatriated) {
       if (_user.travel.timeLeft > 180) {
         buttonsRow = Padding(
           padding: const EdgeInsets.only(top: 14),

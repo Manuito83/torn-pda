@@ -112,7 +112,7 @@ class OwnProfileMisc {
         properties: json["properties"] == null
             ? null
             : Map.from(json["properties"]).map((k, v) => MapEntry<String, Property>(k, Property.fromJson(v))),
-        bazaar: List<Bazaar>.from(json["bazaar"].map((x) => Bazaar.fromJson(x))),
+        bazaar: json["bazaar"] == null ? null : List<Bazaar>.from(json["bazaar"].map((x) => Bazaar.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
