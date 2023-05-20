@@ -1154,37 +1154,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ],
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Text("Show quick menu tab"),
-              Switch(
-                value: _settingsProvider.showQuickMenuInTabBar,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.showQuickMenuInTabBar = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Shows an extra tab that opens a quick menu with shortcuts, full screen mode and more. NOTE: this will '
-            'only be accessible if you are using tabs!',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -1391,7 +1360,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'Opens the quick browser with full screen mode by default.',
+            "Opens the quick browser with full screen mode by default.",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -1421,7 +1390,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'Opens the full browser with full screen mode by default.',
+            "Opens the full browser with full screen mode by default.  NOTE: this won't have any effect if the browser "
+            "is launched from the Chaining section, so that chain controls are readily available",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,

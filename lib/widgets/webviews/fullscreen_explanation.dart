@@ -61,8 +61,8 @@ class FullScreenExplanationDialog extends StatelessWidget {
                       "or by double tapping the three-dotted-icon (which is now in orange color), which might be "
                       "faster to do.\n\n"
                       "How do I reload, go forward or back, You may be asking yourself. For reloading, consider "
-                      "activating the 'pull-to-refresh' option for the browser. To browse forward or back, try "
-                      "a quick left or right swipe gesture over the tab bar!\n\n"
+                      "activating the 'pull-to-refresh' option for the browser. To browse forward or back, double tap "
+                      "the active tab and use the corresponding icon!\n\n"
                       "If you need to exit the browser quickly, you can do so also from the quick menu whenever "
                       "you are in full screen mode.",
                       style: TextStyle(fontSize: 14),

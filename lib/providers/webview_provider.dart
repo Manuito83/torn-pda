@@ -8,10 +8,13 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
@@ -89,6 +92,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   // Vertical expanding menu (menu button)
+  int verticalMenuCurrentIndex = 0;
   bool verticalMenuIsOpen = false;
 
   verticalMenuOpen() {
@@ -490,6 +494,38 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  void duplicateTab(int index) {
+    verticalMenuClose();
+    String message = "Added duplicated tab!";
+    Color messageColor = Colors.blue;
+    if (tabList[index].isChainingBrowser) {
+      message = "Chaining tabs can't be duplicated!";
+      messageColor = Colors.orange;
+    } else {
+      addTab(
+        url: tabList[index].currentUrl,
+        pageTitle: tabList[index].pageTitle,
+        sleepTab: true, // Needs sleep tab or it will crash in iOS 15.5 to 15.9
+        chatRemovalActive: tabList[index].chatRemovalActiveTab,
+        historyBack: tabList[index].historyBack,
+        historyForward: tabList[index].historyForward,
+      );
+    }
+    verticalMenuClose();
+
+    BotToast.showText(
+      crossPage: false,
+      text: message,
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: messageColor,
+      duration: Duration(seconds: 1),
+      contentPadding: EdgeInsets.all(10),
+    );
+  }
+
   bool tryGoBack() {
     var tab = _tabList[_currentTab];
     if (tab.historyBack.length > 0) {
@@ -736,9 +772,10 @@ class WebViewProvider extends ChangeNotifier {
     _lastBrowserOpenedTime = DateTime.now();
 
     // If we are using tabs and selected it by default in the concerning browser type, start with full screen
+    // (except if it's a chaining browser!)
     SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
     if ((useDialog && settings.useTabsBrowserDialog && settings.fullScreenDefaultInQuickBrowser) ||
-        (!useDialog && settings.useTabsFullBrowser && settings.fullScreenDefaultInFullBrowser)) {
+        (!useDialog && settings.useTabsFullBrowser && settings.fullScreenDefaultInFullBrowser) && !isChainingBrowser) {
       setCurrentUiMode(UiMode.fullScreen, context);
     }
 
@@ -809,5 +846,74 @@ class WebViewProvider extends ChangeNotifier {
   void closeWebViewFromOutside() {
     var tab = _tabList[_currentTab];
     tab.webViewKey?.currentState?.closeBrowserFromOutside();
+  }
+
+  /// Uses the already generated shortcuts list
+  Widget getIcon(int i, BuildContext context) {
+    var url = tabList[i].currentUrl;
+
+    var themeProvider = context.read<ThemeProvider>();
+    Widget boxWidget = const ImageIcon(AssetImage('images/icons/pda_icon.png'));
+
+    // Find some icons manually first, as they might trigger errors with shortcuts
+    if (!url.contains("torn.com")) {
+      return Icon(Icons.public, size: 22, color: themeProvider.mainText);
+    } else if (tabList[i].isChainingBrowser) {
+      return Icon(MdiIcons.linkVariant, color: Colors.red);
+    } else if (url.contains("sid=attack&user2ID=2225097")) {
+      return Icon(MdiIcons.pistol, color: Colors.pink);
+    } else if (url.contains("sid=attack&user2ID=")) {
+      return Icon(Icons.person);
+    } else if (url.contains("profiles.php?XID=2225097")) {
+      return Icon(Icons.person, color: Colors.pink);
+    } else if (url.contains("profiles.php")) {
+      return Icon(Icons.person, color: themeProvider.mainText);
+    } else if (url.contains("companies.php") || url.contains("joblist.php")) {
+      return ImageIcon(AssetImage('images/icons/home/job.png'));
+    } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
+      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
+    } else if (url.contains("https://www.torn.com/forums.php")) {
+      return ImageIcon(AssetImage('images/icons/home/forums.png'));
+    } else if (url.contains("yata.yt")) {
+      return Image.asset('images/icons/yata_logo.png');
+    } else if (url.contains("jailview.php")) {
+      return Image.asset('images/icons/map/jail.png', color: themeProvider.mainText);
+    } else if (url.contains("hospitalview.php")) {
+      return Image.asset('images/icons/map/hospital.png', color: themeProvider.mainText);
+    } else if (url.contains("events.php") || url.contains("page.php?sid=events")) {
+      return Image.asset('images/icons/home/events.png', color: themeProvider.mainText);
+    } else if (url.contains("properties.php")) {
+      return Image.asset('images/icons/map/property.png', color: themeProvider.mainText);
+    } else if (url.contains("tornstats.com/")) {
+      return Image.asset('images/icons/tornstats_logo.png');
+    } else if (url.contains("torntrader.com/")) {
+      return Image.asset('images/icons/torntrader_logo.png', color: themeProvider.mainText);
+    } else if (url.contains("arsonwarehouse.com/")) {
+      return Image.asset('images/icons/awh_logo2.png');
+    } else if (url.contains("index.php?page=hunting")) {
+      return Icon(MdiIcons.target, size: 20);
+    } else if (url.contains("bazaar.php")) {
+      return Image.asset('images/icons/inventory/bazaar.png', color: themeProvider.mainText);
+    } else if (url.contains("imarket.php")) {
+      return Image.asset('images/icons/map/item_market.png', color: themeProvider.mainText);
+    } else if (url.contains("index.php")) {
+      return ImageIcon(AssetImage('images/icons/home/home.png'));
+    }
+
+    // Try to find by using shortcuts list
+    // Note: some are not found because the value that comes from OnLoadStop in the WebView differs from
+    // the standard URL in shortcuts. That's why there are some more in the list above.
+    var shortProvider = context.read<ShortcutsProvider>();
+    for (var short in shortProvider.allShortcuts) {
+      if (url.contains(short.url)) {
+        boxWidget = ImageIcon(AssetImage(short.iconUrl));
+        // Return if the coincidence is not with the default shortcut
+        if (short.name != "Home") {
+          return boxWidget;
+        }
+      }
+    }
+
+    return boxWidget;
   }
 }

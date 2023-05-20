@@ -1891,6 +1891,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
     }
 
+    bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+            _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
+        _userProvider.basic?.faction?.factionId != 0;
+
     return CustomAppBar(
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
@@ -1951,11 +1955,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _openUrlDialog();
           },
           child: DottedBorder(
-            padding: const EdgeInsets.all(6),
-            dashPattern: const [1, 4],
-            color: Colors.white70,
+            padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
+            dashPattern: assistPossible ? const [1, 1] : const [1, 4],
+            color: assistPossible ? Colors.orange : Colors.white70,
             child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
               child: Showcase(
                 key: _showCaseTitleBar,
                 title: 'Options menu',
@@ -1971,13 +1974,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 tooltipPadding: EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        _pageTitle,
-                        overflow: TextOverflow.fade,
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
+                    assistPossible
+                        ? Flexible(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "ASSIST",
+                                  overflow: TextOverflow.fade,
+                                  style: TextStyle(fontSize: 9, color: Colors.orange),
+                                ),
+                                Text(
+                                  _pageTitle,
+                                  overflow: TextOverflow.fade,
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Flexible(
+                            child: Text(
+                              _pageTitle,
+                              overflow: TextOverflow.fade,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
                   ],
                 ),
               ),

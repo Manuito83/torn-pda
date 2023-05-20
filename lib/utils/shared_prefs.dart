@@ -237,7 +237,6 @@ class Prefs {
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
-  final String _kShowQuickMenuInTabBar = "pda_showQuickMenuInTabBar";
   final String _kFullScreenExplanationShown = "pda_fullScreenExplanationShown";
   final String _kFullScreenRemovesWidgets = "pda_fullScreenRemovesWidgets";
   final String _kFullScreenRemovesChat = "pda_fullScreenRemovesChat";
@@ -2685,16 +2684,6 @@ class Prefs {
   }
 
   // -- Quick menu tab
-
-  Future<bool> getShowQuickMenuInTabBar() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowQuickMenuInTabBar) ?? true;
-  }
-
-  Future<bool> setShowQuickMenuInTabBar(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowQuickMenuInTabBar, value);
-  }
 
   Future<bool> getFullScreenExplanationShown() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -467,10 +467,9 @@ class _TipsPageState extends State<TipsPage> {
         buildExpandedText: () {
           return Text.rich(
             TextSpan(
-              text: "If you are using tabs, a quick menu icon (three dots) will appear to the right (unless you "
-                  "disabled it!). Tapping it will open your shortcuts menu. Long-press it to add a new custom shortcut "
-                  "to the current page.\n\n"
-                  "Alternatively, if you are not using tabs (or if you deactivated the favorites icon), you can also:\n\n"
+              text: "If you are using tabs, a quick menu icon (three dots) will appear to the right. "
+                  "Tapping it will a vertical menu, with several shortcut options (heart icons).\n\n"
+                  "Alternatively, if you are not using tabs, you can also:\n\n"
                   "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
                   "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
               style: TextStyle(
@@ -507,7 +506,7 @@ class _TipsPageState extends State<TipsPage> {
           return Text.rich(
             TextSpan(
               text: "The browser supports full screen, which can be activated from the quick menu tab in the "
-                  "tab bar. \n\nTo access this feature, you need to have both 'tabs' and 'quick menu tab' enabled in the "
+                  "tab bar. \n\nTo access this feature, you need to have 'tabs' enabled in the "
                   "Advanced Browser Settings section (in the app's Settings menu).",
               style: TextStyle(
                 fontSize: 13,
@@ -569,7 +568,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Close tab",
-        expandedValue: "To close a tap, double tap on it.",
+        expandedValue: "To close a tap, double tap on it and use the red bin icon.",
       ),
     );
     tips.add(
@@ -590,9 +589,8 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
-        headerValue: "Duplicate first tab",
-        expandedValue: "If you want to quickly save your first tab, long-press it for a couple of seconds "
-            "and it will be cloned into the bar.",
+        headerValue: "Duplicate tabs",
+        expandedValue: "If you want to quickly save a tab, double-tap it and look for the duplicate (copy/paste) icon,",
       ),
     );
     tips.add(
@@ -607,7 +605,8 @@ class _TipsPageState extends State<TipsPage> {
         headerValue: "Hide tabs temporarily",
         expandedValue: "You can temporarily hide tabs so that the don't take space."
             "\n\nFull browser: tap and hold the title bar, then slide up or down.\n\n"
-            "Quick browser: tap and hold the bottom bar (where the 'close' button is), then slide up or down.",
+            "Quick browser: tap and hold the bottom bar (where the 'close' button is), then slide up or down.\n\n"
+            "Note: you can't do this while in full screen mode!",
       ),
     );
     return tips;

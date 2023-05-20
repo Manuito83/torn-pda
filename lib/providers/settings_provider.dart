@@ -270,14 +270,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _showQuickMenuInTabBar = true;
-  bool get showQuickMenuInTabBar => _showQuickMenuInTabBar;
-  set showQuickMenuInTabBar(bool value) {
-    _showQuickMenuInTabBar = value;
-    Prefs().setShowQuickMenuInTabBar(_showQuickMenuInTabBar);
-    notifyListeners();
-  }
-
   var _fullScreenRemovesWidgets = true;
   bool get fullScreenRemovesWidgets => _fullScreenRemovesWidgets;
   set fullScreenRemovesWidgets(bool value) {
@@ -718,7 +710,6 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
-    _showQuickMenuInTabBar = await Prefs().getShowQuickMenuInTabBar();
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
     _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
     _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();

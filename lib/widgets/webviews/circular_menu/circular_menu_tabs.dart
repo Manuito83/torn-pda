@@ -1,36 +1,34 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-
 import 'circular_menu_item.dart';
 
-class CircularMenuFixed extends StatefulWidget {
-  /// use global key to control animation anywhere in the code
-  final GlobalKey<CircularMenuFixedState> key;
+class CircularMenuTabs extends StatefulWidget {
+  /// Global key to control animation
+  final GlobalKey<CircularMenuTabsState> key;
 
-  /// list of CircularMenuItem contains at least two items.
+  /// List of CircularMenuItem contains at least two items.
   final List<CircularMenuItem> items;
 
-  /// menu alignment
+  /// Menu alignment
   final AlignmentGeometry alignment;
 
-  /// menu radius
+  /// Menu radius
   final double radius;
 
-  /// widget holds actual page content
+  /// Widget holds actual page content
   final Widget backgroundWidget;
 
-  /// animation duration
+  /// Animation duration
   final Duration animationDuration;
 
-  /// animation curve in forward
+  /// Animation curve in forward
   final Curve curve;
 
-  /// animation curve in reverse
+  /// Animation curve in reverse
   final Curve reverseCurve;
 
-  /// callback
+  /// Callback
   final VoidCallback toggleButtonOnPressed;
   final VoidCallback doubleTapped;
   final Color toggleButtonColor;
@@ -42,15 +40,21 @@ class CircularMenuFixed extends StatefulWidget {
   final AnimatedIconData toggleButtonAnimatedIconData;
 
   final WebViewProvider webViewProvider;
+  final int tabIndex;
 
-  CircularMenuFixed({
+  /// creates a circular menu with specific [radius] and [alignment] .
+  /// [toggleButtonElevation] ,[toggleButtonPadding] and [toggleButtonMargin] must be
+  /// equal or greater than zero.
+  /// [items] must not be null and it must contains two elements at least.
+  CircularMenuTabs({
     @required this.items,
     @required this.webViewProvider,
+    @required this.tabIndex,
     this.doubleTapped,
     this.alignment = Alignment.bottomCenter,
     this.radius = 50,
     this.backgroundWidget,
-    this.animationDuration = const Duration(milliseconds: 150),
+    this.animationDuration = const Duration(milliseconds: 300),
     this.curve = Curves.decelerate,
     this.reverseCurve = Curves.decelerate,
     this.toggleButtonOnPressed,
@@ -66,10 +70,10 @@ class CircularMenuFixed extends StatefulWidget {
         super(key: key);
 
   @override
-  CircularMenuFixedState createState() => CircularMenuFixedState();
+  CircularMenuTabsState createState() => CircularMenuTabsState();
 }
 
-class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerProviderStateMixin {
+class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerProviderStateMixin {
   AnimationController _animationController;
   Animation<double> _animation;
 
@@ -96,7 +100,7 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
     widget.items.asMap().forEach((index, item) {
       items.add(
         Visibility(
-          visible: widget.webViewProvider.verticalMenuCurrentIndex == -1,
+          visible: widget.webViewProvider.verticalMenuCurrentIndex == widget.tabIndex,
           child: Positioned.fill(
             child: Align(
               alignment: Alignment.bottomCenter,
@@ -127,7 +131,12 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
           margin: widget.toggleButtonMargin,
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: 50,
-          onTap: () async {
+          onTap: () {
+            if (widget.toggleButtonOnPressed != null) {
+              widget.toggleButtonOnPressed();
+            }
+          },
+          onDoubleTap: () async {
             // Opens the menu
             if (_animationController.status == AnimationStatus.dismissed) {
               widget.webViewProvider.verticalMenuOpen();
@@ -135,31 +144,12 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
               // Closes the menu but permits the menu to shift from one tab to another
               // without the user noticing (closes and reopens the new tapped tab)
               widget.webViewProvider.verticalMenuClose();
-              if (widget.webViewProvider.verticalMenuCurrentIndex != -1) {
-                widget.webViewProvider.verticalMenuCurrentIndex = -1;
+              if (widget.webViewProvider.verticalMenuCurrentIndex != widget.tabIndex) {
+                widget.webViewProvider.verticalMenuCurrentIndex = widget.tabIndex;
                 widget.webViewProvider.verticalMenuOpen();
               }
             }
-            widget.webViewProvider.verticalMenuCurrentIndex = -1;
-          },
-          onDoubleTap: () async {
-            // The widget might bring a callback to exit full screen mode
-            if (widget.doubleTapped != null) {
-              widget.doubleTapped();
-              return;
-            }
-
-            // Same logic as in [onTap] above
-            if (_animationController.status == AnimationStatus.dismissed) {
-              widget.webViewProvider.verticalMenuOpen();
-            } else {
-              widget.webViewProvider.verticalMenuClose();
-              if (widget.webViewProvider.verticalMenuCurrentIndex != -1) {
-                widget.webViewProvider.verticalMenuCurrentIndex = -1;
-                widget.webViewProvider.verticalMenuOpen();
-              }
-            }
-            widget.webViewProvider.verticalMenuCurrentIndex = -1;
+            widget.webViewProvider.verticalMenuCurrentIndex = widget.tabIndex;
           },
           boxShadow: widget.toggleButtonBoxShadow,
           animatedIcon: AnimatedIcon(
