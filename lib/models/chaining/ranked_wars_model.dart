@@ -18,7 +18,9 @@ class RankedWarsModel {
   factory RankedWarsModel.fromJson(Map<String, dynamic> json) => RankedWarsModel(
         rankedwars: json["rankedwars"] == null
             ? null
-            : Map.from(json["rankedwars"]).map((k, v) => MapEntry<String, RankedWar>(k, RankedWar.fromJson(v))),
+            : json["rankedwars"].isEmpty
+                ? Map()
+                : Map.from(json["rankedwars"]).map((k, v) => MapEntry<String, RankedWar>(k, RankedWar.fromJson(v))),
       );
 
   Map<String, dynamic> toJson() => {

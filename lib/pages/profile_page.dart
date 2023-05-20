@@ -4780,7 +4780,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
 
       // If less than 30 minutes have elapse, we'll just query for new events and fill the list
-      if (minutesDiff < 30) {
+      if (minutesDiff < 30 && eventsSave.isNotEmpty) {
         // Get the last saved event, find out what's the TS
         if (eventsSave.isEmpty) return;
         int lastTs = eventsSave[0].timestamp;
@@ -4805,9 +4805,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         // Refresh events (even if no additions have been made, as we might be starting
         // the app with [_events] with a null value)
-        setState(() {
-          _events = List<Event>.from(eventsSave);
-        });
+        if (mounted)
+          setState(() {
+            _events = List<Event>.from(eventsSave);
+          });
         return;
       }
 
