@@ -53,8 +53,8 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_1_0_6 = "Added Ranked War information and notifications to Profile page";
     String feat3_1_0_7 = "Shortcuts page and all related options have been moved to Settings";
     String feat3_1_0_8 = "Added dual score slider and option to ignore oneself to the Jail widget";
-    String feat3_1_0_9 = "Added company addiction to Profile (Basic Info card)";
-    String feat3_1_0_10 = "Added API call rate bar widget and warning (see Settings)";
+    String feat3_1_0_9 = "Added company addiction to Profile";
+    String feat3_1_0_10 = "Added API call rate bar widget and warning";
     String feat3_1_0_11 = "Full member update in War is now faster";
     String feat3_1_0_12 = "Added competition information to targets and friends details";
     String feat3_1_0_13 = "Added WTF Revive";
