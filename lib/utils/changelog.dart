@@ -39,28 +39,30 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 312 - 19/05/2023
+    // Build 312 - 31/05/2023
 
     // VERSION 3.1.0
     var v3_1_0 = ChangeLogItem();
     v3_1_0.version = 'Torn PDA v3.1.0';
-    v3_1_0.date = '25 MAY 2023';
+    v3_1_0.date = '10 JUN 2023';
     String feat3_1_0_1 = "Added home screen widget (see Tips)";
-    String feat3_1_0_2 = "Added Ranked War information and notifications to Profile page";
-    String feat3_1_0_3 = "The browser can now be chosen as the default app's launch section (Settings)";
-    String feat3_1_0_4 = "Shortcuts page and all related options have been moved to Settings";
-    String feat3_1_0_5 = "Added dual score slider and option to ignore oneself to the Jail widget";
-    String feat3_1_0_6 = "Added company addiction to Profile (Basic Info card)";
-    String feat3_1_0_7 = "Added API call rate bar widget and warning (see Settings)";
-    String feat3_1_0_8 = "Added quick menu to browser with several options, including fullscreen mode";
-    String feat3_1_0_9 = "Browser long-press menu now also adds a shortcut to the target link";
-    String feat3_1_0_10 = "Full update in War now updates all members faster";
-    String feat3_1_0_11 = "Added competition information to targets and friends details";
-    String feat3_1_0_12 = "Added WTF Revive";
-    String feat3_1_0_13 = "Fixed Loot Rangers loot order in certain conditions";
-    String feat3_1_0_14 = "Fixed issues redirecting to attack pages in certain conditions";
-    String feat3_1_0_15 = "Fixed issues when launching the app from a notification";
-    String feat3_1_0_16 = "Fixed pull-to-refresh in short pages";
+    String feat3_1_0_2 = "Browser: complete workflow restructure (faster access and loading)";
+    String feat3_1_0_3 = "Browser: quick browser removed, full screen mode and vertical menus added";
+    String feat3_1_0_4 = "Browser: long-press menu now also adds a shortcut to the target link";
+    String feat3_1_0_5 = "Browser can now be chosen as the default app's launch section";
+    String feat3_1_0_6 = "Added Ranked War information and notifications to Profile page";
+    String feat3_1_0_7 = "Shortcuts page and all related options have been moved to Settings";
+    String feat3_1_0_8 = "Added dual score slider and option to ignore oneself to the Jail widget";
+    String feat3_1_0_9 = "Added company addiction to Profile (Basic Info card)";
+    String feat3_1_0_10 = "Added API call rate bar widget and warning (see Settings)";
+    String feat3_1_0_11 = "Full member update in War is now faster";
+    String feat3_1_0_12 = "Added competition information to targets and friends details";
+    String feat3_1_0_13 = "Added WTF Revive";
+    String feat3_1_0_14 = "Added other minor requested features and improvements";
+    String feat3_1_0_15 = "Fixed Loot Rangers loot order in certain conditions";
+    String feat3_1_0_16 = "Fixed issues redirecting to attack pages in certain conditions";
+    String feat3_1_0_17 = "Fixed issues when launching the app from a notification";
+    String feat3_1_0_18 = "Fixed pull-to-refresh in short pages";
     if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
     v3_1_0.features.add(feat3_1_0_2);
     v3_1_0.features.add(feat3_1_0_3);
@@ -77,6 +79,8 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_0.features.add(feat3_1_0_14);
     v3_1_0.features.add(feat3_1_0_15);
     v3_1_0.features.add(feat3_1_0_16);
+    v3_1_0.features.add(feat3_1_0_17);
+    v3_1_0.features.add(feat3_1_0_18);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();

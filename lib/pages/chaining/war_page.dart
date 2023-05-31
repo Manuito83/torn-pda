@@ -6,16 +6,19 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -28,6 +31,7 @@ import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class WarOptions {
   String description;
@@ -215,6 +219,7 @@ class _WarPageState extends State<WarPage> {
               _chainWidgetToggler(w),
             ],
           ),
+          SizedBox(height: 5),
           if (context.orientation == Orientation.portrait)
             Flexible(
               child: WarTargetsList(
@@ -551,12 +556,18 @@ class _WarPageState extends State<WarPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War"),
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         Showcase(
@@ -1325,7 +1336,7 @@ class HiddenMembersDialog extends StatelessWidget {
   }
 }
 
-class WarTargetsList extends StatelessWidget {
+class WarTargetsList extends StatefulWidget {
   WarTargetsList({
     @required this.warController,
     @required this.offlineSelector,
@@ -1341,24 +1352,47 @@ class WarTargetsList extends StatelessWidget {
   final bool travelingFilterActive;
 
   @override
+  State<WarTargetsList> createState() => _WarTargetsListState();
+}
+
+class _WarTargetsListState extends State<WarTargetsList> {
+  ChainStatusProvider _chainStatusProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    List<WarCard> filteredCards = getChildrenTarget();
+
     if (MediaQuery.of(context).orientation == Orientation.portrait) {
-      return ListView(
+      return ListView.builder(
         shrinkWrap: true,
-        children: getChildrenTargets(),
+        itemCount: filteredCards.length,
+        itemBuilder: (context, index) {
+          return SlidableCard(filteredCards[index]);
+        },
       );
     } else {
-      return ListView(
-        children: getChildrenTargets(),
+      return ListView.builder(
         shrinkWrap: true,
+        itemCount: filteredCards.length,
         physics: NeverScrollableScrollPhysics(),
+        itemBuilder: (context, index) {
+          return SlidableCard(filteredCards[index]);
+        },
       );
     }
   }
 
-  List<Widget> getChildrenTargets() {
+  List<WarCard> getChildrenTarget() {
     List<Member> members = <Member>[];
-    warController.factions.forEach((faction) {
+    List<WarCard> filteredCards = <WarCard>[];
+
+    widget.warController.factions.forEach((faction) {
       if (!faction.hidden) {
         faction.members.forEach((key, value) {
           value.memberId = int.parse(key);
@@ -1370,47 +1404,40 @@ class WarTargetsList extends StatelessWidget {
       }
     });
 
-    List<WarCard> filteredCards = <WarCard>[];
-
     for (Member thisMember in members) {
       if (thisMember.hidden) continue;
       if (thisMember.status.state.contains("Federal") && thisMember.status.state.contains("Fallen")) continue;
 
       if ((thisMember.lastAction.status.contains("Online") || thisMember.lastAction.status.contains("Idle")) &&
-          offlineSelector == 2) {
+          widget.offlineSelector == 2) {
         continue;
       }
 
-      if ((thisMember.lastAction.status.contains("Offline") && offlineSelector == 1)) {
+      if ((thisMember.lastAction.status.contains("Offline") && widget.offlineSelector == 1)) {
         continue;
       }
 
-      if (okayFilterActive && thisMember.status.color == "red") {
+      if (widget.okayFilterActive && thisMember.status.color == "red") {
         continue;
       }
 
-      if (countryFilterActive &&
+      if (widget.countryFilterActive &&
           countryCheck(
                 state: thisMember.status.state,
                 description: thisMember.status.description,
               ) !=
-              warController.playerLocation) {
+              widget.warController.playerLocation) {
         continue;
       }
 
-      if (travelingFilterActive && travelingCheck(state: thisMember.status.state)) {
+      if (widget.travelingFilterActive && travelingCheck(state: thisMember.status.state)) {
         continue;
       }
 
-      filteredCards.add(
-        WarCard(
-          key: UniqueKey(),
-          memberModel: thisMember,
-        ),
-      );
+      filteredCards.add(WarCard(memberModel: thisMember));
     }
 
-    switch (warController.currentSort) {
+    switch (widget.warController.currentSort) {
       case WarSortType.levelDes:
         filteredCards.sort((a, b) => b.memberModel.level.compareTo(a.memberModel.level));
         break;
@@ -1474,7 +1501,7 @@ class WarTargetsList extends StatelessWidget {
         break;
     }
 
-    warController.orderedCardsDetails.clear();
+    widget.warController.orderedCardsDetails.clear();
     for (int i = 0; i < filteredCards.length; i++) {
       WarCardDetails details = WarCardDetails()
         ..cardPosition = i + 1
@@ -1483,9 +1510,105 @@ class WarTargetsList extends StatelessWidget {
         ..personalNote = filteredCards[i].memberModel.personalNote
         ..personalNoteColor = filteredCards[i].memberModel.personalNoteColor;
 
-      warController.orderedCardsDetails.add(details);
+      widget.warController.orderedCardsDetails.add(details);
     }
 
     return filteredCards;
+  }
+
+  Widget SlidableCard(WarCard filteredCard) {
+    return Slidable(
+      closeOnScroll: false,
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        extentRatio: 0.5,
+        children: [
+          SlidableAction(
+            label: 'Hide',
+            backgroundColor: Colors.blue,
+            icon: Icons.delete,
+            onPressed: (context) {
+              widget.warController.hideMember(filteredCard.memberModel);
+            },
+          ),
+        ],
+      ),
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        extentRatio: 0.5,
+        children: [
+          _chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel.name).length == 0
+              ? SlidableAction(
+                  label: 'Add to panic!',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.alphaPCircleOutline,
+                  onPressed: (context) {
+                    String message = "Added ${filteredCard.memberModel.name} as a Panic Mode target!";
+                    Color messageColor = Colors.green;
+
+                    if (_chainStatusProvider.panicTargets.length < 10) {
+                      setState(() {
+                        _chainStatusProvider.addPanicTarget(
+                          PanicTargetModel()
+                            ..name = filteredCard.memberModel.name
+                            ..level = filteredCard.memberModel.level
+                            ..id = filteredCard.memberModel.memberId
+                            ..factionName = filteredCard.memberModel.factionName,
+                        );
+                        // Convert to target with the needed fields
+                      });
+                    } else {
+                      message = "There are already 10 targets in the Panic Mode list, remove some!";
+                      messageColor = Colors.orange[700];
+                    }
+
+                    BotToast.showText(
+                      clickClose: true,
+                      text: message,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: messageColor,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                )
+              : SlidableAction(
+                  label: 'PANIC TARGET',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.alphaPCircleOutline,
+                  onPressed: (context) {
+                    String message = "Removed ${filteredCard.memberModel.name} as a Panic Mode target!";
+                    Color messageColor = Colors.green;
+
+                    setState(() {
+                      _chainStatusProvider.removePanicTarget(
+                        PanicTargetModel()
+                          ..name = filteredCard.memberModel.name
+                          ..level = filteredCard.memberModel.level
+                          ..id = filteredCard.memberModel.memberId
+                          ..factionName = filteredCard.memberModel.factionName,
+                      );
+                    });
+
+                    BotToast.showText(
+                      clickClose: true,
+                      text: message,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: messageColor,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                ),
+        ],
+      ),
+      child: filteredCard,
+    );
   }
 }

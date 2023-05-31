@@ -249,6 +249,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 icon: Icon(Icons.keyboard_arrow_right_outlined),
                                                 onPressed: () {
                                                   showDialog(
+                                                    useRootNavigator: false,
                                                     context: context,
                                                     builder: (BuildContext context) {
                                                       return IconsFilterPage(

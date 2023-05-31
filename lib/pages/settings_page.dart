@@ -32,6 +32,8 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
 
 // Project imports:
@@ -240,6 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Icon(Icons.info_outline),
                     onPressed: () {
                       showDialog(
+                        useRootNavigator: false,
                         context: context,
                         builder: (BuildContext context) {
                           return BrowserInfoDialog();
@@ -1076,6 +1079,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 icon: Icon(Icons.keyboard_arrow_right_outlined),
                 onPressed: () {
                   showDialog(
+                    useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
                       return RevivingServicesDialog();
@@ -1133,6 +1137,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       icon: Icon(Icons.info_outline),
                       onPressed: () {
                         showDialog(
+                          useRootNavigator: false,
                           context: context,
                           builder: (BuildContext context) {
                             return DiscreteInfo();
@@ -1357,12 +1362,18 @@ class _SettingsPageState extends State<SettingsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: Text('Settings'),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
     );
   }
@@ -1683,19 +1694,30 @@ class _SettingsPageState extends State<SettingsPage> {
                       RichText(
                         text: TextSpan(
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Tap here',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/preferences.php#tab=api';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/preferences.php#tab=api';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Tap here',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(
                               text: ' to be redirected',

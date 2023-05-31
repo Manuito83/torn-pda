@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
@@ -219,6 +219,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   Future restoreExamples(bool onlyRestoreNew) async {
+    log("Restoring userscript examples!");
     var newList = <UserScriptModel>[];
 
     // Add the ones that are not examples
@@ -341,6 +342,15 @@ class UserScriptsProvider extends ChangeNotifier {
           for (var dec in decoded) {
             try {
               var decodedModel = UserScriptModel.fromJson(dec);
+
+              // Check if the script with the same name already exists in the list
+              // (user-reported bug)
+              bool scriptExists = _userScriptList.any((script) {
+                return script.name.toLowerCase() == decodedModel.name.toLowerCase();
+              });
+
+              if (scriptExists) continue;
+
               addUserScript(
                 decodedModel.name,
                 decodedModel.time,

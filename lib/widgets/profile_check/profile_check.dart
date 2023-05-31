@@ -1523,6 +1523,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
 
     showDialog(
+      useRootNavigator: false,
       context: context,
       barrierDismissible: true,
       builder: (_) {

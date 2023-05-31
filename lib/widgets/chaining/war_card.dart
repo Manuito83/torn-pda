@@ -3,18 +3,18 @@ import 'dart:async';
 import 'dart:math';
 
 // Flutter imports:
+import 'package:animations/animations.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -24,6 +24,7 @@ import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -40,7 +41,7 @@ class WarCard extends StatefulWidget {
   // Key is needed to update at least the hospital counter individually
   WarCard({
     @required this.memberModel,
-    @required Key key,
+    Key key,
   }) : super(key: key);
 
   @override
@@ -88,306 +89,228 @@ class _WarCardState extends State<WarCard> {
     _member = widget.memberModel;
     _returnLastUpdated();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return Slidable(
-      startActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        extentRatio: 0.5,
-        // Issues with Percent Indicator
-        /*
-              dismissal: SlidableDismissal(
-                child: SlidableDrawerDismissal(),
-                resizeDuration: Duration(seconds: 1),
-                onDismissed: (actionType) {
-                  _w.hideMember(_member);
-                },
-                // Only dismiss left
-                dismissThresholds: <SlideActionType, double>{SlideActionType.primary: 0.0},
-              ),
-              */
-        children: [
-          SlidableAction(
-            label: 'Hide',
-            backgroundColor: Colors.blue,
-            icon: Icons.delete,
-            onPressed: (context) {
-              _w.hideMember(_member);
-            },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
+      child: Card(
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: _borderColor(), width: 1.5),
+          borderRadius: BorderRadius.circular(4.0),
+        ),
+        elevation: 2,
+        child: ClipPath(
+          clipper: ShapeBorderClipper(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(3),
+            ),
           ),
-        ],
-      ),
-      endActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        extentRatio: 0.5,
-        children: [
-          _chainProvider.panicTargets.where((t) => t.name == _member.name).length == 0
-              ? SlidableAction(
-                  label: 'Add to panic!',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    String message = "Added ${_member.name} as a Panic Mode target!";
-                    Color messageColor = Colors.green;
-
-                    if (_chainProvider.panicTargets.length < 10) {
-                      setState(() {
-                        _chainProvider.addPanicTarget(
-                          PanicTargetModel()
-                            ..name = _member.name
-                            ..level = _member.level
-                            ..id = _member.memberId
-                            ..factionName = _member.factionName,
-                        );
-                        // Convert to target with the needed fields
-                      });
-                    } else {
-                      message = "There are already 10 targets in the Panic Mode list, remove some!";
-                      messageColor = Colors.orange[700];
-                    }
-
-                    BotToast.showText(
-                      clickClose: true,
-                      text: message,
-                      textStyle: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
-                    );
-                  },
-                )
-              : SlidableAction(
-                  label: 'PANIC TARGET',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    String message = "Removed ${_member.name} as a Panic Mode target!";
-                    Color messageColor = Colors.green;
-
-                    setState(() {
-                      _chainProvider.removePanicTarget(
-                        PanicTargetModel()
-                          ..name = _member.name
-                          ..level = _member.level
-                          ..id = _member.memberId
-                          ..factionName = _member.factionName,
-                      );
-                    });
-
-                    BotToast.showText(
-                      clickClose: true,
-                      text: message,
-                      textStyle: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
-                    );
-                  },
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(
+                  color: _chainProvider.panicTargets.where((t) => t.name == _member.name).length > 0
+                      ? Colors.blue
+                      : Colors.transparent,
+                  width: 2,
                 ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
-        child: Card(
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: _borderColor(), width: 1.5),
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-          elevation: 2,
-          child: ClipPath(
-            clipper: ShapeBorderClipper(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(3),
               ),
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: _chainProvider.panicTargets.where((t) => t.name == _member.name).length > 0
-                        ? Colors.blue
-                        : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  // LINE 1
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
-                    child: Row(
-                      children: <Widget>[
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            GestureDetector(
-                              child: Row(
-                                children: [
-                                  _attackIcon(),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 5),
-                                  ),
-                                  SizedBox(
-                                    width: 95,
-                                    child: Text(
-                                      '${_member.name}',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                // LINE 1
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
+                  child: Row(
+                    children: <Widget>[
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          GestureDetector(
+                            child: Row(
+                              children: [
+                                _attackIcon(),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 5),
+                                ),
+                                SizedBox(
+                                  width: 95,
+                                  child: Text(
+                                    '${_member.name}',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ],
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              _startAttack();
+                            },
+                          ),
+                        ],
+                      ),
+                      Flexible(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.max,
+                          children: <Widget>[
+                            SizedBox(width: 3),
+                            _factionName(),
+                            OpenContainer(
+                              transitionDuration: Duration(milliseconds: 500),
+                              transitionType: ContainerTransitionType.fadeThrough,
+                              openBuilder: (BuildContext context, VoidCallback _) {
+                                return MemberDetailsPage(memberId: _member.memberId.toString());
+                              },
+                              closedElevation: 0,
+                              closedShape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(56 / 2),
+                                ),
                               ),
-                              onTap: () {
-                                _startAttack();
+                              openColor: _themeProvider.canvas,
+                              closedColor: Colors.transparent,
+                              closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                                return SizedBox(
+                                  height: 22,
+                                  width: 30,
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    size: 20,
+                                  ),
+                                );
                               },
                             ),
-                          ],
-                        ),
-                        Flexible(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            mainAxisSize: MainAxisSize.max,
-                            children: <Widget>[
-                              SizedBox(width: 3),
-                              _factionName(),
-                              SizedBox(width: 3),
-                              Text(
-                                'L${_member.level}',
-                              ),
-                              Row(
-                                children: [
-                                  SizedBox(
-                                    height: 22,
-                                    width: 30,
-                                    child: _addAsTargetButton(),
-                                  ),
-                                  SizedBox(width: 5),
-                                  SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: _refreshIcon(),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // LINE 2
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 5, 15, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.max,
-                      children: <Widget>[
-                        _returnRespectFF(_member.respectGain, _member.fairFight),
-                        if (!_member.overrideEasyLife) _returnEasyHealth(_member) else _returnFullHealth(_member),
-                      ],
-                    ),
-                  ),
-                  // LINE 3
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(14, 5, 15, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        _statsWidget(),
-                        Row(
-                          children: [
-                            _travelIcon(),
-                            _lastOnlineWidget(),
-                            SizedBox(width: 5),
-                            Icon(Icons.refresh, size: 12),
-                            SizedBox(width: 2),
+                            SizedBox(width: 3),
                             Text(
-                              _lastUpdatedString
-                                  .replaceAll("minute ago", "m")
-                                  .replaceAll("minutes ago", "m")
-                                  .replaceAll("hour ago", "h")
-                                  .replaceAll("hours ago", "h")
-                                  .replaceAll("day ago", "d")
-                                  .replaceAll("days ago", "d"),
-                              style: TextStyle(
-                                color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
-                                fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
-                                fontSize: 11,
-                              ),
+                              'L${_member.level}',
+                            ),
+                            Row(
+                              children: [
+                                SizedBox(
+                                  height: 22,
+                                  width: 30,
+                                  child: _addAsTargetButton(),
+                                ),
+                                SizedBox(width: 5),
+                                SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: _refreshIcon(),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  // LINE 4
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Row(
-                            children: <Widget>[
-                              SizedBox(
-                                width: 30,
-                                height: 20,
-                                child: IconButton(
-                                  padding: EdgeInsets.all(0),
-                                  iconSize: 20,
-                                  icon: Icon(
-                                    MdiIcons.notebookEditOutline,
-                                    color: _returnTargetNoteColor(),
-                                    size: 18,
-                                  ),
-                                  onPressed: () {
-                                    _showNotesDialog();
-                                  },
-                                ),
-                              ),
-                              SizedBox(width: 5),
-                              Text(
-                                'Notes: ',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              Flexible(
-                                child: Text(
-                                  '${_member.personalNote}',
-                                  style: TextStyle(
-                                    color: _returnTargetNoteColor(),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 2),
-                          child: Text(
-                            '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member.memberId) + 1}'
-                            '/${_w.orderedCardsDetails.length}',
+                ),
+                // LINE 2
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(16, 5, 15, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      _returnRespectFF(_member.respectGain, _member.fairFight),
+                      if (!_member.overrideEasyLife) _returnEasyHealth(_member) else _returnFullHealth(_member),
+                    ],
+                  ),
+                ),
+                // LINE 3
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(14, 5, 15, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      _statsWidget(),
+                      Row(
+                        children: [
+                          _travelIcon(),
+                          _lastOnlineWidget(),
+                          SizedBox(width: 5),
+                          Icon(Icons.refresh, size: 12),
+                          SizedBox(width: 2),
+                          Text(
+                            _lastUpdatedString
+                                .replaceAll("minute ago", "m")
+                                .replaceAll("minutes ago", "m")
+                                .replaceAll("hour ago", "h")
+                                .replaceAll("hours ago", "h")
+                                .replaceAll("day ago", "d")
+                                .replaceAll("days ago", "d"),
                             style: TextStyle(
-                              color: Colors.brown[400],
+                              color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
+                              fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
                               fontSize: 11,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 10),
-                ],
-              ),
+                ),
+                // LINE 4
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Row(
+                          children: <Widget>[
+                            SizedBox(
+                              width: 30,
+                              height: 20,
+                              child: IconButton(
+                                padding: EdgeInsets.all(0),
+                                iconSize: 20,
+                                icon: Icon(
+                                  MdiIcons.notebookEditOutline,
+                                  color: _returnTargetNoteColor(),
+                                  size: 18,
+                                ),
+                                onPressed: () {
+                                  _showNotesDialog();
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 5),
+                            Text(
+                              'Notes: ',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            Flexible(
+                              child: Text(
+                                '${_member.personalNote}',
+                                style: TextStyle(
+                                  color: _returnTargetNoteColor(),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: Text(
+                          '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member.memberId) + 1}'
+                          '/${_w.orderedCardsDetails.length}',
+                          style: TextStyle(
+                            color: Colors.brown[400],
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+              ],
             ),
           ),
         ),
@@ -1592,11 +1515,10 @@ class _WarCardState extends State<WarCard> {
         bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
         bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
 
-        await _webViewProvider.openBrowserPreference(
-          awaitable: true,
+        _webViewProvider.openBrowserPreference(
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
-          useDialog: false,
+          browserTapType: BrowserTapType.chain,
           recallLastSession: false,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -1610,26 +1532,11 @@ class _WarCardState extends State<WarCard> {
             ..showOnlineFactionWarning = showOnlineFactionWarning,
         );
 
-        if (_w.lastAttackedTargets.length > 0) {
-          BotToast.showText(
-            text: '${_w.lastAttackedTargets.length} attacked targets will auto update in a few seconds!',
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.grey[800],
-            duration: Duration(seconds: 4),
-            contentPadding: EdgeInsets.all(10),
-          );
-
-          _w.updateSomeMembersAfterAttack();
-        }
-
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_member.memberId}';
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
         break;
     }

@@ -109,8 +109,7 @@ class WebViewFull extends StatefulWidget {
   final int windowId;
   final String customTitle;
   final String customUrl;
-  final Function customCallBack;
-  final bool dialog;
+  //final bool dialog;
   final bool useTabs;
   final bool chatRemovalActive;
   final GlobalKey<WebViewFullState> key;
@@ -123,8 +122,7 @@ class WebViewFull extends StatefulWidget {
     this.windowId,
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
-    this.customCallBack,
-    this.dialog = false,
+    //this.dialog = false,
     this.useTabs = false,
     this.chatRemovalActive = false,
     this.key,
@@ -236,6 +234,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _profileTriggered = false;
   var _attackTriggered = false;
 
+  List<String> _lastAttackedTargets = <String>[];
+  List<String> _lastAttackedMembers = <String>[];
+
   UserDetailsProvider _userProvider;
   UserController _u = Get.put(UserController());
   TerminalProvider _terminalProvider;
@@ -260,8 +261,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   PullToRefreshController _pullToRefreshController;
 
-  bool _clearCacheFirstOpportunity = false;
-
   bool _findInPageActive = false;
   final _findController = TextEditingController();
   final _findFocus = FocusNode();
@@ -273,6 +272,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Chaining configuration
   bool _isChainingBrowser = false;
+  ChainingPayload _chainingPayload;
   final _chainingAidPopupChoices = <HealingPages>[
     HealingPages(description: "Personal"),
     HealingPages(description: "Faction"),
@@ -288,18 +288,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _nextButtonPressed = false;
   // Chaining configuration ends
 
-  // We need to destroy the webview before closing the dialog
-  // See: https://github.com/flutter/flutter/issues/112542
-  bool _closeButtonTriggered = false;
-
   // Native Auth management
-  Future _nativeAuthObtained;
   NativeUserProvider _nativeUser;
   NativeAuthProvider _nativeAuth;
 
+  // Time triggers for login error
+  int _loginErrorRetrySeconds = 0;
+  DateTime _loginErrorToastTimer;
+
   // Showcases
-  GlobalKey _showCaseCloseButton = GlobalKey();
   GlobalKey _showCaseTitleBar = GlobalKey();
+  GlobalKey _showCasePlayPauseChain = GlobalKey();
+  bool _showCasesTriggeredThisSession = false;
 
   @override
   void initState() {
@@ -313,7 +313,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _clearCacheFirstOpportunity = _settingsProvider.getClearCacheNextOpportunityAndReset;
 
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
@@ -322,10 +321,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _initialUrl = URLRequest(url: WebUri(widget.customUrl));
 
-    if (widget.isChainingBrowser) {
-      _isChainingBrowser = true;
+    _isChainingBrowser = widget.isChainingBrowser;
+    if (_isChainingBrowser) {
+      _chainingPayload = _chainingPayload;
       _w = Get.put(WarController());
-      String title = widget.chainingPayload.attackNameList[0];
+      String title = _chainingPayload.attackNameList[0];
       _pageTitle = title;
       // Decide if voluntarily skipping first target (always when it's a panic target)
       _assessFirstTargetsOnLaunch();
@@ -334,12 +334,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _chainWidgetController.expanded = true;
       }
       _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
-      if (widget.chainingPayload.war) {
-        _w.lastAttackedTargets.clear();
-        _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[0]);
+      if (_chainingPayload.war) {
+        _lastAttackedMembers.clear();
+        _lastAttackedMembers.add(_chainingPayload.attackIdList[0]);
       } else {
-        _targetsProvider.lastAttackedTargets.clear();
-        _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[0]);
+        _lastAttackedTargets.clear();
+        _lastAttackedTargets.add(_chainingPayload.attackIdList[0]);
       }
     } else {
       _pageTitle = widget.customTitle;
@@ -352,7 +352,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _initialWebViewSettings = InAppWebViewSettings(
       cacheEnabled: false,
       transparentBackground: true,
-      clearCache: _clearCacheFirstOpportunity,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
       javaScriptCanOpenWindowsAutomatically: true,
@@ -386,16 +385,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         size: PullToRefreshSize.DEFAULT,
         backgroundColor: _themeProvider.secondBackground,
         enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
-        slingshotDistance: 150,
-        distanceToTriggerSync: 150,
+        slingshotDistance: 300,
+        distanceToTriggerSync: 300,
       ),
       onRefresh: () async {
         await reload();
       },
     );
-
-    // Native Auth
-    _nativeAuthObtained = _assessNativeAuth();
   }
 
   @override
@@ -430,34 +426,36 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     return WillPopScope(
       onWillPop: _willPopCallback,
-      // If we are launching from a dialog, it's important not to add the show case, in
-      // case this is the first time, as there is no appBar to be found and it would
-      // failed to open
       child: ShowCaseWidget(
         builder: Builder(builder: (_) {
-          _launchShowCases(_);
+          if (_webViewProvider.browserForeground && !_showCasesTriggeredThisSession) {
+            launchShowCases(_);
+          }
           return buildScaffold(context);
         }),
       ),
     );
   }
 
-  void _launchShowCases(BuildContext _) {
+  // ! Ensure that any showcases here are also taken into account in the showcases in [webview_stackview.dart],
+  // ! as the ones here need to fire first. Then only the others are allowed to fire.
+  void launchShowCases(BuildContext _) {
     Future.delayed(Duration(seconds: 1), () async {
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
-      if (widget.dialog) {
-        if (!_settingsProvider.showCases.contains("webview_closeButton")) {
-          _settingsProvider.addShowCase = "webview_closeButton";
-          showCases.add(_showCaseCloseButton);
-        }
-      } else {
-        if (!_settingsProvider.showCases.contains("webview_titleBar")) {
-          _settingsProvider.addShowCase = "webview_titleBar";
-          showCases.add(_showCaseTitleBar);
-        }
+
+      if (!_settingsProvider.showCases.contains("webview_titleBar")) {
+        _settingsProvider.addShowCase = "webview_titleBar";
+        showCases.add(_showCaseTitleBar);
       }
+
+      if (!_settingsProvider.showCases.contains("webview_playPauseChain")) {
+        _settingsProvider.addShowCase = "webview_playPauseChain";
+        showCases.add(_showCasePlayPauseChain);
+      }
+
       if (showCases.isNotEmpty) {
         ShowCaseWidget.of(_).startShowCase(showCases);
+        _showCasesTriggeredThisSession = true;
       }
     });
   }
@@ -479,17 +477,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         child: Consumer<WebViewProvider>(
           builder: (context, wv, child) => Scaffold(
             backgroundColor: _themeProvider.canvas,
-            appBar: widget.dialog || wv.currentUiMode == UiMode.fullScreen
+            appBar: wv.currentUiMode == UiMode.fullScreen
                 // Show appBar only if we are not showing the webView in a dialog
                 ? null
                 : _settingsProvider.appBarTop
                     ? buildCustomAppBar()
                     : null,
-            bottomNavigationBar: widget.dialog
-                // Show appBar only if we are not showing the webView in a dialog
-                ? null
+            bottomNavigationBar:
                 // With appbar bottom, add appbar and some space for tabs
-                : !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
+                !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
                     ? Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -513,291 +509,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 child: Column(
                   children: [
                     Expanded(child: mainWebViewColumn()),
-                    SizedBox(
-                      height: !widget.dialog
-                          ? 0
-                          : _webViewProvider.hideTabs || !_settingsProvider.useTabsBrowserDialog
-                              ? 0
-                              : 40,
-                    ),
-                    if (_webViewProvider.currentUiMode == UiMode.window && widget.dialog) _quickBrowserBottomBar(),
                   ],
                 )),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _quickBrowserBottomBar() {
-    if (_findInPageActive) {
-      return Container(
-        color: _themeProvider.secondBackground,
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () async {
-                setState(() {
-                  _findInPageActive = false;
-                });
-                _findController.text = "";
-                _findInteractionController.clearMatches();
-                _findFirstSubmitted = false;
-              },
-            ),
-            Flexible(
-              child: Form(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                      child: Row(
-                        children: <Widget>[
-                          Flexible(
-                            child: TextField(
-                              onEditingComplete: () {
-                                _findPreviousText = _findController.text;
-                                _findAll();
-                                _findFocus.unfocus();
-                              },
-                              controller: _findController,
-                              focusNode: _findFocus,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: "What are you looking for?",
-                                hintStyle: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              style: TextStyle(
-                                color: _themeProvider.mainText,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    _findPreviousText = _findController.text;
-                    _findAll();
-                    _findFocus.unfocus();
-                  },
-                ),
-                if (_findFirstSubmitted)
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.keyboard_arrow_up),
-                        onPressed: () {
-                          _findNext(forward: false);
-                          _findFocus.unfocus();
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.keyboard_arrow_down),
-                        onPressed: () {
-                          _findNext(forward: true);
-                          _findFocus.unfocus();
-                        },
-                      ),
-                    ],
-                  )
-              ],
-            )
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.secondBackground,
-      height: 38,
-      child: GestureDetector(
-        onLongPress: () => _openUrlDialog(),
-        onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsBrowserDialog
-            ? (DragEndDetails details) async {
-                _webViewProvider.toggleHideTabs();
-                if (await Prefs().getReminderAboutHideTabFeature() == false) {
-                  Prefs().setReminderAboutHideTabFeature(true);
-                  return showDialog<void>(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (BuildContext context) {
-                      return const TabsHideReminderDialog();
-                    },
-                  );
-                }
-              }
-            : null,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 100,
-              child: Row(
-                children: [
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      splashColor: Colors.blueGrey,
-                      child: const SizedBox(
-                        width: 40,
-                        child: Icon(
-                          Icons.arrow_back_ios_outlined,
-                          size: 20,
-                        ),
-                      ),
-                      onTap: () async {
-                        _tryGoBack();
-                      },
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      splashColor: Colors.blueGrey,
-                      child: const SizedBox(
-                        width: 40,
-                        child: Icon(
-                          Icons.arrow_forward_ios_outlined,
-                          size: 20,
-                        ),
-                      ),
-                      onTap: () async {
-                        _tryGoForward();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Showcase(
-                  key: _showCaseCloseButton,
-                  title: 'Options menu',
-                  description: '\nLong press the bottom bar of the quick browser to open a '
-                      'menu with additional options, including faction attack assists calls!\n\n'
-                      'Swipe down/up to hide or show your tab bar!',
-                  targetPadding: const EdgeInsets.only(top: 8),
-                  disableMovingAnimation: true,
-                  textColor: _themeProvider.mainText,
-                  tooltipBackgroundColor: _themeProvider.secondBackground,
-                  descTextStyle: TextStyle(fontSize: 13),
-                  tooltipPadding: EdgeInsets.all(20),
-                  child: GestureDetector(
-                    child: Container(
-                      color: Colors.transparent, // Background to extend the buttons detection area
-                      child: Column(
-                        children: [
-                          Text(
-                            "CLOSE",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: _themeProvider.mainText,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 15,
-                            child: Divider(
-                              height: 3,
-                              thickness: 1,
-                              color: _themeProvider.mainText,
-                            ),
-                          ),
-                          if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
-                                  _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-                              _userProvider.basic?.faction?.factionId != 0)
-                            Text(
-                              "ASSIST",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 7,
-                              ),
-                            )
-                          else
-                            Text(
-                              "OPTIONS",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _themeProvider.mainText,
-                                fontSize: 7,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    onTap: _closeButtonTriggered
-                        ? null
-                        : () async {
-                            setState(() {
-                              _closeButtonTriggered = true;
-                            });
-                            _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                            await Future.delayed(const Duration(milliseconds: 150));
-                            if (mounted) {
-                              Navigator.of(context).pop();
-                            }
-                          },
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _travelHomeIcon(),
-                  _crimesMenuIcon(),
-                  _cityMenuIcon(),
-                  _quickItemsMenuIcon(),
-                  _vaultsPopUpIcon(),
-                  _tradesMenuIcon(),
-                  _vaultOptionsIcon(),
-                  if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                    ),
-                    child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
-                        ? Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              splashColor: Colors.blueGrey,
-                              child: const Icon(Icons.refresh),
-                              onTap: () async {
-                                _scrollX = await webView.getScrollX();
-                                _scrollY = await webView.getScrollY();
-                                await reload();
-                                _scrollAfterLoad = true;
-                              },
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -827,7 +541,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           child: Column(
             children: [
               _profileAttackWidget,
-              if (widget.isChainingBrowser)
+              if (_isChainingBrowser)
                 ExpandablePanel(
                   theme: ExpandableThemeData(
                     hasIcon: false,
@@ -936,20 +650,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
 
         // ### ACTUAL WEBVIEW
-        Expanded(
-          child: _closeButtonTriggered
-              ? const SizedBox.shrink()
-              : FutureBuilder(
-                  future: _nativeAuthObtained,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return _mainWebViewStack();
-                    } else {
-                      return SizedBox.shrink();
-                    }
-                  },
-                ),
-        ),
+        Expanded(child: _mainWebViewStack()),
 
         // ### Widgets that go at the bottom if we have changes appbar to bottom
         Visibility(
@@ -1155,18 +856,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               await webView.addUserScripts(userScripts: scriptsToAdd);
             }
 
-            if (request.request.url.toString().contains("http://")) {
-              _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
-              return NavigationActionPolicy.CANCEL;
+            String urlToLoad = request.request.url.toString();
+            if (urlToLoad.contains("http://")) {
+              urlToLoad = urlToLoad.replaceAll("http:", "https:");
             }
-            return NavigationActionPolicy.ALLOW;
+
+            urlToLoad = await _assessNativeAuth(inputUrl: urlToLoad);
+
+            _loadUrl(urlToLoad);
+            return NavigationActionPolicy.CANCEL;
           },
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
             // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
             // to open a window, a new tab is created but we can't see it and looks like a glitch)
-            if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
-                (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
+            if (!_settingsProvider.useTabsFullBrowser) {
               String url = request.request.url.toString().replaceAll("http:", "https:");
               _loadUrl(url);
             } else {
@@ -1290,7 +994,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               }
 
               if (widget.useTabs) {
-                //_reportUrlVisit(uri);
                 // Report title will only be used from onLoadStop, since onResourceLoad might trigger
                 // it too early (before it has changed)
                 _reportPageTitle();
@@ -1324,7 +1027,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 }
               }
 
-              _assessErrorCases(document);
+              assessErrorCases(document: document);
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -1499,8 +1202,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onConsoleMessage: (controller, consoleMessage) async {
             if (consoleMessage.message != "") {
               if (!consoleMessage.message.contains("Refused to connect to ") &&
-                  !consoleMessage.message.contains("for scope ('https://www.torn.com/') with script "
-                      "('https://www.torn.com/js/serviceWorkers/main_sw.js')")) {
+                  !consoleMessage.message.contains("Uncaught (in promise) TypeError") &&
+                  !consoleMessage.message.contains("Blocked a frame with origin") &&
+                  !consoleMessage.message.contains("Error with Permissions-Policy header")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
@@ -1559,15 +1263,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  Future _assessNativeAuth() async {
+  Future<String> _assessNativeAuth({String inputUrl}) async {
     if (!_nativeUser.isNativeUserEnabled()) {
-      return;
+      return inputUrl;
     }
 
-    String originalInitUrl = _initialUrl.url.toString();
-    if (!originalInitUrl.contains("torn.com")) return;
+    String originalInitUrl = inputUrl;
+    String authUrlToLoad;
+    if (!originalInitUrl.contains("torn.com")) return inputUrl;
     // Auth redirects to attack pages might fail
-    if (originalInitUrl.contains("loader.php?sid=attack&user")) return;
+    if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
 
     int elapsedSinceLastAuth = DateTime.now().difference(_nativeAuth.lastAuthRedirect).inHours;
     if (_nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
@@ -1587,7 +1292,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
         if (loginResponse.success) {
           // Join the standard Auth URL and the original URL requested as part of the redirect parameter
-          _initialUrl = URLRequest(url: WebUri(loginResponse.authUrl + originalInitUrl));
+          authUrlToLoad = loginResponse.authUrl + originalInitUrl;
           log("Auth URL: ${_initialUrl.url}");
         } else {
           error = true;
@@ -1627,7 +1332,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
     }
 
-    return;
+    if (authUrlToLoad != null) {
+      return authUrlToLoad;
+    } else {
+      return inputUrl;
+    }
   }
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
@@ -1715,9 +1424,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     };
   }
 
-  Future _assessErrorCases(dom.Document document) async {
+  Future assessErrorCases({dom.Document document}) async {
     if (!_nativeUser.isNativeUserEnabled()) {
       return;
+    }
+
+    if (document == null) {
+      final html = await webView?.getHtml();
+      if (html == null || html.isEmpty) return;
+      document = parse(html);
     }
 
     // If for some reason we are logged out of Torn, try to login again
@@ -1735,6 +1450,62 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         duration: Duration(seconds: 6),
         contentPadding: EdgeInsets.all(10),
       );
+      return;
+    }
+
+    // If for some reason we are logged out of Torn, try to login again
+    if (_nativeAuth.tryAutomaticLogins && document.querySelectorAll("[class*='logInWrap_']").isNotEmpty) {
+      if (_loginErrorToastTimer == null || DateTime.now().difference(_loginErrorToastTimer).inSeconds > 4) {
+        if (_webViewProvider.browserForeground) {
+          BotToast.showText(
+            text: "Trying to log back into Torn\n\n"
+                "Please wait...!",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+        }
+      }
+      _loginErrorToastTimer = DateTime.now();
+
+      // New attempts will be made in a row if unsuccessful, so make them wait longer
+      // (this is the result of Torn going to an error page at first sometimes)
+      _loginErrorRetrySeconds++;
+      await Future.delayed(Duration(seconds: _loginErrorRetrySeconds));
+
+      final newDoc = parse(await webView.getHtml());
+      if (newDoc.querySelectorAll("[class*='logInWrap_']").isEmpty ||
+          newDoc.body.innerHtml.contains("failures from your IP address")) return;
+
+      TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
+        context: context,
+        loginData: GetInitDataModel(
+          playerId: _userProvider.basic.playerId,
+          sToken: _nativeUser.playerSToken,
+        ),
+      );
+
+      if (loginResponse.success) {
+        webView.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+        await Future.delayed(const Duration(seconds: 4));
+        _loginErrorRetrySeconds = 0;
+      } else {
+        BotToast.showText(
+          text: "Browser error while authenticating: please log in again or verify your user / pass combination "
+              "in the Settings section!",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red,
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
     }
   }
 
@@ -1919,36 +1690,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         systemOverlayStyle: SystemUiOverlayStyle.light,
         leading: IconButton(
           icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
-          onPressed: _closeButtonTriggered
-              ? null
-              : () async {
-                  // Normal behavior is just to pop and go to previous page
-                  if (_backButtonPopsContext) {
-                    if (widget.customCallBack != null) {
-                      widget.customCallBack();
-                    }
-                    setState(() {
-                      _closeButtonTriggered = true;
-                    });
-                    _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                    await Future.delayed(const Duration(milliseconds: 150));
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  } else {
-                    // But we can change and go back to previous page in certain
-                    // situations (e.g. when going for the vault while trading),
-                    // in which case we need to return to previous target
-                    final backPossible = await webView.canGoBack();
-                    if (backPossible) {
-                      webView.goBack();
-                    } else {
-                      if (!mounted) return;
-                      Navigator.pop(context);
-                    }
-                    _backButtonPopsContext = true;
-                  }
-                },
+          onPressed: () async {
+            // Normal behavior is just to pop and go to previous page
+            if (_backButtonPopsContext) {
+              _webViewProvider.setCurrentUiMode(UiMode.window, context);
+              if (mounted) {
+                _webViewProvider.browserForeground = false;
+                _checkIfTargetsAttackedAndRevertChaining();
+              }
+            } else {
+              // But we can change and go back to previous page in certain
+              // situations (e.g. when going for the vault while trading)
+              final backPossible = await webView.canGoBack();
+              if (backPossible) {
+                webView.goBack();
+              } else {
+                if (!mounted) return;
+                Navigator.pop(context);
+              }
+              _backButtonPopsContext = true;
+            }
+          },
         ),
         title: GestureDetector(
           onTap: () {
@@ -2531,13 +2293,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: EdgeInsets.only(bottom: 2),
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.fingerprint, color: widget.dialog ? _themeProvider.mainText : Colors.white),
+              child: Icon(MdiIcons.fingerprint, color: Colors.white),
             ),
           );
         },
@@ -2780,6 +2543,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
             padding: EdgeInsets.only(right: 5),
@@ -2891,7 +2655,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         vaultHtml: allTransactions,
         playerId: _userProvider.basic.playerId,
         userProvider: _userProvider,
-        isBrowserDialog: widget.dialog,
       );
     });
   }
@@ -2914,6 +2677,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
             padding: EdgeInsets.only(right: 5),
@@ -3070,6 +2834,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
             padding: EdgeInsets.only(right: 5),
@@ -3218,13 +2983,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return SizedBox(
-            height: 20,
-            width: 20,
-            child: Image.asset('images/icons/quick_items.png',
-                color: widget.dialog ? _themeProvider.mainText : Colors.white),
-          );
+              height: 20, width: 20, child: Image.asset('images/icons/quick_items.png', color: Colors.white));
         },
       );
     } else {
@@ -3676,6 +3438,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _loadUrl(url);
   }
 
+  // Called from parent though GlobalKey state
+  void convertToChainingBrowser({ChainingPayload chainingPayload}) {
+    _isChainingBrowser = true;
+    _attackNumber = 0;
+    _chainingPayload = chainingPayload;
+    if (_w == null) {
+      _w = Get.put(WarController());
+    }
+    String title = chainingPayload.attackNameList[0];
+    _pageTitle = title;
+    _chainStatusProvider = context.read<ChainStatusProvider>();
+    if (_chainStatusProvider.watcherActive) {
+      _chainWidgetController.expanded = true;
+    }
+    _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    if (chainingPayload.war) {
+      _lastAttackedMembers.clear();
+      _lastAttackedMembers.add(chainingPayload.attackIdList[0]);
+    } else {
+      _lastAttackedTargets.clear();
+      _lastAttackedTargets.add(chainingPayload.attackIdList[0]);
+    }
+  }
+
+  // Called from parent though GlobalKey state
+  void cancelChainingBrowser() {
+    setState(() {
+      _isChainingBrowser = false;
+    });
+  }
+
   void pauseWebview() {
     if (Platform.isAndroid) {
       webView?.pause();
@@ -3688,7 +3481,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
-    Uri resumedUrl = await webView.getUrl();
+    Uri resumedUrl = await webView?.getUrl();
     if (resumedUrl == null) {
       log("Reviving webView!");
       _webViewProvider.reviveUrl();
@@ -3732,7 +3525,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future<bool> _willPopCallback() async {
-    _tryGoBack();
+    if (_webViewProvider.browserForeground) {
+      _tryGoBack();
+    } else {
+      _webViewProvider.willPopCallbackStream.add(true);
+    }
+
     return false;
   }
 
@@ -3816,8 +3614,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
-                    if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
-                        (!widget.dialog && _settingsProvider.useTabsFullBrowser))
+                    if (_settingsProvider.useTabsFullBrowser)
                       Column(
                         children: [
                           SizedBox(width: 150, child: Divider(color: Colors.white)),
@@ -3946,7 +3743,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     myButtons.add(_medicalActionButton());
 
-    if (_attackNumber < widget.chainingPayload.attackIdList.length - 1) {
+    if (_attackNumber < _chainingPayload.attackIdList.length - 1) {
       myButtons.add(_nextAttackActionButton());
     } else {
       myButtons.add(_endAttackButton());
@@ -3956,9 +3753,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Widget _nextAttackActionButton() {
-    return IconButton(
-      icon: Icon(Icons.skip_next),
-      onPressed: _nextButtonPressed ? null : () => _launchNextAttack(),
+    return Showcase(
+      key: _showCasePlayPauseChain,
+      title: 'Chain Forward/Stop!',
+      description: '\nYou can now continue your chain even if you close the browser.\n\n'
+          'If you would like to stop your chain at some point, long-press this button '
+          'to revert to a standard browser tab!',
+      targetPadding: const EdgeInsets.all(10),
+      disableMovingAnimation: true,
+      textColor: _themeProvider.mainText,
+      tooltipBackgroundColor: _themeProvider.secondBackground,
+      descTextStyle: TextStyle(fontSize: 13),
+      tooltipPadding: EdgeInsets.all(20),
+      child: GestureDetector(
+        child: Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Icon(MdiIcons.playPause),
+        ),
+        onTap: _nextButtonPressed ? null : () => _launchNextAttack(),
+        onLongPress: () => _webViewProvider.cancelChainingBrowser(),
+      ),
     );
   }
 
@@ -3966,10 +3780,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     return IconButton(
       icon: Icon(MdiIcons.stop),
       onPressed: () {
-        setState(() {
-          _isChainingBrowser = false;
-          _webViewProvider.cancelChainingBrowser();
-        });
+        _webViewProvider.cancelChainingBrowser();
       },
     );
   }
@@ -4008,8 +3819,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _assessFirstTargetsOnLaunch() async {
-    if (widget.chainingPayload.panic ||
-        (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
+    if (_chainingPayload.panic || (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -4019,8 +3829,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget =
-            await Get.find<ApiCallerController>().getTarget(playerId: widget.chainingPayload.attackIdList[i]);
+        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -4045,7 +3854,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (widget.chainingPayload.showOnlineFactionWarning) {
+            if (_chainingPayload.showOnlineFactionWarning) {
               _factionName = nextTarget.faction.factionName;
               _lastOnline = nextTarget.lastAction.timestamp;
             }
@@ -4053,7 +3862,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
           // If after looping we are over the target limit, it means we have reached the end
           // in which case we reset the position to the last target we attacked, and break
-          if (_attackNumber >= widget.chainingPayload.attackIdList.length) {
+          if (_attackNumber >= _chainingPayload.attackIdList.length) {
             _attackNumber = originalPosition;
             reachedEnd = true;
             break;
@@ -4082,19 +3891,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
         var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
         if (!mounted) return;
-        await _loadUrl('$nextBaseUrl${widget.chainingPayload.attackIdList[_attackNumber]}');
-        if (widget.chainingPayload.war) {
-          _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+        await _loadUrl('$nextBaseUrl${_chainingPayload.attackIdList[_attackNumber]}');
+        if (_chainingPayload.war) {
+          _lastAttackedMembers.add(_chainingPayload.attackIdList[_attackNumber]);
         } else {
-          _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+          _lastAttackedTargets.add(_chainingPayload.attackIdList[_attackNumber]);
         }
 
         setState(() {
-          _pageTitle = '${widget.chainingPayload.attackNameList[_attackNumber]}';
+          _pageTitle = '${_chainingPayload.attackNameList[_attackNumber]}';
         });
 
         // Show note for next target
-        if (widget.chainingPayload.showNotes) {
+        if (_chainingPayload.showNotes) {
           _showNoteToast();
         }
 
@@ -4119,10 +3928,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // This will show the note of the first target, if applicable
-    if (widget.chainingPayload.showNotes) {
-      if (widget.chainingPayload.showOnlineFactionWarning) {
-        var nextTarget =
-            await Get.find<ApiCallerController>().getTarget(playerId: widget.chainingPayload.attackIdList[0]);
+    if (_chainingPayload.showNotes) {
+      if (_chainingPayload.showOnlineFactionWarning) {
+        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[0]);
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
           _lastOnline = nextTarget.lastAction.timestamp;
@@ -4140,7 +3948,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _nextButtonPressed = true;
     });
 
-    if (widget.chainingPayload.panic || _settingsProvider.targetSkippingAll) {
+    if (_chainingPayload.panic || _settingsProvider.targetSkippingAll) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -4150,8 +3958,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget = await Get.find<ApiCallerController>()
-            .getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+        var nextTarget =
+            await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -4176,7 +3984,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (widget.chainingPayload.showOnlineFactionWarning) {
+            if (_chainingPayload.showOnlineFactionWarning) {
               _factionName = nextTarget.faction.factionName;
               _lastOnline = nextTarget.lastAction.timestamp;
             }
@@ -4184,7 +3992,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
           // If after looping we are over the target limit, it means we have reached the end
           // in which case we reset the position to the last target we attacked, and break
-          if (_attackNumber >= widget.chainingPayload.attackIdList.length - 1) {
+          if (_attackNumber >= _chainingPayload.attackIdList.length - 1) {
             _attackNumber = originalPosition;
             reachedEnd = true;
             break;
@@ -4234,9 +4042,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // If skipping is disabled but notes are not, we still get information
     // from the API
     else {
-      if (widget.chainingPayload.showOnlineFactionWarning) {
-        var nextTarget = await Get.find<ApiCallerController>()
-            .getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+      if (_chainingPayload.showOnlineFactionWarning) {
+        var nextTarget =
+            await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
@@ -4250,14 +4058,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _attackNumber++;
     if (!mounted) return;
-    await _loadUrl('$nextBaseUrl${widget.chainingPayload.attackIdList[_attackNumber]}');
-    if (widget.chainingPayload.war) {
-      _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+    await _loadUrl('$nextBaseUrl${_chainingPayload.attackIdList[_attackNumber]}');
+    if (_chainingPayload.war) {
+      _lastAttackedMembers.add(_chainingPayload.attackIdList[_attackNumber]);
     } else {
-      _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+      _lastAttackedTargets.add(_chainingPayload.attackIdList[_attackNumber]);
     }
     setState(() {
-      _pageTitle = '${widget.chainingPayload.attackNameList[_attackNumber]}';
+      _pageTitle = '${_chainingPayload.attackNameList[_attackNumber]}';
     });
     _backButtonPopsContext = true;
 
@@ -4267,7 +4075,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     });
 
     // Show note for next target
-    if (widget.chainingPayload.showNotes) {
+    if (_chainingPayload.showNotes) {
       _showNoteToast();
     }
   }
@@ -4276,7 +4084,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// without showing the notes for the ones skipped)
   void _showNoteToast() {
     Color cardColor;
-    switch (widget.chainingPayload.attackNotesColorList[_attackNumber]) {
+    switch (_chainingPayload.attackNotesColorList[_attackNumber]) {
       case 'z':
         cardColor = Colors.grey[700];
         break;
@@ -4294,11 +4102,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     String extraInfo = "";
-    if (_lastOnline > 0 && !widget.chainingPayload.war) {
+    if (_lastOnline > 0 && !_chainingPayload.war) {
       var now = DateTime.now();
       var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
       if (lastOnlineDiff.inDays < 7) {
-        if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty) {
+        if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty) {
           extraInfo += "\n\n";
         }
         if (lastOnlineDiff.inHours < 1) {
@@ -4319,8 +4127,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // Do nothing if note is empty
-    if (widget.chainingPayload.attackNotesList[_attackNumber].isEmpty &&
-        !widget.chainingPayload.showBlankNotes &&
+    if (_chainingPayload.attackNotesList[_attackNumber].isEmpty &&
+        !_chainingPayload.showBlankNotes &&
         extraInfo.isEmpty) {
       return;
     }
@@ -4342,7 +4150,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty)
+                  if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -4353,19 +4161,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ),
                         SizedBox(width: 5),
                         Text(
-                          'Note for ${widget.chainingPayload.attackNameList[_attackNumber]}',
+                          'Note for ${_chainingPayload.attackNameList[_attackNumber]}',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
-                  if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
+                  if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          '${widget.chainingPayload.attackNotesList[_attackNumber]}$extraInfo',
+                          '${_chainingPayload.attackNotesList[_attackNumber]}$extraInfo',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white),
                         ),
@@ -4379,6 +4187,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  clearCacheAndReload() async {
+    await webView.clearCache();
+    webView.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
   }
 
   _requestTornThemeChange({@required bool dark}) {
@@ -4397,13 +4210,40 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void closeBrowserFromOutside() async {
-    setState(() {
-      _closeButtonTriggered = true;
-    });
     _webViewProvider.setCurrentUiMode(UiMode.window, context);
     await Future.delayed(const Duration(milliseconds: 150));
     if (mounted) {
-      Navigator.of(context).pop();
+      _webViewProvider.browserForeground = false;
+      _checkIfTargetsAttackedAndRevertChaining();
+    }
+  }
+
+  /// Updates attacked targets if we are in a chaining browser and then cancels the chain
+  void _checkIfTargetsAttackedAndRevertChaining() {
+    String message = "";
+    if (_isChainingBrowser) {
+      if (_chainingPayload.war && _lastAttackedMembers.length > 0) {
+        message = '${_lastAttackedMembers.length} attacked targets will auto update in a few seconds!';
+        _w.updateSomeMembersAfterAttack(lastAttackedMembers: _lastAttackedMembers);
+        _lastAttackedMembers.clear();
+      } else if (!_chainingPayload.war && _lastAttackedTargets.length > 0) {
+        message = '${_lastAttackedTargets.length} attacked targets will auto update in a few seconds!';
+        _targetsProvider.updateTargetsAfterAttacks(lastAttackedTargets: _lastAttackedTargets);
+        _lastAttackedTargets.clear();
+      }
+    }
+
+    if (message.isNotEmpty) {
+      BotToast.showText(
+        text: message,
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[800],
+        duration: Duration(seconds: 4),
+        contentPadding: EdgeInsets.all(10),
+      );
     }
   }
 }

@@ -56,8 +56,6 @@ class TargetsProvider extends ChangeNotifier {
 
   TargetSortType _currentSort;
 
-  List<String> lastAttackedTargets = [];
-
   TargetsProvider() {
     restorePreferences();
   }
@@ -303,7 +301,10 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> updateTargetsAfterAttacks() async {
+  Future<void> updateTargetsAfterAttacks({@required List<String> lastAttackedTargets}) async {
+    // Copies the list locally, as it will be erased by the webview after it has been sent
+    // so that other attacks are possible
+    List<String> lastAttackedCopy = List<String>.from(lastAttackedTargets);
     await Future.delayed(Duration(seconds: 15));
 
     // Get attacks full to use later
@@ -311,8 +312,8 @@ class TargetsProvider extends ChangeNotifier {
 
     // Local function for the update of several targets after attacking
     for (var tar in _targets) {
-      for (var i = 0; i < lastAttackedTargets.length; i++) {
-        if (tar.playerId.toString() == lastAttackedTargets[i]) {
+      for (var i = 0; i < lastAttackedCopy.length; i++) {
+        if (tar.playerId.toString() == lastAttackedCopy[i]) {
           tar.isUpdating = true;
           notifyListeners();
           try {
@@ -342,7 +343,7 @@ class TargetsProvider extends ChangeNotifier {
             tar.isUpdating = false;
             _updateResultAnimation(tar, false);
           }
-          if (lastAttackedTargets.length > 40) {
+          if (lastAttackedCopy.length > 40) {
             await Future.delayed(const Duration(seconds: 1), () {});
           }
         }

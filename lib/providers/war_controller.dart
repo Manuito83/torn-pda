@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -60,8 +61,6 @@ class WarController extends GetxController {
 
   bool nukeReviveActive = false;
   bool uhcReviveActive = false;
-
-  List<String> lastAttackedTargets = [];
 
   bool toggleAddUserActive = false;
 
@@ -461,7 +460,10 @@ class WarController extends GetxController {
     return numberUpdated;
   }
 
-  Future updateSomeMembersAfterAttack() async {
+  Future updateSomeMembersAfterAttack({@required List<String> lastAttackedMembers}) async {
+    // Copies the list locally, as it will be erased by the webview after it has been sent
+    // so that other attacks are possible
+    List<String> lastAttackedCopy = List<String>.from(lastAttackedMembers);
     await Future.delayed(Duration(seconds: 15));
     dynamic allAttacksSuccess = await getAllAttacks();
     dynamic ownStatsSuccess = await getOwnStats();
@@ -473,7 +475,7 @@ class WarController extends GetxController {
     // which might happen even if we stop the update
     List<FactionModel> thisFactions = List.from(factions);
 
-    for (String id in lastAttackedTargets) {
+    for (String id in lastAttackedCopy) {
       for (FactionModel f in thisFactions) {
         if (_stopUpdate) {
           _stopUpdate = false;
@@ -489,7 +491,7 @@ class WarController extends GetxController {
             ownStats: ownStatsSuccess,
           );
 
-          if (lastAttackedTargets.length > 60) {
+          if (lastAttackedCopy.length > 60) {
             await Future.delayed(Duration(seconds: 1));
           }
           break;

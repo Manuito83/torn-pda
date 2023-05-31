@@ -12,6 +12,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ItemCard extends StatefulWidget {
   final Item item;
@@ -173,12 +174,11 @@ class _ItemCardState extends State<ItemCard> {
                               onTap: () async {
                                 var url =
                                     "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
-                                var dialog = widget.settingsProvider.useQuickBrowser || false;
+
                                 context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: dialog,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.short,
                                     );
                               },
                               onLongPress: () async {
@@ -187,8 +187,7 @@ class _ItemCardState extends State<ItemCard> {
                                 context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: false,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.long,
                                     );
                               },
                             ),

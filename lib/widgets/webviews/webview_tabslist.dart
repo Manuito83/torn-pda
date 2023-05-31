@@ -1,4 +1,3 @@
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -107,6 +106,8 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                       ),
                                       child: Text(
                                         _webViewProvider.tabList[i].pageTitle,
+                                        overflow: TextOverflow.clip,
+                                        maxLines: 2,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 12,

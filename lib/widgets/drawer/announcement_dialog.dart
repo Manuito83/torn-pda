@@ -1,11 +1,8 @@
-import 'package:easy_rich_text/easy_rich_text.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AnnouncementDialog extends StatelessWidget {
   const AnnouncementDialog({
@@ -54,26 +51,41 @@ class AnnouncementDialog extends StatelessWidget {
               style: TextStyle(fontSize: 14),
             ),
             SizedBox(height: 15),
-            EasyRichText(
-              "Give Torn PDA a thumbs up in the forums, rate the app with your honest opinion, and keep your "
-              "suggestions coming. And do so with any other apps, services, extensions, helpers, spreadsheets,... "
-              "you use. Third-party developers work every day to make the game we all love a bit more enjoyable!",
-              defaultStyle: TextStyle(fontSize: 14, color: _themeProvider.mainText),
-              patternList: [
-                EasyRichTextPattern(
-                  targetString: 'forums',
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () async {
-                      var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
-                      await context.read<WebViewProvider>().openBrowserPreference(
-                            context: context,
-                            url: url,
-                            useDialog: context.read<SettingsProvider>().useQuickBrowser,
-                          );
-                    },
-                  style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
-                ),
-              ],
+            RichText(
+              text: TextSpan(
+                text: "Give Torn PDA a thumbs up in the ",
+                style: TextStyle(fontSize: 14, color: _themeProvider.mainText),
+                children: <InlineSpan>[
+                  WidgetSpan(
+                    child: GestureDetector(
+                      onTap: () {
+                        var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
+                        context.read<WebViewProvider>().openBrowserPreference(
+                              context: context,
+                              url: url,
+                              browserTapType: BrowserTapType.short,
+                            );
+                      },
+                      onLongPress: () {
+                        var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
+                        context.read<WebViewProvider>().openBrowserPreference(
+                              context: context,
+                              url: url,
+                              browserTapType: BrowserTapType.long,
+                            );
+                      },
+                      child: Text(
+                        'forums',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                  TextSpan(
+                      text: ", rate the app with your honest opinion, and keep your "
+                          "suggestions coming. And do so with any other apps, services, extensions, helpers, spreadsheets,... "
+                          "you use. Third-party developers work every day to make the game we all love a bit more enjoyable!"),
+                ],
+              ),
             ),
           ],
         ),

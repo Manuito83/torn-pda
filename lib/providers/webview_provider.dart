@@ -17,7 +17,6 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 // Package imports:
 
@@ -48,7 +47,7 @@ class TabDetails {
 class SleepingWebView {
   final String customUrl;
   final GlobalKey<WebViewFullState> key;
-  final bool dialog;
+  //final bool dialog;
   final bool useTabs;
   final bool chatRemovalActive;
   final bool isChainingBrowser;
@@ -56,7 +55,7 @@ class SleepingWebView {
 
   const SleepingWebView({
     this.customUrl = 'https://www.torn.com',
-    this.dialog = false,
+    //this.dialog = false,
     this.useTabs = false,
     this.chatRemovalActive = false,
     this.key,
@@ -71,12 +70,81 @@ class WebViewProvider extends ChangeNotifier {
 
   bool usingDialog = false;
 
+  /// Changes browser visibility
+  bool _isBrowserForeground = false;
+  bool get browserForeground => _isBrowserForeground;
+  set browserForeground(bool foreground) {
+    if (foreground) {
+      resumeCurrentWebview();
+    } else {
+      pauseCurrentWebview();
+      // Signal that the browser has closed to listener (e.g.: Profile page)
+      browserHasClosedStream.add(true);
+    }
+
+    // Change browser visibility
+    _isBrowserForeground = foreground;
+    notifyListeners();
+  }
+
+  pdaIconActivation({
+    @required bool shortTap,
+    @required BuildContext context,
+    @required automaticLogin,
+  }) {
+    browserForeground = true;
+
+    if (automaticLogin) {
+      // When we use the PDA Icon, launch a logout check by default in case we just activated
+      // the native user in Settings and are logged out
+      assessLoginErrors();
+    }
+
+    SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (settings.fullScreenIncludesPDAButtonTap) {
+      if (shortTap) {
+        if (currentUiMode == UiMode.window) {
+          if (settings.fullScreenByShortTap) {
+            setCurrentUiMode(UiMode.fullScreen, context);
+          }
+        } else if (currentUiMode == UiMode.fullScreen) {
+          if (!settings.fullScreenByShortTap) {
+            setCurrentUiMode(UiMode.window, context);
+          }
+        }
+      } else {
+        if (currentUiMode == UiMode.window) {
+          if (settings.fullScreenByLongTap) {
+            setCurrentUiMode(UiMode.fullScreen, context);
+          }
+        } else if (currentUiMode == UiMode.fullScreen) {
+          if (!settings.fullScreenByLongTap) {
+            setCurrentUiMode(UiMode.window, context);
+          }
+        }
+      }
+    }
+
+    notifyListeners();
+  }
+
+  /// Main browser widget
+  Widget _stackView = WebViewStackView(
+    initUrl: "http://www.torn.com",
+    recallLastSession: true,
+  );
+  WebViewStackView get stackView => _stackView;
+  set stackView(WebViewStackView value) {
+    _stackView = value;
+    notifyListeners();
+  }
+
   UiMode _currentUiMode = UiMode.window;
   UiMode get currentUiMode => _currentUiMode;
-  setCurrentUiMode(UiMode value, BuildContext _) {
+  setCurrentUiMode(UiMode value, BuildContext context) {
     _currentUiMode = value;
     if (_currentUiMode == UiMode.fullScreen) {
-      SettingsProvider settings = Provider.of<SettingsProvider>(_, listen: false);
+      SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
       SystemChrome.setEnabledSystemUIMode(
         SystemUiMode.manual,
         overlays: [
@@ -104,6 +172,8 @@ class WebViewProvider extends ChangeNotifier {
     verticalMenuIsOpen = false;
     notifyListeners();
   }
+
+  StreamController willPopCallbackStream = StreamController.broadcast();
 
   StreamController browserHasClosedStream = StreamController.broadcast();
 
@@ -178,8 +248,6 @@ class WebViewProvider extends ChangeNotifier {
         //
       }
     }
-
-    usingDialog = dialog;
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
@@ -293,7 +361,6 @@ class WebViewProvider extends ChangeNotifier {
                 windowId: windowId,
                 customUrl: url,
                 key: key,
-                dialog: usingDialog,
                 useTabs: true,
                 chatRemovalActive: chatRemovalActive,
                 isChainingBrowser: isChainingBrowser,
@@ -303,7 +370,6 @@ class WebViewProvider extends ChangeNotifier {
             ? SleepingWebView(
                 customUrl: url,
                 key: key,
-                dialog: usingDialog,
                 useTabs: true,
                 chatRemovalActive: chatRemovalActive,
                 isChainingBrowser: isChainingBrowser,
@@ -419,12 +485,56 @@ class WebViewProvider extends ChangeNotifier {
     return WebViewFull(
       customUrl: sleeping.customUrl,
       key: sleeping.key,
-      dialog: sleeping.dialog,
       useTabs: true,
       chatRemovalActive: sleeping.chatRemovalActive,
       isChainingBrowser: sleeping.isChainingBrowser,
       chainingPayload: sleeping.chainingPayload,
     );
+  }
+
+  void pauseCurrentWebview() {
+    if (_tabList.isEmpty) return;
+    log("Pausing current webview!");
+    var currentTab = _tabList[_currentTab];
+    currentTab.webViewKey?.currentState?.pauseWebview();
+  }
+
+  void resumeCurrentWebview() {
+    if (_tabList.isEmpty) return;
+    log("Resuming current webview!");
+    var currentTab = _tabList[_currentTab];
+    currentTab.webViewKey?.currentState?.resumeWebview();
+  }
+
+  Future clearCacheAndTabs() async {
+    if (_tabList.isEmpty) return;
+
+    // Wait 200 milliseconds for build to finish (if we come from a tab)
+    await Future.delayed(const Duration(milliseconds: 200));
+    _currentTab = 0;
+    notifyListeners();
+    // Wait 200 milliseconds so that the animated stack view changes to main tab
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    Prefs().setWebViewSecondaryTabs('{"tabsSave": []}');
+    // Clear session cookie
+    Prefs().setWebViewSessionCookie('');
+
+    // Awake remaining tab if necessary
+    if (_tabList[0].sleepTab) {
+      _tabList[_currentTab].sleepTab = false;
+      _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView);
+    }
+
+    _tabList[0].webViewKey?.currentState?.resumeWebview();
+    _tabList[0].webViewKey?.currentState?.clearCacheAndReload();
+
+    _tabList.removeRange(1, _tabList.length);
+
+    cancelChainingBrowser();
+
+    _saveTabs();
+    notifyListeners();
   }
 
   void reorderTabs(TabDetails movedItem, int oldIndex, int newIndex) {
@@ -444,7 +554,7 @@ class WebViewProvider extends ChangeNotifier {
       // by detecting if the URL we are leaving is the same one we are going to. If it is, don't add it as it is
       // still the current page being shown
       if (tab.currentUrl != newUrl) {
-        tab.historyBack.add(tab.currentUrl);
+        addToHistoryBack(tab: tab, url: tab.currentUrl);
       }
     } else {
       tab.initialised = true;
@@ -526,11 +636,32 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
+  void addToHistoryBack({@required TabDetails tab, @required String url}) {
+    tab.historyBack.add(url);
+    if (tab.historyBack.length > 25) {
+      tab.historyBack.removeAt(0);
+    }
+  }
+
+  void addToHistoryForward({@required TabDetails tab, @required String url}) {
+    tab.historyForward.add(url);
+    if (tab.historyForward.length > 25) {
+      tab.historyForward.removeAt(0);
+    }
+  }
+
+  assessLoginErrors() {
+    var tab = _tabList[_currentTab];
+    if (tab.currentUrl != null) {
+      tab.webViewKey.currentState?.assessErrorCases();
+    }
+  }
+
   bool tryGoBack() {
     var tab = _tabList[_currentTab];
     if (tab.historyBack.length > 0) {
       var previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
-      tab.historyForward.add(tab.currentUrl);
+      addToHistoryForward(tab: tab, url: tab.currentUrl);
       tab.historyBack.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
       tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
@@ -566,7 +697,9 @@ class WebViewProvider extends ChangeNotifier {
     var tab = _tabList[_currentTab];
     if (tab.historyForward.length > 0) {
       var previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
-      tab.historyBack.add(tab.currentUrl);
+
+      addToHistoryBack(tab: tab, url: tab.currentUrl);
+
       tab.historyForward.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
       tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
@@ -616,6 +749,27 @@ class WebViewProvider extends ChangeNotifier {
     if (_currentTab != 0) {
       activateTab(0);
     }
+  }
+
+  void convertToChainingBrowser({ChainingPayload chainingPayload}) {
+    if (_tabList.isEmpty) return;
+    var tab = _tabList[0];
+    tab.isChainingBrowser = true;
+    tab.webViewKey.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload);
+    if (_currentTab != 0) {
+      activateTab(0);
+    }
+    _saveTabs();
+  }
+
+  /// Do not call this directly, do it through the webview provider to ensure that the tab is also updated
+  void cancelChainingBrowser() {
+    if (_tabList.isEmpty) return;
+    var tab = _tabList[0];
+    tab.isChainingBrowser = false;
+    tab.webViewKey.currentState?.cancelChainingBrowser();
+    notifyListeners();
+    _saveTabs();
   }
 
   void loadCurrentTabUrl(String url) {
@@ -747,17 +901,10 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void cancelChainingBrowser() {
-    var tab = _tabList[_currentTab];
-    tab.isChainingBrowser = false;
-    notifyListeners();
-  }
-
   Future openBrowserPreference({
     @required BuildContext context,
     @required String url,
-    @required bool useDialog,
-    bool awaitable = false,
+    @required BrowserTapType browserTapType,
     bool recallLastSession = false,
     // Chaining
     final bool isChainingBrowser = false,
@@ -771,68 +918,49 @@ class WebViewProvider extends ChangeNotifier {
     }
     _lastBrowserOpenedTime = DateTime.now();
 
-    // If we are using tabs and selected it by default in the concerning browser type, start with full screen
-    // (except if it's a chaining browser!)
-    SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
-    if ((useDialog && settings.useTabsBrowserDialog && settings.fullScreenDefaultInQuickBrowser) ||
-        (!useDialog && settings.useTabsFullBrowser && settings.fullScreenDefaultInFullBrowser) && !isChainingBrowser) {
-      setCurrentUiMode(UiMode.fullScreen, context);
-    }
+    UiMode uiMode = _decideBrowserScreenMode(tapType: browserTapType, context: context);
+    setCurrentUiMode(uiMode, context);
 
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
-      // First check if the browser (whichever) is open. If it is, load the url in that browser.
-      if (_tabList.isNotEmpty) {
-        loadMainTabUrl(url);
-      } else {
-        // Otherwise, we attend to user preferences on browser type
-        if (useDialog) {
-          analytics.setCurrentScreen(screenName: 'browser_dialog');
-          if (awaitable) {
-            await openBrowserDialog(
-              context,
-              url,
-              recallLastSession: recallLastSession,
-            );
-          } else {
-            openBrowserDialog(
-              context,
-              url,
-              recallLastSession: recallLastSession,
-            );
-          }
-        } else {
-          analytics.setCurrentScreen(screenName: 'browser_full');
-          if (awaitable) {
-            await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(
-                  initUrl: url,
-                  recallLastSession: recallLastSession,
-                  isChainingBrowser: isChainingBrowser,
-                  chainingPayload: chainingPayload,
-                ),
-              ),
-            );
-          } else {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(
-                  initUrl: url,
-                  recallLastSession: recallLastSession,
-                  isChainingBrowser: isChainingBrowser,
-                  chainingPayload: chainingPayload,
-                ),
-              ),
-            );
-          }
-        }
+      analytics.setCurrentScreen(screenName: 'browser_full');
+      WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+      w.stackView = WebViewStackView(
+        initUrl: url,
+        recallLastSession: recallLastSession,
+        isChainingBrowser: isChainingBrowser,
+        chainingPayload: chainingPayload,
+      );
+      loadMainTabUrl(url);
+      if (isChainingBrowser) {
+        convertToChainingBrowser(chainingPayload: chainingPayload);
       }
+      w.browserForeground = true;
     } else {
-      if (!recallLastSession && await canLaunch(url)) {
-        await launch(url, forceSafariVC: false);
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       }
     }
+  }
+
+  UiMode _decideBrowserScreenMode({@required BrowserTapType tapType, @required BuildContext context}) {
+    SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
+
+    if (tapType == BrowserTapType.chain) {
+      return UiMode.window;
+    } else if (tapType == BrowserTapType.short && settings.fullScreenByShortTap) {
+      return UiMode.fullScreen;
+    } else if (tapType == BrowserTapType.long && settings.fullScreenByLongTap) {
+      return UiMode.fullScreen;
+    } else if (tapType == BrowserTapType.notification && settings.fullScreenByNotificationTap) {
+      return UiMode.fullScreen;
+    } else if (tapType == BrowserTapType.deeplink && settings.fullScreenByDeepLinkTap) {
+      return UiMode.fullScreen;
+    } else if (tapType == BrowserTapType.quickItem && settings.fullScreenByQuickItemTap) {
+      return UiMode.fullScreen;
+    }
+
+    return UiMode.window;
   }
 
   void changeTornTheme({@required bool dark}) {

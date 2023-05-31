@@ -65,6 +65,8 @@ import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
 import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import '../main.dart';
 
 enum ProfileNotification {
@@ -293,6 +295,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   // Showcases
   GlobalKey _showcaseProfileBars = GlobalKey();
   GlobalKey _showcaseProfileClock = GlobalKey();
+  GlobalKey _showcasePdaBrowserButton = GlobalKey();
 
   @override
   void initState() {
@@ -327,14 +330,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   /// If [initCall] is true, a call is placed also at the start
   /// (unless the browser is open)
   void _resetApiTimer({bool initCall = false}) {
-    if (initCall && _webViewProvider.tabList.isEmpty) {
+    if (initCall && !_webViewProvider.browserForeground) {
       _apiRefreshPeriodic(forceMisc: true);
     }
 
     _tickerCallApi?.cancel();
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
       // Only refresh if the browser is not open!
-      if (_webViewProvider.tabList.isEmpty) {
+      if (!_webViewProvider.browserForeground) {
         _apiRefreshPeriodic();
       }
     });
@@ -393,17 +396,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           floatingActionButton: Stack(
             children: [
               buildSpeedDial(),
-              GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                child: Container(
-                  width: 56,
-                  height: 56,
-                ),
-                onLongPress: () async {
-                  bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
-                  _launchBrowser(url: "", dialogRequested: lastSessionWasDialog, recallLastSession: true);
-                },
-              ),
             ],
           ),
           body: Container(
@@ -536,10 +528,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _settingsProvider.addShowCase = "profile_bars";
         showCases.add(_showcaseProfileBars);
       }
+
       if (!_settingsProvider.showCases.contains("profile_clock")) {
         _settingsProvider.addShowCase = "profile_clock";
         showCases.add(_showcaseProfileClock);
       }
+
+      if (!_settingsProvider.showCases.contains("profile_pdaBrowserButton")) {
+        _settingsProvider.addShowCase = "profile_pdaBrowserButton";
+        showCases.add(_showcasePdaBrowserButton);
+      }
+
       if (showCases.isNotEmpty) {
         ShowCaseWidget.of(_).startShowCase(showCases);
       }
@@ -616,12 +615,33 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Text("Profile"),
         ],
       ),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          Showcase(
+            key: _showcasePdaBrowserButton,
+            title: 'Direct Torn access!',
+            description: '\nUse this PDA button in any section to quickly access Torn.\n\n'
+                'By using this icon, you will immediately resume your Torn browser experience, exactly as you '
+                'left it, with no new tabs reloading.\n\n'
+                'Make sure to visit the Settings and Tips section to learn how you can also configure '
+                'your taps (quick or long) to launch the browser in windowed or full screen modes!',
+            showArrow: false,
+            disableMovingAnimation: true,
+            textColor: _themeProvider.mainText,
+            tooltipBackgroundColor: _themeProvider.secondBackground,
+            descTextStyle: TextStyle(fontSize: 13),
+            tooltipPadding: EdgeInsets.all(20),
+            child: PdaBrowserIcon(),
+          ),
+        ],
       ),
       actions: <Widget>[
         _apiGoodData
@@ -629,10 +649,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 padding: const EdgeInsets.only(right: 8),
                 child: GestureDetector(
                   onTap: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: true);
+                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: true);
                   },
                   onLongPress: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: false);
+                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: false);
                   },
                   child: Showcase(
                     key: _showcaseProfileClock,
@@ -811,7 +831,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
 
-          _launchBrowser(url: url, dialogRequested: false);
+          _launchBrowser(url: url, shortTap: false);
         },
         onTap: () async {
           String url = thisShortcut.url;
@@ -828,7 +848,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
 
-          _launchBrowser(url: url, dialogRequested: true);
+          _launchBrowser(url: url, shortTap: true);
         },
         child: Card(
           shape: RoundedRectangleBorder(
@@ -979,13 +999,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 _launchBrowser(
                     url: 'https://www.torn.com/profiles.php?'
                         'XID=$causingId',
-                    dialogRequested: true);
+                    shortTap: true);
               },
               onLongPress: () {
                 _launchBrowser(
                     url: 'https://www.torn.com/profiles.php?'
                         'XID=$causingId',
-                    dialogRequested: false);
+                    shortTap: false);
               },
             );
           } else {
@@ -1071,12 +1091,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         GestureDetector(
                           onLongPress: () => _launchBrowser(
                             url: 'https://www.torn.com/factions.php?step=your#/war/rank',
-                            dialogRequested: false,
+                            shortTap: false,
                           ),
                           onTap: () {
                             _launchBrowser(
                               url: 'https://www.torn.com/factions.php?step=your#/war/rank',
-                              dialogRequested: true,
+                              shortTap: true,
                             );
                           },
                           child: RankedWarMini(
@@ -1260,9 +1280,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onLongPress: () => _launchBrowser(url: 'https://www.torn.com', dialogRequested: false),
+                      onLongPress: () => _launchBrowser(url: 'https://www.torn.com', shortTap: false),
                       onTap: () {
-                        _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
+                        _launchBrowser(url: 'https://www.torn.com', shortTap: true);
                       },
                       child: LinearPercentIndicator(
                         padding: null,
@@ -1398,11 +1418,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
                 onLongPress: () {
-                  _launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
+                  _launchBrowser(url: 'https://www.torn.com', shortTap: false);
                 },
                 onPressed: () async {
                   var url = 'https://www.torn.com';
-                  _launchBrowser(url: url, dialogRequested: true);
+                  _launchBrowser(url: url, shortTap: true);
                 },
               ),
               SizedBox(width: 20),
@@ -1458,6 +1478,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
                 onTap: () {
                   return showDialog(
+                    useRootNavigator: false,
                     context: context,
                     barrierDismissible: true,
                     builder: (BuildContext context) {
@@ -1516,11 +1537,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
                 onLongPress: () {
-                  _launchBrowser(url: 'https://www.torn.com/travelagency.php', dialogRequested: false);
+                  _launchBrowser(url: 'https://www.torn.com/travelagency.php', shortTap: false);
                 },
                 onPressed: () async {
                   var url = 'https://www.torn.com/travelagency.php';
-                  _launchBrowser(url: url, dialogRequested: true);
+                  _launchBrowser(url: url, shortTap: true);
                 },
               ),
               SizedBox(width: 20),
@@ -1730,10 +1751,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           GestureDetector(
                             key: _showOne,
                             onLongPress: () {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: false);
+                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
                             },
                             onTap: () async {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: true);
+                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
                             },
                             child: Showcase(
                               key: _showcaseProfileBars,
@@ -1811,10 +1832,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           SizedBox(width: 10),
                           GestureDetector(
                             onLongPress: () {
-                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: false);
+                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: false);
                             },
                             onTap: () async {
-                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: true);
+                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: true);
                             },
                             child: LinearPercentIndicator(
                               padding: null,
@@ -1858,10 +1879,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       SizedBox(width: 10),
                       GestureDetector(
                         onLongPress: () {
-                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', dialogRequested: false);
+                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', shortTap: false);
                         },
                         onTap: () async {
-                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', dialogRequested: true);
+                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', shortTap: true);
                         },
                         child: LinearPercentIndicator(
                           padding: null,
@@ -1911,12 +1932,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               } else if (_settingsProvider.lifeBarOption == "inventory") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/item.php#medical-items',
-                                  dialogRequested: false,
+                                  shortTap: false,
                                 );
                               } else if (_settingsProvider.lifeBarOption == "faction") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical',
-                                  dialogRequested: false,
+                                  shortTap: false,
                                 );
                               }
                             },
@@ -1926,12 +1947,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               } else if (_settingsProvider.lifeBarOption == "inventory") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/item.php#medical-items',
-                                  dialogRequested: true,
+                                  shortTap: true,
                                 );
                               } else if (_settingsProvider.lifeBarOption == "faction") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical',
-                                  dialogRequested: true,
+                                  shortTap: true,
                                 );
                               }
                             },
@@ -2903,10 +2924,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onLongPress: () {
-                  _launchBrowser(url: "https://www.torn.com/events.php#/step=all", dialogRequested: false);
+                  _launchBrowser(url: "https://www.torn.com/events.php#/step=all", shortTap: false);
                 },
                 onTap: () {
-                  _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', dialogRequested: true);
+                  _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', shortTap: true);
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -3076,13 +3097,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: false);
+                              shortTap: false);
                         },
                         onTap: () {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: true);
+                              shortTap: true);
                         },
                       )
                     : GestureDetector(
@@ -3091,13 +3112,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: false);
+                              shortTap: false);
                         },
                         onTap: () {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: true);
+                              shortTap: true);
                         },
                       ),
               ],
@@ -3182,10 +3203,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onLongPress: () {
-                  _launchBrowser(url: "https://www.torn.com/messages.php", dialogRequested: false);
+                  _launchBrowser(url: "https://www.torn.com/messages.php", shortTap: false);
                 },
                 onTap: () {
-                  _launchBrowser(url: "https://www.torn.com/messages.php", dialogRequested: true);
+                  _launchBrowser(url: "https://www.torn.com/messages.php", shortTap: true);
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -3476,10 +3497,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 children: [
                   GestureDetector(
                     onLongPress: () {
-                      _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: false);
+                      _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
                     },
                     onTap: () async {
-                      _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: true);
+                      _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                     },
                     child: Icon(
                       MdiIcons.alphaPCircleOutline,
@@ -3577,10 +3598,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     GestureDetector(
                       onLongPress: () {
-                        _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: false);
+                        _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
                       },
                       onTap: () async {
-                        _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: true);
+                        _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                       },
                       child: Icon(
                         MdiIcons.alphaPCircleOutline,
@@ -4083,10 +4104,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           InkWell(
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', dialogRequested: false);
+              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
             },
             onTap: () {
-              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', dialogRequested: true);
+              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),
@@ -4122,10 +4143,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
-                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", dialogRequested: false);
+                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
               },
               onTap: () {
-                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', dialogRequested: true);
+                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 5),
@@ -4150,10 +4171,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
-                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", dialogRequested: false);
+                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
               },
               onTap: () {
-                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', dialogRequested: true);
+                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 5),
@@ -4168,6 +4189,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
             onTap: () {
               return showDialog(
+                useRootNavigator: false,
                 context: context,
                 barrierDismissible: true,
                 builder: (BuildContext context) {
@@ -5023,7 +5045,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           shape: BoxShape.circle,
           image: new DecorationImage(
             fit: BoxFit.fill,
-            image: AssetImage("images/icons/torn_t_logo_restore.png"),
+            image: AssetImage("images/icons/torn_t_logo.png"),
           ),
         ),
       ),
@@ -5032,10 +5054,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       children: [
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/city.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/city.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -5056,10 +5078,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/trade.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: true);
           },
           onLongPress: () async {
-            _launchBrowser(url: 'https://www.torn.com/trade.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -5080,10 +5102,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/item.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/item.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -5104,10 +5126,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -5132,10 +5154,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -5156,10 +5178,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -5182,12 +5204,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  void _launchBrowser({@required String url, @required bool dialogRequested, bool recallLastSession = false}) async {
-    if (!_settingsProvider.useQuickBrowser) dialogRequested = false;
+  void _launchBrowser({@required String url, @required bool shortTap, bool recallLastSession = false}) async {
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
-      useDialog: dialogRequested,
+      browserTapType: shortTap ? BrowserTapType.short : BrowserTapType.long,
       recallLastSession: recallLastSession,
     );
   }
@@ -6264,12 +6285,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               onPressed: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: true);
+                                _launchBrowser(url: url, shortTap: true);
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: false);
+                                _launchBrowser(url: url, shortTap: false);
                               },
                             ),
                           ),
@@ -6292,12 +6313,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               onPressed: () async {
                                 var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: true);
+                                _launchBrowser(url: url, shortTap: true);
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: false);
+                                _launchBrowser(url: url, shortTap: false);
                               },
                             ),
                           ),
@@ -6320,12 +6341,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               onPressed: () async {
                                 var url = 'https://www.torn.com/companies.php#/option=funds';
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: true);
+                                _launchBrowser(url: url, shortTap: true);
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/companies.php#/option=funds";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: false);
+                                _launchBrowser(url: url, shortTap: false);
                               },
                             ),
                           ),
@@ -6420,10 +6441,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 var url = "https://www.torn.com/item.php#medical-items";
                                 if (longPress) {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: false);
+                                  _launchBrowser(url: url, shortTap: false);
                                 } else {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: true);
+                                  _launchBrowser(url: url, shortTap: true);
                                 }
                               },
                             ),
@@ -6449,10 +6470,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
                                 if (longPress) {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: false);
+                                  _launchBrowser(url: url, shortTap: false);
                                 } else {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: true);
+                                  _launchBrowser(url: url, shortTap: true);
                                 }
                               },
                             ),
@@ -6544,10 +6565,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         children: [
           GestureDetector(
             onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com/companies.php', dialogRequested: false);
+              _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: false);
             },
             onTap: () async {
-              _launchBrowser(url: 'https://www.torn.com/companies.php', dialogRequested: true);
+              _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: true);
             },
             child: Icon(
               Icons.work,
@@ -6561,6 +6582,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           GestureDetector(
             onTap: () async {
               return showDialog(
+                useRootNavigator: false,
                 context: context,
                 barrierDismissible: true,
                 builder: (BuildContext context) {
@@ -6874,11 +6896,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: false);
+                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: false);
             },
             onTap: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: true);
+                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: true);
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),

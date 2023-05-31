@@ -3,12 +3,14 @@ import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/external/hela_revive.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelaReviveButton extends StatefulWidget {
@@ -112,44 +114,67 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                           ),
                         ),
                         Flexible(
-                          child: EasyRichText(
-                            "HeLa is an independent revive faction, comprised of a small group of active, "
-                            "premium revivers."
-                            "\n\nCheck out their forum thread and Discord server for more information.",
-                            defaultStyle: TextStyle(fontSize: 13, color: widget.themeProvider.mainText),
-                            patternList: [
-                              EasyRichTextPattern(
-                                targetString: 'forum thread',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    _launchBrowser(
-                                      url: 'https://www.torn.com/forums.php#/p=threads&f=10&t=16233040&b=0&a=0',
-                                      dialogRequested: true,
-                                      context: _,
-                                    );
-                                  },
+                          child: RichText(
+                            text: TextSpan(
+                              text: "HeLa is an independent revive faction, comprised of a small group of active, "
+                                  "premium revivers."
+                                  "\n\nCheck out their ",
+                              style: TextStyle(
+                                color: context.read<ThemeProvider>().mainText,
+                                fontSize: 13,
                               ),
-                              EasyRichTextPattern(
-                                targetString: 'Discord server',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    var url = 'https://discord.gg/hWamUgW';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Revives cost 1 million or 1 Xanax each, unless on contract. "
-                            "Refusal to pay will result in getting blacklisted.",
-                            style: TextStyle(fontSize: 13, color: widget.themeProvider.mainText),
+                              children: <InlineSpan>[
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      var url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16233040&b=0&a=0';
+                                      context.read<WebViewProvider>().openBrowserPreference(
+                                            context: context,
+                                            url: url,
+                                            browserTapType: BrowserTapType.short,
+                                          );
+                                    },
+                                    onLongPress: () {
+                                      Navigator.of(context).pop();
+                                      var url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16233040&b=0&a=0';
+                                      context.read<WebViewProvider>().openBrowserPreference(
+                                            context: context,
+                                            url: url,
+                                            browserTapType: BrowserTapType.long,
+                                          );
+                                    },
+                                    child: Text(
+                                      'forum thread',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                TextSpan(text: ' and '),
+                                TextSpan(
+                                  text: 'Discord server',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                    fontSize: 13,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () async {
+                                      var url = 'https://discord.gg/hWamUgW';
+                                      if (await canLaunchUrl(Uri.parse(url))) {
+                                        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                      }
+                                    },
+                                ),
+                                TextSpan(
+                                    text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
+                                        "Refusal to pay will result in getting blacklisted."),
+                              ],
+                            ),
                           ),
                         ),
                         SizedBox(height: 15),
@@ -263,21 +288,6 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
           ),
         );
       },
-    );
-  }
-
-  void _launchBrowser({
-    @required String url,
-    @required bool dialogRequested,
-    bool recallLastSession = false,
-    BuildContext context,
-  }) async {
-    if (!widget.settingsProvider.useQuickBrowser) dialogRequested = false;
-    widget.webViewProvider.openBrowserPreference(
-      context: context,
-      url: url,
-      useDialog: dialogRequested,
-      recallLastSession: recallLastSession,
     );
   }
 }

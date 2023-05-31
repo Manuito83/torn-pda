@@ -33,6 +33,8 @@ import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
 
@@ -182,12 +184,18 @@ class _LootPageState extends State<LootPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('Loot'),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         _apiSuccess
@@ -198,6 +206,7 @@ class _LootPageState extends State<LootPage> {
                 ),
                 onPressed: () {
                   showDialog(
+                    useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
                       return LootFilterDialog(
@@ -552,7 +561,7 @@ class _LootPageState extends State<LootPage> {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
-                      useDialog: _settingsProvider.useQuickBrowser,
+                      browserTapType: BrowserTapType.short,
                     );
               },
               onLongPress: () async {
@@ -560,7 +569,7 @@ class _LootPageState extends State<LootPage> {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
-                      useDialog: false,
+                      browserTapType: BrowserTapType.long,
                     );
               },
             ),
@@ -819,11 +828,11 @@ class _LootPageState extends State<LootPage> {
               GestureDetector(
                 onTap: () async {
                   await showDialog(
+                    useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
                       return LootRangersExplanationDialog(
                         themeProvider: _themeProvider,
-                        currentOrder: _lootRangersIdOrder,
                       );
                     },
                   );
@@ -869,9 +878,8 @@ class _LootPageState extends State<LootPage> {
                       context.read<WebViewProvider>().openBrowserPreference(
                           context: context,
                           url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
-                          useDialog: false,
+                          browserTapType: BrowserTapType.chain,
                           isChainingBrowser: true,
-                          awaitable: true,
                           chainingPayload: ChainingPayload()
                             ..attackIdList = _lootRangersIdOrder
                             ..attackNameList = _lootRangersNameOrder
@@ -1353,7 +1361,7 @@ class NpcImage extends StatelessWidget {
         await context.read<WebViewProvider>().openBrowserPreference(
               context: context,
               url: url,
-              useDialog: useQuickBrowser,
+              browserTapType: BrowserTapType.short,
             );
       },
       onLongPress: () async {
@@ -1361,7 +1369,7 @@ class NpcImage extends StatelessWidget {
         await context.read<WebViewProvider>().openBrowserPreference(
               context: context,
               url: url,
-              useDialog: false,
+              browserTapType: BrowserTapType.long,
             );
       },
     );

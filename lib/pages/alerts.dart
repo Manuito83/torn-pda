@@ -292,6 +292,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           ),
                           onChanged: (value) async {
                             await showDialog(
+                              useRootNavigator: false,
                               context: context,
                               barrierDismissible: true,
                               builder: (BuildContext context) {
@@ -319,6 +320,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               GestureDetector(
                                 onTap: () async {
                                   await showDialog(
+                                    useRootNavigator: false,
                                     context: context,
                                     builder: (BuildContext context) {
                                       return LootRangersExplanationDialog(themeProvider: _themeProvider);
@@ -434,6 +436,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                 icon: const Icon(Icons.keyboard_arrow_right_outlined),
                                 onPressed: () {
                                   showDialog(
+                                    useRootNavigator: false,
                                     context: context,
                                     builder: (BuildContext context) {
                                       return EventsFilterDialog(
@@ -622,6 +625,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                 icon: const Icon(Icons.keyboard_arrow_right_outlined),
                                 onPressed: () {
                                   showDialog(
+                                    useRootNavigator: false,
                                     context: context,
                                     builder: (BuildContext context) {
                                       return RefillsRequestedDialog(
@@ -719,6 +723,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                   // Quick update
                                   onTap: () async {
                                     await showDialog(
+                                      useRootNavigator: false,
                                       context: context,
                                       builder: (BuildContext context) {
                                         return _retalsGeneralExplanation();
@@ -813,6 +818,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                         // Quick update
                                         onTap: () async {
                                           await showDialog(
+                                            useRootNavigator: false,
                                             context: context,
                                             builder: (BuildContext context) {
                                               return _retalsNotificationExplanation();
@@ -870,6 +876,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           ),
           onPressed: () {
             showDialog(
+              useRootNavigator: false,
               context: context,
               builder: (BuildContext context) {
                 return _troubleShootingDialog();
@@ -883,6 +890,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           ),
           onPressed: () {
             showDialog(
+              useRootNavigator: false,
               context: context,
               builder: (BuildContext context) {
                 return _alertsInfoDialog();

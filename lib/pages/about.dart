@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -119,8 +121,8 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://discord.gg/vyP23kJ';
-                                if (await canLaunch(url)) {
-                                  await launch(url, forceSafariVC: false);
+                                if (await canLaunchUrl(Uri.parse(url))) {
+                                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                                 }
                               },
                           ),
@@ -147,19 +149,30 @@ class _AboutPageState extends State<AboutPage> {
                         text: TextSpan(
                           text: 'Give a thumbs up in the official ',
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Torn Forums',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Torn Forums',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(
                                 text: ' and stay updated about the app or '
@@ -192,19 +205,30 @@ class _AboutPageState extends State<AboutPage> {
                         text: TextSpan(
                           text: 'Help us code new features for the app in ',
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Github',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://github.com/Manuito83/torn-pda';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://github.com/Manuito83/torn-pda';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Github',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(
                                 text: '. It is a nice way to practice your '
@@ -235,19 +259,30 @@ class _AboutPageState extends State<AboutPage> {
                           text: 'If you\'d like to show your appreciation and '
                               'can afford a ',
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'donation in game',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'donation in game',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(text: ' it would be certainly appreciated!'),
                           ],
@@ -330,19 +365,30 @@ class _AboutPageState extends State<AboutPage> {
                         text: TextSpan(
                           text: 'Developer: ',
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Manuito',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/profiles.php?XID=2225097';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/profiles.php?XID=2225097';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Manuito',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -361,35 +407,57 @@ class _AboutPageState extends State<AboutPage> {
                         text: TextSpan(
                           text: 'Discord: ',
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Phillip_J_Fry',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/profiles.php?XID=2184575';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/profiles.php?XID=2184575';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Phillip_J_Fry',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(
                               text: ', ',
                             ),
-                            TextSpan(
-                              text: 'VioletStorm',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/profiles.php?XID=2233317';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/profiles.php?XID=2233317';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'VioletStorm',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -408,36 +476,58 @@ class _AboutPageState extends State<AboutPage> {
                         text: TextSpan(
                           text: 'Special mention to ',
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Kivou',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/profiles.php?XID=2000607';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/profiles.php?XID=2000607';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Kivou',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(
                               text: ' and ',
                               style: DefaultTextStyle.of(context).style,
                             ),
-                            TextSpan(
-                              text: 'IceBlueFire',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/profiles.php?XID=776';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/profiles.php?XID=776';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'IceBlueFire',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(
                               text: ' for the resources and support offered by YATA and Torn Stats respectively.',
@@ -479,19 +569,30 @@ class _AboutPageState extends State<AboutPage> {
                           text: 'The JavaScript API for cross-origin http requests (see userscripts section) has '
                               'been developed by ',
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Knoxby',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/profiles.php?XID=2503189';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/profiles.php?XID=2503189';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Knoxby',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -512,12 +613,18 @@ class _AboutPageState extends State<AboutPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      leading: IconButton(
-        icon: Icon(Icons.dehaze),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       title: Text('About'),
     );
@@ -525,6 +632,7 @@ class _AboutPageState extends State<AboutPage> {
 
   void _showChangeLogDialog() {
     showDialog(
+        useRootNavigator: false,
         context: context,
         barrierDismissible: false, // user must tap button!
         builder: (context) {

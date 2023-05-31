@@ -2,7 +2,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/flutter_icons.dart';
 import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -22,7 +21,6 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/bounce_tabbar.dart';
 
 import '../main.dart';
@@ -79,9 +77,8 @@ class _ChainingPageState extends State<ChainingPage> {
               children: [
                 Padding(
                   padding: EdgeInsets.only(top: padding),
-                  child: AnimatedIndexedStack(
+                  child: IndexedStack(
                     index: _currentPage,
-                    duration: 200,
                     children: <Widget>[
                       TargetsPage(
                         // Used to add or remove TAC tab
@@ -97,7 +94,6 @@ class _ChainingPageState extends State<ChainingPage> {
                       ),
                       */
                     ],
-                    errorCallback: null,
                   ),
                 ),
                 if (!_isAppBarTop)

@@ -527,7 +527,7 @@ String addHeightForPullToRefresh() {
       // Check if the website content overflows the viewport
       if (document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
         // If not, add 10px to the body height
-        console.log("Adding extra height for pull-to-refresh");
+        //console.log("Adding extra height for pull-to-refresh");
         document.body.style.height = `\${viewportHeight + 20}px`;
       }
     })();

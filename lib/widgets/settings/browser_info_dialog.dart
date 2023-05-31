@@ -41,5 +41,4 @@ class _BrowserInfoDialogState extends State<BrowserInfoDialog> {
       ],
     );
   }
-
 }

@@ -23,6 +23,7 @@ import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -1319,10 +1320,9 @@ class _RetalCardState extends State<RetalCard> {
 
         _r.browserIsOpen = true;
         await _webViewProvider.openBrowserPreference(
-          awaitable: true,
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
-          useDialog: false,
+          browserTapType: BrowserTapType.chain,
           recallLastSession: false,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -1337,24 +1337,11 @@ class _RetalCardState extends State<RetalCard> {
         );
         _r.browserIsOpen = false;
 
-        if (_r.lastAttackedTargets.length > 0) {
-          BotToast.showText(
-            text: '${_r.lastAttackedTargets.length} attacked targets will auto update in a few seconds!',
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.grey[800],
-            duration: Duration(seconds: 4),
-            contentPadding: EdgeInsets.all(10),
-          );
-        }
-
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_retal.retalId}';
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
+        if (await canLaunchUrl(Uri.parse(url))) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
         break;
     }

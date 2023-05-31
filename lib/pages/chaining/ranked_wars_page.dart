@@ -312,6 +312,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
           ),
           onPressed: () async {
             return showDialog(
+              useRootNavigator: false,
               context: context,
               barrierDismissible: true,
               builder: (BuildContext context) {

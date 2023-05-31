@@ -25,6 +25,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/widgets/awards/award_card_pin.dart';
 import 'package:torn_pda/widgets/other/flipping_yata.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -431,12 +433,18 @@ class _AwardsPageState extends State<AwardsPage> {
               child: Image.asset('images/icons/yata_logo.png', height: 28)),
         ],
       ),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: [
         _apiSuccess
@@ -520,7 +528,7 @@ class _AwardsPageState extends State<AwardsPage> {
                     await context.read<WebViewProvider>().openBrowserPreference(
                           context: context,
                           url: url,
-                          useDialog: _settingsProvider.useQuickBrowser,
+                          browserTapType: BrowserTapType.short,
                         );
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),

@@ -484,6 +484,7 @@ class _TacPageState extends State<TacPage> {
               child: GestureDetector(
                 onTap: () async {
                   await showDialog(
+  useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
                       return _optimalExplanationDialog();
@@ -614,18 +615,25 @@ class _TacPageState extends State<TacPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Torn Attack Central"),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.info_outline_rounded),
           onPressed: () async {
             await showDialog(
+  useRootNavigator: false,
               context: context,
               builder: (BuildContext context) {
                 return _tacExplanationDialog();

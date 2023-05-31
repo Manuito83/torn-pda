@@ -234,6 +234,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeProvider _themeProvider;
+  WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -245,36 +246,59 @@ class _MyAppState extends State<MyApp> {
       HomeWidget.registerBackgroundCallback(pdaWidget_callback);
       pdaWidget_handleBackgroundUpdateStatus();
     }
+
+    // Callback to force the browser back to full screen if there is a system request to revert
+    // Might happen when app is on the background or when only the top is being extended
+    SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
+      if (_webViewProvider.currentUiMode == UiMode.fullScreen && systemOverlaysAreVisible) {
+        _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
+    ThemeData theme = ThemeData(
+      cardColor: _themeProvider.cardColor,
+      appBarTheme: AppBarTheme(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        color: _themeProvider.statusBar,
+      ),
+      primarySwatch: Colors.blueGrey,
+      brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+    );
+
     MediaQuery mq = MediaQuery(
       data: MediaQueryData.fromWindow(ui.window),
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: Stack(
-          children: [
-            GetMaterialApp(
-              builder: BotToastInit(),
-              navigatorObservers: [BotToastNavigatorObserver()],
-              title: 'Torn PDA',
-              debugShowCheckedModeBanner: false,
-              theme: ThemeData(
-                cardColor: _themeProvider.cardColor,
-                appBarTheme: AppBarTheme(
-                  systemOverlayStyle: SystemUiOverlayStyle.light,
-                  color: _themeProvider.statusBar,
-                ),
-                primarySwatch: Colors.blueGrey,
-                brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+        child: MaterialApp(
+          title: 'Torn PDA',
+          theme: theme,
+          debugShowCheckedModeBanner: false,
+          builder: BotToastInit(),
+          navigatorObservers: [BotToastNavigatorObserver()],
+          home: Stack(
+            children: [
+              GetMaterialApp(
+                debugShowCheckedModeBanner: false,
+                theme: theme,
+                home: DrawerPage(),
               ),
-              home: DrawerPage(),
-            ),
-            const AppBorder(),
-          ],
+              Consumer<WebViewProvider>(
+                builder: (context, wProvider, child) {
+                  return Visibility(
+                    maintainState: true,
+                    visible: wProvider.browserForeground,
+                    child: wProvider.stackView,
+                  );
+                },
+              ),
+              const AppBorder(),
+            ],
+          ),
         ),
       ),
     );

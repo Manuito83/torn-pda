@@ -208,9 +208,9 @@ class _TacCardState extends State<TacCard> {
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid='
             'attack&user2ID=${_target.id}';
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
+        if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      }
         break;
     }
   }

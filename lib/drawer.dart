@@ -63,6 +63,7 @@ import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -72,7 +73,10 @@ class DrawerPage extends StatefulWidget {
   _DrawerPageState createState() => _DrawerPageState();
 }
 
-class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
+class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final int _settingsPosition = 11;
   final int _aboutPosition = 12;
   var _allowSectionsWithoutKey = <int>[];
@@ -147,6 +151,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   // Intent receiver subscription
   StreamSubscription _intentListenerSub;
 
+  Stream _willPopPressedInBrowser;
+  StreamSubscription _willPopPressedInBrowserSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -169,7 +176,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: "https://www.torn.com",
-                useDialog: _settingsProvider.useQuickBrowser,
+                browserTapType: BrowserTapType.quickItem,
               );
         }
       });
@@ -180,8 +187,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _settingsPosition,
       _aboutPosition,
     ];
-
-    _webViewProvider = context.read<WebViewProvider>();
 
     // Ensures Shared Prefs are ready for changelog data saving
     Prefs().reload().then((_) {
@@ -281,19 +286,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _initIntentListenerSubscription();
       _initIntentReceiverOnLaunch();
     }
-
-    // Callback to force the browser back to full screen if there is a system request to revert
-    // Might happen when app is on the background or when only the top is being extended
-    SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
-      if (_webViewProvider.currentUiMode == UiMode.fullScreen && systemOverlaysAreVisible) {
-        _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
-      }
-    });
   }
 
   @override
   void dispose() {
     selectNotificationStream?.close();
+    _willPopPressedInBrowserSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _deepLinkSub?.cancel();
     _intentListenerSub?.cancel();
@@ -438,6 +436,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _callSectionFromOutside(2); // Chaining
       return;
     } else if (intent.data.contains("pdaWidget://empty-shortcuts-clicked")) {
+      setState(() {
+        _webViewProvider.browserForeground = false;
+      });
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (BuildContext context) => ShortcutsPage(),
@@ -452,7 +453,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
-          useDialog: _settingsProvider.useQuickBrowser,
+          browserTapType: BrowserTapType.notification,
         );
       });
     }
@@ -523,7 +524,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           _webViewProvider.openBrowserPreference(
             context: context,
             url: url,
-            useDialog: _settingsProvider.useQuickBrowser,
+            browserTapType: BrowserTapType.deeplink,
           );
         });
       }
@@ -534,34 +535,36 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   // ## END Deep links
 
   Future<void> _removeExistingNotifications() async {
-    // Get rid of iOS badge (notifications will be removed by the system)
-    if (Platform.isIOS) {
-      _clearBadge();
-    }
-    // Get rid of notifications in Android
-    try {
-      if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
-        // Gets the active (already shown) notifications
-        final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-            ?.getActiveNotifications();
+    _preferencesCompleter.future.whenComplete(() async {
+      // Get rid of iOS badge (notifications will be removed by the system)
+      if (Platform.isIOS) {
+        _clearBadge();
+      }
+      // Get rid of notifications in Android
+      try {
+        if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
+          // Gets the active (already shown) notifications
+          final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+              ?.getActiveNotifications();
 
-        for (final not in activeNotifications) {
-          // Platform channel to cancel direct Firebase notifications (we can call
-          // "cancelAll()" there without affecting scheduled notifications, which is
-          // a problem with the local plugin)
-          if (not.id == 0) {
-            await platform.invokeMethod('cancelNotifications');
-          }
-          // This cancels the Firebase alerts that have been triggered locally
-          else {
-            flutterLocalNotificationsPlugin.cancel(not.id);
+          for (final not in activeNotifications) {
+            // Platform channel to cancel direct Firebase notifications (we can call
+            // "cancelAll()" there without affecting scheduled notifications, which is
+            // a problem with the local plugin)
+            if (not.id == 0) {
+              await platform.invokeMethod('cancelNotifications');
+            }
+            // This cancels the Firebase alerts that have been triggered locally
+            else {
+              flutterLocalNotificationsPlugin.cancel(not.id);
+            }
           }
         }
+      } catch (e) {
+        // Not supported?
       }
-    } catch (e) {
-      // Not supported?
-    }
+    });
   }
 
   Future<void> _getBackgroundNotificationSavedData() async {
@@ -846,9 +849,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _webViewProvider.openBrowserPreference(
             context: context,
             url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-            useDialog: false,
+            browserTapType: BrowserTapType.chain,
             isChainingBrowser: true,
-            awaitable: true,
             chainingPayload: ChainingPayload()
               ..attackIdList = ids
               ..attackNameList = names
@@ -866,7 +868,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
-          useDialog: _settingsProvider.useQuickBrowser,
+          browserTapType: BrowserTapType.notification,
         );
       });
     }
@@ -937,9 +939,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _webViewProvider.openBrowserPreference(
             context: context,
             url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
-            useDialog: false,
+            browserTapType: BrowserTapType.chain,
             isChainingBrowser: true,
-            awaitable: true,
             chainingPayload: ChainingPayload()
               ..attackIdList = lootRangersNpcsIds
               ..attackNameList = lootRangersNpcsNames
@@ -1127,9 +1128,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           _webViewProvider.openBrowserPreference(
               context: context,
               url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-              useDialog: false,
+              browserTapType: BrowserTapType.chain,
               isChainingBrowser: true,
-              awaitable: true,
               chainingPayload: ChainingPayload()
                 ..attackIdList = ids
                 ..attackNameList = names
@@ -1147,7 +1147,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           _webViewProvider.openBrowserPreference(
             context: context,
             url: browserUrl,
-            useDialog: _settingsProvider.useQuickBrowser,
+            browserTapType: BrowserTapType.notification,
           );
         });
       }
@@ -1160,7 +1160,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
           context: context,
-          useDialog: _settingsProvider.useQuickBrowser,
+          browserTapType: BrowserTapType.chain,
           url: url,
         );
         break;
@@ -1174,6 +1174,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
     if (_s == null) {
@@ -1181,7 +1182,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _s.callbackBrowser = _openBrowserFromToast;
     }
     return WillPopScope(
-      onWillPop: _willPopCallback,
+      onWillPop: _willPopCallback, // This will be called indirectly from the webview provider only
       child: FutureBuilder(
         future: _finishedWithPreferences,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -1396,14 +1397,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       _webViewProvider.openBrowserPreference(
                         context: context,
                         url: "https://www.torn.com/calendar.php",
-                        useDialog: _settingsProvider.useQuickBrowser,
+                        browserTapType: BrowserTapType.short,
                       );
                     },
                     onLongPress: () {
                       _webViewProvider.openBrowserPreference(
                         context: context,
                         url: "https://www.torn.com/calendar.php",
-                        useDialog: false,
+                        browserTapType: BrowserTapType.long,
                       );
                     },
                     child: const TctClock(),
@@ -1609,6 +1610,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
 
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    // Join a stream which will receive a callback from the browser whenever the back button is pressed and the
+    // browser is not in the foreground (as back button presses always land in the browser)
+    _willPopPressedInBrowser = _webViewProvider.willPopCallbackStream.stream;
+    _willPopPressedInBrowserSubscription = _willPopPressedInBrowser.listen((event) {
+      _willPopCallback();
+    });
+
     // Set up UserScriptsProvider so that user preferences are applied
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
@@ -1627,19 +1636,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       String defaultSection = await Prefs().getDefaultSection();
       if (defaultSection == "browser") {
         // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
-        // and recall the last session
-        _preferencesCompleter.future.whenComplete(() async {
-          await _changelogCompleter.future;
-          bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
-          // Add a small delay to avoid racing conditions with browser launched from messages
-          await Future.delayed(Duration(milliseconds: 300));
-          _webViewProvider.openBrowserPreference(
-            context: context,
-            url: "https://www.torn.com",
-            recallLastSession: true,
-            useDialog: lastSessionWasDialog,
-          );
-        });
+        _webViewProvider.browserForeground = true;
+
         // Change to Profile as a base for loading the browser
         defaultSection = "0";
       }
@@ -1807,6 +1805,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         if (allowed == 1) {
           // If we are allowed to proceed, show the dialog
           await showDialog(
+            useRootNavigator: false,
             context: context,
             barrierDismissible: false,
             builder: (context) {
@@ -1827,6 +1826,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   Future<void> _showChangeLogDialog(BuildContext context) async {
     await showDialog(
+      useRootNavigator: false,
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -1841,6 +1841,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   Future<void> _showAppwidgetExplanationDialog(BuildContext context) async {
     await showDialog(
+      useRootNavigator: false,
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -1851,6 +1852,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   void _callSectionFromOutside(int section) {
     setState(() {
+      _webViewProvider.browserForeground = false;
       _selected = section;
       _activeDrawerIndex = section;
     });
@@ -1868,6 +1870,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else {
       String action;
       await showDialog(
+        useRootNavigator: false,
         context: context,
         builder: (BuildContext context) {
           return OnAppExitDialog();
@@ -1975,7 +1978,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                 _webViewProvider.openBrowserPreference(
                                   context: context,
                                   url: "https://www.torn.com/page.php?sid=stocks",
-                                  useDialog: _settingsProvider.useQuickBrowser,
+                                  browserTapType: BrowserTapType.notification,
                                 );
                                 Navigator.of(context).pop();
                               },

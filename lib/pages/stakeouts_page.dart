@@ -16,6 +16,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/stakeouts/stakeout_card.dart';
 import 'package:torn_pda/widgets/stakeouts/stakeouts_info_dialog.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class StakeoutsPage extends StatefulWidget {
   const StakeoutsPage({
@@ -177,12 +178,18 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stakeouts"),
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         IconButton(

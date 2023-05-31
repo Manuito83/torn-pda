@@ -18,6 +18,7 @@ class Prefs {
   // Native login
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
   final String _kLastAuthRedirect = "pda_lastAuthRedirect";
+  final String _kTryAutomaticLogins = "pda_tryAutomaticLogins";
 
   // Targets
   final String _kTargetsList = "pda_targetsList";
@@ -78,7 +79,7 @@ class Prefs {
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
-  final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
+  //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
@@ -243,8 +244,12 @@ class Prefs {
   final String _kFullScreenOverNotch = "pda_fullScreenOverNotch";
   final String _kFullScreenOverBottom = "pda_fullScreenOverBottom";
   final String _kFullScreenOverSides = "pda_fullScreenOverSides";
-  final String _kFullScreenDefaultInQuickBrowser = "pda_fullScreenDefaultInQuickBrowser";
-  final String _kFullScreenDefaultInFullBrowser = "pda_fullScreenDefaultInFullBrowser";
+  final String _kFullScreenByShortTap = "pda_fullScreenByShortTap";
+  final String _kFullScreenByLongTap = "pda_fullScreenByLongTap";
+  final String _kFullScreenByNotificationTap = "pda_fullScreenByNotificationTap";
+  final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
+  final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
+  final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
 
   // Items
   final String _kItemsSort = "pda_itemssSort";
@@ -382,6 +387,16 @@ class Prefs {
   Future<bool> setLastAuthRedirect(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kLastAuthRedirect, value);
+  }
+
+  Future<bool> getTryAutomaticLogins() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTryAutomaticLogins) ?? true;
+  }
+
+  Future<bool> setTryAutomaticLogins(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTryAutomaticLogins, value);
   }
 
   /// ----------------------------
@@ -885,15 +900,17 @@ class Prefs {
     return prefs.setBool(_kRestoreSessionCookie, value);
   }
 
+  /*
   Future<bool> getClearBrowserCacheNextOpportunity() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kClearBrowserCacheNextOpportunity) ?? false;
   }
-
+  
   Future<bool> setClearBrowserCacheNextOpportunity(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kClearBrowserCacheNextOpportunity, value);
   }
+  */
 
   Future<int> getAndroidBrowserScale() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -2745,24 +2762,74 @@ class Prefs {
     return prefs.setBool(_kFullScreenOverSides, value);
   }
 
-  Future<bool> getFullScreenDefaultInQuickBrowser() async {
+  //--
+
+  Future<bool> getFullScreenByShortTap() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenDefaultInQuickBrowser) ?? false;
+    return prefs.getBool(_kFullScreenByShortTap) ?? false;
   }
 
-  Future<bool> setFullScreenDefaultInQuickBrowser(bool value) async {
+  Future<bool> setFullScreenByShortTap(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenDefaultInQuickBrowser, value);
+    return prefs.setBool(_kFullScreenByShortTap, value);
   }
 
-  Future<bool> getFullScreenDefaultInFullBrowser() async {
+  //--
+  Future<bool> getFullScreenByLongTap() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenDefaultInFullBrowser) ?? false;
+    return prefs.getBool(_kFullScreenByLongTap) ?? true;
   }
 
-  Future<bool> setFullScreenDefaultInFullBrowser(bool value) async {
+  Future<bool> setFullScreenByLongTap(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenDefaultInFullBrowser, value);
+    return prefs.setBool(_kFullScreenByLongTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByNotificationTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByNotificationTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByNotificationTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByNotificationTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByDeepLinkTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByDeepLinkTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByDeepLinkTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByDeepLinkTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByQuickItemTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByQuickItemTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByQuickItemTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByQuickItemTap, value);
+  }
+
+  //--
+  Future<bool> getFullScreenIncludesPDAButtonTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenIncludesPDAButtonTap) ?? false;
+  }
+
+  Future<bool> setFullScreenIncludesPDAButtonTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenIncludesPDAButtonTap, value);
   }
 
   /// ----------------------------

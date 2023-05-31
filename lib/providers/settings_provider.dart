@@ -72,21 +72,6 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
-  var _clearCacheNextOpportunity = false;
-  bool get getClearCacheNextOpportunityAndReset {
-    if (_clearCacheNextOpportunity) {
-      setClearCacheNextOpportunity = false;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  set setClearCacheNextOpportunity(bool active) {
-    _clearCacheNextOpportunity = active;
-    Prefs().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
-  }
-
   var _androidBrowserScale = 0;
   int get androidBrowserScale => _androidBrowserScale;
   set setAndroidBrowserScale(int scale) {
@@ -246,14 +231,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _useTabsBrowserDialog = true;
-  bool get useTabsBrowserDialog => _useTabsBrowserDialog;
-  set changeUseTabsBrowserDialog(bool value) {
-    _useTabsBrowserDialog = value;
-    Prefs().setUseTabsBrowserDialog(_useTabsBrowserDialog);
-    notifyListeners();
-  }
-
   var _useTabsHideFeature = true;
   bool get useTabsHideFeature => _useTabsHideFeature;
   set changeUseTabsHideFeature(bool value) {
@@ -310,19 +287,51 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _fullScreenDefaultInQuickBrowser = false;
-  bool get fullScreenDefaultInQuickBrowser => _fullScreenDefaultInQuickBrowser;
-  set fullScreenDefaultInQuickBrowser(bool value) {
-    _fullScreenDefaultInQuickBrowser = value;
-    Prefs().setFullScreenDefaultInQuickBrowser(_fullScreenDefaultInQuickBrowser);
+  var _fullScreenByShortTap = false;
+  bool get fullScreenByShortTap => _fullScreenByShortTap;
+  set fullScreenByShortTap(bool value) {
+    _fullScreenByShortTap = value;
+    Prefs().setFullScreenByShortTap(_fullScreenByShortTap);
     notifyListeners();
   }
 
-  var _fullScreenDefaultInFullBrowser = false;
-  bool get fullScreenDefaultInFullBrowser => _fullScreenDefaultInFullBrowser;
-  set fullScreenDefaultInFullBrowser(bool value) {
-    _fullScreenDefaultInFullBrowser = value;
-    Prefs().setFullScreenDefaultInFullBrowser(_fullScreenDefaultInFullBrowser);
+  var _fullScreenByLongTap = false;
+  bool get fullScreenByLongTap => _fullScreenByLongTap;
+  set fullScreenByLongTap(bool value) {
+    _fullScreenByLongTap = value;
+    Prefs().setFullScreenByLongTap(_fullScreenByLongTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByNotificationTap = false;
+  bool get fullScreenByNotificationTap => _fullScreenByNotificationTap;
+  set fullScreenByNotificationTap(bool value) {
+    _fullScreenByNotificationTap = value;
+    Prefs().setFullScreenByNotificationTap(_fullScreenByNotificationTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByDeepLinkTap = false;
+  bool get fullScreenByDeepLinkTap => _fullScreenByDeepLinkTap;
+  set fullScreenByDeepLinkTap(bool value) {
+    _fullScreenByDeepLinkTap = value;
+    Prefs().setFullScreenByDeepLinkTap(_fullScreenByDeepLinkTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByQuickItemTap = false;
+  bool get fullScreenByQuickItemTap => _fullScreenByQuickItemTap;
+  set fullScreenByQuickItemTap(bool value) {
+    _fullScreenByQuickItemTap = value;
+    Prefs().setFullScreenByQuickItemTap(_fullScreenByQuickItemTap);
+    notifyListeners();
+  }
+
+  var _fullScreenIncludesPDAButtonTap = false;
+  bool get fullScreenIncludesPDAButtonTap => _fullScreenIncludesPDAButtonTap;
+  set fullScreenIncludesPDAButtonTap(bool value) {
+    _fullScreenIncludesPDAButtonTap = value;
+    Prefs().setFullScreenIncludesPDAButtonTap(_fullScreenIncludesPDAButtonTap);
     notifyListeners();
   }
 
@@ -538,7 +547,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _showCases = [];
+  var _showCases = <String>[];
   List<String> get showCases => _showCases;
   set addShowCase(String showCase) {
     _showCases.add(showCase);
@@ -697,7 +706,6 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
     _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
-    _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
 
@@ -707,7 +715,6 @@ class SettingsProvider extends ChangeNotifier {
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
-    _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
@@ -715,8 +722,12 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
     _fullScreenOverBottom = await Prefs().getFullScreenOverBottom();
     _fullScreenOverSides = await Prefs().getFullScreenOverSides();
-    _fullScreenDefaultInQuickBrowser = await Prefs().getFullScreenDefaultInQuickBrowser();
-    _fullScreenDefaultInFullBrowser = await Prefs().getFullScreenDefaultInFullBrowser();
+    _fullScreenByShortTap = await Prefs().getFullScreenByShortTap();
+    _fullScreenByLongTap = await Prefs().getFullScreenByLongTap();
+    _fullScreenByNotificationTap = await Prefs().getFullScreenByNotificationTap();
+    _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
+    _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
+    _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {

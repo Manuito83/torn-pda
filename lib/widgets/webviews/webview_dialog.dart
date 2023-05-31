@@ -14,6 +14,7 @@ Future<void> openBrowserDialog(
   String restoredTheme = await Prefs().getAppTheme();
 
   return showDialog(
+    useRootNavigator: false,
     context: _,
     // Allows WebViewStack and WebViewFill to control the SafeArea for fullscreen mode
     useSafeArea: false,

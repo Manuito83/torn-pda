@@ -14,7 +14,7 @@ class ForeignStockButton extends StatelessWidget {
   const ForeignStockButton({
     @required this.userProv,
     @required this.settingsProv,
-    @required this.launchBrowser({String url, bool dialogRequested}),
+    @required this.launchBrowser({String url, bool shortTap}),
     @required this.updateCallback,
     Key key,
   }) : super(key: key);
@@ -38,8 +38,8 @@ class ForeignStockButton extends StatelessWidget {
         if (returnFlag.flagPressed) {
           var url = 'https://www.torn.com/travelagency.php';
           if (settingsProv.currentBrowser == BrowserSetting.external) {
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
+            if (await canLaunchUrl(Uri.parse(url))) {
+              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
             }
           } else {
             if (returnFlag.shortTap) {

@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;
@@ -27,7 +28,6 @@ class AttackCard extends StatefulWidget {
 class _AttackCardState extends State<AttackCard> {
   Attack _attack;
   ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
 
   bool _addButtonActive = true;
@@ -36,7 +36,6 @@ class _AttackCardState extends State<AttackCard> {
   Widget build(BuildContext context) {
     _attack = widget.attackModel;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
@@ -69,18 +68,18 @@ class _AttackCardState extends State<AttackCard> {
                                 onTap: () async {
                                   var url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
                                   await context.read<WebViewProvider>().openBrowserPreference(
-                                    context: context,
-                                    url: url,
-                                    useDialog: _settingsProvider.useQuickBrowser,
-                                  );
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
                                 },
                                 onLongPress: () async {
                                   var url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
                                   await context.read<WebViewProvider>().openBrowserPreference(
-                                    context: context,
-                                    url: url,
-                                    useDialog: false,
-                                  );
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
                                 },
                               )
                             : SizedBox.shrink(),
@@ -94,10 +93,8 @@ class _AttackCardState extends State<AttackCard> {
                           _attack.targetName.isNotEmpty ? '${_attack.targetName}' : "anonymous",
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontWeight:
-                                _attack.targetName.isNotEmpty ? FontWeight.bold : FontWeight.normal,
-                            fontStyle:
-                                _attack.targetName.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                            fontWeight: _attack.targetName.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                            fontStyle: _attack.targetName.isNotEmpty ? FontStyle.normal : FontStyle.italic,
                           ),
                         ),
                       ),
@@ -130,9 +127,7 @@ class _AttackCardState extends State<AttackCard> {
                             SizedBox(
                               height: 20,
                               width: 20,
-                              child: _attack.targetName.isNotEmpty
-                                  ? _returnAddTargetButton()
-                                  : SizedBox.shrink(),
+                              child: _attack.targetName.isNotEmpty ? _returnAddTargetButton() : SizedBox.shrink(),
                             ),
                           ],
                         ),
@@ -308,8 +303,7 @@ class _AttackCardState extends State<AttackCard> {
     }
 
     TextSpan respectSpan;
-    if ((_attack.attackInitiated && !_attack.attackWon) ||
-        (!_attack.attackInitiated && _attack.attackWon)) {
+    if ((_attack.attackInitiated && !_attack.attackWon) || (!_attack.attackInitiated && _attack.attackWon)) {
       // If we attacked and lost, or someone attacked us and won
       // we just show '0' but in red to indicate that we lost
       respectSpan = TextSpan(
@@ -512,5 +506,4 @@ class _AttackCardState extends State<AttackCard> {
     );
     return factionIcon;
   }
-
 }

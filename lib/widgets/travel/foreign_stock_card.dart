@@ -2,7 +2,8 @@
 import "dart:collection";
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
+import 'dart:developer';
+import 'dart:math' as math;
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ForeignStockCard extends StatefulWidget {
   final ForeignStock foreignStock;
@@ -95,6 +97,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   DateTime _earliestBackToTorn = DateTime.now();
 
+  Stream _browserHasClosed;
+  StreamSubscription _browserHasClosedSubscription;
+
   // Used for mid-trip calculations
   bool _flyingToThisCountry = false;
   bool _flyingElsewhere = false;
@@ -117,6 +122,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   GlobalKey _showcaseExpandIcon = GlobalKey();
   GlobalKey _showcaseHideStock = GlobalKey();
 
+  bool _cashCheckPressed = false;
+
   @override
   void initState() {
     super.initState();
@@ -132,14 +139,26 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     _ticker = new Timer.periodic(Duration(minutes: 1), (Timer t) => _timerUpdate());
 
     // Build code name
-    _codeName = "${widget.foreignStock.countryCode}-"
-        "${widget.foreignStock.name}";
+    _codeName = "${widget.foreignStock.countryCode}-${widget.foreignStock.name}";
+
+    // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
+    // So that we can 1) refresh the API, 2) start the API timer again
+    WebViewProvider webViewProvider = context.read<WebViewProvider>();
+    _browserHasClosed = webViewProvider.browserHasClosedStream.stream;
+    _browserHasClosedSubscription = _browserHasClosed.listen((event) {
+      if (_cashCheckPressed) {
+        log("Browser has closed in Foreign Stocks, refreshing money!");
+        _refreshMoney();
+        _cashCheckPressed = false;
+      }
+    });
   }
 
   @override
   void dispose() {
     _ticker?.cancel();
     _expandableController.dispose();
+    _browserHasClosedSubscription.cancel();
     super.dispose();
   }
 
@@ -1502,7 +1521,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
               );
 
               final degrees = -70;
-              final radians = degrees * pi / 180;
+              final radians = degrees * math.pi / 180;
 
               return Transform.rotate(
                 angle: radians,
@@ -1849,26 +1868,23 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                var dialog = _settingsProvider.useQuickBrowser || false;
                                 Navigator.of(context).pop();
-                                await context.read<WebViewProvider>().openBrowserPreference(
+                                _cashCheckPressed = true;
+                                context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: dialog,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.short,
                                     );
-                                _refreshMoney();
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 Navigator.of(context).pop();
-                                await context.read<WebViewProvider>().openBrowserPreference(
+                                _cashCheckPressed = true;
+                                context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: false,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.long,
                                     );
-                                _refreshMoney();
                               },
                             ),
                           ),
@@ -1890,26 +1906,23 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
-                                var dialog = _settingsProvider.useQuickBrowser || false;
                                 Navigator.of(context).pop();
-                                await context.read<WebViewProvider>().openBrowserPreference(
+                                _cashCheckPressed = true;
+                                context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: dialog,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.short,
                                     );
-                                _refreshMoney();
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
                                 Navigator.of(context).pop();
-                                await context.read<WebViewProvider>().openBrowserPreference(
+                                _cashCheckPressed = true;
+                                context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: false,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.long,
                                     );
-                                _refreshMoney();
                               },
                             ),
                           ),
@@ -1931,26 +1944,23 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/companies.php#/option=funds';
-                                var dialog = _settingsProvider.useQuickBrowser || false;
                                 Navigator.of(context).pop();
-                                await context.read<WebViewProvider>().openBrowserPreference(
+                                _cashCheckPressed = true;
+                                context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: dialog,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.short,
                                     );
-                                _refreshMoney();
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/companies.php#/option=funds";
                                 Navigator.of(context).pop();
-                                await context.read<WebViewProvider>().openBrowserPreference(
+                                _cashCheckPressed = true;
+                                context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: false,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.long,
                                     );
-                                _refreshMoney();
                               },
                             ),
                           ),

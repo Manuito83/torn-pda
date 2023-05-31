@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +22,15 @@ import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
+
+enum BrowserTapType {
+  short,
+  long,
+  chain,
+  notification,
+  deeplink,
+  quickItem,
+}
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
@@ -47,12 +58,16 @@ class WebViewStackView extends StatefulWidget {
   _WebViewStackViewState createState() => _WebViewStackViewState();
 }
 
-class _WebViewStackViewState extends State<WebViewStackView> with TickerProviderStateMixin {
+class _WebViewStackViewState extends State<WebViewStackView>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   ThemeProvider _themeProvider;
   WebViewProvider _webViewProvider;
   SettingsProvider _settingsProvider;
 
-  bool _useTabs = false;
+  //bool _useTabs = false;
 
   Future providerInitialised;
   bool secondaryInitialised = false;
@@ -63,6 +78,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   GlobalKey _showQuickMenuButton = GlobalKey();
   GlobalKey _showCaseNewTabButton = GlobalKey();
   GlobalKey<CircularMenuFixedState> _circularMenuKey = GlobalKey();
+  bool _showCasesTriggeredThisSession = false;
 
   Animation<double> _menuTabOpacity;
   AnimationController _menuTabAnimationController;
@@ -71,12 +87,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   void initState() {
     super.initState();
 
-    // Assess if we need to use tabs based on the combination
     _settingsProvider = context.read<SettingsProvider>();
-    if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
-        (!widget.dialog && _settingsProvider.useTabsFullBrowser)) {
-      _useTabs = true;
-    }
 
     // Initialise WebViewProvider
     providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialiseMain(
@@ -101,43 +112,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
-    if (widget.dialog) {
-      // Return the quick dialog
-      return SafeArea(
-        top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        bottom: !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        left: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        right: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        child: Dialog(
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
-            vertical: _webViewProvider.currentUiMode == UiMode.window ? 10 : 0,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Container(
-            color: widget.restoredTheme == "extraDark" ? Color(0xFF131313) : Colors.transparent,
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: _webViewProvider.currentUiMode == UiMode.window ? 6 : 0,
-                horizontal: _webViewProvider.currentUiMode == UiMode.window ? 3 : 0,
-              ),
-              child: stackView(),
-            ),
-          ),
-        ),
-      );
-    } else {
-      // Return the full browser
-      return stackView();
-    }
-  }
-
-  Widget stackView() {
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -153,9 +131,11 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
         child: ShowCaseWidget(
           builder: Builder(builder: (_) {
-            _launchShowCases(_);
+            if (_webViewProvider.browserForeground && !_showCasesTriggeredThisSession) {
+              _launchShowCases(_);
+            }
             return Scaffold(
-              backgroundColor: _themeProvider.canvas,
+              backgroundColor: _themeProvider.statusBar,
               body: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
@@ -179,7 +159,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                           _initialiseSecondary();
                         }
 
-                        if (_useTabs) {
+                        if (_settingsProvider.useTabsFullBrowser) {
                           try {
                             return AnimatedIndexedStack(
                               index: _webViewProvider.currentTab,
@@ -202,14 +182,6 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                               duration: 100,
                               errorCallback: _closeWithError,
                             );
-                            /*
-                            return IndexedStack(
-                              index: 0,
-                              children: [
-                                allWebViews[0],
-                              ],
-                            );
-                            */
                           } catch (e) {
                             FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
                             FirebaseCrashlytics.instance.recordError(e.toString(), null);
@@ -229,7 +201,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                     child: FutureBuilder(
                       future: providerInitialised,
                       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done && _useTabs) {
+                        if (snapshot.connectionState == ConnectionState.done && _settingsProvider.useTabsFullBrowser) {
                           // Don't hide to hide tabs on fullscreen, or we might not be able to return to the app!
                           if (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window) {
                             return Divider(
@@ -260,8 +232,8 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
       // Check that there is no pending showcases to show by the browser
       // If there is, wait until we open the browser for the next time
-      if ((widget.dialog && !_settingsProvider.showCases.contains("webview_closeButton")) ||
-          (!widget.dialog && !_settingsProvider.showCases.contains("webview_titleBar"))) {
+      if (!_settingsProvider.showCases.contains("webview_playPauseChain") ||
+          !_settingsProvider.showCases.contains("webview_titleBar")) {
         _showCasesNeedToWait = true;
       }
 
@@ -279,6 +251,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
 
       if (showCases.isNotEmpty) {
         ShowCaseWidget.of(_).startShowCase(showCases);
+        _showCasesTriggeredThisSession = true;
       }
     });
   }
@@ -305,7 +278,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     await Future.delayed(Duration(milliseconds: 1000));
     if (!mounted) return;
     Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
-      useTabs: _useTabs,
+      useTabs: _settingsProvider.useTabsFullBrowser,
       recallLastSession: widget.recallLastSession,
     );
   }
@@ -314,7 +287,6 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   Future dispose() async {
     _webViewProvider.clearOnDispose();
     _webViewProvider.verticalMenuIsOpen = false;
-    _webViewProvider.browserHasClosedStream.add(true);
     super.dispose();
   }
 
@@ -323,69 +295,6 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         _webViewProvider.tabList[0].currentUrl.contains("profiles.php?XID=2225097") ||
         _webViewProvider.tabList[0].currentUrl.contains("https://www.torn.com/forums.php#/"
             "p=threads&f=67&t=16163503&b=0&a=0");
-
-    // Main tab
-    /*
-    var mainTab = GestureDetector(
-      key: UniqueKey(),
-      onTap: () {
-        _webViewProvider.activateTab(0);
-        _webViewProvider.verticalMenuClose();
-      },
-      onLongPress: () {
-        _webViewProvider.duplicateTab(0);
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Container(
-            color: _webViewProvider.currentTab == 0
-                ? _themeProvider.navSelected
-                : _themeProvider.currentTheme == AppTheme.extraDark
-                    ? Colors.black
-                    : _themeProvider.canvas,
-            child: Row(
-              children: [
-                Padding(
-                  padding: _webViewProvider.useTabIcons
-                      ? const EdgeInsets.all(10.0)
-                      : const EdgeInsets.symmetric(horizontal: 5),
-                  child: _webViewProvider.useTabIcons
-                      ? SizedBox(width: 24, height: 20, child: _webViewProvider.getIcon(0, context))
-                      : SizedBox(
-                          height: 40,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Container(
-                                constraints: BoxConstraints(maxWidth: 100, minWidth: 24),
-                                child: Text(
-                                  _webViewProvider.tabList[0].pageTitle,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isManuito ? Colors.pink : _themeProvider.mainText,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                ),
-                VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  color: Colors.grey[400],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-    */
 
     var mainTab = FadeTransition(
       key: UniqueKey(),
@@ -440,6 +349,8 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                                       ),
                                     Text(
                                       _webViewProvider.tabList[0].pageTitle,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 12,
