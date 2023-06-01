@@ -97,6 +97,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
       isChainingBrowser: widget.isChainingBrowser,
       chainingPayload: widget.chainingPayload,
       restoreSessionCookie: _settingsProvider.restoreSessionCookie,
+      context: context,
     );
 
     _menuTabAnimationController = AnimationController(
@@ -131,7 +132,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
         right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
         child: ShowCaseWidget(
           builder: Builder(builder: (_) {
-            if (_webViewProvider.browserForeground && !_showCasesTriggeredThisSession) {
+            if (_webViewProvider.browserShowInForeground && !_showCasesTriggeredThisSession) {
               _launchShowCases(_);
             }
             return Scaffold(

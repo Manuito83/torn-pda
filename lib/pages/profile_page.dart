@@ -330,14 +330,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   /// If [initCall] is true, a call is placed also at the start
   /// (unless the browser is open)
   void _resetApiTimer({bool initCall = false}) {
-    if (initCall && !_webViewProvider.browserForeground) {
+    if (initCall && !_webViewProvider.browserShowInForeground) {
       _apiRefreshPeriodic(forceMisc: true);
     }
 
     _tickerCallApi?.cancel();
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
       // Only refresh if the browser is not open!
-      if (!_webViewProvider.browserForeground) {
+      if (!_webViewProvider.browserShowInForeground) {
         _apiRefreshPeriodic();
       }
     });

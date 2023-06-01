@@ -428,7 +428,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       onWillPop: _willPopCallback,
       child: ShowCaseWidget(
         builder: Builder(builder: (_) {
-          if (_webViewProvider.browserForeground && !_showCasesTriggeredThisSession) {
+          if (_webViewProvider.browserShowInForeground && !_showCasesTriggeredThisSession) {
             launchShowCases(_);
           }
           return buildScaffold(context);
@@ -855,16 +855,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
             }
-
-            String urlToLoad = request.request.url.toString();
-            if (urlToLoad.contains("http://")) {
-              urlToLoad = urlToLoad.replaceAll("http:", "https:");
+            
+            if (request.request.url.toString().contains("http://")) {
+              _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
+              return NavigationActionPolicy.CANCEL;
             }
-
-            urlToLoad = await _assessNativeAuth(inputUrl: urlToLoad);
-
-            _loadUrl(urlToLoad);
-            return NavigationActionPolicy.CANCEL;
+            
+            return NavigationActionPolicy.ALLOW;
           },
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
@@ -1263,82 +1260,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  Future<String> _assessNativeAuth({String inputUrl}) async {
-    if (!_nativeUser.isNativeUserEnabled()) {
-      return inputUrl;
-    }
-
-    String originalInitUrl = inputUrl;
-    String authUrlToLoad;
-    if (!originalInitUrl.contains("torn.com")) return inputUrl;
-    // Auth redirects to attack pages might fail
-    if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
-
-    int elapsedSinceLastAuth = DateTime.now().difference(_nativeAuth.lastAuthRedirect).inHours;
-    if (_nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
-      bool error = false;
-
-      // Tentative immediate change, so that other opening tabs don't auth as well
-      _nativeAuth.lastAuthRedirect = DateTime.now();
-      log("Getting auth URL!");
-      try {
-        TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
-          context: context,
-          loginData: GetInitDataModel(
-            playerId: _userProvider.basic.playerId,
-            sToken: _nativeUser.playerSToken,
-          ),
-        );
-
-        if (loginResponse.success) {
-          // Join the standard Auth URL and the original URL requested as part of the redirect parameter
-          authUrlToLoad = loginResponse.authUrl + originalInitUrl;
-          log("Auth URL: ${_initialUrl.url}");
-        } else {
-          error = true;
-          log("Auth URL failed: ${loginResponse.message}");
-        }
-      } catch (e) {
-        error = true;
-        log("Auth URL catch: $e");
-      }
-
-      if (error) {
-        // Reset time with some delay, so that rapidly opening tabs don't cause
-        Future.delayed(Duration(seconds: 2)).then((_) {
-          _nativeAuth.lastAuthRedirect = DateTime.fromMicrosecondsSinceEpoch(elapsedSinceLastAuth);
-        });
-
-        String errorMessage = "Authentication error, please check your username and password in Settings!";
-        if (_nativeAuth.authErrorsInSession >= 3) {
-          _nativeAuth.authErrorsInSession = 0;
-          errorMessage = "Too many authentication errors, your username and password have been erased in "
-              "Torn PDA settings as a precaution!";
-          _nativeUser.eraseUserPreferences();
-        } else {
-          _nativeAuth.authErrorsInSession++;
-        }
-
-        BotToast.showText(
-          text: errorMessage,
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red,
-          duration: Duration(seconds: 4),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
-    }
-
-    if (authUrlToLoad != null) {
-      return authUrlToLoad;
-    } else {
-      return inputUrl;
-    }
-  }
-
   void _addScriptApiHandlers(InAppWebViewController webView) {
     // API HANDLERS
     webView.addJavaScriptHandler(
@@ -1456,7 +1377,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // If for some reason we are logged out of Torn, try to login again
     if (_nativeAuth.tryAutomaticLogins && document.querySelectorAll("[class*='logInWrap_']").isNotEmpty) {
       if (_loginErrorToastTimer == null || DateTime.now().difference(_loginErrorToastTimer).inSeconds > 4) {
-        if (_webViewProvider.browserForeground) {
+        if (_webViewProvider.browserShowInForeground) {
           BotToast.showText(
             text: "Trying to log back into Torn\n\n"
                 "Please wait...!",
@@ -1695,7 +1616,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             if (_backButtonPopsContext) {
               _webViewProvider.setCurrentUiMode(UiMode.window, context);
               if (mounted) {
-                _webViewProvider.browserForeground = false;
+                _webViewProvider.browserShowInForeground = false;
                 _checkIfTargetsAttackedAndRevertChaining();
               }
             } else {
@@ -3481,9 +3402,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
-    Uri resumedUrl = await webView?.getUrl();
-    if (resumedUrl == null) {
-      log("Reviving webView!");
+    try {
+      Uri resumedUrl = await webView?.getUrl();
+      if (resumedUrl == null) {
+        log("Reviving webView!");
+        _webViewProvider.reviveUrl();
+      }
+    } catch (e) {
       _webViewProvider.reviveUrl();
     }
   }
@@ -3525,7 +3450,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future<bool> _willPopCallback() async {
-    if (_webViewProvider.browserForeground) {
+    if (_webViewProvider.browserShowInForeground) {
       _tryGoBack();
     } else {
       _webViewProvider.willPopCallbackStream.add(true);
@@ -4213,7 +4138,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _webViewProvider.setCurrentUiMode(UiMode.window, context);
     await Future.delayed(const Duration(milliseconds: 150));
     if (mounted) {
-      _webViewProvider.browserForeground = false;
+      _webViewProvider.browserShowInForeground = false;
       _checkIfTargetsAttackedAndRevertChaining();
     }
   }

@@ -437,7 +437,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       return;
     } else if (intent.data.contains("pdaWidget://empty-shortcuts-clicked")) {
       setState(() {
-        _webViewProvider.browserForeground = false;
+        _webViewProvider.browserShowInForeground = false;
       });
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -1636,7 +1636,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       String defaultSection = await Prefs().getDefaultSection();
       if (defaultSection == "browser") {
         // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
-        _webViewProvider.browserForeground = true;
+        _webViewProvider.browserShowInForeground = true;
 
         // Change to Profile as a base for loading the browser
         defaultSection = "0";
@@ -1852,7 +1852,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   void _callSectionFromOutside(int section) {
     setState(() {
-      _webViewProvider.browserForeground = false;
+      _webViewProvider.browserShowInForeground = false;
       _selected = section;
       _activeDrawerIndex = section;
     });

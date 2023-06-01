@@ -291,7 +291,7 @@ class _MyAppState extends State<MyApp> {
                 builder: (context, wProvider, child) {
                   return Visibility(
                     maintainState: true,
-                    visible: wProvider.browserForeground,
+                    visible: wProvider.browserShowInForeground,
                     child: wProvider.stackView,
                   );
                 },

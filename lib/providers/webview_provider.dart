@@ -15,6 +15,10 @@ import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 
@@ -72,9 +76,15 @@ class WebViewProvider extends ChangeNotifier {
 
   /// Changes browser visibility
   bool _isBrowserForeground = false;
-  bool get browserForeground => _isBrowserForeground;
-  set browserForeground(bool foreground) {
+  bool get browserShowInForeground => _isBrowserForeground;
+  set browserShowInForeground(bool foreground) {
     if (foreground) {
+      if (stackView is Container) {
+        stackView = WebViewStackView(
+          initUrl: "https://www.torn.com",
+          recallLastSession: true,
+        );
+      }
       resumeCurrentWebview();
     } else {
       pauseCurrentWebview();
@@ -92,12 +102,12 @@ class WebViewProvider extends ChangeNotifier {
     @required BuildContext context,
     @required automaticLogin,
   }) {
-    browserForeground = true;
+    browserShowInForeground = true;
 
-    if (automaticLogin) {
+    if (automaticLogin && context.read<NativeUserProvider>().isNativeUserEnabled()) {
       // When we use the PDA Icon, launch a logout check by default in case we just activated
       // the native user in Settings and are logged out
-      assessLoginErrors();
+      assessLoginErrorsFromPdaIcon();
     }
 
     SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
@@ -129,11 +139,8 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   /// Main browser widget
-  Widget _stackView = WebViewStackView(
-    initUrl: "http://www.torn.com",
-    recallLastSession: true,
-  );
-  WebViewStackView get stackView => _stackView;
+  Widget _stackView = Container();
+  Widget get stackView => _stackView;
   set stackView(WebViewStackView value) {
     _stackView = value;
     notifyListeners();
@@ -215,6 +222,7 @@ class WebViewProvider extends ChangeNotifier {
   /// [recallLastSession] should be used to open a browser session where we left it last time
   Future initialiseMain({
     @required String initUrl,
+    @required BuildContext context,
     bool dialog = false,
     bool recallLastSession = false,
     bool isChainingBrowser = false,
@@ -267,19 +275,23 @@ class WebViewProvider extends ChangeNotifier {
       String savedJson = await Prefs().getWebViewMainTab();
       TabSaveModel savedMain = tabSaveModelFromJson(savedJson);
       if (savedMain.tabsSave.length > 0) {
+        String saveMain = savedMain.tabsSave[0].url;
+        String authUrl = await _assessNativeAuth(inputUrl: saveMain, context: context);
         addTab(
-          url: savedMain.tabsSave[0].url,
+          url: authUrl,
           pageTitle: savedMain.tabsSave[0].pageTitle,
           chatRemovalActive: savedMain.tabsSave[0].chatRemovalActive,
           historyBack: savedMain.tabsSave[0].historyBack,
           historyForward: savedMain.tabsSave[0].historyForward,
         );
       } else {
-        await addTab(url: "https://www.torn.com", chatRemovalActive: chatRemovalActiveGlobal);
+        String authUrl = await _assessNativeAuth(inputUrl: "https://www.torn.com", context: context);
+        await addTab(url: authUrl, chatRemovalActive: chatRemovalActiveGlobal);
       }
     } else {
+      String authUrl = await _assessNativeAuth(inputUrl: url, context: context);
       await addTab(
-        url: url,
+        url: authUrl,
         chatRemovalActive: chatRemovalActiveGlobal,
         isChainingBrowser: isChainingBrowser,
         chainingPayload: chainingPayload,
@@ -479,6 +491,7 @@ class WebViewProvider extends ChangeNotifier {
 
     _callAssessMethods();
     notifyListeners();
+    _saveCurrentActiveTabPosition();
   }
 
   Widget _buildRealWebViewFromSleeping(SleepingWebView sleeping) {
@@ -650,9 +663,18 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  assessLoginErrors() {
-    var tab = _tabList[_currentTab];
-    if (tab.currentUrl != null) {
+  assessLoginErrorsFromPdaIcon() async {
+    TabDetails tab;
+
+    // This might be executed before the browser is ready, so wait for it
+    if (_tabList.isEmpty) {
+      var start = DateTime.now();
+      while (DateTime.now().difference(start).inMilliseconds < 3000 && (_tabList.isEmpty || _tabList[_currentTab] == null)) {
+        await Future.delayed(Duration(milliseconds: 500));
+      }
+    }
+    if (_tabList.isNotEmpty && _tabList[_currentTab] != null) {
+      tab = _tabList[_currentTab];
       tab.webViewKey.currentState?.assessErrorCases();
     }
   }
@@ -829,15 +851,18 @@ class WebViewProvider extends ChangeNotifier {
     String secondaryJson = tabSaveModelToJson(saveSecondaryModel);
     Prefs().setWebViewMainTab(mainJson);
     Prefs().setWebViewSecondaryTabs(secondaryJson);
+    _saveCurrentActiveTabPosition();
   }
 
-  void clearOnDispose() {
+  void _saveCurrentActiveTabPosition() {
     // Ensure tab number is correct before saving active session
     if (_currentTab >= _tabList.length) {
       _tabList.length == 1 ? _currentTab = 0 : _currentTab = _tabList.length - 1;
     }
     Prefs().setWebViewLastActiveTab(_currentTab);
+  }
 
+  void clearOnDispose() {
     _tabList.clear();
     _secondaryInitialised = false;
 
@@ -924,18 +949,25 @@ class WebViewProvider extends ChangeNotifier {
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
       analytics.setCurrentScreen(screenName: 'browser_full');
+      
+      String authUrl = await _assessNativeAuth(inputUrl: url, context: context);
+
       WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
       w.stackView = WebViewStackView(
-        initUrl: url,
+        initUrl: authUrl,
         recallLastSession: recallLastSession,
         isChainingBrowser: isChainingBrowser,
         chainingPayload: chainingPayload,
       );
-      loadMainTabUrl(url);
+
+      loadMainTabUrl(authUrl);
+
       if (isChainingBrowser) {
         convertToChainingBrowser(chainingPayload: chainingPayload);
       }
-      w.browserForeground = true;
+
+      w.browserShowInForeground = true;
+
     } else {
       if (await canLaunchUrl(Uri.parse(url))) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -974,6 +1006,87 @@ class WebViewProvider extends ChangeNotifier {
   void closeWebViewFromOutside() {
     var tab = _tabList[_currentTab];
     tab.webViewKey?.currentState?.closeBrowserFromOutside();
+  }
+
+  /// At least used in the following cases:
+  /// 1.- On main tab init: in case the user only uses the browser, it will fire after an app's launch when browser rebuilds
+  /// 2.- Whenever the user launches the broser from a tap (other than the PDA icon, which does not load any URL itself)
+  Future<String> _assessNativeAuth({@required String inputUrl, @required BuildContext context}) async {
+    NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+    NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+    UserDetailsProvider userProvider = context.read<UserDetailsProvider>();
+
+    if (!nativeUser.isNativeUserEnabled()) {
+      log("No native user enabled, skipping auth!");
+      return inputUrl;
+    }
+
+    String originalInitUrl = inputUrl;
+    String authUrlToLoad;
+    if (!originalInitUrl.contains("torn.com")) return inputUrl;
+    // Auth redirects to attack pages might fail
+    if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
+
+    int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inHours;
+    if (nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
+      log("Entering auth process!");
+      
+      bool error = false;
+
+      // Tentative immediate change, so that other opening tabs don't auth as well
+      nativeAuth.lastAuthRedirect = DateTime.now();
+      log("Getting auth URL!");
+      try {
+        TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
+          context: context,
+          loginData: GetInitDataModel(
+            playerId: userProvider.basic.playerId,
+            sToken: nativeUser.playerSToken,
+          ),
+        );
+
+        if (loginResponse.success) {
+          // Join the standard Auth URL and the original URL requested as part of the redirect parameter
+          authUrlToLoad = loginResponse.authUrl + originalInitUrl;
+          log("Auth URL: ${authUrlToLoad}");
+        } else {
+          error = true;
+          log("Auth URL failed: ${loginResponse.message}");
+        }
+      } catch (e) {
+        error = true;
+        log("Auth URL catch: $e");
+      }
+
+      if (error) {
+        // Reset time with some delay, so that rapidly opening tabs don't cause
+        Future.delayed(Duration(seconds: 2)).then((_) {
+          nativeAuth.lastAuthRedirect = DateTime.fromMicrosecondsSinceEpoch(elapsedSinceLastAuth);
+        });
+
+        String errorMessage = "Authentication error, please check your username and password in Settings!";
+        if (nativeAuth.authErrorsInSession >= 3) {
+          nativeAuth.authErrorsInSession = 0;
+          errorMessage = "Too many authentication errors, your username and password have been erased in "
+              "Torn PDA settings as a precaution!";
+          nativeUser.eraseUserPreferences();
+        } else {
+          nativeAuth.authErrorsInSession++;
+        }
+
+        BotToast.showText(
+          text: errorMessage,
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red,
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+    }
+    return inputUrl;
   }
 
   /// Uses the already generated shortcuts list

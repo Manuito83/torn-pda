@@ -78,7 +78,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     WebViewProvider webviewProvider = Provider.of<WebViewProvider>(context, listen: true);
     return Visibility(
-      visible: !webviewProvider.browserForeground,
+      visible: !webviewProvider.browserShowInForeground,
       child: WillPopScope(
         onWillPop: _willPopCallback,
         child: Container(
