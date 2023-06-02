@@ -2580,16 +2580,6 @@ class Prefs {
     return prefs.setInt(_kWebViewLastActiveTab, value);
   }
 
-  Future<bool> getWebViewLastSessionUsedDialog() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWebViewLastSessionUsedDialog) ?? true;
-  }
-
-  Future<bool> setWebViewLastSessionUsedDialog(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWebViewLastSessionUsedDialog, value);
-  }
-
   Future<String> getWebViewSessionCookie() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kWebViewSessionCookie) ?? '';

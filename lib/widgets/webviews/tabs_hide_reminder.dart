@@ -43,8 +43,7 @@ class TabsHideReminderDialog extends StatelessWidget {
                     const Text("You have hidden your tabs!\n"),
                     const Text(
                       "Just a quick reminder (in case you still have not reviewed the Tips section): swiping up/down "
-                      "the Close button (quick browser) or the title bar (full browser) will hide/show your tab bar, so "
-                      "that you can enjoy more space when needed!\n\n"
+                      "the title bar will hide/show your tab bar, so that you can enjoy more space when needed!\n\n"
                       "This feature can be completely disabled in Settings.",
                       style: TextStyle(fontSize: 13),
                     ),

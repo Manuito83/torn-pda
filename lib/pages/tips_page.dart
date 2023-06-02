@@ -426,49 +426,6 @@ class _TipsPageState extends State<TipsPage> {
       ),
     );
 
-    /*
-    tips.add(
-      ComplexExpandableTip(
-        headerValue: "Quick browser and full browser",
-        buildExpandedText: () {
-          return Text.rich(
-            TextSpan(
-              text: "There are two ways of using the 'in-app' browser in Torn PDA: 'quick' and 'full' browser.\n\n"
-                  "By default, a short tap in buttons, bars or icons will open the 'quick browser', which loads faster "
-                  "and allows to accomplish actions quicker. However, the options bar and its icons are only visible in the "
-                  "'full browser' version, which can be opened with a long-press in the same places.\n\n"
-                  "This also applies, for example, for the main 'T' menu in the Profile section. After expanding it, you can "
-                  "short tap or long-press to use the quick or full browsers.\n\n"
-                  "In the Settings section you can disable the quick browser if you prefer to always use the full one.",
-              style: TextStyle(
-                fontSize: 13,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-    */
-
-    /*
-    tips.add(
-      ComplexExpandableTip(
-        headerValue: "Restore previous browsing session",
-        buildExpandedText: () {
-          return Text.rich(
-            TextSpan(
-              text: "You can restore your previous browsing session, including the first tab, active tab and "
-                  "type of browser (quick or full) by long-pressing the 'T' menu floating button in the Profile section.",
-              style: TextStyle(
-                fontSize: 13,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-    */
-
     tips.add(
       ComplexExpandableTip(
         headerValue: "How can I browse back or forward?",

@@ -1760,9 +1760,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               key: _showcaseProfileBars,
                               title: 'Did you know?',
                               description: '\nTap any of the bars to launch a browser '
-                                  'straight to the gym, crimes or items sections!\n\n'
-                                  'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
-                                  'a full browser with a LONG PRESS.',
+                                  'straight to the gym, crimes or items sections!',
                               targetPadding: const EdgeInsets.all(10),
                               disableMovingAnimation: true,
                               textColor: _themeProvider.mainText,

@@ -223,7 +223,6 @@ class WebViewProvider extends ChangeNotifier {
   Future initialiseMain({
     @required String initUrl,
     @required BuildContext context,
-    bool dialog = false,
     bool recallLastSession = false,
     bool isChainingBrowser = false,
     ChainingPayload chainingPayload,
@@ -262,12 +261,6 @@ class WebViewProvider extends ChangeNotifier {
 
     _useTabIcons = await Prefs().getUseTabsIcons();
     _hideTabs = await Prefs().getHideTabs();
-
-    // This saves if we are using a dialog or not, so that the next session can replicate if we recall from T menu
-    // Chaining browser does not count as an user preference, as it is always full
-    if (!isChainingBrowser) {
-      Prefs().setWebViewLastSessionUsedDialog(dialog);
-    }
 
     // Add the main opener
     String url = initUrl;
@@ -669,7 +662,8 @@ class WebViewProvider extends ChangeNotifier {
     // This might be executed before the browser is ready, so wait for it
     if (_tabList.isEmpty) {
       var start = DateTime.now();
-      while (DateTime.now().difference(start).inMilliseconds < 3000 && (_tabList.isEmpty || _tabList[_currentTab] == null)) {
+      while (DateTime.now().difference(start).inMilliseconds < 3000 &&
+          (_tabList.isEmpty || _tabList[_currentTab] == null)) {
         await Future.delayed(Duration(milliseconds: 500));
       }
     }
@@ -949,7 +943,7 @@ class WebViewProvider extends ChangeNotifier {
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
       analytics.setCurrentScreen(screenName: 'browser_full');
-      
+
       String authUrl = await _assessNativeAuth(inputUrl: url, context: context);
 
       WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
@@ -967,7 +961,6 @@ class WebViewProvider extends ChangeNotifier {
       }
 
       w.browserShowInForeground = true;
-
     } else {
       if (await canLaunchUrl(Uri.parse(url))) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -1030,7 +1023,7 @@ class WebViewProvider extends ChangeNotifier {
     int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inHours;
     if (nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
       log("Entering auth process!");
-      
+
       bool error = false;
 
       // Tentative immediate change, so that other opening tabs don't auth as well

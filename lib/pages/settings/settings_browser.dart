@@ -1099,8 +1099,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
                       child: Text(
-                        'Allow to temporarily hide tabs by swiping in the title bar (full browser) or in the lower bar '
-                        '(quick browser)',
+                        'Allow to temporarily hide tabs by swiping up/down in the title bar',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,

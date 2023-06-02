@@ -13,7 +13,6 @@ import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 import 'package:torn_pda/pages/vault/vault_configuration_page.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class VaultWidget extends StatefulWidget {
   final List<dom.Element> vaultHtml;

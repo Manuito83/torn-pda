@@ -92,7 +92,6 @@ class _WebViewStackViewState extends State<WebViewStackView>
     // Initialise WebViewProvider
     providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialiseMain(
       initUrl: widget.initUrl,
-      dialog: widget.dialog,
       recallLastSession: widget.recallLastSession,
       isChainingBrowser: widget.isChainingBrowser,
       chainingPayload: widget.chainingPayload,
