@@ -68,21 +68,6 @@ class UserScriptsProvider extends ChangeNotifier {
           source: handler_evaluateJS(),
         ),
       );
-
-      // Then add the rest of scripts
-      for (var script in _userScriptList) {
-        if (script.enabled && script.urls.isEmpty) {
-          scriptList.add(
-            UserScript(
-              groupName: script.name,
-              injectionTime: Platform.isAndroid
-                  ? UserScriptInjectionTime.AT_DOCUMENT_START
-                  : UserScriptInjectionTime.AT_DOCUMENT_END,
-              source: adaptSource(script.source, apiKey),
-            ),
-          );
-        }
-      }
     }
     return UnmodifiableListView<UserScript>(scriptList);
   }
@@ -97,18 +82,17 @@ class UserScriptsProvider extends ChangeNotifier {
       for (var script in _userScriptList) {
         if (script.enabled) {
           if (time != script.time) continue;
-          if (script.urls.isNotEmpty) {
-            for (String u in script.urls) {
-              if (url.contains(u.replaceAll("*", ""))) {
-                scriptListToAdd.add(
-                  UserScript(
-                    groupName: script.name,
-                    injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                    source: adaptSource(script.source, apiKey),
-                  ),
-                );
-                break;
-              }
+          for (String u in script.urls) {
+            // Add the continuous ones and the ones that match this URL
+            if (script.urls.isEmpty || url.contains(u.replaceAll("*", ""))) {
+              scriptListToAdd.add(
+                UserScript(
+                  groupName: script.name,
+                  injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                  source: adaptSource(script.source, apiKey),
+                ),
+              );
+              break;
             }
           }
         }
@@ -123,20 +107,20 @@ class UserScriptsProvider extends ChangeNotifier {
     var scriptListToRemove = <String>[];
     if (_userScriptsEnabled) {
       for (var script in _userScriptList) {
-        if (script.enabled) {
-          if (script.urls.isNotEmpty) {
-            var found = false;
-            for (String u in script.urls) {
-              if (url.contains(u.replaceAll("*", ""))) {
-                found = true;
-                break;
-              }
-            }
-            if (!found) {
-              scriptListToRemove.add(script.name);
+        //if (script.enabled) {
+        if (script.urls.isNotEmpty) {
+          var found = false;
+          for (String u in script.urls) {
+            if (script.enabled && url.contains(u.replaceAll("*", ""))) {
+              found = true;
+              break;
             }
           }
+          if (!found) {
+            scriptListToRemove.add(script.name);
+          }
         }
+        //}
       }
     }
     return scriptListToRemove;

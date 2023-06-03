@@ -323,7 +323,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _isChainingBrowser = widget.isChainingBrowser;
     if (_isChainingBrowser) {
-      _chainingPayload = _chainingPayload;
+      _chainingPayload = widget.chainingPayload;
       _w = Get.put(WarController());
       String title = _chainingPayload.attackNameList[0];
       _pageTitle = title;
@@ -854,13 +854,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 time: UserScriptTime.start,
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
+
+              var addList = [];
+              for (var s in scriptsToAdd) {
+                addList.add(s.groupName);
+              }
+              log("Added scripts in shouldOverride: $addList");
             }
-            
+
             if (request.request.url.toString().contains("http://")) {
               _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
               return NavigationActionPolicy.CANCEL;
             }
-            
+
             return NavigationActionPolicy.ALLOW;
           },
           onCreateWindow: (c, request) async {
@@ -959,6 +965,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   await c.removeUserScriptsByGroupName(groupName: group);
                 }
               }
+              log("Removed scripts in loadStop: $scriptsToRemove");
 
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
@@ -1203,7 +1210,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("Error with Permissions-Policy header")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
-                log("TORN PDA CONSOLE: ${consoleMessage.message}");
+                //TODO!!!! //log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
             }
           },
@@ -1343,6 +1350,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       'responseText': resp.body,
       'responseHeaders': resp.headers.keys.map((key) => '${key}: ${resp.headers[key]}').join("\r\n")
     };
+  }
+
+  void removeAllUserScripts() async {
+    await webView.removeAllUserScripts();
   }
 
   Future assessErrorCases({dom.Document document}) async {
@@ -1999,7 +2010,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   /// This will try first with H4 (works for most Torn sections) and revert
   /// to the URL if it doesn't find anything
-  /// [showTitle] show ideally only be set to true in onLoadStop, or full
+  /// [showTitle] show ideally only be set to true in onLoadStop
   /// URLs might show up while loading the page in onProgressChange
   Future<String> _getPageTitle(
     dom.Document document, {
@@ -3068,13 +3079,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future reload() async {
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
-
-    if (Platform.isAndroid) {
-      webView.reload();
-    } else if (Platform.isIOS) {
-      var currentURI = await webView.getUrl();
-      _loadUrl(currentURI.toString());
-    }
+    var currentURI = await webView.getUrl();
+    _loadUrl(currentURI.toString());
     _webViewProvider.verticalMenuClose();
   }
 
@@ -3384,19 +3390,25 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // Called from parent though GlobalKey state
-  void cancelChainingBrowser() {
+  void cancelChainingBrowser() async {
+    final html = await webView.getHtml();
+    dom.Document document = parse(html);
+    _pageTitle = await _getPageTitle(document);
+    // Reports page title so that tab names are updated immediately
+    // (otherwise, the last target remains as page title)
+    _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
     setState(() {
       _isChainingBrowser = false;
     });
   }
 
-  void pauseWebview() {
+  void pauseThisWebview() {
     if (Platform.isAndroid) {
       webView?.pause();
     }
   }
 
-  void resumeWebview() async {
+  void resumeThisWebview() async {
     if (Platform.isAndroid) {
       webView?.resume();
     }
@@ -3432,9 +3444,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
         apiKey: _userProvider?.basic?.userApiKey ?? "",
-        time: UserScriptTime.end,
+        time: UserScriptTime.start,
       );
       await webView.addUserScripts(userScripts: scriptsToAdd);
+
+      var addList = [];
+      for (var s in scriptsToAdd) {
+        addList.add(s.groupName);
+      }
+      log("Added scripts in _loadUrl: $addList");
     }
 
     var uri = WebUri(inputUrl);
@@ -4128,6 +4146,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         window.dispatchEvent(event);
       ''',
     );
+  }
+
+  updatePullToRefresh(BrowserRefreshSetting value) async {
+    if (value == BrowserRefreshSetting.pull || value == BrowserRefreshSetting.both) {
+      _pullToRefreshController.setEnabled(true);
+    } else {
+      _pullToRefreshController.setEnabled(false);
+    }
   }
 
   bool _fullScreenAndWidgetHide() {

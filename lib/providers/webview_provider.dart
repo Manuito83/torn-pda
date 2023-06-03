@@ -3,6 +3,7 @@
 // Flutter imports:
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
@@ -85,9 +86,9 @@ class WebViewProvider extends ChangeNotifier {
           recallLastSession: true,
         );
       }
-      resumeCurrentWebview();
+      resumeAllWebviews();
     } else {
-      pauseCurrentWebview();
+      _removeAllUserScripts().then((value) => pauseAllWebviews());
       // Signal that the browser has closed to listener (e.g.: Profile page)
       browserHasClosedStream.add(true);
     }
@@ -434,7 +435,7 @@ class WebViewProvider extends ChangeNotifier {
         activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView);
       }
 
-      _tabList[_currentTab]?.webViewKey?.currentState?.resumeWebview();
+      _tabList[_currentTab]?.webViewKey?.currentState?.resumeThisWebview();
     } else if (_currentTab == _tabList.length - 1) {
       // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
       _currentTab = _tabList.length - 2;
@@ -442,7 +443,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
     if (wasLast) {
-      _tabList[_currentTab]?.webViewKey?.currentState?.resumeWebview();
+      _tabList[_currentTab]?.webViewKey?.currentState?.resumeThisWebview();
       // Notify listeners first so that the tab changes
       notifyListeners();
       // Then wait 200 milliseconds so that the animated stack view changes its child
@@ -459,7 +460,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void wipeTabs() async {
     _currentTab = 0;
-    _tabList[0]?.webViewKey?.currentState?.resumeWebview();
+    _tabList[0]?.webViewKey?.currentState?.resumeThisWebview();
     _tabList.removeRange(1, _tabList.length);
     notifyListeners();
     _saveTabs();
@@ -469,7 +470,7 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty || _tabList.length - 1 < newActiveTab) return;
 
     var deactivated = _tabList[_currentTab];
-    deactivated?.webViewKey?.currentState?.pauseWebview();
+    deactivated?.webViewKey?.currentState?.pauseThisWebview();
 
     _currentTab = newActiveTab;
     var activated = _tabList[_currentTab];
@@ -480,7 +481,7 @@ class WebViewProvider extends ChangeNotifier {
       activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView);
     }
 
-    activated?.webViewKey?.currentState?.resumeWebview();
+    activated?.webViewKey?.currentState?.resumeThisWebview();
 
     _callAssessMethods();
     notifyListeners();
@@ -502,14 +503,40 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     log("Pausing current webview!");
     var currentTab = _tabList[_currentTab];
-    currentTab.webViewKey?.currentState?.pauseWebview();
+    currentTab.webViewKey?.currentState?.pauseThisWebview();
   }
 
   void resumeCurrentWebview() {
     if (_tabList.isEmpty) return;
     log("Resuming current webview!");
     var currentTab = _tabList[_currentTab];
-    currentTab.webViewKey?.currentState?.resumeWebview();
+    currentTab.webViewKey?.currentState?.resumeThisWebview();
+  }
+
+  void pauseAllWebviews() {
+    if (_tabList.isEmpty) return;
+    log("All webviews paused!");
+    var currentTab = _tabList[_currentTab];
+    currentTab.webViewKey?.currentState?.webView?.pauseTimers();
+  }
+
+  void resumeAllWebviews() {
+    if (_tabList.isEmpty) return;
+    var currentTab = _tabList[_currentTab];
+    currentTab.webViewKey?.currentState?.webView?.resumeTimers();
+
+    var pausedAgain = 0;
+
+    if (Platform.isAndroid) {
+      for (var tab in _tabList) {
+        if (tab != currentTab) {
+          tab.webViewKey.currentState?.pauseThisWebview();
+          pausedAgain++;
+        }
+      }
+    }
+
+    log("Resuming webviews${Platform.isAndroid ? ' (re-paused $pausedAgain)' : ''}!");
   }
 
   Future clearCacheAndTabs() async {
@@ -532,7 +559,7 @@ class WebViewProvider extends ChangeNotifier {
       _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView);
     }
 
-    _tabList[0].webViewKey?.currentState?.resumeWebview();
+    _tabList[0].webViewKey?.currentState?.resumeThisWebview();
     _tabList[0].webViewKey?.currentState?.clearCacheAndReload();
 
     _tabList.removeRange(1, _tabList.length);
@@ -578,7 +605,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Pause timers for tabs that load which are not active (e.g. at the initialization, we pause all except the main)
     if (_tabList[_currentTab] != tab) {
-      tab.webViewKey.currentState?.pauseWebview();
+      tab.webViewKey.currentState?.pauseThisWebview();
     }
 
     notifyListeners();
@@ -607,6 +634,12 @@ class WebViewProvider extends ChangeNotifier {
     chatRemovalWhileFullScreen = false;
     for (var tab in _tabList) {
       tab.webViewKey.currentState?.showChatAfterFullScreen();
+    }
+  }
+
+  Future _removeAllUserScripts() async {
+    for (var tab in _tabList) {
+      await tab.webViewKey.currentState?.removeAllUserScripts();
     }
   }
 
@@ -1080,6 +1113,14 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
     return inputUrl;
+  }
+
+  updatePullToRefresh(BrowserRefreshSetting value) {
+    if (_tabList.isEmpty) return;
+    for (var tab in _tabList) {
+      // Null check because not all webview have a key (sleeping tabs!)
+      tab.webViewKey?.currentState?.updatePullToRefresh(value);
+    }
   }
 
   /// Uses the already generated shortcuts list

@@ -19,6 +19,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({Key key}) : super(key: key);
@@ -1646,11 +1647,17 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
       title: Text('Browser settings'),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
-        onPressed: () {
-          _willPopCallback();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          new IconButton(
+            icon: new Icon(Icons.arrow_back),
+            onPressed: () {
+              _willPopCallback();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
     );
   }
@@ -1708,6 +1715,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       onChanged: (value) {
         setState(() {
           _settingsProvider.changeBrowserRefreshMethod = value;
+          _webViewProvider.updatePullToRefresh(value);
         });
       },
     );

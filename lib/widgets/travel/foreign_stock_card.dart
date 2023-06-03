@@ -706,12 +706,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             },
           ),
           SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              '\$${costCurrency.format(stock.cost)}',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
+          _stockCostColumn(costCurrency, stock),
         ],
       );
     } else {
@@ -785,12 +780,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             },
           ),
           SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              '\$${costCurrency.format(stock.cost)}',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
+          _stockCostColumn(costCurrency, stock),
         ],
       );
     }
@@ -833,6 +823,24 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         SizedBox(width: 8),
         Flexible(flex: 2, child: profitPerMinuteWidget),
       ],
+    );
+  }
+
+  Flexible _stockCostColumn(NumberFormat costCurrency, ForeignStock stock) {
+    return Flexible(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '\$${costCurrency.format(stock.cost)}',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            '(\$${costCurrency.format(stock.cost * widget.capacity)})',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9),
+          ),
+        ],
+      ),
     );
   }
 

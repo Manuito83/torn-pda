@@ -11,6 +11,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -343,11 +344,17 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: Text('User scripts'),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
-        onPressed: () {
-          _willPopCallback();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          new IconButton(
+            icon: new Icon(Icons.arrow_back),
+            onPressed: () {
+              _willPopCallback();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: [
         IconButton(

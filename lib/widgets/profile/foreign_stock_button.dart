@@ -43,10 +43,10 @@ class ForeignStockButton extends StatelessWidget {
             }
           } else {
             if (returnFlag.shortTap) {
-              launchBrowser(url: 'https://www.torn.com/travelagency.php', dialogRequested: true);
+              launchBrowser(url: 'https://www.torn.com/travelagency.php', shortTap: true);
               updateCallback();
             } else {
-              launchBrowser(url: 'https://www.torn.com/travelagency.php', dialogRequested: false);
+              launchBrowser(url: 'https://www.torn.com/travelagency.php', shortTap: false);
               updateCallback();
             }
           }
