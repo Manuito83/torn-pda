@@ -855,11 +855,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
 
+              /* 
+              // DEBUG
               var addList = [];
               for (var s in scriptsToAdd) {
                 addList.add(s.groupName);
               }
               log("Added scripts in shouldOverride: $addList");
+              */
             }
 
             if (request.request.url.toString().contains("http://")) {
@@ -965,7 +968,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   await c.removeUserScriptsByGroupName(groupName: group);
                 }
               }
+              /*
+              // DEBUG
               log("Removed scripts in loadStop: $scriptsToRemove");
+              */
 
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
@@ -3448,11 +3454,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
       await webView.addUserScripts(userScripts: scriptsToAdd);
 
+      /*
+      // DEBUG
       var addList = [];
       for (var s in scriptsToAdd) {
         addList.add(s.groupName);
       }
       log("Added scripts in _loadUrl: $addList");
+      */
     }
 
     var uri = WebUri(inputUrl);
