@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 313 - 03/06/2023
+    // Build 314 - 04/06/2023
 
     // VERSION 3.1.0
     var v3_1_0 = ChangeLogItem();
     v3_1_0.version = 'Torn PDA v3.1.0';
-    v3_1_0.date = '10 JUN 2023';
+    v3_1_0.date = '12 JUN 2023';
     String feat3_1_0_1 = "Added home screen widget (see Tips)";
     String feat3_1_0_2 = "Browser: complete workflow restructure (faster access and loading)";
     String feat3_1_0_3 = "Browser: quick browser removed, full screen mode and vertical menus added";
