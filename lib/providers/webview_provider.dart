@@ -47,6 +47,7 @@ class TabDetails {
   List<String> historyBack = <String>[];
   List<String> historyForward = <String>[];
   bool isChainingBrowser = false;
+  DateTime lastUsedTime;
 }
 
 class SleepingWebView {
@@ -89,6 +90,9 @@ class WebViewProvider extends ChangeNotifier {
       resumeAllWebviews();
     } else {
       _removeAllUserScripts().then((value) => pauseAllWebviews());
+
+      _sleepOldTabs();
+
       // Signal that the browser has closed to listener (e.g.: Profile page)
       browserHasClosedStream.add(true);
     }
@@ -475,6 +479,9 @@ class WebViewProvider extends ChangeNotifier {
     _currentTab = newActiveTab;
     var activated = _tabList[_currentTab];
 
+    // Log time at which the tab is used
+    activated.lastUsedTime = DateTime.now();
+
     // Awake WebView if necessary
     if (activated.sleepTab) {
       activated.sleepTab = false;
@@ -486,6 +493,39 @@ class WebViewProvider extends ChangeNotifier {
     _callAssessMethods();
     notifyListeners();
     _saveCurrentActiveTabPosition();
+  }
+
+  /// Transform tabs that have not been used for a few hours in sleeping tabs to save resources
+  _sleepOldTabs() async {
+    bool sleepTabsByDefault = await Prefs().getOnlyLoadTabsWhenUsed();
+    if (!sleepTabsByDefault) return;
+    if (_tabList.isEmpty) return;
+
+    DateTime now = DateTime.now();
+    for (var i = 0; i < _tabList.length; i++) {
+      if (i == 0) continue;
+
+      // Might happen when users upgrade to v3.1.0
+      if (_tabList[i].lastUsedTime == null) return;
+
+      // Only sleep if 24 hours have elapsed
+      Duration timeDifference = now.difference(_tabList[i].lastUsedTime);
+      if (timeDifference.inHours < 24) return;
+
+      if (_tabList[i].webView != null && !_tabList[i].isChainingBrowser && _tabList[i] != _tabList[currentTab]) {
+        var newSleeper = _tabList[i];
+        newSleeper.sleepTab = true;
+        newSleeper.webView = null;
+        newSleeper.sleepingWebView = SleepingWebView(
+          customUrl: _tabList[i].currentUrl,
+          key: _tabList[i].webViewKey,
+          useTabs: true,
+          chatRemovalActive: _tabList[i].chatRemovalActiveTab,
+          isChainingBrowser: false,
+        );
+        log("Slept tab with ${timeDifference.inHours} hours!");
+      }
+    }
   }
 
   Widget _buildRealWebViewFromSleeping(SleepingWebView sleeping) {

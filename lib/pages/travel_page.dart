@@ -547,7 +547,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             padding: const EdgeInsets.only(top: 20),
             child: ElevatedButton(
               child: Text("Go visit!"),
-              onLongPress: () async {
+              onPressed: () async {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: "https://www.torn.com",
@@ -555,7 +555,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     );
                 _updateInformation();
               },
-              onPressed: () async {
+              onLongPress: () async {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: "https://www.torn.com",
@@ -594,7 +594,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           ElevatedButton(
             child: Icon(Icons.local_airport),
-            onLongPress: () async {
+            onPressed: () async {
               await context.read<WebViewProvider>().openBrowserPreference(
                     context: context,
                     url: "https://www.torn.com",
@@ -602,7 +602,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   );
               _updateInformation();
             },
-            onPressed: () async {
+            onLongPress: () async {
               await context.read<WebViewProvider>().openBrowserPreference(
                     context: context,
                     url: "https://www.torn.com",
@@ -663,7 +663,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               GestureDetector(
-                onLongPress: () async {
+                onTap: () async {
                   await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: "https://www.torn.com",
@@ -671,7 +671,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                       );
                   _updateInformation();
                 },
-                onTap: () async {
+                onLongPress: () async {
                   await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: "https://www.torn.com",
@@ -773,7 +773,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   ElevatedButton _travelAgencyButton() {
     return ElevatedButton(
       child: Text("Travel Agency"),
-      onLongPress: () async {
+      onPressed: () async {
         await context.read<WebViewProvider>().openBrowserPreference(
               context: context,
               url: "https://www.torn.com/travelagency.php",
@@ -781,7 +781,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             );
         _updateInformation();
       },
-      onPressed: () async {
+      onLongPress: () async {
         await context.read<WebViewProvider>().openBrowserPreference(
               context: context,
               url: "https://www.torn.com/travelagency.php",

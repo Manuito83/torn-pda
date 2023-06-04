@@ -82,18 +82,29 @@ class UserScriptsProvider extends ChangeNotifier {
       for (var script in _userScriptList) {
         if (script.enabled) {
           if (time != script.time) continue;
-          for (String u in script.urls) {
-            // Add the continuous ones and the ones that match this URL
-            if (script.urls.isEmpty || url.contains(u.replaceAll("*", ""))) {
-              scriptListToAdd.add(
-                UserScript(
-                  groupName: script.name,
-                  injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                  source: adaptSource(script.source, apiKey),
-                ),
-              );
-              break;
+
+          bool add = false;
+          if (script.urls.isEmpty) {
+            // Add the continuous scripts
+            add = true;
+          } else {
+            for (String u in script.urls) {
+              // Add the ones that match this URL
+              if (url.contains(u.replaceAll("*", ""))) {
+                add = true;
+                break;
+              }
             }
+          }
+
+          if (add) {
+            scriptListToAdd.add(
+              UserScript(
+                groupName: script.name,
+                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                source: adaptSource(script.source, apiKey),
+              ),
+            );
           }
         }
       }

@@ -137,6 +137,9 @@ class WebViewFull extends StatefulWidget {
 }
 
 class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
+  // DEBUG SCRIPT INJECTION (logs)
+  bool _debugScriptsInjection = false;
+
   InAppWebViewController webView;
   var _initialWebViewSettings = InAppWebViewSettings();
 
@@ -855,14 +858,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
 
-              /* 
               // DEBUG
-              var addList = [];
-              for (var s in scriptsToAdd) {
-                addList.add(s.groupName);
+              if (_debugScriptsInjection) {
+                var addList = [];
+                for (var s in scriptsToAdd) {
+                  addList.add(s.groupName);
+                }
+                log("Added scripts in shouldOverride: $addList");
               }
-              log("Added scripts in shouldOverride: $addList");
-              */
             }
 
             if (request.request.url.toString().contains("http://")) {
@@ -968,10 +971,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   await c.removeUserScriptsByGroupName(groupName: group);
                 }
               }
-              /*
+
               // DEBUG
-              log("Removed scripts in loadStop: $scriptsToRemove");
-              */
+              if (_debugScriptsInjection) {
+                log("Removed scripts in loadStop: $scriptsToRemove");
+              }
 
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
@@ -984,6 +988,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 await webView.evaluateJavascript(
                   source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
                 );
+              }
+
+              // DEBUG
+              if (_debugScriptsInjection) {
+                var addList = [];
+                for (var s in scriptsToAdd) {
+                  addList.add(s.groupName);
+                }
+                log("Added scripts in shouldOverride: $addList");
               }
 
               hideChatOnLoad();
@@ -1216,7 +1229,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("Error with Permissions-Policy header")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
-                //TODO!!!! //log("TORN PDA CONSOLE: ${consoleMessage.message}");
+                log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
             }
           },
@@ -3085,9 +3098,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future reload() async {
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
-    var currentURI = await webView.getUrl();
-    _loadUrl(currentURI.toString());
-    _webViewProvider.verticalMenuClose();
+
+    if (Platform.isAndroid) {
+      UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+        url: await webView.getUrl().toString(),
+        apiKey: _userProvider?.basic?.userApiKey ?? "",
+        time: UserScriptTime.start,
+      );
+      await webView.addUserScripts(userScripts: scriptsToAdd);
+
+      // DEBUG
+      if (_debugScriptsInjection) {
+        var addList = [];
+        for (var s in scriptsToAdd) {
+          addList.add(s.groupName);
+        }
+        log("Added scripts in Android reload: $addList");
+      }
+
+      webView.reload();
+    } else if (Platform.isIOS) {
+      var currentURI = await webView.getUrl();
+      _loadUrl(currentURI.toString());
+    }
   }
 
   Future<void> _openUrlDialog() async {
@@ -3454,14 +3487,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
       await webView.addUserScripts(userScripts: scriptsToAdd);
 
-      /*
       // DEBUG
-      var addList = [];
-      for (var s in scriptsToAdd) {
-        addList.add(s.groupName);
+      if (_debugScriptsInjection) {
+        var addList = [];
+        for (var s in scriptsToAdd) {
+          addList.add(s.groupName);
+        }
+        log("Added scripts in _loadUrl: $addList");
       }
-      log("Added scripts in _loadUrl: $addList");
-      */
     }
 
     var uri = WebUri(inputUrl);

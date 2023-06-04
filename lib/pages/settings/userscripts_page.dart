@@ -710,6 +710,27 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 SizedBox(height: 25),
                 Text(
+                  "INJECTION CONSTRAINTS",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
+                  "as much as possible with script injection times and URLs. However, due to the different limitations "
+                  "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
+                  "be injected again in pages with pagination (e.g.: jail, hospital, forums...). Also, reloading the "
+                  "page might result in scripts being injected multiple times.\n\n"
+                  "Hence, it's the script developer's responsibility to control all these constraints. A few ideas: "
+                  "make sure that that the script is prepared for multiple injection retries by adding a variable to "
+                  "the main container; make sure that pagination works by adding click listeners; make sure that no "
+                  "conflicts exist with other scripts (variable names, etc.) by enclosing the script in an "
+                  "anonymous function.",
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 25),
+                Text(
                   "SCRIPT INJECTION TIME",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),

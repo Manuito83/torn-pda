@@ -1066,7 +1066,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       child: Text(
                         'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, '
                         'they will retrieve the web content when first used (tapped). This could add a small delay when the '
-                        'tab is pressed visited the first time, but should improve the overall browser performance',
+                        'tab is pressed visited the first time, but should improve the overall browser performance. '
+                        'Also, tabs that have not been used for 24 hours will be deactivated to reduce memory consumption, '
+                        'and will be reactivated with you switch back to them.\n\n'
+                        'NOTE: in high performance devices, deactivating this option should make the browser quicker and '
+                        'transitions between tabs will be more pleasant, while probably not being noticeable in term of memory usage.',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,
