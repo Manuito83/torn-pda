@@ -20,7 +20,7 @@ Future<int> pdaWidget_numberInstalled() async {
 @pragma("vm:entry-point")
 void pdaWidget_backgroundUpdate() {
   Workmanager().executeTask((taskName, inputData) async {
-    DateTime now = DateTime.now();
+    //DateTime now = DateTime.now();
     //String timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
     //log("Widget $taskName update @$timeString ");
 
@@ -90,6 +90,14 @@ Future<void> pdaWidget_fetchData() async {
     if (apiKey.isNotEmpty) {
       // NOTE: we don't use the ApiCallerController with Getx here, but instead call directly
       var user = await ApiCallerController().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
+
+      if (user is ApiError) {
+        if (user.errorId == 100) {
+          // Retry in case of timeout
+          log("Widget timed out, retrying once after 5 seconds");
+          await Future.delayed(Duration(seconds: 5));
+        }
+      }
 
       if (user is AppWidgetApiModel) {
         HomeWidget.saveWidgetData<bool>('main_layout_visibility', true);
