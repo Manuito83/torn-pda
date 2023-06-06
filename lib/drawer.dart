@@ -169,6 +169,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       quickActions.setShortcutItems(<ShortcutItem>[
         // NOTE: keep the same file name for both platforms
         const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
+        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
+        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
+        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
       ]);
 
       quickActions.initialize((String shortcutType) async {
@@ -176,6 +179,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: "https://www.torn.com",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_gym') {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/gym.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_crimes') {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/crimes.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_travel') {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/travelagency.php",
                 browserTapType: BrowserTapType.quickItem,
               );
         }
