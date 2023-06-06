@@ -226,7 +226,6 @@ class Prefs {
   final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kWebViewLastActiveTab = "pda_webViewLastActiveTab";
-  final String _kWebViewLastSessionUsedDialog = "pda_webViewLastSessionUsedDialog";
   final String _kWebViewSessionCookie = "pda_webViewSessionCookie";
   final String _kWebViewMainTab = "pda_webViewMainTab";
   final String _kWebViewSecondaryTabs = "pda_webViewTabs";
