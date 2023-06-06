@@ -1138,7 +1138,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         if (_user.status.color == 'red' && _user.status.state == "Hospital")
                           _notificationIcon(ProfileNotification.hospital),
                         if (_user.status.color == 'red' && _user.status.state == "Jail")
-                          _notificationIcon(ProfileNotification.hospital),
+                          _notificationIcon(ProfileNotification.jail),
                       ],
                     )
                   else
@@ -1161,7 +1161,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             if (_user.status.color == 'red' && _user.status.state == "Hospital")
                               _notificationIcon(ProfileNotification.hospital),
                             if (_user.status.color == 'red' && _user.status.state == "Jail")
-                              _notificationIcon(ProfileNotification.hospital),
+                              _notificationIcon(ProfileNotification.jail),
                           ],
                         ),
                         Row(
