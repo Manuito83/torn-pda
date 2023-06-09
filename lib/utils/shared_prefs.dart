@@ -77,6 +77,7 @@ class Prefs {
   final String _kOnAppExit = "pda_onAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
+  final String _kBrowserStyleAlternativeEnabled = "pda_browserStyleAlternativeEnabled";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
@@ -869,14 +870,14 @@ class Prefs {
     return prefs.setString(_kBrowserRefreshMethod2, value);
   }
 
-  Future<bool> getUseQuickBrowser() async {
+  Future<bool> getBrowserStyleAlternativeEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseQuickBrowser) ?? true;
+    return prefs.getBool(_kBrowserStyleAlternativeEnabled) ?? false;
   }
 
-  Future<bool> setUseQuickBrowser(bool value) async {
+  Future<bool> setBrowserStyleAlternativeEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseQuickBrowser, value);
+    return prefs.setBool(_kBrowserStyleAlternativeEnabled, value);
   }
 
   Future<String> getTMenuButtonLongPressBrowser() async {

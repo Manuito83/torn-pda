@@ -47,7 +47,7 @@ class YataComm {
     }
 
     try {
-      var awardsRequest = await _client.getUrl(_awardsUrl).timeout(Duration(seconds: 15));
+      var awardsRequest = await _client.getUrl(_awardsUrl).timeout(Duration(seconds: 25));
       awardsRequest.cookies.addAll(cookies);
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
       var awardsResponse = await awardsRequest.close();

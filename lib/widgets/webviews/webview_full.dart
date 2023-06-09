@@ -301,8 +301,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Showcases
   GlobalKey _showCaseTitleBar = GlobalKey();
+  GlobalKey _showCaseCloseButton = GlobalKey();
   GlobalKey _showCasePlayPauseChain = GlobalKey();
-  bool _showCasesTriggeredThisSession = false;
 
   @override
   void initState() {
@@ -431,7 +431,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       onWillPop: _willPopCallback,
       child: ShowCaseWidget(
         builder: Builder(builder: (_) {
-          if (_webViewProvider.browserShowInForeground && !_showCasesTriggeredThisSession) {
+          if (_webViewProvider.browserShowInForeground) {
             launchShowCases(_);
           }
           return buildScaffold(context);
@@ -443,22 +443,32 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // ! Ensure that any showcases here are also taken into account in the showcases in [webview_stackview.dart],
   // ! as the ones here need to fire first. Then only the others are allowed to fire.
   void launchShowCases(BuildContext _) {
+    if (!_webViewProvider.browserShowInForeground) return;
+
     Future.delayed(Duration(seconds: 1), () async {
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
 
-      if (!_settingsProvider.showCases.contains("webview_titleBar")) {
-        _settingsProvider.addShowCase = "webview_titleBar";
-        showCases.add(_showCaseTitleBar);
+      if (_webViewProvider.styleAlternative) {
+        if (!_settingsProvider.showCases.contains("webview_closeButton")) {
+          _settingsProvider.addShowCase = "webview_closeButton";
+          showCases.add(_showCaseCloseButton);
+        }
+      } else {
+        if (!_settingsProvider.showCases.contains("webview_titleBar")) {
+          _settingsProvider.addShowCase = "webview_titleBar";
+          showCases.add(_showCaseTitleBar);
+        }
       }
 
-      if (!_settingsProvider.showCases.contains("webview_playPauseChain")) {
+      if (widget.isChainingBrowser &&
+          _webViewProvider.currentTab == 0 &&
+          !_settingsProvider.showCases.contains("webview_playPauseChain")) {
         _settingsProvider.addShowCase = "webview_playPauseChain";
         showCases.add(_showCasePlayPauseChain);
       }
 
       if (showCases.isNotEmpty) {
         ShowCaseWidget.of(_).startShowCase(showCases);
-        _showCasesTriggeredThisSession = true;
       }
     });
   }
@@ -480,13 +490,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         child: Consumer<WebViewProvider>(
           builder: (context, wv, child) => Scaffold(
             backgroundColor: _themeProvider.canvas,
-            appBar: wv.currentUiMode == UiMode.fullScreen
-                // Show appBar only if we are not showing the webView in a dialog
+            appBar: _webViewProvider.styleAlternative || wv.currentUiMode == UiMode.fullScreen
+                // Show appBar only if we are not showing the webView in a dialog style
                 ? null
                 : _settingsProvider.appBarTop
                     ? buildCustomAppBar()
                     : null,
-            bottomNavigationBar:
+            bottomNavigationBar: _webViewProvider.styleAlternative
+                ? null
+                :
                 // With appbar bottom, add appbar and some space for tabs
                 !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
                     ? Column(
@@ -512,9 +524,267 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 child: Column(
                   children: [
                     Expanded(child: mainWebViewColumn()),
+                    SizedBox(
+                      height: !_webViewProvider.styleAlternative
+                          ? 0
+                          : _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser
+                              ? 0
+                              : 40,
+                    ),
+                    if (_webViewProvider.currentUiMode == UiMode.window && _webViewProvider.styleAlternative)
+                      _quickBrowserBottomBar(),
                   ],
                 )),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _quickBrowserBottomBar() {
+    if (_findInPageActive) {
+      return Container(
+        color: _themeProvider.secondBackground,
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () async {
+                setState(() {
+                  _findInPageActive = false;
+                });
+                _findController.text = "";
+                _findInteractionController.clearMatches();
+                _findFirstSubmitted = false;
+              },
+            ),
+            Flexible(
+              child: Form(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: TextField(
+                              onEditingComplete: () {
+                                _findPreviousText = _findController.text;
+                                _findAll();
+                                _findFocus.unfocus();
+                              },
+                              controller: _findController,
+                              focusNode: _findFocus,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "What are you looking for?",
+                                hintStyle: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              style: TextStyle(
+                                color: _themeProvider.mainText,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    _findPreviousText = _findController.text;
+                    _findAll();
+                    _findFocus.unfocus();
+                  },
+                ),
+                if (_findFirstSubmitted)
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.keyboard_arrow_up),
+                        onPressed: () {
+                          _findNext(forward: false);
+                          _findFocus.unfocus();
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.keyboard_arrow_down),
+                        onPressed: () {
+                          _findNext(forward: true);
+                          _findFocus.unfocus();
+                        },
+                      ),
+                    ],
+                  )
+              ],
+            )
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.secondBackground,
+      height: 38,
+      child: GestureDetector(
+        onLongPress: () => _openUrlDialog(),
+        onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsFullBrowser
+            ? (DragEndDetails details) async {
+                _webViewProvider.toggleHideTabs();
+                if (await Prefs().getReminderAboutHideTabFeature() == false) {
+                  Prefs().setReminderAboutHideTabFeature(true);
+                  return showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return const TabsHideReminderDialog();
+                    },
+                  );
+                }
+              }
+            : null,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 100,
+              child: Row(
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      splashColor: Colors.blueGrey,
+                      child: const SizedBox(
+                        width: 40,
+                        child: Icon(
+                          Icons.arrow_back_ios_outlined,
+                          size: 20,
+                        ),
+                      ),
+                      onTap: () async {
+                        _tryGoBack();
+                      },
+                    ),
+                  ),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      splashColor: Colors.blueGrey,
+                      child: const SizedBox(
+                        width: 40,
+                        child: Icon(
+                          Icons.arrow_forward_ios_outlined,
+                          size: 20,
+                        ),
+                      ),
+                      onTap: () async {
+                        _tryGoForward();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Showcase(
+                  key: _showCaseCloseButton,
+                  title: 'Options menu',
+                  description: '\nLong press the bottom bar of the quick browser to open a '
+                      'menu with additional options, including faction attack assists calls!\n\n'
+                      'Swipe down/up to hide or show your tab bar!',
+                  targetPadding: const EdgeInsets.only(top: 8),
+                  disableMovingAnimation: true,
+                  textColor: _themeProvider.mainText,
+                  tooltipBackgroundColor: _themeProvider.secondBackground,
+                  descTextStyle: TextStyle(fontSize: 13),
+                  tooltipPadding: EdgeInsets.all(20),
+                  child: GestureDetector(
+                    child: Container(
+                      color: Colors.transparent, // Background to extend the buttons detection area
+                      child: Column(
+                        children: [
+                          Text(
+                            "CLOSE",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _themeProvider.mainText,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 15,
+                            child: Divider(
+                              height: 3,
+                              thickness: 1,
+                              color: _themeProvider.mainText,
+                            ),
+                          ),
+                          if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                                  _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
+                              _userProvider.basic?.faction?.factionId != 0)
+                            Text(
+                              "ASSIST",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 7,
+                              ),
+                            )
+                          else
+                            Text(
+                              "OPTIONS",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _themeProvider.mainText,
+                                fontSize: 7,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    onTap: () {
+                      _webViewProvider.browserShowInForeground = false;
+                      _checkIfTargetsAttackedAndRevertChaining();
+                    },
+                  ),
+                ),
+              ),
+            ),
+            _isChainingBrowser
+                ? Row(children: _chainingActionButtons())
+                : SizedBox(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _travelHomeIcon(),
+                        _crimesMenuIcon(),
+                        _cityMenuIcon(),
+                        _quickItemsMenuIcon(),
+                        _vaultsPopUpIcon(),
+                        _tradesMenuIcon(),
+                        _bazaarFillIcon(),
+                        _vaultOptionsIcon(),
+                        if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
+                        _reloadIcon(),
+                      ],
+                    ),
+                  ),
+          ],
         ),
       ),
     );
@@ -1737,10 +2007,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Widget _reloadIcon() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
-          ? Material(
+    return _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
+        ? Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Material(
               color: Colors.transparent,
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -1764,9 +2034,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   );
                 },
               ),
-            )
-          : const SizedBox.shrink(),
-    );
+            ),
+          )
+        : const SizedBox.shrink();
   }
 
   Future _goBackOrForward(DragEndDetails details) async {
@@ -2143,58 +2413,64 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // We use two buttons with a trigger, so that we need to press twice
     if (_travelAbroad) {
       if (!_travelHomeIconTriggered) {
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            splashColor: Colors.blueGrey,
-            child: const Icon(
-              Icons.home,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              splashColor: Colors.blueGrey,
+              child: const Icon(
+                Icons.home,
+              ),
+              onTap: () async {
+                setState(() {
+                  _travelHomeIconTriggered = true;
+                });
+                BotToast.showText(
+                  text: 'Tap again to travel back!',
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.orange[800],
+                  duration: const Duration(seconds: 3),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+                Future.delayed(const Duration(seconds: 3)).then((value) {
+                  if (mounted) {
+                    setState(() {
+                      _travelHomeIconTriggered = false;
+                    });
+                  }
+                });
+              },
             ),
-            onTap: () async {
-              setState(() {
-                _travelHomeIconTriggered = true;
-              });
-              BotToast.showText(
-                text: 'Tap again to travel back!',
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.orange[800],
-                duration: const Duration(seconds: 3),
-                contentPadding: const EdgeInsets.all(10),
-              );
-              Future.delayed(const Duration(seconds: 3)).then((value) {
-                if (mounted) {
-                  setState(() {
-                    _travelHomeIconTriggered = false;
-                  });
-                }
-              });
-            },
           ),
         );
       } else {
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            splashColor: Colors.blueGrey,
-            child: const Icon(
-              Icons.home,
-              color: Colors.orange,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              splashColor: Colors.blueGrey,
+              child: const Icon(
+                Icons.home,
+                color: Colors.orange,
+              ),
+              onTap: () async {
+                await webView.evaluateJavascript(source: travelReturnHomeJS());
+                Future.delayed(const Duration(seconds: 3)).then((value) {
+                  if (mounted) {
+                    setState(() {
+                      _travelHomeIconTriggered = false;
+                    });
+                  }
+                });
+              },
             ),
-            onTap: () async {
-              await webView.evaluateJavascript(source: travelReturnHomeJS());
-              Future.delayed(const Duration(seconds: 3)).then((value) {
-                if (mounted) {
-                  setState(() {
-                    _travelHomeIconTriggered = false;
-                  });
-                }
-              });
-            },
           ),
         );
       }
@@ -2247,7 +2523,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
-            padding: EdgeInsets.only(bottom: 2),
+            padding: EdgeInsets.symmetric(horizontal: 8),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -2497,7 +2773,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
-            padding: EdgeInsets.only(right: 5),
+            padding: EdgeInsets.symmetric(horizontal: 8),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -2631,7 +2907,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
-            padding: EdgeInsets.only(right: 5),
+            padding: EdgeInsets.symmetric(horizontal: 8),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -2788,7 +3064,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
-            padding: EdgeInsets.only(right: 5),
+            padding: const EdgeInsets.all(8.0),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -2833,22 +3109,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Widget _bazaarFillIcon() {
     if (_bazaarActiveOwn) {
-      return TextButton(
-        onPressed: () async {
-          _bazaarFillActive
-              ? await webView.evaluateJavascript(source: removeOwnBazaarFillButtonsJS())
-              : await webView.evaluateJavascript(source: addOwnBazaarFillButtonsJS());
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: 8.0,
+          vertical: _webViewProvider.styleAlternative ? 0 : 20,
+        ),
+        child: GestureDetector(
+          onTap: () async {
+            _bazaarFillActive
+                ? await webView.evaluateJavascript(source: removeOwnBazaarFillButtonsJS())
+                : await webView.evaluateJavascript(source: addOwnBazaarFillButtonsJS());
 
-          if (mounted) {
-            setState(() {
-              _bazaarFillActive ? _bazaarFillActive = false : _bazaarFillActive = true;
-            });
-          }
-        },
-        child: Text(
-          "FILL",
-          style: TextStyle(
-            color: _bazaarFillActive ? Colors.yellow[600] : Colors.white,
+            if (mounted) {
+              setState(() {
+                _bazaarFillActive ? _bazaarFillActive = false : _bazaarFillActive = true;
+              });
+            }
+          },
+          child: Text(
+            "FILL",
+            style: TextStyle(
+              color: _bazaarFillActive ? Colors.yellow[600] : Colors.white,
+              fontSize: 12,
+            ),
           ),
         ),
       );
@@ -2936,8 +3219,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return SizedBox(
-              height: 20, width: 20, child: Image.asset('images/icons/quick_items.png', color: Colors.white));
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
+            ),
+          );
         },
       );
     } else {
@@ -3021,7 +3310,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _hideChatIcon() {
     if (!_localChatRemovalActive) {
       return Padding(
-        padding: const EdgeInsets.only(left: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: GestureDetector(
           child: const Icon(MdiIcons.chatOutline),
           onTap: () async {
@@ -3056,7 +3345,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
     } else {
       return Padding(
-        padding: const EdgeInsets.only(left: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: GestureDetector(
           child: Icon(
             MdiIcons.chatRemoveOutline,
@@ -3708,7 +3997,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   List<Widget> _chainingActionButtons() {
     List<Widget> myButtons = [];
 
-    myButtons.add(_quickItemsMenuIcon());
+    //myButtons.add(_quickItemsMenuIcon());
 
     Widget hideChatIcon = _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink();
     myButtons.add(hideChatIcon);
@@ -3716,13 +4005,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     myButtons.add(_reloadIcon());
 
     myButtons.add(
-      GestureDetector(
-        child: Icon(MdiIcons.linkVariant),
-        onTap: () {
-          _chainWidgetController.expanded
-              ? _chainWidgetController.expanded = false
-              : _chainWidgetController.expanded = true;
-        },
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: GestureDetector(
+          child: Icon(MdiIcons.linkVariant),
+          onTap: () {
+            _chainWidgetController.expanded
+                ? _chainWidgetController.expanded = false
+                : _chainWidgetController.expanded = true;
+          },
+        ),
       ),
     );
 
@@ -3772,7 +4064,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Widget _medicalActionButton() {
     return Padding(
-      padding: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 1),
       child: PopupMenuButton<HealingPages>(
         icon: Icon(Icons.healing),
         onSelected: _openHealingPage,

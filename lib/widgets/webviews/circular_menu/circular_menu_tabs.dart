@@ -54,7 +54,7 @@ class CircularMenuTabs extends StatefulWidget {
     this.alignment = Alignment.bottomCenter,
     this.radius = 50,
     this.backgroundWidget,
-    this.animationDuration = const Duration(milliseconds: 300),
+    this.animationDuration = const Duration(milliseconds: 0),
     this.curve = Curves.decelerate,
     this.reverseCurve = Curves.decelerate,
     this.toggleButtonOnPressed,

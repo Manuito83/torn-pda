@@ -34,7 +34,6 @@ enum BrowserTapType {
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
-  final bool dialog;
   final bool recallLastSession;
   final String restoredTheme;
 
@@ -44,7 +43,6 @@ class WebViewStackView extends StatefulWidget {
 
   const WebViewStackView({
     this.initUrl = "https://www.torn.com",
-    this.dialog = false,
     this.recallLastSession = false,
     this.restoredTheme = "",
 
@@ -73,12 +71,10 @@ class _WebViewStackViewState extends State<WebViewStackView>
   bool secondaryInitialised = false;
 
   // Showcases
-  bool _showCasesNeedToWait = false;
   GlobalKey _showcaseTabsGeneral = GlobalKey();
   GlobalKey _showQuickMenuButton = GlobalKey();
   GlobalKey _showCaseNewTabButton = GlobalKey();
   GlobalKey<CircularMenuFixedState> _circularMenuKey = GlobalKey();
-  bool _showCasesTriggeredThisSession = false;
 
   Animation<double> _menuTabOpacity;
   AnimationController _menuTabAnimationController;
@@ -118,7 +114,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
     return MediaQuery.removePadding(
       context: context,
-      // iOS needs extra padding removal according to: 
+      // iOS needs extra padding removal according to:
       // https://github.com/flutter/flutter/issues/51345
       removeTop: _settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen,
       child: Container(
@@ -136,7 +132,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
           right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
           child: ShowCaseWidget(
             builder: Builder(builder: (_) {
-              if (_webViewProvider.browserShowInForeground && !_showCasesTriggeredThisSession) {
+              if (_webViewProvider.browserShowInForeground) {
                 _launchShowCases(_);
               }
               return Scaffold(
@@ -156,14 +152,14 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               allWebViews.add(tab.webView);
                             }
                           }
-    
+
                           if (allWebViews.isEmpty) _closeWithError();
-    
+
                           if (!secondaryInitialised) {
                             secondaryInitialised = true;
                             _initialiseSecondary();
                           }
-    
+
                           if (_settingsProvider.useTabsFullBrowser) {
                             try {
                               return AnimatedIndexedStack(
@@ -201,12 +197,15 @@ class _WebViewStackViewState extends State<WebViewStackView>
                     ),
                     Padding(
                       padding: EdgeInsets.only(
-                        bottom: _webViewProvider.usingDialog && _webViewProvider.currentUiMode == UiMode.window ? 38 : 0,
+                        bottom: _webViewProvider.styleAlternative && _webViewProvider.currentUiMode == UiMode.window
+                            ? 38
+                            : 0,
                       ),
                       child: FutureBuilder(
                         future: providerInitialised,
                         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done && _settingsProvider.useTabsFullBrowser) {
+                          if (snapshot.connectionState == ConnectionState.done &&
+                              _settingsProvider.useTabsFullBrowser) {
                             // Don't hide to hide tabs on fullscreen, or we might not be able to return to the app!
                             if (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window) {
                               return Divider(
@@ -234,17 +233,24 @@ class _WebViewStackViewState extends State<WebViewStackView>
   }
 
   void _launchShowCases(BuildContext _) {
+    if (!_webViewProvider.browserShowInForeground) return;
+
     Future.delayed(Duration(seconds: 1), () async {
+      bool showCasesNeedToWait = false;
+
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
       // Check that there is no pending showcases to show by the browser
       // If there is, wait until we open the browser for the next time
-      if (!_settingsProvider.showCases.contains("webview_playPauseChain") ||
-          !_settingsProvider.showCases.contains("webview_titleBar")) {
-        _showCasesNeedToWait = true;
+      if ((_webViewProvider.styleAlternative && !_settingsProvider.showCases.contains("webview_closeButton")) ||
+          (!_webViewProvider.styleAlternative && !_settingsProvider.showCases.contains("webview_titleBar")) ||
+          (_webViewProvider.tabList[0].isChainingBrowser &&
+              _webViewProvider.currentTab == 0 &&
+              !_settingsProvider.showCases.contains("webview_playPauseChain"))) {
+        showCasesNeedToWait = true;
       }
 
       // Show tab bar showcases
-      if (!_showCasesNeedToWait) {
+      if (!showCasesNeedToWait) {
         if (!_settingsProvider.showCases.contains("tabs_quickMenuButton")) {
           _settingsProvider.addShowCase = "tabs_quickMenuButton";
           showCases.add(_showQuickMenuButton);
@@ -257,7 +263,6 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
       if (showCases.isNotEmpty) {
         ShowCaseWidget.of(_).startShowCase(showCases);
-        _showCasesTriggeredThisSession = true;
       }
     });
   }
@@ -394,6 +399,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
               icon: Icons.arrow_forward,
               onTap: () {
                 _webViewProvider.tryGoForward();
+                _webViewProvider.verticalMenuClose();
               },
             ),
           if (_webViewProvider.currentTab == 0)
@@ -401,6 +407,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
               icon: Icons.arrow_back,
               onTap: () {
                 _webViewProvider.tryGoBack();
+                _webViewProvider.verticalMenuClose();
               },
             ),
           if (_webViewProvider.currentTab == 0)
