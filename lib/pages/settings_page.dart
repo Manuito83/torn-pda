@@ -702,6 +702,40 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Clear tutorials",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              ElevatedButton(
+                child: Text("CLEAR"),
+                onPressed: () async {
+                  _settingsProvider.clearShowCases();
+                },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "This will clear all the app's tutorial pop-ups in case that you want to review them again. Be aware that "
+            "some of them (e.g.: those in the browser) will require an app restart to complete reset.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

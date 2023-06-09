@@ -39,7 +39,16 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 316 - 06/06/2023
+    // Build 317 - 10/06/2023
+
+    // VERSION 3.1.1
+    var v3_1_1 = ChangeLogItem();
+    v3_1_1.version = 'Torn PDA v3.1.1';
+    v3_1_1.date = '15 JUN 2023';
+    String feat3_1_1_1 = "Added browser styles (including the former quick browser appearance)";
+    String feat3_1_1_2 = "Fixed redirection in Profile header icons";
+    v3_1_1.features.add(feat3_1_1_1);
+    v3_1_1.features.add(feat3_1_1_2);
 
     // VERSION 3.1.0
     var v3_1_0 = ChangeLogItem();

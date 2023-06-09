@@ -74,7 +74,14 @@ class WebViewProvider extends ChangeNotifier {
   List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
-  bool usingDialog = false;
+  bool _styleAlternative = true;
+
+  bool get styleAlternative => _styleAlternative;
+  set styleAlternative(bool value) {
+    _styleAlternative = value;
+    Prefs().setBrowserStyleAlternativeEnabled(value);
+    notifyListeners();
+  }
 
   /// Changes browser visibility
   bool _isBrowserForeground = false;
@@ -260,6 +267,8 @@ class WebViewProvider extends ChangeNotifier {
         //
       }
     }
+
+    _styleAlternative = await Prefs().getBrowserStyleAlternativeEnabled();
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
@@ -1032,8 +1041,6 @@ class WebViewProvider extends ChangeNotifier {
       if (isChainingBrowser) {
         convertToChainingBrowser(chainingPayload: chainingPayload);
       }
-
-      w.browserShowInForeground = true;
     } else {
       if (await canLaunchUrl(Uri.parse(url))) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -1076,7 +1083,7 @@ class WebViewProvider extends ChangeNotifier {
 
   /// At least used in the following cases:
   /// 1.- On main tab init: in case the user only uses the browser, it will fire after an app's launch when browser rebuilds
-  /// 2.- Whenever the user launches the broser from a tap (other than the PDA icon, which does not load any URL itself)
+  /// 2.- Whenever the user launches the browser from a tap (other than the PDA icon, which does not load any URL itself)
   Future<String> _assessNativeAuth({@required String inputUrl, @required BuildContext context}) async {
     NativeUserProvider nativeUser = context.read<NativeUserProvider>();
     NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();

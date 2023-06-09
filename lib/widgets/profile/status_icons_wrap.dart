@@ -127,13 +127,11 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
                 },
                 onDoubleTap: () {
                   final String url = _constructUrl(iconNumber);
-                  final bool dialog = widget.settingsProvider.useQuickBrowser || false;
-                  widget.openBrowser(url: url, dialogRequested: dialog);
+                  widget.openBrowser(url: url, shortTap: true);
                 },
                 onLongPress: () {
                   final String url = _constructUrl(iconNumber);
-                  const bool dialog = false;
-                  widget.openBrowser(url: url, dialogRequested: dialog);
+                  widget.openBrowser(url: url, shortTap: false);
                 },
               ),
             );

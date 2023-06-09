@@ -890,6 +890,30 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
+              Text("Browser style"),
+              _browserStyleDropdown(),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "The 'default' style makes use of the app's appbar (positioned at the top or at the bottom, depending "
+            "on the user settings) to show the page title and main icons. The 'bottom bar' style uses a smaller "
+            "bar at the bottom to gain some space, but does not show the page title; it does, however, include "
+            "back and forward icons.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
               Text("Show load bar"),
               Switch(
                 value: _settingsProvider.loadBarBrowser,
@@ -1670,6 +1694,43 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   void dispose() {
     _ticker?.cancel();
     super.dispose();
+  }
+
+  Widget _browserStyleDropdown() {
+    return DropdownButton<bool>(
+      value: _webViewProvider.styleAlternative,
+      items: [
+        DropdownMenuItem(
+          value: false,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Default",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: true,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Bottom bar",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        _webViewProvider.styleAlternative = value;
+      },
+    );
   }
 
   Widget _refreshMethodDropdown() {

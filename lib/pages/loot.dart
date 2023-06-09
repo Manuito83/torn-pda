@@ -928,7 +928,6 @@ class _LootPageState extends State<LootPage> {
               ..image = NpcImage(
                 npcId: key,
                 level: value.levels.current,
-                useQuickBrowser: _settingsProvider.useQuickBrowser,
               ),
           );
         });
@@ -1308,7 +1307,6 @@ class NpcImagesModel {
 class NpcImage extends StatelessWidget {
   final int level;
   final String npcId;
-  final bool useQuickBrowser;
 
   const NpcImage({
     int level,
@@ -1317,7 +1315,6 @@ class NpcImage extends StatelessWidget {
     Key key,
   })  : level = level,
         npcId = npcId,
-        useQuickBrowser = useQuickBrowser,
         super(key: key);
 
   @override

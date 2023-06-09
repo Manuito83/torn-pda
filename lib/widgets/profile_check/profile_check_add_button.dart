@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class ProfileCheckAddButton extends StatefulWidget {
@@ -126,9 +127,20 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
   }
 
   void _launchShowCases(BuildContext _) {
+    var webviewProvider = Provider.of<WebViewProvider>(context, listen: false);
+
+    if (!webviewProvider.browserShowInForeground) return;
+
     Future.delayed(Duration(seconds: 1), () async {
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
       if (!_settingsProvider.showCases.contains("profile_check_button")) {
+        // Prevent the showcase from activating if we have reset the showcase while a tab with a profile is open
+        if (!webviewProvider.currentTabUrl().contains('loader.php?sid=attack&user2ID=') &&
+            !webviewProvider.currentTabUrl().contains('loader2.php?sid=getInAttack&user2ID=') &&
+            !webviewProvider.currentTabUrl().contains('torn.com/profiles.php?XID=')) {
+          return;
+        }
+
         _settingsProvider.addShowCase = "profile_check_button";
         showCases.add(_showcaseButton);
         ShowCaseWidget.of(_).startShowCase(showCases);

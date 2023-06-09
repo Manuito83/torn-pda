@@ -57,7 +57,7 @@ dependencies:
   flutter_local_notifications: 13.0.0
   flutter_secure_storage: ^6.0.0
   flutter_slidable: ^2.0.0
-  flutter_speed_dial: ^6.0.0
+  flutter_speed_dial: ^7.0.0
   flutter_xlider: ^3.5.0
   workmanager: ^0.5.1
   font_awesome_flutter: ^10.4.0

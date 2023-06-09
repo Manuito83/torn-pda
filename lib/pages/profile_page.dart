@@ -5027,7 +5027,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      animationDuration: Duration(milliseconds: 150),
+      animationDuration: Duration(milliseconds: 0),
       direction:
           MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       backgroundColor: Colors.transparent,
@@ -5051,10 +5051,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       curve: Curves.bounceIn,
       children: [
         SpeedDialChild(
-          onTap: () {
+          onTap: () async {
+            // Trying to get rid of errors switching to the browser
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: true);
           },
-          onLongPress: () {
+          onLongPress: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: false);
           },
           child: Container(
@@ -5075,10 +5078,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.purple[500],
         ),
         SpeedDialChild(
-          onTap: () {
+          onTap: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: true);
           },
           onLongPress: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: false);
           },
           child: Container(
@@ -5099,10 +5104,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.yellow[800],
         ),
         SpeedDialChild(
-          onTap: () {
+          onTap: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: true);
           },
-          onLongPress: () {
+          onLongPress: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: false);
           },
           child: Container(
@@ -5123,10 +5130,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.blue[400],
         ),
         SpeedDialChild(
-          onTap: () {
+          onTap: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: true);
           },
-          onLongPress: () {
+          onLongPress: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: false);
           },
           child: Container(
@@ -5151,10 +5160,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.deepOrange[400],
         ),
         SpeedDialChild(
-          onTap: () {
+          onTap: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
           },
-          onLongPress: () {
+          onLongPress: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
           },
           child: Container(
@@ -5176,9 +5187,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com', shortTap: true);
           },
-          onLongPress: () {
+          onLongPress: () async {
+            await Future.delayed(Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com', shortTap: false);
           },
           child: Container(
@@ -6759,56 +6772,56 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (section == "Shortcuts" && _settingsProvider.shortcutsEnabledProfile) {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _shortcutsCarrousel(),
           ),
         );
       } else if (section == "Status") {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _playerStatus(),
           ),
         );
       } else if (section == "Travel" && _dedicatedTravelCard) {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _travelCard(),
           ),
         );
       } else if (section == "Bars") {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _basicBars(),
           ),
         );
       } else if (section == "Cooldowns") {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _coolDowns(),
           ),
         );
       } else if (section == "Events") {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _eventsTimeline(),
           ),
         );
       } else if (section == "Messages") {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _messagesTimeline(),
           ),
         );
       } else if (section == "Basic Info" && _miscApiFetchedOnce) {
         sectionSort.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
             child: _playerStats(),
           ),
         );

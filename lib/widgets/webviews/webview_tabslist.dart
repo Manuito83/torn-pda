@@ -152,6 +152,7 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
                     icon: Icons.arrow_forward,
                     onTap: () {
                       _webViewProvider.tryGoForward();
+                      _webViewProvider.verticalMenuClose();
                     },
                   ),
                 if (_webViewProvider.currentTab == i)
@@ -159,6 +160,7 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
                     icon: Icons.arrow_back,
                     onTap: () {
                       _webViewProvider.tryGoBack();
+                      _webViewProvider.verticalMenuClose();
                     },
                   ),
                 if (_webViewProvider.currentTab == i)

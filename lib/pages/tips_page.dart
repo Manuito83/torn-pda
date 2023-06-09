@@ -404,6 +404,33 @@ class _TipsPageState extends State<TipsPage> {
 
     tips.add(
       ComplexExpandableTip(
+        headerValue: "Browser styles",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "There are two different browser styles in Torn PDA: the 'default' and the 'bottom bar' styles. "
+                  "\n\nThey resemble the look of the former 'full' and 'quick' browsers in previous versions of the "
+                  "app, but they share the same functionality today.\n\n"
+                  "The 'default' style makes use of the app bar (positioned at the top or at the bottom, "
+                  "depending on the user settings) to show the page title and main icons. Be aware that in this "
+                  "style, you need to swipe left/right across the title bar if you wish to browser forward or back. "
+                  "Or, alternatively (valid for both styles) you can double tap the active tab to gain access to "
+                  "back/forward navigation as well.\n\n"
+                  "The 'bottom' bar style places a smaller bar at the bottom to gain some space, but does not show "
+                  "the page title. Instead, a long press in the 'CLOSE' button is necessary to access some of the "
+                  "options that are available in the 'default' style with a tab in the title bar. In this style you'll "
+                  "also have a couple of extra icons available to browse back or forward.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    tips.add(
+      ComplexExpandableTip(
         headerValue: "Chaining tab",
         buildExpandedText: () {
           return Text.rich(

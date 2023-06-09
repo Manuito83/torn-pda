@@ -399,14 +399,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _useQuickBrowser = true;
-  bool get useQuickBrowser => _useQuickBrowser;
-  set changeUseQuickBrowser(bool value) {
-    _useQuickBrowser = value;
-    Prefs().setUseQuickBrowser(_useQuickBrowser);
-    notifyListeners();
-  }
-
   var _removeNotificationsOnLaunch = true;
   bool get removeNotificationsOnLaunch => _removeNotificationsOnLaunch;
   set changeRemoveNotificationsOnLaunch(bool value) {
@@ -558,6 +550,12 @@ class SettingsProvider extends ChangeNotifier {
   set removeShowCase(String showCase) {
     _showCases.remove(showCase);
     Prefs().setShowCases(_showCases);
+    notifyListeners();
+  }
+
+  clearShowCases() {
+    _showCases.clear();
+    Prefs().setShowCases([]);
     notifyListeners();
   }
 
@@ -764,8 +762,6 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _extraPlayerNetworth = await Prefs().getExtraPlayerNetworth();
-
-    _useQuickBrowser = await Prefs().getUseQuickBrowser();
 
     _removeNotificationsOnLaunch = await Prefs().getRemoveNotificationsOnLaunch();
 
