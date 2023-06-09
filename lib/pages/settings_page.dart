@@ -17,16 +17,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
 
 // Project imports:
@@ -35,7 +42,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
@@ -83,6 +90,8 @@ class _SettingsPageState extends State<SettingsPage> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ThemeProvider _themeProvider;
+  ShortcutsProvider _shortcutsProvider;
+  ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   var _expandableController = ExpandableController();
 
@@ -99,6 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     analytics.setCurrentScreen(screenName: 'settings');
@@ -139,878 +149,56 @@ class _SettingsPageState extends State<SettingsPage> {
                             SizedBox(height: 15),
                           ],
                         ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'BROWSER',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Flexible(
-                                  child: Text(
-                                    "Web browser",
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.info_outline),
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return BrowserInfoDialog();
-                                      },
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              child: _openBrowserDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_openBrowserValue == "0")
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                "Advanced browser settings",
-                              ),
-                              IconButton(
-                                  icon: Icon(Icons.keyboard_arrow_right_outlined),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (BuildContext context) => SettingsBrowserPage(),
-                                      ),
-                                    );
-                                  }),
-                            ],
-                          ),
-                        ),
+                      _browserSection(context),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'TIME',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Time format",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              child: _timeFormatDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Time zone",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              flex: 2,
-                              child: _timeZoneDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Show date in clock",
-                              ),
-                            ),
-                            Flexible(
-                              flex: 2,
-                              child: _dateInClockDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                'Add an extra row for the date wherever the TCT clock is shown. You can also specify '
-                                'the desired format (day/month or month/day)',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Seconds in clock",
-                              ),
-                            ),
-                            Flexible(
-                              flex: 2,
-                              child: _secondsInClockDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 15),
-                      // TODO: this is conditional now because it only affects Android.
-                      // In the future it might be needed to show always the Divider and
-                      // SizedBox and only hide the actual Android elements
-
-                      Column(
-                        children: [
-                          Divider(),
-                          SizedBox(height: 5),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'NOTIFICATIONS',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 5),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Flexible(
-                                  child: Row(
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          "Discrete notifications",
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.info_outline),
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return DiscreteInfo();
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Switch(
-                                  value: _settingsProvider.discreteNotifications,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _settingsProvider.discreteNotifications = value;
-                                      firestore.toggleDiscrete(value);
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (Platform.isAndroid)
-                            Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          "Remove notifications on launch",
-                                        ),
-                                      ),
-                                      Switch(
-                                        value: _removeNotificationsLaunch,
-                                        onChanged: (value) {
-                                          _settingsProvider.changeRemoveNotificationsOnLaunch = value;
-                                          setState(() {
-                                            _removeNotificationsLaunch = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: Text(
-                                    'This will remove all Torn PDA notifications from your notifications bar '
-                                    'when you launch the app. Deactivate it if you would prefer to keep them '
-                                    'and erase them later manually',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 5),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Flexible(
-                                        child: Text(
-                                          "Alerts vibration",
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.only(left: 20),
-                                      ),
-                                      Flexible(
-                                        flex: 2,
-                                        child: _vibrationDropdown(),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: Text(
-                                    'This vibration applies to the automatic alerts only, with the '
-                                    'app in use or in the background',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 5),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Text("Manual alarm sound"),
-                                      Switch(
-                                        value: _manualAlarmSound,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _manualAlarmSound = value;
-                                          });
-                                          Prefs().setManualAlarmSound(value);
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Text("Manual alarm vibration"),
-                                      Switch(
-                                        value: _manualAlarmVibration,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _manualAlarmVibration = value;
-                                          });
-                                          Prefs().setManualAlarmVibration(value);
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: RichText(
-                                    text: TextSpan(
-                                      text: 'Applies to manually activated alarms in all sections '
-                                          '(Travel, Loot, Profile, etc.). '
-                                          'Some Android clock applications do not work well '
-                                          'with more than 1 timer or do not allow to choose '
-                                          'between sound and vibration for alarms. If you experience '
-                                          'any issue, it is recommended to install ',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                      children: <TextSpan>[
-                                        TextSpan(
-                                          text: 'Google\'s Clock application',
-                                          style: TextStyle(color: Colors.blue),
-                                          recognizer: TapGestureRecognizer()
-                                            ..onTap = () async {
-                                              AndroidIntent intent = AndroidIntent(
-                                                action: 'action_view',
-                                                data: 'https://play.google.com/store'
-                                                    '/apps/details?id=com.google.android.deskclock',
-                                              );
-                                              await intent.launch();
-                                            },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 15),
-                              ],
-                            )
-                        ],
-                      ),
-                      Divider(),
-                      SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'SPIES',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Spies source",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              flex: 2,
-                              child: _spiesSourceDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          'Choose the source of spied stats. This affects the stats shown when you visit a profile '
-                          'in the browser, as well as those shown in the War section (Chaining)',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                      _shortcutsSection(context),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'ORGANIZED CRIMES',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Nerve bar source",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              flex: 2,
-                              child: _naturalNerveBarSourceDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each '
-                          'member of your faction available to plan an organized crime',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                      _timeSection(),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'REVIVING SERVICES',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Text(
-                              "Choose reviving providers",
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.keyboard_arrow_right_outlined),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return RevivingServicesDialog();
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "Choose which reviving services you might want to use. "
-                          "If enabled, when you are in hospital you\'ll have the option to call "
-                          "one of their revivers from several places (e.g. Profile and Chaining sections).",
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                      _notificationsSection(context),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'MISC',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            const Flexible(
-                              child: Text(
-                                "Sync theme and web themes",
-                              ),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Switch(
-                              value: _settingsProvider.syncTheme,
-                              onChanged: (enabled) async {
-                                setState(() {
-                                  _settingsProvider.syncTheme = enabled;
-                                });
-                              },
-                              activeTrackColor: Colors.lightGreenAccent,
-                              activeColor: Colors.green,
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (_settingsProvider.syncTheme)
+                      if (Platform.isAndroid)
                         Column(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  const Flexible(
-                                    child: Text(
-                                      "Dark theme equivalent",
-                                    ),
-                                  ),
-                                  Flexible(
-                                    flex: 2,
-                                    child: _themeToSyncDropdown(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Text(
-                                'Specifies which of the two dark themes is activated in the app when the web is switched to dark',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
+                            _appWidgetSection(context),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 5),
                           ],
                         ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "App bar position",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              flex: 2,
-                              child: _appBarPositionDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          'Note: this will affect other quick access items such as '
-                          'the quick crimes bar in the browser',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Default launch section",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              child: _openSectionDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Allow auto rotation",
-                              ),
-                            ),
-                            Switch(
-                              value: _settingsProvider.allowScreenRotation,
-                              onChanged: (value) {
-                                setState(() {
-                                  _settingsProvider.changeAllowScreenRotation = value;
-                                });
-                              },
-                              activeTrackColor: Colors.lightGreenAccent,
-                              activeColor: Colors.green,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
-                          'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
-                          'to be manually scrolled and some elements might look too big)',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "On app exit",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              child: _appExitDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "Note: this will only have effect in certain devices, depending on "
-                          "your configuration. Dictates how to proceed when the app detects a back button "
-                          "press or swipe that would otherwise close the app. "
-                          "If you choose 'ask', a dialog will be shown next time",
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                      _spiesSection(),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'EXTERNAL PARTNERS',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Text(
-                              "Alternative API keys",
-                            ),
-                            IconButton(
-                                icon: Icon(Icons.keyboard_arrow_right_outlined),
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (BuildContext context) => AlternativeKeysPage(),
-                                    ),
-                                  );
-                                }),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "Use this section to configure alternative API keys for the external partners that "
-                          "Torn PDA connects with. CAUTION: ensure this other keys are working correctly, as Torn PDA "
-                          "won't be able to check for errors and certain sections might stop working",
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                      _ocSection(),
                       SizedBox(height: 15),
                       Divider(),
                       SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'TROUBLESHOOTING',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Test API",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            ElevatedButton(
-                              child: Text("PING"),
-                              onPressed: () async {
-                                BotToast.showText(
-                                  text: "Please wait...",
-                                  textStyle: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: Colors.blue,
-                                  duration: Duration(seconds: 1),
-                                  contentPadding: EdgeInsets.all(10),
-                                );
-                                final ping = Ping('api.torn.com', count: 4);
-                                ping.stream.listen((event) {
-                                  if (event.summary != null || event.error != null) {
-                                    String message = "";
-                                    if (event.error != null) {
-                                      message = "CONNECTION PROBLEM\n\n${event.error}";
-                                    } else {
-                                      if (event.summary.transmitted == event.summary.received) {
-                                        message = "SUCCESS\n\n${event.summary}";
-                                      } else {
-                                        message = "CONNECTION PROBLEM\n\n${event.summary}";
-                                      }
-                                    }
-
-                                    BotToast.showText(
-                                      clickClose: true,
-                                      text: message,
-                                      textStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.blue,
-                                      duration: Duration(seconds: 10),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  }
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "In case that you are facing connection problems, this will ping Torn's API and show whether "
-                          "it is reachable from your device. If it isn't, it might be because of your DNS servers (you "
-                          "can try switching from WiFi to data)",
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            const Flexible(
-                              child: Text(
-                                "Enable debug messages",
-                              ),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Switch(
-                              value: _settingsProvider.debugMessages,
-                              onChanged: (enabled) async {
-                                setState(() {
-                                  _settingsProvider.debugMessages = enabled;
-                                });
-                              },
-                              activeTrackColor: Colors.lightGreenAccent,
-                              activeColor: Colors.green,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          'Enable specific debug messages for app failure testing. This is an advanced feature that might create '
-                          'additional error messages: avoid using it unless you have been requested to do so',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                      _revivingServicesSection(context),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      _miscSection(),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      _externalPartnersSection(context),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      _apiRateSection(),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      _troubleshootingSection(),
                       SizedBox(height: 50),
                     ],
                   ),
@@ -1025,18 +213,1167 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Column _browserSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'BROWSER',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Flexible(
+                    child: Text(
+                      "Web browser",
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.info_outline),
+                    onPressed: () {
+                      showDialog(
+                        useRootNavigator: false,
+                        context: context,
+                        builder: (BuildContext context) {
+                          return BrowserInfoDialog();
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: _openBrowserDropdown(),
+              ),
+            ],
+          ),
+        ),
+        if (_openBrowserValue == "0")
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text(
+                  "Advanced browser settings",
+                ),
+                IconButton(
+                    icon: Icon(Icons.keyboard_arrow_right_outlined),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => SettingsBrowserPage(),
+                        ),
+                      );
+                    }),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Column _timeSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'TIME',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Time format",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: _timeFormatDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Time zone",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                flex: 2,
+                child: _timeZoneDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Show date in clock",
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: _dateInClockDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  'Add an extra row for the date wherever the TCT clock is shown. You can also specify '
+                  'the desired format (day/month or month/day)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Seconds in clock",
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: _secondsInClockDropdown(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _spiesSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'SPIES',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Spies source",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                flex: 2,
+                child: _spiesSourceDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Choose the source of spied stats. This affects the stats shown when you visit a profile '
+            'in the browser, as well as those shown in the War section (Chaining)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _ocSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'ORGANIZED CRIMES',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Nerve bar source",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                flex: 2,
+                child: _naturalNerveBarSourceDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each '
+            'member of your faction available to plan an organized crime',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _apiRateSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'API CALL RATE',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Display API call rate",
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Switch(
+                value: _apiController.showApiRateInDrawer.value,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _apiController.showApiRateInDrawer = RxBool(enabled);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Enables a small progress bar on top of Torn PDA's logo in the main drawer menu, with real-time count "
+            "of the number of API calls performed in the last minute",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Warn max. call rate",
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Switch(
+                value: _apiController.showApiMaxCallWarning,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _apiController.showApiMaxCallWarning = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "If enabled, a quick message will be shown when approaching (95 calls in 60 seconds) the maximum "
+            "API call rate. This message will be then inhibited for 30 seconds",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _troubleshootingSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'TROUBLESHOOTING',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Test API",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              ElevatedButton(
+                child: Text("PING"),
+                onPressed: () async {
+                  BotToast.showText(
+                    text: "Please wait...",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.blue,
+                    duration: Duration(seconds: 1),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                  final ping = Ping('api.torn.com', count: 4);
+                  ping.stream.listen((event) {
+                    if (event.summary != null || event.error != null) {
+                      String message = "";
+                      if (event.error != null) {
+                        message = "CONNECTION PROBLEM\n\n${event.error}";
+                      } else {
+                        if (event.summary.transmitted == event.summary.received) {
+                          message = "SUCCESS\n\n${event.summary}";
+                        } else {
+                          message = "CONNECTION PROBLEM\n\n${event.summary}";
+                        }
+                      }
+
+                      BotToast.showText(
+                        clickClose: true,
+                        text: message,
+                        textStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.blue,
+                        duration: Duration(seconds: 10),
+                        contentPadding: EdgeInsets.all(10),
+                      );
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "In case that you are facing connection problems, this will ping Torn's API and show whether "
+            "it is reachable from your device. If it isn't, it might be because of your DNS servers (you "
+            "can try switching from WiFi to data)",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Enable debug messages",
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Switch(
+                value: _settingsProvider.debugMessages,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.debugMessages = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Enable specific debug messages for app failure testing. This is an advanced feature that might create '
+            'additional error messages: avoid using it unless you have been requested to do so',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _externalPartnersSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'EXTERNAL PARTNERS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                "Alternative API keys",
+              ),
+              IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => AlternativeKeysPage(),
+                      ),
+                    );
+                  }),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Use this section to configure alternative API keys for the external partners that "
+            "Torn PDA connects with. CAUTION: ensure this other keys are working correctly, as Torn PDA "
+            "won't be able to check for errors and certain sections might stop working",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _shortcutsSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'SHORTCUTS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Configure shortcuts"),
+              IconButton(
+                icon: Icon(Icons.switch_access_shortcut_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => ShortcutsPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Use Profile section shortcuts"),
+              Switch(
+                value: _settingsProvider.shortcutsEnabledProfile,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.shortcutsEnabledProfile = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Enable configurable shortcuts in the Profile section to quickly access your favorite sections in Torn',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        if (_settingsProvider.shortcutsEnabledProfile)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 30, top: 0, right: 20, bottom: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        "Profile shortcuts menu",
+                      ),
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: _shortcutMenuDropdown(),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 30, top: 0, right: 20, bottom: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        "Profile tile type",
+                      ),
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: _shortcutTileDropdown(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Column _miscSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'MISC',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Sync theme and web themes",
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Switch(
+                value: _settingsProvider.syncTheme,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.syncTheme = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        if (_settingsProvider.syncTheme)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Dark theme equivalent",
+                      ),
+                    ),
+                    Flexible(
+                      flex: 2,
+                      child: _themeToSyncDropdown(),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Specifies which of the two dark themes is activated in the app when the web is switched to dark',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "App bar position",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                flex: 2,
+                child: _appBarPositionDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Note: this will affect other quick access items such as '
+            'the quick crimes bar in the browser',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Default launch section",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: _openSectionDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Allow auto rotation",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.allowScreenRotation,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.changeAllowScreenRotation = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
+            'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
+            'to be manually scrolled and some elements might look too big)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        SizedBox(height: 5),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "On app exit",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: _appExitDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Note: this will only have effect in certain devices, depending on "
+            "your configuration. Dictates how to proceed when the app detects a back button "
+            "press or swipe that would otherwise close the app. "
+            "If you choose 'ask', a dialog will be shown next time",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _revivingServicesSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'REVIVING SERVICES',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                "Choose reviving providers",
+              ),
+              IconButton(
+                icon: Icon(Icons.keyboard_arrow_right_outlined),
+                onPressed: () {
+                  showDialog(
+                    useRootNavigator: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return RevivingServicesDialog();
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Choose which reviving services you might want to use. "
+            "If enabled, when you are in hospital you\'ll have the option to call "
+            "one of their revivers from several places (e.g. Profile and Chaining sections).",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _notificationsSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'NOTIFICATIONS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        SizedBox(height: 5),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        "Discrete notifications",
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.info_outline),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return DiscreteInfo();
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.discreteNotifications,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.discreteNotifications = value;
+                    firestore.toggleDiscrete(value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        if (Platform.isAndroid)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        "Remove notifications on launch",
+                      ),
+                    ),
+                    Switch(
+                      value: _removeNotificationsLaunch,
+                      onChanged: (value) {
+                        _settingsProvider.changeRemoveNotificationsOnLaunch = value;
+                        setState(() {
+                          _removeNotificationsLaunch = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'This will remove all Torn PDA notifications from your notifications bar '
+                  'when you launch the app. Deactivate it if you would prefer to keep them '
+                  'and erase them later manually',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              SizedBox(height: 5),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        "Alerts vibration",
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: 20),
+                    ),
+                    Flexible(
+                      flex: 2,
+                      child: _vibrationDropdown(),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'This vibration applies to the automatic alerts only, with the '
+                  'app in use or in the background',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              SizedBox(height: 5),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text("Manual alarm sound"),
+                    Switch(
+                      value: _manualAlarmSound,
+                      onChanged: (value) {
+                        setState(() {
+                          _manualAlarmSound = value;
+                        });
+                        Prefs().setManualAlarmSound(value);
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text("Manual alarm vibration"),
+                    Switch(
+                      value: _manualAlarmVibration,
+                      onChanged: (value) {
+                        setState(() {
+                          _manualAlarmVibration = value;
+                        });
+                        Prefs().setManualAlarmVibration(value);
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: RichText(
+                  text: TextSpan(
+                    text: 'Applies to manually activated alarms in all sections '
+                        '(Travel, Loot, Profile, etc.). '
+                        'Some Android clock applications do not work well '
+                        'with more than 1 timer or do not allow to choose '
+                        'between sound and vibration for alarms. If you experience '
+                        'any issue, it is recommended to install ',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: 'Google\'s Clock application',
+                        style: TextStyle(color: Colors.blue),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            AndroidIntent intent = AndroidIntent(
+                              action: 'action_view',
+                              data: 'https://play.google.com/store'
+                                  '/apps/details?id=com.google.android.deskclock',
+                            );
+                            await intent.launch();
+                          },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          )
+      ],
+    );
+  }
+
+  Column _appWidgetSection(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'HOME SCREEN WIDGET',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        SizedBox(height: 5),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Dark mode",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.appwidgetDarkMode,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetDarkMode = value;
+                    HomeWidget.saveWidgetData<bool>('darkMode', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: Text('Settings'),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
     );
   }
@@ -1288,7 +1625,7 @@ class _SettingsPageState extends State<SettingsPage> {
           onEditingComplete: () {
             FocusScope.of(context).requestFocus(new FocusNode());
             if (_formKey.currentState.validate()) {
-              _myCurrentKey = _apiKeyInputController.text;
+              _myCurrentKey = _apiKeyInputController.text.trim();
               _getApiDetails(userTriggered: true);
             }
           },
@@ -1357,19 +1694,30 @@ class _SettingsPageState extends State<SettingsPage> {
                       RichText(
                         text: TextSpan(
                           style: DefaultTextStyle.of(context).style,
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: 'Tap here',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () async {
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
                                   var url = 'https://www.torn.com/preferences.php#tab=api';
-                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                  context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
-                                        useDialog: _settingsProvider.useQuickBrowser,
+                                        browserTapType: BrowserTapType.short,
                                       );
                                 },
+                                onLongPress: () {
+                                  var url = 'https://www.torn.com/preferences.php#tab=api';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: Text(
+                                  'Tap here',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
                             ),
                             TextSpan(
                               text: ' to be redirected',
@@ -1419,9 +1767,20 @@ class _SettingsPageState extends State<SettingsPage> {
       value: _openSectionValue,
       items: [
         DropdownMenuItem(
+          value: "browser",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Browser",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "0",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Profile",
               textAlign: TextAlign.right,
@@ -1434,7 +1793,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "1",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Travel",
               textAlign: TextAlign.right,
@@ -1447,7 +1806,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "2",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Chaining",
               textAlign: TextAlign.right,
@@ -1460,7 +1819,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "3",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Loot",
               textAlign: TextAlign.right,
@@ -1473,20 +1832,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "4",
           child: SizedBox(
-            width: 60,
-            child: Text(
-              "Friends",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "5",
-          child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Awards",
               textAlign: TextAlign.right,
@@ -1497,9 +1843,22 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         DropdownMenuItem(
+          value: "5",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Items",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "6",
           child: SizedBox(
-            width: 60,
+            width: 80,
             child: Text(
               "Items",
               textAlign: TextAlign.right,
@@ -2080,7 +2439,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
 
-      dynamic myProfile = await TornApiCaller().getOwnProfileBasic(forcedApiKey: _myCurrentKey);
+      dynamic myProfile = await _apiController.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
@@ -2116,6 +2475,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
           // Signal stat counter initialization
           widget.statsController.logFirstLoginEver();
+
+          // Update the home widget if it's installed
+          if (Platform.isAndroid) {
+            if ((await pdaWidget_numberInstalled()) > 0) {
+              pdaWidget_fetchData();
+            }
+          }
         }
       } else if (myProfile is ApiError) {
         setState(() {
@@ -2234,5 +2600,96 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_myCurrentKey != '') {
       _getApiDetails(userTriggered: false);
     }
+  }
+
+  DropdownButton _shortcutTileDropdown() {
+    return DropdownButton<String>(
+      value: _shortcutsProvider.shortcutTile,
+      items: [
+        DropdownMenuItem(
+          value: "both",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Icon and text",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "icon",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Only icon",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "text",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Only text",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _shortcutsProvider.changeShortcutTile(value);
+        });
+      },
+    );
+  }
+
+  DropdownButton _shortcutMenuDropdown() {
+    return DropdownButton<String>(
+      value: _shortcutsProvider.shortcutMenu,
+      items: [
+        DropdownMenuItem(
+          value: "carousel",
+          child: SizedBox(
+            width: 67,
+            child: Text(
+              "Carousel",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "grid",
+          child: SizedBox(
+            width: 67,
+            child: Text(
+              "Grid",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _shortcutsProvider.changeShortcutMenu(value);
+        });
+      },
+    );
   }
 }

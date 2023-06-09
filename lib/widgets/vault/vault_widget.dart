@@ -13,20 +13,17 @@ import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 import 'package:torn_pda/pages/vault/vault_configuration_page.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class VaultWidget extends StatefulWidget {
   final List<dom.Element> vaultHtml;
   final int playerId;
   final UserDetailsProvider userProvider;
-  final bool isBrowserDialog;
 
   VaultWidget({
     Key key,
     @required this.vaultHtml,
     @required this.playerId,
     @required this.userProvider,
-    @required this.isBrowserDialog,
   }) : super(key: key);
 
   @override
@@ -133,59 +130,22 @@ class _VaultWidgetState extends State<VaultWidget> {
                       _vaultConfigurationIcon(),
                     ],
                   ),
-                  if (!widget.isBrowserDialog)
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            "(alternatively, deactivate the widget through the appbar icon)",
-                            style: TextStyle(
-                              color: Colors.orange,
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic,
-                            ),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          "(alternatively, deactivate the widget through the appbar icon)",
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
-                      ],
-                    )
-                  else
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            "(alternatively, deactivate the widget through the appbar icon by "
-                            "using the full browser [click the info icon for more info])",
-                            style: TextStyle(
-                              color: Colors.orange,
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4),
-                          child: GestureDetector(
-                            onTap: () async {
-                              await showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return BrowserExplanationDialog();
-                                },
-                              );
-                            },
-                            child: Icon(
-                              Icons.info_outline,
-                              size: 18,
-                              color: Colors.orangeAccent,
-                            ),
-                          ),
-                        )
-                      ],
-                    )
+                      ),
+                    ],
+                  )
                 ],
               );
             } else {
@@ -295,9 +255,7 @@ class _VaultWidgetState extends State<VaultWidget> {
         var date = format.parse(day + " " + hour, true);
 
         var playerTransaction = false;
-        var name = trans
-            .querySelector(".user.t-overflow > .d-hide > .user.name > span")
-            ?.attributes["title"];
+        var name = trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"];
         if (name.contains("[${widget.playerId}]")) {
           playerTransaction = true;
         }
@@ -350,8 +308,7 @@ class _VaultWidgetState extends State<VaultWidget> {
     var indexFound = -1;
     for (var t = 0; t < transactions.length; t++) {
       // Locate our last saved transaction and save its index
-      if (transactions[t].date == _vaultStatus.timestamp &&
-          transactions[t].balance == _vaultStatus.total) {
+      if (transactions[t].date == _vaultStatus.timestamp && transactions[t].balance == _vaultStatus.total) {
         indexFound = t;
         break;
       }

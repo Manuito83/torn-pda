@@ -2,6 +2,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
@@ -13,7 +14,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 
 class ChainWidgetOptions extends StatefulWidget {
   final Function callBackOptions;
@@ -1183,7 +1184,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                           String inputId = _addIdController.text;
                           _addIdController.text = '';
 
-                          dynamic target = await TornApiCaller().getTarget(playerId: inputId);
+                          dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
                           String message = "";
                           Color messageColor = Colors.green[700];
                           if (target is TargetModel) {

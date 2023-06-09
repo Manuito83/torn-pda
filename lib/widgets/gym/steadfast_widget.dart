@@ -1,7 +1,8 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:torn_pda/models/perks/user_perks_model.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 
 class SteadfastDetails {
   int strength = 0;
@@ -67,7 +68,7 @@ class _GymWidgetState extends State<GymWidget> {
   }
 
   Future<void> _fetchSteadFast() async {
-    dynamic perksResponse = await TornApiCaller().getUserPerks();
+    dynamic perksResponse = await Get.find<ApiCallerController>().getUserPerks();
 
     if (perksResponse is ApiError) {
       return;

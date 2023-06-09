@@ -518,6 +518,22 @@ String removeChatOnLoadStartJS() {
   ''';
 }
 
+String addHeightForPullToRefresh() {
+  return '''
+    (function() {
+      // Get the height of the viewport
+      var viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+      // Check if the website content overflows the viewport
+      if (document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+        // If not, add 10px to the body height
+        //console.log("Adding extra height for pull-to-refresh");
+        document.body.style.height = `\${viewportHeight + 20}px`;
+      }
+    })();
+  ''';
+}
+
 String removeChatJS() {
   return '''
     try {
@@ -877,9 +893,12 @@ String jailJS({
   @required int levelMax,
   @required int timeMin,
   @required int timeMax,
+  @required int scoreMin,
   @required int scoreMax,
   @required bool bailTicked,
   @required bool bustTicked,
+  @required bool excludeSelf,
+  @required String excludeName,
 }) {
   return '''
     // Credit to TornTools for implementation logic
@@ -938,9 +957,16 @@ String jailJS({
 
         // Score
         var score = level * seconds / 60
-        if (score > $scoreMax) {
+        if (score > $scoreMax || score < $scoreMin) {
           shouldHide = true;
         }
+        
+        // Exclude own player
+        var name = player.querySelector(".user.name").innerText;
+        if ($excludeSelf && name === "$excludeName" && shouldHide) {
+          shouldHide = false;
+        }
+                
         if (shouldHide) {
           //player.hidden = true; // Not allowed with new user agent on iOS
           player.style.display = "none"; 

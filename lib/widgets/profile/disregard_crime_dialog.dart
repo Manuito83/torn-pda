@@ -11,7 +11,6 @@ class DisregardCrimeDialog extends StatefulWidget {
 }
 
 class _DisregardCrimeDialogState extends State<DisregardCrimeDialog> {
-
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

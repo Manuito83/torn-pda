@@ -39,7 +39,48 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 299 - 18/04/2023
+    // Build 316 - 06/06/2023
+
+    // VERSION 3.1.0
+    var v3_1_0 = ChangeLogItem();
+    v3_1_0.version = 'Torn PDA v3.1.0';
+    v3_1_0.date = '12 JUN 2023';
+    String feat3_1_0_1 = "Added home screen widget (see Tips)";
+    String feat3_1_0_2 = "Browser: complete workflow restructure (faster access and loading)";
+    String feat3_1_0_3 = "Browser: quick browser removed, full screen mode and vertical menus added";
+    String feat3_1_0_4 = "Browser: long-press menu now also adds a shortcut to the target link";
+    String feat3_1_0_5 = "Browser can now be chosen as the default app's launch section";
+    String feat3_1_0_6 = "Added Ranked War information and notifications to Profile page";
+    String feat3_1_0_7 = "Shortcuts page and all related options have been moved to Settings";
+    String feat3_1_0_8 = "Added dual score slider and option to ignore oneself to the Jail widget";
+    String feat3_1_0_9 = "Added company addiction to Profile";
+    String feat3_1_0_10 = "Added API call rate bar widget and warning";
+    String feat3_1_0_11 = "Full member update in War is now faster";
+    String feat3_1_0_12 = "Added competition information to targets and friends details";
+    String feat3_1_0_13 = "Added WTF Revive";
+    String feat3_1_0_14 = "Added other minor requested features and improvements";
+    String feat3_1_0_15 = "Fixed Loot Rangers loot order in certain conditions";
+    String feat3_1_0_16 = "Fixed issues redirecting to attack pages in certain conditions";
+    String feat3_1_0_17 = "Fixed issues when launching the app from a notification";
+    String feat3_1_0_18 = "Fixed pull-to-refresh in short pages";
+    if (Platform.isAndroid) v3_1_0.features.add(feat3_1_0_1);
+    v3_1_0.features.add(feat3_1_0_2);
+    v3_1_0.features.add(feat3_1_0_3);
+    v3_1_0.features.add(feat3_1_0_4);
+    v3_1_0.features.add(feat3_1_0_5);
+    v3_1_0.features.add(feat3_1_0_6);
+    v3_1_0.features.add(feat3_1_0_7);
+    v3_1_0.features.add(feat3_1_0_8);
+    v3_1_0.features.add(feat3_1_0_9);
+    v3_1_0.features.add(feat3_1_0_10);
+    v3_1_0.features.add(feat3_1_0_11);
+    v3_1_0.features.add(feat3_1_0_12);
+    v3_1_0.features.add(feat3_1_0_13);
+    v3_1_0.features.add(feat3_1_0_14);
+    v3_1_0.features.add(feat3_1_0_15);
+    v3_1_0.features.add(feat3_1_0_16);
+    v3_1_0.features.add(feat3_1_0_17);
+    v3_1_0.features.add(feat3_1_0_18);
 
     // VERSION 3.0.2
     var v3_0_2 = ChangeLogItem();
@@ -1362,6 +1403,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_1_0);
     itemList.add(v3_0_2);
     itemList.add(v3_0_1);
     itemList.add(v2_9_6);

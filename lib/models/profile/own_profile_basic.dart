@@ -142,17 +142,10 @@ class OwnProfileBasic {
                 : BasicIcons.fromJson(json["basicicons"]),
         states: json["states"] == null ? null : States.fromJson(json["states"]),
         lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
-        strengthInfo: json["strength_info"] == null
-            ? null
-            : List<String>.from(json["strength_info"].map((x) => x)),
-        defenseInfo: json["defense_info"] == null
-            ? null
-            : List<String>.from(json["defense_info"].map((x) => x)),
-        speedInfo:
-            json["speed_info"] == null ? null : List<String>.from(json["speed_info"].map((x) => x)),
-        dexterityInfo: json["dexterity_info"] == null
-            ? null
-            : List<String>.from(json["dexterity_info"].map((x) => x)),
+        strengthInfo: json["strength_info"] == null ? null : List<String>.from(json["strength_info"].map((x) => x)),
+        defenseInfo: json["defense_info"] == null ? null : List<String>.from(json["defense_info"].map((x) => x)),
+        speedInfo: json["speed_info"] == null ? null : List<String>.from(json["speed_info"].map((x) => x)),
+        dexterityInfo: json["dexterity_info"] == null ? null : List<String>.from(json["dexterity_info"].map((x) => x)),
       );
 
   Map<String, dynamic> toJson() => {
@@ -192,12 +185,10 @@ class OwnProfileBasic {
         "basicicons": basicIcons == null ? null : basicIcons.toJson(),
         "states": states == null ? null : states.toJson(),
         "last_action": lastAction == null ? null : lastAction.toJson(),
-        "strength_info":
-            strengthInfo == null ? null : List<dynamic>.from(strengthInfo.map((x) => x)),
+        "strength_info": strengthInfo == null ? null : List<dynamic>.from(strengthInfo.map((x) => x)),
         "defense_info": defenseInfo == null ? null : List<dynamic>.from(defenseInfo.map((x) => x)),
         "speed_info": speedInfo == null ? null : List<dynamic>.from(speedInfo.map((x) => x)),
-        "dexterity_info":
-            dexterityInfo == null ? null : List<dynamic>.from(dexterityInfo.map((x) => x)),
+        "dexterity_info": dexterityInfo == null ? null : List<dynamic>.from(dexterityInfo.map((x) => x)),
       };
 }
 
@@ -268,18 +259,21 @@ class Faction {
 
 class Job {
   Job({
+    this.job,
     this.position,
     this.companyId,
     this.companyName,
     this.companyType,
   });
 
+  String job;
   String position;
   int companyId;
   String companyName;
   int companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
+        job: json["job"] == null ? null : json["job"],
         position: json["position"] == null ? null : json["position"],
         companyId: json["company_id"] == null ? null : json["company_id"],
         companyName: json["company_name"] == null ? null : json["company_name"].toString(),
@@ -287,6 +281,7 @@ class Job {
       );
 
   Map<String, dynamic> toJson() => {
+        "job": job == null ? null : job,
         "position": position == null ? null : position,
         "company_id": companyId == null ? null : companyId,
         "company_name": companyName == null ? null : companyName,

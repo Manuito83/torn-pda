@@ -19,6 +19,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({Key key}) : super(key: key);
@@ -88,11 +89,15 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 15),
+                            _userScripts(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
                             _tabs(),
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 10),
-                            _userScripts(),
+                            _fullScreen(),
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 10),
@@ -498,7 +503,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Certain iOS versions (e.g.: iOS 16) might have issues with Torn overscrolling horizontally. '
+                'Certain iOS versions (e.g.: iOS 16) might have issues with Torn overs-scrolling horizontally. '
                 'By using this option you might get rid of such behavior. NOTE: this will restrict pull-to-refresh '
                 'to work only from swipes at the top part of the browser.',
                 style: TextStyle(
@@ -569,12 +574,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ElevatedButton(
                     child: Text("Clear"),
                     onPressed: () async {
-                      // This resets cache when the browser opens again
-                      _settingsProvider.setClearCacheNextOpportunity = true;
-                      // Clear tabs now
-                      Prefs().setWebViewSecondaryTabs('{"tabsSave": []}');
-                      // Clear session cookie
-                      Prefs().setWebViewSessionCookie('');
+                      _webViewProvider.clearCacheAndTabs();
 
                       BotToast.showText(
                         text: "Browser cache and tabs have been reset!",
@@ -917,9 +917,9 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'The browser has pull to refresh functionality (not applicable to the chaining browser). '
+            'The browser has pull to refresh functionality. '
             'However, you can get an extra refresh icon if it\'s useful for certain situations (e.g. '
-            'jail or hospital refresh)',
+            'jail or hospital)',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -927,6 +927,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        /*
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -960,6 +961,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        */
       ],
     );
   }
@@ -979,9 +981,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
           child: Text(
-            'Tabs increase memory and processor usage. If you notice performance issues, consider disabling them '
-            'at least in the browser dialog for better results. Also, be sure that you get familiar with how tabs work '
-            'by visiting the Tips section!',
+            'Tabs might increase memory and processor usage; be sure that you get familiar with how tabs work (see '
+            'the Tips section). It is highly recommended to use tabs to improve your Torn PDA experience.',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -994,15 +995,15 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Tabs in full browser"),
+              Text("Use tabs in browser"),
               Switch(
                 value: _settingsProvider.useTabsFullBrowser,
                 onChanged: (value) {
                   setState(() {
                     _settingsProvider.changeUseTabsFullBrowser = value;
                   });
-                  // Reset tabs to shown if we deactivate tabs in both browsers (so that upon reactivation they show)
-                  if (!value && !_settingsProvider.useTabsBrowserDialog) {
+                  // Reset tabs to shown if we deactivate tabs (so that upon reactivation they show)
+                  if (!value) {
                     Prefs().setHideTabs(false);
                   }
                 },
@@ -1012,6 +1013,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ],
           ),
         ),
+        /*
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -1035,40 +1037,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ],
           ),
         ),
-        if (_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog)
+        */
+        if (_settingsProvider.useTabsFullBrowser)
           Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text("Show favorites in tab bar"),
-                    Switch(
-                      value: _settingsProvider.showFavoritesInTabBar,
-                      onChanged: (value) {
-                        setState(() {
-                          _settingsProvider.showFavoritesInTabBar = value;
-                        });
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
-                child: Text(
-                  'Shows a favorites icon in the tab bar that opens a quick menu with shortcuts',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-              if (_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog)
+              if (_settingsProvider.useTabsFullBrowser)
                 Column(
                   children: [
                     Padding(
@@ -1093,7 +1066,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       child: Text(
                         'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, '
                         'they will retrieve the web content when first used (tapped). This could add a small delay when the '
-                        'tab is pressed visited the first time, but should improve the overall browser performance',
+                        'tab is pressed visited the first time, but should improve the overall browser performance. '
+                        'Also, tabs that have not been used for 24 hours will be deactivated to reduce memory consumption, '
+                        'and will be reactivated with you switch back to them.\n\n'
+                        'NOTE: in high performance devices, deactivating this option should make the browser quicker and '
+                        'transitions between tabs will be more pleasant, while probably not being noticeable in term of memory usage.',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,
@@ -1127,8 +1104,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
                       child: Text(
-                        'Allow to temporarily hide tabs by swiping in the title bar (full browser) or in the lower bar '
-                        '(quick browser)',
+                        'Allow to temporarily hide tabs by swiping up/down in the title bar',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,
@@ -1140,8 +1116,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
             ],
           ),
-        if ((_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog) &&
-            _settingsProvider.useTabsHideFeature)
+        if ((_settingsProvider.useTabsFullBrowser) && _settingsProvider.useTabsHideFeature)
           Padding(
             padding: const EdgeInsets.only(top: 15),
             child: Column(
@@ -1179,13 +1154,432 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ],
             ),
-          )
+          ),
+      ],
+    );
+  }
+
+  Column _fullScreen() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'FULL SCREEN BEHAVIOR',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+          child: Text(
+            'NOTE: full screen mode is only accessible if using tabs and through the quick menu tab!',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen removes widgets")),
+              Switch(
+                value: _settingsProvider.fullScreenRemovesWidgets,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenRemovesWidgets = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode in the browser, when enabled, should also get rid of all of '
+            'Torn PDA widgets',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen removes chat")),
+              Switch(
+                value: _settingsProvider.fullScreenRemovesChat,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenRemovesChat = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode in the browser, when enabled, should also get rid of all of '
+            'Torn chat bubbles in game',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 40,
+              width: 50,
+              child: Divider(),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'FULL SCREEN POSITIONING',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen extends to top")),
+              Switch(
+                value: _settingsProvider.fullScreenOverNotch,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenOverNotch = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode should extend all the way to the top, which might include '
+            'the front-facing camera and any other sensors (notch). It will extend the view further, but certain '
+            'web elements might be hidden or obscured, as might happen with corners.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen extends to bottom")),
+              Switch(
+                value: _settingsProvider.fullScreenOverBottom,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenOverBottom = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode should extend all the way to the bottom. In certain devices this '
+            'might cause the tabs at the corner to be barely reachable.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Full screen extends to sides")),
+              Switch(
+                value: _settingsProvider.fullScreenOverSides,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenOverSides = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Dictates whether the full screen mode should extend all the way to the sides, including any possible '
+            'front-facing cameras, notch, etc. Might be useful for landscape mode.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 40,
+              width: 50,
+              child: Divider(),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'FULL SCREEN INTERACTION',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+          child: Text(
+            'NOTE: tabs opened in chaining mode (targets, war targets, loot NPCs, etc.) are not affected by these '
+            'options, as chaining controls are needed to advance through the chain.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Short tap opens full screen")),
+              Switch(
+                value: _settingsProvider.fullScreenByShortTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByShortTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when an item in the app is short-tapped. Defaults to OFF.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Long tap opens full screen")),
+              Switch(
+                value: _settingsProvider.fullScreenByLongTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByLongTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when an item in the app is long-tapped. "
+            "Defaults to ON.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Short/long tab affect PDA icon")),
+              Switch(
+                value: _settingsProvider.fullScreenIncludesPDAButtonTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenIncludesPDAButtonTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "By default, the PDA icon in the main pages of the app restores the browser as it was when you left it. "
+            "By activating this option, the browser will change to windowed or full screen mode by adhering to "
+            "your short and long tap preferences above. Defaults to OFF.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Notifications open full screen")),
+              Switch(
+                value: _settingsProvider.fullScreenByNotificationTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByNotificationTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a notification is tapped. Defaults to OFF.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Deep links open full screen")),
+              Switch(
+                value: _settingsProvider.fullScreenByDeepLinkTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByDeepLinkTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when it has been triggered by a deep link. Defaults to OFF.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Quick items open full screen")),
+              Switch(
+                value: _settingsProvider.fullScreenByQuickItemTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByQuickItemTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a quick item (in the app's main icon in your device) has been "
+            "tapped.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }
 
   void _showColorPickerTabs(BuildContext context) {
     showDialog(
+      useRootNavigator: false,
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -1218,6 +1612,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   void _showColorPickerChat(BuildContext context) {
     var pickerColor = _highlightColor;
     showDialog(
+      useRootNavigator: false,
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -1256,11 +1651,17 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
       title: Text('Browser settings'),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
-        onPressed: () {
-          _willPopCallback();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          new IconButton(
+            icon: new Icon(Icons.arrow_back),
+            onPressed: () {
+              _willPopCallback();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
     );
   }
@@ -1318,6 +1719,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       onChanged: (value) {
         setState(() {
           _settingsProvider.changeBrowserRefreshMethod = value;
+          _webViewProvider.updatePullToRefresh(value);
         });
       },
     );

@@ -2,21 +2,26 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Intent;
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
+import 'package:receive_intent/receive_intent.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
@@ -31,6 +36,7 @@ import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
@@ -45,15 +51,19 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -63,7 +73,10 @@ class DrawerPage extends StatefulWidget {
   _DrawerPageState createState() => _DrawerPageState();
 }
 
-class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
+class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final int _settingsPosition = 11;
   final int _aboutPosition = 12;
   var _allowSectionsWithoutKey = <int>[];
@@ -95,6 +108,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   UserScriptsProvider _userScriptsProvider;
   WebViewProvider _webViewProvider;
   StakeoutsController _s;
+  ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -103,7 +117,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   DateTime _deepLinkSubTriggeredTime;
   bool _deepLinkInitOnce = false;
 
+  // Used to avoid racing condition with browser launch from notifications (not included in the FutureBuilder), as
+  // preferences take time to load
+  Completer _preferencesCompleter = Completer();
+  Completer _changelogCompleter = Completer();
+  // Used for the main UI loading (FutureBuilder)
   Future _finishedWithPreferences;
+  Future _finishedWithChangelog;
 
   int _activeDrawerIndex = 0;
   int _selected = 0;
@@ -128,6 +148,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   // Platform channel with MainActivity.java
   static const platform = MethodChannel('tornpda.channel');
 
+  // Intent receiver subscription
+  StreamSubscription _intentListenerSub;
+
+  Stream _willPopPressedInBrowser;
+  StreamSubscription _willPopPressedInBrowserSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -143,6 +169,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       quickActions.setShortcutItems(<ShortcutItem>[
         // NOTE: keep the same file name for both platforms
         const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
+        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
+        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
+        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
       ]);
 
       quickActions.initialize((String shortcutType) async {
@@ -150,7 +179,25 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: "https://www.torn.com",
-                useDialog: _settingsProvider.useQuickBrowser,
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_gym') {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/gym.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_crimes') {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/crimes.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_travel') {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/travelagency.php",
+                browserTapType: BrowserTapType.quickItem,
               );
         }
       });
@@ -162,12 +209,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _aboutPosition,
     ];
 
-    _webViewProvider = context.read<WebViewProvider>();
-
     // Ensures Shared Prefs are ready for changelog data saving
     Prefs().reload().then((_) {
-      _handleChangelog();
+      _finishedWithChangelog = _handleChangelog();
+      _changelogCompleter.complete(_finishedWithChangelog);
+
       _finishedWithPreferences = _loadInitPreferences();
+      _preferencesCompleter.complete(_finishedWithPreferences);
     });
 
     // Deep Linking
@@ -176,7 +224,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     // This starts a stream that listens for tap on local notifications (i.e.:
     // when the app is open)
-    _fireOnTapLocalNotifications();
+    _onForegroundNotification();
 
     // Configure all notifications channels so that Firebase alerts have already
     // and assign channel where to land
@@ -202,13 +250,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     _messaging.getInitialMessage().then((RemoteMessage message) {
       if (message != null && message.data.isNotEmpty) {
-        _fireLaunchResumeNotifications(message.data);
+        _onFirebaseBackgroundNotification(message.data);
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       if (message != null && message.data.isNotEmpty) {
-        _fireLaunchResumeNotifications(message.data);
+        _onFirebaseBackgroundNotification(message.data);
       }
     });
 
@@ -251,15 +299,23 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     });
 
     // Handle notifications
-    _getBackGroundNotifications();
+    _getBackgroundNotificationSavedData();
     _removeExistingNotifications();
+
+    // Init intent listener (for appWidget)
+    if (Platform.isAndroid) {
+      _initIntentListenerSubscription();
+      _initIntentReceiverOnLaunch();
+    }
   }
 
   @override
   void dispose() {
-    selectNotificationSubject.close();
+    selectNotificationStream?.close();
+    _willPopPressedInBrowserSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    _deepLinkSub.cancel();
+    _deepLinkSub?.cancel();
+    _intentListenerSub?.cancel();
     super.dispose();
   }
 
@@ -293,7 +349,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused) {
       // Stop stakeouts
       if (_s != null) {
@@ -303,12 +359,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       // Stop stats counting
       _statsController.logCheckOut();
+
+      // Refresh widget to have up to date info when we exit
+      if (Platform.isAndroid) {
+        if (await pdaWidget_numberInstalled() > 0) {
+          pdaWidget_startBackgroundUpdate();
+        }
+      }
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
 
       // Handle notifications
-      _getBackGroundNotifications();
+      _getBackgroundNotificationSavedData();
       _removeExistingNotifications();
 
       // Resume stakeouts
@@ -319,10 +382,106 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       // Resume stats counting
       _statsController.logCheckIn();
+
+      // App widget - reset background updater
+      if (Platform.isAndroid) {
+        pdaWidget_handleBackgroundUpdateStatus();
+      }
     }
   }
 
-  // Deep links
+  // ## Intent Listener (for appWidget)
+  Future<void> _initIntentReceiverOnLaunch() async {
+    final intent = await ReceiveIntent.getInitialIntent();
+    if (!mounted || intent.data == null) return;
+    log("Intent received: ${intent.data}");
+    await _assessIntent(intent);
+  }
+
+  Future<void> _initIntentListenerSubscription() async {
+    _intentListenerSub = ReceiveIntent.receivedIntentStream.listen((Intent intent) async {
+      if (!mounted || intent.data == null) return;
+      await _assessIntent(intent);
+    }, onError: (err) {
+      log(err);
+    });
+  }
+
+  Future<void> _assessIntent(Intent intent) async {
+    log("Intent received: ${intent.data}");
+
+    bool launchBrowser = false;
+    var browserUrl = "https://www.torn.com";
+    if (intent.data.contains("pdaWidget://energy-box-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/gym.php";
+    } else if (intent.data.contains("pdaWidget://nerve-box-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/crimes.php";
+    } else if (intent.data.contains("pdaWidget://happy-box-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#candy-items";
+    } else if (intent.data.contains("pdaWidget://life-box-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+    } else if (intent.data.contains("pdaWidget://blue-status-clicked") ||
+        intent.data.contains("pdaWidget://blue-status-icon-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com";
+    } else if (intent.data.contains("pdaWidget://hospital-status-icon-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/hospitalview.php";
+    } else if (intent.data.contains("pdaWidget://jail-status-icon-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/jailview.php";
+    } else if (intent.data.contains("pdaWidget://messages-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/messages.php";
+    } else if (intent.data.contains("pdaWidget://events-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/events.php";
+    } else if (intent.data.contains("pdaWidget://shortcut:")) {
+      String shortcutUrl = intent.data.split("pdaWidget://shortcut:")[1];
+      launchBrowser = true;
+      browserUrl = shortcutUrl;
+    } else if (intent.data.contains("pdaWidget://drug-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#drugs-items";
+    } else if (intent.data.contains("pdaWidget://medical-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+    } else if (intent.data.contains("pdaWidget://booster-clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#boosters-items";
+    } else if (intent.data.contains("pdaWidget://chain-box-clicked")) {
+      _callSectionFromOutside(2); // Chaining
+      return;
+    } else if (intent.data.contains("pdaWidget://empty-shortcuts-clicked")) {
+      setState(() {
+        _webViewProvider.browserShowInForeground = false;
+      });
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
+      return;
+    }
+
+    if (launchBrowser) {
+      _preferencesCompleter.future.whenComplete(() async {
+        await _changelogCompleter.future;
+        _webViewProvider.openBrowserPreference(
+          context: context,
+          url: browserUrl,
+          browserTapType: BrowserTapType.notification,
+        );
+      });
+    }
+  }
+  // ## END Intent Listener (for appWidget)
+
+  // ## Deep links
   Future _deepLinksInit() async {
     if (_deepLinkInitOnce) return;
     _deepLinkInitOnce = true;
@@ -381,51 +540,55 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           return;
         }
         _deepLinkSubTriggeredTime = DateTime.now();
-        await Future.delayed(const Duration(milliseconds: 2000));
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: url,
-          useDialog: _settingsProvider.useQuickBrowser,
-        );
+        _preferencesCompleter.future.whenComplete(() async {
+          await _changelogCompleter.future;
+          _webViewProvider.openBrowserPreference(
+            context: context,
+            url: url,
+            browserTapType: BrowserTapType.deeplink,
+          );
+        });
       }
     } catch (e) {
       print(e);
     }
   }
-  // END Deep links
+  // ## END Deep links
 
   Future<void> _removeExistingNotifications() async {
-    // Get rid of iOS badge (notifications will be removed by the system)
-    if (Platform.isIOS) {
-      _clearBadge();
-    }
-    // Get rid of notifications in Android
-    try {
-      if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
-        // Gets the active (already shown) notifications
-        final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-            ?.getActiveNotifications();
+    _preferencesCompleter.future.whenComplete(() async {
+      // Get rid of iOS badge (notifications will be removed by the system)
+      if (Platform.isIOS) {
+        _clearBadge();
+      }
+      // Get rid of notifications in Android
+      try {
+        if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
+          // Gets the active (already shown) notifications
+          final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+              ?.getActiveNotifications();
 
-        for (final not in activeNotifications) {
-          // Platform channel to cancel direct Firebase notifications (we can call
-          // "cancelAll()" there without affecting scheduled notifications, which is
-          // a problem with the local plugin)
-          if (not.id == 0) {
-            await platform.invokeMethod('cancelNotifications');
-          }
-          // This cancels the Firebase alerts that have been triggered locally
-          else {
-            flutterLocalNotificationsPlugin.cancel(not.id);
+          for (final not in activeNotifications) {
+            // Platform channel to cancel direct Firebase notifications (we can call
+            // "cancelAll()" there without affecting scheduled notifications, which is
+            // a problem with the local plugin)
+            if (not.id == 0) {
+              await platform.invokeMethod('cancelNotifications');
+            }
+            // This cancels the Firebase alerts that have been triggered locally
+            else {
+              flutterLocalNotificationsPlugin.cancel(not.id);
+            }
           }
         }
+      } catch (e) {
+        // Not supported?
       }
-    } catch (e) {
-      // Not supported?
-    }
+    });
   }
 
-  Future<void> _getBackGroundNotifications() async {
+  Future<void> _getBackgroundNotificationSavedData() async {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
     // Get the save alerts
@@ -437,7 +600,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _fireLaunchResumeNotifications(Map<String, dynamic> message) async {
+  Future<void> _onFirebaseBackgroundNotification(Map<String, dynamic> message) async {
     bool launchBrowser = false;
     var browserUrl = "https://www.torn.com";
 
@@ -570,27 +733,29 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // If we have the section manually deactivated
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
-      await Future.delayed(Duration(seconds: 2));
-      if (!_settingsProvider.retaliationSectionEnabled ||
-          (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
-        launchBrowser = true;
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
-      } else {
-        // Even if we meet above requirements, call the API and assess whether the user
-        // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-        var attacksResult = await TornApiCaller().getFactionAttacks();
-        if (attacksResult is! FactionAttacksModel) {
+      _preferencesCompleter.future.whenComplete(() async {
+        await _changelogCompleter.future;
+        if (!_settingsProvider.retaliationSectionEnabled ||
+            (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
-          // If we pass all checks above, redirect to the retals section
-          _retalsRedirection = true;
-          _callSectionFromOutside(2);
-          Future.delayed(Duration(seconds: 2)).then((value) {
-            _retalsRedirection = false;
-          });
+          // Even if we meet above requirements, call the API and assess whether the user
+          // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+          var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+          if (attacksResult is! FactionAttacksModel) {
+            launchBrowser = true;
+            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          } else {
+            // If we pass all checks above, redirect to the retals section
+            _retalsRedirection = true;
+            _callSectionFromOutside(2);
+            Future.delayed(Duration(seconds: 2)).then((value) {
+              _retalsRedirection = false;
+            });
+          }
         }
-      }
+      });
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
@@ -605,7 +770,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          var own = await TornApiCaller().getOwnPersonalStats();
+          var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
             int xanaxComparison = otherXanax - own.personalstats.xantaken;
             int refillsComparison = otherRefills - own.personalstats.refills;
@@ -705,9 +870,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _webViewProvider.openBrowserPreference(
             context: context,
             url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-            useDialog: false,
+            browserTapType: BrowserTapType.chain,
             isChainingBrowser: true,
-            awaitable: true,
             chainingPayload: ChainingPayload()
               ..attackIdList = ids
               ..attackNameList = names
@@ -720,28 +884,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
 
     if (launchBrowser) {
-      // iOS seems to open a blank WebView unless we allow some time onResume
-      if (Platform.isAndroid) {
-        await Future.delayed(const Duration(milliseconds: 2000));
-      } else if (Platform.isIOS) {
-        await Future.delayed(const Duration(milliseconds: 2500));
-      }
-
-      // Works best if we get SharedPrefs directly instead of SettingsProvider
-      if (launchBrowser) {
+      _preferencesCompleter.future.whenComplete(() async {
+        await _changelogCompleter.future;
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
-          useDialog: _settingsProvider?.useQuickBrowser ?? true,
+          browserTapType: BrowserTapType.notification,
         );
-      }
+      });
     }
   }
 
   // Fires if notification from local_notifications package is tapped (i.e.:
   // when the app is open). Also for manual notifications when app is open.
-  Future<void> _fireOnTapLocalNotifications() async {
-    selectNotificationSubject.stream.listen((String payload) async {
+  Future<void> _onForegroundNotification() async {
+    selectNotificationStream.stream.listen((String payload) async {
       var launchBrowser = false;
       var browserUrl = '';
 
@@ -803,9 +960,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _webViewProvider.openBrowserPreference(
             context: context,
             url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
-            useDialog: false,
+            browserTapType: BrowserTapType.chain,
             isChainingBrowser: true,
-            awaitable: true,
             chainingPayload: ChainingPayload()
               ..attackIdList = lootRangersNpcsIds
               ..attackNameList = lootRangersNpcsNames
@@ -860,7 +1016,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          var attacksResult = await TornApiCaller().getFactionAttacks();
+          var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowser = true;
             browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
@@ -891,7 +1047,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            var own = await TornApiCaller().getOwnPersonalStats();
+            var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
               int xanaxComparison = otherXanax - own.personalstats.xantaken;
               int refillsComparison = otherRefills - own.personalstats.refills;
@@ -993,9 +1149,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           _webViewProvider.openBrowserPreference(
               context: context,
               url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-              useDialog: false,
+              browserTapType: BrowserTapType.chain,
               isChainingBrowser: true,
-              awaitable: true,
               chainingPayload: ChainingPayload()
                 ..attackIdList = ids
                 ..attackNameList = names
@@ -1008,11 +1163,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       if (launchBrowser) {
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: browserUrl,
-          useDialog: _settingsProvider.useQuickBrowser,
-        );
+        _preferencesCompleter.future.whenComplete(() async {
+          await _changelogCompleter.future;
+          _webViewProvider.openBrowserPreference(
+            context: context,
+            url: browserUrl,
+            browserTapType: BrowserTapType.notification,
+          );
+        });
       }
     });
   }
@@ -1023,7 +1181,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
           context: context,
-          useDialog: _settingsProvider.useQuickBrowser,
+          browserTapType: BrowserTapType.chain,
           url: url,
         );
         break;
@@ -1037,6 +1195,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
     if (_s == null) {
@@ -1044,7 +1203,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _s.callbackBrowser = _openBrowserFromToast;
     }
     return WillPopScope(
-      onWillPop: _willPopCallback,
+      onWillPop: _willPopCallback, // This will be called indirectly from the webview provider only
       child: FutureBuilder(
         future: _finishedWithPreferences,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -1097,6 +1256,50 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
+            Obx(
+              () {
+                if (_apiController.showApiRateInDrawer.isTrue) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StreamBuilder<int>(
+                          stream: _apiController.callCountStream,
+                          initialData: 0,
+                          builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                            int callCount = snapshot.data ?? 0;
+                            double progress = math.min(callCount / 100, 1.0);
+                            return LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
+                              center: Text(
+                                "${callCount}",
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              lineHeight: 14.0,
+                              percent: progress,
+                              backgroundColor:
+                                  _themeProvider.currentTheme == AppTheme.light ? Colors.grey[400] : Colors.grey[800],
+                              progressColor: callCount >= 95 ? Colors.red[400] : Colors.green,
+                            );
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 1),
+                          child: Text(
+                            "API CALLS (60s)",
+                            style: TextStyle(fontSize: 9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
+              },
+            ),
             const Flexible(
               child: Image(
                 image: AssetImage('images/icons/torn_pda.png'),
@@ -1215,14 +1418,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       _webViewProvider.openBrowserPreference(
                         context: context,
                         url: "https://www.torn.com/calendar.php",
-                        useDialog: _settingsProvider.useQuickBrowser,
+                        browserTapType: BrowserTapType.short,
                       );
                     },
                     onLongPress: () {
                       _webViewProvider.openBrowserPreference(
                         context: context,
                         url: "https://www.torn.com/calendar.php",
-                        useDialog: false,
+                        browserTapType: BrowserTapType.long,
                       );
                     },
                     child: const TctClock(),
@@ -1428,6 +1631,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
 
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    // Join a stream which will receive a callback from the browser whenever the back button is pressed and the
+    // browser is not in the foreground (as back button presses always land in the browser)
+    _willPopPressedInBrowser = _webViewProvider.willPopCallbackStream.stream;
+    _willPopPressedInBrowserSubscription = _willPopPressedInBrowser.listen((event) {
+      _willPopCallback();
+    });
+
     // Set up UserScriptsProvider so that user preferences are applied
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
@@ -1437,11 +1648,20 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     await _userProvider.loadPreferences();
 
+    // User Provider was started in Main
+    // If key is empty, redirect to the Settings page.
     if (!_userProvider.basic.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
-      final defaultSection = await Prefs().getDefaultSection();
+      String defaultSection = await Prefs().getDefaultSection();
+      if (defaultSection == "browser") {
+        // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
+        _webViewProvider.browserShowInForeground = true;
+
+        // Change to Profile as a base for loading the browser
+        defaultSection = "0";
+      }
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
@@ -1536,7 +1756,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider.basic.userApiKey;
-    final dynamic prof = await TornApiCaller().getOwnProfileBasic();
+    final dynamic prof = await Get.find<ApiCallerController>().getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof
@@ -1578,12 +1798,56 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       _changelogIsActive = true;
-      _showChangeLogDialog(context);
+      await _showChangeLogDialog(context);
+    } else {
+      // Other dialogs we need to show when the dialog is not being displayed
+
+      // Appwidget dialog
+      if (Platform.isAndroid) {
+        if (!await Prefs().getAppwidgetExplanationShown()) {
+          int widgets = await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+          if (widgets > 0) {
+            await _showAppwidgetExplanationDialog(context);
+            Prefs().setAppwidgetExplanationShown(true);
+            return; // Do not show more dialogs below
+          }
+        }
+      }
+
+      // Announcement dialog
+      // Version hardcoded - only allow users with version 0
+      if ((await Prefs().getAppAnnouncementDialogVersion()) <= 0) {
+        // For version 1, user needs to have 24 hours of app use
+        int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+        if (savedSeconds < 86400) return;
+
+        // If we are still in an old dialog, get DB to see if we can are free to show it
+        int allowed = (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value;
+        if (allowed == 1) {
+          // If we are allowed to proceed, show the dialog
+          await showDialog(
+            useRootNavigator: false,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return AnnouncementDialog(themeProvider: _themeProvider);
+            },
+          );
+
+          // Then update the version to the current one
+          Prefs().setAppAnnouncementDialogVersion(1);
+          return; // Do not show more dialogs below
+        }
+      }
+
+      // Other dialogs
+      //...
     }
   }
 
   Future<void> _showChangeLogDialog(BuildContext context) async {
     await showDialog(
+      useRootNavigator: false,
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -1596,8 +1860,20 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     });
   }
 
+  Future<void> _showAppwidgetExplanationDialog(BuildContext context) async {
+    await showDialog(
+      useRootNavigator: false,
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AppwidgetExplanationDialog();
+      },
+    );
+  }
+
   void _callSectionFromOutside(int section) {
     setState(() {
+      _webViewProvider.browserShowInForeground = false;
       _selected = section;
       _activeDrawerIndex = section;
     });
@@ -1615,6 +1891,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else {
       String action;
       await showDialog(
+        useRootNavigator: false,
         context: context,
         builder: (BuildContext context) {
           return OnAppExitDialog();
@@ -1722,7 +1999,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                 _webViewProvider.openBrowserPreference(
                                   context: context,
                                   url: "https://www.torn.com/page.php?sid=stocks",
-                                  useDialog: _settingsProvider.useQuickBrowser,
+                                  browserTapType: BrowserTapType.notification,
                                 );
                                 Navigator.of(context).pop();
                               },

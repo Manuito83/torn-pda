@@ -25,6 +25,7 @@ import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class TargetsOptions {
   String description;
@@ -35,7 +36,7 @@ class TargetsOptions {
       case "Options":
         iconData = Icons.settings;
         break;
-      case "Filter":
+      case "Filter Color":
         iconData = Icons.filter_list;
         break;
       case "Backup":
@@ -109,7 +110,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   final _popupOptionsChoices = <TargetsOptions>[
     TargetsOptions(description: "Options"),
-    TargetsOptions(description: "Filter"),
+    TargetsOptions(description: "Filter Color"),
     TargetsOptions(description: "Backup"),
     TargetsOptions(description: "Wipe"),
   ];
@@ -167,7 +168,7 @@ class _TargetsPageState extends State<TargetsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.secondBackground,
+                  backgroundColor: _themeProvider.secondBackground,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -189,7 +190,7 @@ class _TargetsPageState extends State<TargetsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.secondBackground,
+                  backgroundColor: _themeProvider.secondBackground,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -265,12 +266,18 @@ class _TargetsPageState extends State<TargetsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: _appBarText,
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         IconButton(
@@ -665,8 +672,9 @@ class _TargetsPageState extends State<TargetsPage> {
         widget.retaliationCallback(newOptions.retaliationEnabled);
         //widget.tabCallback(newOptions.tacEnabled);
         break;
-      case "Filter":
+      case "Filter Color":
         showDialog(
+          useRootNavigator: false,
           context: context,
           builder: (BuildContext context) {
             return ColorFilterDialog();

@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class ProfileCheckAddButton extends StatefulWidget {
@@ -480,7 +480,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
         seconds: 3,
       );
     } else {
-      dynamic target = await TornApiCaller().getTarget(playerId: widget.profileId.toString());
+      dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: widget.profileId.toString());
       String message = "";
       Color messageColor = Colors.green[700];
       if (target is TargetModel) {

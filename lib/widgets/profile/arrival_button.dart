@@ -19,7 +19,7 @@ class ArrivalButton extends StatefulWidget {
     @required this.themeProvider,
     @required this.userProv,
     @required this.settingsProv,
-    @required this.launchBrowser({String url, bool dialogRequested}),
+    @required this.launchBrowser({String url, bool shortTap}),
     @required this.updateCallback,
     Key key,
   }) : super(key: key);

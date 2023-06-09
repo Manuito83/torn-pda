@@ -22,6 +22,7 @@ dependencies:
     sdk: flutter
   android_intent_plus: ^3.1.5
   animations: ^2.0.2
+  app_settings: ^4.2.0
   audioplayers: ^0.20.1
   bot_toast: ^4.0.1
   cloud_firestore: 4.5.0
@@ -53,13 +54,18 @@ dependencies:
   flutter_inappwebview: 
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: manuito-beta22
-  flutter_local_notifications: 9.2.0
+  flutter_local_notifications: 13.0.0
   flutter_secure_storage: ^6.0.0
   flutter_slidable: ^2.0.0
   flutter_speed_dial: ^6.0.0
-  font_awesome_flutter: ^10.1.0
+  flutter_xlider: ^3.5.0
+  workmanager: ^0.5.1
+  font_awesome_flutter: ^10.4.0
   get: ^4.6.3
+  home_widget:
+    git:
+      url: https://github.com/Manuito83/home_widget.git
+      ref: main
   html: ^0.15.0
   http: ^0.13.4
   lint: ^1.8.1
@@ -67,18 +73,18 @@ dependencies:
   import_sorter: ^4.6.0
   intl: ^0.17.0
   material_design_icons_flutter: 5.0.5955-rc.1  ## Breaking changes in minor versions
-  non_linear_slider: ^0.0.1
   percent_indicator: ^4.2.2
   provider: ^6.0.2
   pull_to_refresh: ^2.0.0
-  quick_actions: ^0.6.0+9
-  rxdart: ^0.27.3
+  quick_actions: ^1.0.5
+  receive_intent: 0.2.3
+  rxdart: ^0.27.7
   share: ^2.0.4
   shared_preferences: ^2.0.15
   showcaseview: 2.0.0+1
   sliding_up_panel: ^2.0.0+1
   timeline_tile: ^2.0.0
-  timezone: ^0.8.0
+  timezone: ^0.9.1
   toggle_switch: ^2.0.1
   uni_links: ^0.5.1
   url_launcher: ^6.0.18

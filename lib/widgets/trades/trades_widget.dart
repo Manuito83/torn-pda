@@ -870,6 +870,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         ),
       );
       showDialog(
+        useRootNavigator: false,
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(

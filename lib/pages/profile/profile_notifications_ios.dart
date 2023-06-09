@@ -305,6 +305,34 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
         );
         types.add(SizedBox(height: 10));
       }
+
+      if (element == ProfileNotification.rankedWar) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Ranked War notification timings"),
+                IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return JailAheadOptions();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        types.add(SizedBox(height: 10));
+      }
     });
 
     return Column(

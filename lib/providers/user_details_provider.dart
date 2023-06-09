@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class UserDetailsProvider extends ChangeNotifier {
@@ -71,7 +71,7 @@ class UserDetailsProvider extends ChangeNotifier {
         // NOTE: calling basic to make things faster
         // Basic includes:
         // + Battle stats for TAC
-        var apiVerify = await TornApiCaller().getOwnProfileBasic();
+        var apiVerify = await Get.find<ApiCallerController>().getOwnProfileBasic();
 
         if (apiVerify is OwnProfileBasic) {
           // Reassign from saved user, as these don't come with the API

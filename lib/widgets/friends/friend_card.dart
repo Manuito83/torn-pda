@@ -16,10 +16,10 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/pages/friends/friend_details_page.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import '../notes_dialog.dart';
 
 class FriendCard extends StatefulWidget {
@@ -35,7 +35,6 @@ class _FriendCardState extends State<FriendCard> {
   FriendModel _friend;
   FriendsProvider _friendsProvider;
   ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
 
   Timer _ticker;
@@ -60,7 +59,6 @@ class _FriendCardState extends State<FriendCard> {
     _returnLastUpdated();
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Slidable(
       startActionPane: ActionPane(
@@ -138,6 +136,7 @@ class _FriendCardState extends State<FriendCard> {
                               ),
                             ),
                             closedColor: Colors.transparent,
+                            openColor: _themeProvider.canvas,
                             closedBuilder: (BuildContext context, VoidCallback openContainer) {
                               return SizedBox(
                                 height: 20,
@@ -304,14 +303,14 @@ class _FriendCardState extends State<FriendCard> {
           await context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: tradeUrl,
-                useDialog: _settingsProvider.useQuickBrowser,
+                browserTapType: BrowserTapType.short,
               );
         },
         onLongPress: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: tradeUrl,
-                useDialog: false,
+                browserTapType: BrowserTapType.long,
               );
         },
       ),
@@ -333,14 +332,14 @@ class _FriendCardState extends State<FriendCard> {
           await context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: messageUrl,
-                useDialog: _settingsProvider.useQuickBrowser,
+                browserTapType: BrowserTapType.short,
               );
         },
         onLongPress: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: messageUrl,
-                useDialog: false,
+                browserTapType: BrowserTapType.long,
               );
         },
       ),
@@ -361,14 +360,14 @@ class _FriendCardState extends State<FriendCard> {
           await context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: profileUrl,
-                useDialog: _settingsProvider.useQuickBrowser,
+                browserTapType: BrowserTapType.short,
               );
         },
         onLongPress: () async {
           await context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
                 url: profileUrl,
-                useDialog: false,
+                browserTapType: BrowserTapType.long,
               );
         },
       ),
@@ -468,7 +467,7 @@ class _FriendCardState extends State<FriendCard> {
       BotToast.showText(
         text: HtmlParser.fix("${_friend.name} belongs to your same company "
             "(${_friend.job.companyName}) as "
-            "${_friend.job.position}"),
+            "${_friend.job.job}"),
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,

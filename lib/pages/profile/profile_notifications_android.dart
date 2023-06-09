@@ -3,6 +3,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
 import 'package:torn_pda/pages/profile/jail_ahead_options.dart';
+import 'package:torn_pda/pages/profile/war_ahead_options.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
@@ -50,6 +52,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   String _boosterDropDownValue;
   String _hospitalDropDownValue;
   String _jailDropDownValue;
+  String _rankedWarDropDownValue;
 
   Future _preferencesLoaded;
 
@@ -181,6 +184,10 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         case ProfileNotification.jail:
           typeString = 'Jail';
           profileType = ProfileNotification.jail;
+          break;
+        case ProfileNotification.rankedWar:
+          typeString = 'Ranked War';
+          profileType = ProfileNotification.rankedWar;
           break;
       }
 
@@ -383,6 +390,34 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         );
         types.add(SizedBox(height: 10));
       }
+
+      if (element == ProfileNotification.rankedWar) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Ranked War notification timings"),
+                IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return WarAheadOptions();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        types.add(SizedBox(height: 10));
+      }
     });
 
     return Column(
@@ -419,6 +454,9 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         break;
       case ProfileNotification.jail:
         value = _jailDropDownValue;
+        break;
+      case ProfileNotification.rankedWar:
+        value = _rankedWarDropDownValue;
         break;
     }
 
@@ -521,6 +559,12 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
               _jailDropDownValue = value;
             });
             break;
+          case ProfileNotification.rankedWar:
+            Prefs().setRankedWarNotificationType(value);
+            setState(() {
+              _rankedWarDropDownValue = value;
+            });
+            break;
         }
       },
     );
@@ -548,6 +592,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
     var medicalType = await Prefs().getMedicalNotificationType();
     var hospitalType = await Prefs().getHospitalNotificationType();
     var jailType = await Prefs().getJailNotificationType();
+    var rankedWarType = await Prefs().getRankedWarNotificationType();
     var boosterType = await Prefs().getBoosterNotificationType();
 
     setState(() {
@@ -566,6 +611,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
       _medicalDropDownValue = medicalType;
       _hospitalDropDownValue = hospitalType;
       _jailDropDownValue = jailType;
+      _rankedWarDropDownValue = rankedWarType;
       _boosterDropDownValue = boosterType;
     });
   }

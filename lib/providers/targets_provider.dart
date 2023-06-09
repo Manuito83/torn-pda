@@ -20,7 +20,7 @@ import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AddTargetResult {
@@ -56,8 +56,6 @@ class TargetsProvider extends ChangeNotifier {
 
   TargetSortType _currentSort;
 
-  List<String> lastAttackedTargets = [];
-
   TargetsProvider() {
     restorePreferences();
   }
@@ -79,7 +77,7 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewTargetModel = await TornApiCaller().getTarget(playerId: targetId);
+    dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: targetId);
 
     if (myNewTargetModel is TargetModel) {
       _getRespectFF(attacks, myNewTargetModel);
@@ -111,7 +109,7 @@ class TargetsProvider extends ChangeNotifier {
   /// to call several times if looping. Example: we can loop the addTarget method 100 times, but
   /// the attack variable we provide is the same and we only requested it once.
   dynamic getAttacks() async {
-    return await TornApiCaller().getAttacks();
+    return await Get.find<ApiCallerController>().getAttacks();
   }
 
   void _getTargetFaction(TargetModel myNewTargetModel) {
@@ -213,7 +211,8 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: targetToUpdate.playerId.toString());
+      dynamic myUpdatedTargetModel =
+          await Get.find<ApiCallerController>().getTarget(playerId: targetToUpdate.playerId.toString());
       if (myUpdatedTargetModel is TargetModel) {
         _getRespectFF(
           attacks,
@@ -257,7 +256,8 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: _targets[i].playerId.toString());
+        dynamic myUpdatedTargetModel =
+            await Get.find<ApiCallerController>().getTarget(playerId: _targets[i].playerId.toString());
         if (myUpdatedTargetModel is TargetModel) {
           _getRespectFF(
             attacks,
@@ -301,7 +301,10 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> updateTargetsAfterAttacks() async {
+  Future<void> updateTargetsAfterAttacks({@required List<String> lastAttackedTargets}) async {
+    // Copies the list locally, as it will be erased by the webview after it has been sent
+    // so that other attacks are possible
+    List<String> lastAttackedCopy = List<String>.from(lastAttackedTargets);
     await Future.delayed(Duration(seconds: 15));
 
     // Get attacks full to use later
@@ -309,12 +312,13 @@ class TargetsProvider extends ChangeNotifier {
 
     // Local function for the update of several targets after attacking
     for (var tar in _targets) {
-      for (var i = 0; i < lastAttackedTargets.length; i++) {
-        if (tar.playerId.toString() == lastAttackedTargets[i]) {
+      for (var i = 0; i < lastAttackedCopy.length; i++) {
+        if (tar.playerId.toString() == lastAttackedCopy[i]) {
           tar.isUpdating = true;
           notifyListeners();
           try {
-            dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: tar.playerId.toString());
+            dynamic myUpdatedTargetModel =
+                await Get.find<ApiCallerController>().getTarget(playerId: tar.playerId.toString());
             if (myUpdatedTargetModel is TargetModel) {
               _getRespectFF(
                 attacks,
@@ -339,7 +343,7 @@ class TargetsProvider extends ChangeNotifier {
             tar.isUpdating = false;
             _updateResultAnimation(tar, false);
           }
-          if (lastAttackedTargets.length > 40) {
+          if (lastAttackedCopy.length > 40) {
             await Future.delayed(const Duration(seconds: 1), () {});
           }
         }

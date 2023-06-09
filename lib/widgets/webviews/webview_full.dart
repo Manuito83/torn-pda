@@ -54,7 +54,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
@@ -109,8 +109,7 @@ class WebViewFull extends StatefulWidget {
   final int windowId;
   final String customTitle;
   final String customUrl;
-  final Function customCallBack;
-  final bool dialog;
+  //final bool dialog;
   final bool useTabs;
   final bool chatRemovalActive;
   final GlobalKey<WebViewFullState> key;
@@ -123,8 +122,7 @@ class WebViewFull extends StatefulWidget {
     this.windowId,
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
-    this.customCallBack,
-    this.dialog = false,
+    //this.dialog = false,
     this.useTabs = false,
     this.chatRemovalActive = false,
     this.key,
@@ -139,6 +137,9 @@ class WebViewFull extends StatefulWidget {
 }
 
 class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
+  // DEBUG SCRIPT INJECTION (logs)
+  bool _debugScriptsInjection = false;
+
   InAppWebViewController webView;
   var _initialWebViewSettings = InAppWebViewSettings();
 
@@ -194,6 +195,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _bazaarFillActive = false;
 
   var _localChatRemovalActive = false;
+  var _localChatRemoveActiveBeforeFullScreen = false;
 
   var _quickItemsActive = false;
   var _quickItemsFactionActive = false;
@@ -235,6 +237,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _profileTriggered = false;
   var _attackTriggered = false;
 
+  List<String> _lastAttackedTargets = <String>[];
+  List<String> _lastAttackedMembers = <String>[];
+
   UserDetailsProvider _userProvider;
   UserController _u = Get.put(UserController());
   TerminalProvider _terminalProvider;
@@ -259,8 +264,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   PullToRefreshController _pullToRefreshController;
 
-  bool _clearCacheFirstOpportunity = false;
-
   bool _findInPageActive = false;
   final _findController = TextEditingController();
   final _findFocus = FocusNode();
@@ -272,6 +275,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Chaining configuration
   bool _isChainingBrowser = false;
+  ChainingPayload _chainingPayload;
   final _chainingAidPopupChoices = <HealingPages>[
     HealingPages(description: "Personal"),
     HealingPages(description: "Faction"),
@@ -287,18 +291,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _nextButtonPressed = false;
   // Chaining configuration ends
 
-  // We need to destroy the webview before closing the dialog
-  // See: https://github.com/flutter/flutter/issues/112542
-  bool _closeButtonTriggered = false;
-
   // Native Auth management
-  Future _nativeAuthObtained;
   NativeUserProvider _nativeUser;
   NativeAuthProvider _nativeAuth;
 
+  // Time triggers for login error
+  int _loginErrorRetrySeconds = 0;
+  DateTime _loginErrorToastTimer;
+
   // Showcases
-  GlobalKey _showCaseCloseButton = GlobalKey();
   GlobalKey _showCaseTitleBar = GlobalKey();
+  GlobalKey _showCasePlayPauseChain = GlobalKey();
+  bool _showCasesTriggeredThisSession = false;
 
   @override
   void initState() {
@@ -312,7 +316,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _clearCacheFirstOpportunity = _settingsProvider.getClearCacheNextOpportunityAndReset;
 
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
@@ -321,10 +324,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _initialUrl = URLRequest(url: WebUri(widget.customUrl));
 
-    if (widget.isChainingBrowser) {
-      _isChainingBrowser = true;
+    _isChainingBrowser = widget.isChainingBrowser;
+    if (_isChainingBrowser) {
+      _chainingPayload = widget.chainingPayload;
       _w = Get.put(WarController());
-      String title = widget.chainingPayload.attackNameList[0];
+      String title = _chainingPayload.attackNameList[0];
       _pageTitle = title;
       // Decide if voluntarily skipping first target (always when it's a panic target)
       _assessFirstTargetsOnLaunch();
@@ -333,12 +337,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _chainWidgetController.expanded = true;
       }
       _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
-      if (widget.chainingPayload.war) {
-        _w.lastAttackedTargets.clear();
-        _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[0]);
+      if (_chainingPayload.war) {
+        _lastAttackedMembers.clear();
+        _lastAttackedMembers.add(_chainingPayload.attackIdList[0]);
       } else {
-        _targetsProvider.lastAttackedTargets.clear();
-        _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[0]);
+        _lastAttackedTargets.clear();
+        _lastAttackedTargets.add(_chainingPayload.attackIdList[0]);
       }
     } else {
       _pageTitle = widget.customTitle;
@@ -351,7 +355,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _initialWebViewSettings = InAppWebViewSettings(
       cacheEnabled: false,
       transparentBackground: true,
-      clearCache: _clearCacheFirstOpportunity,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
       javaScriptCanOpenWindowsAutomatically: true,
@@ -362,7 +365,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
-      /// hospital timer, company applications, etc. There is a but on iOS if we activate it
+      /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
       /// and deactivate it dynamically, where onLoadResource stops triggering!
       //useShouldInterceptAjaxRequest: false,
       mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
@@ -376,6 +379,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       disableLongPressContextMenuOnLinks: true,
       ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
       disallowOverScroll: _settingsProvider.iosDisallowOverscroll,
+      overScrollMode: OverScrollMode.NEVER,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -384,16 +388,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         size: PullToRefreshSize.DEFAULT,
         backgroundColor: _themeProvider.secondBackground,
         enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
-        slingshotDistance: 150,
-        distanceToTriggerSync: 150,
+        slingshotDistance: 300,
+        distanceToTriggerSync: 300,
       ),
       onRefresh: () async {
         await reload();
       },
     );
-
-    // Native Auth
-    _nativeAuthObtained = _assessNativeAuth();
   }
 
   @override
@@ -428,34 +429,36 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     return WillPopScope(
       onWillPop: _willPopCallback,
-      // If we are launching from a dialog, it's important not to add the show case, in
-      // case this is the first time, as there is no appBar to be found and it would
-      // failed to open
       child: ShowCaseWidget(
         builder: Builder(builder: (_) {
-          _launchShowCases(_);
+          if (_webViewProvider.browserShowInForeground && !_showCasesTriggeredThisSession) {
+            launchShowCases(_);
+          }
           return buildScaffold(context);
         }),
       ),
     );
   }
 
-  void _launchShowCases(BuildContext _) {
+  // ! Ensure that any showcases here are also taken into account in the showcases in [webview_stackview.dart],
+  // ! as the ones here need to fire first. Then only the others are allowed to fire.
+  void launchShowCases(BuildContext _) {
     Future.delayed(Duration(seconds: 1), () async {
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
-      if (widget.dialog) {
-        if (!_settingsProvider.showCases.contains("webview_closeButton")) {
-          _settingsProvider.addShowCase = "webview_closeButton";
-          showCases.add(_showCaseCloseButton);
-        }
-      } else {
-        if (!_settingsProvider.showCases.contains("webview_titleBar")) {
-          _settingsProvider.addShowCase = "webview_titleBar";
-          showCases.add(_showCaseTitleBar);
-        }
+
+      if (!_settingsProvider.showCases.contains("webview_titleBar")) {
+        _settingsProvider.addShowCase = "webview_titleBar";
+        showCases.add(_showCaseTitleBar);
       }
+
+      if (!_settingsProvider.showCases.contains("webview_playPauseChain")) {
+        _settingsProvider.addShowCase = "webview_playPauseChain";
+        showCases.add(_showCasePlayPauseChain);
+      }
+
       if (showCases.isNotEmpty) {
         ShowCaseWidget.of(_).startShowCase(showCases);
+        _showCasesTriggeredThisSession = true;
       }
     });
   }
@@ -470,306 +473,48 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: widget.dialog
-              // Show appBar only if we are not showing the webView in a dialog
-              ? null
-              : _settingsProvider.appBarTop
-                  ? buildCustomAppBar()
-                  : null,
-          bottomNavigationBar: widget.dialog
-              // Show appBar only if we are not showing the webView in a dialog
-              ? null
-              : !_settingsProvider.appBarTop
-                  ? SizedBox(
-                      height: AppBar().preferredSize.height,
-                      child: buildCustomAppBar(),
-                    )
-                  : null,
-          body: Container(
-            // Background color for all browser widgets
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
-            child: widget.dialog
-                ? Column(
-                    children: [
-                      Expanded(child: mainWebViewColumn()),
-                      _quickBrowserBottomBar(),
-                    ],
-                  )
-                : mainWebViewColumn(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _quickBrowserBottomBar() {
-    if (_findInPageActive) {
-      return Container(
-        color: _themeProvider.secondBackground,
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () async {
-                setState(() {
-                  _findInPageActive = false;
-                });
-                _findController.text = "";
-                _findInteractionController.clearMatches();
-                _findFirstSubmitted = false;
-              },
-            ),
-            Flexible(
-              child: Form(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                      child: Row(
-                        children: <Widget>[
-                          Flexible(
-                            child: TextField(
-                              onEditingComplete: () {
-                                _findPreviousText = _findController.text;
-                                _findAll();
-                                _findFocus.unfocus();
-                              },
-                              controller: _findController,
-                              focusNode: _findFocus,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: "What are you looking for?",
-                                hintStyle: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              style: TextStyle(
-                                color: _themeProvider.mainText,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    _findPreviousText = _findController.text;
-                    _findAll();
-                    _findFocus.unfocus();
-                  },
-                ),
-                if (_findFirstSubmitted)
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.keyboard_arrow_up),
-                        onPressed: () {
-                          _findNext(forward: false);
-                          _findFocus.unfocus();
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.keyboard_arrow_down),
-                        onPressed: () {
-                          _findNext(forward: true);
-                          _findFocus.unfocus();
-                        },
-                      ),
-                    ],
-                  )
-              ],
-            )
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.secondBackground,
-      height: 38,
-      child: GestureDetector(
-        onLongPress: () => _openUrlDialog(),
-        onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsBrowserDialog
-            ? (DragEndDetails details) async {
-                _webViewProvider.toggleHideTabs();
-                if (await Prefs().getReminderAboutHideTabFeature() == false) {
-                  Prefs().setReminderAboutHideTabFeature(true);
-                  return showDialog<void>(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (BuildContext context) {
-                      return const TabsHideReminderDialog();
-                    },
-                  );
-                }
-              }
-            : null,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 100,
-              child: Row(
-                children: [
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      splashColor: Colors.blueGrey,
-                      child: const SizedBox(
-                        width: 40,
-                        child: Icon(
-                          Icons.arrow_back_ios_outlined,
-                          size: 20,
-                        ),
-                      ),
-                      onTap: () async {
-                        _tryGoBack();
-                      },
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      splashColor: Colors.blueGrey,
-                      child: const SizedBox(
-                        width: 40,
-                        child: Icon(
-                          Icons.arrow_forward_ios_outlined,
-                          size: 20,
-                        ),
-                      ),
-                      onTap: () async {
-                        _tryGoForward();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Showcase(
-                  key: _showCaseCloseButton,
-                  title: 'Options menu',
-                  description: '\nLong press the bottom bar of the quick browser to open a '
-                      'menu with additional options, including faction attack assists calls!\n\n'
-                      'Swipe down/up to hide or show your tab bar!',
-                  targetPadding: const EdgeInsets.only(top: 8),
-                  disableMovingAnimation: true,
-                  textColor: _themeProvider.mainText,
-                  tooltipBackgroundColor: _themeProvider.secondBackground,
-                  descTextStyle: TextStyle(fontSize: 13),
-                  tooltipPadding: EdgeInsets.all(20),
-                  child: GestureDetector(
-                    child: Container(
-                      color: Colors.transparent, // Background to extend the buttons detection area
-                      child: Column(
+        top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        bottom: !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        left: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        child: Consumer<WebViewProvider>(
+          builder: (context, wv, child) => Scaffold(
+            backgroundColor: _themeProvider.canvas,
+            appBar: wv.currentUiMode == UiMode.fullScreen
+                // Show appBar only if we are not showing the webView in a dialog
+                ? null
+                : _settingsProvider.appBarTop
+                    ? buildCustomAppBar()
+                    : null,
+            bottomNavigationBar:
+                // With appbar bottom, add appbar and some space for tabs
+                !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            "CLOSE",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: _themeProvider.mainText,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
+                          SizedBox(
+                            height: AppBar().preferredSize.height,
+                            child: buildCustomAppBar(),
                           ),
                           SizedBox(
-                            width: 15,
-                            child: Divider(
-                              height: 3,
-                              thickness: 1,
-                              color: _themeProvider.mainText,
-                            ),
+                            height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
                           ),
-                          if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
-                                  _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-                              _userProvider.basic?.faction?.factionId != 0)
-                            Text(
-                              "ASSIST",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 7,
-                              ),
-                            )
-                          else
-                            Text(
-                              "OPTIONS",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _themeProvider.mainText,
-                                fontSize: 7,
-                              ),
-                            ),
                         ],
+                      )
+                    :
+                    // With appbar top, still add some space below for tabs
+                    SizedBox(
+                        height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
                       ),
-                    ),
-                    onTap: () async {
-                      setState(() {
-                        _closeButtonTriggered = true;
-                      });
-                      await Future.delayed(const Duration(milliseconds: 200));
-                      if (mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _travelHomeIcon(),
-                  _crimesMenuIcon(),
-                  _cityMenuIcon(),
-                  _quickItemsMenuIcon(),
-                  _vaultsPopUpIcon(),
-                  _tradesMenuIcon(),
-                  _vaultOptionsIcon(),
-                  if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                    ),
-                    child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
-                        ? Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              splashColor: Colors.blueGrey,
-                              child: const Icon(Icons.refresh),
-                              onTap: () async {
-                                _scrollX = await webView.getScrollX();
-                                _scrollY = await webView.getScrollY();
-                                await reload();
-                                _scrollAfterLoad = true;
-                              },
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            body: Container(
+                // Background color for all browser widgets
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+                child: Column(
+                  children: [
+                    Expanded(child: mainWebViewColumn()),
+                  ],
+                )),
+          ),
         ),
       ),
     );
@@ -791,212 +536,217 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           )
         else
           const SizedBox.shrink(),
+        // ### WIDGETS
+
         // Profile attack
-        _profileAttackWidget,
-        if (widget.isChainingBrowser)
-          ExpandablePanel(
-            theme: ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: SizedBox.shrink(),
-            controller: _chainWidgetController,
-            header: SizedBox.shrink(),
-            expanded: ChainWidget(
-              key: _chainWidgetKey,
-              alwaysDarkBackground: true,
-            ),
-          ),
-        // Crimes widget. NOTE: this one will open at the bottom if
-        // appBar is at the bottom, so it's duplicated below the actual
-        // webView widget
-        if (_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _crimesController,
-            header: const SizedBox.shrink(),
-            expanded: _crimesActive
-                ? CrimesWidget(
-                    controller: webView,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        ExpandablePanel(
-          theme: const ExpandableThemeData(
-            hasIcon: false,
-            tapBodyToCollapse: false,
-            tapHeaderToExpand: false,
-          ),
-          collapsed: const SizedBox.shrink(),
-          controller: _ocNnbController,
-          header: const SizedBox.shrink(),
-          expanded: _ocNnbTriggered
-              ? FactionCrimesWidget(
-                  source: _ocSource,
-                )
-              : const SizedBox.shrink(),
-        ),
-        // Quick items widget. NOTE: this one will open at the bottom if
-        // appBar is at the bottom, so it's duplicated below the actual
-        // webView widget
-        if (_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: false,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        if (_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsFactionController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsFactionActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: true,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        // Gym widget
-        _gymExpandable,
-        // Trades widget
-        _tradesExpandable,
-        // Vault widget
-        _vaultExpandable,
-        // City widget
-        _cityExpandable,
-        // Jail widget
-        _jailExpandable,
-        // Bounties widget
-        _bountiesExpandable,
-        // Actual WebView
-        Expanded(
-          child: _closeButtonTriggered
-              ? const SizedBox.shrink()
-              : FutureBuilder(
-                  future: _nativeAuthObtained,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return _mainWebViewStack();
-                    } else {
-                      return SizedBox.shrink();
-                    }
-                  },
-                ),
-        ),
-        // Widgets that go at the bottom if we have changes appbar to bottom
-        if (!_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _crimesController,
-            header: const SizedBox.shrink(),
-            expanded: _crimesActive
-                ? CrimesWidget(
-                    controller: webView,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        if (!_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: false,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        if (!_settingsProvider.appBarTop)
-          ExpandablePanel(
-            theme: const ExpandableThemeData(
-              hasIcon: false,
-              tapBodyToCollapse: false,
-              tapHeaderToExpand: false,
-            ),
-            collapsed: const SizedBox.shrink(),
-            controller: _quickItemsFactionController,
-            header: const SizedBox.shrink(),
-            expanded: _quickItemsFactionActive
-                ? QuickItemsWidget(
-                    inAppWebViewController: webView,
-                    faction: true,
-                  )
-                : const SizedBox.shrink(),
-          )
-        else
-          const SizedBox.shrink(),
-        // Terminal
-        Consumer<SettingsProvider>(
-          builder: (_, value, __) {
-            if (value.terminalEnabled) {
-              return Container(
-                decoration: BoxDecoration(
-                  border: Border.all(width: 2, color: Colors.green[900]),
-                ),
-                height: 100,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            _terminalProvider.terminal,
-                            style: const TextStyle(color: Colors.green, fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
+        Visibility(
+          visible: !_fullScreenAndWidgetHide(),
+          child: Column(
+            children: [
+              _profileAttackWidget,
+              if (_isChainingBrowser)
+                ExpandablePanel(
+                  theme: ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: SizedBox.shrink(),
+                  controller: _chainWidgetController,
+                  header: SizedBox.shrink(),
+                  expanded: ChainWidget(
+                    key: _chainWidgetKey,
+                    alwaysDarkBackground: true,
                   ),
                 ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
+              // Crimes widget. NOTE: this one will open at the bottom if
+              // appBar is at the bottom, so it's duplicated below the actual
+              // webView widget
+              if (_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _crimesController,
+                  header: const SizedBox.shrink(),
+                  expanded: _crimesActive
+                      ? CrimesWidget(
+                          controller: webView,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              ExpandablePanel(
+                theme: const ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: const SizedBox.shrink(),
+                controller: _ocNnbController,
+                header: const SizedBox.shrink(),
+                expanded: _ocNnbTriggered
+                    ? FactionCrimesWidget(
+                        source: _ocSource,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              // Quick items widget. NOTE: this one will open at the bottom if
+              // appBar is at the bottom, so it's duplicated below the actual
+              // webView widget
+              if (_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: false,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              if (_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsFactionController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsFactionActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: true,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              // Gym widget
+              _gymExpandable,
+              // Trades widget
+              _tradesExpandable,
+              // Vault widget
+              _vaultExpandable,
+              // City widget
+              _cityExpandable,
+              // Jail widget
+              _jailExpandable,
+              // Bounties widget
+              _bountiesExpandable,
+            ],
+          ),
+        ),
+
+        // ### ACTUAL WEBVIEW
+        Expanded(child: _mainWebViewStack()),
+
+        // ### Widgets that go at the bottom if we have changes appbar to bottom
+        Visibility(
+          visible: !_fullScreenAndWidgetHide(),
+          child: Column(
+            children: [
+              if (!_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _crimesController,
+                  header: const SizedBox.shrink(),
+                  expanded: _crimesActive
+                      ? CrimesWidget(
+                          controller: webView,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              if (!_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: false,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              if (!_settingsProvider.appBarTop)
+                ExpandablePanel(
+                  theme: const ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: const SizedBox.shrink(),
+                  controller: _quickItemsFactionController,
+                  header: const SizedBox.shrink(),
+                  expanded: _quickItemsFactionActive
+                      ? QuickItemsWidget(
+                          inAppWebViewController: webView,
+                          faction: true,
+                        )
+                      : const SizedBox.shrink(),
+                )
+              else
+                const SizedBox.shrink(),
+              // Terminal
+              Consumer<SettingsProvider>(
+                builder: (_, value, __) {
+                  if (value.terminalEnabled) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 2, color: Colors.green[900]),
+                      ),
+                      height: 100,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  _terminalProvider.terminal,
+                                  style: const TextStyle(color: Colors.green, fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1009,7 +759,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           windowId: widget.windowId,
           initialUrlRequest: _initialUrl,
           initialUserScripts: _userScriptsProvider.getContinuousSources(
-            apiKey: _userProvider.basic.userApiKey,
+            apiKey: _userProvider?.basic?.userApiKey ?? "",
           ),
           pullToRefreshController: _pullToRefreshController,
           findInteractionController: _findInteractionController,
@@ -1023,7 +773,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl.url.toString(),
-                apiKey: _userProvider.basic.userApiKey,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
@@ -1103,24 +853,33 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: request.request.url.toString(),
-                apiKey: _userProvider.basic.userApiKey,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webView.addUserScripts(userScripts: scriptsToAdd);
+
+              // DEBUG
+              if (_debugScriptsInjection) {
+                var addList = [];
+                for (var s in scriptsToAdd) {
+                  addList.add(s.groupName);
+                }
+                log("Added scripts in shouldOverride: $addList");
+              }
             }
 
             if (request.request.url.toString().contains("http://")) {
               _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
               return NavigationActionPolicy.CANCEL;
             }
+
             return NavigationActionPolicy.ALLOW;
           },
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
             // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
             // to open a window, a new tab is created but we can't see it and looks like a glitch)
-            if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
-                (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
+            if (!_settingsProvider.useTabsFullBrowser) {
               String url = request.request.url.toString().replaceAll("http:", "https:");
               _loadUrl(url);
             } else {
@@ -1139,6 +898,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             log("Start URL: ${uri}");
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
+            _webViewProvider.verticalMenuClose();
             if (!mounted) return;
 
             if (Platform.isAndroid) {
@@ -1150,7 +910,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
               final html = await webView.getHtml();
 
-              _hideChat();
+              hideChatOnLoad();
 
               final document = parse(html);
               _assessGeneral(document);
@@ -1167,7 +927,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 webView.evaluateJavascript(source: travelRemovePlaneJS());
               }
 
-              _hideChat();
+              hideChatOnLoad();
 
               if (mounted) {
                 setState(() {
@@ -1212,21 +972,41 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 }
               }
 
+              // DEBUG
+              if (_debugScriptsInjection) {
+                log("Removed scripts in loadStop: $scriptsToRemove");
+              }
+
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
-                apiKey: _userProvider.basic.userApiKey,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.end,
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (var script in scriptsToAdd) {
                 await webView.evaluateJavascript(
-                  source: _userScriptsProvider.adaptSource(script.source, _userProvider.basic.userApiKey),
+                  source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
                 );
               }
 
-              _hideChat();
+              // DEBUG
+              if (_debugScriptsInjection) {
+                var addList = [];
+                for (var s in scriptsToAdd) {
+                  addList.add(s.groupName);
+                }
+                log("Added scripts in shouldOverride: $addList");
+              }
+
+              hideChatOnLoad();
               _highlightChat();
+
+              // If we are using pull-to-refresh in a short page (that does not scroll), add a bit of body
+              // height so that the pull-to-refresh triggers properly
+              if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
+                _addExtraHeightForPullToRefresh();
+              }
 
               final html = await webView.getHtml();
               final document = parse(html);
@@ -1237,7 +1017,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               }
 
               if (widget.useTabs) {
-                //_reportUrlVisit(uri);
                 // Report title will only be used from onLoadStop, since onResourceLoad might trigger
                 // it too early (before it has changed)
                 _reportPageTitle();
@@ -1271,7 +1050,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 }
               }
 
-              _assessErrorCases(document);
+              assessErrorCases(document: document);
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -1445,7 +1224,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           },
           onConsoleMessage: (controller, consoleMessage) async {
             if (consoleMessage.message != "") {
-              if (!consoleMessage.message.contains("Refused to connect to ")) {
+              if (!consoleMessage.message.contains("Refused to connect to ") &&
+                  !consoleMessage.message.contains("Uncaught (in promise) TypeError") &&
+                  !consoleMessage.message.contains("Blocked a frame with origin") &&
+                  !consoleMessage.message.contains("Error with Permissions-Policy header")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
@@ -1470,127 +1252,38 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
           },
           /*
-              shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-                // VAULT EVENTS
-                if (_vaultTriggered) {
-                  if (x.data.toString().contains("step=vaultProperty&withdraw") ||
-                      x.data.toString().contains("step=vaultProperty&deposit")) {
-                    // Wait a couple of seconds to let the html load
-                    Future.delayed(Duration(seconds: 2)).then((value) async {
-                      // Reset _vaultTriggered so that we can call _assessVault() again
-                      _reassessVault();
-                    });
-                  }
-                }
-            
-                /*
-                // This will intercept ajax calls performed when the bazaar reached 100 items
-                // and needs to be reloaded, so that we can remove and add again the fill buttons
-                if (x == null) return x;
-                if (x.data == null) return x;
-                if (x.url == null) return x;
-            
-                if (x.data.contains("step=getList&type=All&start=") &&
-                    x.url.contains('inventory.php') &&
-                    _bazaarActive &&
-                    _bazaarFillActive) {
-                  webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
-                  Future.delayed(const Duration(seconds: 2)).then((value) {
-                    webView.evaluateJavascript(source: addBazaarFillButtonsJS());
-                  });
-                }
-                */
-            
-                // MAIN AJAX REQUEST RETURN
-                return x;
-              },
-              */
+            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+              // MAIN AJAX REQUEST RETURN
+              return x;
+            },
+          */
         ),
-        // Some pages (e.g. travel or by double clicking a cooldown icon) don't have any scroll and the
-        // pull to refresh does not trigger. In this case, we setup an area at the top, over Torn's top bar
-        // which should not be pulled with normal use. By dragging there, we can pull in these situations.
-        if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon)
-          GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onVerticalDragEnd: (_) async {
+        // Container that covers Torn's top bar to serve as a gesture detector
+        GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onVerticalDragEnd: (_) async {
+            // Pull to refresh for short pages (since v3.1.0 we also add an extra height to short pages via scripts)
+            if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
               await reload();
               _pullToRefreshController.beginRefreshing();
-            },
-            child: Container(
-              height: 32,
-            ),
+            }
+          },
+          onDoubleTap: () {
+            // Return to windowed mode
+            if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
+              _webViewProvider.verticalMenuClose();
+              _webViewProvider.setCurrentUiMode(UiMode.window, context);
+              if (_settingsProvider.fullScreenRemovesChat) {
+                _webViewProvider.showAllChatsFullScreen();
+              }
+            }
+          },
+          child: Container(
+            height: 32,
           ),
+        ),
       ],
     );
-  }
-
-  Future _assessNativeAuth() async {
-    if (!_nativeUser.isNativeUserEnabled()) {
-      return;
-    }
-
-    String originalInitUrl = _initialUrl.url.toString();
-    if (!originalInitUrl.contains("torn.com")) return;
-
-    int elapsedSinceLastAuth = DateTime.now().difference(_nativeAuth.lastAuthRedirect).inHours;
-    if (_nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
-      bool error = false;
-
-      // Tentative immediate change, so that other opening tabs don't auth as well
-      _nativeAuth.lastAuthRedirect = DateTime.now();
-      log("Getting auth URL!");
-      try {
-        TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
-          context: context,
-          loginData: GetInitDataModel(
-            playerId: _userProvider.basic.playerId,
-            sToken: _nativeUser.playerSToken,
-          ),
-        );
-
-        if (loginResponse.success) {
-          // Join the standard Auth URL and the original URL requested as part of the redirect parameter
-          _initialUrl = URLRequest(url: WebUri(loginResponse.authUrl + originalInitUrl));
-          log("Auth URL: ${_initialUrl.url}");
-        } else {
-          error = true;
-          log("Auth URL failed: ${loginResponse.message}");
-        }
-      } catch (e) {
-        error = true;
-        log("Auth URL catch: $e");
-      }
-
-      if (error) {
-        // Reset time with some delay, so that rapidly opening tabs don't cause
-        Future.delayed(Duration(seconds: 2)).then((_) {
-          _nativeAuth.lastAuthRedirect = DateTime.fromMicrosecondsSinceEpoch(elapsedSinceLastAuth);
-        });
-
-        String errorMessage = "Authentication error, please check your username and password in Settings!";
-        if (_nativeAuth.authErrorsInSession >= 3) {
-          _nativeAuth.authErrorsInSession = 0;
-          errorMessage = "Too many authentication errors, your username and password have been erased in "
-              "Torn PDA settings as a precaution!";
-          _nativeUser.eraseUserPreferences();
-        } else {
-          _nativeAuth.authErrorsInSession++;
-        }
-
-        BotToast.showText(
-          text: errorMessage,
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red,
-          duration: Duration(seconds: 4),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
-    }
-
-    return;
   }
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
@@ -1623,6 +1316,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         return;
       },
     );
+  }
+
+  _addExtraHeightForPullToRefresh() {
+    webView.evaluateJavascript(source: addHeightForPullToRefresh());
   }
 
   void _addLoadoutChangeHandler(InAppWebViewController webView) {
@@ -1674,9 +1371,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     };
   }
 
-  Future _assessErrorCases(dom.Document document) async {
+  void removeAllUserScripts() async {
+    await webView.removeAllUserScripts();
+  }
+
+  Future assessErrorCases({dom.Document document}) async {
     if (!_nativeUser.isNativeUserEnabled()) {
       return;
+    }
+
+    if (document == null) {
+      final html = await webView?.getHtml();
+      if (html == null || html.isEmpty) return;
+      document = parse(html);
     }
 
     // If for some reason we are logged out of Torn, try to login again
@@ -1694,6 +1401,62 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         duration: Duration(seconds: 6),
         contentPadding: EdgeInsets.all(10),
       );
+      return;
+    }
+
+    // If for some reason we are logged out of Torn, try to login again
+    if (_nativeAuth.tryAutomaticLogins && document.querySelectorAll("[class*='logInWrap_']").isNotEmpty) {
+      if (_loginErrorToastTimer == null || DateTime.now().difference(_loginErrorToastTimer).inSeconds > 4) {
+        if (_webViewProvider.browserShowInForeground) {
+          BotToast.showText(
+            text: "Trying to log back into Torn\n\n"
+                "Please wait...!",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+        }
+      }
+      _loginErrorToastTimer = DateTime.now();
+
+      // New attempts will be made in a row if unsuccessful, so make them wait longer
+      // (this is the result of Torn going to an error page at first sometimes)
+      _loginErrorRetrySeconds++;
+      await Future.delayed(Duration(seconds: _loginErrorRetrySeconds));
+
+      final newDoc = parse(await webView.getHtml());
+      if (newDoc.querySelectorAll("[class*='logInWrap_']").isEmpty ||
+          newDoc.body.innerHtml.contains("failures from your IP address")) return;
+
+      TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
+        context: context,
+        loginData: GetInitDataModel(
+          playerId: _userProvider.basic.playerId,
+          sToken: _nativeUser.playerSToken,
+        ),
+      );
+
+      if (loginResponse.success) {
+        webView.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+        await Future.delayed(const Duration(seconds: 4));
+        _loginErrorRetrySeconds = 0;
+      } else {
+        BotToast.showText(
+          text: "Browser error while authenticating: please log in again or verify your user / pass combination "
+              "in the Settings section!",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red,
+          duration: Duration(seconds: 4),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
     }
   }
 
@@ -1745,9 +1508,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _hideChat() {
-    if (_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) {
+  void hideChatOnLoad() {
+    if ((_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) ||
+        _webViewProvider.chatRemovalWhileFullScreen) {
       webView.evaluateJavascript(source: removeChatOnLoadStartJS());
+    }
+  }
+
+  void hideChatWhileFullScreen() {
+    _localChatRemoveActiveBeforeFullScreen = _localChatRemovalActive;
+    webView.evaluateJavascript(source: removeChatJS());
+  }
+
+  void showChatAfterFullScreen() {
+    _localChatRemovalActive = _localChatRemoveActiveBeforeFullScreen;
+    if (!_localChatRemovalActive) {
+      webView.evaluateJavascript(source: restoreChatJS());
     }
   }
 
@@ -1837,6 +1613,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
     }
 
+    bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+            _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
+        _userProvider.basic?.faction?.factionId != 0;
+
     return CustomAppBar(
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
@@ -1864,20 +1644,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onPressed: () async {
             // Normal behavior is just to pop and go to previous page
             if (_backButtonPopsContext) {
-              if (widget.customCallBack != null) {
-                widget.customCallBack();
-              }
-              setState(() {
-                _closeButtonTriggered = true;
-              });
-              await Future.delayed(const Duration(milliseconds: 200));
+              _webViewProvider.setCurrentUiMode(UiMode.window, context);
               if (mounted) {
-                Navigator.of(context).pop();
+                _webViewProvider.browserShowInForeground = false;
+                _checkIfTargetsAttackedAndRevertChaining();
               }
             } else {
               // But we can change and go back to previous page in certain
-              // situations (e.g. when going for the vault while trading),
-              // in which case we need to return to previous target
+              // situations (e.g. when going for the vault while trading)
               final backPossible = await webView.canGoBack();
               if (backPossible) {
                 webView.goBack();
@@ -1894,11 +1668,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _openUrlDialog();
           },
           child: DottedBorder(
-            padding: const EdgeInsets.all(6),
-            dashPattern: const [1, 4],
-            color: Colors.white70,
+            padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
+            dashPattern: assistPossible ? const [1, 1] : const [1, 4],
+            color: assistPossible ? Colors.orange : Colors.white70,
             child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
               child: Showcase(
                 key: _showCaseTitleBar,
                 title: 'Options menu',
@@ -1914,13 +1687,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 tooltipPadding: EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        _pageTitle,
-                        overflow: TextOverflow.fade,
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
+                    assistPossible
+                        ? Flexible(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "ASSIST",
+                                  overflow: TextOverflow.fade,
+                                  style: TextStyle(fontSize: 9, color: Colors.orange),
+                                ),
+                                Text(
+                                  _pageTitle,
+                                  overflow: TextOverflow.fade,
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Flexible(
+                            child: Text(
+                              _pageTitle,
+                              overflow: TextOverflow.fade,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
                   ],
                 ),
               ),
@@ -1987,72 +1778,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _tryGoBack() async {
-    bool success = false;
+    _webViewProvider.verticalMenuClose();
 
     // It's much more precise to use the native implementation (when not using tabs),
     // since onLoadStop and onLoadResource won't trigger always and need exceptions
     if (widget.useTabs) {
-      success = _webViewProvider.tryGoBack();
+      _webViewProvider.tryGoBack();
     } else {
-      success = await webView.canGoBack();
-    }
-
-    if (success) {
-      BotToast.showText(
-        text: "Back",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-    } else {
-      BotToast.showText(
-        text: "Can't go back!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
+      bool success = await webView.canGoBack();
+      if (success) {
+        await webView.goBack();
+      }
     }
   }
 
   Future _tryGoForward() async {
-    bool success = false;
+    _webViewProvider.verticalMenuClose();
     if (widget.useTabs) {
-      success = _webViewProvider.tryGoForward();
+      _webViewProvider.tryGoForward();
     } else {
-      success = await webView.canGoForward();
-    }
-
-    if (success) {
-      await webView.goForward();
-      BotToast.showText(
-        text: "Forward",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-    } else {
-      BotToast.showText(
-        text: "Can't go forward!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600],
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
+      bool success = await webView.canGoForward();
+      if (success) {
+        await webView.goForward();
+      }
     }
   }
 
@@ -2281,7 +2029,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   /// This will try first with H4 (works for most Torn sections) and revert
   /// to the URL if it doesn't find anything
-  /// [showTitle] show ideally only be set to true in onLoadStop, or full
+  /// [showTitle] show ideally only be set to true in onLoadStop
   /// URLs might show up while loading the page in onProgressChange
   Future<String> _getPageTitle(
     dom.Document document, {
@@ -2496,13 +2244,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: EdgeInsets.only(bottom: 2),
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.fingerprint, color: widget.dialog ? _themeProvider.mainText : Colors.white),
+              child: Icon(MdiIcons.fingerprint, color: Colors.white),
             ),
           );
         },
@@ -2745,6 +2494,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
             padding: EdgeInsets.only(right: 5),
@@ -2856,7 +2606,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         vaultHtml: allTransactions,
         playerId: _userProvider.basic.playerId,
         userProvider: _userProvider,
-        isBrowserDialog: widget.dialog,
       );
     });
   }
@@ -2879,6 +2628,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
             padding: EdgeInsets.only(right: 5),
@@ -2974,7 +2724,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      final dynamic apiResponse = await TornApiCaller().getItems();
+      final dynamic apiResponse = await Get.find<ApiCallerController>().getItems();
       if (apiResponse is ItemsModel) {
         apiResponse.items.forEach((key, value) {
           // Assign correct ids
@@ -3035,6 +2785,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return const Padding(
             padding: EdgeInsets.only(right: 5),
@@ -3183,13 +2934,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return SizedBox(
-            height: 20,
-            width: 20,
-            child: Image.asset('images/icons/quick_items.png',
-                color: widget.dialog ? _themeProvider.mainText : Colors.white),
-          );
+              height: 20, width: 20, child: Image.asset('images/icons/quick_items.png', color: Colors.white));
         },
       );
     } else {
@@ -3225,7 +2973,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProvider.basic.userApiKey,
+              apiKey: _userProvider?.basic?.userApiKey ?? "",
               profileCheckType: ProfileCheckType.profile,
               themeProvider: _themeProvider,
             );
@@ -3249,7 +2997,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProvider.basic.userApiKey,
+              apiKey: _userProvider?.basic?.userApiKey ?? "",
               profileCheckType: ProfileCheckType.attack,
               themeProvider: _themeProvider,
             );
@@ -3265,7 +3013,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future _assessBarsRedirect(dom.Document document) async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
-      webView.evaluateJavascript(source: barsDoubleClickRedirect());
+      webView?.evaluateJavascript(source: barsDoubleClickRedirect());
     }
   }
 
@@ -3282,6 +3030,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = true;
             });
+            _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
             webView.evaluateJavascript(source: removeChatJS());
@@ -3289,10 +3038,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = true;
             });
+            _webViewProvider.verticalMenuClose();
 
             BotToast.showText(
               crossPage: false,
-              text: "Default chat hide enabled",
+              text: "Default chat hide enabled (new tabs)",
               textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -3318,6 +3068,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = false;
             });
+            _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
             webView.evaluateJavascript(source: restoreChatJS());
@@ -3325,6 +3076,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             setState(() {
               _localChatRemovalActive = false;
             });
+            _webViewProvider.verticalMenuClose();
 
             BotToast.showText(
               crossPage: false,
@@ -3348,6 +3100,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (_cityTriggered) _cityTriggered = false;
 
     if (Platform.isAndroid) {
+      UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+        url: await webView.getUrl().toString(),
+        apiKey: _userProvider?.basic?.userApiKey ?? "",
+        time: UserScriptTime.start,
+      );
+      await webView.addUserScripts(userScripts: scriptsToAdd);
+
+      // DEBUG
+      if (_debugScriptsInjection) {
+        var addList = [];
+        for (var s in scriptsToAdd) {
+          addList.add(s.groupName);
+        }
+        log("Added scripts in Android reload: $addList");
+      }
+
       webView.reload();
     } else if (Platform.isIOS) {
       var currentURI = await webView.getUrl();
@@ -3356,6 +3124,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future<void> _openUrlDialog() async {
+    _webViewProvider.verticalMenuClose();
     final url = await webView.getUrl();
     return showDialog<void>(
       context: context,
@@ -3408,7 +3177,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
-      final stats = await TornApiCaller().getBars();
+      final stats = await Get.find<ApiCallerController>().getBars();
       if (stats is BarsModel) {
         var message = "";
         if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
@@ -3449,6 +3218,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _jailExpandable = JailWidget(
           webview: webView,
           fireScriptCallback: _fireJailScriptCallback,
+          playerName: _userProvider.basic.name.toUpperCase(),
         );
       });
     }
@@ -3469,9 +3239,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         levelMax: _jailModel.levelMax,
         timeMin: _jailModel.timeMin,
         timeMax: _jailModel.timeMax,
+        scoreMin: _jailModel.scoreMin,
         scoreMax: _jailModel.scoreMax,
         bailTicked: _jailModel.bailTicked,
         bustTicked: _jailModel.bustTicked,
+        excludeSelf: _jailModel.excludeSelf,
+        excludeName: _jailModel.excludeName,
       ),
     );
   }
@@ -3631,21 +3404,62 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _loadUrl(url);
   }
 
-  void pauseWebview() {
+  // Called from parent though GlobalKey state
+  void convertToChainingBrowser({ChainingPayload chainingPayload}) {
+    _isChainingBrowser = true;
+    _attackNumber = 0;
+    _chainingPayload = chainingPayload;
+    if (_w == null) {
+      _w = Get.put(WarController());
+    }
+    String title = chainingPayload.attackNameList[0];
+    _pageTitle = title;
+    _chainStatusProvider = context.read<ChainStatusProvider>();
+    if (_chainStatusProvider.watcherActive) {
+      _chainWidgetController.expanded = true;
+    }
+    _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    if (chainingPayload.war) {
+      _lastAttackedMembers.clear();
+      _lastAttackedMembers.add(chainingPayload.attackIdList[0]);
+    } else {
+      _lastAttackedTargets.clear();
+      _lastAttackedTargets.add(chainingPayload.attackIdList[0]);
+    }
+  }
+
+  // Called from parent though GlobalKey state
+  void cancelChainingBrowser() async {
+    final html = await webView.getHtml();
+    dom.Document document = parse(html);
+    _pageTitle = await _getPageTitle(document);
+    // Reports page title so that tab names are updated immediately
+    // (otherwise, the last target remains as page title)
+    _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
+    setState(() {
+      _isChainingBrowser = false;
+    });
+  }
+
+  void pauseThisWebview() {
     if (Platform.isAndroid) {
       webView?.pause();
     }
   }
 
-  void resumeWebview() async {
+  void resumeThisWebview() async {
     if (Platform.isAndroid) {
       webView?.resume();
     }
 
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
-    Uri resumedUrl = await webView.getUrl();
-    if (resumedUrl == null) {
-      log("Reviving webView!");
+    try {
+      Uri resumedUrl = await webView?.getUrl();
+      if (resumedUrl == null) {
+        log("Reviving webView!");
+        _webViewProvider.reviveUrl();
+      }
+    } catch (e) {
       _webViewProvider.reviveUrl();
     }
   }
@@ -3668,10 +3482,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
-        apiKey: _userProvider.basic.userApiKey,
-        time: UserScriptTime.end,
+        apiKey: _userProvider?.basic?.userApiKey ?? "",
+        time: UserScriptTime.start,
       );
       await webView.addUserScripts(userScripts: scriptsToAdd);
+
+      // DEBUG
+      if (_debugScriptsInjection) {
+        var addList = [];
+        for (var s in scriptsToAdd) {
+          addList.add(s.groupName);
+        }
+        log("Added scripts in _loadUrl: $addList");
+      }
     }
 
     var uri = WebUri(inputUrl);
@@ -3687,7 +3510,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future<bool> _willPopCallback() async {
-    _tryGoBack();
+    if (_webViewProvider.browserShowInForeground) {
+      _tryGoBack();
+    } else {
+      _webViewProvider.willPopCallbackStream.add(true);
+    }
+
     return false;
   }
 
@@ -3771,8 +3599,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
-                    if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
-                        (!widget.dialog && _settingsProvider.useTabsFullBrowser))
+                    if (_settingsProvider.useTabsFullBrowser)
                       Column(
                         children: [
                           SizedBox(width: 150, child: Divider(color: Colors.white)),
@@ -3797,6 +3624,57 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
+                    SizedBox(width: 150, child: Divider(color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                      child: GestureDetector(
+                        child: Text(
+                          "Add as shortcut",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () async {
+                          String open = url.toString() ?? src;
+
+                          bool error = false;
+                          if (open == null) error = true;
+                          if (open != null) {
+                            if (!open.contains("http")) {
+                              error = true;
+                            }
+                          }
+
+                          if (!error) {
+                            String u = open.replaceAll("http:", "https:");
+                            return showDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (BuildContext context) {
+                                return CustomShortcutDialog(
+                                  themeProvider: _themeProvider,
+                                  title: "",
+                                  url: u,
+                                );
+                              },
+                            );
+                          } else {
+                            BotToast.showText(
+                              text: "URL error!",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.orange[800],
+                              duration: Duration(seconds: 2),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          }
+                          textCancel();
+                        },
+                      ),
+                    ),
                     SizedBox(width: 150, child: Divider(color: Colors.white)),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 5, 0, 20),
@@ -3850,7 +3728,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     myButtons.add(_medicalActionButton());
 
-    if (_attackNumber < widget.chainingPayload.attackIdList.length - 1) {
+    if (_attackNumber < _chainingPayload.attackIdList.length - 1) {
       myButtons.add(_nextAttackActionButton());
     } else {
       myButtons.add(_endAttackButton());
@@ -3860,9 +3738,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Widget _nextAttackActionButton() {
-    return IconButton(
-      icon: Icon(Icons.skip_next),
-      onPressed: _nextButtonPressed ? null : () => _launchNextAttack(),
+    return Showcase(
+      key: _showCasePlayPauseChain,
+      title: 'Chain Forward/Stop!',
+      description: '\nYou can now continue your chain even if you close the browser.\n\n'
+          'If you would like to stop your chain at some point, long-press this button '
+          'to revert to a standard browser tab!',
+      targetPadding: const EdgeInsets.all(10),
+      disableMovingAnimation: true,
+      textColor: _themeProvider.mainText,
+      tooltipBackgroundColor: _themeProvider.secondBackground,
+      descTextStyle: TextStyle(fontSize: 13),
+      tooltipPadding: EdgeInsets.all(20),
+      child: GestureDetector(
+        child: Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Icon(MdiIcons.playPause),
+        ),
+        onTap: _nextButtonPressed ? null : () => _launchNextAttack(),
+        onLongPress: () => _webViewProvider.cancelChainingBrowser(),
+      ),
     );
   }
 
@@ -3870,10 +3765,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     return IconButton(
       icon: Icon(MdiIcons.stop),
       onPressed: () {
-        setState(() {
-          _isChainingBrowser = false;
-          _webViewProvider.cancelChainingBrowser();
-        });
+        _webViewProvider.cancelChainingBrowser();
       },
     );
   }
@@ -3912,8 +3804,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _assessFirstTargetsOnLaunch() async {
-    if (widget.chainingPayload.panic ||
-        (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
+    if (_chainingPayload.panic || (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -3923,7 +3814,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget = await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[i]);
+        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -3935,7 +3826,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user = await TornApiCaller().getTarget(playerId: _userProvider.basic.playerId.toString());
+            var user =
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -3947,7 +3839,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (widget.chainingPayload.showOnlineFactionWarning) {
+            if (_chainingPayload.showOnlineFactionWarning) {
               _factionName = nextTarget.faction.factionName;
               _lastOnline = nextTarget.lastAction.timestamp;
             }
@@ -3955,7 +3847,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
           // If after looping we are over the target limit, it means we have reached the end
           // in which case we reset the position to the last target we attacked, and break
-          if (_attackNumber >= widget.chainingPayload.attackIdList.length) {
+          if (_attackNumber >= _chainingPayload.attackIdList.length) {
             _attackNumber = originalPosition;
             reachedEnd = true;
             break;
@@ -3984,19 +3876,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
         var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
         if (!mounted) return;
-        await _loadUrl('$nextBaseUrl${widget.chainingPayload.attackIdList[_attackNumber]}');
-        if (widget.chainingPayload.war) {
-          _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+        await _loadUrl('$nextBaseUrl${_chainingPayload.attackIdList[_attackNumber]}');
+        if (_chainingPayload.war) {
+          _lastAttackedMembers.add(_chainingPayload.attackIdList[_attackNumber]);
         } else {
-          _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+          _lastAttackedTargets.add(_chainingPayload.attackIdList[_attackNumber]);
         }
 
         setState(() {
-          _pageTitle = '${widget.chainingPayload.attackNameList[_attackNumber]}';
+          _pageTitle = '${_chainingPayload.attackNameList[_attackNumber]}';
         });
 
         // Show note for next target
-        if (widget.chainingPayload.showNotes) {
+        if (_chainingPayload.showNotes) {
           _showNoteToast();
         }
 
@@ -4021,9 +3913,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // This will show the note of the first target, if applicable
-    if (widget.chainingPayload.showNotes) {
-      if (widget.chainingPayload.showOnlineFactionWarning) {
-        var nextTarget = await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[0]);
+    if (_chainingPayload.showNotes) {
+      if (_chainingPayload.showOnlineFactionWarning) {
+        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[0]);
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
           _lastOnline = nextTarget.lastAction.timestamp;
@@ -4041,7 +3933,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _nextButtonPressed = true;
     });
 
-    if (widget.chainingPayload.panic || _settingsProvider.targetSkippingAll) {
+    if (_chainingPayload.panic || _settingsProvider.targetSkippingAll) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -4052,7 +3944,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
         var nextTarget =
-            await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+            await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -4064,7 +3956,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user = await TornApiCaller().getTarget(playerId: _userProvider.basic.playerId.toString());
+            var user =
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -4076,7 +3969,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (widget.chainingPayload.showOnlineFactionWarning) {
+            if (_chainingPayload.showOnlineFactionWarning) {
               _factionName = nextTarget.faction.factionName;
               _lastOnline = nextTarget.lastAction.timestamp;
             }
@@ -4084,7 +3977,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
           // If after looping we are over the target limit, it means we have reached the end
           // in which case we reset the position to the last target we attacked, and break
-          if (_attackNumber >= widget.chainingPayload.attackIdList.length - 1) {
+          if (_attackNumber >= _chainingPayload.attackIdList.length - 1) {
             _attackNumber = originalPosition;
             reachedEnd = true;
             break;
@@ -4134,9 +4027,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // If skipping is disabled but notes are not, we still get information
     // from the API
     else {
-      if (widget.chainingPayload.showOnlineFactionWarning) {
+      if (_chainingPayload.showOnlineFactionWarning) {
         var nextTarget =
-            await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+            await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
@@ -4150,14 +4043,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _attackNumber++;
     if (!mounted) return;
-    await _loadUrl('$nextBaseUrl${widget.chainingPayload.attackIdList[_attackNumber]}');
-    if (widget.chainingPayload.war) {
-      _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+    await _loadUrl('$nextBaseUrl${_chainingPayload.attackIdList[_attackNumber]}');
+    if (_chainingPayload.war) {
+      _lastAttackedMembers.add(_chainingPayload.attackIdList[_attackNumber]);
     } else {
-      _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+      _lastAttackedTargets.add(_chainingPayload.attackIdList[_attackNumber]);
     }
     setState(() {
-      _pageTitle = '${widget.chainingPayload.attackNameList[_attackNumber]}';
+      _pageTitle = '${_chainingPayload.attackNameList[_attackNumber]}';
     });
     _backButtonPopsContext = true;
 
@@ -4167,7 +4060,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     });
 
     // Show note for next target
-    if (widget.chainingPayload.showNotes) {
+    if (_chainingPayload.showNotes) {
       _showNoteToast();
     }
   }
@@ -4176,7 +4069,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// without showing the notes for the ones skipped)
   void _showNoteToast() {
     Color cardColor;
-    switch (widget.chainingPayload.attackNotesColorList[_attackNumber]) {
+    switch (_chainingPayload.attackNotesColorList[_attackNumber]) {
       case 'z':
         cardColor = Colors.grey[700];
         break;
@@ -4194,11 +4087,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     String extraInfo = "";
-    if (_lastOnline > 0 && !widget.chainingPayload.war) {
+    if (_lastOnline > 0 && !_chainingPayload.war) {
       var now = DateTime.now();
       var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
       if (lastOnlineDiff.inDays < 7) {
-        if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty) {
+        if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty) {
           extraInfo += "\n\n";
         }
         if (lastOnlineDiff.inHours < 1) {
@@ -4219,8 +4112,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // Do nothing if note is empty
-    if (widget.chainingPayload.attackNotesList[_attackNumber].isEmpty &&
-        !widget.chainingPayload.showBlankNotes &&
+    if (_chainingPayload.attackNotesList[_attackNumber].isEmpty &&
+        !_chainingPayload.showBlankNotes &&
         extraInfo.isEmpty) {
       return;
     }
@@ -4242,7 +4135,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty)
+                  if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -4253,19 +4146,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ),
                         SizedBox(width: 5),
                         Text(
-                          'Note for ${widget.chainingPayload.attackNameList[_attackNumber]}',
+                          'Note for ${_chainingPayload.attackNameList[_attackNumber]}',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
-                  if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
+                  if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          '${widget.chainingPayload.attackNotesList[_attackNumber]}$extraInfo',
+                          '${_chainingPayload.attackNotesList[_attackNumber]}$extraInfo',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white),
                         ),
@@ -4281,6 +4174,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
+  clearCacheAndReload() async {
+    await webView.clearCache();
+    webView.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
+  }
+
   _requestTornThemeChange({@required bool dark}) {
     webView.evaluateJavascript(
       source: '''
@@ -4290,5 +4188,55 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         window.dispatchEvent(event);
       ''',
     );
+  }
+
+  updatePullToRefresh(BrowserRefreshSetting value) async {
+    if (value == BrowserRefreshSetting.pull || value == BrowserRefreshSetting.both) {
+      _pullToRefreshController.setEnabled(true);
+    } else {
+      _pullToRefreshController.setEnabled(false);
+    }
+  }
+
+  bool _fullScreenAndWidgetHide() {
+    return _webViewProvider.currentUiMode == UiMode.fullScreen && _settingsProvider.fullScreenRemovesWidgets;
+  }
+
+  void closeBrowserFromOutside() async {
+    _webViewProvider.setCurrentUiMode(UiMode.window, context);
+    await Future.delayed(const Duration(milliseconds: 150));
+    if (mounted) {
+      _webViewProvider.browserShowInForeground = false;
+      _checkIfTargetsAttackedAndRevertChaining();
+    }
+  }
+
+  /// Updates attacked targets if we are in a chaining browser and then cancels the chain
+  void _checkIfTargetsAttackedAndRevertChaining() {
+    String message = "";
+    if (_isChainingBrowser) {
+      if (_chainingPayload.war && _lastAttackedMembers.length > 0) {
+        message = '${_lastAttackedMembers.length} attacked targets will auto update in a few seconds!';
+        _w.updateSomeMembersAfterAttack(lastAttackedMembers: _lastAttackedMembers);
+        _lastAttackedMembers.clear();
+      } else if (!_chainingPayload.war && _lastAttackedTargets.length > 0) {
+        message = '${_lastAttackedTargets.length} attacked targets will auto update in a few seconds!';
+        _targetsProvider.updateTargetsAfterAttacks(lastAttackedTargets: _lastAttackedTargets);
+        _lastAttackedTargets.clear();
+      }
+    }
+
+    if (message.isNotEmpty) {
+      BotToast.showText(
+        text: message,
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[800],
+        duration: Duration(seconds: 4),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
   }
 }

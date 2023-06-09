@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/src/provider.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -8,9 +9,10 @@ import 'package:torn_pda/models/market/market_item_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ItemCard extends StatefulWidget {
   final Item item;
@@ -172,12 +174,11 @@ class _ItemCardState extends State<ItemCard> {
                               onTap: () async {
                                 var url =
                                     "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
-                                var dialog = widget.settingsProvider.useQuickBrowser || false;
+
                                 context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: dialog,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.short,
                                     );
                               },
                               onLongPress: () async {
@@ -186,8 +187,7 @@ class _ItemCardState extends State<ItemCard> {
                                 context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
-                                      useDialog: false,
-                                      awaitable: true,
+                                      browserTapType: BrowserTapType.long,
                                     );
                               },
                             ),
@@ -489,7 +489,7 @@ class _ItemCardState extends State<ItemCard> {
   }
 
   Future _getFooterInformation() async {
-    var apiResponse = await TornApiCaller().getMarketItem(itemId: widget.item.id);
+    var apiResponse = await Get.find<ApiCallerController>().getMarketItem(itemId: widget.item.id);
     if (apiResponse is MarketItemModel) {
       setState(() {
         _footerSuccessful = true;

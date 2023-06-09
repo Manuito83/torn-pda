@@ -70,8 +70,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                 children: <Widget>[
                   Text("Red"),
                   Switch(
-                    value:
-                        _targetsProvider.currentColorFilterOut.contains('red'),
+                    value: _targetsProvider.currentColorFilterOut.contains('red'),
                     onChanged: (value) {
                       var temp = _targetsProvider.currentColorFilterOut;
                       if (value) {
@@ -100,8 +99,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                 children: <Widget>[
                   Text("Yellow"),
                   Switch(
-                    value: _targetsProvider.currentColorFilterOut
-                        .contains('orange'),
+                    value: _targetsProvider.currentColorFilterOut.contains('orange'),
                     onChanged: (value) {
                       var temp = _targetsProvider.currentColorFilterOut;
                       if (value) {
@@ -130,8 +128,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
                 children: <Widget>[
                   Text("Green"),
                   Switch(
-                    value: _targetsProvider.currentColorFilterOut
-                        .contains('green'),
+                    value: _targetsProvider.currentColorFilterOut.contains('green'),
                     onChanged: (value) {
                       var temp = _targetsProvider.currentColorFilterOut;
                       if (value) {

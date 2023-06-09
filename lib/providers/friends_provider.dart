@@ -3,13 +3,13 @@ import 'dart:collection';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AddFriendResult {
@@ -43,9 +43,6 @@ class FriendsProvider extends ChangeNotifier {
 
   FriendSortType _currentSort;
 
-  OwnProfileBasic _userDetails;
-  FriendsProvider(this._userDetails);
-
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
   Future<AddFriendResult> addFriend(String friendId, {String notes = '', String notesColor = ''}) async {
@@ -58,7 +55,7 @@ class FriendsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewFriendModel = await TornApiCaller().getFriends(playerId: friendId);
+    dynamic myNewFriendModel = await Get.find<ApiCallerController>().getFriends(playerId: friendId);
 
     if (myNewFriendModel is FriendModel) {
       _getFriendFaction(myNewFriendModel);
@@ -103,7 +100,7 @@ class FriendsProvider extends ChangeNotifier {
 
     try {
       dynamic myUpdatedFriendModel =
-          await TornApiCaller().getFriends(playerId: oldFriend.playerId.toString());
+          await Get.find<ApiCallerController>().getFriends(playerId: oldFriend.playerId.toString());
       if (myUpdatedFriendModel is FriendModel) {
         _getFriendFaction(myUpdatedFriendModel);
         _friends[_friends.indexOf(oldFriend)] = myUpdatedFriendModel;
@@ -140,7 +137,7 @@ class FriendsProvider extends ChangeNotifier {
     for (var i = 0; i < _friends.length; i++) {
       try {
         dynamic myUpdatedFriendModel =
-            await TornApiCaller().getFriends(playerId: _friends[i].playerId.toString());
+            await Get.find<ApiCallerController>().getFriends(playerId: _friends[i].playerId.toString());
         if (myUpdatedFriendModel is FriendModel) {
           _getFriendFaction(myUpdatedFriendModel);
           var notes = _friends[i].personalNote;

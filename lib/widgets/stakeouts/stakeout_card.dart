@@ -19,6 +19,7 @@ import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -149,7 +150,10 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       ],
                     ),
                     onTap: () {
-                      _openBrowser();
+                      _openBrowser(shortTap: true);
+                    },
+                    onLongPress: () {
+                      _openBrowser(shortTap: true);
                     },
                   ),
                 ],
@@ -629,14 +633,14 @@ class _StakeoutCardState extends State<StakeoutCard> {
     }
   }
 
-  void _openBrowser() async {
+  void _openBrowser({@required bool shortTap}) async {
     var browserType = _settingsProvider.currentBrowser;
     String url = 'https://www.torn.com/profiles.php?XID=${_stakeout.id}';
     switch (browserType) {
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
           context: context,
-          useDialog: _settingsProvider.useQuickBrowser,
+          browserTapType: shortTap ? BrowserTapType.short : BrowserTapType.long,
           url: url,
         );
         break;

@@ -8,7 +8,7 @@ export const staleGroup = {
     .schedule("0 0 * * *")
     .onRun(async () => {
       const promises: Promise<any>[] = [];
-      
+
       const currentDateInMillis = Date.now();
 
       // This pull the users who haven't open the app for 7 days
@@ -46,21 +46,21 @@ export const staleGroup = {
               active: false,
             })
         );
-        
+
         functions.logger.warn(`Staled: ${user.playerId.toString()} with UID ${user.uid}`);
       });
-      
+
       return Promise.all(promises);
-  }),
+    }),
 
   deleteStale: functions.region('us-east4').pubsub
     .schedule("0 0 15 * *")
     .onRun(async () => {
       const promises: Promise<any>[] = [];
-      
+
       const currentDateInMillis = Date.now();
 
-      // This pull the users who havent open the app for 30 days
+      // This pull the users who have not open the app for 30 days
       const totalUsers = (
         await admin
           .firestore()
@@ -80,6 +80,7 @@ export const staleGroup = {
           .get()
       ).docs.map((d) => d.data());
 
+      functions.logger.warn(`Active users: ${totalUsers.length - usersWhoUninstalled.length}`);
       functions.logger.warn(`Users to delete: ${usersWhoUninstalled.length}`);
 
       // *******
@@ -95,8 +96,8 @@ export const staleGroup = {
         );
         // functions.logger.warn(`Removed: ${user.name.toString()}[${user.playerId.toString()}] with UID ${user.uid}`);
       });
-      
+
       return Promise.all(promises);
-  }),
+    }),
 
 };

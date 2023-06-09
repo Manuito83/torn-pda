@@ -11,6 +11,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -42,6 +44,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (_userScriptsProvider.scriptsFirstTime) {
         await showDialog(
+          useRootNavigator: false,
           context: context,
           barrierDismissible: false,
           builder: (BuildContext context) {
@@ -59,6 +62,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       } else {
         if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatInjectionTimeShown)
           await showDialog(
+            useRootNavigator: false,
             context: context,
             barrierDismissible: false,
             builder: (BuildContext context) {
@@ -73,106 +77,110 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: BorderSide(width: 2, color: Colors.blueGrey),
-                                ),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.add,
-                              size: 20,
-                              color: _themeProvider.mainText,
-                            ),
-                            onPressed: () {
-                              _showAddDialog(context);
-                            },
-                          ),
-                        ),
-                        SizedBox(width: 15),
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: BorderSide(
-                                    width: 2,
-                                    color: Colors.blueGrey,
+    WebViewProvider webviewProvider = Provider.of<WebViewProvider>(context, listen: true);
+    return Visibility(
+      visible: !webviewProvider.browserShowInForeground,
+      child: WillPopScope(
+        onWillPop: _willPopCallback,
+        child: Container(
+          color: _themeProvider.currentTheme == AppTheme.light
+              ? MediaQuery.of(context).orientation == Orientation.portrait
+                  ? Colors.blueGrey
+                  : _themeProvider.canvas
+              : _themeProvider.canvas,
+          child: SafeArea(
+            child: Scaffold(
+              backgroundColor: _themeProvider.canvas,
+              appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+              bottomNavigationBar: !_settingsProvider.appBarTop
+                  ? SizedBox(
+                      height: AppBar().preferredSize.height,
+                      child: buildAppBar(),
+                    )
+                  : null,
+              body: Container(
+                color: _themeProvider.canvas,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          ButtonTheme(
+                            minWidth: 1.0,
+                            child: ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                                shape: MaterialStateProperty.all<OutlinedBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    side: BorderSide(width: 2, color: Colors.blueGrey),
                                   ),
                                 ),
                               ),
+                              child: Icon(
+                                Icons.add,
+                                size: 20,
+                                color: _themeProvider.mainText,
+                              ),
+                              onPressed: () {
+                                _showAddDialog(context);
+                              },
                             ),
-                            child: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: _themeProvider.mainText,
+                          ),
+                          SizedBox(width: 15),
+                          ButtonTheme(
+                            minWidth: 1.0,
+                            child: ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                                shape: MaterialStateProperty.all<OutlinedBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    side: BorderSide(
+                                      width: 2,
+                                      color: Colors.blueGrey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.delete_outline,
+                                size: 20,
+                                color: _themeProvider.mainText,
+                              ),
+                              onPressed: () {
+                                _openWipeDialog();
+                              },
                             ),
-                            onPressed: () {
-                              _openWipeDialog();
-                            },
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Preexisting scripts might require modifications to work with Torn PDA. '
+                          'Please ensure that you use scripts responsibly and '
+                          'understand the hazards. Tap the exclamation mark for more information.',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Preexisting scripts might require modifications to work with Torn PDA. '
-                        'Please ensure that you use scripts responsibly and '
-                        'understand the hazards. Tap the exclamation mark for more information.',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                      ),
+                      SizedBox(height: 10),
+                      Flexible(
+                        child: Consumer<UserScriptsProvider>(
+                          builder: (context, settingsProvider, child) => scriptsCards(),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Flexible(
-                      child: Consumer<UserScriptsProvider>(
-                        builder: (context, settingsProvider, child) => scriptsCards(),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -336,11 +344,17 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: Text('User scripts'),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
-        onPressed: () {
-          _willPopCallback();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          new IconButton(
+            icon: new Icon(Icons.arrow_back),
+            onPressed: () {
+              _willPopCallback();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: [
         IconButton(
@@ -358,6 +372,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           ),
           onPressed: () async {
             await showDialog(
+              useRootNavigator: false,
               context: context,
               builder: (BuildContext context) {
                 return _disclaimerDialog();
@@ -591,7 +606,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     return AlertDialog(
       title: Text("DISCLAIMER"),
       content: Scrollbar(
-        isAlwaysShown: true,
+        thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -628,27 +643,26 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       recognizer: TapGestureRecognizer()
                         ..onTap = () async {
                           var url = 'https://discord.gg/vyP23kJ';
-                          if (await canLaunch(url)) {
-                            await launch(url, forceSafariVC: false);
+                          if (await canLaunchUrl(Uri.parse(url))) {
+                            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                           }
                         },
                     ),
                     EasyRichTextPattern(
-                      targetString: 'list of tested userscripts',
-                      style: TextStyle(
-                        decoration: TextDecoration.underline,
-                        color: Colors.blue[400],
-                      ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () async {
-                          var url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
-                          await context.read<WebViewProvider>().openBrowserPreference(
-                                context: context,
-                                url: url,
-                                useDialog: _settingsProvider.useQuickBrowser,
-                              );
-                        },
-                    ),
+                        targetString: 'list of tested userscripts',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          color: Colors.blue[400],
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            var url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
+                            await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  browserTapType: BrowserTapType.short,
+                                );
+                          }),
                   ],
                   defaultStyle: TextStyle(
                     fontSize: 13,
@@ -686,10 +700,31 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  "Preexisting Torn user scripts (e.g. for Greasemonkey) may require some "
+                  "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
                   "code changes to work with Torn PDA if external libraries were used.\n\n"
                   "If a script does not work as intended after changing its code in Torn PDA, please "
                   "try resetting your browser cache in the advanced browser settings section.",
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 25),
+                Text(
+                  "INJECTION CONSTRAINTS",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
+                  "as much as possible with script injection times and URLs. However, due to the different limitations "
+                  "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
+                  "be injected again in pages with pagination (e.g.: jail, hospital, forums...). Also, reloading the "
+                  "page might result in scripts being injected multiple times.\n\n"
+                  "Hence, it's the script developer's responsibility to control all these constraints. A few ideas: "
+                  "make sure that that the script is prepared for multiple injection retries by adding a variable to "
+                  "the main container; make sure that pagination works by adding click listeners; make sure that no "
+                  "conflicts exist with other scripts (variable names, etc.) by enclosing the script in an "
+                  "anonymous function.",
                   style: TextStyle(
                     fontSize: 13,
                   ),
@@ -821,8 +856,8 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                           ..onTap = () async {
                             const String scriptApiUrl =
                                 "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_API.js";
-                            if (await canLaunch(scriptApiUrl)) {
-                              launch(scriptApiUrl);
+                            if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
+                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
                             }
                           },
                       ),
@@ -858,8 +893,8 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                           ..onTap = () async {
                             const String scriptApiUrl =
                                 "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_EvaluateJavascript.js";
-                            if (await canLaunch(scriptApiUrl)) {
-                              launch(scriptApiUrl);
+                            if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
+                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
                             }
                           },
                       ),
@@ -965,7 +1000,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     return AlertDialog(
       title: Text("SCRIPT INJECTION TIME"),
       content: Scrollbar(
-        isAlwaysShown: true,
+        thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(right: 12),

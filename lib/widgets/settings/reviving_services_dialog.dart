@@ -14,6 +14,7 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
   bool _nukeReviveEnabled = true;
   bool _uhcReviveEnabled = true;
   bool _helaReviveEnabled = true;
+  bool _wtfReviveEnabled = true;
 
   @override
   void initState() {
@@ -121,6 +122,33 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
                     ],
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "WTF Reviving Services",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _wtfReviveEnabled,
+                        onChanged: (value) {
+                          Prefs().setUseWtfRevive(value);
+                          setState(() {
+                            _wtfReviveEnabled = value;
+                          });
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                ),
                 SizedBox(height: 15),
                 Text(
                   "NOTE: Torn PDA is not affiliated to any of these services in any form",
@@ -148,14 +176,21 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
   }
 
   Future _restorePreferences() async {
-    var useNuke = await Prefs().getUseNukeRevive();
-    var useUhc = await Prefs().getUseUhcRevive();
-    var useHela = await Prefs().getUseHelaRevive();
+    var prefs = Prefs();
+    var futures = [
+      prefs.getUseNukeRevive(),
+      prefs.getUseUhcRevive(),
+      prefs.getUseHelaRevive(),
+      prefs.getUseWtfRevive(),
+    ];
+
+    var results = await Future.wait(futures);
 
     setState(() {
-      _nukeReviveEnabled = useNuke;
-      _uhcReviveEnabled = useUhc;
-      _helaReviveEnabled = useHela;
+      _nukeReviveEnabled = results[0];
+      _uhcReviveEnabled = results[1];
+      _helaReviveEnabled = results[2];
+      _wtfReviveEnabled = results[3];
     });
   }
 }

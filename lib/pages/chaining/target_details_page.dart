@@ -122,10 +122,9 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                           '/${widget.target.enemies}'),
                       SizedBox(height: 20),
                       _returnFaction(),
-                      SizedBox(height: 20),
                       _returnJob(),
-                      SizedBox(height: 20),
                       _returnDiscord(),
+                      _returnCompetition(),
                       SizedBox(height: 50),
                     ],
                   ),
@@ -254,12 +253,15 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   Widget _returnFaction() {
     if (widget.target.faction.factionId != 0) {
-      return Column(
-        children: <Widget>[
-          Text('Faction: ${HtmlParser.fix(widget.target.faction.factionName)}'),
-          Text('Position: ${widget.target.faction.position}'),
-          Text('Joined: ${widget.target.faction.daysInFaction} days ago'),
-        ],
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Column(
+          children: <Widget>[
+            Text('Faction: ${HtmlParser.fix(widget.target.faction.factionName)}'),
+            Text('Position: ${widget.target.faction.position}'),
+            Text('Joined: ${widget.target.faction.daysInFaction} days ago'),
+          ],
+        ),
       );
     } else {
       return SizedBox.shrink();
@@ -268,11 +270,14 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   Widget _returnJob() {
     if (widget.target.job.companyId != 0) {
-      return Column(
-        children: <Widget>[
-          Text('Company: ${HtmlParser.fix(widget.target.job.companyName)}'),
-          Text('Position: ${widget.target.job.position}'),
-        ],
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Column(
+          children: <Widget>[
+            Text('Company: ${HtmlParser.fix(widget.target.job.companyName)}'),
+            Text('Position: ${widget.target.job.job}'),
+          ],
+        ),
       );
     } else {
       return SizedBox.shrink();
@@ -290,36 +295,100 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       return SizedBox.shrink();
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text('Discord ID'),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 5),
-          child: SizedBox(
-            width: 30,
-            height: 30,
-            child: IconButton(
-              icon: Icon(Icons.content_copy),
-              iconSize: 20,
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: widget.target.discord.discordId));
-                BotToast.showText(
-                  text: "Your target's Discord ID (${widget.target.discord.discordId}) has been "
-                      "copied to the clipboard!",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green,
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text('Discord ID'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: SizedBox(
+              width: 30,
+              height: 30,
+              child: IconButton(
+                icon: Icon(Icons.content_copy),
+                iconSize: 20,
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: widget.target.discord.discordId));
+                  BotToast.showText(
+                    text: "Your target's Discord ID (${widget.target.discord.discordId}) has been "
+                        "copied to the clipboard!",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green,
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  Widget _returnCompetition() {
+    if (widget.target.competition == null) {
+      return SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'COMPETITION',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (widget.target.competition.name != null)
+            Text(
+              '"${widget.target.competition.name}"',
+            ),
+          if (widget.target.competition.attacks != null)
+            Text(
+              'Attacks: ${widget.target.competition.attacks}',
+            ),
+          if (widget.target.competition.image != null)
+            Text(
+              'Image: ${widget.target.competition.image}',
+            ),
+          if (widget.target.competition.score != null)
+            Text(
+              'Score: ${widget.target.competition.score.ceil()}',
+            ),
+          if (widget.target.competition.team != null)
+            Text(
+              'Team: ${widget.target.competition.team}',
+            ),
+          if (widget.target.competition.text != null)
+            Text(
+              'Text: ${widget.target.competition.text}',
+            ),
+          if (widget.target.competition.total != null)
+            Text(
+              'Total (accumulated): ${widget.target.competition.total}',
+            ),
+          if (widget.target.competition.treatsCollectedTotal != null)
+            Text(
+              'Treats collected: ${widget.target.competition.treatsCollectedTotal}',
+            ),
+          if (widget.target.competition.votes != null)
+            Text(
+              'Votes: ${widget.target.competition.votes}',
+            ),
+          if (widget.target.competition.position != null)
+            Text(
+              'Position: ${widget.target.competition.position}',
+            ),
+        ],
+      ),
     );
   }
 }

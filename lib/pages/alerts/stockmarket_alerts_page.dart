@@ -1,6 +1,7 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
@@ -14,11 +15,12 @@ import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 import 'package:torn_pda/widgets/alerts/share_price_options.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
   final FirebaseUserModel fbUser;
@@ -44,7 +46,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   double _totalProfit = 0;
 
   Future _stocksInitialised;
-  bool _errorInitialising = false;
+  bool _errorInitializing = false;
 
   @override
   void initState() {
@@ -88,7 +90,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                       future: _stocksInitialised,
                       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                         if (snapshot.connectionState == ConnectionState.done) {
-                          if (!_errorInitialising) {
+                          if (!_errorInitializing) {
                             return SingleChildScrollView(
                               child: Column(
                                 children: <Widget>[
@@ -190,10 +192,10 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
             MdiIcons.openInApp,
           ),
           onTap: () {
-            _launchBrowser(dialog: true);
+            _launchBrowser(shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(dialog: false);
+            _launchBrowser(shortTap: false);
           },
         ),
         SizedBox(width: 5),
@@ -203,6 +205,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           ),
           onPressed: () async {
             return showDialog(
+              useRootNavigator: false,
               context: context,
               barrierDismissible: true,
               builder: (BuildContext context) {
@@ -277,11 +280,11 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       _fbUser = await firestore.getUserProfile(force: false); // We are NOT getting updated stocks every time
     }
 
-    var allStocksReply = await TornApiCaller().getAllStocks();
-    var userStocksReply = await TornApiCaller().getUserStocks();
+    var allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
+    var userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
 
     if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
-      _errorInitialising = true;
+      _errorInitializing = true;
       return;
     }
 
@@ -349,12 +352,12 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     _stockList.sort((a, b) => b.owned.compareTo(a.owned));
   }
 
-  void _launchBrowser({@required dialog}) {
+  void _launchBrowser({@required shortTap}) {
     String url = "https://www.torn.com/page.php?sid=stocks";
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
-      useDialog: dialog,
+      browserTapType: shortTap ? BrowserTapType.short : BrowserTapType.long,
     );
   }
 

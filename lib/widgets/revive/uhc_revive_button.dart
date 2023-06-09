@@ -2,12 +2,15 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/external/uhc_revive.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UhcReviveButton extends StatefulWidget {
@@ -111,53 +114,68 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                           ),
                         ),
                         Flexible(
-                          child: EasyRichText(
-                            "Universal Health Care (UHC for short) is a revive alliance consisting "
-                            "of several factions. You can find more information in the forums or "
-                            "in the UHC Discord server.",
-                            defaultStyle: TextStyle(fontSize: 13, color: widget.themeProvider.mainText),
-                            patternList: [
-                              EasyRichTextPattern(
-                                targetString: 'forums',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    _launchBrowser(
-                                      url: 'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0',
-                                      dialogRequested: true,
-                                      context: _,
-                                    );
-                                  },
+                          child: RichText(
+                            text: TextSpan(
+                              text: "Universal Health Care (UHC for short) is a revive alliance consisting "
+                                  "of several factions. You can find more information in the ",
+                              style: TextStyle(
+                                color: context.read<ThemeProvider>().mainText,
+                                fontSize: 13,
                               ),
-                              EasyRichTextPattern(
-                                targetString: 'UHC Discord',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    var url = 'https://discord.gg/JJprTpb';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Each revive must be paid directly to the reviver and costs "
-                            "\$1 million or 1 Xanax. There are special prices for faction contracts "
-                            "(more information in the forums).",
-                            style: TextStyle(fontSize: 13, color: widget.themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Please keep in mind if you don't pay for the requested revive, "
-                            "you risk getting blocked from UHC!",
-                            style: TextStyle(fontSize: 13, color: widget.themeProvider.mainText),
+                              children: <InlineSpan>[
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      context.read<WebViewProvider>().openBrowserPreference(
+                                            context: context,
+                                            url: 'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0',
+                                            browserTapType: BrowserTapType.short,
+                                          );
+                                    },
+                                    onLongPress: () {
+                                      Navigator.of(context).pop();
+                                      context.read<WebViewProvider>().openBrowserPreference(
+                                            context: context,
+                                            url: 'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0',
+                                            browserTapType: BrowserTapType.long,
+                                          );
+                                    },
+                                    child: Text(
+                                      'forum thread',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                TextSpan(text: ' or in the UHC '),
+                                TextSpan(
+                                  text: 'Discord server',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                    fontSize: 13,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () async {
+                                      var url = 'https://discord.gg/JJprTpb';
+                                      if (await canLaunchUrl(Uri.parse(url))) {
+                                        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                      }
+                                    },
+                                ),
+                                TextSpan(
+                                    text: "\n\nEach revive must be paid directly to the reviver and costs "
+                                        "\$1 million or 1 Xanax. There are special prices for faction contracts "
+                                        "(more information in the forums)."),
+                                TextSpan(
+                                    text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
+                                        "you risk getting blocked from UHC!"),
+                              ],
+                            ),
                           ),
                         ),
                         SizedBox(height: 15),
@@ -169,7 +187,8 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                               onPressed: () async {
                                 // User can be null if we are not accessing from the Profile page
                                 if (widget.user == null) {
-                                  var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: 3);
+                                  var apiResponse =
+                                      await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
                                   if (apiResponse is OwnProfileExtended) {
                                     _user = apiResponse;
                                   }
@@ -284,21 +303,6 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
           ),
         );
       },
-    );
-  }
-
-  void _launchBrowser({
-    @required String url,
-    @required bool dialogRequested,
-    bool recallLastSession = false,
-    BuildContext context,
-  }) async {
-    if (!widget.settingsProvider.useQuickBrowser) dialogRequested = false;
-    widget.webViewProvider.openBrowserPreference(
-      context: context,
-      url: url,
-      useDialog: dialogRequested,
-      recallLastSession: recallLastSession,
     );
   }
 }

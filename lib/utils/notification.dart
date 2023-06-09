@@ -14,7 +14,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // IDS
-// 101 -> 108 profile cooldowns
+// 101 -> 109 profile cooldowns
 // 201 travel arrival
 // 211 travel departure
 // 400 loot
@@ -229,7 +229,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (Platform.isIOS) {
     var platformChannelSpecifics = NotificationDetails(
       android: null,
-      iOS: IOSNotificationDetails(
+      iOS: DarwinNotificationDetails(
         presentSound: true,
         sound: 'slow_spring_board.aiff',
       ),
@@ -237,7 +237,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     if (channelName.contains("travel")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'aircraft_seatbelt.aiff',
         ),
@@ -245,7 +245,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     } else if (channelName.contains("assists")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
@@ -253,7 +253,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     } else if (channelName.contains("loot")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
@@ -261,7 +261,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     } else if (channelName.contains("retals")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
@@ -472,6 +472,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual jail ${modifier.channelIdModifier}',
       'Manual jail ${modifier.channelIdModifier}',
       description: 'Manual notifications for jail',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual war ${modifier.channelIdModifier}',
+      'Manual war ${modifier.channelIdModifier}',
+      description: 'Manual notifications for war',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

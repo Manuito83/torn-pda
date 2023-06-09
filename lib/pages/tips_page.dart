@@ -2,6 +2,7 @@
 import 'dart:io';
 
 // Flutter imports:
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,12 +14,17 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum TipClass {
   general,
   browserGeneral,
   browserTabs,
+  appwidget,
   travel,
   profile,
   factionCommunication,
@@ -93,6 +99,7 @@ class _TipsPageState extends State<TipsPage> {
   var _generalTipList = <TipTextBuilder>[];
   var _browserGeneralTipList = <TipTextBuilder>[];
   var _browserTabsTipList = <TipTextBuilder>[];
+  var _appwidgetTipsList = <TipTextBuilder>[];
   var _travelTipsList = <TipTextBuilder>[];
   var _profileTipsList = <TipTextBuilder>[];
   var _factionCommunicationTipsList = <TipTextBuilder>[];
@@ -108,6 +115,7 @@ class _TipsPageState extends State<TipsPage> {
     _generalTipList = buildGeneralTips();
     _browserGeneralTipList = buildBrowserGeneralTips();
     _browserTabsTipList = buildBrowserTabsTips();
+    _appwidgetTipsList = buildAppwidgetSectionTips();
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
     _factionCommunicationTipsList = buildFactionCommunicationTips();
@@ -163,6 +171,16 @@ class _TipsPageState extends State<TipsPage> {
                 SizedBox(height: 10),
                 tipsPanels(TipClass.browserTabs),
                 SizedBox(height: 25),
+                if (Platform.isAndroid)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("HOME SCREEN WIDGET"),
+                      SizedBox(height: 10),
+                      tipsPanels(TipClass.appwidget),
+                    ],
+                  ),
+                SizedBox(height: 25),
                 Text("TRAVEL SECTION"),
                 SizedBox(height: 10),
                 tipsPanels(TipClass.travel),
@@ -208,12 +226,18 @@ class _TipsPageState extends State<TipsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      leading: IconButton(
-        icon: Icon(Icons.dehaze),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       title: Text('Torn PDA - Tips'),
     );
@@ -230,6 +254,9 @@ class _TipsPageState extends State<TipsPage> {
         break;
       case TipClass.browserTabs:
         listToShow = _browserTabsTipList;
+        break;
+      case TipClass.appwidget:
+        listToShow = _appwidgetTipsList;
         break;
       case TipClass.travel:
         listToShow = _travelTipsList;
@@ -313,94 +340,241 @@ class _TipsPageState extends State<TipsPage> {
     return tips;
   }
 
-  List<ExpandableTip> buildBrowserGeneralTips() {
-    var tips = <ExpandableTip>[];
+  List<ComplexExpandableTip> buildBrowserGeneralTips() {
+    var tips = <ComplexExpandableTip>[];
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "What browser should I use?",
-        expandedValue: "You can choose between 'external' and 'in-app' browser. "
-            "This is accomplished in the Settings section.\n\n"
-            "The earlier will open your mobile phone's default browser application, but you will lose most "
-            "functionalities in Torn PDA (such as quick crimes, trades calculator, city finder...)",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "You can choose between 'external' and 'in-app' browser. "
+                  "This is accomplished in the Settings section.\n\n"
+                  "The earlier will open your mobile phone's default browser application, but you will lose most "
+                  "functionalities in Torn PDA (such as quick crimes, trades calculator, city finder...)",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
-        headerValue: "Chaining browser",
-        expandedValue:
-            "Please be aware that the browser used in the chaining section is focused on improving the chaining experience.\n\nIt does not "
-            "have as many features as the standard browser that you can use in other sections of the app. One exception is the "
-            "Quick Items feature, since this can be helpful while chaining.",
+      ComplexExpandableTip(
+        headerValue: "How do I access the browser?",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "There are several ways:\n\n"
+                  "If you would like to browse to a specific section in Torn, you can tap or long-press most of "
+                  "the widgets in the apps (e.g.: life and nerve bars). This will automatically switch to the browser "
+                  "view and navigate to your desired section.\n\n"
+                  "If you just want to open Torn to resume your browsing session where you left it, you can just tap "
+                  "the white Torn PDA icon in the app bar, which will show the browser as it was left the last time.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
-        headerValue: "Quick browser and full browser",
-        expandedValue: "There are two ways of using the 'in-app' browser in Torn PDA: 'quick' and 'full' browser.\n\n"
-            "By default, a short tap in buttons, bars or icons will open the 'quick browser', which loads faster "
-            "and allows to accomplish actions quicker. However, the options bar and its icons are only visible in the "
-            "'full browser' version, which can be opened with a long-press in the same places.\n\n"
-            "This also applies, for example, for the main 'T' menu in the Profile section. After expanding it, you can "
-            "short tap or long-press to use the quick or full browsers.\n\n"
-            "In the Settings section you can disable the quick browser if you prefer to always use the full one.",
+      ComplexExpandableTip(
+        headerValue: "Short tap vs. long-press",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "The browser will open both after a short tap or a long-press in any of the widgets that redirect "
+                  "to Torn, as explained in the previous Tip. By default, a short-tap will open the browser in a windowed "
+                  "mode, whereas a long-press will launch it in full screen mode.\n\n"
+                  "You can change this behavior in Settings. There is also more information about the full screen mode "
+                  "in another Tip below.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
-        headerValue: "Restore previous browsing session",
-        expandedValue: "You can restore your previous browsing session, including the first tab, active tab and "
-            "type of browser (quick or full) by long-pressing the 'T' menu floating button in the Profile section.",
+      ComplexExpandableTip(
+        headerValue: "Chaining tab",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text:
+                  "Whenever you access the browser from a target attack request (in the Chaining section), your first "
+                  "browser tab will be converted to a special 'chaining tab', with additional icons at the top that "
+                  "will allow you to continue from one target to another, until you reach the end of your list.\n\n"
+                  "Please be aware that you can stop your chain session at any time by long-pressing the play/pause "
+                  "button at the right corner of your app bar.\n\n"
+                  "It is not recommended to use this tab for normal day-to-day widget usage (such us quick items, "
+                  "crimes, etc.) since it can lack some of the normal features in certain cases. Instead, it is better "
+                  "to stop the chain session or use another tab.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "How can I browse back or forward?",
-        expandedValue:
-            "If using the full browser, swipe your finger right or left across the title bar to browse back or "
-            "forward respectively. If using the quick browser, there are dedicated icons at the bottom.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "There are several ways: you can either swipe your finger right or left across the title bar "
+                  "or double-tap any tab (while selected) and use the arrows in the vertical menu that appears.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "How do I browse to a custom URL?",
-        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "Full browser: short tap the title bar to open a small dialog with several options.\n\n",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "How do I copy the current URL?",
-        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "Full browser: short tap the title bar to open a small dialog with several options.\n\n",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Save the current URL as a shortcut or navigate to an existing one",
-        expandedValue: "If you are using tabs, a favorites (heart-shaped) icon will appear to the right. Tapping it "
-            "will open your shortcuts menu. Long-press it to add a new custom shortcut to the current page.\n\n"
-            "Alternatively, if you are not using tabs (or if you deactivated the favorites icon), you can also:\n\n"
-            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "If you are using tabs, a quick menu icon (three dots) will appear to the right. "
+                  "Tapping it will a vertical menu, with several shortcut options (heart icons).\n\n"
+                  "Alternatively, if you are not using tabs, you can also tap the title bar to open a "
+                  "dialog with several options.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
+      ComplexExpandableTip(
         headerValue: "Pull to refresh",
-        expandedValue: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
-            "There are certain (short) pages in Torn, with no scroll, that won't activate this feature; if that's "
-            "the case, try pulling down from Torn's appbar at the very top!",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
+                  "There are certain (short) pages in Torn, with no scroll, that might not activate this feature; "
+                  "if that's the case, try pulling down from Torn's appbar at the very top!",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
       ),
     );
+
     tips.add(
-      ExpandableTip(
-        headerValue: "Use terminal (developers only)",
-        expandedValue: "There is a Terminal window (read only) available for development use (so that you can see "
-            "scripts or section outputs). To activate it:"
-            "\n\nFull browser: short tap the title bar to open a small dialog with several options.\n\n"
-            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+      ComplexExpandableTip(
+        headerValue: "Full screen mode",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "The browser supports full screen, which can be activated from the quick menu tab in the "
+                  "tab bar. \n\nTo access this feature, you need to have 'tabs' enabled in the "
+                  "Advanced Browser Settings section (in the app's Settings menu).",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+              children: [
+                TextSpan(
+                  text: "\n\nFor more information, please ",
+                ),
+                TextSpan(
+                  text: "tab here",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                    fontSize: 13,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return const FullScreenExplanationDialog();
+                        },
+                      );
+                    },
+                ),
+                TextSpan(
+                  text: "!",
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
+
+    tips.add(
+      ComplexExpandableTip(
+        headerValue: "Use terminal (developers only)",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "There is a Terminal window (read only) available for development use (so that you can see "
+                  "scripts or section outputs). To activate it, short tap the title bar to open a small dialog "
+                  "with several options.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
     return tips;
   }
 
@@ -409,7 +583,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Close tab",
-        expandedValue: "To close a tap, double tap on it.",
+        expandedValue: "To close a tap, double tap on it and use the red bin icon.",
       ),
     );
     tips.add(
@@ -430,9 +604,8 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
-        headerValue: "Duplicate first tab",
-        expandedValue: "If you want to quickly save your first tab, long-press it for a couple of seconds "
-            "and it will be cloned into the bar.",
+        headerValue: "Duplicate tabs",
+        expandedValue: "If you want to quickly save a tab, double-tap it and look for the duplicate (copy/paste) icon,",
       ),
     );
     tips.add(
@@ -445,11 +618,86 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Hide tabs temporarily",
-        expandedValue: "You can temporarily hide tabs so that the don't take space."
-            "\n\nFull browser: tap and hold the title bar, then slide up or down.\n\n"
-            "Quick browser: tap and hold the bottom bar (where the 'close' button is), then slide up or down.",
+        expandedValue: "You can temporarily hide tabs so that they don't take space."
+            "\n\nTap and hold the title bar, then slide up or down.\n\n",
       ),
     );
+    return tips;
+  }
+
+  List<ComplexExpandableTip> buildAppwidgetSectionTips() {
+    var tips = <ComplexExpandableTip>[];
+    tips.add(ComplexExpandableTip(
+      headerValue: "Battery restrictions",
+      buildExpandedText: () {
+        return Text.rich(
+          TextSpan(
+            text: "Please be aware that the home screen widget has been built taking battery consumption into "
+                "consideration. It fetches the API and updates the layout once every few minutes, trying to minimize the "
+                "use of background tasks.\n\n"
+                "However, depending on your device model or launcher selection, further restrictions might be applied; if "
+                "that is the case, the widget might not update as much as expected.\n\n"
+                "This is also the case for widget initialization after the device is rebooted, which is restricted by "
+                "some launchers.\n\n"
+                "Check your ",
+            style: TextStyle(
+              fontSize: 13,
+            ),
+            children: [
+              TextSpan(
+                text: "Android's app settings",
+                style: TextStyle(
+                  decoration: TextDecoration.underline,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                  fontSize: 13,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () async {
+                    AppSettings.openAppSettings();
+                  },
+              ),
+              TextSpan(
+                text: ".",
+              ),
+            ],
+          ),
+        );
+      },
+    ));
+
+    tips.add(ComplexExpandableTip(
+      headerValue: "Widget interaction",
+      buildExpandedText: () {
+        return Text.rich(
+          TextSpan(
+            text: "As in the app, you can interact with almost every item in the widget (e.g.: tap the energy "
+                "bar to launch the app and access the gym).\n\n"
+                "Also, your 9 top shortcuts in the main shortcuts list (which you can configure in Settings) will "
+                "be shown in the widget. If you can't see the shortcuts in the widget, "
+                "ensure you expand it vertically!",
+            style: TextStyle(
+              fontSize: 13,
+            ),
+          ),
+        );
+      },
+    ));
+
+    tips.add(ComplexExpandableTip(
+      headerValue: "Widget theme",
+      buildExpandedText: () {
+        return Text.rich(
+          TextSpan(
+            text: "You can change the home widget theme in the Settings menu in Torn PDA!",
+            style: TextStyle(
+              fontSize: 13,
+            ),
+          ),
+        );
+      },
+    ));
+
     return tips;
   }
 
@@ -466,8 +714,8 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Quick return",
-        expandedValue: "When abroad, if using the full browser, you will be able to see a house icon that "
-            "will start your flight back immediately.",
+        expandedValue: "When abroad, you will be able to see a house icon in the app bar that "
+            "will start your flight back immediately (press it twice!).",
       ),
     );
     return tips;
@@ -486,7 +734,7 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Using shortcuts",
         expandedValue: "You can add as many custom shortcuts as you like. There is also a long list "
-            "available with preconfigured shortcuts. Tapping or long-pressing shortcut tiles "
+            "available with pre-configured shortcuts. Tapping or long-pressing shortcut tiles "
             "will open a quick or full browser.",
       ),
     );
@@ -501,7 +749,7 @@ class _TipsPageState extends State<TipsPage> {
         headerValue: "Medic call",
         expandedValue:
             "When you are in hospital, you'll get the chance to call a reviver by using the icon that appears in the Profile section (status card).\n\n"
-            "You can use one of two partners: Central Hospital or Universal Health Care (activate or deactivate them in options in the Profile section).\n\n"
+            "You can use several reviving partners (you can activate or deactivate them separately in Settings).\n\n"
             "Your call will automatically alert all available revivers in the selected partner's Discord channel.\n\n"
             "Have a look at the information contained in the revive dialog and be aware that this is a paid service!",
       ),
@@ -523,11 +771,10 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Request attack assistance from your faction mates",
         expandedValue: "When you are in the attack screen, the browser's URL menu (accessed by short tapping "
-            "the title bar if using the full browser, of by long-pressing the bottom bar if using the quick browser) will "
-            "offer a new button, marked in red, labelled 'FACTION ASSISTANCE'.\n\n"
+            "the title bar) will show a new button, marked in red, labelled 'FACTION ASSISTANCE'.\n\n"
             "Tapping this button will send a notification to all your faction mates that use Torn PDA and have the "
-            "'Faction assist messages' option enabled in the Alerts section.\n\nBy tapping the notification they will be "
-            "able to join your attack and provide assistance.",
+            "'Faction assist messages' option enabled in the Alerts section.\n\n"
+            "By tapping the notification they will be able to join your attack and provide assistance.",
       ),
     );
     tips.add(
@@ -741,18 +988,33 @@ class _TipsPageState extends State<TipsPage> {
                 TextSpan(
                   text: "\n\nYou can find more information about this scheme in Chrome's ",
                 ),
-                TextSpan(
-                  text: "official documentation",
-                  style: TextStyle(
-                    decoration: TextDecoration.underline,
-                  ),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () async {
-                      const String scriptApiUrl = "https://developer.chrome.com/docs/multidevice/android/intents/";
-                      if (await canLaunch(scriptApiUrl)) {
-                        launch(scriptApiUrl);
-                      }
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () {
+                      const String url = "https://developer.chrome.com/docs/multidevice/android/intents/";
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: url,
+                            browserTapType: BrowserTapType.short,
+                          );
                     },
+                    onLongPress: () {
+                      const String url = "https://developer.chrome.com/docs/multidevice/android/intents/";
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: url,
+                            browserTapType: BrowserTapType.long,
+                          );
+                    },
+                    child: Text(
+                      'official documentation',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
                 ),
                 TextSpan(
                   text: ".",
@@ -776,25 +1038,40 @@ class _TipsPageState extends State<TipsPage> {
             TextSpan(
               text: "You can use custom userscripts with Torn PDA. For more information, please visit the "
                   "userscripts section in Settings & Advanced Browser Settings.\n\n"
-                  "Make sure to read carefully the disclaimer, "
-                  "instructions and limitations in case you would like to install new userscripts.\n\n"
+                  "Make sure to read carefully the disclaimer, instructions and limitations in case you would "
+                  "like to install new userscripts.\n\n"
                   "There is a list of several userscripts examples at ",
               style: TextStyle(
                 fontSize: 13,
               ),
               children: [
-                TextSpan(
-                  text: "our Github repository",
-                  style: TextStyle(
-                    decoration: TextDecoration.underline,
-                  ),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () async {
-                      const String scriptApiUrl = "https://github.com/Manuito83/torn-pda/tree/master/userscripts";
-                      if (await canLaunch(scriptApiUrl)) {
-                        launch(scriptApiUrl);
-                      }
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () {
+                      var url = 'https://github.com/Manuito83/torn-pda';
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: url,
+                            browserTapType: BrowserTapType.short,
+                          );
                     },
+                    onLongPress: () {
+                      var url = 'https://github.com/Manuito83/torn-pda';
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: url,
+                            browserTapType: BrowserTapType.long,
+                          );
+                    },
+                    child: Text(
+                      'our Github repository',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
                 ),
                 TextSpan(
                   text: ".",

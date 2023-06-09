@@ -119,7 +119,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                       keyboardType: TextInputType.numberWithOptions(signed: true, decimal: false),
                       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]?[\d,]*$'))],
                       onChanged: (ownString) {
-                        if (ownString.isNotEmpty && ownString != "-")  {
+                        if (ownString.isNotEmpty && ownString != "-") {
                           var ownAmount = _cleanNumber(ownString);
                           ownString = _moneyFormat.format(ownAmount);
                           _ownAmountController.value = TextEditingValue(

@@ -45,8 +45,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                 children: <Widget>[
                   Text("Energy"),
                   Switch(
-                    value:
-                        _firebaseUserModel.refillsRequested.contains('energy'),
+                    value: _firebaseUserModel.refillsRequested.contains('energy'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
@@ -69,8 +68,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                 children: <Widget>[
                   Text("Nerve"),
                   Switch(
-                    value:
-                        _firebaseUserModel.refillsRequested.contains('nerve'),
+                    value: _firebaseUserModel.refillsRequested.contains('nerve'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
@@ -93,8 +91,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                 children: <Widget>[
                   Text("Casino tokens"),
                   Switch(
-                    value:
-                        _firebaseUserModel.refillsRequested.contains('token'),
+                    value: _firebaseUserModel.refillsRequested.contains('token'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {

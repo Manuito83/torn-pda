@@ -3,11 +3,12 @@ import 'dart:collection';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class QuickItemsProviderFaction extends ChangeNotifier {
@@ -145,7 +146,7 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   }
 
   Future _getAllTornItems() async {
-    var allTornItems = await TornApiCaller().getItems();
+    var allTornItems = await Get.find<ApiCallerController>().getItems();
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsListFaction.clear();

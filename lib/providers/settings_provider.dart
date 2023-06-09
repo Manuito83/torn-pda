@@ -72,21 +72,6 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
-  var _clearCacheNextOpportunity = false;
-  bool get getClearCacheNextOpportunityAndReset {
-    if (_clearCacheNextOpportunity) {
-      setClearCacheNextOpportunity = false;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  set setClearCacheNextOpportunity(bool active) {
-    _clearCacheNextOpportunity = active;
-    Prefs().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
-  }
-
   var _androidBrowserScale = 0;
   int get androidBrowserScale => _androidBrowserScale;
   set setAndroidBrowserScale(int scale) {
@@ -246,14 +231,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _useTabsBrowserDialog = true;
-  bool get useTabsBrowserDialog => _useTabsBrowserDialog;
-  set changeUseTabsBrowserDialog(bool value) {
-    _useTabsBrowserDialog = value;
-    Prefs().setUseTabsBrowserDialog(_useTabsBrowserDialog);
-    notifyListeners();
-  }
-
   var _useTabsHideFeature = true;
   bool get useTabsHideFeature => _useTabsHideFeature;
   set changeUseTabsHideFeature(bool value) {
@@ -267,6 +244,94 @@ class SettingsProvider extends ChangeNotifier {
   set changeTabsHideBarColor(int value) {
     _tabsHideBarColor = value;
     Prefs().setTabsHideBarColor(_tabsHideBarColor);
+    notifyListeners();
+  }
+
+  var _fullScreenRemovesWidgets = true;
+  bool get fullScreenRemovesWidgets => _fullScreenRemovesWidgets;
+  set fullScreenRemovesWidgets(bool value) {
+    _fullScreenRemovesWidgets = value;
+    Prefs().setFullScreenRemovesWidgets(_fullScreenRemovesWidgets);
+    notifyListeners();
+  }
+
+  var _fullScreenRemovesChat = true;
+  bool get fullScreenRemovesChat => _fullScreenRemovesChat;
+  set fullScreenRemovesChat(bool value) {
+    _fullScreenRemovesChat = value;
+    Prefs().setFullScreenRemovesChat(_fullScreenRemovesChat);
+    notifyListeners();
+  }
+
+  var _fullScreenOverNotch = true;
+  bool get fullScreenOverNotch => _fullScreenOverNotch;
+  set fullScreenOverNotch(bool value) {
+    _fullScreenOverNotch = value;
+    Prefs().setFullScreenOverNotch(_fullScreenOverNotch);
+    notifyListeners();
+  }
+
+  var _fullScreenOverBottom = true;
+  bool get fullScreenOverBottom => _fullScreenOverBottom;
+  set fullScreenOverBottom(bool value) {
+    _fullScreenOverBottom = value;
+    Prefs().setFullScreenOverBottom(_fullScreenOverBottom);
+    notifyListeners();
+  }
+
+  var _fullScreenOverSides = true;
+  bool get fullScreenOverSides => _fullScreenOverSides;
+  set fullScreenOverSides(bool value) {
+    _fullScreenOverSides = value;
+    Prefs().setFullScreenOverSides(_fullScreenOverSides);
+    notifyListeners();
+  }
+
+  var _fullScreenByShortTap = false;
+  bool get fullScreenByShortTap => _fullScreenByShortTap;
+  set fullScreenByShortTap(bool value) {
+    _fullScreenByShortTap = value;
+    Prefs().setFullScreenByShortTap(_fullScreenByShortTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByLongTap = false;
+  bool get fullScreenByLongTap => _fullScreenByLongTap;
+  set fullScreenByLongTap(bool value) {
+    _fullScreenByLongTap = value;
+    Prefs().setFullScreenByLongTap(_fullScreenByLongTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByNotificationTap = false;
+  bool get fullScreenByNotificationTap => _fullScreenByNotificationTap;
+  set fullScreenByNotificationTap(bool value) {
+    _fullScreenByNotificationTap = value;
+    Prefs().setFullScreenByNotificationTap(_fullScreenByNotificationTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByDeepLinkTap = false;
+  bool get fullScreenByDeepLinkTap => _fullScreenByDeepLinkTap;
+  set fullScreenByDeepLinkTap(bool value) {
+    _fullScreenByDeepLinkTap = value;
+    Prefs().setFullScreenByDeepLinkTap(_fullScreenByDeepLinkTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByQuickItemTap = false;
+  bool get fullScreenByQuickItemTap => _fullScreenByQuickItemTap;
+  set fullScreenByQuickItemTap(bool value) {
+    _fullScreenByQuickItemTap = value;
+    Prefs().setFullScreenByQuickItemTap(_fullScreenByQuickItemTap);
+    notifyListeners();
+  }
+
+  var _fullScreenIncludesPDAButtonTap = false;
+  bool get fullScreenIncludesPDAButtonTap => _fullScreenIncludesPDAButtonTap;
+  set fullScreenIncludesPDAButtonTap(bool value) {
+    _fullScreenIncludesPDAButtonTap = value;
+    Prefs().setFullScreenIncludesPDAButtonTap(_fullScreenIncludesPDAButtonTap);
     notifyListeners();
   }
 
@@ -458,6 +523,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _rankedWarsInProfile = false;
+  bool get rankedWarsInProfile => _rankedWarsInProfile;
+  set changeRankedWarsInProfile(bool choice) {
+    _rankedWarsInProfile = choice;
+    Prefs().setRankedWarsInProfile(_rankedWarsInProfile);
+    notifyListeners();
+  }
+
   var _stockExchangeInMenu = false;
   bool get stockExchangeInMenu => _stockExchangeInMenu;
   set changeStockExchangeInMenu(bool choice) {
@@ -474,7 +547,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _showCases = [];
+  var _showCases = <String>[];
   List<String> get showCases => _showCases;
   set addShowCase(String showCase) {
     _showCases.add(showCase);
@@ -599,11 +672,19 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _showFavoritesInTabBar = true;
-  bool get showFavoritesInTabBar => _showFavoritesInTabBar;
-  set showFavoritesInTabBar(bool value) {
-    _showFavoritesInTabBar = value;
-    Prefs().setShowFavoritesInTabBar(_showFavoritesInTabBar);
+  var _shortcutsEnabledProfile = true;
+  bool get shortcutsEnabledProfile => _shortcutsEnabledProfile;
+  set shortcutsEnabledProfile(bool value) {
+    _shortcutsEnabledProfile = value;
+    Prefs().setShortcutsEnabledProfile(value);
+    notifyListeners();
+  }
+
+  var _appwidgetDarkMode = false;
+  bool get appwidgetDarkMode => _appwidgetDarkMode;
+  set appwidgetDarkMode(bool value) {
+    _appwidgetDarkMode = value;
+    Prefs().setAppwidgetDarkMode(value);
     notifyListeners();
   }
 
@@ -625,7 +706,6 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
     _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
-    _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
 
@@ -635,9 +715,19 @@ class SettingsProvider extends ChangeNotifier {
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
-    _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
+    _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
+    _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
+    _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
+    _fullScreenOverBottom = await Prefs().getFullScreenOverBottom();
+    _fullScreenOverSides = await Prefs().getFullScreenOverSides();
+    _fullScreenByShortTap = await Prefs().getFullScreenByShortTap();
+    _fullScreenByLongTap = await Prefs().getFullScreenByLongTap();
+    _fullScreenByNotificationTap = await Prefs().getFullScreenByNotificationTap();
+    _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
+    _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
+    _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
@@ -740,6 +830,7 @@ class SettingsProvider extends ChangeNotifier {
     _terminalEnabled = await Prefs().getTerminalEnabled();
 
     _rankedWarsInMenu = await Prefs().getRankedWarsInMenu();
+    _rankedWarsInProfile = await Prefs().getRankedWarsInProfile();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 
@@ -778,7 +869,9 @@ class SettingsProvider extends ChangeNotifier {
 
     _debugMessages = await Prefs().getDebugMessages();
 
-    _showFavoritesInTabBar = await Prefs().getShowFavoritesInTabBar();
+    _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
+
+    _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
 
     notifyListeners();
   }

@@ -8,17 +8,23 @@ class Prefs {
   ///
   /// Instantiation of the SharedPreferences library
   ///
+
   // General
   final String _kAppVersion = "pda_appVersion";
+  final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+
   // Native login
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
   final String _kLastAuthRedirect = "pda_lastAuthRedirect";
+  final String _kTryAutomaticLogins = "pda_tryAutomaticLogins";
+
   // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kTargetsColorFilter = "pda_targetsColorFilter";
+
   // War targets
   final String _kWarFactions = "pda_warFactions";
   final String _kFilterListInWars = "pda_filterListInWars";
@@ -33,10 +39,15 @@ class Prefs {
   final String _kTornStatsSpies = "pda_tornStatsSpies";
   final String _kTornStatsSpiesTime = "pda_tornStatsSpiesTime";
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
+
+  // Ranked war extra access
   final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
+  final String _kRankedWarsInProfile = "pda_rankedWarsInProfile";
+
   // Retaliation
   final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
   final String _kSingleRetaliationOpensBrowser = "pda_singleRetaliationOpensBrowser";
+
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
@@ -65,11 +76,10 @@ class Prefs {
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kDebugMessages = "pda_debugMessages";
-  final String _kShowFavoritesInTabBar = "pda_showFavoritesInTabBar";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
-  final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
+  //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
@@ -91,7 +101,6 @@ class Prefs {
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
-  final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
@@ -106,6 +115,8 @@ class Prefs {
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
   final String _kRestocksEnabled = "pda_restocksEnabled";
+
+  // Profile notifications
   final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
   final String _kEnergyNotificationValue = "pda_energyNotificationValue";
@@ -125,38 +136,51 @@ class Prefs {
   final String _kJailNotificationAhead = "pda_jailNotificationAhead";
   final String _kJailAlarmAhead = "pda_jailAlarmAhead";
   final String _kJailTimerAhead = "pda_jailTimesAhead";
-  final String _kManualAlarmVibration = "pda_manualAlarmVibration";
-  final String _kManualAlarmSound = "pda_manualAlarmSound";
-  final String _kEnableShortcuts = "pda_enableShortcuts";
+  final String _kRankedWarNotificationType = "pda_rankedWarNotificationType";
+  final String _kRankedWarNotificationAhead = "pda_rankedWarNotificationAhead";
+  final String _kRankedWarAlarmAhead = "pda_rankedWarAlarmAhead";
+  final String _kRankedWarTimerAhead = "pda_rankedWarTimesAhead";
+
+  // Profile options
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
   final String _kShowHeaderIcons = "pda_showHeaderIcons";
   final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
   final String _kDisableTravelSection = "pda_disableTravelSection";
-  final String _kShortcutTile = "pda_shortcutTile";
-  final String _kShortcutMenu = "pda_shortcutMenu";
-  final String _kActiveShortcutsList = "pda_activeShortcutsList";
-
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
   final String _kWarnAboutExcessEnergyThreshold = "pda_warnAboutExcessEnergyThreshold";
-  final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
   final String _kMessagesShowNumber = "pda_messagesShowNumber";
   final String _kEventsShowNumber = "pda_eventsShowNumber";
+  final String _kEventsLastRetrieved = "pda_eventsLastRetrieved";
+  final String _kEventsSave = "pda_eventsSave";
   final String _kExpandBasicInfo = "pda_ExpandBasicInfo";
   final String _kExpandNetworth = "pda_ExpandNetworth";
-  final String _kActiveCrimesList = "pda_activeCrimesList";
-  final String _kQuickItemsList = "pda_quickItemsList";
-  final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
-  final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
+  final String _kJobAddictionValue = "pda_jobAddiction";
+  final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
+  final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
+  final String _kOCrimesEnabled = "pda_OCrimesEnabled";
+  final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
+  final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+
+  // Loot
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
   final String _kLootNotificationAhead = "pda_lootNotificationAhead";
   final String _kLootAlarmAhead = "pda_lootAlarmAhead";
   final String _kLootTimerAhead = "pda_lootTimerAhead";
   final String _kLootFiltered = "pda_lootFiltered";
+
+  // Browser scripts and widgets
+  final String _kManualAlarmVibration = "pda_manualAlarmVibration";
+  final String _kManualAlarmSound = "pda_manualAlarmSound";
+  final String _kTerminalEnabled = "pda_terminalEnabled";
+  final String _kActiveCrimesList = "pda_activeCrimesList";
+  final String _kQuickItemsList = "pda_quickItemsList";
+  final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
+  final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
@@ -171,28 +195,37 @@ class Prefs {
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
-  final String _kOCrimesEnabled = "pda_OCrimesEnabled";
-  final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
-  final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+
+  // Shortcuts
+  final String _kEnableShortcuts = "pda_enableShortcuts";
+  final String _kShortcutTile = "pda_shortcutTile";
+  final String _kShortcutMenu = "pda_shortcutMenu";
+  final String _kActiveShortcutsList = "pda_activeShortcutsList";
+
   // Reviving
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kUseUhcRevive = "pda_useUhcRevive";
   final String _kUseHelaRevive = "pda_useHelaRevive";
+  final String _kUseWtfRevive = "pda_useWtfRevive";
+
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
+
   // Jail
   final String _kJailModel = "pda_jailOptions";
+
   // Bounties
   final String _kBountiesModel = "pda_bountiesOptions";
+
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
+
   // WebView Tabs
   final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kWebViewLastActiveTab = "pda_webViewLastActiveTab";
-  final String _kWebViewLastSessionUsedDialog = "pda_webViewLastSessionUsedDialog";
   final String _kWebViewSessionCookie = "pda_webViewSessionCookie";
   final String _kWebViewMainTab = "pda_webViewMainTab";
   final String _kWebViewSecondaryTabs = "pda_webViewTabs";
@@ -204,24 +237,41 @@ class Prefs {
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
+  final String _kFullScreenExplanationShown = "pda_fullScreenExplanationShown";
+  final String _kFullScreenRemovesWidgets = "pda_fullScreenRemovesWidgets";
+  final String _kFullScreenRemovesChat = "pda_fullScreenRemovesChat";
+  final String _kFullScreenOverNotch = "pda_fullScreenOverNotch";
+  final String _kFullScreenOverBottom = "pda_fullScreenOverBottom";
+  final String _kFullScreenOverSides = "pda_fullScreenOverSides";
+  final String _kFullScreenByShortTap = "pda_fullScreenByShortTap";
+  final String _kFullScreenByLongTap = "pda_fullScreenByLongTap";
+  final String _kFullScreenByNotificationTap = "pda_fullScreenByNotificationTap";
+  final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
+  final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
+  final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
+
   // Items
   final String _kItemsSort = "pda_itemssSort";
   final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
+
   // NNB
   final String _kNaturalNerveBarSource = "pda_naturalNerveBarSource";
   final String _kNaturalNerveYataTime = "pda_naturalNerveYataTime";
   final String _kNaturalNerveYataModel = "pda_naturalNerveYataModel";
   final String _kNaturalNerveTornStatsTime = "pda_naturalNerveTornStatsTime";
   final String _kNaturalNerveTornStatsModel = "pda_naturalNerveTornStatsModel";
+
   // Stakeouts
   final String _kStakeoutsEnabled = "pda_stakeoutsEnabled";
   final String _kStakeouts = "pda_stakeouts";
   final String _kStakeoutsSleepTime = "pda_stakeoutsSleepTime";
   final String _kStakeoutsFetchDelayLimit = "pda_stakeoutsFetchDelayLimit";
+
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
+
   // Stats
   final String _kStatsFirstLoginTimestamp = "pda_statsFirstLoginTimestamp";
   final String _kStatsCumulatedAppUseSeconds = "pda_statsCumulatedAppUseSeconds";
@@ -245,6 +295,14 @@ class Prefs {
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
 
+  // Appwidget
+  final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
+  final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
+
+  // Api Rate
+  final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
+  final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -265,6 +323,20 @@ class Prefs {
   Future<bool> setAppCompilation(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAppVersion, value);
+  }
+
+  /// -------------------------------
+  /// Methods for announcement dialog
+  /// -------------------------------
+
+  Future<int> getAppAnnouncementDialogVersion() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kAppAnnouncementDialogVersion) ?? 0;
+  }
+
+  Future<bool> setAppAnnouncementDialogVersion(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kAppAnnouncementDialogVersion, value);
   }
 
   /// ----------------------------
@@ -314,6 +386,16 @@ class Prefs {
   Future<bool> setLastAuthRedirect(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kLastAuthRedirect, value);
+  }
+
+  Future<bool> getTryAutomaticLogins() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTryAutomaticLogins) ?? true;
+  }
+
+  Future<bool> setTryAutomaticLogins(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTryAutomaticLogins, value);
   }
 
   /// ----------------------------
@@ -755,19 +837,6 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for favorites icon in tab bar
-  /// ----------------------------
-  Future<bool> getShowFavoritesInTabBar() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowFavoritesInTabBar) ?? true;
-  }
-
-  Future<bool> setShowFavoritesInTabBar(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowFavoritesInTabBar, value);
-  }
-
-  /// ----------------------------
   /// Methods for default browser
   /// ----------------------------
   Future<String> getDefaultBrowser() async {
@@ -830,15 +899,17 @@ class Prefs {
     return prefs.setBool(_kRestoreSessionCookie, value);
   }
 
+  /*
   Future<bool> getClearBrowserCacheNextOpportunity() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kClearBrowserCacheNextOpportunity) ?? false;
   }
-
+  
   Future<bool> setClearBrowserCacheNextOpportunity(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kClearBrowserCacheNextOpportunity, value);
   }
+  */
 
   Future<int> getAndroidBrowserScale() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -1499,6 +1570,49 @@ class Prefs {
     return prefs.setInt(_kJailTimerAhead, value);
   }
 
+  // Ranked War notification
+  Future<String> getRankedWarNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kRankedWarNotificationType) ?? '0';
+  }
+
+  Future<bool> setRankedWarNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kRankedWarNotificationType, value);
+  }
+
+  Future<int> getRankedWarNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRankedWarNotificationAhead) ?? 60;
+  }
+
+  Future<bool> setRankedWarNotificationAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRankedWarNotificationAhead, value);
+  }
+
+  Future<int> getRankedWarAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRankedWarAlarmAhead) ?? 1;
+  }
+
+  Future<bool> setRankedWarAlarmAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRankedWarAlarmAhead, value);
+  }
+
+  Future<int> getRankedWarTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRankedWarTimerAhead) ?? 60;
+  }
+
+  Future<bool> setRankedWarTimerAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRankedWarTimerAhead, value);
+  }
+
+  //
+
   Future<bool> getManualAlarmVibration() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kManualAlarmVibration) ?? true;
@@ -1517,16 +1631,6 @@ class Prefs {
   Future<bool> setManualAlarmSound(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kManualAlarmSound, value);
-  }
-
-  Future<bool> getEnableShortcuts() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kEnableShortcuts) ?? true;
-  }
-
-  Future<bool> setEnableShortcuts(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kEnableShortcuts, value);
   }
 
   Future<bool> getShowHeaderWallet() async {
@@ -1619,6 +1723,8 @@ class Prefs {
     return prefs.setBool(_kTerminalEnabled, value);
   }
 
+  // -- Events
+
   Future<bool> getExpandEvents() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kExpandEvents) ?? false;
@@ -1638,6 +1744,28 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kEventsShowNumber, value);
   }
+
+  Future<int> getEventsLastRetrieved() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kEventsLastRetrieved) ?? 0;
+  }
+
+  Future<bool> setEventsLastRetrieved(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kEventsLastRetrieved, value);
+  }
+
+  Future<List<String>> getEventsSave() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kEventsSave) ?? [];
+  }
+
+  Future<bool> setEventsSave(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kEventsSave, value);
+  }
+
+  // --
 
   Future<bool> getExpandMessages() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -1680,6 +1808,31 @@ class Prefs {
   }
 
   /// ----------------------------
+  /// Methods job addiction in Profile
+  /// ----------------------------
+  Future<int> getJobAddictionValue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJobAddictionValue) ?? 0;
+  }
+
+  Future<bool> setJobAdditionValue(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJobAddictionValue, value);
+  }
+
+  //--
+
+  Future<int> getJobAddictionNextCallTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJobAddictionNextCallTime) ?? 0;
+  }
+
+  Future<bool> setJobAddictionNextCallTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJobAddictionNextCallTime, value);
+  }
+
+  /// ----------------------------
   /// Methods for reviving
   /// ----------------------------
 
@@ -1713,9 +1866,29 @@ class Prefs {
     return prefs.setBool(_kUseHelaRevive, value);
   }
 
+  Future<bool> getUseWtfRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseWtfRevive) ?? false;
+  }
+
+  Future<bool> setUseWtfRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseWtfRevive, value);
+  }
+
   /// ----------------------------
   /// Methods for shortcuts
   /// ----------------------------
+  Future<bool> getShortcutsEnabledProfile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kEnableShortcuts) ?? true;
+  }
+
+  Future<bool> setShortcutsEnabledProfile(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kEnableShortcuts, value);
+  }
+
   Future<String> getShortcutTile() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kShortcutTile) ?? 'both';
@@ -2325,7 +2498,7 @@ class Prefs {
   }
 
   /// -----------------------------
-  /// METHODS FOR RANKED WARD
+  /// METHODS FOR EXTRA ACCESS TO RANKED WAR
   /// -----------------------------
   Future<bool> getRankedWarsInMenu() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -2335,6 +2508,16 @@ class Prefs {
   Future<bool> setRankedWarsInMenu(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRankedWarsInMenu, value);
+  }
+
+  Future<bool> getRankedWarsInProfile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRankedWarsInProfile) ?? true;
+  }
+
+  Future<bool> setRankedWarsInProfile(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRankedWarsInProfile, value);
   }
 
   /// -----------------------
@@ -2394,16 +2577,6 @@ class Prefs {
   Future<bool> setWebViewLastActiveTab(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kWebViewLastActiveTab, value);
-  }
-
-  Future<bool> getWebViewLastSessionUsedDialog() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWebViewLastSessionUsedDialog) ?? true;
-  }
-
-  Future<bool> setWebViewLastSessionUsedDialog(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWebViewLastSessionUsedDialog, value);
   }
 
   Future<String> getWebViewSessionCookie() async {
@@ -2516,6 +2689,138 @@ class Prefs {
     return prefs.setBool(_kReminderAboutHideTabFeature, value);
   }
 
+  // -- Quick menu tab
+
+  Future<bool> getFullScreenExplanationShown() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenExplanationShown) ?? false;
+  }
+
+  Future<bool> setFullScreenExplanationShown(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenExplanationShown, value);
+  }
+
+  Future<bool> getFullScreenRemovesWidgets() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenRemovesWidgets) ?? true;
+  }
+
+  Future<bool> setFullScreenRemovesWidgets(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenRemovesWidgets, value);
+  }
+
+  Future<bool> getFullScreenRemovesChat() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenRemovesChat) ?? true;
+  }
+
+  Future<bool> setFullScreenRemovesChat(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenRemovesChat, value);
+  }
+
+  Future<bool> getFullScreenOverNotch() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenOverNotch) ?? true;
+  }
+
+  Future<bool> setFullScreenOverNotch(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenOverNotch, value);
+  }
+
+  Future<bool> getFullScreenOverBottom() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenOverBottom) ?? true;
+  }
+
+  Future<bool> setFullScreenOverBottom(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenOverBottom, value);
+  }
+
+  Future<bool> getFullScreenOverSides() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenOverSides) ?? true;
+  }
+
+  Future<bool> setFullScreenOverSides(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenOverSides, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByShortTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByShortTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByShortTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByShortTap, value);
+  }
+
+  //--
+  Future<bool> getFullScreenByLongTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByLongTap) ?? true;
+  }
+
+  Future<bool> setFullScreenByLongTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByLongTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByNotificationTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByNotificationTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByNotificationTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByNotificationTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByDeepLinkTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByDeepLinkTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByDeepLinkTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByDeepLinkTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByQuickItemTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByQuickItemTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByQuickItemTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByQuickItemTap, value);
+  }
+
+  //--
+  Future<bool> getFullScreenIncludesPDAButtonTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenIncludesPDAButtonTap) ?? false;
+  }
+
+  Future<bool> setFullScreenIncludesPDAButtonTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenIncludesPDAButtonTap, value);
+  }
+
   /// ----------------------------
   /// Methods for show cases
   /// ----------------------------
@@ -2569,5 +2874,55 @@ class Prefs {
   Future<bool> setStatsCumulatedEventsAchieved(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kStatsEventsAchieved, value);
+  }
+
+  /// ----------------------------
+  /// Methods for appwidget
+  /// ----------------------------
+  Future<bool> getAppwidgetDarkMode() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetDarkMode) ?? false;
+  }
+
+  Future<bool> setAppwidgetDarkMode(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetDarkMode, value);
+  }
+
+  // ---
+
+  Future<bool> getAppwidgetExplanationShown() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetExplanationShown) ?? false;
+  }
+
+  Future<bool> setAppwidgetExplanationShown(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetExplanationShown, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Api Rate
+  /// ----------------------------
+  Future<bool> getShowApiRateInDrawer() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowApiRateInDrawer) ?? false;
+  }
+
+  Future<bool> setShowApiRateInDrawer(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowApiRateInDrawer, value);
+  }
+
+  // ---
+
+  Future<bool> getShowApiMaxCallWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowApiMaxCallWarning) ?? false;
+  }
+
+  Future<bool> setShowApiMaxCallWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowApiMaxCallWarning, value);
   }
 }

@@ -16,6 +16,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 import '../../providers/targets_provider.dart';
 import '../../providers/war_controller.dart';
@@ -50,7 +51,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
   SettingsProvider _settingsProvider;
   WebViewProvider _webViewProvider;
 
-  List<Faction> _factions = <Faction>[];
+  List<WarFaction> _factions = <WarFaction>[];
   List<String> _factionsIds = <String>[];
 
   String _titleString = "";
@@ -130,10 +131,10 @@ class _RankedWarCardState extends State<RankedWarCard> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        _launchBrowser(factionId: _factionsIds[0], dialog: true);
+                        _launchBrowser(factionId: _factionsIds[0], shortTap: true);
                       },
                       onLongPress: () {
-                        _launchBrowser(factionId: _factionsIds[0], dialog: false);
+                        _launchBrowser(factionId: _factionsIds[0], shortTap: false);
                       },
                       child: Column(
                         children: [
@@ -165,10 +166,10 @@ class _RankedWarCardState extends State<RankedWarCard> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        _launchBrowser(factionId: _factionsIds[1], dialog: true);
+                        _launchBrowser(factionId: _factionsIds[1], shortTap: true);
                       },
                       onLongPress: () {
-                        _launchBrowser(factionId: _factionsIds[1], dialog: false);
+                        _launchBrowser(factionId: _factionsIds[1], shortTap: false);
                       },
                       child: Column(
                         children: [
@@ -363,12 +364,12 @@ class _RankedWarCardState extends State<RankedWarCard> {
     );
   }
 
-  void _launchBrowser({@required factionId, @required dialog}) {
+  void _launchBrowser({@required factionId, @required shortTap}) {
     String url = "https://www.torn.com/factions.php?step=profile&ID=$factionId";
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
-      useDialog: dialog,
+      browserTapType: shortTap ? BrowserTapType.short : BrowserTapType.long,
     );
   }
 

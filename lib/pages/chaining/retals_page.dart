@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/retals_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class WarOptions {
   String description;
@@ -183,12 +184,18 @@ class _RetalsPageState extends State<RetalsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Retaliation"),
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         Padding(
@@ -202,6 +209,7 @@ class _RetalsPageState extends State<RetalsPage> {
                   // Quick update
                   onTap: () async {
                     await showDialog(
+                      useRootNavigator: false,
                       context: context,
                       builder: (BuildContext context) {
                         return _disclaimerDialog();

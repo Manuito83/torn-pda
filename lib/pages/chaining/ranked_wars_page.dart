@@ -11,7 +11,7 @@ import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_card.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_options.dart';
 
@@ -55,7 +55,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       future: _rankedWarsFetched,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          if (_rankedWarsModel != null) {
+          if (_rankedWarsModel.rankedwars != null && _rankedWarsModel.rankedwars.isNotEmpty) {
             return DefaultTabController(
               length: 3,
               child: SafeArea(
@@ -312,6 +312,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
           ),
           onPressed: () async {
             return showDialog(
+              useRootNavigator: false,
               context: context,
               barrierDismissible: true,
               builder: (BuildContext context) {
@@ -345,36 +346,54 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
-          Get.back();
+          if (widget.calledFromMenu) {
+            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+            scaffoldState.openDrawer();
+          } else {
+            Get.back();
+          }
         },
       ),
     );
   }
 
   Future _fetchRankedWards() async {
-    dynamic apiResponse = await TornApiCaller().getRankedWars();
+    dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
 
     if (apiResponse is RankedWarsModel) {
-      _rankedWarsModel = apiResponse;
+      if (apiResponse.rankedwars != null) {
+        _rankedWarsModel = apiResponse;
+      }
     }
   }
 
   Widget _fetchError() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 50),
         child: Column(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'OOPS!',
-              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            if (_rankedWarsModel.rankedwars != null && _rankedWarsModel.rankedwars.isEmpty)
+              Text(
+                'No wars found',
+                style: TextStyle(color: Colors.orange[800], fontSize: 20, fontWeight: FontWeight.bold),
+              )
+            else
+              Text(
+                'OOPS!',
+                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             SizedBox(height: 20),
-            Text(
-              'There was an error getting data from the API, please try again later!',
-            ),
+            if (_rankedWarsModel.rankedwars != null && _rankedWarsModel.rankedwars.isEmpty)
+              Text(
+                'The ranked wars list returned from the API is empty, please try again later!',
+              )
+            else
+              Text(
+                'There was an error getting data from the API, please try again later!',
+              ),
           ],
         ),
       ),

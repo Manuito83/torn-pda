@@ -422,7 +422,7 @@ class _TacPageState extends State<TacPage> {
 
     for (var i = 0; i < _tacProvider.targetsList.length; i++) {
       if (mounted) {
-        dynamic target = await TornApiCaller().getTarget(playerId: _tacProvider.targetsList[i].id.toString());
+        dynamic target = await Get.find<TornApiCaller>().getTarget(playerId: _tacProvider.targetsList[i].id.toString());
 
         if (target is TargetModel) {
           _tacProvider.getSingleStatus(i, target);
@@ -484,6 +484,7 @@ class _TacPageState extends State<TacPage> {
               child: GestureDetector(
                 onTap: () async {
                   await showDialog(
+  useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
                       return _optimalExplanationDialog();
@@ -614,18 +615,25 @@ class _TacPageState extends State<TacPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Torn Attack Central"),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.info_outline_rounded),
           onPressed: () async {
             await showDialog(
+  useRootNavigator: false,
               context: context,
               builder: (BuildContext context) {
                 return _tacExplanationDialog();
@@ -652,7 +660,7 @@ class _TacPageState extends State<TacPage> {
       _targetCards.clear();
     });
     int currentChainHit = 0;
-    var chainResponse = await TornApiCaller().getChainStatus();
+    var chainResponse = await Get.find<TornApiCaller>().getChainStatus();
     if (chainResponse is ChainModel) {
       currentChainHit = chainResponse.chain.current;
     }

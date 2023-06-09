@@ -4,9 +4,8 @@ import 'dart:math';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_xlider/flutter_xlider.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:non_linear_slider/models/interval.dart';
-import 'package:non_linear_slider/non_linear_slider.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/jail/jail_record_dialog.dart';
@@ -14,10 +13,12 @@ import 'package:torn_pda/widgets/jail/jail_record_dialog.dart';
 class JailWidget extends StatefulWidget {
   final InAppWebViewController webview;
   final Function fireScriptCallback;
+  final String playerName;
 
   const JailWidget({
     @required this.webview,
     @required this.fireScriptCallback,
+    @required this.playerName,
     Key key,
   }) : super(key: key);
 
@@ -107,6 +108,13 @@ class _JailWidgetState extends State<JailWidget> {
                               fontSize: 10,
                             ),
                           ),
+                          Text(
+                            "Show oneself: ${_jailModel.excludeSelf ? 'YES' : 'NO'}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -146,7 +154,7 @@ class _JailWidgetState extends State<JailWidget> {
                             ),
                           ),
                           Text(
-                            "Score: ${_jailModel.scoreMax}",
+                            "Score: ${_jailModel.scoreMin} - ${_jailModel.scoreMax}",
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -174,8 +182,14 @@ class _JailWidgetState extends State<JailWidget> {
   Widget _vaultExpanded() {
     return Column(
       children: [
-        _bailEnabled(),
-        _bustEnabler(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _bailEnabled(),
+            _bustEnabler(),
+          ],
+        ),
+        _excludeSelf(),
         _timeSlider(),
         _levelSlider(),
         _scoreSlider(),
@@ -193,7 +207,7 @@ class _JailWidgetState extends State<JailWidget> {
             fontSize: 12,
           ),
         ),
-        const SizedBox(width: 50),
+        const SizedBox(width: 10),
         Switch(
           value: _jailModel.bailTicked,
           activeColor: Colors.green,
@@ -222,7 +236,7 @@ class _JailWidgetState extends State<JailWidget> {
             fontSize: 12,
           ),
         ),
-        const SizedBox(width: 50),
+        const SizedBox(width: 10),
         Switch(
           value: _jailModel.bustTicked,
           activeColor: Colors.green,
@@ -232,6 +246,35 @@ class _JailWidgetState extends State<JailWidget> {
           onChanged: (active) {
             setState(() {
               _jailModel.bustTicked = active;
+            });
+            widget.fireScriptCallback(_jailModel);
+            _saveModel();
+          },
+        )
+      ],
+    );
+  }
+
+  Row _excludeSelf() {
+    return Row(
+      children: [
+        const Text(
+          "Always show oneself",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Switch(
+          value: _jailModel.excludeSelf,
+          activeColor: Colors.green,
+          activeTrackColor: Colors.green[200],
+          inactiveThumbColor: Colors.red,
+          inactiveTrackColor: Colors.red[200],
+          onChanged: (active) {
+            setState(() {
+              _jailModel.excludeSelf = active;
             });
             widget.fireScriptCallback(_jailModel);
             _saveModel();
@@ -268,6 +311,7 @@ class _JailWidgetState extends State<JailWidget> {
               values: RangeValues(_jailModel.timeMin.toDouble(), _jailModel.timeMax.toDouble()),
               max: 100,
               divisions: 100,
+              inactiveColor: Colors.grey,
               onChanged: (RangeValues values) {
                 setState(() {
                   _jailModel.timeMin = values.start.toInt();
@@ -320,6 +364,7 @@ class _JailWidgetState extends State<JailWidget> {
               min: 1,
               max: 100,
               divisions: 99,
+              inactiveColor: Colors.grey,
               onChanged: (RangeValues values) {
                 setState(() {
                   _jailModel.levelMin = values.start.toInt();
@@ -344,45 +389,145 @@ class _JailWidgetState extends State<JailWidget> {
     );
   }
 
+  RangeValues _values = RangeValues(0, 250000);
+  double _valueToPercent(double value) {
+    if (value <= 40000) {
+      return value * 0.5 / 40000;
+    } else if (value <= 175000) {
+      return 0.5 + (value - 40000) * 0.4 / (175000 - 40000);
+    } else {
+      return 0.9 + (value - 175000) * 0.1 / (250000 - 175000);
+    }
+  }
+
+  /// From 0-40000, travel 50%
+  /// From 40000-175000 travel 40%
+  /// From 175000 to 250000 travel 10%
+  double customScoreMapping(double value) {
+    if (value <= 0.5) {
+      return 40000 * value / 0.5;
+    } else if (value <= 0.9) {
+      return 40000 + (175000 - 40000) * (value - 0.5) / 0.4;
+    } else {
+      return 175000 + (250000 - 175000) * (value - 0.9) / 0.1;
+    }
+  }
+
+  double customScoreReverseMapping(double value) {
+    if (value <= 40000) {
+      return 0.5 * value / 40000;
+    } else if (value <= 175000) {
+      return 0.5 + 0.4 * (value - 40000) / (175000 - 40000);
+    } else {
+      return 0.9 + 0.1 * (value - 175000) / (250000 - 175000);
+    }
+  }
+
   Row _scoreSlider() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: Text(
-            "Score",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-            ),
-          ),
-        ),
-        SizedBox(width: 5),
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _jailModel.scoreMax.toString(),
+              "Score Min ${_jailModel.scoreMin.toString()}",
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: 11,
               ),
             ),
-            NonLinearSlider(
-              value: _jailModel.scoreMax.toDouble(),
-              intervals: [
-                NLSInterval(0, 40000, 0.50),
-                NLSInterval(40000, 175000, 0.40),
-                NLSInterval(175000, 250000, 0.10),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _jailModel.scoreMax = value.toInt();
-                });
-              },
-              onChangeEnd: (value) {
-                widget.fireScriptCallback(_jailModel);
-                _saveModel();
-              },
+            Text(
+              "Score Max ${_jailModel.scoreMax.toString()}",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: SizedBox(
+                width: 164,
+                child: FlutterSlider(
+                  min: 0,
+                  max: 1,
+                  step: FlutterSliderStep(step: 0.01),
+                  values: [
+                    customScoreReverseMapping(_jailModel.scoreMin.toDouble()),
+                    customScoreReverseMapping(_jailModel.scoreMax.toDouble()),
+                  ],
+                  rangeSlider: true,
+                  onDragging: (handlerIndex, lower, upper) {
+                    double lowerActualValue = customScoreMapping(lower);
+                    double upperActualValue = customScoreMapping(upper);
+                    setState(() {
+                      _jailModel.scoreMin = lowerActualValue.toInt();
+                      _jailModel.scoreMax = upperActualValue.toInt();
+                    });
+                  },
+                  onDragCompleted: (handlerIndex, lower, upper) {
+                    widget.fireScriptCallback(_jailModel);
+                    _saveModel();
+                  },
+                  handler: FlutterSliderHandler(
+                    decoration: BoxDecoration(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      height: 22,
+                      width: 22,
+                    ),
+                  ),
+                  rightHandler: FlutterSliderHandler(
+                    decoration: BoxDecoration(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      height: 22,
+                      width: 22,
+                    ),
+                  ),
+                  handlerWidth: 20,
+                  handlerHeight: 20,
+                  trackBar: FlutterSliderTrackBar(
+                    activeTrackBarHeight: 5,
+                    inactiveTrackBarHeight: 4,
+                    inactiveTrackBar: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.grey,
+                    ),
+                    activeTrackBar: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  tooltip: FlutterSliderTooltip(
+                    disabled: false,
+                    custom: (value) {
+                      double actualValue = customScoreMapping(value);
+                      return Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Colors.black,
+                        ),
+                        child: Text(
+                          actualValue.toStringAsFixed(0),
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
             GestureDetector(
               child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
@@ -437,9 +582,13 @@ class _JailWidgetState extends State<JailWidget> {
         ..levelMax = 100
         ..timeMin = 0
         ..timeMax = 100
+        ..scoreMin = 0
         ..scoreMax = 250000
         ..bailTicked = false
-        ..bustTicked = false;
+        ..bustTicked = false
+        ..excludeSelf = false
+        ..excludeName = widget.playerName.toUpperCase();
+      //widget.playerName;
     }
 
     widget.fireScriptCallback(_jailModel);
@@ -451,9 +600,12 @@ class _JailWidgetState extends State<JailWidget> {
       ..levelMax = _jailModel.levelMax
       ..timeMin = _jailModel.timeMin
       ..timeMax = _jailModel.timeMax
+      ..scoreMin = _jailModel.scoreMin
       ..scoreMax = _jailModel.scoreMax
       ..bailTicked = _jailModel.bailTicked
-      ..bustTicked = _jailModel.bustTicked;
+      ..bustTicked = _jailModel.bustTicked
+      ..excludeSelf = _jailModel.excludeSelf
+      ..excludeName = widget.playerName.toUpperCase();
 
     Prefs().setJailModel(jailModelToJson(_jailModel));
   }

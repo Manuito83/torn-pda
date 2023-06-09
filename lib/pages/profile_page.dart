@@ -5,6 +5,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,18 +23,23 @@ import 'package:share/share.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
+import 'package:torn_pda/models/company/employees_model.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
+import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
+import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
 import 'package:http/http.dart' as http;
@@ -51,7 +57,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -59,6 +65,8 @@ import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
 import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import '../main.dart';
 
 enum ProfileNotification {
@@ -71,6 +79,7 @@ enum ProfileNotification {
   drugs,
   medical,
   booster,
+  rankedWar,
 }
 
 enum NotificationType {
@@ -129,10 +138,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _apiRetries = 0;
 
   OwnProfileExtended _user;
+  List<Event> _events = <Event>[];
 
   DateTime _serverTime;
 
   Timer _tickerCallApi;
+  Stream _browserHasClosed;
+  StreamSubscription _browserHasClosedSubscription;
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -154,6 +166,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _boosterNotificationTime;
   DateTime _hospitalReleaseTime;
   DateTime _jailReleaseTime;
+  DateTime _rankedWarTime;
 
   int _hospitalNotificationAhead;
   int _hospitalTimerAhead;
@@ -161,6 +174,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _jailNotificationAhead;
   int _jailTimerAhead;
   int _jailAlarmAhead;
+  int _rankedWarNotificationAhead;
+  int _rankedWarTimerAhead;
+  int _rankedWarAlarmAhead;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -171,6 +187,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _boosterNotificationsPending = false;
   bool _hospitalNotificationsPending = false;
   bool _jailNotificationsPending = false;
+  bool _rankedWarNotificationsPending = false;
 
   NotificationType _travelNotificationType;
   NotificationType _energyNotificationType;
@@ -181,6 +198,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   NotificationType _boosterNotificationType;
   NotificationType _hospitalNotificationType;
   NotificationType _jailNotificationType;
+  NotificationType _rankedWarNotificationType;
 
   int _customEnergyTrigger;
   int _customNerveTrigger;
@@ -197,12 +215,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   IconData _boosterNotificationIcon;
   IconData _hospitalNotificationIcon;
   IconData _jailNotificationIcon;
+  IconData _rankedWarNotificationIcon;
 
   bool _alarmSound;
   bool _alarmVibration;
 
   bool _miscApiFetchedOnce = false;
-  var _miscTick = 0;
+  DateTime _miscTickLastTime = DateTime.now();
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
 
@@ -226,9 +245,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _nukeReviveActive = false;
   bool _uhcReviveActive = false;
   bool _helaReviveActive = false;
+  bool _wtfReviveActive = false;
 
   bool _warnAboutChains = false;
-  bool _shortcutsEnabled = false;
   bool _showHeaderWallet = false;
   bool _showHeaderIcons = false;
   bool _dedicatedTravelCard = false;
@@ -269,9 +288,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   StatsChartTornStats _statsChartModel;
   Future _statsChartDataFetched;
 
+  RankedWar _factionRankedWar;
+
+  int _companyAddiction;
+
   // Showcases
   GlobalKey _showcaseProfileBars = GlobalKey();
   GlobalKey _showcaseProfileClock = GlobalKey();
+  GlobalKey _showcasePdaBrowserButton = GlobalKey();
 
   @override
   void initState() {
@@ -280,7 +304,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _webViewProvider = context.read<WebViewProvider>();
 
-    _requestIOSPermissions();
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -289,39 +312,56 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
-    _startApiTimer();
+    // Initialise periodic API refresh
+    _resetApiTimer();
+
+    // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
+    // So that we can 1) refresh the API, 2) start the API timer again
+    _browserHasClosed = _webViewProvider.browserHasClosedStream.stream;
+    _browserHasClosedSubscription = _browserHasClosed.listen((event) {
+      log("Browser has closed in Profile, resuming API calls!");
+      _resetApiTimer(initCall: true);
+    });
 
     analytics.setCurrentScreen(screenName: 'profile');
   }
 
-  void _startApiTimer() {
+  /// Restarts the API timer (to be executed after 20 minutes)
+  /// If [initCall] is true, a call is placed also at the start
+  /// (unless the browser is open)
+  void _resetApiTimer({bool initCall = false}) {
+    if (initCall && !_webViewProvider.browserShowInForeground) {
+      _apiRefreshPeriodic(forceMisc: true);
+    }
+
     _tickerCallApi?.cancel();
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
-      _fetchApi();
-
-      // Fetch misc every minute
-      if (_miscTick < 2) {
-        _miscTick++;
-      } else {
-        _getMiscCardInfo();
-        _miscTick = 0;
+      // Only refresh if the browser is not open!
+      if (!_webViewProvider.browserShowInForeground) {
+        _apiRefreshPeriodic();
       }
     });
   }
 
-  void _requestIOSPermissions() {
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+  void _apiRefreshPeriodic({bool forceMisc = false}) {
+    _fetchApi();
+    _refreshEvents();
+
+    // Fetch misc every minute
+    int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
+    if (secondsSinceLastMiscFetch > 60 || forceMisc) {
+      _miscTickLastTime = DateTime.now();
+      _getMiscCardInfo();
+      _getStatsChart();
+      _getRankedWars();
+      _getCompanyAddiction();
+    }
   }
 
   @override
   void dispose() {
     _tickerCallApi?.cancel();
+    _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -329,14 +369,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      await _fetchApi();
-      _startApiTimer();
-      if (_apiGoodData) {
-        // We get miscellaneous information when we open the app for those cases where users
-        // stay with the app on the background for hours/days and only use the Profile section
-        _getMiscCardInfo();
-        _getStatsChart();
-      }
+      _resetApiTimer(initCall: true);
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
     }
@@ -363,17 +396,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           floatingActionButton: Stack(
             children: [
               buildSpeedDial(),
-              GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                child: Container(
-                  width: 56,
-                  height: 56,
-                ),
-                onLongPress: () async {
-                  bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
-                  _launchBrowser(url: "", dialogRequested: lastSessionWasDialog, recallLastSession: true);
-                },
-              ),
             ],
           ),
           body: Container(
@@ -385,9 +407,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   if (_apiGoodData) {
                     return RefreshIndicator(
                       onRefresh: () async {
-                        _fetchApi();
-                        _getMiscCardInfo();
-                        _miscTick = 0;
+                        _resetApiTimer(initCall: true);
                         await Future.delayed(Duration(seconds: 1));
                       },
                       child: SingleChildScrollView(
@@ -508,10 +528,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _settingsProvider.addShowCase = "profile_bars";
         showCases.add(_showcaseProfileBars);
       }
+
       if (!_settingsProvider.showCases.contains("profile_clock")) {
         _settingsProvider.addShowCase = "profile_clock";
         showCases.add(_showcaseProfileClock);
       }
+
+      if (!_settingsProvider.showCases.contains("profile_pdaBrowserButton")) {
+        _settingsProvider.addShowCase = "profile_pdaBrowserButton";
+        showCases.add(_showcasePdaBrowserButton);
+      }
+
       if (showCases.isNotEmpty) {
         ShowCaseWidget.of(_).startShowCase(showCases);
       }
@@ -588,12 +615,33 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Text("Profile"),
         ],
       ),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          Showcase(
+            key: _showcasePdaBrowserButton,
+            title: 'Direct Torn access!',
+            description: '\nUse this PDA button in any section to quickly access Torn.\n\n'
+                'By using this icon, you will immediately resume your Torn browser experience, exactly as you '
+                'left it, with no new tabs reloading.\n\n'
+                'Make sure to visit the Settings and Tips section to learn how you can also configure '
+                'your taps (quick or long) to launch the browser in windowed or full screen modes!',
+            showArrow: false,
+            disableMovingAnimation: true,
+            textColor: _themeProvider.mainText,
+            tooltipBackgroundColor: _themeProvider.secondBackground,
+            descTextStyle: TextStyle(fontSize: 13),
+            tooltipPadding: EdgeInsets.all(20),
+            child: PdaBrowserIcon(),
+          ),
+        ],
       ),
       actions: <Widget>[
         _apiGoodData
@@ -601,10 +649,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 padding: const EdgeInsets.only(right: 8),
                 child: GestureDetector(
                   onTap: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: true);
+                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: true);
                   },
                   onLongPress: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: false);
+                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: false);
                   },
                   child: Showcase(
                     key: _showcaseProfileClock,
@@ -642,7 +690,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
-              _shortcutsEnabled = newOptions.shortcutsEnabled;
               _showHeaderWallet = newOptions.showHeaderWallet;
               _showHeaderIcons = newOptions.showHeaderIcons;
               _dedicatedTravelCard = newOptions.dedicatedTravelCard;
@@ -784,7 +831,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
 
-          _launchBrowser(url: url, dialogRequested: false);
+          _launchBrowser(url: url, shortTap: false);
         },
         onTap: () async {
           String url = thisShortcut.url;
@@ -801,7 +848,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
 
-          _launchBrowser(url: url, dialogRequested: true);
+          _launchBrowser(url: url, shortTap: true);
         },
         child: Card(
           shape: RoundedRectangleBorder(
@@ -952,13 +999,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 _launchBrowser(
                     url: 'https://www.torn.com/profiles.php?'
                         'XID=$causingId',
-                    dialogRequested: true);
+                    shortTap: true);
               },
               onLongPress: () {
                 _launchBrowser(
                     url: 'https://www.torn.com/profiles.php?'
                         'XID=$causingId',
-                    dialogRequested: false);
+                    shortTap: false);
               },
             );
           } else {
@@ -985,24 +1032,39 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
+    bool repatriated = false;
+
     Color stateColor;
     if (_user.status.color == 'red') {
       stateColor = Colors.red;
+      if (_user.travel.timeLeft > 0) {
+        repatriated = true;
+      }
     } else if (_user.status.color == 'green') {
       stateColor = Colors.green;
     } else if (_user.status.color == 'blue') {
       stateColor = Colors.blue;
     }
 
-    Widget stateBall() {
+    Widget stateBall({bool forceBlue = false}) {
       return Padding(
         padding: EdgeInsets.only(left: 8),
         child: Container(
           width: 13,
           height: 13,
-          decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+          decoration: BoxDecoration(
+            color: forceBlue ? Colors.blue : stateColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.black),
+          ),
         ),
       );
+    }
+
+    bool warInFuture = false;
+    if (_factionRankedWar != null) {
+      int ts = DateTime.now().millisecondsSinceEpoch;
+      warInFuture = _factionRankedWar.war.start * 1000 > ts;
     }
 
     return Card(
@@ -1013,37 +1075,111 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(bottom: 15),
-              child: Text(
-                'STATUS',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'STATUS',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (_factionRankedWar != null && _settingsProvider.rankedWarsInProfile)
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onLongPress: () => _launchBrowser(
+                            url: 'https://www.torn.com/factions.php?step=your#/war/rank',
+                            shortTap: false,
+                          ),
+                          onTap: () {
+                            _launchBrowser(
+                              url: 'https://www.torn.com/factions.php?step=your#/war/rank',
+                              shortTap: true,
+                            );
+                          },
+                          child: RankedWarMini(
+                            rankedWar: _factionRankedWar,
+                            playerFactionName: _user.faction.factionName,
+                            playerFactionTag: _user.faction.factionTag,
+                          ),
+                        ),
+                        if (warInFuture)
+                          Row(
+                            children: [
+                              SizedBox(width: 10),
+                              _notificationIcon(ProfileNotification.rankedWar),
+                            ],
+                          ),
+                      ],
+                    ),
+                ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Column(
                 children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 60,
-                            child: Text('Status: '),
-                          ),
-                          Text(_user.status.state),
-                          stateBall(),
-                        ],
-                      ),
-                      if (_user.status.color == 'red' && _user.status.state == "Hospital")
-                        _notificationIcon(ProfileNotification.hospital),
-                      if (_user.status.color == 'red' && _user.status.state == "Jail")
-                        _notificationIcon(ProfileNotification.hospital),
-                    ],
-                  ),
+                  if (!repatriated)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 60,
+                              child: Text('Status: '),
+                            ),
+                            Text(_user.status.state),
+                            stateBall(),
+                          ],
+                        ),
+                        if (_user.status.color == 'red' && _user.status.state == "Hospital")
+                          _notificationIcon(ProfileNotification.hospital),
+                        if (_user.status.color == 'red' && _user.status.state == "Jail")
+                          _notificationIcon(ProfileNotification.jail),
+                      ],
+                    )
+                  else
+                    // Travelling while in hospital (repatriation)
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 60,
+                                  child: Text('Status: '),
+                                ),
+                                Text(_user.status.state),
+                                stateBall(),
+                              ],
+                            ),
+                            if (_user.status.color == 'red' && _user.status.state == "Hospital")
+                              _notificationIcon(ProfileNotification.hospital),
+                            if (_user.status.color == 'red' && _user.status.state == "Jail")
+                              _notificationIcon(ProfileNotification.jail),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Row(
+                              children: [
+                                SizedBox(width: 60),
+                                Text("Travel (repatriated)"),
+                                stateBall(forceBlue: true),
+                              ],
+                            ),
+                            _notificationIcon(ProfileNotification.travel),
+                          ],
+                        ),
+                        if (!_dedicatedTravelCard) _travelWidget(repatriated: true),
+                      ],
+                    ),
                   BazaarStatusCard(
                     // Careful, in this card we mixed sync with async items, so the miscModel can still be null
                     bazaarModel: _miscModel?.bazaar,
@@ -1081,6 +1217,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
+                  if (_user.status.state == 'Hospital' && _wtfReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: WtfReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1102,8 +1248,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Widget _travelWidget() {
-    if (_user.status.state == 'Traveling') {
+  Widget _travelWidget({bool repatriated = false}) {
+    if (_user.status.state == 'Traveling' || repatriated) {
       var startTime = _user.travel.departed;
       var endTime = _user.travel.timestamp;
       var totalTravelTimeSeconds = endTime - startTime;
@@ -1134,9 +1280,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onLongPress: () => _launchBrowser(url: 'https://www.torn.com', dialogRequested: false),
+                      onLongPress: () => _launchBrowser(url: 'https://www.torn.com', shortTap: false),
                       onTap: () {
-                        _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
+                        _launchBrowser(url: 'https://www.torn.com', shortTap: true);
                       },
                       child: LinearPercentIndicator(
                         padding: null,
@@ -1208,8 +1354,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Card _travelCard() {
     Widget header;
+    bool repatriated = false;
     if (_user.status.state == "Traveling") {
       header = _travelWidget();
+    } else if (_user.status.state == "Hospital" && _user.travel.timeLeft > 0) {
+      header = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 55),
+            child: Text(
+              "REPATRIATED",
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.red,
+              ),
+            ),
+          ),
+          _travelWidget(repatriated: true),
+        ],
+      );
+      repatriated = true;
     } else if (_user.status.state == "Abroad") {
       header = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1253,11 +1418,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
                 onLongPress: () {
-                  _launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
+                  _launchBrowser(url: 'https://www.torn.com', shortTap: false);
                 },
                 onPressed: () async {
                   var url = 'https://www.torn.com';
-                  _launchBrowser(url: url, dialogRequested: true);
+                  _launchBrowser(url: url, shortTap: true);
                 },
               ),
               SizedBox(width: 20),
@@ -1313,6 +1478,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
                 onTap: () {
                   return showDialog(
+                    useRootNavigator: false,
                     context: context,
                     barrierDismissible: true,
                     builder: (BuildContext context) {
@@ -1371,11 +1537,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
                 onLongPress: () {
-                  _launchBrowser(url: 'https://www.torn.com/travelagency.php', dialogRequested: false);
+                  _launchBrowser(url: 'https://www.torn.com/travelagency.php', shortTap: false);
                 },
                 onPressed: () async {
                   var url = 'https://www.torn.com/travelagency.php';
-                  _launchBrowser(url: url, dialogRequested: true);
+                  _launchBrowser(url: url, shortTap: true);
                 },
               ),
               SizedBox(width: 20),
@@ -1477,7 +1643,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     Widget buttonsRow;
-    if (_user.status.state == "Traveling") {
+    if (_user.status.state == "Traveling" || repatriated) {
       if (_user.travel.timeLeft > 180) {
         buttonsRow = Padding(
           padding: const EdgeInsets.only(top: 14),
@@ -1585,18 +1751,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           GestureDetector(
                             key: _showOne,
                             onLongPress: () {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: false);
+                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
                             },
                             onTap: () async {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: true);
+                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
                             },
                             child: Showcase(
                               key: _showcaseProfileBars,
                               title: 'Did you know?',
                               description: '\nTap any of the bars to launch a browser '
-                                  'straight to the gym, crimes or items sections!\n\n'
-                                  'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
-                                  'a full browser with a LONG PRESS.',
+                                  'straight to the gym, crimes or items sections!',
                               targetPadding: const EdgeInsets.all(10),
                               disableMovingAnimation: true,
                               textColor: _themeProvider.mainText,
@@ -1666,10 +1830,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           SizedBox(width: 10),
                           GestureDetector(
                             onLongPress: () {
-                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: false);
+                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: false);
                             },
                             onTap: () async {
-                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: true);
+                              _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: true);
                             },
                             child: LinearPercentIndicator(
                               padding: null,
@@ -1713,10 +1877,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       SizedBox(width: 10),
                       GestureDetector(
                         onLongPress: () {
-                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', dialogRequested: false);
+                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', shortTap: false);
                         },
                         onTap: () async {
-                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', dialogRequested: true);
+                          _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', shortTap: true);
                         },
                         child: LinearPercentIndicator(
                           padding: null,
@@ -1766,12 +1930,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               } else if (_settingsProvider.lifeBarOption == "inventory") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/item.php#medical-items',
-                                  dialogRequested: false,
+                                  shortTap: false,
                                 );
                               } else if (_settingsProvider.lifeBarOption == "faction") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical',
-                                  dialogRequested: false,
+                                  shortTap: false,
                                 );
                               }
                             },
@@ -1781,12 +1945,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               } else if (_settingsProvider.lifeBarOption == "inventory") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/item.php#medical-items',
-                                  dialogRequested: true,
+                                  shortTap: true,
                                 );
                               } else if (_settingsProvider.lifeBarOption == "faction") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical',
-                                  dialogRequested: true,
+                                  shortTap: true,
                                 );
                               }
                             },
@@ -2223,6 +2387,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationType = _jailNotificationType;
         notificationIcon = _jailNotificationIcon;
         break;
+
+      case ProfileNotification.rankedWar:
+        _rankedWarTime = DateTime.fromMillisecondsSinceEpoch(_factionRankedWar.war.start * 1000);
+        secondsToGo = _rankedWarTime.difference(DateTime.now()).inSeconds;
+        notificationsPending = _rankedWarNotificationsPending;
+
+        var notificationTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        var formattedTime = TimeFormatter(
+          inputTime: notificationTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        var alarmTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        var formattedTimeAlarm = TimeFormatter(
+          inputTime: alarmTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        var timerTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        var formattedTimeTimer = TimeFormatter(
+          inputTime: timerTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        notificationSetString = 'Ranked war notification set for $formattedTime';
+        notificationCancelString = 'Ranked war  notification cancelled!';
+        alarmSetString = 'Ranked war  alarm set for $formattedTimeAlarm';
+        timerSetString = 'Ranked war  timer set for $formattedTimeTimer';
+        notificationType = _rankedWarNotificationType;
+        notificationIcon = _rankedWarNotificationIcon;
+        break;
     }
 
     if (secondsToGo == 0 && !percentageError) {
@@ -2559,13 +2757,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Card _eventsTimeline() {
     int maxToShow = _eventsShowNumber;
 
-    // Some users might an empty events map. This is why we have the events parameters as dynamic
-    // in OwnProfile Model. We need to check if it contains several elements, in which case we
-    // create a map in a new variable. Otherwise, we return an empty Card.
-    var events = Map<String, Event>();
-    if (_user.events.length > 0) {
-      events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
-    } else {
+    if (_events.length == 0) {
       return Card(
         child: Row(
           children: [
@@ -2585,8 +2777,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
                   child: Text(
-                    "You have no events",
-                    style: TextStyle(color: Colors.green),
+                    "Loading...",
                   ),
                 ),
               ],
@@ -2606,14 +2797,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int loopCount = 1;
     int maxCount;
 
-    if (events.length > maxToShow) {
+    if (_events.length > maxToShow) {
       maxCount = maxToShow;
     } else {
-      maxCount = events.length;
-      maxToShow = events.length;
+      maxCount = _events.length;
+      maxToShow = _events.length;
     }
 
-    for (var e in events.values) {
+    for (Event e in _events) {
       String message = HtmlParser.fix(e.event);
       message = message;
       message = message.replaceAll('View the details here!', '');
@@ -2731,10 +2922,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onLongPress: () {
-                  _launchBrowser(url: "https://www.torn.com/events.php#/step=all", dialogRequested: false);
+                  _launchBrowser(url: "https://www.torn.com/events.php#/step=all", shortTap: false);
                 },
                 onTap: () {
-                  _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', dialogRequested: true);
+                  _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', shortTap: true);
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -2904,13 +3095,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: false);
+                              shortTap: false);
                         },
                         onTap: () {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: true);
+                              shortTap: true);
                         },
                       )
                     : GestureDetector(
@@ -2919,13 +3110,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: false);
+                              shortTap: false);
                         },
                         onTap: () {
                           _launchBrowser(
                               url: "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
-                              dialogRequested: true);
+                              shortTap: true);
                         },
                       ),
               ],
@@ -3010,10 +3201,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onLongPress: () {
-                  _launchBrowser(url: "https://www.torn.com/messages.php", dialogRequested: false);
+                  _launchBrowser(url: "https://www.torn.com/messages.php", shortTap: false);
                 },
                 onTap: () {
-                  _launchBrowser(url: "https://www.torn.com/messages.php", dialogRequested: true);
+                  _launchBrowser(url: "https://www.torn.com/messages.php", shortTap: true);
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -3304,10 +3495,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 children: [
                   GestureDetector(
                     onLongPress: () {
-                      _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: false);
+                      _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
                     },
                     onTap: () async {
-                      _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: true);
+                      _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                     },
                     child: Icon(
                       MdiIcons.alphaPCircleOutline,
@@ -3320,6 +3511,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               SizedBox(height: 4),
               _jobPoints(),
+              SizedBox(height: 4),
+              _companyAddictionWidget(),
               SizedBox(height: 8),
               SelectableText('Battle Stats: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
@@ -3403,10 +3596,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     GestureDetector(
                       onLongPress: () {
-                        _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: false);
+                        _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
                       },
                       onTap: () async {
-                        _launchBrowser(url: 'https://www.torn.com/points.php', dialogRequested: true);
+                        _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                       },
                       child: Icon(
                         MdiIcons.alphaPCircleOutline,
@@ -3422,6 +3615,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: _jobPoints(),
+              ),
+              SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: _companyAddictionWidget(),
               ),
               SizedBox(height: 20),
               Padding(
@@ -3904,10 +4102,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           InkWell(
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', dialogRequested: false);
+              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
             },
             onTap: () {
-              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', dialogRequested: true);
+              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),
@@ -3943,10 +4141,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
-                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", dialogRequested: false);
+                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
               },
               onTap: () {
-                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', dialogRequested: true);
+                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 5),
@@ -3971,10 +4169,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
-                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", dialogRequested: false);
+                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
               },
               onTap: () {
-                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', dialogRequested: true);
+                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 5),
@@ -3989,6 +4187,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
             onTap: () {
               return showDialog(
+                useRootNavigator: false,
                 context: context,
                 barrierDismissible: true,
                 builder: (BuildContext context) {
@@ -4372,8 +4571,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber > limit) limit = _messagesShowNumber;
     if (_eventsShowNumber > limit) limit = _eventsShowNumber;
 
-    var apiResponse = await TornApiCaller().getOwnProfileExtended(limit: limit);
-    var apiChain = await TornApiCaller().getChainStatus();
+    var apiResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: limit);
+
+    // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
+    // Otherwise, call the API
+    dynamic chain;
+    ChainStatusProvider chainProvider = context.read<ChainStatusProvider>();
+    if (chainProvider.chainModel is ChainModel) {
+      chain = chainProvider.chainModel;
+    } else {
+      chain = await Get.find<ApiCallerController>().getChainStatus();
+    }
 
     if (mounted) {
       setState(() {
@@ -4393,8 +4601,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Prefs().setNerveNotificationValue(_customNerveTrigger);
           }
 
-          if (apiChain is ChainModel) {
-            _chainModel = apiChain;
+          if (chain is ChainModel) {
+            _chainModel = chain;
           } else {
             // Default to empty chain, with all parameters at 0
             _chainModel = ChainModel();
@@ -4419,9 +4627,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //  - (sync) Education, money and skills with miscInfo call
     //  - (async) OC Crimes (both types) with AA call or from events
     //  - (async) Bazaar
+    //  - (async) RankedWars
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
       _statsChartDataFetched = _getStatsChart();
+      _getRankedWars();
+      _getCompanyAddiction();
+      _refreshEvents();
     }
 
     _retrievePendingNotifications();
@@ -4429,10 +4641,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getMiscCardInfo() async {
     try {
-      var miscApiResponse = await TornApiCaller().getOwnProfileMisc();
+      var miscApiResponse = await Get.find<ApiCallerController>().getOwnProfileMisc();
 
       if (_tornEducationModel == null) {
-        _tornEducationModel = await TornApiCaller().getEducation();
+        _tornEducationModel = await Get.find<ApiCallerController>().getEducation();
       }
 
       // The ones that are inside this condition, show in the MISC card (which
@@ -4498,9 +4710,163 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
+  Future _getRankedWars() async {
+    try {
+      if (_user.faction.factionId == 0) return;
+      if (!_settingsProvider.rankedWarsInProfile) return;
+
+      dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
+      if (apiResponse is RankedWarsModel) {
+        for (var warMap in apiResponse.rankedwars.entries) {
+          if (warMap.value.factions.keys.contains(_user.faction.factionId.toString())) {
+            int ts = DateTime.now().millisecondsSinceEpoch;
+            bool warInFuture = warMap.value.war.start * 1000 > ts;
+            bool warActive = warMap.value.war.start < ts && warMap.value.war.end == 0;
+            if (warInFuture || warActive) {
+              setState(() {
+                _factionRankedWar = warMap.value;
+              });
+            }
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      // Returns null
+    }
+    _factionRankedWar = null;
+    return;
+  }
+
+  Future _getCompanyAddiction() async {
+    try {
+      if (_user.job.companyId == 0) return;
+
+      final nextFetchTime = await Prefs().getJobAddictionNextCallTime();
+
+      int currentTimeMillis = DateTime.now().toUtc().millisecondsSinceEpoch;
+      bool shouldCallApi = currentTimeMillis >= nextFetchTime;
+
+      // If we should call the API, fetch the data and update SharedPreferences
+      if (shouldCallApi || nextFetchTime == 0) {
+        log("Fetching job addiction!");
+        dynamic apiResponse = await Get.find<ApiCallerController>().getCompanyEmployees();
+        if (apiResponse is CompanyEmployees) {
+          for (var eMap in apiResponse.companyEmployees.entries) {
+            // Loop until we find the user
+            if (eMap.key != _user.playerId.toString()) continue;
+
+            // Calculate the next allowed API call time
+            DateTime now = DateTime.now().toUtc();
+            DateTime nextAllowedTime = DateTime.utc(now.year, now.month, now.day, 18, 30);
+            if (now.isAfter(nextAllowedTime)) {
+              nextAllowedTime = nextAllowedTime.add(Duration(days: 1));
+            }
+            int nextAllowedTimeMillis = nextAllowedTime.millisecondsSinceEpoch;
+
+            Prefs().setJobAddictionNextCallTime(nextAllowedTimeMillis);
+            Prefs().setJobAdditionValue(eMap.value.effectiveness.addiction ?? 0);
+            setState(() {
+              _companyAddiction = eMap.value.effectiveness.addiction ?? 0;
+            });
+            return;
+          }
+        }
+      } else {
+        int savedAddition = await Prefs().getJobAddictionValue();
+        setState(() {
+          _companyAddiction = savedAddition;
+        });
+      }
+    } catch (e) {
+      _companyAddiction = null;
+      return;
+    }
+  }
+
+  /// To be restrictive with API calls, we will only perform a full events update if > 30 minutes from last
+  /// In between, we will only update new events from X timestamp
+  Future _refreshEvents() async {
+    try {
+      // Get the saved events from shared prefs
+      List<Event> eventsSave = <Event>[];
+      List<String> save = await Prefs().getEventsSave();
+      for (var s in save) {
+        eventsSave.add(eventFromJson(s));
+      }
+
+      // Calculate time difference from last time we obtained events
+      DateTime lastEventsTs = DateTime.fromMillisecondsSinceEpoch(await Prefs().getEventsLastRetrieved());
+      int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
+
+      // If less than 30 minutes have elapse, we'll just query for new events and fill the list
+      if (minutesDiff < 30 && eventsSave.isNotEmpty) {
+        // Get the last saved event, find out what's the TS
+        if (eventsSave.isEmpty) return;
+        int lastTs = eventsSave[0].timestamp;
+
+        // Get new events after that and add them
+        dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs + 1);
+        if (newEventsResponse is List<Event>) {
+          if (newEventsResponse.isNotEmpty) {
+            for (int i = 0; i < newEventsResponse.length; i++) {
+              eventsSave.insert(i, newEventsResponse[i]);
+            }
+
+            List<String> eventsListToSave = [];
+            for (Event e in eventsSave) {
+              eventsListToSave.add(eventToJson(e));
+            }
+            Prefs().setEventsSave(eventsListToSave);
+          }
+          // Save last retrieved date as now
+          Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
+        }
+
+        // Refresh events (even if no additions have been made, as we might be starting
+        // the app with [_events] with a null value)
+        if (mounted)
+          setState(() {
+            _events = List<Event>.from(eventsSave);
+          });
+        return;
+      }
+
+      // If more than 30 minutes elapsed, we get the whole pack
+      // Calculate one month ago
+      log("Events save elapse more than 30 minutes, getting all events");
+      int monthAgo = ((DateTime.now().subtract(Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
+      dynamic allEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: monthAgo);
+      if (allEventsResponse is List<Event>) {
+        // Save events and last retrieved timestamp
+        List<String> eventsListToSave = [];
+        for (Event e in allEventsResponse) {
+          eventsListToSave.add(eventToJson(e));
+        }
+        Prefs().setEventsSave(eventsListToSave);
+        Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
+
+        // Refresh events
+        setState(() {
+          _events = List<Event>.from(allEventsResponse);
+        });
+      } else {
+        // In case of error, return what's saved
+        setState(() {
+          _events = List<Event>.from(eventsSave);
+        });
+      }
+    } catch (e, trace) {
+      log("Error at Profile Events: $e >> $trace");
+      FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
+  }
+
   Future<void> _getFactionCrimes() async {
     try {
-      var factionCrimes = await TornApiCaller().getFactionCrimes(playerId: _user.playerId.toString());
+      if (_user == null) return;
+      var factionCrimes = await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
@@ -4588,32 +4954,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
 
         // Try to find quick crimes in events
-        var events = Map<String, Event>();
-        if (_user.events.length > 0) {
-          events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
-        }
-
         bool foundExpired = false;
         bool foundProgress = false;
         bool error = false;
 
         // Try to find our crime by reviewing the last 100 events. The first one we
         // can find is the one that counts
-        events.forEach((key, value) {
+        for (Event e in _events) {
           if (!foundExpired && !foundProgress && !error) {
-            if (value.event.contains("You and your team") ||
-                (value.event.contains("canceled the") && value.event.contains("that you were selected for"))) {
+            if (e.event.contains("You and your team") ||
+                (e.event.contains("canceled the") && e.event.contains("that you were selected for"))) {
               foundExpired = true;
-            } else if (value.event.contains("You have been selected")) {
+            } else if (e.event.contains("You have been selected")) {
               RegExp strRaw = RegExp(r"([0-9]+) hours");
-              var matches = strRaw.allMatches(value.event);
+              var matches = strRaw.allMatches(e.event);
               if (matches.length > 0) {
                 for (var match in matches) {
                   var hoursString = match.group(1);
                   try {
                     var hours = int.parse(hoursString);
-                    simpleTime =
-                        DateTime.fromMillisecondsSinceEpoch(value.timestamp * 1000).add(Duration(hours: hours));
+                    simpleTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp * 1000).add(Duration(hours: hours));
                     foundProgress = true;
                     simpleExists = true;
                     _settingsProvider.changeOCrimeLastKnown = simpleTime.millisecondsSinceEpoch;
@@ -4627,7 +4987,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             }
           }
-        });
+        }
 
         // If we haven't found anything in 100 events (including no cancellations), but we are still
         // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
@@ -4683,7 +5043,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           shape: BoxShape.circle,
           image: new DecorationImage(
             fit: BoxFit.fill,
-            image: AssetImage("images/icons/torn_t_logo_restore.png"),
+            image: AssetImage("images/icons/torn_t_logo.png"),
           ),
         ),
       ),
@@ -4692,10 +5052,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       children: [
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/city.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/city.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -4716,10 +5076,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/trade.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: true);
           },
           onLongPress: () async {
-            _launchBrowser(url: 'https://www.torn.com/trade.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -4740,10 +5100,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/item.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/item.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -4764,10 +5124,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -4792,10 +5152,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -4816,10 +5176,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
+            _launchBrowser(url: 'https://www.torn.com', shortTap: true);
           },
           onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
+            _launchBrowser(url: 'https://www.torn.com', shortTap: false);
           },
           child: Container(
             width: 100,
@@ -4842,12 +5202,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  void _launchBrowser({@required String url, @required bool dialogRequested, bool recallLastSession = false}) async {
-    if (!_settingsProvider.useQuickBrowser) dialogRequested = false;
+  void _launchBrowser({@required String url, @required bool shortTap, bool recallLastSession = false}) async {
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
-      useDialog: dialogRequested,
+      browserTapType: shortTap ? BrowserTapType.short : BrowserTapType.long,
       recallLastSession: recallLastSession,
     );
   }
@@ -4989,6 +5348,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from jail!';
         notificationPayload += 'jail';
         break;
+      case ProfileNotification.rankedWar:
+        notificationId = 109;
+        secondsToNotification = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarNotificationAhead;
+        channelTitle = 'Manual war';
+        channelSubtitle = 'Manual war';
+        channelDescription = 'Manual notifications for war';
+        notificationTitle = _settingsProvider.discreteNotifications ? "W" : 'Ranked War';
+        notificationSubtitle = _settingsProvider.discreteNotifications ? "App" : 'Ranked war is about to start!';
+        notificationPayload += 'war';
+        break;
     }
 
     var modifier = await getNotificationChannelsModifiers();
@@ -5015,9 +5384,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
     if (notificationId == 201) {
-      iOSPlatformChannelSpecifics = IOSNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
+      iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
     }
 
     var platformChannelSpecifics = NotificationDetails(
@@ -5124,6 +5493,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.jail:
         await flutterLocalNotificationsPlugin.cancel(108);
+        break;
+      case ProfileNotification.rankedWar:
+        await flutterLocalNotificationsPlugin.cancel(109);
         break;
     }
 
@@ -5537,15 +5909,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _jailAlarmAhead = await Prefs().getJailAlarmAhead();
     _jailTimerAhead = await Prefs().getJailTimerAhead();
 
+    var rankedWar = await Prefs().getRankedWarNotificationType();
+    _rankedWarNotificationAhead = await Prefs().getRankedWarNotificationAhead();
+    _rankedWarAlarmAhead = await Prefs().getRankedWarAlarmAhead();
+    _rankedWarTimerAhead = await Prefs().getRankedWarTimerAhead();
+
     _alarmSound = await Prefs().getManualAlarmSound();
     _alarmVibration = await Prefs().getManualAlarmVibration();
 
     _nukeReviveActive = await Prefs().getUseNukeRevive();
     _uhcReviveActive = await Prefs().getUseUhcRevive();
     _helaReviveActive = await Prefs().getUseHelaRevive();
+    _wtfReviveActive = await Prefs().getUseWtfRevive();
 
     _warnAboutChains = await Prefs().getWarnAboutChains();
-    _shortcutsEnabled = await Prefs().getEnableShortcuts();
     _showHeaderWallet = await Prefs().getShowHeaderWallet();
     _showHeaderIcons = await Prefs().getShowHeaderIcons();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
@@ -5659,6 +6036,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _jailNotificationIcon = Icons.timer;
       }
 
+      if (rankedWar == '0') {
+        _rankedWarNotificationType = NotificationType.notification;
+        _rankedWarNotificationIcon = Icons.chat_bubble_outline;
+      } else if (rankedWar == '1') {
+        _rankedWarNotificationType = NotificationType.alarm;
+        _rankedWarNotificationIcon = Icons.notifications_none;
+      } else if (rankedWar == '2') {
+        _rankedWarNotificationType = NotificationType.timer;
+        _rankedWarNotificationIcon = Icons.timer;
+      }
+
       _eventsExpController.expanded = expandEvents;
       _eventsShowNumber = eventsNumber;
       _messagesExpController.expanded = expandMessages;
@@ -5721,6 +6109,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Jail';
+        break;
+      case ProfileNotification.rankedWar:
+        var alarmTime = _rankedWarTime.add(Duration(minutes: -_rankedWarAlarmAhead));
+        hour = alarmTime.hour;
+        minute = alarmTime.minute;
+        message = 'Torn PDA War';
         break;
     }
 
@@ -5810,6 +6204,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         totalSeconds = _jailReleaseTime.difference(DateTime.now()).inSeconds - _jailTimerAhead;
         message = 'Torn PDA Jail';
         break;
+      case ProfileNotification.rankedWar:
+        totalSeconds = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarTimerAhead;
+        message = 'Torn PDA War';
+        break;
     }
 
     AndroidIntent intent = AndroidIntent(
@@ -5885,12 +6283,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               onPressed: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: true);
+                                _launchBrowser(url: url, shortTap: true);
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: false);
+                                _launchBrowser(url: url, shortTap: false);
                               },
                             ),
                           ),
@@ -5913,12 +6311,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               onPressed: () async {
                                 var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: true);
+                                _launchBrowser(url: url, shortTap: true);
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: false);
+                                _launchBrowser(url: url, shortTap: false);
                               },
                             ),
                           ),
@@ -5941,12 +6339,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               onPressed: () async {
                                 var url = 'https://www.torn.com/companies.php#/option=funds';
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: true);
+                                _launchBrowser(url: url, shortTap: true);
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/companies.php#/option=funds";
                                 Navigator.of(context).pop();
-                                _launchBrowser(url: url, dialogRequested: false);
+                                _launchBrowser(url: url, shortTap: false);
                               },
                             ),
                           ),
@@ -6041,10 +6439,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 var url = "https://www.torn.com/item.php#medical-items";
                                 if (longPress) {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: false);
+                                  _launchBrowser(url: url, shortTap: false);
                                 } else {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: true);
+                                  _launchBrowser(url: url, shortTap: true);
                                 }
                               },
                             ),
@@ -6070,10 +6468,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
                                 if (longPress) {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: false);
+                                  _launchBrowser(url: url, shortTap: false);
                                 } else {
                                   Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: true);
+                                  _launchBrowser(url: url, shortTap: true);
                                 }
                               },
                             ),
@@ -6122,11 +6520,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       bool unemployed = false;
 
       if (_user.job.companyId == 0) {
-        if (_user.job.position == "None") {
+        if (_user.job.job == "None") {
           unemployed = true;
         }
 
-        switch (_user.job.position.toLowerCase()) {
+        switch (_user.job.job.toLowerCase()) {
           case "army":
             currentPoints = _miscModel.jobpoints.jobs.army;
             break;
@@ -6165,10 +6563,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         children: [
           GestureDetector(
             onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com/companies.php', dialogRequested: false);
+              _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: false);
             },
             onTap: () async {
-              _launchBrowser(url: 'https://www.torn.com/companies.php', dialogRequested: true);
+              _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: true);
             },
             child: Icon(
               Icons.work,
@@ -6182,6 +6580,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           GestureDetector(
             onTap: () async {
               return showDialog(
+                useRootNavigator: false,
                 context: context,
                 barrierDismissible: true,
                 builder: (BuildContext context) {
@@ -6201,6 +6600,37 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           ),
         ],
+      );
+    } catch (e) {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _companyAddictionWidget() {
+    try {
+      if (_companyAddiction == null) return SizedBox.shrink();
+
+      Color c = _themeProvider.mainText;
+      if (_companyAddiction < -1) c = Colors.orange[700];
+      if (_companyAddiction < -12) c = Colors.red[700];
+
+      return Padding(
+        padding: const EdgeInsets.only(left: 2),
+        child: Row(
+          children: [
+            Image.asset(
+              'images/icons/chart_down.png',
+              height: 18,
+              color: Colors.brown[300],
+            ),
+            SizedBox(width: 9),
+            Text("Company Addiction: "),
+            Text(
+              "$_companyAddiction",
+              style: TextStyle(color: c),
+            ),
+          ],
+        ),
       );
     } catch (e) {
       return SizedBox.shrink();
@@ -6326,7 +6756,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var sectionSort = <Widget>[];
 
     for (var section in _userSectionOrder) {
-      if (section == "Shortcuts" && _shortcutsEnabled) {
+      if (section == "Shortcuts" && _settingsProvider.shortcutsEnabledProfile) {
         sectionSort.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
@@ -6414,7 +6844,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (element) async {
-      var rentDetails = await TornApiCaller().getProperty(propertyId: element.toString());
+      var rentDetails = await Get.find<ApiCallerController>().getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         var timeLeft = rentDetails.property.rented.daysLeft;
@@ -6464,11 +6894,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: false);
+                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: false);
             },
             onTap: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: true);
+                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: true);
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),

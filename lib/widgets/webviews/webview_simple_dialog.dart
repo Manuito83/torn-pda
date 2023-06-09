@@ -37,6 +37,7 @@ Future<void> openWebViewSimpleDialog({
   String restoredTheme = await Prefs().getAppTheme();
 
   return showDialog(
+    useRootNavigator: false,
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {

@@ -11,9 +11,7 @@ import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 
 // Project imports:
-import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -48,7 +46,6 @@ class ProfileOptionsPage extends StatefulWidget {
 
 class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _warnAboutChainsEnabled = true;
-  bool _shortcutsEnabled = true;
   bool _showHeaderWallet = true;
   bool _showHeaderIcons = true;
   bool _dedicatedTravelCard = true;
@@ -166,88 +163,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 ),
                                 SizedBox(height: 15),
                                 Divider(),
-                                SizedBox(height: 15),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'SHORTCUTS',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Text("Enable shortcuts"),
-                                      Switch(
-                                        value: _shortcutsEnabled,
-                                        onChanged: (value) {
-                                          // If user wants to disable and there are
-                                          // active shortcuts, open dialog and offer
-                                          // a second opportunity. Also might be good
-                                          // to reset the lists if there are issues.
-                                          if (!value && context.read<ShortcutsProvider>().activeShortcuts.length > 0) {
-                                            _shortcutsDisableConfirmationDialog();
-                                          } else {
-                                            Prefs().setEnableShortcuts(value);
-                                            setState(() {
-                                              _shortcutsEnabled = value;
-                                            });
-                                          }
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'Enable configurable shortcuts in the Profile section to '
-                                    'quickly access your favorite sections in game. '
-                                    'Tip: if enabled in settings, short-press shortcuts for quick browser '
-                                    'window, long-press for full browser with app bar',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Text(
-                                        "Configure shortcuts",
-                                        style: TextStyle(
-                                          color: _shortcutsEnabled ? _themeProvider.mainText : Colors.grey,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.keyboard_arrow_right_outlined),
-                                        color: _shortcutsEnabled ? _themeProvider.mainText : Colors.grey,
-                                        onPressed: _shortcutsEnabled
-                                            ? () {
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (BuildContext context) => ShortcutsPage(),
-                                                  ),
-                                                );
-                                              }
-                                            : null,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(height: 15),
-                                Divider(),
                                 SizedBox(height: 5),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -334,6 +249,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 icon: Icon(Icons.keyboard_arrow_right_outlined),
                                                 onPressed: () {
                                                   showDialog(
+                                                    useRootNavigator: false,
                                                     context: context,
                                                     builder: (BuildContext context) {
                                                       return IconsFilterPage(
@@ -442,6 +358,50 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
+                                      'RANKED WAR WIDGET',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Show next Ranked War"),
+                                      Switch(
+                                        value: _settingsProvider.rankedWarsInProfile,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.changeRankedWarsInProfile = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'Show a mini widget in the Status card with information regarding the approaching '
+                                    'Ranked War, including notifications. When the Ranked War is active, a scoreboard '
+                                    'is shown. It can be clicked to access the war in Torn.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 15),
+                                Divider(),
+                                SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
                                       'BARS BEHAVIOR',
                                       style: TextStyle(fontSize: 10),
                                     ),
@@ -516,8 +476,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   child: Text(
                                     'Shown in the miscellaneous card and in status when the time approaches. '
                                     'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
-                                    'the participants\' status. Otherwise, it will be calculated based on received events (it might be prone to errors '
-                                    'if you delete them)',
+                                    'the participants\' status. Otherwise, it will be calculated based on received events',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -1018,7 +977,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   Future _restorePreferences() async {
     var warnChains = await Prefs().getWarnAboutChains();
-    var shortcuts = await Prefs().getEnableShortcuts();
     var headerWallet = await Prefs().getShowHeaderWallet();
     var headerIcons = await Prefs().getShowHeaderIcons();
     var dedTravel = await Prefs().getDedicatedTravelCard();
@@ -1033,7 +991,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
     setState(() {
       _warnAboutChainsEnabled = warnChains;
-      _shortcutsEnabled = shortcuts;
       _showHeaderWallet = headerWallet;
       _showHeaderIcons = headerIcons;
       _dedicatedTravelCard = dedTravel;
@@ -1048,108 +1005,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     });
   }
 
-  Future<void> _shortcutsDisableConfirmationDialog() {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
-                      children: <Widget>[
-                        Flexible(
-                          child: Text(
-                            "Caution: you have active shortcuts, if you disable this "
-                            "feature you will erase the list as well. Are you sure?",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: Text("Disable!"),
-                              onPressed: () {
-                                context.read<ShortcutsProvider>().wipeAllShortcuts();
-                                Prefs().setEnableShortcuts(false);
-                                setState(() {
-                                  _shortcutsEnabled = false;
-                                });
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            TextButton(
-                              child: Text("Oh no!"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Icon(Icons.delete_forever_outlined),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Future<bool> _willPopCallback() async {
     Navigator.of(context).pop(
       ProfileOptionsReturn()
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
-        ..shortcutsEnabled = _shortcutsEnabled
         ..showHeaderWallet = _showHeaderWallet
         ..showHeaderIcons = _showHeaderIcons
         ..dedicatedTravelCard = _dedicatedTravelCard

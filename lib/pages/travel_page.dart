@@ -11,6 +11,7 @@ import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -25,11 +26,13 @@ import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class TravelPage extends StatefulWidget {
   TravelPage({Key key}) : super(key: key);
@@ -149,16 +152,16 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 onClosed: (ReturnFlagPressed returnFlag) async {
                   if (returnFlag.flagPressed) {
                     var url = 'https://www.torn.com/travelagency.php';
-                    if (!_settingsProvider.useQuickBrowser) returnFlag.shortTap = false;
                     await context.read<WebViewProvider>().openBrowserPreference(
                           context: context,
                           url: url,
-                          useDialog: returnFlag.shortTap,
+                          browserTapType: returnFlag.shortTap ? BrowserTapType.short : BrowserTapType.long,
                         );
                     _updateInformation();
                   }
                 },
                 closedColor: Colors.orange,
+                openColor: _themeProvider.canvas,
                 closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
                     height: 56,
@@ -185,12 +188,18 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      leading: IconButton(
-        icon: Icon(Icons.dehaze),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       title: Text('Travel'),
       actions: <Widget>[
@@ -451,11 +460,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     if (returnFlag.flagPressed) {
       var url = 'https://www.torn.com/travelagency.php';
-      if (!_settingsProvider.useQuickBrowser) returnFlag.shortTap = false;
+
       await context.read<WebViewProvider>().openBrowserPreference(
             context: context,
             url: url,
-            useDialog: returnFlag.shortTap,
+            browserTapType: returnFlag.shortTap ? BrowserTapType.short : BrowserTapType.long,
           );
       _updateInformation();
     }
@@ -538,19 +547,19 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             padding: const EdgeInsets.only(top: 20),
             child: ElevatedButton(
               child: Text("Go visit!"),
-              onLongPress: () async {
-                await context.read<WebViewProvider>().openBrowserPreference(
-                      context: context,
-                      url: "https://www.torn.com",
-                      useDialog: false,
-                    );
-                _updateInformation();
-              },
               onPressed: () async {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: "https://www.torn.com",
-                      useDialog: _settingsProvider.useQuickBrowser,
+                      browserTapType: BrowserTapType.short,
+                    );
+                _updateInformation();
+              },
+              onLongPress: () async {
+                await context.read<WebViewProvider>().openBrowserPreference(
+                      context: context,
+                      url: "https://www.torn.com",
+                      browserTapType: BrowserTapType.long,
                     );
                 _updateInformation();
               },
@@ -585,19 +594,19 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           ElevatedButton(
             child: Icon(Icons.local_airport),
-            onLongPress: () async {
-              await context.read<WebViewProvider>().openBrowserPreference(
-                    context: context,
-                    url: "https://www.torn.com",
-                    useDialog: false,
-                  );
-              _updateInformation();
-            },
             onPressed: () async {
               await context.read<WebViewProvider>().openBrowserPreference(
                     context: context,
                     url: "https://www.torn.com",
-                    useDialog: _settingsProvider.useQuickBrowser,
+                    browserTapType: BrowserTapType.short,
+                  );
+              _updateInformation();
+            },
+            onLongPress: () async {
+              await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: "https://www.torn.com",
+                    browserTapType: BrowserTapType.long,
                   );
               _updateInformation();
             },
@@ -654,19 +663,19 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               GestureDetector(
-                onLongPress: () async {
-                  await context.read<WebViewProvider>().openBrowserPreference(
-                        context: context,
-                        url: "https://www.torn.com",
-                        useDialog: false,
-                      );
-                  _updateInformation();
-                },
                 onTap: () async {
                   await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: "https://www.torn.com",
-                        useDialog: _settingsProvider.useQuickBrowser,
+                        browserTapType: BrowserTapType.short,
+                      );
+                  _updateInformation();
+                },
+                onLongPress: () async {
+                  await context.read<WebViewProvider>().openBrowserPreference(
+                        context: context,
+                        url: "https://www.torn.com",
+                        browserTapType: BrowserTapType.long,
                       );
                   _updateInformation();
                 },
@@ -764,19 +773,19 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   ElevatedButton _travelAgencyButton() {
     return ElevatedButton(
       child: Text("Travel Agency"),
-      onLongPress: () async {
-        await context.read<WebViewProvider>().openBrowserPreference(
-              context: context,
-              url: "https://www.torn.com/travelagency.php",
-              useDialog: false,
-            );
-        _updateInformation();
-      },
       onPressed: () async {
         await context.read<WebViewProvider>().openBrowserPreference(
               context: context,
               url: "https://www.torn.com/travelagency.php",
-              useDialog: _settingsProvider.useQuickBrowser,
+              browserTapType: BrowserTapType.short,
+            );
+        _updateInformation();
+      },
+      onLongPress: () async {
+        await context.read<WebViewProvider>().openBrowserPreference(
+              context: context,
+              url: "https://www.torn.com/travelagency.php",
+              browserTapType: BrowserTapType.long,
             );
         _updateInformation();
       },
@@ -849,7 +858,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchTornApi() async {
-    var myTravel = await TornApiCaller().getTravel();
+    var myTravel = await Get.find<ApiCallerController>().getTravel();
     if (myTravel is TravelModel) {
       _apiRetries = 0;
       setState(() {
@@ -886,7 +895,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       presentSound: true,
       sound: 'aircraft_seatbelt.aiff',
     );

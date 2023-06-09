@@ -34,11 +34,11 @@ class BazaarStatusCard extends StatelessWidget {
     bazaarPendingString = "\$${formatProfit(inputInt: totalMoney)}";
 
     openTapCallback() {
-      launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: true);
+      launchBrowser(url: 'https://www.torn.com/bazaar.php', shortTap: true);
     }
 
     openLongPressCallback() {
-      launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: false);
+      launchBrowser(url: 'https://www.torn.com/bazaar.php', shortTap: false);
     }
 
     return Padding(
@@ -59,6 +59,7 @@ class BazaarStatusCard extends StatelessWidget {
             ),
             onTap: () {
               return showDialog<void>(
+                useRootNavigator: false,
                 context: context,
                 barrierDismissible: false, // user must tap button!
                 builder: (BuildContext context) {

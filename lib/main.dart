@@ -1,9 +1,11 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:ui' as ui;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+
 // Useful for functions debugging
 // ignore: unused_import
 import 'package:cloud_functions/cloud_functions.dart';
@@ -18,9 +20,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:torn_pda/firebase_options.dart';
+import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
+import 'package:torn_pda/utils/http_overrides.dart';
+import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -46,15 +53,32 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.0.2';
-const String androidCompilation = '299';
-const String iosCompilation = '299';
+const String appVersion = '3.1.0';
+const String androidCompilation = '316';
+const String iosCompilation = '316';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
+final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
+    StreamController<ReceivedNotification>.broadcast();
+
+final StreamController<String> selectNotificationStream = StreamController<String>.broadcast();
+
+class ReceivedNotification {
+  ReceivedNotification({
+    @required this.id,
+    @required this.title,
+    @required this.body,
+    @required this.payload,
+  });
+
+  final int id;
+  final String title;
+  final String body;
+  final String payload;
+}
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
@@ -78,23 +102,42 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialise Workmanager for app widget
+  // [isInDebugMode] sends notifications each time a task is performed
+  Workmanager().initialize(pdaWidget_backgroundUpdate, isInDebugMode: false);
+
+  // Flutter Local Notifications
+  if (Platform.isAndroid) {
+    final AndroidFlutterLocalNotificationsPlugin androidImplementation =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await androidImplementation.requestPermission();
+  }
+
   tz.initializeTimeZones();
   const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-  const initializationSettingsIOS = IOSInitializationSettings();
+  const initializationSettingsIOS = DarwinInitializationSettings();
 
   const initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
     iOS: initializationSettingsIOS,
   );
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onSelectNotification: (String payload) async {
-    selectNotificationSubject.add(payload);
-  });
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+      final String payload = notificationResponse.payload;
+      if (notificationResponse.payload != null) {
+        log('Notification payload: $payload');
+        selectNotificationStream.add(payload);
+      }
+    },
+  );
+  // END # Flutter Local Notifications
 
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
@@ -121,6 +164,10 @@ Future<void> main() async {
     DartPingIOS.register();
   }
 
+  Get.put(ApiCallerController(), permanent: true);
+
+  HttpOverrides.global = MyHttpOverrides();
+
   runApp(
     MultiProvider(
       providers: [
@@ -134,10 +181,8 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
-        ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
-          create: (context) => FriendsProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider, FriendsProvider friendsProvider) =>
-              FriendsProvider(userProvider.basic),
+        ChangeNotifierProvider<FriendsProvider>(
+          create: (context) => FriendsProvider(),
         ),
         ChangeNotifierProvider<UserScriptsProvider>(
           create: (context) => UserScriptsProvider(),
@@ -189,40 +234,71 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeProvider _themeProvider;
+  WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
+
+    // Handle home widget
+    if (Platform.isAndroid) {
+      HomeWidget.setAppGroupId('torn_pda');
+      HomeWidget.registerBackgroundCallback(pdaWidget_callback);
+      pdaWidget_handleBackgroundUpdateStatus();
+    }
+
+    // Callback to force the browser back to full screen if there is a system request to revert
+    // Might happen when app is on the background or when only the top is being extended
+    SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
+      if (_webViewProvider.currentUiMode == UiMode.fullScreen && systemOverlaysAreVisible) {
+        _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
+    ThemeData theme = ThemeData(
+      cardColor: _themeProvider.cardColor,
+      appBarTheme: AppBarTheme(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        color: _themeProvider.statusBar,
+      ),
+      primarySwatch: Colors.blueGrey,
+      brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+    );
+
     MediaQuery mq = MediaQuery(
       data: MediaQueryData.fromWindow(ui.window),
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: Stack(
-          children: [
-            GetMaterialApp(
-              builder: BotToastInit(),
-              navigatorObservers: [BotToastNavigatorObserver()],
-              title: 'Torn PDA',
-              debugShowCheckedModeBanner: false,
-              theme: ThemeData(
-                cardColor: _themeProvider.cardColor,
-                appBarTheme: AppBarTheme(
-                  systemOverlayStyle: SystemUiOverlayStyle.light,
-                  color: _themeProvider.statusBar,
-                ),
-                primarySwatch: Colors.blueGrey,
-                brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+        child: MaterialApp(
+          title: 'Torn PDA',
+          theme: theme,
+          debugShowCheckedModeBanner: false,
+          builder: BotToastInit(),
+          navigatorObservers: [BotToastNavigatorObserver()],
+          home: Stack(
+            children: [
+              GetMaterialApp(
+                debugShowCheckedModeBanner: false,
+                theme: theme,
+                home: DrawerPage(),
               ),
-              home: DrawerPage(),
-            ),
-            const AppBorder(),
-          ],
+              Consumer<WebViewProvider>(
+                builder: (context, wProvider, child) {
+                  return Visibility(
+                    maintainState: true,
+                    visible: wProvider.browserShowInForeground,
+                    child: wProvider.stackView,
+                  );
+                },
+              ),
+              const AppBorder(),
+            ],
+          ),
         ),
       ),
     );

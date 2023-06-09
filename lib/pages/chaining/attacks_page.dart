@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/attacks_list.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class AttacksPage extends StatefulWidget {
   const AttacksPage({Key key}) : super(key: key);
@@ -130,12 +131,18 @@ class _AttacksPageState extends State<AttacksPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('Attacks'),
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
-        onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
-        },
+      leadingWidth: 80,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: new Icon(Icons.menu),
+            onPressed: () {
+              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+              scaffoldState.openDrawer();
+            },
+          ),
+          PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         IconButton(

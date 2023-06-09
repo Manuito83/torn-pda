@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
@@ -68,21 +68,6 @@ class UserScriptsProvider extends ChangeNotifier {
           source: handler_evaluateJS(),
         ),
       );
-
-      // Then add the rest of scripts
-      for (var script in _userScriptList) {
-        if (script.enabled && script.urls.isEmpty) {
-          scriptList.add(
-            UserScript(
-              groupName: script.name,
-              injectionTime: Platform.isAndroid
-                  ? UserScriptInjectionTime.AT_DOCUMENT_START
-                  : UserScriptInjectionTime.AT_DOCUMENT_END,
-              source: adaptSource(script.source, apiKey),
-            ),
-          );
-        }
-      }
     }
     return UnmodifiableListView<UserScript>(scriptList);
   }
@@ -97,19 +82,29 @@ class UserScriptsProvider extends ChangeNotifier {
       for (var script in _userScriptList) {
         if (script.enabled) {
           if (time != script.time) continue;
-          if (script.urls.isNotEmpty) {
+
+          bool add = false;
+          if (script.urls.isEmpty) {
+            // Add the continuous scripts
+            add = true;
+          } else {
             for (String u in script.urls) {
+              // Add the ones that match this URL
               if (url.contains(u.replaceAll("*", ""))) {
-                scriptListToAdd.add(
-                  UserScript(
-                    groupName: script.name,
-                    injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                    source: adaptSource(script.source, apiKey),
-                  ),
-                );
+                add = true;
                 break;
               }
             }
+          }
+
+          if (add) {
+            scriptListToAdd.add(
+              UserScript(
+                groupName: script.name,
+                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                source: adaptSource(script.source, apiKey),
+              ),
+            );
           }
         }
       }
@@ -123,20 +118,20 @@ class UserScriptsProvider extends ChangeNotifier {
     var scriptListToRemove = <String>[];
     if (_userScriptsEnabled) {
       for (var script in _userScriptList) {
-        if (script.enabled) {
-          if (script.urls.isNotEmpty) {
-            var found = false;
-            for (String u in script.urls) {
-              if (url.contains(u.replaceAll("*", ""))) {
-                found = true;
-                break;
-              }
-            }
-            if (!found) {
-              scriptListToRemove.add(script.name);
+        //if (script.enabled) {
+        if (script.urls.isNotEmpty) {
+          var found = false;
+          for (String u in script.urls) {
+            if (script.enabled && url.contains(u.replaceAll("*", ""))) {
+              found = true;
+              break;
             }
           }
+          if (!found) {
+            scriptListToRemove.add(script.name);
+          }
         }
+        //}
       }
     }
     return scriptListToRemove;
@@ -219,6 +214,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   Future restoreExamples(bool onlyRestoreNew) async {
+    log("Restoring userscript examples!");
     var newList = <UserScriptModel>[];
 
     // Add the ones that are not examples
@@ -341,6 +337,15 @@ class UserScriptsProvider extends ChangeNotifier {
           for (var dec in decoded) {
             try {
               var decodedModel = UserScriptModel.fromJson(dec);
+
+              // Check if the script with the same name already exists in the list
+              // (user-reported bug)
+              bool scriptExists = _userScriptList.any((script) {
+                return script.name.toLowerCase() == decodedModel.name.toLowerCase();
+              });
+
+              if (scriptExists) continue;
+
               addUserScript(
                 decodedModel.name,
                 decodedModel.time,
