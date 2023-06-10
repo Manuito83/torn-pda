@@ -51,86 +51,93 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
-    return FutureBuilder(
-      future: _rankedWarsFetched,
-      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (_rankedWarsModel.rankedwars != null && _rankedWarsModel.rankedwars.isNotEmpty) {
-            return DefaultTabController(
-              length: 3,
-              child: SafeArea(
-                child: Scaffold(
-                  backgroundColor: _themeProvider.canvas,
-                  appBar: _settingsProvider.appBarTop
-                      ? buildAppBarSuccess(context)
-                      : new PreferredSize(
-                          preferredSize: Size.fromHeight(kToolbarHeight),
-                          child: Container(
-                            color: _themeProvider.currentTheme == AppTheme.light
-                                ? MediaQuery.of(context).orientation == Orientation.portrait
-                                    ? Colors.blueGrey
-                                    : _themeProvider.canvas
-                                : _themeProvider.canvas,
-                            child: Column(
-                              children: <Widget>[
-                                Expanded(child: new Container()),
-                                TabBar(
-                                  tabs: [
-                                    Tab(text: "Active"),
-                                    Tab(text: "Upcoming"),
-                                    Tab(text: "Finished"),
-                                  ],
-                                ),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: FutureBuilder(
+        future: _rankedWarsFetched,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (_rankedWarsModel.rankedwars != null && _rankedWarsModel.rankedwars.isNotEmpty) {
+              return DefaultTabController(
+                length: 3,
+                child: SafeArea(
+                  child: Scaffold(
+                    backgroundColor: _themeProvider.canvas,
+                    appBar: _settingsProvider.appBarTop
+                        ? buildAppBarSuccess(context)
+                        : new PreferredSize(
+                            preferredSize: Size.fromHeight(kToolbarHeight),
+                            child: Container(
+                              color: _themeProvider.currentTheme == AppTheme.light
+                                  ? MediaQuery.of(context).orientation == Orientation.portrait
+                                      ? Colors.blueGrey
+                                      : _themeProvider.canvas
+                                  : _themeProvider.canvas,
+                              child: Column(
+                                children: <Widget>[
+                                  Expanded(child: new Container()),
+                                  TabBar(
+                                    tabs: [
+                                      Tab(text: "Active"),
+                                      Tab(text: "Upcoming"),
+                                      Tab(text: "Finished"),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                    bottomNavigationBar: !_settingsProvider.appBarTop
+                        ? SizedBox(
+                            height: AppBar().preferredSize.height,
+                            child: buildAppBarSuccess(context),
+                          )
+                        : null,
+                    body: Container(
+                      color: _themeProvider.canvas,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: TabBarView(
+                              children: [
+                                _tabActive(),
+                                _tabUpcoming(),
+                                _tabFinished(),
                               ],
                             ),
                           ),
-                        ),
-                  bottomNavigationBar: !_settingsProvider.appBarTop
-                      ? SizedBox(
-                          height: AppBar().preferredSize.height,
-                          child: buildAppBarSuccess(context),
-                        )
-                      : null,
-                  body: Container(
-                    color: _themeProvider.canvas,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: TabBarView(
-                            children: [
-                              _tabActive(),
-                              _tabUpcoming(),
-                              _tabFinished(),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
+              );
+            } else {
+              return SafeArea(
+                child: Scaffold(
+                  backgroundColor: _themeProvider.canvas,
+                  appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
+                  body: Container(color: _themeProvider.canvas, child: _fetchError()),
+                ),
+              );
+            }
           } else {
             return SafeArea(
               child: Scaffold(
                 backgroundColor: _themeProvider.canvas,
                 appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-                body: Container(color: _themeProvider.canvas, child: _fetchError()),
+                body: Container(
+                    color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                    child: Center(child: CircularProgressIndicator())),
               ),
             );
           }
-        } else {
-          return SafeArea(
-            child: Scaffold(
-              backgroundColor: _themeProvider.canvas,
-              appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-              body: Container(
-                  color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-                  child: Center(child: CircularProgressIndicator())),
-            ),
-          );
-        }
-      },
+        },
+      ),
     );
   }
 
@@ -291,7 +298,13 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor:
+            _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : _themeProvider.canvas,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
       toolbarHeight: kMinInteractiveDimension,
       title: const Text("Ranked Wars"),
       leading: new IconButton(

@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -775,7 +776,15 @@ class _WarPageState extends State<WarPage> {
         ),
         IconButton(
           icon: Icon(MdiIcons.earth),
-          onPressed: () => Get.to(() => RankedWarsPage()),
+          onPressed: () {
+            log("lala");
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => RankedWarsPage(),
+              ),
+            );
+            //Get.to(() => RankedWarsPage());
+          },
         ),
       ],
     );
