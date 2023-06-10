@@ -35,7 +35,6 @@ enum BrowserTapType {
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
   final bool recallLastSession;
-  final String restoredTheme;
 
   // Chaining
   final bool isChainingBrowser;
@@ -44,7 +43,6 @@ class WebViewStackView extends StatefulWidget {
   const WebViewStackView({
     this.initUrl = "https://www.torn.com",
     this.recallLastSession = false,
-    this.restoredTheme = "",
 
     // Chaining
     this.isChainingBrowser = false,
@@ -112,6 +110,42 @@ class _WebViewStackViewState extends State<WebViewStackView>
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
+    if (_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2) {
+      return Dialog(
+        insetPadding: EdgeInsets.only(
+          top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
+          bottom: _webViewProvider.currentUiMode == UiMode.window ? 30 : 0,
+          left: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
+          right: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Container(
+          color: _themeProvider.currentTheme == AppTheme.extraDark ? Color(0xFF131313) : Colors.transparent,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: _webViewProvider.currentUiMode == UiMode.window ? 6 : 0,
+              bottom: _webViewProvider.currentUiMode == UiMode.window
+                  ? _themeProvider.currentTheme == AppTheme.extraDark
+                      ? 6
+                      : 4
+                  : 0,
+              left: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
+              right: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
+            ),
+            child: stackView(),
+          ),
+        ),
+      );
+    }
+
+    return stackView();
+  }
+
+  Widget stackView() {
+    bool dialog = _webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2;
+
     return MediaQuery.removePadding(
       context: context,
       // iOS needs extra padding removal according to:
@@ -126,10 +160,14 @@ class _WebViewStackViewState extends State<WebViewStackView>
                 ? Colors.grey[900]
                 : Colors.black,
         child: SafeArea(
-          top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-          bottom: !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
-          left: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
-          right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+          top: !dialog &&
+              !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+          bottom: !dialog &&
+              !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
+          left: !dialog &&
+              !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+          right: !dialog &&
+              !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
           child: ShowCaseWidget(
             builder: Builder(builder: (_) {
               if (_webViewProvider.browserShowInForeground) {
@@ -197,9 +235,10 @@ class _WebViewStackViewState extends State<WebViewStackView>
                     ),
                     Padding(
                       padding: EdgeInsets.only(
-                        bottom: _webViewProvider.styleAlternative && _webViewProvider.currentUiMode == UiMode.window
-                            ? 38
-                            : 0,
+                        bottom:
+                            _webViewProvider.bottomBarStyleEnabled && _webViewProvider.currentUiMode == UiMode.window
+                                ? 38
+                                : 0,
                       ),
                       child: FutureBuilder(
                         future: providerInitialised,
@@ -241,8 +280,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
       // Check that there is no pending showcases to show by the browser
       // If there is, wait until we open the browser for the next time
-      if ((_webViewProvider.styleAlternative && !_settingsProvider.showCases.contains("webview_closeButton")) ||
-          (!_webViewProvider.styleAlternative && !_settingsProvider.showCases.contains("webview_titleBar")) ||
+      if ((_webViewProvider.bottomBarStyleEnabled && !_settingsProvider.showCases.contains("webview_closeButton")) ||
+          (!_webViewProvider.bottomBarStyleEnabled && !_settingsProvider.showCases.contains("webview_titleBar")) ||
           (_webViewProvider.tabList[0].isChainingBrowser &&
               _webViewProvider.currentTab == 0 &&
               !_settingsProvider.showCases.contains("webview_playPauseChain"))) {

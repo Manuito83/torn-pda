@@ -74,12 +74,20 @@ class WebViewProvider extends ChangeNotifier {
   List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
-  bool _styleAlternative = true;
+  bool _bottomBarStyleEnabled = false;
+  bool get bottomBarStyleEnabled => _bottomBarStyleEnabled;
+  set bottomBarStyleEnabled(bool value) {
+    _bottomBarStyleEnabled = value;
+    Prefs().setBrowserBottomBarStyleEnabled(value);
+    notifyListeners();
+  }
 
-  bool get styleAlternative => _styleAlternative;
-  set styleAlternative(bool value) {
-    _styleAlternative = value;
-    Prefs().setBrowserStyleAlternativeEnabled(value);
+  // 1 = standard, 2 = dialog
+  int _bottomBarStyleType = 1;
+  int get bottomBarStyleType => _bottomBarStyleType;
+  set bottomBarStyleType(int value) {
+    _bottomBarStyleType = value;
+    Prefs().setBrowserBottomBarStyleType(value);
     notifyListeners();
   }
 
@@ -268,7 +276,8 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
 
-    _styleAlternative = await Prefs().getBrowserStyleAlternativeEnabled();
+    _bottomBarStyleEnabled = await Prefs().getBrowserBottomBarStyleEnabled();
+    _bottomBarStyleType = await Prefs().getBrowserBottomBarStyleType();
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();

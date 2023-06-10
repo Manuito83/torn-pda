@@ -448,7 +448,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     Future.delayed(Duration(seconds: 1), () async {
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
 
-      if (_webViewProvider.styleAlternative) {
+      if (_webViewProvider.bottomBarStyleEnabled) {
         if (!_settingsProvider.showCases.contains("webview_closeButton")) {
           _settingsProvider.addShowCase = "webview_closeButton";
           showCases.add(_showCaseCloseButton);
@@ -474,6 +474,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Widget buildScaffold(BuildContext context) {
+    bool dialog = _webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2;
+
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -483,20 +485,23 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
-        top: !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        bottom: !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        left: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        right: !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        top: !dialog && !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        bottom:
+            !dialog && !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        left:
+            !dialog && !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        right:
+            !dialog && !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
         child: Consumer<WebViewProvider>(
           builder: (context, wv, child) => Scaffold(
             backgroundColor: _themeProvider.canvas,
-            appBar: _webViewProvider.styleAlternative || wv.currentUiMode == UiMode.fullScreen
+            appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
                 // Show appBar only if we are not showing the webView in a dialog style
                 ? null
                 : _settingsProvider.appBarTop
                     ? buildCustomAppBar()
                     : null,
-            bottomNavigationBar: _webViewProvider.styleAlternative
+            bottomNavigationBar: _webViewProvider.bottomBarStyleEnabled
                 ? null
                 :
                 // With appbar bottom, add appbar and some space for tabs
@@ -525,14 +530,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   children: [
                     Expanded(child: mainWebViewColumn()),
                     SizedBox(
-                      height: !_webViewProvider.styleAlternative
+                      height: !_webViewProvider.bottomBarStyleEnabled
                           ? 0
                           : _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser
                               ? 0
                               : 40,
                     ),
-                    if (_webViewProvider.currentUiMode == UiMode.window && _webViewProvider.styleAlternative)
-                      _quickBrowserBottomBar(),
+                    if (_webViewProvider.currentUiMode == UiMode.window && _webViewProvider.bottomBarStyleEnabled)
+                      _bottomBarStyleBottomBar(),
                   ],
                 )),
           ),
@@ -541,7 +546,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  Widget _quickBrowserBottomBar() {
+  Widget _bottomBarStyleBottomBar() {
     if (_findInPageActive) {
       return Container(
         color: _themeProvider.secondBackground,
@@ -657,7 +662,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              width: 100,
+              width: 70,
               child: Row(
                 children: [
                   Material(
@@ -666,7 +671,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       customBorder: const CircleBorder(),
                       splashColor: Colors.blueGrey,
                       child: const SizedBox(
-                        width: 40,
+                        width: 35,
                         child: Icon(
                           Icons.arrow_back_ios_outlined,
                           size: 20,
@@ -683,7 +688,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       customBorder: const CircleBorder(),
                       splashColor: Colors.blueGrey,
                       child: const SizedBox(
-                        width: 40,
+                        width: 35,
                         child: Icon(
                           Icons.arrow_forward_ios_outlined,
                           size: 20,
@@ -1504,20 +1509,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
           },
           onLongPressHitTestResult: (controller, result) async {
-            var focus = await controller.requestFocusNodeHref();
+            if (result.extra == null) return;
 
-            if (result.extra != null && focus != null) {
-              // If not in this page already
-              if (result.extra.replaceAll("#", "") != _currentUrl &&
-                  // And the link does not go to a profile (in which case the mini profile opens)
-                  (result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE &&
-                          !result.extra.contains("https://www.torn.com/profiles.php?XID=") ||
-                      // Or, if it goes to an image, it's not an award image (let mini profiles work)
-                      (result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE &&
-                          !result.extra.contains("awardimages")))) {
-                if (focus.url != null) {
-                  _showLongPressCard(focus.src, focus.url);
-                }
+            bool notCurrentUrl = result.extra.replaceAll("#", "") != _currentUrl;
+            bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
+            bool isImageAnchorType = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
+            bool notProfileLink = !result.extra.contains("https://www.torn.com/profiles.php?XID=");
+            bool notAwardImage = !result.extra.contains("awardimages");
+
+            if (notCurrentUrl && ((isAnchorType && notProfileLink) || (isImageAnchorType && notAwardImage))) {
+              var focus = await controller.requestFocusNodeHref();
+              if (focus.url != null) {
+                _showLongPressCard(focus.src, focus.url);
               }
             }
           },
@@ -3112,7 +3115,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return Padding(
         padding: EdgeInsets.symmetric(
           horizontal: 8.0,
-          vertical: _webViewProvider.styleAlternative ? 0 : 20,
+          vertical: _webViewProvider.bottomBarStyleEnabled ? 0 : 20,
         ),
         child: GestureDetector(
           onTap: () async {

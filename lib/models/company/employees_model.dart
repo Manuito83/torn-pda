@@ -15,10 +15,13 @@ class CompanyEmployees {
     this.companyEmployees,
   });
 
-  factory CompanyEmployees.fromJson(Map<String, dynamic> json) => CompanyEmployees(
-        companyEmployees: Map.from(json["company_employees"])
-            .map((k, v) => MapEntry<String, CompanyEmployee>(k, CompanyEmployee.fromJson(v))),
-      );
+  factory CompanyEmployees.fromJson(Map<String, dynamic> json) {
+    if (json["company_employees"] == null) return null;
+    return CompanyEmployees(
+      companyEmployees: Map.from(json["company_employees"])
+          .map((k, v) => MapEntry<String, CompanyEmployee>(k, CompanyEmployee.fromJson(v))),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "company_employees": Map.from(companyEmployees).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),

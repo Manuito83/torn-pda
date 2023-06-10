@@ -77,7 +77,8 @@ class Prefs {
   final String _kOnAppExit = "pda_onAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
-  final String _kBrowserStyleAlternativeEnabled = "pda_browserStyleAlternativeEnabled";
+  final String _kBrowserStyleBottomBarEnabled = "pda_browserStyleAlternativeEnabled";
+  final String _kBrowserStyleBottomBarType = "pda_browserStyleAlternativeType";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
@@ -870,14 +871,24 @@ class Prefs {
     return prefs.setString(_kBrowserRefreshMethod2, value);
   }
 
-  Future<bool> getBrowserStyleAlternativeEnabled() async {
+  Future<bool> getBrowserBottomBarStyleEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kBrowserStyleAlternativeEnabled) ?? false;
+    return prefs.getBool(_kBrowserStyleBottomBarEnabled) ?? false;
   }
 
-  Future<bool> setBrowserStyleAlternativeEnabled(bool value) async {
+  Future<bool> setBrowserBottomBarStyleEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kBrowserStyleAlternativeEnabled, value);
+    return prefs.setBool(_kBrowserStyleBottomBarEnabled, value);
+  }
+
+  Future<int> getBrowserBottomBarStyleType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kBrowserStyleBottomBarType) ?? 1;
+  }
+
+  Future<bool> setBrowserBottomBarStyleType(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kBrowserStyleBottomBarType, value);
   }
 
   Future<String> getTMenuButtonLongPressBrowser() async {

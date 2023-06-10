@@ -36,6 +36,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   bool _highlightChat;
   Color _highlightColor = Color(0xff7ca900);
 
+  int _browserStyle = 0;
+
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
@@ -898,10 +900,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            "The 'default' style makes use of the app's appbar (positioned at the top or at the bottom, depending "
-            "on the user settings) to show the page title and main icons. The 'bottom bar' style uses a smaller "
-            "bar at the bottom to gain some space, but does not show the page title; it does, however, include "
-            "back and forward icons.",
+            "There are three browser styles available, all sharing the same functionality. Please have a look "
+            "at the Tips section for more information, or try them for yourself!",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -1697,11 +1697,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Widget _browserStyleDropdown() {
-    return DropdownButton<bool>(
-      value: _webViewProvider.styleAlternative,
+    return DropdownButton<int>(
+      value: _browserStyle,
       items: [
         DropdownMenuItem(
-          value: false,
+          value: 0,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -1714,7 +1714,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         DropdownMenuItem(
-          value: true,
+          value: 1,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -1726,9 +1726,35 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: 2,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Dialog",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
-        _webViewProvider.styleAlternative = value;
+        _browserStyle = value;
+        switch (value) {
+          case 0:
+            _webViewProvider.bottomBarStyleEnabled = false;
+            break;
+          case 1:
+            _webViewProvider.bottomBarStyleEnabled = true;
+            _webViewProvider.bottomBarStyleType = 1;
+            break;
+          case 2:
+            _webViewProvider.bottomBarStyleEnabled = true;
+            _webViewProvider.bottomBarStyleType = 2;
+            break;
+        }
       },
     );
   }
@@ -1839,9 +1865,18 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Future _restorePreferences() async {
+    var w = Provider.of<WebViewProvider>(context, listen: false);
+    var alternativeBrowser = w.bottomBarStyleEnabled;
+    var alternativeType = w.bottomBarStyleType;
+    var style = 0;
+    if (alternativeBrowser) {
+      style = alternativeType == 2 ? 2 : 1;
+    }
+
     setState(() {
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
+      _browserStyle = style;
     });
   }
 

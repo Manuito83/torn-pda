@@ -129,7 +129,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
   bool widgetVisible = false;
 
-  AudioCache _audioCache = new AudioCache();
+  AudioPlayer _audioPlayer = AudioPlayer();
 
   int _lastChainCount = 0;
   bool _wereWeChaining = false;
@@ -172,7 +172,7 @@ class ChainStatusProvider extends ChangeNotifier {
   void activateWatcher() {
     _watcherActive = true;
     _enableWakelock();
-    _audioCache.play('../sounds/alerts/tick.wav');
+    _audioPlayer.play(AssetSource('../sounds/alerts/tick.wav'));
     notifyListeners();
   }
 
@@ -410,7 +410,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.panic) {
             _chainWatcherDefcon = WatchDefcon.panic;
             if (_soundEnabled) {
-              _audioCache.play('../sounds/alerts/warning2.wav');
+              _audioPlayer.play(AssetSource('../sounds/alerts/warning2.wav'));
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -455,7 +455,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.red2) {
             _chainWatcherDefcon = WatchDefcon.red2;
             if (_soundEnabled) {
-              _audioCache.play('../sounds/alerts/warning2.wav');
+              _audioPlayer.play(AssetSource('../sounds/alerts/warning2.wav'));
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -472,7 +472,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.red1) {
             _chainWatcherDefcon = WatchDefcon.red1;
             if (_soundEnabled) {
-              _audioCache.play('../sounds/alerts/warning1.wav');
+              _audioPlayer.play(AssetSource('../sounds/alerts/warning1.wav'));
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -489,7 +489,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.orange2) {
             _chainWatcherDefcon = WatchDefcon.orange2;
             if (_soundEnabled) {
-              _audioCache.play('../sounds/alerts/alert2.wav');
+              _audioPlayer.play(AssetSource('../sounds/alerts/alert2.wav'));
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -503,7 +503,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.orange1) {
             _chainWatcherDefcon = WatchDefcon.orange1;
             if (_soundEnabled) {
-              _audioCache.play('../sounds/alerts/alert1.wav');
+              _audioPlayer.play(AssetSource('../sounds/alerts/alert1.wav'));
             }
             if (_vibrationEnabled) {
               _vibrate(3);

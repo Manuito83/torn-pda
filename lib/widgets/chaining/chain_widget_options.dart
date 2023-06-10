@@ -30,7 +30,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
-  AudioCache _audioCache = new AudioCache();
+  AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   Widget build(BuildContext context) {
@@ -424,7 +424,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                             : Colors.grey,
                       ),
                       onTap: () {
-                        _audioCache.play('../sounds/alerts/alert1.wav');
+                        _audioPlayer.play(AssetSource('../sounds/alerts/alert1.wav'));
                       },
                     ),
                   ],
@@ -541,7 +541,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         : Colors.grey,
                   ),
                   onTap: () {
-                    _audioCache.play('../sounds/alerts/alert2.wav');
+                    _audioPlayer.play(AssetSource('../sounds/alerts/alert2.wav'));
                   },
                 ),
               ],
@@ -656,7 +656,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         : Colors.grey,
                   ),
                   onTap: () {
-                    _audioCache.play('../sounds/alerts/warning1.wav');
+                    _audioPlayer.play(AssetSource('../sounds/alerts/warning1.wav'));
                   },
                 ),
               ],
@@ -771,7 +771,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         : Colors.grey,
                   ),
                   onTap: () {
-                    _audioCache.play('../sounds/alerts/warning2.wav');
+                    _audioPlayer.play(AssetSource('../sounds/alerts/warning2.wav'));
                   },
                 ),
               ],
