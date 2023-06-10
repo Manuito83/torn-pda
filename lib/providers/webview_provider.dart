@@ -94,27 +94,34 @@ class WebViewProvider extends ChangeNotifier {
   /// Changes browser visibility
   bool _isBrowserForeground = false;
   bool get browserShowInForeground => _isBrowserForeground;
-  set browserShowInForeground(bool foreground) {
-    if (foreground) {
+  set browserShowInForeground(bool bringToForeground) {
+    if (bringToForeground) {
       if (stackView is Container) {
         stackView = WebViewStackView(
           initUrl: "https://www.torn.com",
           recallLastSession: true,
         );
       }
+
+      // Change browser visibility early
+      _isBrowserForeground = bringToForeground;
+      notifyListeners();
+
       resumeAllWebviews();
     } else {
-      _removeAllUserScripts().then((value) => pauseAllWebviews());
+      // Change browser visibility early
+      _isBrowserForeground = bringToForeground;
+      notifyListeners();
+
+      _removeAllUserScripts().then((value) {
+        pauseAllWebviews();
+      });
 
       _sleepOldTabs();
 
       // Signal that the browser has closed to listener (e.g.: Profile page)
       browserHasClosedStream.add(true);
     }
-
-    // Change browser visibility
-    _isBrowserForeground = foreground;
-    notifyListeners();
   }
 
   pdaIconActivation({
