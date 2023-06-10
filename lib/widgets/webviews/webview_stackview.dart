@@ -115,7 +115,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
       return Dialog(
         insetPadding: EdgeInsets.only(
           top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
-          bottom: _webViewProvider.currentUiMode == UiMode.window ? 30 : 0,
+          bottom: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
           left: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
           right: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
         ),
