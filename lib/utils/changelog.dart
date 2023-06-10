@@ -46,11 +46,14 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_1.version = 'Torn PDA v3.1.1';
     v3_1_1.date = '15 JUN 2023';
     String feat3_1_1_1 = "Added browser styles (including the former quick browser appearance)";
-    String feat3_1_1_2 = "Fixed redirection links in Profile and Loot";
-    String feat3_1_1_3 = "Fixed iOS 14 crashes";
+    String feat3_1_1_2 = "Changed gesture settings in the ellipsis (...) browser button to allow a "
+        "faster access to shortcuts (please see Tips)";
+    String feat3_1_1_3 = "Fixed redirection links in Profile and Loot";
+    String feat3_1_1_4 = "Fixed iOS 14 crashes";
     v3_1_1.features.add(feat3_1_1_1);
     v3_1_1.features.add(feat3_1_1_2);
-    if (Platform.isIOS) v3_1_1.features.add(feat3_1_1_3);
+    v3_1_1.features.add(feat3_1_1_3);
+    if (Platform.isIOS) v3_1_1.features.add(feat3_1_1_4);
 
     // VERSION 3.1.0
     var v3_1_0 = ChangeLogItem();

@@ -526,6 +526,28 @@ class _TipsPageState extends State<TipsPage> {
 
     tips.add(
       ComplexExpandableTip(
+        headerValue: "Ellipsis (...) button",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "This '...' button appears in your tab bar and is relevant to access several functions. If used "
+                  "correctly, it can also speed up several tasks.\n\n"
+                  "You can tap it to show a quick list of quick actions, including shortcuts, access to the full screen "
+                  "mode and a tap wipe tool.\n\nThere are also a few important quick shortcuts:\n\n"
+                  "Double tap the button any time to get quick access to the shortcuts dialog\n\n"
+                  "When in full screen mode, long-press the button (it will be shown circled and with an orange color) "
+                  "to revert to windowed mode immediately",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    tips.add(
+      ComplexExpandableTip(
         headerValue: "Pull to refresh",
         buildExpandedText: () {
           return Text.rich(

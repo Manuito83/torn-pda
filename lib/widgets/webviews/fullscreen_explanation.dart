@@ -58,7 +58,7 @@ class FullScreenExplanationDialog extends StatelessWidget {
                       "It is also possible to launch the browser in full screen mode by default, or select which "
                       "action (single tap or long-press) does what.\n\n"
                       "You can exit the fullscreen mode by taping again the full screen / window icon in the vertical "
-                      "menu in the tab bar, or directly by double-tapping the three-dotted-icon "
+                      "menu in the tab bar, or directly by long-pressing the three-dotted-icon "
                       "(highlighted now in orange color) which might be faster to do.\n\n"
                       "How do I reload, go forward or back, you may be asking yourself. For reloading, consider "
                       "activating the 'pull-to-refresh' option for the browser. To browse forward or back, double tap "

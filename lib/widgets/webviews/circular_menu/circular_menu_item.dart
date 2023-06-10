@@ -7,6 +7,7 @@ class CircularMenuItem extends StatelessWidget {
   final Color iconColor;
   final VoidCallback onTap;
   final VoidCallback onDoubleTap;
+  final VoidCallback onLongPress;
   final double iconSize;
   final double padding;
   final double margin;
@@ -21,6 +22,7 @@ class CircularMenuItem extends StatelessWidget {
   const CircularMenuItem({
     @required this.onTap,
     this.onDoubleTap,
+    this.onLongPress,
     this.icon,
     this.color,
     this.iconSize = 25,
@@ -50,6 +52,7 @@ class CircularMenuItem extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             onDoubleTap: onDoubleTap,
+            onLongPress: onLongPress,
             child: Padding(
               padding: const EdgeInsets.all(6),
               child: animatedIcon ??

@@ -31,8 +31,8 @@ class CircularMenuFixed extends StatefulWidget {
   final Curve reverseCurve;
 
   /// callback
-  final VoidCallback toggleButtonOnPressed;
   final VoidCallback doubleTapped;
+  final VoidCallback longPressed;
   final Color toggleButtonColor;
   final double toggleButtonSize;
   final List<BoxShadow> toggleButtonBoxShadow;
@@ -47,13 +47,13 @@ class CircularMenuFixed extends StatefulWidget {
     @required this.items,
     @required this.webViewProvider,
     this.doubleTapped,
+    this.longPressed,
     this.alignment = Alignment.bottomCenter,
     this.radius = 50,
     this.backgroundWidget,
     this.animationDuration = const Duration(milliseconds: 0),
     this.curve = Curves.decelerate,
     this.reverseCurve = Curves.decelerate,
-    this.toggleButtonOnPressed,
     this.toggleButtonColor,
     this.toggleButtonBoxShadow,
     this.toggleButtonMargin = 10,
@@ -143,13 +143,19 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
             widget.webViewProvider.verticalMenuCurrentIndex = -1;
           },
           onDoubleTap: () async {
-            // The widget might bring a callback to exit full screen mode
             if (widget.doubleTapped != null) {
               widget.doubleTapped();
               return;
             }
+          },
+          onLongPress: () {
+            // We might want to close the fullscreen mode
+            if (widget.longPressed != null) {
+              widget.longPressed();
+              return;
+            }
 
-            // Same logic as in [onTap] above
+            // ... otherwise, do as with 'onTap'
             if (_animationController.status == AnimationStatus.dismissed) {
               widget.webViewProvider.verticalMenuOpen();
             } else {

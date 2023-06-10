@@ -290,8 +290,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
       // Show tab bar showcases
       if (!showCasesNeedToWait) {
-        if (!_settingsProvider.showCases.contains("tabs_quickMenuButton")) {
-          _settingsProvider.addShowCase = "tabs_quickMenuButton";
+        if (!_settingsProvider.showCases.contains("tabs_quickMenuButton2")) {
+          _settingsProvider.addShowCase = "tabs_quickMenuButton2";
           showCases.add(_showQuickMenuButton);
         }
         if (!_settingsProvider.showCases.contains("tabs_newTabButton")) {
@@ -518,7 +518,9 @@ class _WebViewStackViewState extends State<WebViewStackView>
                     key: _showQuickMenuButton,
                     title: 'Quick menu',
                     description: '\nTap to show a quick list of quick actions, including shortcuts, '
-                        'fullscreen mode and more!',
+                        'fullscreen mode and more! Some quick shortcuts are:\n\n'
+                        'Double tap to get quick access to shortcuts\n\n'
+                        'When in full screen mode, long-press to revert to windowed mode immediately',
                     targetPadding: const EdgeInsets.all(10),
                     disableMovingAnimation: true,
                     textColor: _themeProvider.mainText,
@@ -547,7 +549,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                             toggleButtonIconColor: Colors.transparent,
                             // Adds a return to windowed mode if we are in fullscreen with a double tap
                             // Otherwise, the default double tap behavior applies
-                            doubleTapped: _webViewProvider.currentUiMode == UiMode.window
+                            longPressed: _webViewProvider.currentUiMode == UiMode.window
                                 ? null
                                 : () {
                                     _webViewProvider.verticalMenuClose();
@@ -556,6 +558,16 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                       _webViewProvider.showAllChatsFullScreen();
                                     }
                                   },
+                            doubleTapped: () {
+                              _webViewProvider.verticalMenuClose();
+                              return showDialog<void>(
+                                context: context,
+                                barrierDismissible: true,
+                                builder: (BuildContext context) {
+                                  return WebviewShortcutsDialog(fromShortcut: true);
+                                },
+                              );
+                            },
                             backgroundWidget: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
                               mainAxisSize: MainAxisSize.max,
