@@ -1041,6 +1041,8 @@ class WebViewProvider extends ChangeNotifier {
       if (isChainingBrowser) {
         convertToChainingBrowser(chainingPayload: chainingPayload);
       }
+
+      w.browserShowInForeground = true;
     } else {
       if (await canLaunchUrl(Uri.parse(url))) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
