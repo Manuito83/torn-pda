@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/settings/friendly_factions.dart';
@@ -1744,13 +1745,16 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         _browserStyle = value;
         switch (value) {
           case 0:
+            analytics.setUserProperty(name: "browser_style", value: "default");
             _webViewProvider.bottomBarStyleEnabled = false;
             break;
           case 1:
+            analytics.setUserProperty(name: "browser_style", value: "bottom_bar");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 1;
             break;
           case 2:
+            analytics.setUserProperty(name: "browser_style", value: "dialog");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 2;
             break;
