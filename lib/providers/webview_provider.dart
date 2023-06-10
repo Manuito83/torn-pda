@@ -103,24 +103,24 @@ class WebViewProvider extends ChangeNotifier {
         );
       }
 
-      // Change browser visibility early
+      // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
       notifyListeners();
 
       resumeAllWebviews();
     } else {
-      // Change browser visibility early
+      // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
       notifyListeners();
+
+      // Signal that the browser has closed to listener (e.g.: Profile page)
+      browserHasClosedStream.add(true);
 
       _removeAllUserScripts().then((value) {
         pauseAllWebviews();
       });
 
       _sleepOldTabs();
-
-      // Signal that the browser has closed to listener (e.g.: Profile page)
-      browserHasClosedStream.add(true);
     }
   }
 
