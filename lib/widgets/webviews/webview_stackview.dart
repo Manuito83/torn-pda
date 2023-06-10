@@ -69,6 +69,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
   bool secondaryInitialised = false;
 
   // Showcases
+  DateTime _lastShowCasesCheck;
   GlobalKey _showcaseTabsGeneral = GlobalKey();
   GlobalKey _showQuickMenuButton = GlobalKey();
   GlobalKey _showCaseNewTabButton = GlobalKey();
@@ -273,6 +274,13 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
   void _launchShowCases(BuildContext _) {
     if (!_webViewProvider.browserShowInForeground) return;
+
+    // Ensure only one execution per minute, so that showcases wait even if the first mandatory ones are shown
+    DateTime now = DateTime.now();
+    if (_lastShowCasesCheck != null && now.difference(_lastShowCasesCheck).inSeconds < 60) {
+      return;
+    }
+    _lastShowCasesCheck = now;
 
     Future.delayed(Duration(seconds: 1), () async {
       bool showCasesNeedToWait = false;
