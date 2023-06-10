@@ -6,6 +6,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -579,29 +580,54 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void pauseAllWebviews() {
-    if (_tabList.isEmpty) return;
-    log("All webviews paused!");
-    var currentTab = _tabList[_currentTab];
-    currentTab.webViewKey?.currentState?.webView?.pauseTimers();
+    try {
+      if (_tabList.isEmpty) return;
+
+      if (Platform.isAndroid) {
+        // Android pauses all timers at once
+        var currentTab = _tabList[_currentTab];
+        currentTab.webViewKey?.currentState?.webView?.pauseTimers();
+      } else if (Platform.isIOS) {
+        // iOS needs to call [pauseTimers] in each webview
+        for (var tab in _tabList) {
+          tab.webViewKey?.currentState?.pauseThisWebview();
+        }
+      }
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
   }
 
   void resumeAllWebviews() {
-    if (_tabList.isEmpty) return;
-    var currentTab = _tabList[_currentTab];
-    currentTab.webViewKey?.currentState?.webView?.resumeTimers();
+    try {
+      if (_tabList.isEmpty) return;
 
-    var pausedAgain = 0;
-
-    if (Platform.isAndroid) {
-      for (var tab in _tabList) {
-        if (tab != currentTab) {
-          tab.webViewKey.currentState?.pauseThisWebview();
-          pausedAgain++;
+      if (Platform.isAndroid) {
+        // Android resumes all timers at once
+        var currentTab = _tabList[_currentTab];
+        currentTab.webViewKey?.currentState?.webView?.resumeTimers();
+        // Then pauses the ones that are not in use
+        var pausedAgain = 0;
+        if (Platform.isAndroid) {
+          for (var tab in _tabList) {
+            if (tab != currentTab) {
+              tab.webViewKey?.currentState?.pauseThisWebview();
+              pausedAgain++;
+            }
+          }
+          log("Resuming webviews${Platform.isAndroid ? ' (re-paused $pausedAgain)' : ''}!");
+        }
+      } else if (Platform.isIOS) {
+        // iOS needs to call [resumeTimers] in each webview
+        for (var tab in _tabList) {
+          tab.webViewKey?.currentState?.resumeThisWebview();
         }
       }
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.log("PDA Crash at Resuming Webviews");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
-
-    log("Resuming webviews${Platform.isAndroid ? ' (re-paused $pausedAgain)' : ''}!");
   }
 
   Future clearCacheAndTabs() async {
@@ -670,7 +696,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Pause timers for tabs that load which are not active (e.g. at the initialization, we pause all except the main)
     if (_tabList[_currentTab] != tab) {
-      tab.webViewKey.currentState?.pauseThisWebview();
+      tab.webViewKey?.currentState?.pauseThisWebview();
     }
 
     notifyListeners();
@@ -691,20 +717,20 @@ class WebViewProvider extends ChangeNotifier {
   void removeAllChatsFullScreen() {
     chatRemovalWhileFullScreen = true;
     for (var tab in _tabList) {
-      tab.webViewKey.currentState?.hideChatWhileFullScreen();
+      tab.webViewKey?.currentState?.hideChatWhileFullScreen();
     }
   }
 
   void showAllChatsFullScreen() {
     chatRemovalWhileFullScreen = false;
     for (var tab in _tabList) {
-      tab.webViewKey.currentState?.showChatAfterFullScreen();
+      tab.webViewKey?.currentState?.showChatAfterFullScreen();
     }
   }
 
   Future _removeAllUserScripts() async {
     for (var tab in _tabList) {
-      await tab.webViewKey.currentState?.removeAllUserScripts();
+      await tab.webViewKey?.currentState?.removeAllUserScripts();
     }
   }
 
@@ -767,7 +793,7 @@ class WebViewProvider extends ChangeNotifier {
     }
     if (_tabList.isNotEmpty && _tabList[_currentTab] != null) {
       tab = _tabList[_currentTab];
-      tab.webViewKey.currentState?.assessErrorCases();
+      tab.webViewKey?.currentState?.assessErrorCases();
     }
   }
 
@@ -778,7 +804,7 @@ class WebViewProvider extends ChangeNotifier {
       addToHistoryForward(tab: tab, url: tab.currentUrl);
       tab.historyBack.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
+      tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
       _saveTabs();
       BotToast.showText(
@@ -816,7 +842,7 @@ class WebViewProvider extends ChangeNotifier {
 
       tab.historyForward.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
+      tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
       _saveTabs();
       BotToast.showText(
@@ -848,7 +874,7 @@ class WebViewProvider extends ChangeNotifier {
   bool reviveUrl() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl != null) {
-      tab.webViewKey.currentState?.loadFromExterior(url: tab.currentUrl, omitHistory: true);
+      tab.webViewKey?.currentState?.loadFromExterior(url: tab.currentUrl, omitHistory: true);
       _saveTabs();
       return true;
     } else {
@@ -859,7 +885,7 @@ class WebViewProvider extends ChangeNotifier {
   void loadMainTabUrl(String url) {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
-    tab.webViewKey.currentState?.loadFromExterior(url: url, omitHistory: false);
+    tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
     if (_currentTab != 0) {
       activateTab(0);
     }
@@ -869,7 +895,7 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
     tab.isChainingBrowser = true;
-    tab.webViewKey.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload);
+    tab.webViewKey?.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload);
     if (_currentTab != 0) {
       activateTab(0);
     }
@@ -881,7 +907,7 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
     tab.isChainingBrowser = false;
-    tab.webViewKey.currentState?.cancelChainingBrowser();
+    tab.webViewKey?.currentState?.cancelChainingBrowser();
     notifyListeners();
     _saveTabs();
   }
@@ -889,7 +915,7 @@ class WebViewProvider extends ChangeNotifier {
   void loadCurrentTabUrl(String url) {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl != null) {
-      tab.webViewKey.currentState?.loadFromExterior(url: url, omitHistory: false);
+      tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
       _saveTabs();
     }
   }
@@ -897,7 +923,7 @@ class WebViewProvider extends ChangeNotifier {
   String currentTabUrl() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl != null) {
-      return tab.webViewKey.currentState?.reportCurrentUrl();
+      return tab.webViewKey?.currentState?.reportCurrentUrl();
     }
     return "";
   }
@@ -905,7 +931,7 @@ class WebViewProvider extends ChangeNotifier {
   String currentTabTitle() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl != null) {
-      return tab.webViewKey.currentState?.reportCurrentTitle();
+      return tab.webViewKey?.currentState?.reportCurrentTitle();
     }
     return "";
   }
@@ -976,7 +1002,7 @@ class WebViewProvider extends ChangeNotifier {
   void _callAssessMethods() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl.contains("gym.php") || tab.currentUrl.contains("index.php?page=hunting")) {
-      tab.webViewKey.currentState?.assessEnergyWarning();
+      tab.webViewKey?.currentState?.assessEnergyWarning();
     }
   }
 
