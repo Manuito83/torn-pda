@@ -34,7 +34,7 @@ dependencies:
   dart_ping_ios: 3.0.0
   dbcrypt: 2.0.0
   dio: 5.0.3
-  device_info: 2.0.3
+  device_info_plus: 8.2.2
   dotted_border: 2.0.0+2
   easy_rich_text: 1.0.1
   expandable: 5.0.1
@@ -90,7 +90,7 @@ dependencies:
   uni_links: 0.5.1
   url_launcher: 6.1.11
   vibration: 1.7.4-nullsafety.0
-  wakelock: 0.6.1+2
+  wakelock: 0.6.2
   webview_flutter: 3.0.4
 
 dev_dependencies:

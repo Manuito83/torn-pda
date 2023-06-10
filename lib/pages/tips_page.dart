@@ -309,6 +309,7 @@ class _TipsPageState extends State<TipsPage> {
 
   List<ExpandableTip> buildGeneralTips() {
     var tips = <ExpandableTip>[];
+
     tips.add(
       ExpandableTip(
         headerValue: "App bar position",
@@ -316,15 +317,20 @@ class _TipsPageState extends State<TipsPage> {
             "by some users, as it is easier to reach in bigger screens). This can be changed in the Settings section.",
       ),
     );
+
     tips.add(
       ExpandableTip(
-        headerValue: "Torn user/pass autocomplete",
-        expandedValue: "Android: long-press the username field and then the three vertical dots. You should be able "
-            "to activate autocomplete from then on.\n\n"
-            "iOS: you should be able to autocomplete the user/pass from iCloud's or any other keychain (e.g. Chrome).\n\n"
-            "NOTE: this functionality is from the OS (Android/iOS), Torn PDA will never store your Torn username or password.",
+        headerValue: "Torn native login",
+        expandedValue: "By providing Torn PDA with your Torn username and password in Settings, Torn PDA will make "
+            "use of Torn's native login system to periodically request authorization and keep you logged in at all times."
+            "\n\nAlso, in the event that the app recognizes a logout condition, it will be able to log you back in "
+            "in a matter of seconds without any interaction from your side."
+            "\n\nPlease note that this login workflow has been designed with Torn's dev team, so it's officially "
+            "approved. In any case, Torn PDA will not store your original credentials anywhere."
+            "\n\nVisit the Settings section for more information on how to proceed.",
       ),
     );
+
     if (Platform.isAndroid) {
       tips.add(
         ExpandableTip(
