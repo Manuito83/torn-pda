@@ -686,6 +686,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _appwidgetMoneyEnabled = false;
+  bool get appwidgetMoneyEnabled => _appwidgetMoneyEnabled;
+  set appwidgetMoneyEnabled(bool value) {
+    _appwidgetMoneyEnabled = value;
+    Prefs().setAppwidgetMoneyEnabled(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -868,6 +876,7 @@ class SettingsProvider extends ChangeNotifier {
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
+    _appwidgetMoneyEnabled = await Prefs().getAppwidgetMoneyEnabled();
 
     notifyListeners();
   }

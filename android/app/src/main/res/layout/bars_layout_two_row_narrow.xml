@@ -189,8 +189,26 @@
                             android:adjustViewBounds="true" />
                     </RelativeLayout>
                 </LinearLayout>
-                
-                
+
+                <LinearLayout
+                    android:id="@+id/widget_main_money_box"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/widget_money_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textColor="#01C301"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginTop="1dp"
+                        android:textStyle="bold"
+                        android:visibility="visible"
+                        tools:text="$0"/>
+                </LinearLayout>
+
             </LinearLayout>
         </RelativeLayout>
 

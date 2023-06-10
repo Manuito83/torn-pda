@@ -264,6 +264,16 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             view.setViewVisibility(R.id.widget_events_icon_green, View.GONE);
         }
 
+        // ## EVENTS
+        String money = prefs.getString("money", "0");
+        boolean moneyEnabled = prefs.getBoolean("money_enabled", true);
+        if (moneyEnabled) {
+            view.setTextViewText(R.id.widget_money_text, money);
+            view.setViewVisibility(R.id.widget_money_text, View.VISIBLE);
+        } else {
+            view.setViewVisibility(R.id.widget_money_text, View.GONE);
+        }
+
         // ## ENERGY
         // Assign Energy Text
         String energy = prefs.getString("energy_text", "0");

@@ -259,6 +259,26 @@ Future<void> pdaWidget_fetchData() async {
           HomeWidget.saveWidgetData<String>('chain_text', "$currentChain");
         }
 
+        // Money
+        String money = "0";
+        int onHand = user.moneyOnhand;
+        if (onHand >= 1000000000000) {
+          money = "\$${(onHand / 1000000000000).toStringAsFixed(1)}T";
+        } else if (onHand >= 1000000000) {
+          money = "\$${(onHand / 1000000000).toStringAsFixed(1)}B";
+        } else if (onHand >= 1000000) {
+          money = "\$${(onHand / 1000000).toStringAsFixed(1)}M";
+        } else if (onHand >= 1000) {
+          if (onHand < 10000) {
+            money = "\$${(onHand / 1000).toStringAsFixed(1)}K";
+          } else {
+            money = "\$${(onHand / 1000).toStringAsFixed(0)}K";
+          }
+        } else {
+          money = "\$$onHand";
+        }
+        HomeWidget.saveWidgetData<String>('money', money);
+
         // Last Updated
         String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
         TimeFormatSetting timePrefs = restoredTimeFormat == '24' ? TimeFormatSetting.h24 : TimeFormatSetting.h12;

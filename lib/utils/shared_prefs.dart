@@ -299,6 +299,7 @@ class Prefs {
 
   // Appwidget
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
+  final String _kAppwidgetMoneyEnabled = "pda_appwidgetMoneyEnabled";
   final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
 
   // Api Rate
@@ -2899,6 +2900,16 @@ class Prefs {
   Future<bool> setAppwidgetDarkMode(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kAppwidgetDarkMode, value);
+  }
+
+  Future<bool> getAppwidgetMoneyEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetMoneyEnabled) ?? true;
+  }
+
+  Future<bool> setAppwidgetMoneyEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetMoneyEnabled, value);
   }
 
   // ---

@@ -1386,6 +1386,42 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        SizedBox(height: 5),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  "Show wallet money",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.appwidgetMoneyEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetMoneyEnabled = value;
+                    HomeWidget.saveWidgetData<bool>('money_enabled', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'This is only applicable for the tall widget layout',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }
