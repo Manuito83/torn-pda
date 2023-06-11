@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/bars_model.dart';
+import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
@@ -261,9 +262,11 @@ class _ChainWidgetState extends State<ChainWidget> {
                     color: widget.alwaysDarkBackground ? Colors.grey : _themeProvider.mainText,
                   ),
                   onTap: () {
-                    Get.to(
-                      () => ChainWidgetOptions(
-                        callBackOptions: _callBackChainOptions,
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => ChainWidgetOptions(
+                          callBackOptions: _callBackChainOptions,
+                        ),
                       ),
                     );
                   },

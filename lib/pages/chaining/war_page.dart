@@ -777,7 +777,6 @@ class _WarPageState extends State<WarPage> {
         IconButton(
           icon: Icon(MdiIcons.earth),
           onPressed: () {
-            log("lala");
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (BuildContext context) => RankedWarsPage(),
