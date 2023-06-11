@@ -21,6 +21,7 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({Key key}) : super(key: key);
@@ -1742,7 +1743,15 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ],
       onChanged: (value) {
+        if ((_browserStyle != 2 && value == 2) || _browserStyle == 2 && value != 2) {
+          // If you go to/from dialog, we will be rebuilding the stackview and therefore the browser will reset
+          // to how it was when the app first launched. To force a reload of the last session, just before the change,
+          // we transform it into a Container and let the provider change it back to a webview with [recallLastSession]
+          _webViewProvider.stackView = Container();
+        }
+
         _browserStyle = value;
+
         switch (value) {
           case 0:
             analytics.setUserProperty(name: "browser_style", value: "default");

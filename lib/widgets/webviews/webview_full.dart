@@ -2426,8 +2426,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             child: InkWell(
               customBorder: const CircleBorder(),
               splashColor: Colors.blueGrey,
-              child: const Icon(
+              child: Icon(
                 Icons.home,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
               ),
               onTap: () async {
                 setState(() {
@@ -2533,7 +2534,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.fingerprint, color: Colors.white),
+              child: Icon(
+                MdiIcons.fingerprint,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+              ),
             ),
           );
         },
@@ -2724,7 +2728,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _vaultsPopUpIcon() {
     if (_tradesIconActive) {
       return PopupMenuButton<VaultsOptions>(
-        icon: const Icon(MdiIcons.cashUsdOutline),
+        icon: Icon(
+          MdiIcons.cashUsdOutline,
+          color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+        ),
         onSelected: _openVaultsOptions,
         itemBuilder: (BuildContext context) {
           return _popupOptionsChoices.map((VaultsOptions choice) {
@@ -2778,12 +2785,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.accountSwitchOutline),
+              child: Icon(
+                MdiIcons.accountSwitchOutline,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+              ),
             ),
           );
         },
@@ -2912,12 +2922,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.safeSquareOutline),
+              child: Icon(
+                MdiIcons.safeSquareOutline,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+              ),
             ),
           );
         },
@@ -3069,12 +3082,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return const Padding(
-            padding: const EdgeInsets.all(8.0),
+          return Padding(
+            padding: EdgeInsets.all(8.0),
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.cityVariantOutline),
+              child: Icon(
+                MdiIcons.cityVariantOutline,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+              ),
             ),
           );
         },
@@ -3135,7 +3151,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           child: Text(
             "FILL",
             style: TextStyle(
-              color: _bazaarFillActive ? Colors.yellow[600] : Colors.white,
+              color: _bazaarFillActive
+                  ? Colors.yellow[600]
+                  : _webViewProvider.bottomBarStyleEnabled
+                      ? _themeProvider.mainText
+                      : Colors.white,
               fontSize: 12,
             ),
           ),
@@ -3230,7 +3250,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
+              child: Image.asset(
+                'images/icons/quick_items.png',
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+              ),
             ),
           );
         },
@@ -3318,7 +3341,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: GestureDetector(
-          child: const Icon(MdiIcons.chatOutline),
+          child: Icon(
+            MdiIcons.chatOutline,
+            color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+          ),
           onTap: () async {
             webView.evaluateJavascript(source: removeChatJS());
             _webViewProvider.reportChatRemovalChange(true, false);

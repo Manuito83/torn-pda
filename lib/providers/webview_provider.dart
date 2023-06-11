@@ -169,7 +169,7 @@ class WebViewProvider extends ChangeNotifier {
   /// Main browser widget
   Widget _stackView = Container();
   Widget get stackView => _stackView;
-  set stackView(WebViewStackView value) {
+  set stackView(Widget value) {
     _stackView = value;
     notifyListeners();
   }
