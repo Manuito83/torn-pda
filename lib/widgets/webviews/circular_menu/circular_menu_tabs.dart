@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/multitab_detector.dart';
 import 'circular_menu_item.dart';
 
 class CircularMenuTabs extends StatefulWidget {
@@ -77,6 +79,9 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
   AnimationController _animationController;
   Animation<double> _animation;
 
+  // Keep track of taps in 450 ms to allow for triple tabs
+  MultiTapDetector multiTapDetector = MultiTapDetector();
+
   @override
   void initState() {
     _animationController = AnimationController(
@@ -132,24 +137,32 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: 50,
           onTap: () {
-            if (widget.toggleButtonOnPressed != null) {
-              widget.toggleButtonOnPressed();
-            }
-          },
-          onDoubleTap: () async {
-            // Opens the menu
-            if (_animationController.status == AnimationStatus.dismissed) {
-              widget.webViewProvider.verticalMenuOpen();
-            } else {
-              // Closes the menu but permits the menu to shift from one tab to another
-              // without the user noticing (closes and reopens the new tapped tab)
-              widget.webViewProvider.verticalMenuClose();
-              if (widget.webViewProvider.verticalMenuCurrentIndex != widget.tabIndex) {
+            multiTapDetector.onTap((numTaps) {
+              if (numTaps == 1) {
+                // Single tap
+                if (widget.toggleButtonOnPressed != null) {
+                  widget.toggleButtonOnPressed();
+                }
+              } else if (numTaps == 2) {
+                // Double tab
+                // Opens the menu
+                if (_animationController.status == AnimationStatus.dismissed) {
+                  widget.webViewProvider.verticalMenuOpen();
+                } else {
+                  // Closes the menu but permits the menu to shift from one tab to another
+                  // without the user noticing (closes and reopens the new tapped tab)
+                  widget.webViewProvider.verticalMenuClose();
+                  if (widget.webViewProvider.verticalMenuCurrentIndex != widget.tabIndex) {
+                    widget.webViewProvider.verticalMenuCurrentIndex = widget.tabIndex;
+                    widget.webViewProvider.verticalMenuOpen();
+                  }
+                }
                 widget.webViewProvider.verticalMenuCurrentIndex = widget.tabIndex;
-                widget.webViewProvider.verticalMenuOpen();
+              } else if (numTaps == 3) {
+                // Triple tab
+                widget.webViewProvider.removeTab(position: widget.tabIndex);
               }
-            }
-            widget.webViewProvider.verticalMenuCurrentIndex = widget.tabIndex;
+            });
           },
           boxShadow: widget.toggleButtonBoxShadow,
           animatedIcon: AnimatedIcon(

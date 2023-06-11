@@ -39,7 +39,16 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 323 - 11/06/2023
+    // Build 324 - 11/06/2023
+
+    // VERSION 3.1.2
+    var v3_1_2 = ChangeLogItem();
+    v3_1_2.version = 'Torn PDA v3.1.2';
+    v3_1_2.date = '16 JUN 2023';
+    String feat3_1_2_1 = "Added triple tap gesture to instantly close a browser tab";
+    String feat3_1_2_2 = "Fixed travel button browser redirection";
+    v3_1_2.features.add(feat3_1_2_1);
+    v3_1_2.features.add(feat3_1_2_2);
 
     // VERSION 3.1.1
     var v3_1_1 = ChangeLogItem();
@@ -1421,6 +1430,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_1_2);
     itemList.add(v3_1_1);
     itemList.add(v3_1_0);
     itemList.add(v3_0_2);

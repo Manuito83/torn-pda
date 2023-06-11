@@ -641,7 +641,9 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Close tab",
-        expandedValue: "To close a tap, double tap on it and use the red bin icon.",
+        expandedValue: "To close a tab, you have two options: you can either DOUBLE TAP it to access the vertical "
+            "menu and do it from there (with the red bin icon), or alternatively with a TRIPLE TAP, which will close "
+            "the selected tab instantly (except for the first one, which is persistent).",
       ),
     );
     tips.add(

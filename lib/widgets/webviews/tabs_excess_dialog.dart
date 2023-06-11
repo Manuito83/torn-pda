@@ -42,7 +42,8 @@ class TabsExcessDialog extends StatelessWidget {
                   children: [
                     const Text("Too many tabs?\n"),
                     const Text(
-                      "Remember you can close tabs by double tapping them!",
+                      "Remember you can close tabs by double or triple tapping them!"
+                      "\n\nSee Tips for more information!",
                       style: TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 16.0),

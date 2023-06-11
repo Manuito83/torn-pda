@@ -491,9 +491,10 @@ class _WebViewStackViewState extends State<WebViewStackView>
       textColor: _themeProvider.mainText,
       tooltipBackgroundColor: _themeProvider.secondBackground,
       key: _showcaseTabsGeneral,
-      title: 'Tab bar',
-      description: "\nYou've opened your first tab; remember you can close tabs (except for the first one) by double "
-          "tapping them. You can also rearrange tabs, duplicate the first one, etc."
+      title: 'New tab...!',
+      description: "\nYou've opened a new tab!\n\nThere are two important things to remember: a DOUBLE TAP will "
+          "open a menu with a few options (including navigation arrows which might be useful in full screen "
+          "mode!), and a TRIPLE TAP will instantly remove a tab (except for the first one, which is persistent)."
           "\n\nVisit the Tips section for more information!\n",
       descTextStyle: TextStyle(fontSize: 13),
       tooltipPadding: EdgeInsets.all(20),
@@ -756,9 +757,9 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               onTap: () async {
                                 _webViewProvider.addTab();
                                 _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                                if (!_settingsProvider.showCases.contains("tabs_general")) {
+                                if (_settingsProvider.showCases.contains("tabs_general2")) {
                                   ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
-                                  _settingsProvider.addShowCase = "tabs_general";
+                                  //_settingsProvider.addShowCase = "tabs_general2";
                                 }
 
                                 if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
