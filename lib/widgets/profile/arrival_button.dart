@@ -108,10 +108,10 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
                   ],
                 ),
                 onLongPress: () {
-                  widget.launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
+                  widget.launchBrowser(url: 'https://www.torn.com', shortTap: true);
                 },
                 onPressed: () async {
-                  widget.launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
+                  widget.launchBrowser(url: 'https://www.torn.com', shortTap: false);
                 },
               );
             }),
