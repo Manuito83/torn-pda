@@ -55,7 +55,7 @@ class WebViewStackView extends StatefulWidget {
 }
 
 class _WebViewStackViewState extends State<WebViewStackView>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with WidgetsBindingObserver, TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -78,9 +78,12 @@ class _WebViewStackViewState extends State<WebViewStackView>
   Animation<double> _menuTabOpacity;
   AnimationController _menuTabAnimationController;
 
+  bool _keyboardVisible = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _settingsProvider = context.read<SettingsProvider>();
 
@@ -106,6 +109,12 @@ class _WebViewStackViewState extends State<WebViewStackView>
   }
 
   @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    _keyboardVisible = WidgetsBinding.instance.window.viewInsets.bottom > 0;
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
@@ -115,7 +124,11 @@ class _WebViewStackViewState extends State<WebViewStackView>
       return Dialog(
         insetPadding: EdgeInsets.only(
           top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
-          bottom: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
+          bottom: _webViewProvider.currentUiMode == UiMode.window
+              ? _keyboardVisible
+                  ? 0
+                  : 45
+              : 0,
           left: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
           right: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
         ),
@@ -175,6 +188,9 @@ class _WebViewStackViewState extends State<WebViewStackView>
                 _launchShowCases(_);
               }
               return Scaffold(
+                // Dialog displaces the webview up by default
+                resizeToAvoidBottomInset:
+                    !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
                 backgroundColor: _themeProvider.statusBar,
                 body: Stack(
                   alignment: Alignment.bottomCenter,
@@ -345,6 +361,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
   Future dispose() async {
     _webViewProvider.clearOnDispose();
     _webViewProvider.verticalMenuIsOpen = false;
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
