@@ -1878,9 +1878,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Future _restorePreferences() async {
-    var w = Provider.of<WebViewProvider>(context, listen: false);
-    var alternativeBrowser = w.bottomBarStyleEnabled;
-    var alternativeType = w.bottomBarStyleType;
+    var alternativeBrowser = await Prefs().getBrowserBottomBarStyleEnabled();
+    var alternativeType = await Prefs().getBrowserBottomBarStyleType();
     var style = 0;
     if (alternativeBrowser) {
       style = alternativeType == 2 ? 2 : 1;
