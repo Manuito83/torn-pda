@@ -499,6 +499,9 @@ class WebViewProvider extends ChangeNotifier {
   void activateTab(int newActiveTab) {
     if (_tabList.isEmpty || _tabList.length - 1 < newActiveTab) return;
 
+    // Avoid activating the same tab again (pause/resume could cause issues if call on iOS)
+    if (newActiveTab == _currentTab) return;
+
     var deactivated = _tabList[_currentTab];
     deactivated?.webViewKey?.currentState?.pauseThisWebview();
 

@@ -162,9 +162,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
     return MediaQuery.removePadding(
       context: context,
-      // iOS needs extra padding removal according to:
-      // https://github.com/flutter/flutter/issues/51345
-      removeTop: _settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen,
+      removeTop: true,  // Always needed in dialog to allow top bar taps
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait

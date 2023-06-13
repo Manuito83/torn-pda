@@ -139,10 +139,12 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
           onTap: () {
             multiTapDetector.onTap((numTaps) {
               if (numTaps == 1) {
+                
                 // Single tap
                 if (widget.toggleButtonOnPressed != null) {
                   widget.toggleButtonOnPressed();
                 }
+                
               } else if (numTaps == 2) {
                 // Double tab
                 // Opens the menu
