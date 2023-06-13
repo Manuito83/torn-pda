@@ -485,7 +485,8 @@ class _TipsPageState extends State<TipsPage> {
         buildExpandedText: () {
           return Text.rich(
             TextSpan(
-              text: "Full browser: short tap the title bar to open a small dialog with several options.\n\n",
+              text: "Default style browser: short tap the title bar to open a small dialog with several options.\n\n"
+                  "'Bottom-bar' or 'dialog' styles: long-press the CLOSE button to open a small dialog with several options.",
               style: TextStyle(
                 fontSize: 13,
               ),
@@ -679,7 +680,8 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Hide tabs temporarily",
         expandedValue: "You can temporarily hide tabs so that they don't take space."
-            "\n\nTap and hold the title bar, then slide up or down.\n\n",
+            "\n\nIf you are using the 'default' browser style: tap and hold the title bar, then slide up or down.\n\n"
+            "If you are using the 'bottom-bar' or 'dialog' styles: tab and hold the CLOSE button, then slide up or down.",
       ),
     );
     return tips;
@@ -831,7 +833,8 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Request attack assistance from your faction mates",
         expandedValue: "When you are in the attack screen, the browser's URL menu (accessed by short tapping "
-            "the title bar) will show a new button, marked in red, labelled 'FACTION ASSISTANCE'.\n\n"
+            "the title bar in the 'default' browser style or the CLOSE button in the two other styles) will show a "
+            "new button, marked in red, labelled 'FACTION ASSISTANCE'.\n\n"
             "Tapping this button will send a notification to all your faction mates that use Torn PDA and have the "
             "'Faction assist messages' option enabled in the Alerts section.\n\n"
             "By tapping the notification they will be able to join your attack and provide assistance.",
