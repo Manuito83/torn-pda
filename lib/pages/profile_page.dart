@@ -5436,6 +5436,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool booster = false;
     bool hospital = false;
     bool jail = false;
+    bool war = false;
 
     var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -5459,6 +5460,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           hospital = true;
         } else if (notification.payload.contains('jail')) {
           jail = true;
+        } else if (notification.payload.contains('war')) {
+          war = true;
         }
       }
     }
@@ -5474,6 +5477,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _boosterNotificationsPending = booster;
         _hospitalNotificationsPending = hospital;
         _jailNotificationsPending = jail;
+        _rankedWarNotificationsPending = war;
       });
     }
   }
