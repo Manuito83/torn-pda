@@ -162,7 +162,11 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
     return MediaQuery.removePadding(
       context: context,
-      removeTop: true,  // Always needed in dialog to allow top bar taps
+      // Dialog always needs this in iOS to allow interaction with top row
+      // Also, iOS needs extra padding removal according to:
+      // https://github.com/flutter/flutter/issues/51345
+      removeTop:
+          dialog || (_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
