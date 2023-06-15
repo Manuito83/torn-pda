@@ -583,17 +583,9 @@ class WebViewProvider extends ChangeNotifier {
   void pauseAllWebviews() {
     try {
       if (_tabList.isEmpty) return;
-
-      if (Platform.isAndroid) {
-        // Android pauses all timers at once
         var currentTab = _tabList[_currentTab];
+        // NOTE: IOS only stops the current active webview
         currentTab.webViewKey?.currentState?.webView?.pauseTimers();
-      } else if (Platform.isIOS) {
-        // iOS needs to call [pauseTimers] in each webview
-        for (var tab in _tabList) {
-          tab.webViewKey?.currentState?.pauseThisWebview();
-        }
-      }
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
@@ -604,11 +596,11 @@ class WebViewProvider extends ChangeNotifier {
     try {
       if (_tabList.isEmpty) return;
 
+      var currentTab = _tabList[_currentTab];
+      currentTab.webViewKey?.currentState?.webView?.resumeTimers();
+
       if (Platform.isAndroid) {
-        // Android resumes all timers at once
-        var currentTab = _tabList[_currentTab];
-        currentTab.webViewKey?.currentState?.webView?.resumeTimers();
-        // Then pauses the ones that are not in use
+        // Android pauses the ones that are not in use
         var pausedAgain = 0;
         if (Platform.isAndroid) {
           for (var tab in _tabList) {
@@ -619,12 +611,7 @@ class WebViewProvider extends ChangeNotifier {
           }
           log("Resuming webviews${Platform.isAndroid ? ' (re-paused $pausedAgain)' : ''}!");
         }
-      } else if (Platform.isIOS) {
-        // iOS needs to call [resumeTimers] in each webview
-        for (var tab in _tabList) {
-          tab.webViewKey?.currentState?.resumeThisWebview();
-        }
-      }
+      } 
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Resuming Webviews");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);

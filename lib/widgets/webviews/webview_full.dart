@@ -3760,12 +3760,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     });
   }
 
+  /// Note: it is not possible to use pauseTimers in iOS
+  /// since it will always pause the current webview
   void pauseThisWebview() {
     if (Platform.isAndroid) {
       webView?.pause();
-    } else if (Platform.isIOS) {
-      webView?.pauseTimers();
-    }
+    } 
   }
 
   void resumeThisWebview() async {

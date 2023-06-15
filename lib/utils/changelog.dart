@@ -47,10 +47,12 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_2.date = '20 JUN 2023';
     String feat3_1_2_1 = "Added triple tap gesture to instantly close a browser tab";
     String feat3_1_2_2 = "Fixed travel button browser redirection";
-    String feat3_1_2_3 = "Fixed section routing with back button press";
+    String feat3_1_2_3 = "Fixed profile pages redirection";
+    String feat3_1_2_4 = "Fixed section routing with back button press";
     v3_1_2.features.add(feat3_1_2_1);
     v3_1_2.features.add(feat3_1_2_2);
     v3_1_2.features.add(feat3_1_2_3);
+    v3_1_2.features.add(feat3_1_2_4);
 
     // VERSION 3.1.1
     var v3_1_1 = ChangeLogItem();
