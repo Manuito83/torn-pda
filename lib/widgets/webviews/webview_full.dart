@@ -73,6 +73,7 @@ import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 
 class HealingPages {
   String description;
@@ -2311,7 +2312,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     String title = '';
     final h4 = document.querySelector(".content-title > h4");
     if (h4 != null) {
-      title = h4.innerHtml.substring(0).trim();
+      title = pdaParser.HtmlParser.fix(h4.innerHtml.substring(0).trim());
     }
 
     if (h4 == null && showTitle) {
