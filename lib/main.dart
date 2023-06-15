@@ -27,7 +27,6 @@ import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
-import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
@@ -55,8 +54,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.1.2';
-const String androidCompilation = '324';
-const String iosCompilation = '324';
+const String androidCompilation = '325';
+const String iosCompilation = '325';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
