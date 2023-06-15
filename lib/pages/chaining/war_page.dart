@@ -13,6 +13,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
@@ -117,6 +118,9 @@ class _WarPageState extends State<WarPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _webViewProvider = context.read<WebViewProvider>();
+
+    routeWithDrawer = true;
+    routeName = "chaining_war";
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -35,6 +36,12 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
+
+    routeName = "travel_options";
+    routeWithDrawer = false;
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "travel_options") _goBack();
+    });
   }
 
   @override
@@ -108,10 +115,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          if (widget.callback != null) {
-            widget.callback();
-          }
-          Navigator.of(context).pop();
+          _goBack();
         },
       ),
       actions: [
@@ -264,5 +268,14 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
         );
       },
     );
+  }
+
+  _goBack() {
+    routeWithDrawer = false;
+    routeName = "profile_notifications";
+    if (widget.callback != null) {
+      widget.callback();
+    }
+    Navigator.of(context).pop();
   }
 }

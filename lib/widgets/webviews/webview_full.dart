@@ -400,7 +400,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   @override
   void dispose() {
     try {
-      webView = null;
+      //webView = null;
       _findController.dispose();
       _chainWidgetController.dispose();
       WidgetsBinding.instance.removeObserver(this);
@@ -427,16 +427,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _terminalProvider = Provider.of<TerminalProvider>(context);
 
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: ShowCaseWidget(
-        builder: Builder(builder: (_) {
-          if (_webViewProvider.browserShowInForeground) {
-            launchShowCases(_);
-          }
-          return buildScaffold(context);
-        }),
-      ),
+    return ShowCaseWidget(
+      builder: Builder(builder: (_) {
+        if (_webViewProvider.browserShowInForeground) {
+          launchShowCases(_);
+        }
+        return buildScaffold(context);
+      }),
     );
   }
 
@@ -3832,16 +3829,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   String reportCurrentTitle() {
     return _pageTitle;
-  }
-
-  Future<bool> _willPopCallback() async {
-    if (_webViewProvider.browserShowInForeground) {
-      _tryGoBack();
-    } else {
-      _webViewProvider.willPopCallbackStream.add(true);
-    }
-
-    return false;
   }
 
   void _revertTransparentBackground() async {

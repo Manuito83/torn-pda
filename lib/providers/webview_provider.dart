@@ -208,8 +208,6 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  StreamController willPopCallbackStream = StreamController.broadcast();
-
   StreamController browserHasClosedStream = StreamController.broadcast();
 
   bool chatRemovalEnabledGlobal = false;

@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
@@ -42,6 +43,9 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = true;
+    routeName = "stakeouts";
   }
 
   @override

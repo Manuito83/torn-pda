@@ -9,6 +9,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
@@ -98,6 +99,9 @@ class _AwardsPageState extends State<AwardsPage> {
     _getAwardsPayload = _fetchYataAndPopulate();
 
     analytics.setCurrentScreen(screenName: 'awards');
+
+    routeWithDrawer = true;
+    routeName = "awards";
   }
 
   @override

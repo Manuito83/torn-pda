@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -38,64 +39,67 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
+
+    routeWithDrawer = false;
+    routeName = "jail_ahead_options";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "jail_ahead_options") _goBack();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  color: _themeProvider.canvas,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                    child: FutureBuilder(
-                      future: _preferencesLoaded,
-                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          return SingleChildScrollView(
-                            child: Column(
-                              children: <Widget>[
-                                Padding(
-                                  padding: const EdgeInsets.all(20.0),
-                                  child: Text('Here you can specify your preferred notification '
-                                      'trigger time before jail release'),
-                                ),
-                                _rowsWithTypes(),
-                                SizedBox(height: 50),
-                              ],
-                            ),
-                          );
-                        } else {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                      },
-                    ),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
+              return Container(
+                color: _themeProvider.canvas,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text('Here you can specify your preferred notification '
+                                    'trigger time before jail release'),
+                              ),
+                              _rowsWithTypes(),
+                              SizedBox(height: 50),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -110,10 +114,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          if (widget.callback != null) {
-            widget.callback();
-          }
-          Navigator.of(context).pop();
+          _goBack();
         },
       ),
     );
@@ -441,10 +442,12 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
     });
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
     if (widget.callback != null) {
       widget.callback();
     }
-    return true;
+    routeWithDrawer = false;
+    routeName = "profile_notifications";
+    Navigator.of(context).pop();
   }
 }

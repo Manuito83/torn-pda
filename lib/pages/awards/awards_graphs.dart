@@ -11,6 +11,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -39,6 +40,12 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "awards_graphs";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "awards_graphs") _goBack();
+    });
   }
 
   @override
@@ -52,52 +59,49 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           : _themeProvider.currentTheme == AppTheme.dark
               ? Colors.grey[900]
               : Colors.black,
-      child: WillPopScope(
-        onWillPop: _willPopCallback,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: Padding(
-                padding: const EdgeInsets.all(30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: <Widget>[
-                    /*
-                    Text(
-                      'Awards',
-                      style: TextStyle(
-                          color: const Color(0xff0f4a3c),
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(
-                      height: 38,
-                    ),
-                    */
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: BarChart(
-                          mainBarData(),
-                        ),
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: Padding(
+              padding: const EdgeInsets.all(30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  /*
+                  Text(
+                    'Awards',
+                    style: TextStyle(
+                        color: const Color(0xff0f4a3c),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(
+                    height: 38,
+                  ),
+                  */
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: BarChart(
+                        mainBarData(),
                       ),
                     ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                ],
               ),
             ),
           ),
@@ -134,7 +138,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          _goBack();
         },
       ),
       actions: [
@@ -296,13 +300,14 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
     );
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
     // Only revert rotation if it's not allowed app-wide
     if (!_settingsProvider.allowScreenRotation) {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     }
 
+    routeWithDrawer = true;
+    routeName = "awards";
     Navigator.of(context).pop();
-    return true;
   }
 }

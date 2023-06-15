@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 
 // Project imports:
@@ -30,112 +31,115 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "friendly_factions";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "friendly_factions") _goBack();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: BorderSide(width: 2, color: Colors.blueGrey),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              child: Column(
+                children: <Widget>[
+                  SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      ButtonTheme(
+                        minWidth: 1.0,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: BorderSide(width: 2, color: Colors.blueGrey),
+                              ),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 20,
+                            color: _themeProvider.mainText,
+                          ),
+                          onPressed: () {
+                            _showAddDialog(context);
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 15),
+                      ButtonTheme(
+                        minWidth: 1.0,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: BorderSide(
+                                  width: 2,
+                                  color: Colors.blueGrey,
                                 ),
                               ),
                             ),
-                            child: Icon(
-                              Icons.add,
-                              size: 20,
-                              color: _themeProvider.mainText,
-                            ),
-                            onPressed: () {
-                              _showAddDialog(context);
-                            },
                           ),
-                        ),
-                        SizedBox(width: 15),
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: BorderSide(
-                                    width: 2,
-                                    color: Colors.blueGrey,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: _themeProvider.mainText,
-                            ),
-                            onPressed: () {
-                              _openWipeDialog();
-                            },
+                          child: Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: _themeProvider.mainText,
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Use the \'+\' button to add new friendly factions to the list. '
-                        'Players in said factions will be flagged as allied when you visit their '
-                        'profiles or try to attack them.',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                          onPressed: () {
+                            _openWipeDialog();
+                          },
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Flexible(
-                      child: Consumer<SettingsProvider>(
-                        builder: (context, settingsProvider, child) => factions(),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Use the \'+\' button to add new friendly factions to the list. '
+                      'Players in said factions will be flagged as allied when you visit their '
+                      'profiles or try to attack them.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 10),
+                  Flexible(
+                    child: Consumer<SettingsProvider>(
+                      builder: (context, settingsProvider, child) => factions(),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -214,7 +218,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          _goBack();
         },
       ),
     );
@@ -338,9 +342,10 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
     );
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
+    routeWithDrawer = false;
+    routeName = "settings_browser";
     Navigator.of(context).pop();
-    return true;
   }
 }
 

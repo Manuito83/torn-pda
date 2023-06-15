@@ -14,6 +14,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -30,7 +31,7 @@ import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
 class ReturnFlagPressed {
   bool flagPressed = false;
-  bool shortTap = false;
+  bool shortTap = true;
 
   ReturnFlagPressed({@required this.flagPressed, @required this.shortTap});
 }
@@ -148,6 +149,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _fabHeight = _initFabHeight;
     _apiCalled = _fetchApiInformation();
     _restoreSharedPreferences();
+
+    routeWithDrawer = false;
+    routeName = "foreign_stock";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "foreign_stock") _goBack(false, false);
+    });
   }
 
   @override
@@ -321,6 +328,16 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
+  _goBack(bool flag, bool shortTap) {
+    routeWithDrawer = true;
+    routeName = "drawer";
+    // Returning 'false' to indicate we did not press a flag
+    Navigator.pop(
+      context,
+      ReturnFlagPressed(flagPressed: flag, shortTap: shortTap),
+    );
+  }
+
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
@@ -329,11 +346,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          // Returning 'false' to indicate we did not press a flag
-          Navigator.pop(
-            context,
-            ReturnFlagPressed(flagPressed: false, shortTap: false),
-          );
+          _goBack(false, false);
         },
       ),
       actions: <Widget>[
@@ -1425,10 +1438,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   void _onFlagPressed(bool flagPressed, bool shortTap) {
-    Navigator.pop(
-      context,
-      ReturnFlagPressed(flagPressed: true, shortTap: shortTap),
-    );
+    _goBack(true, shortTap);
   }
 
   void _onRefresh() async {

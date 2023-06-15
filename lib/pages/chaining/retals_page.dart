@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/retal_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -61,6 +62,9 @@ class _RetalsPageState extends State<RetalsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = true;
+    routeName = "chaining_retals";
   }
 
   @override

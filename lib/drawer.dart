@@ -60,13 +60,15 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
-import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+bool routeWithDrawer = true;
+String routeName = "drawer";
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -151,8 +153,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   // Intent receiver subscription
   StreamSubscription _intentListenerSub;
 
-  Stream _willPopPressedInBrowser;
-  StreamSubscription _willPopPressedInBrowserSubscription;
+  Stream _willPopShouldOpenDrawer;
+  StreamSubscription _willPopSubscription;
 
   @override
   void initState() {
@@ -312,7 +314,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   @override
   void dispose() {
     selectNotificationStream?.close();
-    _willPopPressedInBrowserSubscription?.cancel();
+    _willPopSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _deepLinkSub?.cancel();
     _intentListenerSub?.cancel();
@@ -1202,50 +1204,47 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       _s = Get.put(StakeoutsController(), permanent: true);
       _s.callbackBrowser = _openBrowserFromToast;
     }
-    return WillPopScope(
-      onWillPop: _willPopCallback, // This will be called indirectly from the webview provider only
-      child: FutureBuilder(
-        future: _finishedWithPreferences,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
-            // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
-            // safe area will be black
-            return Container(
-              color: _themeProvider.currentTheme == AppTheme.light
-                  ? MediaQuery.of(context).orientation == Orientation.portrait
-                      ? Colors.blueGrey
-                      : _themeProvider.canvas
-                  : _themeProvider.canvas,
-              child: SafeArea(
-                child: Scaffold(
-                  key: _scaffoldKey,
-                  body: _getPages(),
-                  drawer: Drawer(
-                    backgroundColor: _themeProvider.canvas,
-                    elevation: 2, // This avoids shadow over SafeArea
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      children: <Widget>[
-                        _getDrawerHeader(),
-                        _getDrawerItems(),
-                      ],
-                    ),
+    return FutureBuilder(
+      future: _finishedWithPreferences,
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
+          // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
+          // safe area will be black
+          return Container(
+            color: _themeProvider.currentTheme == AppTheme.light
+                ? MediaQuery.of(context).orientation == Orientation.portrait
+                    ? Colors.blueGrey
+                    : _themeProvider.canvas
+                : _themeProvider.canvas,
+            child: SafeArea(
+              child: Scaffold(
+                key: _scaffoldKey,
+                body: _getPages(),
+                drawer: Drawer(
+                  backgroundColor: _themeProvider.canvas,
+                  elevation: 2, // This avoids shadow over SafeArea
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: <Widget>[
+                      _getDrawerHeader(),
+                      _getDrawerItems(),
+                    ],
                   ),
                 ),
               ),
-            );
-          } else {
-            return Container(
-              color: _themeProvider.secondBackground,
-              child: SafeArea(
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+            ),
+          );
+        } else {
+          return Container(
+            color: _themeProvider.secondBackground,
+            child: SafeArea(
+              child: const Center(
+                child: CircularProgressIndicator(),
               ),
-            );
-          }
-        },
-      ),
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -1632,11 +1631,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     await _settingsProvider.loadPreferences();
 
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
-    // Join a stream which will receive a callback from the browser whenever the back button is pressed and the
-    // browser is not in the foreground (as back button presses always land in the browser)
-    _willPopPressedInBrowser = _webViewProvider.willPopCallbackStream.stream;
-    _willPopPressedInBrowserSubscription = _willPopPressedInBrowser.listen((event) {
-      _willPopCallback();
+    // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
+    _willPopShouldOpenDrawer = _settingsProvider.willPopShouldOpenDrawer.stream;
+    _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
+      _openDrawer();
     });
 
     // Set up UserScriptsProvider so that user preferences are applied
@@ -1880,33 +1878,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     _getPages();
   }
 
-  Future<bool> _willPopCallback() async {
-    final appExit = _settingsProvider.onAppExit;
-    if (appExit == 'exit') {
-      return true;
-    } else if (appExit == 'stay') {
-      // Open drawer instead
+  _openDrawer() {
+    if (routeWithDrawer) {
       _scaffoldKey.currentState.openDrawer();
-      return false;
-    } else {
-      String action;
-      await showDialog(
-        useRootNavigator: false,
-        context: context,
-        builder: (BuildContext context) {
-          return OnAppExitDialog();
-        },
-      ).then((choice) {
-        action = choice as String;
-      });
-      if (action == 'exit') {
-        await Future.delayed(const Duration(milliseconds: 300));
-        return true;
-      } else {
-        // Open drawer instead
-        _scaffoldKey.currentState.openDrawer();
-        return false;
-      }
     }
   }
 

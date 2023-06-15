@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -40,6 +41,9 @@ class _TradesOptionsState extends State<TradesOptions> {
   void initState() {
     super.initState();
     _preferencesLoaded = _restorePreferences();
+
+    routeWithDrawer = false;
+    routeName = "trades_options";
   }
 
   @override

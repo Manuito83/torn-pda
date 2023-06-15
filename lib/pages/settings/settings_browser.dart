@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
@@ -51,105 +52,108 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
     _preferencesRestored = _restorePreferences();
+
+    routeWithDrawer = false;
+    routeName = "settings_browser";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "settings_browser") _goBack();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: FutureBuilder(
-                future: _preferencesRestored,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: <Widget>[
-                            SizedBox(height: 15),
-                            _general(),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 15),
-                            _userScripts(),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 10),
-                            _tabs(),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 10),
-                            _fullScreen(),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 10),
-                            _chat(context),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 10),
-                            _travel(),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 10),
-                            _gym(),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 10),
-                            _profile(),
-                            if (Platform.isIOS)
-                              Column(
-                                children: [
-                                  SizedBox(height: 15),
-                                  Divider(),
-                                  SizedBox(height: 10),
-                                  _linkPreview(),
-                                ],
-                              ),
-                            if (Platform.isIOS)
-                              Column(
-                                children: [
-                                  SizedBox(height: 15),
-                                  Divider(),
-                                  SizedBox(height: 10),
-                                  _pinchGesture(),
-                                  _iosDisallowOverScroll(),
-                                ],
-                              ),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 10),
-                            _maintenance(),
-                            SizedBox(height: 40),
-                          ],
-                        ),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: FutureBuilder(
+              future: _preferencesRestored,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          SizedBox(height: 15),
+                          _general(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 15),
+                          _userScripts(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _tabs(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _fullScreen(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _chat(context),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _travel(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _gym(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _profile(),
+                          if (Platform.isIOS)
+                            Column(
+                              children: [
+                                SizedBox(height: 15),
+                                Divider(),
+                                SizedBox(height: 10),
+                                _linkPreview(),
+                              ],
+                            ),
+                          if (Platform.isIOS)
+                            Column(
+                              children: [
+                                SizedBox(height: 15),
+                                Divider(),
+                                SizedBox(height: 10),
+                                _pinchGesture(),
+                                _iosDisallowOverScroll(),
+                              ],
+                            ),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _maintenance(),
+                          SizedBox(height: 40),
+                        ],
                       ),
-                    );
-                  } else {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                },
-              ),
+                    ),
+                  );
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
+              },
             ),
           ),
         ),
@@ -1682,7 +1686,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           new IconButton(
             icon: new Icon(Icons.arrow_back),
             onPressed: () {
-              _willPopCallback();
+              _goBack();
             },
           ),
           PdaBrowserIcon(),
@@ -1891,8 +1895,9 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
     });
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
+    routeWithDrawer = true;
+    routeName = "settings";
     Navigator.of(context).pop();
-    return true;
   }
 }

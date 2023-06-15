@@ -27,6 +27,7 @@ import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
+import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
@@ -280,24 +281,41 @@ class _MyAppState extends State<MyApp> {
           debugShowCheckedModeBanner: false,
           builder: BotToastInit(),
           navigatorObservers: [BotToastNavigatorObserver()],
-          home: Stack(
-            children: [
-              GetMaterialApp(
-                debugShowCheckedModeBanner: false,
-                theme: theme,
-                home: DrawerPage(),
-              ),
-              Consumer<WebViewProvider>(
-                builder: (context, wProvider, child) {
-                  return Visibility(
-                    maintainState: true,
-                    visible: wProvider.browserShowInForeground,
-                    child: wProvider.stackView,
-                  );
-                },
-              ),
-              const AppBorder(),
-            ],
+          home: WillPopScope(
+            onWillPop: () async {
+              WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+
+              if (w.browserShowInForeground) {
+                // Browser is in front, delegate the call
+                w.tryGoBack();
+                return false;
+              } else {
+                // App is in front
+                //_webViewProvider.willPopCallbackStream.add(true);
+                bool shouldPop = await _willPopFromApp();
+                if (shouldPop) return true;
+                return false;
+              }
+            },
+            child: Stack(
+              children: [
+                GetMaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  theme: theme,
+                  home: DrawerPage(),
+                ),
+                Consumer<WebViewProvider>(
+                  builder: (context, wProvider, child) {
+                    return Visibility(
+                      maintainState: true,
+                      visible: wProvider.browserShowInForeground,
+                      child: wProvider.stackView,
+                    );
+                  },
+                ),
+                const AppBorder(),
+              ],
+            ),
           ),
         ),
       ),
@@ -324,6 +342,23 @@ class _MyAppState extends State<MyApp> {
     );
 
     return mq;
+  }
+
+  Future<bool> _willPopFromApp() async {
+    SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
+    final appExit = s.onAppExit;
+    if (appExit == 'exit') {
+      return true;
+    } else {
+      if (routeWithDrawer) {
+        // Open drawer instead
+        s.willPopShouldOpenDrawer.add(true);
+        return false;
+      } else {
+        s.willPopShouldGoBack.add(true);
+        return false;
+      }
+    }
   }
 }
 

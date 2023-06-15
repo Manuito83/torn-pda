@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
@@ -22,54 +23,57 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
   void initState() {
     super.initState();
     filteredIcons = widget.settingsProvider.iconsFiltered;
+
+    var s = Provider.of<SettingsProvider>(context, listen: false);
+    routeWithDrawer = false;
+    routeName = "icons_filter_page";
+    s.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "icons_filter_page") _goBack();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: widget.settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !widget.settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                      child:
-                          Text("Select which icons you would like to include as part of the Profile section's header"),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: widget.settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !widget.settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Text("Select which icons you would like to include as part of the Profile section's header"),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 50),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: allowedIcons.length,
+                      itemBuilder: (context, i) {
+                        String key = allowedIcons.keys.elementAt(i);
+                        return _iconFilterCard(key, allowedIcons[key]);
+                      },
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 50),
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: allowedIcons.length,
-                        itemBuilder: (context, i) {
-                          String key = allowedIcons.keys.elementAt(i);
-                          return _iconFilterCard(key, allowedIcons[key]);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -86,7 +90,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          _goBack();
         },
       ),
     );
@@ -154,8 +158,9 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
     );
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
+    routeWithDrawer = false;
+    routeName = "profile_notifications";
     Navigator.of(context).pop();
-    return true;
   }
 }

@@ -6,6 +6,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
@@ -51,9 +52,21 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   @override
   void initState() {
     super.initState();
+
     _settingsP = Provider.of<SettingsProvider>(context, listen: false);
     _webViewProvider = context.read<WebViewProvider>();
-    if (!widget.calledFromMenu) _fbUser = widget.fbUser; // We are NOT getting updated stocks every time
+    routeName = "stockmarket_alerts_page";
+    if (!widget.calledFromMenu) {
+      // We are NOT getting updated stocks every time
+      _fbUser = widget.fbUser;
+
+      routeWithDrawer = false;
+      _settingsP.willPopShouldGoBack.stream.listen((event) {
+        if (mounted && routeName == "stockmarket_alerts_page") _goBack();
+      });
+    } else {
+      routeWithDrawer = true;
+    }
     _stocksInitialised = _initialiseStocks();
     analytics.setCurrentScreen(screenName: 'stockMarket');
   }
@@ -61,107 +74,104 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsP.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsP.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: Builder(
-                builder: (BuildContext context) {
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                    child: FutureBuilder(
-                      future: _stocksInitialised,
-                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          if (!_errorInitializing) {
-                            return SingleChildScrollView(
-                              child: Column(
-                                children: <Widget>[
-                                  _alertActivator(),
-                                  Divider(),
-                                  Text("Traded Companies"),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsP.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsP.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: Builder(
+              builder: (BuildContext context) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _stocksInitialised,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (!_errorInitializing) {
+                          return SingleChildScrollView(
+                            child: Column(
+                              children: <Widget>[
+                                _alertActivator(),
+                                Divider(),
+                                Text("Traded Companies"),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Value: ",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      formatProfit(inputDouble: _totalValue),
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      formatProfit(inputDouble: _totalProfit),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: _totalProfit >= 0 ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 10),
+                                _allStocksList(),
+                                SizedBox(height: 50),
+                              ],
+                            ),
+                          );
+                        } else {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text(
+                                  'OOPS!',
+                                  style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                                  child: Column(
                                     children: [
                                       Text(
-                                        "Value: ",
-                                        style: TextStyle(fontSize: 10),
-                                      ),
-                                      Text(
-                                        formatProfit(inputDouble: _totalValue),
-                                        style: TextStyle(fontSize: 10),
-                                      ),
-                                      Text(
-                                        " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
-                                        style: TextStyle(fontSize: 10),
-                                      ),
-                                      Text(
-                                        formatProfit(inputDouble: _totalProfit),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: _totalProfit >= 0 ? Colors.green : Colors.red,
-                                        ),
+                                        'There was an error retrieving market share or alerts information.'
+                                        '\n\nPlease try again in a few minutes!',
+                                        textAlign: TextAlign.center,
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 10),
-                                  _allStocksList(),
-                                  SizedBox(height: 50),
-                                ],
-                              ),
-                            );
-                          } else {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Text(
-                                    'OOPS!',
-                                    style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          'There was an error retrieving market share or alerts information.'
-                                          '\n\nPlease try again in a few minutes!',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                        } else {
-                          return Center(
-                            child: CircularProgressIndicator(),
+                                ),
+                              ],
+                            ),
                           );
                         }
-                      },
-                    ),
-                  );
-                },
-              ),
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -182,7 +192,8 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
             final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
             scaffoldState.openDrawer();
           } else {
-            Navigator.of(context).pop();
+            routeWithDrawer = true;
+            _goBack();
           }
         },
       ),
@@ -361,7 +372,13 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     );
   }
 
-  Future<bool> _willPopCallback() async {
-    return true;
+  _goBack() {
+    routeWithDrawer = true;
+    if (!widget.calledFromMenu) {
+      routeName = "alerts";
+    } else {
+      routeName = "drawer";
+    }
+    Navigator.of(context).pop();
   }
 }

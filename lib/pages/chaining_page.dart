@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
@@ -58,6 +59,9 @@ class _ChainingPageState extends State<ChainingPage> {
     _userProvider = context.read<UserDetailsProvider>();
     _r = Get.put(RetalsController());
     _preferencesLoaded = _restorePreferences();
+
+    routeWithDrawer = true;
+    routeName = "chaining";
   }
 
   @override

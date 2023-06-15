@@ -10,6 +10,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
@@ -54,6 +55,12 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "friends_backup";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "friends_backup") _goBack();
+    });
   }
 
   @override
@@ -267,6 +274,8 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   @override
   Future dispose() async {
     _importInputController.dispose();
+    routeWithDrawer = true;
+    routeName = "friends";
     super.dispose();
   }
 
@@ -468,5 +477,11 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
         await Future.delayed(const Duration(seconds: 1), () {});
       }
     }
+  }
+
+  _goBack() {
+    routeWithDrawer = true;
+    routeName = "friends";
+    Navigator.of(context).pop();
   }
 }

@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
@@ -73,6 +74,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
     _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
     analytics.setCurrentScreen(screenName: 'travel');
+
+    routeWithDrawer = true;
+    routeName = "travel";
   }
 
   @override

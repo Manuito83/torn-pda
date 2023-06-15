@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
@@ -126,6 +127,9 @@ class _TipsPageState extends State<TipsPage> {
     _userScriptsTipsList = buildUserScriptsTipsList();
 
     analytics.setCurrentScreen(screenName: 'tips');
+
+    routeWithDrawer = true;
+    routeName = "tips";
   }
 
   @override

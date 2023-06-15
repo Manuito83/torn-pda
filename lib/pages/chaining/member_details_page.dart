@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -39,6 +40,12 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
     _memberFetched = _fetchMemberDetails();
+
+    routeWithDrawer = false;
+    routeName = "member_details";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "member_details") _goBack();
+    });
   }
 
   @override
@@ -171,7 +178,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
             );
           }
         } else {
-          return CircularProgressIndicator();
+          return Center(child: CircularProgressIndicator());
         }
       },
     );
@@ -184,7 +191,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.of(context).pop();
+          _goBack();
         },
       ),
     );
@@ -438,5 +445,11 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
       _member = myNewTargetModel;
       return;
     }
+  }
+
+  _goBack() {
+    routeWithDrawer = true;
+    routeName = "chaining_war";
+    Navigator.of(context).pop();
   }
 }

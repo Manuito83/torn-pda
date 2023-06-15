@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/friends/friends_sort.dart';
@@ -56,6 +57,9 @@ class _FriendsPageState extends State<FriendsPage> {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
     analytics.setCurrentScreen(screenName: 'friends');
+
+    routeWithDrawer = true;
+    routeName = "friends";
   }
 
   @override

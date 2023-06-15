@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -45,6 +46,12 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
 
     _rankedWarsFetched = _fetchRankedWards();
     _timeNow = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    routeWithDrawer = false;
+    routeName = "ranked_wars";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "ranked_wars") _goBack();
+    });
   }
 
   @override
@@ -310,12 +317,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       leading: new IconButton(
         icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
         onPressed: () {
-          if (widget.calledFromMenu) {
-            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          } else {
-            Get.back();
-          }
+          _goBack();
         },
       ),
       actions: [
@@ -411,5 +413,16 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
         ),
       ),
     );
+  }
+
+  _goBack() {
+    if (widget.calledFromMenu) {
+      final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+      scaffoldState.openDrawer();
+    } else {
+      routeWithDrawer = true;
+      routeName = "chaining_war";
+      Get.back();
+    }
   }
 }

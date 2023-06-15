@@ -12,6 +12,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items/items_sort.dart';
@@ -88,6 +89,9 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     _loadedApiItems = _getAllItems();
     _searchController.addListener(onSearchInputTextChange);
     analytics.setCurrentScreen(screenName: 'items');
+
+    routeWithDrawer = true;
+    routeName = "items";
   }
 
   @override

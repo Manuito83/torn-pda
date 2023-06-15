@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:convert';
 
 // Flutter imports:
@@ -34,6 +35,9 @@ enum BrowserRefreshSetting {
 }
 
 class SettingsProvider extends ChangeNotifier {
+  StreamController willPopShouldOpenDrawer = StreamController.broadcast();
+  StreamController willPopShouldGoBack = StreamController.broadcast();
+
   var _currentBrowser = BrowserSetting.app;
   BrowserSetting get currentBrowser => _currentBrowser;
   set changeBrowser(BrowserSetting browserType) {

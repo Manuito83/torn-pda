@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
@@ -32,6 +33,9 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "yata_targets_distribution";
   }
 
   @override

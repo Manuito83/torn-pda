@@ -6,6 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/crimes/crime_model.dart';
@@ -53,6 +54,9 @@ class _CrimesOptionsState extends State<CrimesOptions> {
     _initCrimes();
     _crimesProvider = Provider.of<CrimesProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
+
+    routeWithDrawer = false;
+    routeName = "crimes_options";
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
@@ -56,6 +57,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
       _getFactionApiAccess(),
     ]);
     analytics.setCurrentScreen(screenName: 'alerts');
+
+    routeWithDrawer = true;
+    routeName = "alerts";
   }
 
   @override

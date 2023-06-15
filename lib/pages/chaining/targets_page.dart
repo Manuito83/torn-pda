@@ -10,6 +10,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
@@ -125,6 +126,9 @@ class _TargetsPageState extends State<TargetsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<TargetsProvider>(context, listen: false).setFilterText('');
     });
+
+    routeWithDrawer = true;
+    routeName = "chaining_targets";
   }
 
   @override

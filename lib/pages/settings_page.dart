@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
@@ -112,6 +113,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _preferencesRestored = _restorePreferences();
     _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     analytics.setCurrentScreen(screenName: 'settings');
+
+    routeWithDrawer = true;
+    routeName = "settings";
   }
 
   @override
@@ -1076,8 +1080,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Text(
             "Note: this will only have effect in certain devices, depending on "
             "your configuration. Dictates how to proceed when the app detects a back button "
-            "press or swipe that would otherwise close the app. "
-            "If you choose 'ask', a dialog will be shown next time",
+            "press or swipe that would otherwise close the app.",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -1954,11 +1957,11 @@ class _SettingsPageState extends State<SettingsPage> {
       value: _onAppExitValue,
       items: [
         DropdownMenuItem(
-          value: "ask",
+          value: "stay",
           child: SizedBox(
             width: 60,
             child: Text(
-              "Ask",
+              "Stay",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -1972,19 +1975,6 @@ class _SettingsPageState extends State<SettingsPage> {
             width: 60,
             child: Text(
               "Exit",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "stay",
-          child: SizedBox(
-            width: 60,
-            child: Text(
-              "Stay",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -2602,7 +2592,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       switch (onAppExit) {
         case 'ask':
-          _onAppExitValue = 'ask';
+          _onAppExitValue = 'stay'; // Fix after removing "ask" option
           break;
         case 'exit':
           _onAppExitValue = 'exit';

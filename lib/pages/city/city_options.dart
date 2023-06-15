@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -32,6 +33,9 @@ class _CityOptionsState extends State<CityOptions> {
   void initState() {
     super.initState();
     _preferencesLoaded = _restorePreferences();
+
+    routeWithDrawer = false;
+    routeName = "city_options";
   }
 
   @override

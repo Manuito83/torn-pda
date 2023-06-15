@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -34,6 +35,9 @@ class _AboutPageState extends State<AboutPage> {
   void initState() {
     super.initState();
     analytics.setCurrentScreen(screenName: 'about');
+
+    routeWithDrawer = true;
+    routeName = "about";
   }
 
   @override

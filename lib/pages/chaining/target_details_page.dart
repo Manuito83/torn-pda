@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -33,6 +34,12 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "target_details";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "target_details") _goBack();
+    });
   }
 
   @override
@@ -144,7 +151,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.of(context).pop();
+          _goBack();
         },
       ),
     );
@@ -390,5 +397,11 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
         ],
       ),
     );
+  }
+
+  _goBack() {
+    routeWithDrawer = true;
+    routeName = "chaining_targets";
+    Navigator.of(context).pop();
   }
 }

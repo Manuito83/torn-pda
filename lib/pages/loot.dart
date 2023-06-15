@@ -16,6 +16,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/loot/loot_rangers_model.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
@@ -91,6 +92,10 @@ class _LootPageState extends State<LootPage> {
     _getInitialLootInformation = _getLoot();
     _getLootRangers();
     analytics.setCurrentScreen(screenName: 'loot');
+
+    routeWithDrawer = true;
+    routeName = "loot";
+
     _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
   }
 

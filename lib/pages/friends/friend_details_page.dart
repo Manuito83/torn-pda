@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
@@ -33,6 +34,12 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "friend_details";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "friend_details") _goBack();
+    });
   }
 
   @override
@@ -145,7 +152,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.of(context).pop();
+          _goBack();
         },
       ),
     );
@@ -385,5 +392,11 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         ],
       ),
     );
+  }
+
+  _goBack() {
+    routeWithDrawer = true;
+    routeName = "friends";
+    Navigator.of(context).pop();
   }
 }

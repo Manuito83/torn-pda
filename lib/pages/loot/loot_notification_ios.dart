@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -35,70 +36,73 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
+
+    routeWithDrawer = false;
+    routeName = "loot_notification";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "loot_notification") _goBack();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Builder(
-              builder: (BuildContext context) {
-                String message = 'Here you can specify your preferred alerting '
-                    'method and launch time before the loot level is reached';
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
+              String message = 'Here you can specify your preferred alerting '
+                  'method and launch time before the loot level is reached';
 
-                if (widget.lootRangersEnabled) {
-                  message += ' (also applies to Loot Rangers, if available)';
-                }
+              if (widget.lootRangersEnabled) {
+                message += ' (also applies to Loot Rangers, if available)';
+              }
 
-                return Container(
-                  color: _themeProvider.canvas,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                    child: FutureBuilder(
-                      future: _preferencesLoaded,
-                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          return SingleChildScrollView(
-                            child: Column(
-                              children: <Widget>[
-                                Padding(
-                                  padding: const EdgeInsets.all(20.0),
-                                  child: Text(message),
-                                ),
-                                _rowsWithTypes(),
-                                SizedBox(height: 50),
-                              ],
-                            ),
-                          );
-                        } else {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                      },
-                    ),
+              return Container(
+                color: _themeProvider.canvas,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text(message),
+                              ),
+                              _rowsWithTypes(),
+                              SizedBox(height: 50),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -244,8 +248,10 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
     });
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
     widget.callback();
-    return true;
+    routeWithDrawer = true;
+    routeName = "loot";
+    Navigator.of(context).pop();
   }
 }

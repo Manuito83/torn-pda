@@ -109,6 +109,9 @@ class _TacPageState extends State<TacPage> {
     _preferencesLoaded = _restorePreferences();
 
     analytics.setCurrentScreen(screenName: 'tac');
+
+    routeWithDrawer = true;
+    routeName = "chaining_tac";
   }
 
   @override

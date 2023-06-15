@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_sort.dart';
@@ -54,6 +55,9 @@ class _AttacksPageState extends State<AttacksPage> {
       _attacksProvider.initializeAttacks();
       _changeFilterColorAndText();
     });
+
+    routeWithDrawer = true;
+    routeName = "chaining_attacks";
   }
 
   @override

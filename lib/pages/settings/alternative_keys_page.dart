@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -37,47 +38,50 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _yataKeyController.text = _u.alternativeYataKey;
     _tornStatsKeyController.text = _u.alternativeTornStatsKey;
+
+    routeWithDrawer = false;
+    routeName = "alternative_keys";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "alternative_keys") _goBack();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      SizedBox(height: 15),
-                      _yataKey(),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 15),
-                      _tornStatsKey(),
-                      SizedBox(height: 15),
-                      SizedBox(height: 40),
-                    ],
-                  ),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: 15),
+                    _yataKey(),
+                    SizedBox(height: 15),
+                    Divider(),
+                    SizedBox(height: 15),
+                    _tornStatsKey(),
+                    SizedBox(height: 15),
+                    SizedBox(height: 40),
+                  ],
                 ),
               ),
             ),
@@ -237,14 +241,15 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          _goBack();
         },
       ),
     );
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
+    routeWithDrawer = true;
+    routeName = "settings";
     Navigator.of(context).pop();
-    return true;
   }
 }

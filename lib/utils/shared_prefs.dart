@@ -818,7 +818,7 @@ class Prefs {
   /// ----------------------------
   Future<String> getOnAppExit() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kOnAppExit) ?? 'ask';
+    return prefs.getString(_kOnAppExit) ?? 'stay';
   }
 
   Future<bool> setOnAppExit(String value) async {

@@ -23,6 +23,7 @@ import 'package:share/share.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/company/employees_model.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
@@ -324,6 +325,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     analytics.setCurrentScreen(screenName: 'profile');
+
+    routeWithDrawer = true;
+    routeName = "profile`";
   }
 
   /// Restarts the API timer (to be executed after 20 minutes)

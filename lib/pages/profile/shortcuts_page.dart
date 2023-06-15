@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -33,97 +34,100 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "shortcuts";
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+      if (mounted && routeName == "shortcuts") _goBack();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(height: 20),
-                    SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text("ACTIVE SHORTCUTS"),
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline, size: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 10),
-                                    child: Text(
-                                      'SWIPE RIGHT TO REMOVE, LEFT TO EDIT',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: 20),
+                  SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text("ACTIVE SHORTCUTS"),
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline, size: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    'SWIPE RIGHT TO REMOVE, LEFT TO EDIT',
+                                    style: TextStyle(fontSize: 10),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 10),
-                                    child: Text(
-                                      'LONG-PRESS TO SORT',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    'LONG-PRESS TO SORT',
+                                    style: TextStyle(fontSize: 10),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    if (_shortcutsProvider.activeShortcuts.length == 0)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
-                        child: Text(
-                          'No active shortcuts, add some below!',
-                          style: TextStyle(
-                            color: Colors.orange[800],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 13,
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      )
-                    else
-                      _activeCardsList(),
-                    SizedBox(height: 40),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Text("ALL SHORTCUTS"),
+                      ],
                     ),
-                    SizedBox(height: 10),
-                    _customCard(),
-                    _allCardsList(),
-                    SizedBox(height: 40),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 10),
+                  if (_shortcutsProvider.activeShortcuts.length == 0)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                      child: Text(
+                        'No active shortcuts, add some below!',
+                        style: TextStyle(
+                          color: Colors.orange[800],
+                          fontStyle: FontStyle.italic,
+                          fontSize: 13,
+                        ),
+                      ),
+                    )
+                  else
+                    _activeCardsList(),
+                  SizedBox(height: 40),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Text("ALL SHORTCUTS"),
+                  ),
+                  SizedBox(height: 10),
+                  _customCard(),
+                  _allCardsList(),
+                  SizedBox(height: 40),
+                ],
               ),
             ),
           ),
@@ -377,7 +381,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          _goBack();
         },
       ),
       actions: <Widget>[
@@ -912,8 +916,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
     );
   }
 
-  Future<bool> _willPopCallback() async {
+  _goBack() {
+    routeWithDrawer = true;
+    routeName = "settings";
     Navigator.of(context).pop();
-    return true;
   }
 }
