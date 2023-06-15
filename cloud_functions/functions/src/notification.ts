@@ -13,7 +13,7 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
     ) {
 
       let title = `Full Energy Bar`;
-      let body = `Your energy is full, go spend on something!`;
+      let body = `Your energy is full, go spend it on something!`;
       if (subscriber.discrete) {
         title = `E`;
         body = `Full`;
