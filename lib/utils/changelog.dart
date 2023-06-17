@@ -39,7 +39,14 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 325 - 15/06/2023
+    // Build 326 - 18/06/2023
+
+    // VERSION 3.1.3
+    var v3_1_3 = ChangeLogItem();
+    v3_1_3.version = 'Torn PDA v3.1.3';
+    v3_1_3.date = '22 JUN 2023';
+    String feat3_1_3_1 = "Fixed events duplication in Profile";
+    v3_1_3.features.add(feat3_1_3_1);
 
     // VERSION 3.1.2
     var v3_1_2 = ChangeLogItem();

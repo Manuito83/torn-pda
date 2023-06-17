@@ -4810,11 +4810,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         int lastTs = eventsSave[0].timestamp;
 
         // Get new events after that and add them
-        dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs + 1);
+        dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs);
         if (newEventsResponse is List<Event>) {
           if (newEventsResponse.isNotEmpty) {
             for (int i = 0; i < newEventsResponse.length; i++) {
-              eventsSave.insert(i, newEventsResponse[i]);
+              bool repeated = false;
+              for (Event inSave in eventsSave) {
+                if (newEventsResponse[i].event == inSave.event && newEventsResponse[i].timestamp == inSave.timestamp) {
+                  repeated = true;
+                  break;
+                }
+              }
+              // Avoid events repetition (even adding 1 ms to lastTs didn't help)
+              if (!repeated) {
+                eventsSave.insert(i, newEventsResponse[i]);
+              }
             }
 
             List<String> eventsListToSave = [];
