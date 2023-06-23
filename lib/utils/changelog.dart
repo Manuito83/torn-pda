@@ -46,7 +46,9 @@ class _ChangeLogState extends State<ChangeLog> {
     v3_1_4.version = 'Torn PDA v3.1.4';
     v3_1_4.date = '28 JUN 2023';
     String feat3_1_4_1 = "Fixed stock market alerts page for users with no shares";
+    String feat3_1_4_2 = "Fixed profile check widget in named URLs";
     v3_1_4.features.add(feat3_1_4_1);
+    v3_1_4.features.add(feat3_1_4_2);
 
     // VERSION 3.1.3
     var v3_1_3 = ChangeLogItem();

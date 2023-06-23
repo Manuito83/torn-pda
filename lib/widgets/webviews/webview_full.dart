@@ -2160,9 +2160,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     if (_settingsProvider.extraPlayerInformation) {
       const profileUrl = 'torn.com/profiles.php?XID=';
-      if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
-          (_currentUrl.contains(profileUrl) && !_profileTriggered) ||
-          (_currentUrl.contains(profileUrl) && _currentUrl != _lastProfileVisited)) {
+      const profileUrl2 = 'torn.com/profiles.php?NID=';
+      if (((!_currentUrl.contains(profileUrl) && !_currentUrl.contains(profileUrl2)) && _profileTriggered) ||
+          ((_currentUrl.contains(profileUrl) || _currentUrl.contains(profileUrl2)) && !_profileTriggered) ||
+          ((_currentUrl.contains(profileUrl) || _currentUrl.contains(profileUrl2)) &&
+              _currentUrl != _lastProfileVisited)) {
         anySectionTriggered = true;
         getProfile = true;
       }
@@ -2192,8 +2194,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (getCity) _assessCity(doc, pageTitle);
       if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
       if (getVault) _assessVault(doc: doc, pageTitle: pageTitle);
-      if (getProfile) _assessProfileAttack();
-      if (getAttack) _assessProfileAttack();
+      if (getProfile) _assessProfileAttack(document: doc, pageTitle: pageTitle);
+      if (getAttack) _assessProfileAttack(document: doc, pageTitle: pageTitle);
       if (getJail) _assessJail(doc);
       if (getBounties) _assessBounties(doc);
     }
@@ -3262,11 +3264,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ASSESS PROFILES
-  Future _assessProfileAttack() async {
+  Future _assessProfileAttack({dom.Document document, String pageTitle = ""}) async {
     if (mounted) {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
           !_currentUrl.contains('loader2.php?sid=getInAttack&user2ID=') &&
-          !_currentUrl.contains('torn.com/profiles.php?XID=')) {
+          !_currentUrl.contains('torn.com/profiles.php?XID=') &&
+          !_currentUrl.contains('torn.com/profiles.php?NID=')) {
         _profileTriggered = false;
         _profileAttackWidget = const SizedBox.shrink();
         return;
@@ -3274,7 +3277,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
       int userId = 0;
 
-      if (_currentUrl.contains('torn.com/profiles.php?XID=')) {
+      if (_currentUrl.contains('torn.com/profiles.php?XID=') || _currentUrl.contains('torn.com/profiles.php?NID=')) {
         if (_profileTriggered && _currentUrl == _lastProfileVisited) {
           return;
         }
@@ -3282,18 +3285,46 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _lastProfileVisited = _currentUrl;
 
         try {
-          final RegExp regId = RegExp(r"php\?XID=([0-9]+)");
-          final matches = regId.allMatches(_currentUrl);
-          userId = int.parse(matches.elementAt(0).group(1));
-          setState(() {
-            _profileAttackWidget = ProfileAttackCheckWidget(
-              key: UniqueKey(),
-              profileId: userId,
-              apiKey: _userProvider?.basic?.userApiKey ?? "",
-              profileCheckType: ProfileCheckType.profile,
-              themeProvider: _themeProvider,
-            );
-          });
+          if (_currentUrl.contains('torn.com/profiles.php?XID=')) {
+            final RegExp regId = RegExp(r"php\?XID=([0-9]+)");
+            final matches = regId.allMatches(_currentUrl);
+
+            userId = int.parse(matches.elementAt(0).group(1));
+            setState(() {
+              _profileAttackWidget = ProfileAttackCheckWidget(
+                key: UniqueKey(),
+                profileId: userId,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                profileCheckType: ProfileCheckType.profile,
+                themeProvider: _themeProvider,
+              );
+            });
+          } else if (_currentUrl.contains('torn.com/profiles.php?NID=')) {
+            // When the URL is constructed with name instead of ID (e.g.: when the heart icon is pressed),
+            // we capture the ID from the profile element, ensuring that it's besides the correct name
+
+            final RegExp regId = RegExp(r"php\?NID=([^&]+)");
+            final matches = regId.allMatches(_currentUrl);
+            String username = matches.elementAt(0).group(1);
+
+            dom.Element userInfoValue = document.querySelector('div.user-info-value');
+            String textContent = userInfoValue.querySelector('span.bold').text.trim();
+            final RegExp regUsername = RegExp(r'(' + username + r')\s*\[([0-9]+)\]');
+            final match = regUsername.firstMatch(textContent);
+            if (match != null) {
+              setState(() {
+                _profileAttackWidget = ProfileAttackCheckWidget(
+                  key: UniqueKey(),
+                  profileId: int.parse(match.group(2)),
+                  apiKey: _userProvider?.basic?.userApiKey ?? "",
+                  profileCheckType: ProfileCheckType.profile,
+                  themeProvider: _themeProvider,
+                );
+              });
+            }
+          } else {
+            userId = 0;
+          }
         } catch (e) {
           userId = 0;
         }
@@ -3765,7 +3796,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void pauseThisWebview() {
     if (Platform.isAndroid) {
       webView?.pause();
-    } 
+    }
   }
 
   void resumeThisWebview() async {
