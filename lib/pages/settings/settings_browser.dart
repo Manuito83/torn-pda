@@ -1274,6 +1274,37 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: Text("Add close button to tab bar")),
+              Switch(
+                value: _settingsProvider.fullScreenExtraCloseButton,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenExtraCloseButton = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "When in full screen mode, replaces the 'X' close button in the vertical menu by an additional tab for "
+            "a quicker access",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -39,16 +39,20 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 328 - 18/06/2023
+    // Build 329 - 24/06/2023
 
     // VERSION 3.1.4
     var v3_1_4 = ChangeLogItem();
     v3_1_4.version = 'Torn PDA v3.1.4';
     v3_1_4.date = '28 JUN 2023';
-    String feat3_1_4_1 = "Fixed stock market alerts page for users with no shares";
-    String feat3_1_4_2 = "Fixed profile check widget in named URLs";
+    String feat3_1_4_1 = "Browser full screen: added gear icon to '...' vertical menu to access further options";
+    String feat3_1_4_2 = "Browser full screen: added extra tab to exit the browser directly (disabled by default)";
+    String feat3_1_4_3 = "Fixed stock market alerts page for users with no shares";
+    String feat3_1_4_4 = "Fixed profile check widget in named URLs";
     v3_1_4.features.add(feat3_1_4_1);
     v3_1_4.features.add(feat3_1_4_2);
+    v3_1_4.features.add(feat3_1_4_3);
+    v3_1_4.features.add(feat3_1_4_4);
 
     // VERSION 3.1.3
     var v3_1_3 = ChangeLogItem();

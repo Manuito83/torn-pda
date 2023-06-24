@@ -504,7 +504,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
         onTap: () => _webViewProvider.verticalMenuClose(),
         child: Container(
           color: Colors.transparent,
-          height: _webViewProvider.verticalMenuIsOpen ? 300 : 40,
+          height: _webViewProvider.verticalMenuIsOpen ? 350 : 40,
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: [
@@ -689,7 +689,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                   }
                                 },
                               ),
-                              if (_webViewProvider.currentUiMode == UiMode.fullScreen)
+                              if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
+                                  !_settingsProvider.fullScreenExtraCloseButton)
                                 CircularMenuItem(
                                   icon: Icons.close,
                                   color: Colors.orange[900],
@@ -698,26 +699,74 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                     _webViewProvider.closeWebViewFromOutside();
                                   },
                                 ),
-                              CircularMenuItem(
-                                icon: Icons.delete_forever_outlined,
-                                color: Colors.red[800],
-                                onTap: () {
-                                  _webViewProvider.verticalMenuClose();
-                                  return showDialog<void>(
-                                    context: _,
-                                    barrierDismissible: false,
-                                    builder: (BuildContext context) {
-                                      return const TabsWipeDialog();
-                                    },
-                                  );
-                                },
-                              ),
+                              if (_webViewProvider.currentUiMode == UiMode.fullScreen)
+                                CircularMenuItem(
+                                  icon: Icons.settings,
+                                  color: Colors.blue,
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    _webViewProvider.openUrlDialog();
+                                  },
+                                ),
+                              if (_webViewProvider.tabList.length > 1)
+                                CircularMenuItem(
+                                  icon: Icons.delete_forever_outlined,
+                                  color: Colors.red[800],
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    return showDialog<void>(
+                                      context: _,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return const TabsWipeDialog();
+                                      },
+                                    );
+                                  },
+                                ),
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
+                  if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
+                      _settingsProvider.fullScreenExtraCloseButton)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 40,
+                              child: VerticalDivider(
+                                width: 1,
+                                thickness: 1,
+                                color: _themeProvider.mainText,
+                              ),
+                            ),
+                            GestureDetector(
+                              child: Container(
+                                color: _themeProvider.navSelected,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: SizedBox(
+                                    width: 24,
+                                    child: Icon(
+                                      Icons.close,
+                                      color: Colors.orange[900],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              onTap: () async {
+                                _webViewProvider.closeWebViewFromOutside();
+                                _webViewProvider.verticalMenuClose();
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   Showcase(
                     key: _showCaseNewTabButton,
                     title: 'New tab button',

@@ -267,6 +267,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenExtraCloseButton = false;
+  bool get fullScreenExtraCloseButton => _fullScreenExtraCloseButton;
+  set fullScreenExtraCloseButton(bool value) {
+    _fullScreenExtraCloseButton = value;
+    Prefs().setFullScreenExtraCloseButton(_fullScreenExtraCloseButton);
+    notifyListeners();
+  }
+
   var _fullScreenOverNotch = true;
   bool get fullScreenOverNotch => _fullScreenOverNotch;
   set fullScreenOverNotch(bool value) {
@@ -729,6 +737,7 @@ class SettingsProvider extends ChangeNotifier {
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
     _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
+    _fullScreenExtraCloseButton = await Prefs().getFullScreenExtraCloseButton();
     _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
     _fullScreenOverBottom = await Prefs().getFullScreenOverBottom();
     _fullScreenOverSides = await Prefs().getFullScreenOverSides();

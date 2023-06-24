@@ -643,7 +643,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.secondBackground,
       height: 38,
       child: GestureDetector(
-        onLongPress: () => _openUrlDialog(),
+        onLongPress: () => openUrlDialog(),
         onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsFullBrowser
             ? (DragEndDetails details) async {
                 _webViewProvider.toggleHideTabs();
@@ -1939,7 +1939,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
         title: GestureDetector(
           onTap: () {
-            _openUrlDialog();
+            openUrlDialog();
           },
           child: DottedBorder(
             padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
@@ -3473,7 +3473,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _openUrlDialog() async {
+  Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
     final url = await webView.getUrl();
     return showDialog<void>(

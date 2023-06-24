@@ -583,9 +583,9 @@ class WebViewProvider extends ChangeNotifier {
   void pauseAllWebviews() {
     try {
       if (_tabList.isEmpty) return;
-        var currentTab = _tabList[_currentTab];
-        // NOTE: IOS only stops the current active webview
-        currentTab.webViewKey?.currentState?.webView?.pauseTimers();
+      var currentTab = _tabList[_currentTab];
+      // NOTE: IOS only stops the current active webview
+      currentTab.webViewKey?.currentState?.webView?.pauseTimers();
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
@@ -611,11 +611,17 @@ class WebViewProvider extends ChangeNotifier {
           }
           log("Resuming webviews${Platform.isAndroid ? ' (re-paused $pausedAgain)' : ''}!");
         }
-      } 
+      }
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Resuming Webviews");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
+  }
+
+  void openUrlDialog() {
+    if (_tabList.isEmpty) return;
+    var currentTab = _tabList[_currentTab];
+    currentTab.webViewKey?.currentState?.openUrlDialog();
   }
 
   Future clearCacheAndTabs() async {

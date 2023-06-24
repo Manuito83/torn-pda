@@ -186,21 +186,17 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
     } else {
       _animationController.reverse();
     }
-    return Stack(
-      children: <Widget>[
-        AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Stack(
-              children: [
-                widget.backgroundWidget ?? Container(),
-                ..._buildMenuItems(),
-                _buildMenuButton(context),
-              ],
-            );
-          },
-        ),
-      ],
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            widget.backgroundWidget ?? Container(),
+            ..._buildMenuItems(),
+            _buildMenuButton(context),
+          ],
+        );
+      },
     );
   }
 
