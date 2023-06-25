@@ -39,7 +39,7 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 330 - 25/06/2023
+    // Build 331 - 25/06/2023
 
     // VERSION 3.1.4
     var v3_1_4 = ChangeLogItem();
@@ -50,12 +50,14 @@ class _ChangeLogState extends State<ChangeLog> {
         "browser directly (both disabled by default)";
     String feat3_1_4_3 = "Fixed stock market alerts page for users with no shares";
     String feat3_1_4_4 = "Fixed profile check widget in named URLs";
-    String feat3_1_4_5 = "Fixed other reported issues";
+    String feat3_1_4_5 = "Fixed widgets and chats not correctly hiding in full screen browser";
+    String feat3_1_4_6 = "Fixed other reported issues";
     v3_1_4.features.add(feat3_1_4_1);
     v3_1_4.features.add(feat3_1_4_2);
     v3_1_4.features.add(feat3_1_4_3);
     v3_1_4.features.add(feat3_1_4_4);
     v3_1_4.features.add(feat3_1_4_5);
+    v3_1_4.features.add(feat3_1_4_6);
 
     // VERSION 3.1.3
     var v3_1_3 = ChangeLogItem();

@@ -144,6 +144,10 @@ class WebViewProvider extends ChangeNotifier {
         if (currentUiMode == UiMode.window) {
           if (settings.fullScreenByShortTap) {
             setCurrentUiMode(UiMode.fullScreen, context);
+            if (currentUiMode == UiMode.fullScreen &&
+                Provider.of<SettingsProvider>(context, listen: false).fullScreenRemovesChat) {
+              removeAllChatsFullScreen();
+            }
           }
         } else if (currentUiMode == UiMode.fullScreen) {
           if (!settings.fullScreenByShortTap) {
@@ -154,6 +158,10 @@ class WebViewProvider extends ChangeNotifier {
         if (currentUiMode == UiMode.window) {
           if (settings.fullScreenByLongTap) {
             setCurrentUiMode(UiMode.fullScreen, context);
+            if (currentUiMode == UiMode.fullScreen &&
+                Provider.of<SettingsProvider>(context, listen: false).fullScreenRemovesChat) {
+              removeAllChatsFullScreen();
+            }
           }
         } else if (currentUiMode == UiMode.fullScreen) {
           if (!settings.fullScreenByLongTap) {
@@ -1079,6 +1087,11 @@ class WebViewProvider extends ChangeNotifier {
       }
 
       w.browserShowInForeground = true;
+
+      if (currentUiMode == UiMode.fullScreen &&
+          Provider.of<SettingsProvider>(context, listen: false).fullScreenRemovesChat) {
+        removeAllChatsFullScreen();
+      }
     } else {
       if (await canLaunchUrl(Uri.parse(url))) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
