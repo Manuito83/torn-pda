@@ -161,25 +161,9 @@ class _TargetsListState extends State<TargetsList> {
         ],
       ),
       child: TargetCard(
-        key: UniqueKey(),
+        key: ValueKey(widget.targets[index].playerId),
         targetModel: widget.targets[index],
       ),
     );
-  }
-
-  List<Widget> getChildrenTargets(BuildContext _) {
-    var targetsProvider = Provider.of<TargetsProvider>(_, listen: false);
-    String filter = targetsProvider.currentWordFilter;
-    List<Widget> filteredCards = <Widget>[];
-    for (var thisTarget in widget.targets) {
-      if (thisTarget.name.toUpperCase().contains(filter.toUpperCase())) {
-        if (!targetsProvider.currentColorFilterOut.contains(thisTarget.personalNoteColor)) {
-          filteredCards.add(TargetCard(key: UniqueKey(), targetModel: thisTarget));
-        }
-      }
-    }
-    // Avoid collisions with SnackBar
-    filteredCards.add(SizedBox(height: 50));
-    return filteredCards;
   }
 }
