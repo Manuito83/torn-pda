@@ -1279,6 +1279,36 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
+              Flexible(child: Text("Add reload button to tab bar")),
+              Switch(
+                value: _settingsProvider.fullScreenExtraReloadButton,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenExtraReloadButton = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "When in full screen mode, adds an additional tab with a reload button for a quicker access",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
               Flexible(child: Text("Add close button to tab bar")),
               Switch(
                 value: _settingsProvider.fullScreenExtraCloseButton,

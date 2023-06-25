@@ -393,7 +393,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         distanceToTriggerSync: 300,
       ),
       onRefresh: () async {
-        await reload();
+        await _reload();
       },
     );
   }
@@ -401,7 +401,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   @override
   void dispose() {
     try {
-      //webView = null;
+      webView = null;
       _findController.dispose();
       _chainWidgetController.dispose();
       WidgetsBinding.instance.removeObserver(this);
@@ -1538,7 +1538,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onVerticalDragEnd: (_) async {
             // Pull to refresh for short pages (since v3.1.0 we also add an extra height to short pages via scripts)
             if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
-              await reload();
+              await _reload();
               _pullToRefreshController.beginRefreshing();
             }
           },
@@ -1606,7 +1606,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final regex = RegExp(r'"equippedSet":(\d)');
             final match = regex.firstMatch(message);
             final loadout = match.group(1);
-            reload();
+            _reload();
             BotToast.showText(
               text: "Loadout $loadout activated!",
               textStyle: TextStyle(
@@ -2023,7 +2023,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onTap: () async {
                   _scrollX = await webView.getScrollX();
                   _scrollY = await webView.getScrollY();
-                  await reload();
+                  await _reload();
                   _scrollAfterLoad = true;
 
                   BotToast.showText(
@@ -3107,7 +3107,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Do not reload upon first city activation, otherwise we get a reload glitch. Do it only
     // after we have activated/deactivated the city
     if (!init) {
-      await reload();
+      await _reload();
     }
   }
 
@@ -3445,7 +3445,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  Future reload() async {
+  Future _reload() async {
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
 
@@ -3471,6 +3471,24 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       var currentURI = await webView.getUrl();
       _loadUrl(currentURI.toString());
     }
+  }
+
+  Future reloadFromOutside() async {
+    _scrollX = await webView.getScrollX();
+    _scrollY = await webView.getScrollY();
+    await _reload();
+    _scrollAfterLoad = true;
+
+    BotToast.showText(
+      text: "Reloading...",
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.grey[600],
+      duration: const Duration(seconds: 1),
+      contentPadding: const EdgeInsets.all(10),
+    );
   }
 
   Future<void> openUrlDialog() async {

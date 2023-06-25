@@ -730,6 +730,44 @@ class _WebViewStackViewState extends State<WebViewStackView>
                     ),
                   ),
                   if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
+                      _settingsProvider.fullScreenExtraReloadButton)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 40,
+                              child: VerticalDivider(
+                                width: 1,
+                                thickness: 1,
+                                color: _themeProvider.mainText,
+                              ),
+                            ),
+                            GestureDetector(
+                              child: Container(
+                                color: _themeProvider.navSelected,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: SizedBox(
+                                    width: 24,
+                                    child: Icon(
+                                      Icons.refresh,
+                                      color: _themeProvider.mainText,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              onTap: () async {
+                                _webViewProvider.reloadFromOutside();
+                                _webViewProvider.verticalMenuClose();
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
                       _settingsProvider.fullScreenExtraCloseButton)
                     Column(
                       mainAxisAlignment: MainAxisAlignment.end,

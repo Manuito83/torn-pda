@@ -243,6 +243,7 @@ class Prefs {
   final String _kFullScreenRemovesWidgets = "pda_fullScreenRemovesWidgets";
   final String _kFullScreenRemovesChat = "pda_fullScreenRemovesChat";
   final String _kFullScreenExtraCloseButton = "pda_fullScreenExtraCloseButton";
+  final String _kFullScreenExtraReloadButton = "pda_fullScreenExtraReloadButton";
   final String _kFullScreenOverNotch = "pda_fullScreenOverNotch";
   final String _kFullScreenOverBottom = "pda_fullScreenOverBottom";
   final String _kFullScreenOverSides = "pda_fullScreenOverSides";
@@ -2743,6 +2744,16 @@ class Prefs {
   Future<bool> setFullScreenExtraCloseButton(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kFullScreenExtraCloseButton, value);
+  }
+
+  Future<bool> getFullScreenExtraReloadButton() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenExtraReloadButton) ?? false;
+  }
+
+  Future<bool> setFullScreenExtraReloadButton(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenExtraReloadButton, value);
   }
 
   Future<bool> getFullScreenOverNotch() async {
