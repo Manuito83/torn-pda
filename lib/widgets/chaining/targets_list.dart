@@ -73,7 +73,6 @@ class _TargetsListState extends State<TargetsList> {
             backgroundColor: Colors.red,
             icon: Icons.delete,
             onPressed: (context) {
-              _targetsProvider.deleteTarget(widget.targets[index]);
               BotToast.showText(
                 text: 'Deleted ${widget.targets[index].name}!',
                 textStyle: TextStyle(
@@ -84,6 +83,7 @@ class _TargetsListState extends State<TargetsList> {
                 duration: Duration(seconds: 5),
                 contentPadding: EdgeInsets.all(10),
               );
+              _targetsProvider.deleteTarget(widget.targets[index]);
             },
           ),
         ],

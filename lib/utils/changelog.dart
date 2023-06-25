@@ -49,10 +49,12 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat3_1_4_2 = "Browser full screen: added extra tab to exit the browser directly (disabled by default)";
     String feat3_1_4_3 = "Fixed stock market alerts page for users with no shares";
     String feat3_1_4_4 = "Fixed profile check widget in named URLs";
+    String feat3_1_4_5 = "Fixed other reported issues";
     v3_1_4.features.add(feat3_1_4_1);
     v3_1_4.features.add(feat3_1_4_2);
     v3_1_4.features.add(feat3_1_4_3);
     v3_1_4.features.add(feat3_1_4_4);
+    v3_1_4.features.add(feat3_1_4_5);
 
     // VERSION 3.1.3
     var v3_1_3 = ChangeLogItem();

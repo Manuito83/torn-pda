@@ -70,7 +70,6 @@ class _FriendCardState extends State<FriendCard> {
             backgroundColor: Colors.red,
             icon: Icons.delete,
             onPressed: (context) {
-              Provider.of<FriendsProvider>(context, listen: false).deleteFriend(_friend);
               BotToast.showText(
                 text: 'Deleted ${_friend.name}!',
                 textStyle: TextStyle(
@@ -81,6 +80,7 @@ class _FriendCardState extends State<FriendCard> {
                 duration: Duration(seconds: 3),
                 contentPadding: EdgeInsets.all(10),
               );
+              Provider.of<FriendsProvider>(context, listen: false).deleteFriend(_friend);
             },
           ),
         ],
