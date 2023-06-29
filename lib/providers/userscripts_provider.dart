@@ -37,7 +37,7 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  UnmodifiableListView<UserScript> getContinuousSources({
+  UnmodifiableListView<UserScript> getHandlerSources({
     @required String apiKey,
   }) {
     var scriptList = <UserScript>[];

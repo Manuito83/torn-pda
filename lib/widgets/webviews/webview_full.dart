@@ -1034,9 +1034,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         InAppWebView(
           windowId: widget.windowId,
           initialUrlRequest: _initialUrl,
-          initialUserScripts: _userScriptsProvider.getContinuousSources(
-            apiKey: _userProvider?.basic?.userApiKey ?? "",
-          ),
           pullToRefreshController: _pullToRefreshController,
           findInteractionController: _findInteractionController,
           initialSettings: _initialWebViewSettings,
@@ -1047,6 +1044,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             // Userscripts initial load
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+              );
+              await webView.addUserScripts(userScripts: handlersScriptsToAdd);
+
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl.url.toString(),
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
@@ -1127,6 +1129,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           shouldOverrideUrlLoading: (c, request) async {
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
+              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+              );
+              await webView.addUserScripts(userScripts: handlersScriptsToAdd);
+
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: request.request.url.toString(),
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
@@ -1140,7 +1147,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 for (var s in scriptsToAdd) {
                   addList.add(s.groupName);
                 }
-                log("Added scripts in shouldOverride: $addList");
+                log("Added normal scripts in shouldOverride: $addList");
+                log("Added handlers scripts in shouldOverride: $handlersScriptsToAdd");
               }
             }
 
