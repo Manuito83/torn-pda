@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/flutter_icons.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 
