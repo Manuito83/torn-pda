@@ -76,8 +76,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 
 class HealingPages {
-  String description;
-  String url;
+  String? description;
+  String? url;
 
   HealingPages({this.description}) {
     switch (description) {
@@ -92,7 +92,7 @@ class HealingPages {
 }
 
 class VaultsOptions {
-  String description;
+  String? description;
 
   VaultsOptions({this.description}) {
     switch (description) {
@@ -107,17 +107,17 @@ class VaultsOptions {
 }
 
 class WebViewFull extends StatefulWidget {
-  final int windowId;
+  final int? windowId;
   final String customTitle;
-  final String customUrl;
+  final String? customUrl;
   //final bool dialog;
   final bool useTabs;
   final bool chatRemovalActive;
-  final GlobalKey<WebViewFullState> key;
+  final GlobalKey<WebViewFullState>? key;
 
   // Chaining
   final bool isChainingBrowser;
-  final ChainingPayload chainingPayload;
+  final ChainingPayload? chainingPayload;
 
   const WebViewFull({
     this.windowId,
@@ -141,7 +141,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // DEBUG SCRIPT INJECTION (logs)
   bool _debugScriptsInjection = false;
 
-  InAppWebViewController webView;
+  InAppWebViewController? webView;
   var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
@@ -150,8 +150,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   bool _firstLoad = true;
 
-  URLRequest _initialUrl;
-  String _pageTitle = "";
+  URLRequest? _initialUrl;
+  String? _pageTitle = "";
   String _currentUrl = '';
 
   bool _backButtonPopsContext = true;
@@ -169,7 +169,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _tradesExpandable = const SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
-  DateTime _tradesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+  DateTime? _tradesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   DateTime _lastTradeCall = DateTime.now().subtract(const Duration(minutes: 1));
   // Sometimes the first call to trades will not detect that we are in, hence
@@ -183,7 +183,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _vaultDetected = false;
   Widget _vaultExpandable = const SizedBox.shrink();
   DateTime _vaultTriggeredTime = DateTime.now().subtract(const Duration(minutes: 1));
-  DateTime _vaultOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+  DateTime? _vaultOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -202,25 +202,25 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _quickItemsFactionActive = false;
   final _quickItemsController = ExpandableController();
   final _quickItemsFactionController = ExpandableController();
-  DateTime _quickItemsFactionOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+  DateTime? _quickItemsFactionOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   // NNB is called from onPageVisit and onLoadStart, so API fetch and script activation have several checks
-  DateTime _nnbTriggeredTime;
-  DateTime _yataTriggeredTime;
-  DateTime _tsTriggeredTime;
+  DateTime? _nnbTriggeredTime;
+  late DateTime _yataTriggeredTime;
+  late DateTime _tsTriggeredTime;
   final _ocNnbUrl = "factions.php?step=your#/tab=crimes";
   final _ocNnbController = ExpandableController();
   String _ocSource = "";
 
   Widget _jailExpandable = const SizedBox.shrink();
-  DateTime _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
-  JailModel _jailModel;
+  DateTime? _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+  JailModel? _jailModel;
 
   Widget _bountiesExpandable = const SizedBox.shrink();
-  DateTime _bountiesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
-  BountiesModel _bountiesModel;
+  DateTime? _bountiesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+  BountiesModel? _bountiesModel;
 
-  DateTime _urlTriggerTime;
+  DateTime? _urlTriggerTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -241,11 +241,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   List<String> _lastAttackedTargets = <String>[];
   List<String> _lastAttackedMembers = <String>[];
 
-  UserDetailsProvider _userProvider;
+  UserDetailsProvider? _userProvider;
   UserController _u = Get.put(UserController());
-  TerminalProvider _terminalProvider;
+  late TerminalProvider _terminalProvider;
 
-  WebViewProvider _webViewProvider;
+  late WebViewProvider _webViewProvider;
 
   final _popupOptionsChoices = <VaultsOptions>[
     VaultsOptions(description: "Personal vault"),
@@ -254,16 +254,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   ];
 
   bool _scrollAfterLoad = false;
-  int _scrollY = 0;
-  int _scrollX = 0;
+  int? _scrollY = 0;
+  int? _scrollX = 0;
 
   double _progress = 0;
 
-  SettingsProvider _settingsProvider;
-  UserScriptsProvider _userScriptsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserScriptsProvider _userScriptsProvider;
+  ThemeProvider? _themeProvider;
 
-  PullToRefreshController _pullToRefreshController;
+  PullToRefreshController? _pullToRefreshController;
 
   bool _findInPageActive = false;
   final _findController = TextEditingController();
@@ -276,29 +276,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Chaining configuration
   bool _isChainingBrowser = false;
-  ChainingPayload _chainingPayload;
+  ChainingPayload? _chainingPayload;
   final _chainingAidPopupChoices = <HealingPages>[
     HealingPages(description: "Personal"),
     HealingPages(description: "Faction"),
   ];
   final _chainWidgetController = ExpandableController();
   final _chainWidgetKey = GlobalKey();
-  ChainStatusProvider _chainStatusProvider;
-  TargetsProvider _targetsProvider;
-  WarController _w;
+  late ChainStatusProvider _chainStatusProvider;
+  late TargetsProvider _targetsProvider;
+  WarController? _w;
   int _attackNumber = 0;
-  String _factionName = "";
-  int _lastOnline = 0;
+  String? _factionName = "";
+  int? _lastOnline = 0;
   bool _nextButtonPressed = false;
   // Chaining configuration ends
 
   // Native Auth management
-  NativeUserProvider _nativeUser;
-  NativeAuthProvider _nativeAuth;
+  late NativeUserProvider _nativeUser;
+  late NativeAuthProvider _nativeAuth;
 
   // Time triggers for login error
   int _loginErrorRetrySeconds = 0;
-  DateTime _loginErrorToastTimer;
+  DateTime? _loginErrorToastTimer;
 
   // Showcases
   GlobalKey _showCaseTitleBar = GlobalKey();
@@ -323,13 +323,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _nativeUser = context.read<NativeUserProvider>();
     _nativeAuth = context.read<NativeAuthProvider>();
 
-    _initialUrl = URLRequest(url: WebUri(widget.customUrl));
+    _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
 
     _isChainingBrowser = widget.isChainingBrowser;
     if (_isChainingBrowser) {
       _chainingPayload = widget.chainingPayload;
       _w = Get.put(WarController());
-      String title = _chainingPayload.attackNameList[0];
+      String? title = _chainingPayload!.attackNameList[0];
       _pageTitle = title;
       // Decide if voluntarily skipping first target (always when it's a panic target)
       _assessFirstTargetsOnLaunch();
@@ -338,12 +338,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _chainWidgetController.expanded = true;
       }
       _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
-      if (_chainingPayload.war) {
+      if (_chainingPayload!.war) {
         _lastAttackedMembers.clear();
-        _lastAttackedMembers.add(_chainingPayload.attackIdList[0]);
+        _lastAttackedMembers.add(_chainingPayload!.attackIdList[0]);
       } else {
         _lastAttackedTargets.clear();
-        _lastAttackedTargets.add(_chainingPayload.attackIdList[0]);
+        _lastAttackedTargets.add(_chainingPayload!.attackIdList[0]);
       }
     } else {
       _pageTitle = widget.customTitle;
@@ -387,7 +387,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       settings: PullToRefreshSettings(
         color: Colors.orange[800],
         size: PullToRefreshSize.DEFAULT,
-        backgroundColor: _themeProvider.secondBackground,
+        backgroundColor: _themeProvider!.secondBackground,
         enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
         slingshotDistance: 300,
         distanceToTriggerSync: 300,
@@ -466,7 +466,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
 
       if (showCases.isNotEmpty) {
-        ShowCaseWidget.of(_).startShowCase(showCases);
+        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
@@ -475,11 +475,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool dialog = _webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2;
 
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
+      color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : _themeProvider.currentTheme == AppTheme.dark
+          : _themeProvider!.currentTheme == AppTheme.dark
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
@@ -495,7 +495,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             resizeToAvoidBottomInset:
                 // Dialog displaces the webview up by default
                 !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
-            backgroundColor: _themeProvider.canvas,
+            backgroundColor: _themeProvider!.canvas,
             appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
                 // Show appBar only if we are not showing the webView in a dialog style
                 ? null
@@ -526,7 +526,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       ),
             body: Container(
                 // Background color for all browser widgets
-                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+                color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
                 child: Column(
                   children: [
                     Expanded(child: mainWebViewColumn()),
@@ -550,7 +550,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _bottomBarStyleBottomBar() {
     if (_findInPageActive) {
       return Container(
-        color: _themeProvider.secondBackground,
+        color: _themeProvider!.secondBackground,
         child: Row(
           children: [
             IconButton(
@@ -591,7 +591,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 ),
                               ),
                               style: TextStyle(
-                                color: _themeProvider.mainText,
+                                color: _themeProvider!.mainText,
                                 fontSize: 16,
                               ),
                             ),
@@ -640,7 +640,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.secondBackground,
+      color: _themeProvider!.currentTheme == AppTheme.light ? Colors.white : _themeProvider!.secondBackground,
       height: 38,
       child: GestureDetector(
         onLongPress: () => openUrlDialog(),
@@ -714,8 +714,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       'Swipe down/up to hide or show your tab bar!',
                   targetPadding: const EdgeInsets.only(top: 8),
                   disableMovingAnimation: true,
-                  textColor: _themeProvider.mainText,
-                  tooltipBackgroundColor: _themeProvider.secondBackground,
+                  textColor: _themeProvider!.mainText!,
+                  tooltipBackgroundColor: _themeProvider!.secondBackground!,
                   descTextStyle: TextStyle(fontSize: 13),
                   tooltipPadding: EdgeInsets.all(20),
                   child: GestureDetector(
@@ -727,7 +727,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             "CLOSE",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: _themeProvider.mainText,
+                              color: _themeProvider!.mainText,
                               fontWeight: FontWeight.bold,
                               fontSize: 10,
                             ),
@@ -737,12 +737,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             child: Divider(
                               height: 3,
                               thickness: 1,
-                              color: _themeProvider.mainText,
+                              color: _themeProvider!.mainText,
                             ),
                           ),
                           if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-                              _userProvider.basic?.faction?.factionId != 0)
+                              _userProvider!.basic?.faction?.factionId != 0)
                             Text(
                               "ASSIST",
                               textAlign: TextAlign.center,
@@ -756,7 +756,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               "OPTIONS",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: _themeProvider.mainText,
+                                color: _themeProvider!.mainText,
                                 fontSize: 7,
                               ),
                             ),
@@ -806,7 +806,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 ? LinearProgressIndicator(
                     value: _progress,
                     backgroundColor: Colors.blueGrey[100],
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange[300]),
+                    valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
                   )
                 : Container(height: 2),
           )
@@ -998,7 +998,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   if (value.terminalEnabled) {
                     return Container(
                       decoration: BoxDecoration(
-                        border: Border.all(width: 2, color: Colors.green[900]),
+                        border: Border.all(width: 2, color: Colors.green[900]!),
                       ),
                       height: 100,
                       child: SingleChildScrollView(
@@ -1047,14 +1047,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
-              await webView.addUserScripts(userScripts: handlersScriptsToAdd);
+              await webView!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-                url: _initialUrl.url.toString(),
+                url: _initialUrl!.url.toString(),
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
-              await webView.addUserScripts(userScripts: scriptsToAdd);
+              await webView!.addUserScripts(userScripts: scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
                   "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
@@ -1062,7 +1062,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
 
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
-            webView.addJavaScriptHandler(
+            webView!.addJavaScriptHandler(
               handlerName: 'copyToClipboard',
               callback: (args) {
                 String copy = args.toString();
@@ -1075,40 +1075,40 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             );
 
             // Theme change received from web
-            webView.addJavaScriptHandler(
+            webView!.addJavaScriptHandler(
               handlerName: 'webThemeChange',
               callback: (args) {
                 if (!_settingsProvider.syncTheme) return;
                 if (args.contains("dark")) {
                   // Only change to dark themes if we are currently in light (the web will respond with a
                   // theme change event when we initiate the change, and it could revert to the default dark)
-                  if (_themeProvider.currentTheme == AppTheme.light) {
+                  if (_themeProvider!.currentTheme == AppTheme.light) {
                     if (_settingsProvider.darkThemeToSyncFromWeb == "dark") {
-                      _themeProvider.changeTheme = AppTheme.dark;
+                      _themeProvider!.changeTheme = AppTheme.dark;
                       log("Web theme changed to dark!");
                     } else {
-                      _themeProvider.changeTheme = AppTheme.extraDark;
+                      _themeProvider!.changeTheme = AppTheme.extraDark;
                       log("Web theme changed to extra dark!");
                     }
                   }
                 } else if (args.contains("light")) {
-                  _themeProvider.changeTheme = AppTheme.light;
+                  _themeProvider!.changeTheme = AppTheme.light;
                   log("Web theme changed to light!");
                 }
 
                 setState(() {
                   SystemChrome.setSystemUIOverlayStyle(
                     SystemUiOverlayStyle(
-                      statusBarColor: _themeProvider.statusBar,
+                      statusBarColor: _themeProvider!.statusBar,
                       systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape
-                          ? _themeProvider.canvas
-                          : _themeProvider.statusBar,
+                          ? _themeProvider!.canvas
+                          : _themeProvider!.statusBar,
                       systemNavigationBarIconBrightness: MediaQuery.of(context).orientation == Orientation.landscape
-                          ? _themeProvider.currentTheme == AppTheme.light
+                          ? _themeProvider!.currentTheme == AppTheme.light
                               ? Brightness.dark
                               : Brightness.light
                           : Brightness.light,
-                      statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+                      statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
                           ? MediaQuery.of(context).orientation == Orientation.portrait
                               ? Brightness.dark
                               : Brightness.light
@@ -1122,9 +1122,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               },
             );
 
-            _addLoadoutChangeHandler(webView);
+            _addLoadoutChangeHandler(webView!);
 
-            _addScriptApiHandlers(webView);
+            _addScriptApiHandlers(webView!);
           },
           shouldOverrideUrlLoading: (c, request) async {
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
@@ -1132,14 +1132,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
-              await webView.addUserScripts(userScripts: handlersScriptsToAdd);
+              await webView!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: request.request.url.toString(),
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
-              await webView.addUserScripts(userScripts: scriptsToAdd);
+              await webView!.addUserScripts(userScripts: scriptsToAdd);
 
               // DEBUG
               if (_debugScriptsInjection) {
@@ -1192,7 +1192,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             try {
               _currentUrl = uri.toString();
 
-              final html = await webView.getHtml();
+              final html = await webView!.getHtml();
 
               hideChatOnLoad();
 
@@ -1208,7 +1208,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             try {
               if (_settingsProvider.removeAirplane) {
-                webView.evaluateJavascript(source: travelRemovePlaneJS());
+                webView!.evaluateJavascript(source: travelRemovePlaneJS());
               }
 
               hideChatOnLoad();
@@ -1220,7 +1220,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               }
 
               if (progress > 75) {
-                _pullToRefreshController.endRefreshing();
+                _pullToRefreshController!.endRefreshing();
 
                 // onProgressChanged gets called before onLoadStart, so it works
                 // both to add or remove widgets. It is much faster.
@@ -1247,12 +1247,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _currentUrl = uri.toString();
 
               // Userscripts remove those no longer necessary
-              List<String> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
+              List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
                 url: uri.toString(),
               );
               if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
                 for (var group in scriptsToRemove) {
-                  await c.removeUserScriptsByGroupName(groupName: group);
+                  await c.removeUserScriptsByGroupName(groupName: group!);
                 }
               }
 
@@ -1269,7 +1269,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (var script in scriptsToAdd) {
-                await webView.evaluateJavascript(
+                await webView!.evaluateJavascript(
                   source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
                 );
               }
@@ -1292,7 +1292,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _addExtraHeightForPullToRefresh();
               }
 
-              final html = await webView.getHtml();
+              final html = await webView!.getHtml();
               final document = parse(html);
 
               // Force to show title
@@ -1310,13 +1310,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
               if (_scrollAfterLoad) {
-                webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                webView!.scrollTo(x: _scrollX!, y: _scrollY!, animated: false);
                 _scrollAfterLoad = false;
               }
 
               if (_settingsProvider.restoreSessionCookie) {
                 if (_currentUrl.contains("torn.com")) {
-                  Cookie session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
+                  Cookie? session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
                   if (session != null) {
                     Prefs().setWebViewSessionCookie(session.value);
                   }
@@ -1365,16 +1365,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                 // the webView to freeze for a bit
                 if (_tradesOnResourceTriggerTime != null &&
-                    DateTime.now().difference(_tradesOnResourceTriggerTime).inSeconds < 2) return;
+                    DateTime.now().difference(_tradesOnResourceTriggerTime!).inSeconds < 2) return;
                 _tradesOnResourceTriggerTime = DateTime.now();
 
                 _tradesTriggered = true;
-                final html = await webView.getHtml();
+                final html = await webView!.getHtml();
                 final document = parse(html);
-                final pageTitle = (await _getPageTitle(document)).toLowerCase();
+                final pageTitle = (await _getPageTitle(document))!.toLowerCase();
                 if (Platform.isIOS) {
                   // iOS needs this check because the full trade URL won't trigger in onLoadStop
-                  _currentUrl = (await webView.getUrl()).toString();
+                  _currentUrl = (await webView!.getUrl()).toString();
                 }
                 _assessTrades(document, pageTitle);
               }
@@ -1385,13 +1385,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                 // the webView to freeze for a bit
                 if (_vaultOnResourceTriggerTime != null &&
-                    DateTime.now().difference(_vaultOnResourceTriggerTime).inSeconds < 2) return;
+                    DateTime.now().difference(_vaultOnResourceTriggerTime!).inSeconds < 2) return;
                 _vaultOnResourceTriggerTime = DateTime.now();
 
                 if (!_vaultTriggered) {
-                  final html = await webView.getHtml();
+                  final html = await webView!.getHtml();
                   final document = parse(html);
-                  final pageTitle = (await _getPageTitle(document)).toLowerCase();
+                  final pageTitle = (await _getPageTitle(document))!.toLowerCase();
                   _assessVault(doc: document, pageTitle: pageTitle);
                 } else {
                   // If it's triggered, it's because we are inside and we performed an operation
@@ -1408,21 +1408,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               if (resource.url.toString().contains("jailview.php")) {
                 // Trigger once
                 if (_jailOnResourceTriggerTime != null &&
-                    DateTime.now().difference(_jailOnResourceTriggerTime).inMilliseconds < 500) {
+                    DateTime.now().difference(_jailOnResourceTriggerTime!).inMilliseconds < 500) {
                   return;
                 }
                 _jailOnResourceTriggerTime = DateTime.now();
 
                 // iOS needs URL report in jail pages
                 if (Platform.isIOS) {
-                  var uri = (await webView.getUrl());
+                  var uri = (await webView!.getUrl());
                   _reportUrlVisit(uri);
                 }
 
-                final html = await webView.getHtml();
+                final html = await webView!.getHtml();
                 dom.Document document = parse(html);
 
-                List<dom.Element> query;
+                late List<dom.Element> query;
                 for (var i = 0; i < 2; i++) {
                   if (!mounted) break;
                   query = document.querySelectorAll(".users-list > li");
@@ -1431,7 +1431,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   } else {
                     await Future.delayed(const Duration(seconds: 1));
                     if (!mounted) break;
-                    final updatedHtml = await webView.getHtml();
+                    final updatedHtml = await webView!.getHtml();
                     document = parse(updatedHtml);
                   }
                 }
@@ -1444,21 +1444,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               if (resource.url.toString().contains("bounties.php")) {
                 // Trigger once
                 if (_bountiesOnResourceTriggerTime != null &&
-                    DateTime.now().difference(_bountiesOnResourceTriggerTime).inMilliseconds < 500) {
+                    DateTime.now().difference(_bountiesOnResourceTriggerTime!).inMilliseconds < 500) {
                   return;
                 }
                 _bountiesOnResourceTriggerTime = DateTime.now();
 
                 // iOS needs URL report in jail pages
                 if (Platform.isIOS) {
-                  var uri = (await webView.getUrl());
+                  var uri = (await webView!.getUrl());
                   _reportUrlVisit(uri);
                 }
 
-                final html = await webView.getHtml();
+                final html = await webView!.getHtml();
                 dom.Document document = parse(html);
 
-                List<dom.Element> query;
+                late List<dom.Element> query;
                 for (var i = 0; i < 2; i++) {
                   if (!mounted) break;
                   query = document.querySelectorAll(".bounties-list > li");
@@ -1467,7 +1467,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   } else {
                     await Future.delayed(const Duration(seconds: 1));
                     if (!mounted) break;
-                    final updatedHtml = await webView.getHtml();
+                    final updatedHtml = await webView!.getHtml();
                     document = parse(updatedHtml);
                   }
                 }
@@ -1482,7 +1482,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                 // the webView to freeze for a bit
                 if (_quickItemsFactionOnResourceTriggerTime != null &&
-                    DateTime.now().difference(_quickItemsFactionOnResourceTriggerTime).inSeconds < 1) {
+                    DateTime.now().difference(_quickItemsFactionOnResourceTriggerTime!).inSeconds < 1) {
                   return;
                 }
 
@@ -1490,7 +1490,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                 // We are not reporting the URL if we change tabs
                 // (it does not work on desktop either)
-                var uri = (await webView.getUrl());
+                var uri = (await webView!.getUrl());
                 _currentUrl = uri.toString();
 
                 if (_currentUrl.contains('tab=armoury') && !_quickItemsFactionTriggered) {
@@ -1520,14 +1520,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onLongPressHitTestResult: (controller, result) async {
             if (result.extra == null) return;
 
-            bool notCurrentUrl = result.extra.replaceAll("#", "") != _currentUrl;
+            bool notCurrentUrl = result.extra!.replaceAll("#", "") != _currentUrl;
             bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
             bool isImageAnchorType = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
-            bool notProfileLink = !result.extra.contains("https://www.torn.com/profiles.php?XID=");
-            bool notAwardImage = !result.extra.contains("awardimages");
+            bool notProfileLink = !result.extra!.contains("https://www.torn.com/profiles.php?XID=");
+            bool notAwardImage = !result.extra!.contains("awardimages");
 
             if (notCurrentUrl && ((isAnchorType && notProfileLink) || (isImageAnchorType && notAwardImage))) {
-              var focus = await controller.requestFocusNodeHref();
+              var focus = (await controller.requestFocusNodeHref())!;
               if (focus.url != null) {
                 _showLongPressCard(focus.src, focus.url);
               }
@@ -1547,7 +1547,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             // Pull to refresh for short pages (since v3.1.0 we also add an extra height to short pages via scripts)
             if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
               await _reload();
-              _pullToRefreshController.beginRefreshing();
+              _pullToRefreshController!.beginRefreshing();
             }
           },
           onDoubleTap: () {
@@ -1581,7 +1581,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.addJavaScriptHandler(
       handlerName: 'PDA_httpPost',
       callback: (args) async {
-        Object body = args[2];
+        Object? body = args[2];
         if (body is Map<String, dynamic>) {
           body = Map<String, String>.from(body);
         }
@@ -1601,7 +1601,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   _addExtraHeightForPullToRefresh() {
-    webView.evaluateJavascript(source: addHeightForPullToRefresh());
+    webView!.evaluateJavascript(source: addHeightForPullToRefresh());
   }
 
   void _addLoadoutChangeHandler(InAppWebViewController webView) {
@@ -1612,7 +1612,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           String message = args[0];
           if (message.contains("equippedSet")) {
             final regex = RegExp(r'"equippedSet":(\d)');
-            final match = regex.firstMatch(message);
+            final match = regex.firstMatch(message)!;
             final loadout = match.group(1);
             _reload();
             BotToast.showText(
@@ -1621,7 +1621,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.blue[600],
+              contentColor: Colors.blue[600]!,
               duration: Duration(seconds: 1),
               contentPadding: EdgeInsets.all(10),
             );
@@ -1635,7 +1635,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.red[600],
+          contentColor: Colors.red[600]!,
           duration: Duration(seconds: 2),
           contentPadding: EdgeInsets.all(10),
         );
@@ -1653,11 +1653,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     };
   }
 
-  void removeAllUserScripts() async {
-    await webView.removeAllUserScripts();
+  Future removeAllUserScripts() async {
+    await webView!.removeAllUserScripts();
   }
 
-  Future assessErrorCases({dom.Document document}) async {
+  Future assessErrorCases({dom.Document? document}) async {
     if (!_nativeUser.isNativeUserEnabled()) {
       return;
     }
@@ -1669,8 +1669,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // If for some reason we are logged out of Torn, try to login again
-    if (document.body.innerHtml.contains("Email address or password incorrect") ||
-        document.body.innerHtml.contains("multiple failures from your IP address")) {
+    if (document.body!.innerHtml.contains("Email address or password incorrect") ||
+        document.body!.innerHtml.contains("multiple failures from your IP address")) {
       BotToast.showText(
         clickClose: true,
         text: "Authentication error detected!\n\nIf you have inserted your username and password combination in Torn "
@@ -1688,7 +1688,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // If for some reason we are logged out of Torn, try to login again
     if (_nativeAuth.tryAutomaticLogins && document.querySelectorAll("[class*='logInWrap_']").isNotEmpty) {
-      if (_loginErrorToastTimer == null || DateTime.now().difference(_loginErrorToastTimer).inSeconds > 4) {
+      if (_loginErrorToastTimer == null || DateTime.now().difference(_loginErrorToastTimer!).inSeconds > 4) {
         if (_webViewProvider.browserShowInForeground) {
           BotToast.showText(
             text: "Trying to log back into Torn\n\n"
@@ -1710,20 +1710,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _loginErrorRetrySeconds++;
       await Future.delayed(Duration(seconds: _loginErrorRetrySeconds));
 
-      final newDoc = parse(await webView.getHtml());
+      final newDoc = parse(await webView!.getHtml());
       if (newDoc.querySelectorAll("[class*='logInWrap_']").isEmpty ||
-          newDoc.body.innerHtml.contains("failures from your IP address")) return;
+          newDoc.body!.innerHtml.contains("failures from your IP address")) return;
 
       TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
         context: context,
         loginData: GetInitDataModel(
-          playerId: _userProvider.basic.playerId,
+          playerId: _userProvider!.basic!.playerId,
           sToken: _nativeUser.playerSToken,
         ),
       );
 
       if (loginResponse.success) {
-        webView.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+        webView!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
         await Future.delayed(const Duration(seconds: 4));
         _loginErrorRetrySeconds = 0;
       } else {
@@ -1742,7 +1742,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _reportUrlVisit(Uri uri) {
+  void _reportUrlVisit(Uri? uri) {
     // This avoids reporting url such as "https://www.torn.com/imarket.php#/0.5912994041327981", which are generated
     // when returning from a bazaar and go straight to the market, not allowing to return to the item search
     if (uri.toString().contains("imarket.php#/")) {
@@ -1756,7 +1756,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // For certain URLs (e.g. forums in iOS) we might be reporting this twice. Once from onLoadStop and again
     // from onResourceLoad. The check in the provider (for onLoadStop triggering several times) is not enough
     // to prevent adding extra pages to history (when it's the first page loading, it's only omitted once).
-    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime).inSeconds) < 1) {
+    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1) {
       return;
     }
     _urlTriggerTime = DateTime.now();
@@ -1781,10 +1781,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
     final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
     final String hlMap =
-        '[ { name: "${_userProvider.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
+        '[ { name: "${_userProvider!.basic!.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
-      webView.evaluateJavascript(
+      webView!.evaluateJavascript(
         source: chatHighlightJS(highlightMap: hlMap),
       );
     }
@@ -1793,19 +1793,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void hideChatOnLoad() {
     if ((_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) ||
         _webViewProvider.chatRemovalWhileFullScreen) {
-      webView.evaluateJavascript(source: removeChatOnLoadStartJS());
+      webView!.evaluateJavascript(source: removeChatOnLoadStartJS());
     }
   }
 
   void hideChatWhileFullScreen() {
     _localChatRemoveActiveBeforeFullScreen = _localChatRemovalActive;
-    webView.evaluateJavascript(source: removeChatJS());
+    webView!.evaluateJavascript(source: removeChatJS());
   }
 
   void showChatAfterFullScreen() {
     _localChatRemovalActive = _localChatRemoveActiveBeforeFullScreen;
     if (!_localChatRemovalActive) {
-      webView.evaluateJavascript(source: restoreChatJS());
+      webView!.evaluateJavascript(source: restoreChatJS());
     }
   }
 
@@ -1897,7 +1897,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-        _userProvider.basic?.faction?.factionId != 0;
+        _userProvider!.basic?.faction?.factionId != 0;
 
     return CustomAppBar(
       onHorizontalDragEnd: (DragEndDetails details) async {
@@ -1934,9 +1934,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             } else {
               // But we can change and go back to previous page in certain
               // situations (e.g. when going for the vault while trading)
-              final backPossible = await webView.canGoBack();
+              final backPossible = await webView!.canGoBack();
               if (backPossible) {
-                webView.goBack();
+                webView!.goBack();
               } else {
                 if (!mounted) return;
                 Navigator.pop(context);
@@ -1963,8 +1963,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     'Swipe down/up to hide or show your tab bar!',
                 targetPadding: const EdgeInsets.all(10),
                 disableMovingAnimation: true,
-                textColor: _themeProvider.mainText,
-                tooltipBackgroundColor: _themeProvider.secondBackground,
+                textColor: _themeProvider!.mainText!,
+                tooltipBackgroundColor: _themeProvider!.secondBackground!,
                 descTextStyle: TextStyle(fontSize: 13),
                 tooltipPadding: EdgeInsets.all(20),
                 child: Row(
@@ -1980,7 +1980,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                   style: TextStyle(fontSize: 9, color: Colors.orange),
                                 ),
                                 Text(
-                                  _pageTitle,
+                                  _pageTitle!,
                                   overflow: TextOverflow.fade,
                                   style: TextStyle(fontSize: 14),
                                 ),
@@ -1989,7 +1989,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           )
                         : Flexible(
                             child: Text(
-                              _pageTitle,
+                              _pageTitle!,
                               overflow: TextOverflow.fade,
                               style: TextStyle(fontSize: 16),
                             ),
@@ -2029,8 +2029,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 splashColor: Colors.orange,
                 child: const Icon(Icons.refresh),
                 onTap: () async {
-                  _scrollX = await webView.getScrollX();
-                  _scrollY = await webView.getScrollY();
+                  _scrollX = await webView!.getScrollX();
+                  _scrollY = await webView!.getScrollY();
                   await _reload();
                   _scrollAfterLoad = true;
 
@@ -2040,7 +2040,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.grey[600],
+                    contentColor: Colors.grey[600]!,
                     duration: const Duration(seconds: 1),
                     contentPadding: const EdgeInsets.all(10),
                   );
@@ -2052,9 +2052,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _goBackOrForward(DragEndDetails details) async {
-    if (details.primaryVelocity < 0) {
+    if (details.primaryVelocity! < 0) {
       await _tryGoForward();
-    } else if (details.primaryVelocity > 0) {
+    } else if (details.primaryVelocity! > 0) {
       await _tryGoBack();
     }
   }
@@ -2067,9 +2067,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (widget.useTabs) {
       _webViewProvider.tryGoBack();
     } else {
-      bool success = await webView.canGoBack();
+      bool success = await webView!.canGoBack();
       if (success) {
-        await webView.goBack();
+        await webView!.goBack();
       }
     }
   }
@@ -2079,9 +2079,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (widget.useTabs) {
       _webViewProvider.tryGoForward();
     } else {
-      bool success = await webView.canGoForward();
+      bool success = await webView!.canGoForward();
       if (success) {
-        await webView.goForward();
+        await webView!.goForward();
       }
     }
   }
@@ -2192,9 +2192,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (anySectionTriggered) {
       dom.Document doc;
       var pageTitle = "";
-      final html = await webView.getHtml();
+      final html = await webView!.getHtml();
       doc = parse(html);
-      pageTitle = (await _getPageTitle(doc)).toLowerCase();
+      pageTitle = (await _getPageTitle(doc))!.toLowerCase();
 
       if (getItems) _assessQuickItems(pageTitle);
       if (getCrimes) _assessCrimes(pageTitle);
@@ -2301,10 +2301,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // However, if we come from Trades, we'll also change
     // the back button behavior to ensure we are returning to Trades
     else {
-      final history = await webView.getCopyBackForwardList();
+      final history = (await webView!.getCopyBackForwardList())!;
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
-      if (history.currentIndex > 0) {
-        if (history.list[history.currentIndex - 1].url.toString().contains('trade.php')) {
+      if (history.currentIndex! > 0) {
+        if (history.list![history.currentIndex! - 1].url.toString().contains('trade.php')) {
           _backButtonPopsContext = false;
         }
       }
@@ -2315,18 +2315,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// to the URL if it doesn't find anything
   /// [showTitle] show ideally only be set to true in onLoadStop
   /// URLs might show up while loading the page in onProgressChange
-  Future<String> _getPageTitle(
+  Future<String?> _getPageTitle(
     dom.Document document, {
     bool showTitle = false,
   }) async {
-    String title = '';
+    String? title = '';
     final h4 = document.querySelector(".content-title > h4");
     if (h4 != null) {
       title = pdaParser.HtmlParser.fix(h4.innerHtml.substring(0).trim());
     }
 
     if (h4 == null && showTitle) {
-      title = await webView.getTitle();
+      title = (await webView!.getTitle())!;
       if (title.contains(' |')) {
         title = title.split(' |')[0];
       }
@@ -2339,19 +2339,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       title = title.replaceAll('https://', '');
     }
 
-    if (title != null) {
-      if (title.toLowerCase().contains('error') || title.toLowerCase().contains('please validate')) {
-        if (mounted) {
-          setState(() {
-            _pageTitle = 'Torn';
-          });
-        }
-      } else {
-        if (mounted && showTitle) {
-          setState(() {
-            _pageTitle = title;
-          });
-        }
+    if (title.toLowerCase().contains('error') || title.toLowerCase().contains('please validate')) {
+      if (mounted) {
+        setState(() {
+          _pageTitle = 'Torn';
+        });
+      }
+    } else {
+      if (mounted && showTitle) {
+        setState(() {
+          _pageTitle = title;
+        });
       }
     }
     return title;
@@ -2378,7 +2376,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _insertTravelFillMaxButtons() async {
-    await webView.evaluateJavascript(source: buyMaxAbroadJS());
+    await webView!.evaluateJavascript(source: buyMaxAbroadJS());
   }
 
   Future _sendStockInformation(dom.Document document) async {
@@ -2392,18 +2390,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         stockModel.authorId = 2225097;
 
         stockModel.country =
-            document.querySelector(".content-title > h4").innerHtml.substring(0, 4).toLowerCase().trim();
+            document.querySelector(".content-title > h4")!.innerHtml.substring(0, 4).toLowerCase().trim();
 
         for (final el in elements) {
           final stockItem = ForeignStockOutItem();
 
-          stockItem.id = int.tryParse(el.querySelector(".details").attributes["itemid"]);
+          stockItem.id = int.tryParse(el.querySelector(".details")!.attributes["itemid"]!);
           stockItem.quantity =
-              int.tryParse(el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp("[^0-9]"), ""));
-          stockItem.cost = int.tryParse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp("[^0-9]"), ""));
+              int.tryParse(el.querySelector(".stck-amount")!.innerHtml.replaceAll(RegExp("[^0-9]"), ""));
+          stockItem.cost = int.tryParse(el.querySelector(".c-price")!.innerHtml.replaceAll(RegExp("[^0-9]"), ""));
 
           if (stockItem.id != null && stockItem.quantity != null && stockItem.cost != null) {
-            stockModel.items.add(stockItem);
+            stockModel.items!.add(stockItem);
           }
         }
 
@@ -2436,7 +2434,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               splashColor: Colors.blueGrey,
               child: Icon(
                 Icons.home,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
               ),
               onTap: () async {
                 setState(() {
@@ -2448,7 +2446,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.orange[800],
+                  contentColor: Colors.orange[800]!,
                   duration: const Duration(seconds: 3),
                   contentPadding: const EdgeInsets.all(10),
                 );
@@ -2476,7 +2474,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 color: Colors.orange,
               ),
               onTap: () async {
-                await webView.evaluateJavascript(source: travelReturnHomeJS());
+                await webView!.evaluateJavascript(source: travelReturnHomeJS());
                 Future.delayed(const Duration(seconds: 3)).then((value) {
                   if (mounted) {
                     setState(() {
@@ -2535,7 +2533,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas,
+        openColor: _themeProvider!.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
@@ -2544,7 +2542,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.fingerprint,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
               ),
             ),
           );
@@ -2586,9 +2584,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Try to get the page title after the section loads
     if (_currentUrl.contains('trade') && pageTitle.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 1500));
-      final html = await webView.getHtml();
+      final html = await webView!.getHtml();
       document = parse(html);
-      pageTitle = (await _getPageTitle(document)).toLowerCase();
+      pageTitle = (await _getPageTitle(document))!.toLowerCase();
     }
 
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
@@ -2651,7 +2649,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       if (totalFinds.isEmpty) {
         await Future.delayed(const Duration(milliseconds: 1500));
-        final updatedHtml = await webView.getHtml();
+        final updatedHtml = await webView!.getHtml();
         final updatedDoc = parse(updatedHtml);
         document = updatedDoc;
       }
@@ -2664,14 +2662,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       rightItemsElements = document.querySelectorAll("#trade-container .right .color2 .name");
       rightPropertyElements = document.querySelectorAll("#trade-container .right .color3 .name");
       rightSharesElements = document.querySelectorAll("#trade-container .right .color4 .name");
-      sellerName = document.querySelector(".right .title-black").innerHtml ?? "";
+      sellerName = document.querySelector(".right .title-black")?.innerHtml ?? "";
 
       final sellerIdString = document.querySelectorAll("#trade-container .log li .desc a");
       for (final html in sellerIdString) {
         final RegExp regId = RegExp("XID=([0-9]+)");
-        final matches = regId.allMatches(html.attributes["href"]);
-        final id = int.parse(matches.elementAt(0).group(1));
-        if (id != _userProvider.basic.playerId) {
+        final matches = regId.allMatches(html.attributes["href"]!);
+        final id = int.parse(matches.elementAt(0).group(1)!);
+        if (id != _userProvider!.basic!.playerId) {
           sellerId = id;
           break;
         }
@@ -2684,7 +2682,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       final RegExp regId = RegExp("&ID=([0-9]+)");
       final matches = regId.allMatches(_currentUrl);
-      tradeId = int.parse(matches.elementAt(0).group(1));
+      tradeId = int.parse(matches.elementAt(0).group(1)!);
     } catch (e) {
       tradeId = 0;
     }
@@ -2696,7 +2694,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (!mounted) return;
     final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
-      playerId: _userProvider.basic.playerId,
+      playerId: _userProvider!.basic!.playerId,
       sellerName: sellerName,
       sellerId: sellerId,
       tradeId: tradeId,
@@ -2711,7 +2709,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  void _toggleTradesWidget({@required bool active}) {
+  void _toggleTradesWidget({required bool active}) {
     if (active) {
       if (mounted) {
         setState(() {
@@ -2738,7 +2736,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return PopupMenuButton<VaultsOptions>(
         icon: Icon(
           MdiIcons.cashUsdOutline,
-          color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+          color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
         ),
         onSelected: _openVaultsOptions,
         itemBuilder: (BuildContext context) {
@@ -2747,7 +2745,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               value: choice,
               child: Row(
                 children: [
-                  Text(choice.description),
+                  Text(choice.description!),
                 ],
               ),
             );
@@ -2780,7 +2778,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return TradesOptions(
-            playerId: _userProvider.basic.playerId,
+            playerId: _userProvider!.basic!.playerId,
             callback: _tradesPreferencesLoad,
           );
         },
@@ -2791,7 +2789,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas,
+        openColor: _themeProvider!.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
@@ -2800,7 +2798,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.accountSwitchOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
               ),
             ),
           );
@@ -2817,7 +2815,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // Avoid continuous calls to trades from different activators
-  Future _decideIfCallTrades({dom.Document doc, String pageTitle = ""}) async {
+  Future _decideIfCallTrades({dom.Document? doc, String pageTitle = ""}) async {
     final now = DateTime.now();
     final diff = now.difference(_lastTradeCall);
     if (diff.inSeconds > 1 || !_lastTradeCallWasIn) {
@@ -2829,10 +2827,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (doc != null && pageTitle.isNotEmpty) {
           _assessTrades(doc, pageTitle);
         } else {
-          _currentUrl = (await webView.getUrl()).toString();
-          final html = await webView.getHtml();
+          _currentUrl = (await webView!.getUrl()).toString();
+          final html = await webView!.getHtml();
           final d = parse(html);
-          final t = (await _getPageTitle(d)).toLowerCase();
+          final t = (await _getPageTitle(d))!.toLowerCase();
           _assessTrades(d, t);
         }
       }
@@ -2840,7 +2838,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // PROPERTIES
-  Future _assessVault({dom.Document doc, String pageTitle = "", bool fromReassess = false}) async {
+  Future _assessVault({dom.Document? doc, String pageTitle = "", bool fromReassess = false}) async {
     if (!pageTitle.toLowerCase().contains('properties')) {
       setState(() {
         _vaultIconActive = false;
@@ -2878,21 +2876,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Android should get all elements every time, as it takes 100ms to load. iOS loads at the
     // very beginning and might need a few tries. So we give 5 seconds.
-    List<dom.Element> allTransactions;
+    List<dom.Element>? allTransactions;
     for (var i = 0; i < 10; i++) {
       if (!mounted) break;
-      allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
+      allTransactions = doc!.querySelectorAll("ul.vault-trans-list > li:not(.title)");
       if (allTransactions.isNotEmpty) {
         break;
       } else {
         await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) break;
-        final updatedHtml = await webView.getHtml();
+        final updatedHtml = await webView!.getHtml();
         doc = parse(updatedHtml);
       }
     }
 
-    if (allTransactions.isEmpty) {
+    if (allTransactions!.isEmpty) {
       _vaultDetected = false;
       return;
     } else {
@@ -2904,7 +2902,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _vaultExpandable = VaultWidget(
         key: UniqueKey(),
         vaultHtml: allTransactions,
-        playerId: _userProvider.basic.playerId,
+        playerId: _userProvider!.basic!.playerId,
         userProvider: _userProvider,
       );
     });
@@ -2928,7 +2926,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas,
+        openColor: _themeProvider!.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
@@ -2937,7 +2935,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.safeSquareOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
               ),
             ),
           );
@@ -2953,9 +2951,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _vaultEnabled = await Prefs().getVaultEnabled();
     // Reset _vaultTriggered so that we can call _assessVault() again
     _vaultTriggered = false;
-    final html = await webView.getHtml();
+    final html = await webView!.getHtml();
     final document = parse(html);
-    final pageTitle = (await _getPageTitle(document)).toLowerCase();
+    final pageTitle = (await _getPageTitle(document))!.toLowerCase();
     _assessVault(doc: document, pageTitle: pageTitle, fromReassess: true);
   }
 
@@ -2996,7 +2994,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Retry several times and allow the map to load. If the user lands in the city list, this will
     // also trigger and the user will have 30 seconds to load the map (after that, only reloading
     // or browsing out/in of city will force a reload)
-    List<dom.Element> query;
+    late List<dom.Element> query;
     for (var i = 0; i < 30; i++) {
       if (!mounted) break;
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
@@ -3005,7 +3003,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       } else {
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) break;
-        final updatedHtml = await webView.getHtml();
+        final updatedHtml = await webView!.getHtml();
         document = parse(updatedHtml);
       }
     }
@@ -3029,11 +3027,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       final dynamic apiResponse = await Get.find<ApiCallerController>().getItems();
       if (apiResponse is ItemsModel) {
-        apiResponse.items.forEach((key, value) {
+        apiResponse.items!.forEach((key, value) {
           // Assign correct ids
           value.id = key;
         });
-        final tornItems = apiResponse.items.values.toList();
+        final tornItems = apiResponse.items!.values.toList();
         final itemsFound = <Item>[];
         for (final mapItem in mapItemsList) {
           final Item itemMatch = tornItems.firstWhere((element) => element.id == mapItem);
@@ -3058,7 +3056,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             });
           }
         }
-        webView.evaluateJavascript(source: highlightCityItemsJS());
+        webView!.evaluateJavascript(source: highlightCityItemsJS());
       } else {
         if (mounted) {
           setState(() {
@@ -3088,7 +3086,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas,
+        openColor: _themeProvider!.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: EdgeInsets.all(8.0),
@@ -3097,7 +3095,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.cityVariantOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
               ),
             ),
           );
@@ -3133,7 +3131,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future _assessBazaarOthers(dom.Document document) async {
     final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('bazaar.php?userId=')) {
-      await webView.evaluateJavascript(source: addOthersBazaarFillButtonsJS());
+      await webView!.evaluateJavascript(source: addOthersBazaarFillButtonsJS());
     }
   }
 
@@ -3147,8 +3145,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         child: GestureDetector(
           onTap: () async {
             _bazaarFillActive
-                ? await webView.evaluateJavascript(source: removeOwnBazaarFillButtonsJS())
-                : await webView.evaluateJavascript(source: addOwnBazaarFillButtonsJS());
+                ? await webView!.evaluateJavascript(source: removeOwnBazaarFillButtonsJS())
+                : await webView!.evaluateJavascript(source: addOwnBazaarFillButtonsJS());
 
             if (mounted) {
               setState(() {
@@ -3162,7 +3160,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               color: _bazaarFillActive
                   ? Colors.yellow[600]
                   : _webViewProvider.bottomBarStyleEnabled
-                      ? _themeProvider.mainText
+                      ? _themeProvider!.mainText
                       : Colors.white,
               fontSize: 12,
             ),
@@ -3251,7 +3249,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas,
+        openColor: _themeProvider!.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -3260,7 +3258,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Image.asset(
                 'images/icons/quick_items.png',
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
               ),
             ),
           );
@@ -3272,7 +3270,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ASSESS PROFILES
-  Future _assessProfileAttack({dom.Document document, String pageTitle = ""}) async {
+  Future _assessProfileAttack({dom.Document? document, String pageTitle = ""}) async {
     if (mounted) {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
           !_currentUrl.contains('loader2.php?sid=getInAttack&user2ID=') &&
@@ -3297,7 +3295,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final RegExp regId = RegExp(r"php\?XID=([0-9]+)");
             final matches = regId.allMatches(_currentUrl);
 
-            userId = int.parse(matches.elementAt(0).group(1));
+            userId = int.parse(matches.elementAt(0).group(1)!);
             setState(() {
               _profileAttackWidget = ProfileAttackCheckWidget(
                 key: UniqueKey(),
@@ -3313,17 +3311,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             final RegExp regId = RegExp(r"php\?NID=([^&]+)");
             final matches = regId.allMatches(_currentUrl);
-            String username = matches.elementAt(0).group(1);
+            String username = matches.elementAt(0).group(1)!;
 
-            dom.Element userInfoValue = document.querySelector('div.user-info-value');
-            String textContent = userInfoValue.querySelector('span.bold').text.trim();
+            dom.Element userInfoValue = document!.querySelector('div.user-info-value')!;
+            String textContent = userInfoValue.querySelector('span.bold')!.text.trim();
             final RegExp regUsername = RegExp(r'(' + username + r')\s*\[([0-9]+)\]');
             final match = regUsername.firstMatch(textContent);
             if (match != null) {
               setState(() {
                 _profileAttackWidget = ProfileAttackCheckWidget(
                   key: UniqueKey(),
-                  profileId: int.parse(match.group(2)),
+                  profileId: int.parse(match.group(2)!),
                   apiKey: _userProvider?.basic?.userApiKey ?? "",
                   profileCheckType: ProfileCheckType.profile,
                   themeProvider: _themeProvider,
@@ -3347,7 +3345,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         try {
           final RegExp regId = RegExp("&user2ID=([0-9]+)");
           final matches = regId.allMatches(_currentUrl);
-          userId = int.parse(matches.elementAt(0).group(1));
+          userId = int.parse(matches.elementAt(0).group(1)!);
           setState(() {
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
@@ -3380,10 +3378,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         child: GestureDetector(
           child: Icon(
             MdiIcons.chatOutline,
-            color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+            color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
           ),
           onTap: () async {
-            webView.evaluateJavascript(source: removeChatJS());
+            webView!.evaluateJavascript(source: removeChatJS());
             _webViewProvider.reportChatRemovalChange(true, false);
             setState(() {
               _localChatRemovalActive = true;
@@ -3391,7 +3389,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
-            webView.evaluateJavascript(source: removeChatJS());
+            webView!.evaluateJavascript(source: removeChatJS());
             _webViewProvider.reportChatRemovalChange(true, true);
             setState(() {
               _localChatRemovalActive = true;
@@ -3421,7 +3419,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             color: Colors.orange[500],
           ),
           onTap: () async {
-            webView.evaluateJavascript(source: restoreChatJS());
+            webView!.evaluateJavascript(source: restoreChatJS());
             _webViewProvider.reportChatRemovalChange(false, false);
             setState(() {
               _localChatRemovalActive = false;
@@ -3429,7 +3427,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
-            webView.evaluateJavascript(source: restoreChatJS());
+            webView!.evaluateJavascript(source: restoreChatJS());
             _webViewProvider.reportChatRemovalChange(false, true);
             setState(() {
               _localChatRemovalActive = false;
@@ -3443,7 +3441,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.grey[700],
+              contentColor: Colors.grey[700]!,
               duration: const Duration(seconds: 1),
               contentPadding: const EdgeInsets.all(10),
             );
@@ -3459,11 +3457,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     if (Platform.isAndroid) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-        url: await webView.getUrl().toString(),
+        url: await webView!.getUrl().toString(),
         apiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
-      await webView.addUserScripts(userScripts: scriptsToAdd);
+      await webView!.addUserScripts(userScripts: scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
@@ -3474,16 +3472,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         log("Added scripts in Android reload: $addList");
       }
 
-      webView.reload();
+      webView!.reload();
     } else if (Platform.isIOS) {
-      var currentURI = await webView.getUrl();
+      var currentURI = await webView!.getUrl();
       _loadUrl(currentURI.toString());
     }
   }
 
   Future reloadFromOutside() async {
-    _scrollX = await webView.getScrollX();
-    _scrollY = await webView.getScrollY();
+    _scrollX = await webView!.getScrollX();
+    _scrollY = await webView!.getScrollY();
     await _reload();
     _scrollAfterLoad = true;
 
@@ -3493,7 +3491,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.grey[600],
+      contentColor: Colors.grey[600]!,
       duration: const Duration(seconds: 1),
       contentPadding: const EdgeInsets.all(10),
     );
@@ -3501,7 +3499,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
-    final url = await webView.getUrl();
+    final url = await webView!.getUrl();
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -3533,7 +3531,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _findNext({@required bool forward}) {
+  void _findNext({required bool forward}) {
     _findInteractionController.findNext(forward: forward);
     if (_findFocus.hasFocus) _findFocus.unfocus();
   }
@@ -3556,9 +3554,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       final stats = await Get.find<ApiCallerController>().getBars();
       if (stats is BarsModel) {
         var message = "";
-        if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
+        if (stats.chain!.current! > 10 && stats.chain!.cooldown == 0) {
           message = 'Caution: your faction is chaining!';
-        } else if (stats.energy.current >= _settingsProvider.warnAboutExcessEnergyThreshold) {
+        } else if (stats.energy!.current! >= _settingsProvider.warnAboutExcessEnergyThreshold) {
           message = 'Caution: high energy detected, you might be stacking!';
         }
 
@@ -3594,7 +3592,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _jailExpandable = JailWidget(
           webview: webView,
           fireScriptCallback: _fireJailScriptCallback,
-          playerName: _userProvider.basic.name.toUpperCase(),
+          playerName: _userProvider!.basic!.name!.toUpperCase(),
         );
       });
     }
@@ -3605,22 +3603,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _fireJailScriptCallback(JailModel jailModel) {
+  void _fireJailScriptCallback(JailModel? jailModel) {
     if (jailModel == null) return;
 
     _jailModel = jailModel;
-    webView.evaluateJavascript(
+    webView!.evaluateJavascript(
       source: jailJS(
-        levelMin: _jailModel.levelMin,
-        levelMax: _jailModel.levelMax,
-        timeMin: _jailModel.timeMin,
-        timeMax: _jailModel.timeMax,
-        scoreMin: _jailModel.scoreMin,
-        scoreMax: _jailModel.scoreMax,
-        bailTicked: _jailModel.bailTicked,
-        bustTicked: _jailModel.bustTicked,
-        excludeSelf: _jailModel.excludeSelf,
-        excludeName: _jailModel.excludeName,
+        levelMin: _jailModel!.levelMin,
+        levelMax: _jailModel!.levelMax,
+        timeMin: _jailModel!.timeMin,
+        timeMax: _jailModel!.timeMax,
+        scoreMin: _jailModel!.scoreMin,
+        scoreMax: _jailModel!.scoreMax,
+        bailTicked: _jailModel!.bailTicked,
+        bustTicked: _jailModel!.bustTicked,
+        excludeSelf: _jailModel!.excludeSelf,
+        excludeName: _jailModel!.excludeName,
       ),
     );
   }
@@ -3644,14 +3642,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _fireBountiesScriptCallback(BountiesModel bountiesModel) {
+  void _fireBountiesScriptCallback(BountiesModel? bountiesModel) {
     if (bountiesModel == null) return;
 
     _bountiesModel = bountiesModel;
-    webView.evaluateJavascript(
+    webView!.evaluateJavascript(
       source: bountiesJS(
-        levelMax: _bountiesModel.levelMax,
-        removeNotAvailable: _bountiesModel.removeRed,
+        levelMax: _bountiesModel!.levelMax,
+        removeNotAvailable: _bountiesModel!.removeRed,
       ),
     );
   }
@@ -3673,7 +3671,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // API are protected by timing, and NNB script is protected by saved variable
     // But we also double check here to avoid several activations (prob. not necessary)
-    if (_nnbTriggeredTime != null && DateTime.now().difference(_nnbTriggeredTime).inSeconds < 2) return;
+    if (_nnbTriggeredTime != null && DateTime.now().difference(_nnbTriggeredTime!).inSeconds < 2) return;
     _nnbTriggeredTime = DateTime.now();
 
     log(DateTime.now().toString());
@@ -3704,7 +3702,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           Prefs().setNaturalNerveYataTime(DateTime.now().millisecondsSinceEpoch);
         }
 
-        yataMembers.members.forEach((key, value) {
+        yataMembers.members!.forEach((key, value) {
           if (value.nnbShare == 1) {
             membersString += '"${value.id}":"${value.nnb}",';
           } else {
@@ -3728,7 +3726,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           final tsOCjson = await http.get(WebUri(tsUrl)).timeout(Duration(seconds: 15));
           tsMembers = tornStatsMembersModelFromJson(tsOCjson.body);
 
-          if (!tsMembers.status) {
+          if (!tsMembers.status!) {
             BotToast.showText(
               text: "Could not load NNB from TornStats: ${tsMembers.message}",
               clickClose: true,
@@ -3736,7 +3734,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.red[900],
+              contentColor: Colors.red[900]!,
               duration: Duration(seconds: 5),
               contentPadding: EdgeInsets.all(10),
             );
@@ -3747,7 +3745,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           Prefs().setNaturalNerveTornStatsTime(DateTime.now().millisecondsSinceEpoch);
         }
 
-        tsMembers.members.forEach((key, value) {
+        tsMembers.members!.forEach((key, value) {
           // No need to account for unknown in TS, as the member won't be in the JSON (the script assigns 'unk')
           membersString += '"${key}":"${value.naturalNerve}",';
         });
@@ -3758,7 +3756,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // On iOS, when using the new menu icon for OC, the html doc does not respond for some reason
       // We just wait a second and then add the script (should not be noticeable)
       await Future.delayed(Duration(milliseconds: 1000));
-      webView.evaluateJavascript(source: ocNNB(members: membersString));
+      webView!.evaluateJavascript(source: ocNNB(members: membersString));
     } catch (e) {
       BotToast.showText(
         text: "Could not load NNB from $_ocSource: ${e}",
@@ -3767,7 +3765,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.red[900],
+        contentColor: Colors.red[900]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
@@ -3775,20 +3773,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // Called from parent though GlobalKey state
-  void loadFromExterior({@required String url, @required bool omitHistory}) {
+  void loadFromExterior({required String? url, required bool omitHistory}) {
     _omitTabHistory = omitHistory;
     _loadUrl(url);
   }
 
   // Called from parent though GlobalKey state
-  void convertToChainingBrowser({ChainingPayload chainingPayload}) {
+  void convertToChainingBrowser({required ChainingPayload chainingPayload}) {
     _isChainingBrowser = true;
     _attackNumber = 0;
     _chainingPayload = chainingPayload;
     if (_w == null) {
       _w = Get.put(WarController());
     }
-    String title = chainingPayload.attackNameList[0];
+    String? title = chainingPayload.attackNameList[0];
     _pageTitle = title;
     _chainStatusProvider = context.read<ChainStatusProvider>();
     if (_chainStatusProvider.watcherActive) {
@@ -3806,7 +3804,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Called from parent though GlobalKey state
   void cancelChainingBrowser() async {
-    final html = await webView.getHtml();
+    final html = await webView!.getHtml();
     dom.Document document = parse(html);
     _pageTitle = await _getPageTitle(document);
     // Reports page title so that tab names are updated immediately
@@ -3834,7 +3832,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
     try {
-      Uri resumedUrl = await webView?.getUrl();
+      Uri? resumedUrl = await webView?.getUrl();
       if (resumedUrl == null) {
         log("Reviving webView!");
         _webViewProvider.reviveUrl();
@@ -3844,7 +3842,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _loadUrl(String inputUrl) async {
+  Future _loadUrl(String? inputUrl) async {
     // If the input URL is invalid, we will see if there was one saved as _currentUrl
     // http and https are valid because we'll change them later
     if (inputUrl == null || inputUrl.isEmpty) {
@@ -3865,7 +3863,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         apiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
-      await webView.addUserScripts(userScripts: scriptsToAdd);
+      await webView!.addUserScripts(userScripts: scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
@@ -3878,27 +3876,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     var uri = WebUri(inputUrl);
-    webView.loadUrl(urlRequest: URLRequest(url: uri));
+    webView!.loadUrl(urlRequest: URLRequest(url: uri));
   }
 
   String reportCurrentUrl() {
     return _currentUrl;
   }
 
-  String reportCurrentTitle() {
+  String? reportCurrentTitle() {
     return _pageTitle;
   }
 
   void _revertTransparentBackground() async {
     if (_firstLoad) {
-      InAppWebViewSettings newSettings = await webView.getSettings();
+      InAppWebViewSettings newSettings = (await webView!.getSettings())!;
       newSettings.transparentBackground = false;
-      webView.setSettings(settings: newSettings);
+      webView!.setSettings(settings: newSettings);
       _firstLoad = false;
     }
   }
 
-  void _showLongPressCard(String src, Uri url) {
+  void _showLongPressCard(String? src, Uri? url) {
     BotToast.showCustomText(
       onlyOne: false,
       clickClose: true,
@@ -3929,7 +3927,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ),
                         onTap: () {
-                          var open = url.toString() ?? src;
+                          var open = url?.toString() ?? src;
                           Clipboard.setData(ClipboardData(text: open));
                           BotToast.showText(
                             text: "Link copied to the clipboard: ${open}",
@@ -3937,7 +3935,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor: Colors.grey[700],
+                            contentColor: Colors.grey[700]!,
                             duration: Duration(seconds: 2),
                             contentPadding: EdgeInsets.all(10),
                           );
@@ -4006,7 +4004,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ),
                         onTap: () async {
-                          String open = url.toString() ?? src;
+                          String? open = url?.toString() ?? src;
 
                           bool error = false;
                           if (open == null) error = true;
@@ -4017,7 +4015,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           }
 
                           if (!error) {
-                            String u = open.replaceAll("http:", "https:");
+                            String u = open!.replaceAll("http:", "https:");
                             return showDialog<void>(
                               context: context,
                               barrierDismissible: false,
@@ -4036,7 +4034,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
-                              contentColor: Colors.orange[800],
+                              contentColor: Colors.orange[800]!,
                               duration: Duration(seconds: 2),
                               contentPadding: EdgeInsets.all(10),
                             );
@@ -4057,9 +4055,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ),
                         onTap: () async {
-                          var open = url.toString() ?? src;
-                          if (await canLaunchUrl(Uri.parse(open))) {
-                            await launchUrl(Uri.parse(open), mode: LaunchMode.externalApplication);
+                          String? open = url?.toString() ?? src;
+                          if (open != null) {
+                            if (await canLaunchUrl(Uri.parse(open))) {
+                              await launchUrl(Uri.parse(open), mode: LaunchMode.externalApplication);
+                            }
                           }
                         },
                       ),
@@ -4101,7 +4101,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     myButtons.add(_medicalActionButton());
 
-    if (_attackNumber < _chainingPayload.attackIdList.length - 1) {
+    if (_attackNumber < _chainingPayload!.attackIdList.length - 1) {
       myButtons.add(_nextAttackActionButton());
     } else {
       myButtons.add(_endAttackButton());
@@ -4119,8 +4119,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           'to revert to a standard browser tab!',
       targetPadding: const EdgeInsets.all(10),
       disableMovingAnimation: true,
-      textColor: _themeProvider.mainText,
-      tooltipBackgroundColor: _themeProvider.secondBackground,
+      textColor: _themeProvider!.mainText!,
+      tooltipBackgroundColor: _themeProvider!.secondBackground!,
       descTextStyle: TextStyle(fontSize: 13),
       tooltipPadding: EdgeInsets.all(20),
       child: GestureDetector(
@@ -4153,7 +4153,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           return _chainingAidPopupChoices.map((HealingPages choice) {
             return PopupMenuItem<HealingPages>(
               value: choice,
-              child: Text(choice.description),
+              child: Text(choice.description!),
             );
           }).toList();
         },
@@ -4162,7 +4162,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _openHealingPage(HealingPages choice) async {
-    String goBackTitle = _pageTitle;
+    String? goBackTitle = _pageTitle;
     // Check if the proper page loads (e.g. if we have started an attack, it won't let us change to another page!).
     // Note: this is something that can't be done from one target to another,
     // but only between different sections (not sure why).
@@ -4177,7 +4177,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _assessFirstTargetsOnLaunch() async {
-    if (_chainingPayload.panic || (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
+    if (_chainingPayload!.panic || (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -4187,22 +4187,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[i]);
+        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload!.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
-          if (nextTarget.status.color == "red") {
+          if (nextTarget.status!.color == "red") {
             targetsSkipped++;
             skippedNames.add(nextTarget.name);
             _attackNumber++;
           }
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
-          else if (nextTarget.status.color == "blue") {
+          else if (nextTarget.status!.color == "blue") {
             var user =
-                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider.basic.playerId.toString());
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider!.basic!.playerId.toString());
             if (user is TargetModel) {
-              if (user.status.description != nextTarget.status.description) {
+              if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
                 skippedNames.add(nextTarget.name);
                 _attackNumber++;
@@ -4212,15 +4212,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (_chainingPayload.showOnlineFactionWarning) {
-              _factionName = nextTarget.faction.factionName;
-              _lastOnline = nextTarget.lastAction.timestamp;
+            if (_chainingPayload!.showOnlineFactionWarning) {
+              _factionName = nextTarget.faction!.factionName;
+              _lastOnline = nextTarget.lastAction!.timestamp;
             }
             break;
           }
           // If after looping we are over the target limit, it means we have reached the end
           // in which case we reset the position to the last target we attacked, and break
-          if (_attackNumber >= _chainingPayload.attackIdList.length) {
+          if (_attackNumber >= _chainingPayload!.attackIdList.length) {
             _attackNumber = originalPosition;
             reachedEnd = true;
             break;
@@ -4242,26 +4242,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.grey[600],
+          contentColor: Colors.grey[600]!,
           duration: Duration(seconds: 5),
           contentPadding: EdgeInsets.all(10),
         );
 
         var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
         if (!mounted) return;
-        await _loadUrl('$nextBaseUrl${_chainingPayload.attackIdList[_attackNumber]}');
-        if (_chainingPayload.war) {
-          _lastAttackedMembers.add(_chainingPayload.attackIdList[_attackNumber]);
+        await _loadUrl('$nextBaseUrl${_chainingPayload!.attackIdList[_attackNumber]}');
+        if (_chainingPayload!.war) {
+          _lastAttackedMembers.add(_chainingPayload!.attackIdList[_attackNumber]);
         } else {
-          _lastAttackedTargets.add(_chainingPayload.attackIdList[_attackNumber]);
+          _lastAttackedTargets.add(_chainingPayload!.attackIdList[_attackNumber]);
         }
 
         setState(() {
-          _pageTitle = '${_chainingPayload.attackNameList[_attackNumber]}';
+          _pageTitle = '${_chainingPayload!.attackNameList[_attackNumber]}';
         });
 
         // Show note for next target
-        if (_chainingPayload.showNotes) {
+        if (_chainingPayload!.showNotes) {
           _showNoteToast();
         }
 
@@ -4276,7 +4276,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.grey[600],
+          contentColor: Colors.grey[600]!,
           duration: Duration(seconds: 5),
           contentPadding: EdgeInsets.all(10),
         );
@@ -4286,12 +4286,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // This will show the note of the first target, if applicable
-    if (_chainingPayload.showNotes) {
-      if (_chainingPayload.showOnlineFactionWarning) {
-        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[0]);
+    if (_chainingPayload!.showNotes) {
+      if (_chainingPayload!.showOnlineFactionWarning) {
+        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload!.attackIdList[0]);
         if (nextTarget is TargetModel) {
-          _factionName = nextTarget.faction.factionName;
-          _lastOnline = nextTarget.lastAction.timestamp;
+          _factionName = nextTarget.faction!.factionName;
+          _lastOnline = nextTarget.lastAction!.timestamp;
         }
       }
       _showNoteToast();
@@ -4306,7 +4306,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _nextButtonPressed = true;
     });
 
-    if (_chainingPayload.panic || _settingsProvider.targetSkippingAll) {
+    if (_chainingPayload!.panic || _settingsProvider.targetSkippingAll) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -4316,23 +4316,23 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget =
-            await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[_attackNumber + 1]);
+        var nextTarget = await Get.find<ApiCallerController>()
+            .getTarget(playerId: _chainingPayload!.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
-          if (nextTarget.status.color == "red") {
+          if (nextTarget.status!.color == "red") {
             targetsSkipped++;
             skippedNames.add(nextTarget.name);
             _attackNumber++;
           }
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
-          else if (nextTarget.status.color == "blue") {
+          else if (nextTarget.status!.color == "blue") {
             var user =
-                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider.basic.playerId.toString());
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider!.basic!.playerId.toString());
             if (user is TargetModel) {
-              if (user.status.description != nextTarget.status.description) {
+              if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
                 skippedNames.add(nextTarget.name);
                 _attackNumber++;
@@ -4342,15 +4342,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (_chainingPayload.showOnlineFactionWarning) {
-              _factionName = nextTarget.faction.factionName;
-              _lastOnline = nextTarget.lastAction.timestamp;
+            if (_chainingPayload!.showOnlineFactionWarning) {
+              _factionName = nextTarget.faction!.factionName;
+              _lastOnline = nextTarget.lastAction!.timestamp;
             }
             break;
           }
           // If after looping we are over the target limit, it means we have reached the end
           // in which case we reset the position to the last target we attacked, and break
-          if (_attackNumber >= _chainingPayload.attackIdList.length - 1) {
+          if (_attackNumber >= _chainingPayload!.attackIdList.length - 1) {
             _attackNumber = originalPosition;
             reachedEnd = true;
             break;
@@ -4372,7 +4372,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.grey[600],
+          contentColor: Colors.grey[600]!,
           duration: Duration(seconds: 5),
           contentPadding: EdgeInsets.all(10),
         );
@@ -4386,7 +4386,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.grey[600],
+          contentColor: Colors.grey[600]!,
           duration: Duration(seconds: 5),
           contentPadding: EdgeInsets.all(10),
         );
@@ -4400,13 +4400,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // If skipping is disabled but notes are not, we still get information
     // from the API
     else {
-      if (_chainingPayload.showOnlineFactionWarning) {
-        var nextTarget =
-            await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload.attackIdList[_attackNumber + 1]);
+      if (_chainingPayload!.showOnlineFactionWarning) {
+        var nextTarget = await Get.find<ApiCallerController>()
+            .getTarget(playerId: _chainingPayload!.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
-          _factionName = nextTarget.faction.factionName;
-          _lastOnline = nextTarget.lastAction.timestamp;
+          _factionName = nextTarget.faction!.factionName;
+          _lastOnline = nextTarget.lastAction!.timestamp;
         } else {
           _factionName = "";
           _lastOnline = 0;
@@ -4416,14 +4416,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _attackNumber++;
     if (!mounted) return;
-    await _loadUrl('$nextBaseUrl${_chainingPayload.attackIdList[_attackNumber]}');
-    if (_chainingPayload.war) {
-      _lastAttackedMembers.add(_chainingPayload.attackIdList[_attackNumber]);
+    await _loadUrl('$nextBaseUrl${_chainingPayload!.attackIdList[_attackNumber]}');
+    if (_chainingPayload!.war) {
+      _lastAttackedMembers.add(_chainingPayload!.attackIdList[_attackNumber]);
     } else {
-      _lastAttackedTargets.add(_chainingPayload.attackIdList[_attackNumber]);
+      _lastAttackedTargets.add(_chainingPayload!.attackIdList[_attackNumber]);
     }
     setState(() {
-      _pageTitle = '${_chainingPayload.attackNameList[_attackNumber]}';
+      _pageTitle = '${_chainingPayload!.attackNameList[_attackNumber]}';
     });
     _backButtonPopsContext = true;
 
@@ -4433,7 +4433,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     });
 
     // Show note for next target
-    if (_chainingPayload.showNotes) {
+    if (_chainingPayload!.showNotes) {
       _showNoteToast();
     }
   }
@@ -4441,8 +4441,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// Use [onlyOne] when we want to get rid of several notes (e.g. to skip the very first target(s)
   /// without showing the notes for the ones skipped)
   void _showNoteToast() {
-    Color cardColor;
-    switch (_chainingPayload.attackNotesColorList[_attackNumber]) {
+    Color? cardColor;
+    switch (_chainingPayload!.attackNotesColorList[_attackNumber]) {
       case 'z':
         cardColor = Colors.grey[700];
         break;
@@ -4460,11 +4460,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     String extraInfo = "";
-    if (_lastOnline > 0 && !_chainingPayload.war) {
+    if (_lastOnline! > 0 && !_chainingPayload!.war) {
       var now = DateTime.now();
-      var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
+      var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline! * 1000));
       if (lastOnlineDiff.inDays < 7) {
-        if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty) {
+        if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty) {
           extraInfo += "\n\n";
         }
         if (lastOnlineDiff.inHours < 1) {
@@ -4485,8 +4485,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // Do nothing if note is empty
-    if (_chainingPayload.attackNotesList[_attackNumber].isEmpty &&
-        !_chainingPayload.showBlankNotes &&
+    if (_chainingPayload!.attackNotesList[_attackNumber]!.isEmpty &&
+        !_chainingPayload!.showBlankNotes &&
         extraInfo.isEmpty) {
       return;
     }
@@ -4508,7 +4508,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty)
+                  if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -4519,19 +4519,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ),
                         SizedBox(width: 5),
                         Text(
-                          'Note for ${_chainingPayload.attackNameList[_attackNumber]}',
+                          'Note for ${_chainingPayload!.attackNameList[_attackNumber]}',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
-                  if (_chainingPayload.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
+                  if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty) SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          '${_chainingPayload.attackNotesList[_attackNumber]}$extraInfo',
+                          '${_chainingPayload!.attackNotesList[_attackNumber]}$extraInfo',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white),
                         ),
@@ -4548,12 +4548,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   clearCacheAndReload() async {
-    await webView.clearCache();
-    webView.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
+    await webView!.clearCache();
+    webView!.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
   }
 
-  _requestTornThemeChange({@required bool dark}) {
-    webView.evaluateJavascript(
+  _requestTornThemeChange({required bool dark}) {
+    webView!.evaluateJavascript(
       source: '''
         var event = new CustomEvent("onChangeTornMode", {
           detail: { checked: $dark }
@@ -4563,11 +4563,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  updatePullToRefresh(BrowserRefreshSetting value) async {
+  updatePullToRefresh(BrowserRefreshSetting? value) async {
     if (value == BrowserRefreshSetting.pull || value == BrowserRefreshSetting.both) {
-      _pullToRefreshController.setEnabled(true);
+      _pullToRefreshController!.setEnabled(true);
     } else {
-      _pullToRefreshController.setEnabled(false);
+      _pullToRefreshController!.setEnabled(false);
     }
   }
 
@@ -4588,11 +4588,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void _checkIfTargetsAttackedAndRevertChaining() {
     String message = "";
     if (_isChainingBrowser) {
-      if (_chainingPayload.war && _lastAttackedMembers.length > 0) {
+      if (_chainingPayload!.war && _lastAttackedMembers.length > 0) {
         message = '${_lastAttackedMembers.length} attacked targets will auto update in a few seconds!';
-        _w.updateSomeMembersAfterAttack(lastAttackedMembers: _lastAttackedMembers);
+        _w!.updateSomeMembersAfterAttack(lastAttackedMembers: _lastAttackedMembers);
         _lastAttackedMembers.clear();
-      } else if (!_chainingPayload.war && _lastAttackedTargets.length > 0) {
+      } else if (!_chainingPayload!.war && _lastAttackedTargets.length > 0) {
         message = '${_lastAttackedTargets.length} attacked targets will auto update in a few seconds!';
         _targetsProvider.updateTargetsAfterAttacks(lastAttackedTargets: _lastAttackedTargets);
         _lastAttackedTargets.clear();
@@ -4606,7 +4606,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[800],
+        contentColor: Colors.grey[800]!,
         duration: Duration(seconds: 4),
         contentPadding: EdgeInsets.all(10),
       );

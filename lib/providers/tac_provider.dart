@@ -15,7 +15,7 @@ class UpdateTargetsResult {
   int numberSuccessful;
 
   UpdateTargetsResult(
-      {@required this.success, @required this.numberErrors, @required this.numberSuccessful});
+      {required this.success, required this.numberErrors, required this.numberSuccessful});
 }
 
 class TacProvider extends ChangeNotifier {
@@ -23,14 +23,14 @@ class TacProvider extends ChangeNotifier {
 
   getSingleStatus(int index, TargetModel model) async {
     var tac = targetsList.elementAt(index);
-    tac.currentLife = model.life.current;
-    tac.maxLife = model.life.maximum;
-    if (model.status.state == "Hospital") {
+    tac.currentLife = model.life!.current;
+    tac.maxLife = model.life!.maximum;
+    if (model.status!.state == "Hospital") {
       tac.hospital = true;
     } else {
       tac.hospital = false;
     }
-    if (model.status.state == "Abroad") {
+    if (model.status!.state == "Abroad") {
       tac.abroad = true;
     } else {
       tac.abroad = false;

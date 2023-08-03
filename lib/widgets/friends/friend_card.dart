@@ -25,21 +25,21 @@ import '../notes_dialog.dart';
 class FriendCard extends StatefulWidget {
   final FriendModel friendModel;
 
-  FriendCard({@required this.friendModel});
+  FriendCard({required this.friendModel});
 
   @override
   _FriendCardState createState() => _FriendCardState();
 }
 
 class _FriendCardState extends State<FriendCard> {
-  FriendModel _friend;
-  FriendsProvider _friendsProvider;
-  ThemeProvider _themeProvider;
-  UserDetailsProvider _userProvider;
+  FriendModel? _friend;
+  late FriendsProvider _friendsProvider;
+  late ThemeProvider _themeProvider;
+  late UserDetailsProvider _userProvider;
 
-  Timer _ticker;
+  Timer? _ticker;
 
-  String _lastUpdated;
+  String? _lastUpdated;
 
   @override
   void initState() {
@@ -71,12 +71,12 @@ class _FriendCardState extends State<FriendCard> {
             icon: Icons.delete,
             onPressed: (context) {
               BotToast.showText(
-                text: 'Deleted ${_friend.name}!',
+                text: 'Deleted ${_friend!.name}!',
                 textStyle: TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.orange[800],
+                contentColor: Colors.orange[800]!,
                 duration: Duration(seconds: 3),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -109,7 +109,7 @@ class _FriendCardState extends State<FriendCard> {
                         SizedBox(
                           width: 120,
                           child: Text(
-                            '${_friend.name}',
+                            '${_friend!.name}',
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -136,7 +136,7 @@ class _FriendCardState extends State<FriendCard> {
                               ),
                             ),
                             closedColor: Colors.transparent,
-                            openColor: _themeProvider.canvas,
+                            openColor: _themeProvider.canvas!,
                             closedBuilder: (BuildContext context, VoidCallback openContainer) {
                               return SizedBox(
                                 height: 20,
@@ -171,7 +171,7 @@ class _FriendCardState extends State<FriendCard> {
                     Row(
                       children: <Widget>[
                         Text(
-                          'Lvl ${_friend.level}',
+                          'Lvl ${_friend!.level}',
                         ),
                         Padding(
                           padding: const EdgeInsets.only(left: 15),
@@ -205,7 +205,7 @@ class _FriendCardState extends State<FriendCard> {
                           width: 14,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: _returnStatusColor(_friend.lastAction.status),
+                            color: _returnStatusColor(_friend!.lastAction!.status),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -216,9 +216,9 @@ class _FriendCardState extends State<FriendCard> {
                           ),
                         ),
                         Text(
-                          _friend.lastAction.relative == "0 minutes ago"
+                          _friend!.lastAction!.relative == "0 minutes ago"
                               ? 'now'
-                              : _friend.lastAction.relative.replaceAll(' ago', ''),
+                              : _friend!.lastAction!.relative!.replaceAll(' ago', ''),
                         ),
                       ],
                     ),
@@ -267,7 +267,7 @@ class _FriendCardState extends State<FriendCard> {
                             Text('Notes: '),
                             Flexible(
                               child: Text(
-                                '${_friend.personalNote}',
+                                '${_friend!.personalNote}',
                                 style: TextStyle(
                                   color: _returnFriendNoteColor(),
                                 ),
@@ -290,7 +290,7 @@ class _FriendCardState extends State<FriendCard> {
 
   Widget _tradeIcon() {
     var tradeUrl = 'https://www.torn.com/trade.php#step=start&user'
-        'ID=${_friend.playerId}';
+        'ID=${_friend!.playerId}';
     return SizedBox(
       height: 20,
       width: 20,
@@ -319,7 +319,7 @@ class _FriendCardState extends State<FriendCard> {
 
   Widget _messageIcon() {
     var messageUrl = 'https://www.torn.com/messages.php#/p=compose&'
-        'XID=${_friend.playerId}';
+        'XID=${_friend!.playerId}';
     return SizedBox(
       height: 20,
       width: 20,
@@ -347,7 +347,7 @@ class _FriendCardState extends State<FriendCard> {
   }
 
   Widget _visitProfileIcon() {
-    String profileUrl = 'https://www.torn.com/profiles.php?XID=${_friend.playerId}';
+    String profileUrl = 'https://www.torn.com/profiles.php?XID=${_friend!.playerId}';
     return SizedBox(
       height: 20,
       width: 20,
@@ -375,7 +375,7 @@ class _FriendCardState extends State<FriendCard> {
   }
 
   Widget _refreshIcon() {
-    if (_friend.isUpdating) {
+    if (_friend!.isUpdating) {
       return Padding(
         padding: const EdgeInsets.all(2.0),
         child: CircularProgressIndicator(),
@@ -393,19 +393,19 @@ class _FriendCardState extends State<FriendCard> {
   }
 
   Widget _factionIcon() {
-    if (_friend.hasFaction) {
-      Color borderColor = Colors.transparent;
-      Color iconColor = _themeProvider.mainText;
-      if (_friend.faction.factionId == _userProvider.basic.faction.factionId) {
+    if (_friend!.hasFaction!) {
+      Color? borderColor = Colors.transparent;
+      Color? iconColor = _themeProvider.mainText;
+      if (_friend!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
         borderColor = iconColor = Colors.green[500];
       }
 
       void showFactionToast() {
-        if (_friend.faction.factionId == _userProvider.basic.faction.factionId) {
+        if (_friend!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
           BotToast.showText(
-            text: HtmlParser.fix("${_friend.name} belongs to your same faction "
-                "(${_friend.faction.factionName}) as "
-                "${_friend.faction.position}"),
+            text: HtmlParser.fix("${_friend!.name} belongs to your same faction "
+                "(${_friend!.faction!.factionName}) as "
+                "${_friend!.faction!.position}"),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -416,14 +416,14 @@ class _FriendCardState extends State<FriendCard> {
           );
         } else {
           BotToast.showText(
-            text: HtmlParser.fix("${_friend.name} belongs to faction "
-                "${_friend.faction.factionName} as "
-                "${_friend.faction.position}"),
+            text: HtmlParser.fix("${_friend!.name} belongs to faction "
+                "${_friend!.faction!.factionName} as "
+                "${_friend!.faction!.position}"),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[600],
+            contentColor: Colors.grey[600]!,
             duration: Duration(seconds: 5),
             contentPadding: EdgeInsets.all(10),
           );
@@ -435,7 +435,7 @@ class _FriendCardState extends State<FriendCard> {
         child: Ink(
           decoration: BoxDecoration(
             border: Border.all(
-              color: borderColor,
+              color: borderColor!,
               width: 1.5,
             ),
             shape: BoxShape.circle,
@@ -465,9 +465,9 @@ class _FriendCardState extends State<FriendCard> {
   Widget _companyIcon() {
     void showCompanyToast() {
       BotToast.showText(
-        text: HtmlParser.fix("${_friend.name} belongs to your same company "
-            "(${_friend.job.companyName}) as "
-            "${_friend.job.job}"),
+        text: HtmlParser.fix("${_friend!.name} belongs to your same company "
+            "(${_friend!.job!.companyName}) as "
+            "${_friend!.job!.job}"),
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,
@@ -478,13 +478,13 @@ class _FriendCardState extends State<FriendCard> {
       );
     }
 
-    if (_friend.job.companyId == _userProvider.basic.job.companyId) {
+    if (_friend!.job!.companyId == _userProvider.basic!.job!.companyId) {
       Widget companyIcon = Material(
         type: MaterialType.transparency,
         child: Ink(
           decoration: BoxDecoration(
             border: Border.all(
-              color: Colors.brown[400],
+              color: Colors.brown[400]!,
               width: 1.5,
             ),
             shape: BoxShape.circle,
@@ -511,12 +511,12 @@ class _FriendCardState extends State<FriendCard> {
   }
 
   Widget _status() {
-    Color stateColor;
-    if (_friend.status.color == 'red') {
+    Color? stateColor;
+    if (_friend!.status!.color == 'red') {
       stateColor = Colors.red;
-    } else if (_friend.status.color == 'green') {
+    } else if (_friend!.status!.color == 'green') {
       stateColor = Colors.green;
-    } else if (_friend.status.color == 'blue') {
+    } else if (_friend!.status!.color == 'blue') {
       stateColor = Colors.blue;
     }
 
@@ -532,37 +532,35 @@ class _FriendCardState extends State<FriendCard> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(_friend.status.state),
+        Text(_friend!.status!.state!),
         stateBall,
       ],
     );
   }
 
   Color _cardBorderColor() {
-    if (_friend.justUpdatedWithSuccess) {
+    if (_friend!.justUpdatedWithSuccess) {
       return Colors.green;
-    } else if (_friend.justUpdatedWithError) {
+    } else if (_friend!.justUpdatedWithError) {
       return Colors.red;
     } else {
       return Colors.transparent;
     }
   }
 
-  Color _returnStatusColor(String status) {
+  Color _returnStatusColor(String? status) {
     switch (status) {
       case 'Online':
         return Colors.green;
-        break;
       case 'Idle':
         return Colors.orange;
-        break;
       default:
         return Colors.grey;
     }
   }
 
   void _returnLastUpdated() {
-    var timeDifference = DateTime.now().difference(_friend.lastUpdated);
+    var timeDifference = DateTime.now().difference(_friend!.lastUpdated!);
     if (timeDifference.inMinutes < 1) {
       _lastUpdated = 'now';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
@@ -580,20 +578,16 @@ class _FriendCardState extends State<FriendCard> {
     }
   }
 
-  Color _returnFriendNoteColor() {
-    switch (_friend.personalNoteColor) {
+  Color? _returnFriendNoteColor() {
+    switch (_friend!.personalNoteColor) {
       case 'red':
         return Colors.red;
-        break;
       case 'orange':
         return Colors.orange[600];
-        break;
       case 'green':
         return Colors.green;
-        break;
       default:
         return _themeProvider.mainText;
-        break;
     }
   }
 
@@ -619,11 +613,11 @@ class _FriendCardState extends State<FriendCard> {
   }
 
   void _updateThisFriend() async {
-    bool updateWorked = await _friendsProvider.updateFriend(_friend);
+    bool updateWorked = await _friendsProvider.updateFriend(_friend!);
     if (updateWorked) {
     } else {
       BotToast.showText(
-        text: "Error updating ${_friend.name}!",
+        text: "Error updating ${_friend!.name}!",
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,

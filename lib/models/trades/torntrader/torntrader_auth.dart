@@ -20,11 +20,11 @@ class TornTraderAuthModel {
   });
 
   // State
-  bool error = false;
+  bool? error = false;
 
-  String message;
-  bool allowed;
-  String token;
+  String? message;
+  bool? allowed;
+  String? token;
 
   factory TornTraderAuthModel.fromJson(Map<String, dynamic> json) => TornTraderAuthModel(
     message: json["message"] == null ? null : json["message"],

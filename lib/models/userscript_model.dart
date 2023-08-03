@@ -23,13 +23,13 @@ class UserScriptModel {
     this.time = UserScriptTime.end,
   });
 
-  bool enabled;
-  List<dynamic> urls;
-  String name;
-  int exampleCode;
-  int version;
-  bool edited;
-  String source;
+  bool? enabled;
+  List<dynamic>? urls;
+  String? name;
+  int? exampleCode;
+  int? version;
+  bool? edited;
+  String? source;
   UserScriptTime time;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) => UserScriptModel(
@@ -55,10 +55,6 @@ class UserScriptModel {
         "version": version == null ? null : version,
         "edited": edited == null ? null : edited,
         "source": source == null ? null : source,
-        "time": time == null
-            ? "end"
-            : time == UserScriptTime.start
-                ? "start"
-                : "end",
+        "time": time == UserScriptTime.start ? "start" : "end",
       };
 }

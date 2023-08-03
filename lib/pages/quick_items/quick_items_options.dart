@@ -21,17 +21,17 @@ import 'package:torn_pda/widgets/quick_items/loadouts_number_dialog.dart';
 class QuickItemsOptions extends StatefulWidget {
   final bool isFaction;
 
-  QuickItemsOptions({@required this.isFaction});
+  QuickItemsOptions({required this.isFaction});
 
   @override
   _QuickItemsOptionsState createState() => _QuickItemsOptionsState();
 }
 
 class _QuickItemsOptionsState extends State<QuickItemsOptions> {
-  SettingsProvider _settingsProvider;
-  QuickItemsProvider _itemsProvider;
-  QuickItemsProviderFaction _itemsProviderFaction;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  QuickItemsProvider? _itemsProvider;
+  late QuickItemsProviderFaction _itemsProviderFaction;
+  ThemeProvider? _themeProvider;
 
   final _searchController = new TextEditingController();
 
@@ -44,7 +44,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     _itemsProviderFaction = Provider.of<QuickItemsProviderFaction>(context, listen: false);
 
     if (!widget.isFaction) {
-      _itemsProvider.updateInventoryQuantities(fullUpdate: true);
+      _itemsProvider!.updateInventoryQuantities(fullUpdate: true);
     }
 
     _searchController.addListener(onSearchInputTextChange);
@@ -65,14 +65,14 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
+        color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
+                : _themeProvider!.canvas
+            : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
+            backgroundColor: _themeProvider!.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -81,7 +81,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   )
                 : null,
             body: Container(
-              color: _themeProvider.canvas,
+              color: _themeProvider!.canvas,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
@@ -117,7 +117,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                         ),
                       ),
                       SizedBox(height: 10),
-                      if ((!widget.isFaction && _itemsProvider.activeQuickItems.length == 0) ||
+                      if ((!widget.isFaction && _itemsProvider!.activeQuickItems.length == 0) ||
                           (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.length == 0))
                         Padding(
                           padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
@@ -138,7 +138,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                         child: Text("ALL AVAILABLE ITEMS"),
                       ),
                       SizedBox(height: 10),
-                      if ((!widget.isFaction && _itemsProvider.fullQuickItems.isEmpty) ||
+                      if ((!widget.isFaction && _itemsProvider!.fullQuickItems.isEmpty) ||
                           (widget.isFaction && _itemsProviderFaction.fullQuickItemsFaction.isEmpty))
                         Center(
                           child: Padding(
@@ -200,10 +200,10 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
         IconButton(
           icon: Icon(
             Icons.delete,
-            color: _themeProvider.buttonText,
+            color: _themeProvider!.buttonText,
           ),
           onPressed: () async {
-            if ((!widget.isFaction && _itemsProvider.activeQuickItems.length == 0) ||
+            if ((!widget.isFaction && _itemsProvider!.activeQuickItems.length == 0) ||
                 (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.length == 0)) {
               BotToast.showText(
                 text: 'You have no active quick items, activate some!',
@@ -211,7 +211,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.orange[800],
+                contentColor: Colors.orange[800]!,
                 duration: Duration(seconds: 2),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -252,7 +252,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                     child: Container(
                       height: 60,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
+                        padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0),
                         child: Card(
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
@@ -261,12 +261,12 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                               children: [
                                 Padding(
                                   padding: EdgeInsets.all(2),
-                                  child: item.isEnergyPoints || item.isNervePoints
+                                  child: item.isEnergyPoints! || item.isNervePoints!
                                       ? SizedBox(
                                           width: 25,
                                           child: Icon(
                                             MdiIcons.alphaPCircleOutline,
-                                            color: item.isEnergyPoints ? Colors.green : Colors.red,
+                                            color: item.isEnergyPoints! ? Colors.green : Colors.red,
                                           ),
                                         )
                                       : Image.asset(
@@ -286,7 +286,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                item.name,
+                                                item.name!,
                                                 style: TextStyle(fontSize: 13),
                                               ),
                                             ),
@@ -351,7 +351,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                           backgroundColor: Colors.red,
                           icon: Icons.remove_circle_outline_outlined,
                           onPressed: (context) {
-                            _itemsProvider.deactivateQuickItem(item);
+                            _itemsProvider!.deactivateQuickItem(item);
                           },
                         ),
                       ],
@@ -359,7 +359,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                     child: Container(
                       height: 60,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
+                        padding: EdgeInsets.symmetric(horizontal: item.isLoadout! ? 20 : 0),
                         child: Card(
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
@@ -369,11 +369,11 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                 Padding(
                                   padding: EdgeInsets.all(2),
                                   child: Image.asset(
-                                    item.isLoadout
+                                    item.isLoadout!
                                         ? 'images/icons/loadout.png'
                                         : 'images/torn_items/small/${item.number}_small.png',
-                                    width: item.isLoadout ? 25 : 35,
-                                    height: item.isLoadout ? 25 : 35,
+                                    width: item.isLoadout! ? 25 : 35,
+                                    height: item.isLoadout! ? 25 : 35,
                                   ),
                                 ),
                                 SizedBox(width: 10),
@@ -387,14 +387,14 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                item.isLoadout ? item.loadoutName : item.name,
+                                                item.isLoadout! ? item.loadoutName! : item.name!,
                                                 style: TextStyle(fontSize: 13),
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      if (!item.isLoadout)
+                                      if (!item.isLoadout!)
                                         Text(
                                           "(inv: x${item.inventory})",
                                           style: TextStyle(fontSize: 10),
@@ -403,7 +403,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                   ),
                                 ),
                                 SizedBox(width: 10),
-                                if (!item.isLoadout)
+                                if (!item.isLoadout!)
                                   GestureDetector(
                                     onTap: () {
                                       BotToast.showText(
@@ -413,7 +413,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           fontSize: 14,
                                           color: Colors.white,
                                         ),
-                                        contentColor: Colors.green[800],
+                                        contentColor: Colors.green[800]!,
                                         duration: Duration(seconds: 5),
                                         contentPadding: EdgeInsets.all(10),
                                       );
@@ -423,7 +423,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                       size: 19,
                                     ),
                                   )
-                                else if (item.isLoadout)
+                                else if (item.isLoadout!)
                                   GestureDetector(
                                     onTap: () {
                                       _openLoadoutsNameDialog(item);
@@ -456,7 +456,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                     // removing the item at oldIndex will shorten the list by 1
                     newIndex -= 1;
                   }
-                  _itemsProvider.reorderQuickItem(
+                  _itemsProvider!.reorderQuickItem(
                     itemsProvider.activeQuickItems[oldIndex],
                     oldIndex,
                     newIndex,
@@ -499,20 +499,20 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               builder: (context, itemsProviderFaction, child) {
                 var allQuickItems = <Widget>[];
                 for (var item in itemsProviderFaction.fullQuickItemsFaction) {
-                  if (item.name.toLowerCase().contains(_itemsProviderFaction.searchFilter.toLowerCase())) {
-                    if (item.active) {
+                  if (item.name!.toLowerCase().contains(_itemsProviderFaction.searchFilter.toLowerCase())) {
+                    if (item.active!) {
                       continue;
                     }
 
                     allQuickItems.add(
                       AnimatedOpacity(
-                        opacity: item.visible ? 1 : 0,
+                        opacity: item.visible! ? 1 : 0,
                         duration: Duration(milliseconds: 300),
                         child: Container(
                           height: 60,
                           child: Padding(
                             padding:
-                                EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
+                                EdgeInsets.symmetric(horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0),
                             child: Card(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -520,12 +520,12 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                   children: [
                                     Padding(
                                       padding: EdgeInsets.all(2),
-                                      child: item.isEnergyPoints || item.isNervePoints
+                                      child: item.isEnergyPoints! || item.isNervePoints!
                                           ? SizedBox(
                                               width: 25,
                                               child: Icon(
                                                 MdiIcons.alphaPCircleOutline,
-                                                color: item.isEnergyPoints ? Colors.green : Colors.red,
+                                                color: item.isEnergyPoints! ? Colors.green : Colors.red,
                                               ),
                                             )
                                           : Image.asset(
@@ -545,7 +545,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               children: [
                                                 Flexible(
                                                   child: Text(
-                                                    item.name,
+                                                    item.name!,
                                                     style: TextStyle(fontSize: 13),
                                                   ),
                                                 ),
@@ -555,7 +555,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         ],
                                       ),
                                     ),
-                                    if (!item.isLoadout)
+                                    if (!item.isLoadout!)
                                       GestureDetector(
                                         onTap: () {
                                           BotToast.showText(
@@ -564,7 +564,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               fontSize: 14,
                                               color: Colors.white,
                                             ),
-                                            contentColor: Colors.green[800],
+                                            contentColor: Colors.green[800]!,
                                             duration: Duration(seconds: 5),
                                             contentPadding: EdgeInsets.all(10),
                                           );
@@ -575,7 +575,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         ),
                                       ),
                                     TextButton(
-                                      onPressed: !item.visible
+                                      onPressed: !item.visible!
                                           // Avoid double press
                                           ? null
                                           : () async {
@@ -645,19 +645,19 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               builder: (context, itemsProvider, child) {
                 var allQuickItems = <Widget>[];
                 for (var item in itemsProvider.fullQuickItems) {
-                  if (item.name.toLowerCase().contains(_itemsProvider.searchFilter.toLowerCase())) {
-                    if (item.active || (item.isLoadout && item.loadoutNumber > itemsProvider.numberOfLoadoutsToShow)) {
+                  if (item.name!.toLowerCase().contains(_itemsProvider!.searchFilter.toLowerCase())) {
+                    if (item.active! || (item.isLoadout! && item.loadoutNumber! > itemsProvider.numberOfLoadoutsToShow)) {
                       continue;
                     }
 
                     allQuickItems.add(
                       AnimatedOpacity(
-                        opacity: item.visible ? 1 : 0,
+                        opacity: item.visible! ? 1 : 0,
                         duration: Duration(milliseconds: 300),
                         child: Container(
                           height: 60,
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
+                            padding: EdgeInsets.symmetric(horizontal: item.isLoadout! ? 20 : 0),
                             child: Card(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -666,11 +666,11 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                     Padding(
                                       padding: EdgeInsets.all(2),
                                       child: Image.asset(
-                                        item.isLoadout
+                                        item.isLoadout!
                                             ? 'images/icons/loadout.png'
                                             : 'images/torn_items/small/${item.number}_small.png',
-                                        width: item.isLoadout ? 25 : 35,
-                                        height: item.isLoadout ? 25 : 35,
+                                        width: item.isLoadout! ? 25 : 35,
+                                        height: item.isLoadout! ? 25 : 35,
                                       ),
                                     ),
                                     SizedBox(width: 10),
@@ -684,14 +684,14 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               children: [
                                                 Flexible(
                                                   child: Text(
-                                                    item.name,
+                                                    item.name!,
                                                     style: TextStyle(fontSize: 13),
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          if (!item.isLoadout)
+                                          if (!item.isLoadout!)
                                             Text(
                                               "(inv: x${item.inventory})",
                                               style: TextStyle(fontSize: 10),
@@ -699,7 +699,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         ],
                                       ),
                                     ),
-                                    if (!item.isLoadout)
+                                    if (!item.isLoadout!)
                                       GestureDetector(
                                         onTap: () {
                                           BotToast.showText(
@@ -709,7 +709,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               fontSize: 14,
                                               color: Colors.white,
                                             ),
-                                            contentColor: Colors.green[800],
+                                            contentColor: Colors.green[800]!,
                                             duration: Duration(seconds: 5),
                                             contentPadding: EdgeInsets.all(10),
                                           );
@@ -720,7 +720,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         ),
                                       ),
                                     TextButton(
-                                      onPressed: !item.visible
+                                      onPressed: !item.visible!
                                           // Avoid double press
                                           ? null
                                           : () async {
@@ -790,7 +790,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.secondBackground,
+                      color: _themeProvider!.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -808,7 +808,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                           child: Text(
                             "This will reset all your quick items and order, "
                             "are you sure?",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -821,7 +821,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                 if (widget.isFaction) {
                                   _itemsProviderFaction.wipeAllQuickItems();
                                 } else {
-                                  _itemsProvider.wipeAllQuickItems();
+                                  _itemsProvider!.wipeAllQuickItems();
                                 }
                                 Navigator.of(context).pop();
                               },
@@ -843,9 +843,9 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -894,7 +894,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     if (widget.isFaction) {
       _itemsProviderFaction.setFilterText(_searchController.text);
     } else {
-      _itemsProvider.setFilterText(_searchController.text);
+      _itemsProvider!.setFilterText(_searchController.text);
     }
   }
 

@@ -36,7 +36,7 @@ import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class TravelPage extends StatefulWidget {
-  TravelPage({Key key}) : super(key: key);
+  TravelPage({Key? key}) : super(key: key);
 
   @override
   _TravelPageState createState() => _TravelPageState();
@@ -44,26 +44,26 @@ class TravelPage extends StatefulWidget {
 
 class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   TravelModel _travelModel = TravelModel();
-  Timer _ticker;
+  Timer? _ticker;
 
   int _apiRetries = 0;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  SettingsProvider? _settingsProvider;
 
   bool _notificationsPending = false;
   bool _alarmSound = false;
   bool _alarmVibration = true;
 
-  int _travelNotificationAhead;
-  int _travelAlarmAhead;
-  int _travelTimerAhead;
+  late int _travelNotificationAhead;
+  late int _travelAlarmAhead;
+  late int _travelTimerAhead;
 
-  String _myCurrentKey = '';
+  String? _myCurrentKey = '';
   bool _apiError = true;
   String _errorReason = '';
 
-  Future _finishedLoadingPreferences;
+  Future? _finishedLoadingPreferences;
 
   @override
   void initState() {
@@ -99,8 +99,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
+      appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider!.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
               child: buildAppBar(),
@@ -153,8 +153,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     Radius.circular(56 / 2),
                   ),
                 ),
-                onClosed: (ReturnFlagPressed returnFlag) async {
-                  if (returnFlag.flagPressed) {
+                onClosed: (ReturnFlagPressed? returnFlag) async {
+                  if (returnFlag!.flagPressed) {
                     var url = 'https://www.torn.com/travelagency.php';
                     await context.read<WebViewProvider>().openBrowserPreference(
                           context: context,
@@ -165,7 +165,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   }
                 },
                 closedColor: Colors.orange,
-                openColor: _themeProvider.canvas,
+                openColor: _themeProvider.canvas!,
                 closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
                     height: 56,
@@ -191,15 +191,17 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
       leadingWidth: 80,
       leading: Row(
         children: [
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -220,7 +222,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.grey[700],
+              contentColor: Colors.grey[700]!,
               duration: Duration(milliseconds: 500),
               contentPadding: EdgeInsets.all(10),
             );
@@ -312,7 +314,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       backgroundColor: Colors.green,
       onTap: () async {
         await _scheduleNotification().then((value) {
-          String formattedTime = _formatTime(value);
+          String? formattedTime = _formatTime(value);
           BotToast.showText(
             text: "Notification set for $formattedTime",
             textStyle: TextStyle(
@@ -347,7 +349,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             fontSize: 14,
             color: Colors.black,
           ),
-          contentColor: Colors.orange[700],
+          contentColor: Colors.orange[700]!,
           duration: Duration(seconds: 3),
           contentPadding: EdgeInsets.all(10),
         );
@@ -368,7 +370,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       backgroundColor: Colors.grey[400],
       onTap: () async {
         await _setAlarm().then((value) {
-          String formattedTime = _formatTime(value);
+          String? formattedTime = _formatTime(value);
           BotToast.showText(
             text: 'Alarm set for $formattedTime!',
             textStyle: TextStyle(
@@ -397,7 +399,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       backgroundColor: Colors.grey[400],
       onTap: () async {
         await _setTimer().then((value) {
-          String formattedTime = _formatTime(value);
+          String? formattedTime = _formatTime(value);
           BotToast.showText(
             text: "Timer set for $formattedTime",
             textStyle: TextStyle(
@@ -421,7 +423,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     // We always add stocks
     dials.add(dialStocks);
 
-    if (_travelModel.abroad && _travelModel.timeLeft > 120) {
+    if (_travelModel.abroad && _travelModel.timeLeft! > 120) {
       if (_notificationsPending) {
         dials.add(dialNotificationCancel);
       } else {
@@ -459,10 +461,10 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
   }
 
-  _onStocksPageClosed(ReturnFlagPressed returnFlag) async {
+  _onStocksPageClosed(ReturnFlagPressed? returnFlag) async {
     if (_travelModel.abroad) return;
 
-    if (returnFlag.flagPressed) {
+    if (returnFlag!.flagPressed) {
       var url = 'https://www.torn.com/travelagency.php';
 
       await context.read<WebViewProvider>().openBrowserPreference(
@@ -525,7 +527,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     // API was correct: are we travelling or not?
     if (_travelModel.abroad) {
       // If we have reached another country
-      if (_travelModel.destination != 'Torn' && _travelModel.timeLeft < 15) {
+      if (_travelModel.destination != 'Torn' && _travelModel.timeLeft! < 15) {
         return <Widget>[
           Padding(
             padding: EdgeInsetsDirectional.only(bottom: 60),
@@ -570,7 +572,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             ),
           ),
         ];
-      } else if (_travelModel.timeLeft > 0 && _travelModel.timeLeft < 120) {
+      } else if (_travelModel.timeLeft! > 0 && _travelModel.timeLeft! < 120) {
         // We are about to reach another country
         return <Widget>[
           Padding(
@@ -622,15 +624,15 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         // Time formatting
         var formattedTime = TimeFormatter(
           inputTime: _travelModel.timeArrival,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
         // Calculations for travel bar
-        var startTime = _travelModel.departed;
-        var endTime = _travelModel.timeStamp;
+        var startTime = _travelModel.departed!;
+        var endTime = _travelModel.timeStamp!;
         var totalTravelTimeSeconds = endTime - startTime;
-        var dateTimeArrival = _travelModel.timeArrival;
+        var dateTimeArrival = _travelModel.timeArrival!;
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
         String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
@@ -684,7 +686,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   _updateInformation();
                 },
                 child: LinearPercentIndicator(
-                  padding: null,
+                  padding: EdgeInsets.all(0),
                   barRadius: Radius.circular(10),
                   isRTL: _travelModel.destination == "Torn" ? true : false,
                   center: Text(
@@ -764,7 +766,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   double _getTravelPercentage(int totalSeconds) {
-    double percentage = 1 - (_travelModel.timeLeft / totalSeconds);
+    double percentage = 1 - (_travelModel.timeLeft! / totalSeconds);
     if (percentage > 1) {
       return 1;
     } else if (percentage < 0) {
@@ -847,15 +849,15 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   void _updateInformation() {
     DateTime now = DateTime.now();
     // We avoid calling the API unnecessarily
-    if (now.isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
+    if (now.isAfter(_travelModel.timeArrival!.subtract(Duration(seconds: 120)))) {
       _fetchTornApi();
     }
     _retrievePendingNotifications();
 
     // Update timeLeft so that the percentage indicator and timer set time work correctly
-    if (_travelModel.timeArrival.isAfter(DateTime.now())) {
+    if (_travelModel.timeArrival!.isAfter(DateTime.now())) {
       setState(() {
-        var diff = _travelModel.timeArrival.difference(DateTime.now());
+        var diff = _travelModel.timeArrival!.difference(DateTime.now());
         _travelModel.timeLeft = diff.inSeconds;
       });
     }
@@ -883,7 +885,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    var scheduledNotificationDateTime = _travelModel.timeArrival.subtract(Duration(seconds: _travelNotificationAhead));
+    var scheduledNotificationDateTime = _travelModel.timeArrival!.subtract(Duration(seconds: _travelNotificationAhead));
 
     var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
@@ -912,7 +914,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var notificationTitle = await Prefs().getTravelNotificationTitle();
     var notificationSubtitle = await Prefs().getTravelNotificationBody();
 
-    if (_settingsProvider.discreteNotifications) {
+    if (_settingsProvider!.discreteNotifications) {
       notificationTitle = "T";
       notificationSubtitle = " ";
     }
@@ -961,7 +963,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setAlarm() async {
-    var alarmTime = _travelModel.timeArrival.add(Duration(minutes: -_travelAlarmAhead));
+    var alarmTime = _travelModel.timeArrival!.add(Duration(minutes: -_travelAlarmAhead));
     int hour = alarmTime.hour;
     int minute = alarmTime.minute;
 
@@ -991,7 +993,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - _travelTimerAhead,
+        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft! - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
@@ -999,12 +1001,12 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
     intent.launch();
 
-    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft - _travelTimerAhead));
+    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft! - _travelTimerAhead));
   }
 
   Future _restorePreferences() async {
     var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
-    _myCurrentKey = userDetails.basic.userApiKey;
+    _myCurrentKey = userDetails.basic!.userApiKey;
     if (_myCurrentKey != '') {
       await _fetchTornApi();
     }
@@ -1056,11 +1058,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     }
   }
 
-  String _formatTime(DateTime inputTime) {
+  String? _formatTime(DateTime inputTime) {
     return TimeFormatter(
       inputTime: inputTime,
-      timeFormatSetting: _settingsProvider.currentTimeFormat,
-      timeZoneSetting: _settingsProvider.currentTimeZone,
+      timeFormatSetting: _settingsProvider!.currentTimeFormat,
+      timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHour;
   }
 
@@ -1071,17 +1073,17 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
 class FabOverrideAnimation extends FloatingActionButtonAnimator {
   @override
-  Offset getOffset({Offset begin, Offset end, double progress}) {
+  Offset getOffset({Offset? begin, required Offset end, double? progress}) {
     return Offset(end.dx, end.dy);
   }
 
   @override
-  Animation<double> getRotationAnimation({Animation<double> parent}) {
+  Animation<double> getRotationAnimation({required Animation<double> parent}) {
     return Tween<double>(begin: 1.0, end: 1.0).animate(parent);
   }
 
   @override
-  Animation<double> getScaleAnimation({Animation<double> parent}) {
+  Animation<double> getScaleAnimation({required Animation<double> parent}) {
     return Tween<double>(begin: 1.0, end: 1.0).animate(parent);
   }
 }

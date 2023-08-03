@@ -1,6 +1,5 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -13,9 +12,9 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 
 class UserScriptsAddDialog extends StatefulWidget {
   final bool editExisting;
-  final UserScriptModel editScript;
+  final UserScriptModel? editScript;
 
-  UserScriptsAddDialog({@required this.editExisting, this.editScript});
+  UserScriptsAddDialog({required this.editExisting, this.editScript});
 
   @override
   _UserScriptsAddDialogState createState() => _UserScriptsAddDialogState();
@@ -31,11 +30,11 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
   var _nameFormKey = GlobalKey<FormState>();
   var _sourceFormKey = GlobalKey<FormState>();
 
-  UserScriptsProvider _userScriptsProvider;
-  ThemeProvider _themeProvider;
+  late UserScriptsProvider _userScriptsProvider;
+  late ThemeProvider _themeProvider;
 
-  String _originalSource = "";
-  String _originalName = "";
+  String? _originalSource = "";
+  String? _originalName = "";
 
   UserScriptTime _originalTime = UserScriptTime.end;
 
@@ -47,9 +46,9 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
 
     if (widget.editExisting) {
       for (var script in _userScriptsProvider.userScriptList) {
-        if (script.name == widget.editScript.name) {
-          _addNameController.text = script.name;
-          _addSourceController.text = script.source;
+        if (script.name == widget.editScript!.name) {
+          _addNameController.text = script.name!;
+          _addSourceController.text = script.source!;
           _originalSource = script.source;
           _originalName = script.name;
           _originalTime = script.time;
@@ -106,17 +105,17 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                     labelText: 'Script name',
                   ),
                   validator: (value) {
-                    if (value.isEmpty) {
+                    if (value!.isEmpty) {
                       return "Enter a valid name!";
                     }
                     for (var script in _userScriptsProvider.userScriptList) {
-                      if (script.name.toLowerCase() == value.toLowerCase()) {
+                      if (script.name!.toLowerCase() == value.toLowerCase()) {
                         if (!widget.editExisting) {
                           return "Script name already taken!";
                         } else {
                           // Allow to save same script, but not if it conflicts
                           // with another existing script
-                          if (script.name.toLowerCase() != widget.editScript.name.toLowerCase()) {
+                          if (script.name!.toLowerCase() != widget.editScript!.name!.toLowerCase()) {
                             return "Script name already taken!";
                           }
                         }
@@ -138,13 +137,13 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                       minHeight: 28,
                       customHeights: [30, 30],
                       borderColor:
-                          _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+                          _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
                       initialLabelIndex: _originalTime == UserScriptTime.start ? 0 : 1,
                       activeBgColor: _themeProvider.currentTheme == AppTheme.light
-                          ? [Colors.blueGrey[400]]
+                          ? [Colors.blueGrey[400]!]
                           : _themeProvider.currentTheme == AppTheme.dark
                               ? [Colors.blueGrey]
-                              : [Colors.blueGrey[700]],
+                              : [Colors.blueGrey[700]!],
                       activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
                       inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
                           ? Colors.white
@@ -184,7 +183,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                       labelText: 'Paste source code',
                     ),
                     validator: (value) {
-                      if (value.isEmpty) {
+                      if (value!.isEmpty) {
                         return "Cannot be empty!";
                       }
                       _addSourceController.text = value.trim();
@@ -222,7 +221,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
   }
 
   Future<void> _addPressed(BuildContext context) async {
-    if (_nameFormKey.currentState.validate() && _sourceFormKey.currentState.validate()) {
+    if (_nameFormKey.currentState!.validate() && _sourceFormKey.currentState!.validate()) {
       // Get rid of dialog first, so that it can't
       // be pressed twice
       Navigator.of(context).pop();
@@ -240,7 +239,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
       } else {
         // Flag the script as edited if we've changed something now or in the past
         var sourcedChanged = true;
-        if (!widget.editScript.edited &&
+        if (!widget.editScript!.edited! &&
             inputSource == _originalSource &&
             inputTime == _originalTime &&
             inputName == _originalName) {

@@ -1,4 +1,5 @@
 // Dart imports:
+
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
@@ -104,19 +105,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   final StatsController _statsController = StatsController();
 
-  ThemeProvider _themeProvider;
-  UserDetailsProvider _userProvider;
-  SettingsProvider _settingsProvider;
-  UserScriptsProvider _userScriptsProvider;
-  WebViewProvider _webViewProvider;
-  StakeoutsController _s;
+  ThemeProvider? _themeProvider;
+  UserDetailsProvider? _userProvider;
+  late SettingsProvider _settingsProvider;
+  late UserScriptsProvider _userScriptsProvider;
+  late WebViewProvider _webViewProvider;
+  StakeoutsController _s = Get.put(StakeoutsController(), permanent: true);
   ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
-  StreamSubscription _deepLinkSub;
-  DateTime _deepLinkSubTriggeredTime;
+  StreamSubscription? _deepLinkSub;
+  DateTime? _deepLinkSubTriggeredTime;
   bool _deepLinkInitOnce = false;
 
   // Used to avoid racing condition with browser launch from notifications (not included in the FutureBuilder), as
@@ -124,8 +125,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   Completer _preferencesCompleter = Completer();
   Completer _changelogCompleter = Completer();
   // Used for the main UI loading (FutureBuilder)
-  Future _finishedWithPreferences;
-  Future _finishedWithChangelog;
+  Future? _finishedWithPreferences;
+  Future? _finishedWithChangelog;
 
   int _activeDrawerIndex = 0;
   int _selected = 0;
@@ -141,8 +142,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Allows to space alerts when app is on the foreground
-  DateTime _lastMessageReceived;
-  String _lastBody;
+  late DateTime _lastMessageReceived;
+  String? _lastBody;
   int concurrent = 0;
   // Assigns different ids to alerts when the app is on the foreground
   int notId = 900;
@@ -151,10 +152,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   static const platform = MethodChannel('tornpda.channel');
 
   // Intent receiver subscription
-  StreamSubscription _intentListenerSub;
+  StreamSubscription? _intentListenerSub;
 
-  Stream _willPopShouldOpenDrawer;
-  StreamSubscription _willPopSubscription;
+  late Stream _willPopShouldOpenDrawer;
+  StreamSubscription? _willPopSubscription;
 
   @override
   void initState() {
@@ -250,14 +251,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     _lastMessageReceived = DateTime.now();
     _lastBody = "";
 
-    _messaging.getInitialMessage().then((RemoteMessage message) {
+    _messaging.getInitialMessage().then((RemoteMessage? message) {
       if (message != null && message.data.isNotEmpty) {
         _onFirebaseBackgroundNotification(message.data);
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-      if (message != null && message.data.isNotEmpty) {
+      if (message.data.isNotEmpty) {
         _onFirebaseBackgroundNotification(message.data);
       }
     });
@@ -265,8 +266,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       // This allows for notifications other than predefined ones in functions
       if (message.data.isEmpty) {
-        message.data["title"] = message.notification.title;
-        message.data["body"] = message.notification.body;
+        message.data["title"] = message.notification!.title;
+        message.data["body"] = message.notification!.body;
       }
 
       // Space messages and skip repeated
@@ -288,7 +289,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
       if (!skip) {
         _lastMessageReceived = DateTime.now();
-        _lastBody = message.data["body"] as String;
+        _lastBody = message.data["body"] as String?;
         // Assigns a different id two alerts that come together (otherwise one
         // deletes the previous one)
         notId++;
@@ -313,7 +314,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   @override
   void dispose() {
-    selectNotificationStream?.close();
+    selectNotificationStream.close();
     _willPopSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _deepLinkSub?.cancel();
@@ -327,17 +328,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       // Note: orientation here is taken BEFORE the change
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
-          statusBarColor: _themeProvider.statusBar,
+          statusBarColor: _themeProvider!.statusBar,
           systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
-              ? _themeProvider.statusBar
+              ? _themeProvider!.statusBar
               : Colors.transparent,
           systemNavigationBarIconBrightness:
               MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
                   ? Brightness.light
-                  : _themeProvider.currentTheme == AppTheme.light
+                  : _themeProvider!.currentTheme == AppTheme.light
                       ? Brightness.dark
                       : Brightness.light,
-          statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+          statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
               ? MediaQuery.of(context).orientation == Orientation.landscape
                   ? Brightness.dark
                   : Brightness.light
@@ -354,17 +355,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused) {
       // Stop stakeouts
-      if (_s != null) {
-        _s.stopTimer();
-        log("Stakeouts stopped");
-      }
+      _s.stopTimer();
+      log("Stakeouts stopped");
 
       // Stop stats counting
       _statsController.logCheckOut();
 
       // Refresh widget to have up to date info when we exit
       if (Platform.isAndroid) {
-        if (await pdaWidget_numberInstalled() > 0) {
+        if ((await pdaWidget_numberInstalled())! > 0) {
           pdaWidget_startBackgroundUpdate();
         }
       }
@@ -377,10 +376,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       _removeExistingNotifications();
 
       // Resume stakeouts
-      if (_s != null) {
-        _s.startTimer();
-        log("Stakeouts resumed");
-      }
+      _s.startTimer();
+      log("Stakeouts resumed");
 
       // Resume stats counting
       _statsController.logCheckIn();
@@ -395,14 +392,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   // ## Intent Listener (for appWidget)
   Future<void> _initIntentReceiverOnLaunch() async {
     final intent = await ReceiveIntent.getInitialIntent();
-    if (!mounted || intent.data == null) return;
+    if (!mounted || intent!.data == null) return;
     log("Intent received: ${intent.data}");
     await _assessIntent(intent);
   }
 
   Future<void> _initIntentListenerSubscription() async {
-    _intentListenerSub = ReceiveIntent.receivedIntentStream.listen((Intent intent) async {
-      if (!mounted || intent.data == null) return;
+    _intentListenerSub = ReceiveIntent.receivedIntentStream.listen((Intent? intent) async {
+      if (!mounted || intent!.data == null) return;
       await _assessIntent(intent);
     }, onError: (err) {
       log(err);
@@ -414,51 +411,51 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
     bool launchBrowser = false;
     var browserUrl = "https://www.torn.com";
-    if (intent.data.contains("pdaWidget://energy-box-clicked")) {
+    if (intent.data!.contains("pdaWidget://energy-box-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
-    } else if (intent.data.contains("pdaWidget://nerve-box-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://nerve-box-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
-    } else if (intent.data.contains("pdaWidget://happy-box-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://happy-box-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#candy-items";
-    } else if (intent.data.contains("pdaWidget://life-box-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://life-box-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#medical-items";
-    } else if (intent.data.contains("pdaWidget://blue-status-clicked") ||
-        intent.data.contains("pdaWidget://blue-status-icon-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://blue-status-clicked") ||
+        intent.data!.contains("pdaWidget://blue-status-icon-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com";
-    } else if (intent.data.contains("pdaWidget://hospital-status-icon-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://hospital-status-icon-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/hospitalview.php";
-    } else if (intent.data.contains("pdaWidget://jail-status-icon-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://jail-status-icon-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/jailview.php";
-    } else if (intent.data.contains("pdaWidget://messages-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://messages-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/messages.php";
-    } else if (intent.data.contains("pdaWidget://events-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://events-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/events.php";
-    } else if (intent.data.contains("pdaWidget://shortcut:")) {
-      String shortcutUrl = intent.data.split("pdaWidget://shortcut:")[1];
+    } else if (intent.data!.contains("pdaWidget://shortcut:")) {
+      String shortcutUrl = intent.data!.split("pdaWidget://shortcut:")[1];
       launchBrowser = true;
       browserUrl = shortcutUrl;
-    } else if (intent.data.contains("pdaWidget://drug-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://drug-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#drugs-items";
-    } else if (intent.data.contains("pdaWidget://medical-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://medical-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#medical-items";
-    } else if (intent.data.contains("pdaWidget://booster-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://booster-clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#boosters-items";
-    } else if (intent.data.contains("pdaWidget://chain-box-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://chain-box-clicked")) {
       _callSectionFromOutside(2); // Chaining
       return;
-    } else if (intent.data.contains("pdaWidget://empty-shortcuts-clicked")) {
+    } else if (intent.data!.contains("pdaWidget://empty-shortcuts-clicked")) {
       setState(() {
         _webViewProvider.browserShowInForeground = false;
       });
@@ -500,7 +497,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   Future _deepLinksStreamSub() async {
     try {
-      _deepLinkSub = linkStream.listen((String link) {
+      _deepLinkSub = linkStream.listen((String? link) {
         _deepLinkHandle(link);
       });
     } catch (e) {
@@ -508,14 +505,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     }
   }
 
-  void _deepLinkHandle(String link, {bool error = false}) async {
+  void _deepLinkHandle(String? link, {bool error = false}) async {
     try {
       bool showError = false;
-      String url = link;
+      String? url = link;
       if (error) {
         showError = true;
       } else {
-        url = url.replaceAll("http://", "https://");
+        url = url!.replaceAll("http://", "https://");
         // Double tornpda comes from href in website
         // <a href="intent://tornpda://www.cnn.com#Intent;package=com.manuito.tornpda;scheme=tornpda;end">test</a>
         url = url.replaceAll("tornpda://tornpda://", "https://");
@@ -532,13 +529,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.orange[700],
+          contentColor: Colors.orange[700]!,
           duration: const Duration(seconds: 1),
           contentPadding: const EdgeInsets.all(10),
         );
       } else {
         // Prevents double activation
-        if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime).inSeconds < 5) {
+        if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 5) {
           return;
         }
         _deepLinkSubTriggeredTime = DateTime.now();
@@ -567,9 +564,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       try {
         if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
           // Gets the active (already shown) notifications
-          final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
+          final List<ActiveNotification> activeNotifications = (await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-              ?.getActiveNotifications();
+              ?.getActiveNotifications())!;
 
           for (final not in activeNotifications) {
             // Platform channel to cancel direct Firebase notifications (we can call
@@ -624,27 +621,27 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     bool loot = false;
     bool retals = false;
 
-    var channel = '';
-    var messageId = '';
-    var tradeId = '';
-    var assistId = '';
-    var bulkDetails = '';
+    String? channel = '';
+    String? messageId = '';
+    String? tradeId = '';
+    String? assistId = '';
+    String? bulkDetails = '';
 
     if (Platform.isIOS) {
-      channel = message["channelId"] as String;
-      messageId = message["tornMessageId"] as String;
-      tradeId = message["tornTradeId"] as String;
-      assistId = message["assistId"] as String;
-      bulkDetails = message["bulkDetails"] as String;
+      channel = message["channelId"] as String?;
+      messageId = message["tornMessageId"] as String?;
+      tradeId = message["tornTradeId"] as String?;
+      assistId = message["assistId"] as String?;
+      bulkDetails = message["bulkDetails"] as String?;
     } else if (Platform.isAndroid) {
-      channel = message["channelId"] as String;
-      messageId = message["tornMessageId"] as String;
-      tradeId = message["tornTradeId"] as String;
-      assistId = message["assistId"] as String;
-      bulkDetails = message["bulkDetails"] as String;
+      channel = message["channelId"] as String?;
+      messageId = message["tornMessageId"] as String?;
+      tradeId = message["tornTradeId"] as String?;
+      assistId = message["assistId"] as String?;
+      bulkDetails = message["bulkDetails"] as String?;
     }
 
-    if (channel.contains("Alerts travel")) {
+    if (channel!.contains("Alerts travel")) {
       travel = true;
     } else if (channel.contains("Alerts hospital")) {
       hospital = true;
@@ -728,7 +725,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
     } else if (retals) {
-      if (int.parse(bulkDetails) == -1) {
+      if (int.parse(bulkDetails!) == -1) {
         // No-host notification
         return;
       }
@@ -738,7 +735,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       _preferencesCompleter.future.whenComplete(() async {
         await _changelogCompleter.future;
         if (!_settingsProvider.retaliationSectionEnabled ||
-            (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+            (int.parse(bulkDetails!) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
@@ -764,22 +761,23 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       launchBrowser = true;
       browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
 
-      Color totalColor = Colors.grey[700];
+      Color? totalColor = Colors.grey[700];
       try {
-        if (bulkDetails.isNotEmpty) {
+        if (bulkDetails!.isNotEmpty) {
           final bulkList = bulkDetails.split("#");
-          int otherXanax = int.tryParse(bulkList[0].split("xanax:")[1]);
-          int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
-          int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
+          int? otherXanax = int.tryParse(bulkList[0].split("xanax:")[1]);
+          int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
+          int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
           var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
-            int xanaxComparison = otherXanax - own.personalstats.xantaken;
-            int refillsComparison = otherRefills - own.personalstats.refills;
-            int drinksComparison = otherDrinks - own.personalstats.energydrinkused;
+            int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
+            int refillsComparison = otherRefills! - own.personalstats!.refills!;
+            int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
 
             int otherTotals = otherXanax + otherRefills + otherDrinks;
-            int myTotals = own.personalstats.xantaken + own.personalstats.refills + own.personalstats.energydrinkused;
+            int myTotals =
+                own.personalstats!.xantaken! + own.personalstats!.refills! + own.personalstats!.energydrinkused!;
 
             if (otherTotals < myTotals - myTotals * 0.1) {
               totalColor = Colors.green[700];
@@ -817,8 +815,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
             }
 
             if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
-              int begin = message["body"].indexOf("\n- Xanax");
-              int last = message["body"].length;
+              int? begin = message["body"].indexOf("\n- Xanax");
+              int? last = message["body"].length;
               message["body"] = message["body"].replaceRange(begin, last, "");
               message["body"] += xanaxString;
               message["body"] += refillsString;
@@ -840,12 +838,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: totalColor,
+        contentColor: totalColor!,
         duration: const Duration(seconds: 10),
         contentPadding: const EdgeInsets.all(10),
       );
     } else if (loot) {
-      var incomingIds = assistId.split(",");
+      var incomingIds = assistId!.split(",");
       if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
         // This is a standard loot alert for a single NPC
         launchBrowser = true;
@@ -900,7 +898,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   // Fires if notification from local_notifications package is tapped (i.e.:
   // when the app is open). Also for manual notifications when app is open.
   Future<void> _onForegroundNotification() async {
-    selectNotificationStream.stream.listen((String payload) async {
+    selectNotificationStream.stream.listen((String? payload) async {
       var launchBrowser = false;
       var browserUrl = '';
 
@@ -910,7 +908,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       } else if (payload == 'restocks') {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
-      } else if (payload.contains('energy')) {
+      } else if (payload!.contains('energy')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/gym.php';
       } else if (payload.contains('nerve')) {
@@ -1041,22 +1039,23 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         final bulkDetails = assistSplit[2].split('bulkDetails:');
         browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
 
-        Color totalColor = Colors.grey[700];
+        Color? totalColor = Colors.grey[700];
         try {
           if (bulkDetails[1].isNotEmpty) {
             final bulkList = bulkDetails[1].split("#");
-            int otherXanax = int.tryParse(bulkList[0].split("xanax:")[1]);
-            int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
-            int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
+            int? otherXanax = int.tryParse(bulkList[0].split("xanax:")[1]);
+            int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
+            int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
             var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
-              int xanaxComparison = otherXanax - own.personalstats.xantaken;
-              int refillsComparison = otherRefills - own.personalstats.refills;
-              int drinksComparison = otherDrinks - own.personalstats.energydrinkused;
+              int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
+              int refillsComparison = otherRefills! - own.personalstats!.refills!;
+              int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
 
               int otherTotals = otherXanax + otherRefills + otherDrinks;
-              int myTotals = own.personalstats.xantaken + own.personalstats.refills + own.personalstats.energydrinkused;
+              int myTotals =
+                  own.personalstats!.xantaken! + own.personalstats!.refills! + own.personalstats!.energydrinkused!;
 
               if (otherTotals < myTotals - myTotals * 0.1) {
                 totalColor = Colors.green[700];
@@ -1116,7 +1115,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: totalColor,
+          contentColor: totalColor!,
           duration: const Duration(seconds: 10),
           contentPadding: const EdgeInsets.all(10),
         );
@@ -1200,10 +1199,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     super.build(context);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
-    if (_s == null) {
-      _s = Get.put(StakeoutsController(), permanent: true);
-      _s.callbackBrowser = _openBrowserFromToast;
-    }
+    _s.callbackBrowser = _openBrowserFromToast;
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -1211,17 +1207,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
           // safe area will be black
           return Container(
-            color: _themeProvider.currentTheme == AppTheme.light
+            color: _themeProvider!.currentTheme == AppTheme.light
                 ? MediaQuery.of(context).orientation == Orientation.portrait
                     ? Colors.blueGrey
-                    : _themeProvider.canvas
-                : _themeProvider.canvas,
+                    : _themeProvider!.canvas
+                : _themeProvider!.canvas,
             child: SafeArea(
               child: Scaffold(
                 key: _scaffoldKey,
                 body: _getPages(),
                 drawer: Drawer(
-                  backgroundColor: _themeProvider.canvas,
+                  backgroundColor: _themeProvider!.canvas,
                   elevation: 2, // This avoids shadow over SafeArea
                   child: ListView(
                     padding: EdgeInsets.zero,
@@ -1236,7 +1232,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           );
         } else {
           return Container(
-            color: _themeProvider.secondBackground,
+            color: _themeProvider!.secondBackground,
             child: SafeArea(
               child: const Center(
                 child: CircularProgressIndicator(),
@@ -1270,7 +1266,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                             int callCount = snapshot.data ?? 0;
                             double progress = math.min(callCount / 100, 1.0);
                             return LinearPercentIndicator(
-                              padding: null,
+                              padding: EdgeInsets.all(0),
                               barRadius: Radius.circular(10),
                               center: Text(
                                 "${callCount}",
@@ -1279,7 +1275,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                               lineHeight: 14.0,
                               percent: progress,
                               backgroundColor:
-                                  _themeProvider.currentTheme == AppTheme.light ? Colors.grey[400] : Colors.grey[800],
+                                  _themeProvider!.currentTheme == AppTheme.light ? Colors.grey[400] : Colors.grey[800],
                               progressColor: callCount >= 95 ? Colors.red[400] : Colors.green,
                             );
                           },
@@ -1330,24 +1326,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                           borderWidth: 1,
                           cornerRadius: 5,
                           borderColor:
-                              _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
-                          initialLabelIndex: _themeProvider.currentTheme == AppTheme.light
+                              _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
+                          initialLabelIndex: _themeProvider!.currentTheme == AppTheme.light
                               ? 0
-                              : _themeProvider.currentTheme == AppTheme.dark
+                              : _themeProvider!.currentTheme == AppTheme.dark
                                   ? 1
                                   : 2,
-                          activeBgColor: _themeProvider.currentTheme == AppTheme.light
+                          activeBgColor: _themeProvider!.currentTheme == AppTheme.light
                               ? [Colors.blueGrey]
-                              : _themeProvider.currentTheme == AppTheme.dark
+                              : _themeProvider!.currentTheme == AppTheme.dark
                                   ? [Colors.blueGrey]
-                                  : [Colors.blueGrey[900]],
-                          activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                          inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                                  : [Colors.blueGrey[900]!],
+                          activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                          inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
                               ? Colors.white
-                              : _themeProvider.currentTheme == AppTheme.dark
+                              : _themeProvider!.currentTheme == AppTheme.dark
                                   ? Colors.grey[800]
                                   : Colors.black,
-                          inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                          inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
                           totalSwitches: 3,
                           animate: true,
                           animationDuration: 500,
@@ -1358,17 +1354,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                           ],
                           onToggle: (index) {
                             if (index == 0) {
-                              _themeProvider.changeTheme = AppTheme.light;
+                              _themeProvider!.changeTheme = AppTheme.light;
                               if (_settingsProvider.syncTheme) {
                                 _webViewProvider.changeTornTheme(dark: false);
                               }
                             } else if (index == 1) {
-                              _themeProvider.changeTheme = AppTheme.dark;
+                              _themeProvider!.changeTheme = AppTheme.dark;
                               if (_settingsProvider.syncTheme) {
                                 _webViewProvider.changeTornTheme(dark: true);
                               }
                             } else {
-                              _themeProvider.changeTheme = AppTheme.extraDark;
+                              _themeProvider!.changeTheme = AppTheme.extraDark;
                               if (_settingsProvider.syncTheme) {
                                 _webViewProvider.changeTornTheme(dark: true);
                               }
@@ -1386,17 +1382,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                             setState(() {
                               SystemChrome.setSystemUIOverlayStyle(
                                 SystemUiOverlayStyle(
-                                  statusBarColor: _themeProvider.statusBar,
+                                  statusBarColor: _themeProvider!.statusBar,
                                   systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape
-                                      ? _themeProvider.canvas
-                                      : _themeProvider.statusBar,
+                                      ? _themeProvider!.canvas
+                                      : _themeProvider!.statusBar,
                                   systemNavigationBarIconBrightness:
                                       MediaQuery.of(context).orientation == Orientation.landscape
-                                          ? _themeProvider.currentTheme == AppTheme.light
+                                          ? _themeProvider!.currentTheme == AppTheme.light
                                               ? Brightness.dark
                                               : Brightness.light
                                           : Brightness.light,
-                                  statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+                                  statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
                                       ? MediaQuery.of(context).orientation == Orientation.portrait
                                           ? Brightness.dark
                                           : Brightness.light
@@ -1442,12 +1438,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     final drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings + About pages
     // (just don't add the other sections to the list)
-    if (!_userProvider.basic.userApiKeyValid) {
+    if (!_userProvider!.basic!.userApiKeyValid!) {
       for (final position in _allowSectionsWithoutKey) {
         drawerOptions.add(
           ListTileTheme(
             selectedColor: Colors.red,
-            iconColor: _themeProvider.mainText,
+            iconColor: _themeProvider!.mainText,
             child: Ink(
               color: position == _selected ? Colors.grey[300] : Colors.transparent,
               child: ListTile(
@@ -1489,7 +1485,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         drawerOptions.add(
           ListTileTheme(
             selectedColor: Colors.red,
-            iconColor: _themeProvider.mainText,
+            iconColor: _themeProvider!.mainText,
             child: Ink(
               color: i == _selected ? Colors.grey[300] : Colors.transparent,
               child: ListTile(
@@ -1518,99 +1514,71 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           callBackSection: _callSectionFromOutside,
           disableTravelSection: _onChangeDisableTravelSection,
         );
-        break;
       case 1:
         return TravelPage();
-        break;
       case 2:
         return ChainingPage(retalsRedirection: _retalsRedirection);
-        break;
       case 3:
         return LootPage();
-        break;
       case 4:
         return FriendsPage();
-        break;
       case 5:
         return StakeoutsPage();
-        break;
       case 6:
         return AwardsPage();
-        break;
       case 7:
         return ItemsPage();
-        break;
       case 8:
         return RankedWarsPage(calledFromMenu: true);
-        break;
       case 9:
         return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
-        break;
       case 10:
         return AlertsSettings(_onChangeStockMarketInMenu);
-        break;
       case 11:
         return SettingsPage(
           changeUID: changeUID,
           statsController: _statsController,
         );
-        break;
       case 12:
         return AboutPage(uid: _userUID);
-        break;
       case 13:
         return TipsPage();
-        break;
 
       default:
         return const Text("Error");
     }
   }
 
-  Widget _returnDrawerIcons({int drawerPosition}) {
+  Widget _returnDrawerIcons({int? drawerPosition}) {
     switch (drawerPosition) {
       case 0:
         return const Icon(Icons.person);
-        break;
       case 1:
         return const Icon(Icons.local_airport);
-        break;
       case 2:
         return const Icon(MdiIcons.linkVariant);
-        break;
       case 3:
         return const Icon(MdiIcons.knifeMilitary);
-        break;
       case 4:
         return const Icon(Icons.people);
-        break;
       case 5:
         return const Icon(MdiIcons.cctv);
-        break;
       case 6:
         return const Icon(MdiIcons.trophy);
-        break;
       case 7:
         return const Icon(MdiIcons.packageVariantClosed);
-        break;
       case 8:
         return const Icon(MaterialCommunityIcons.sword_cross);
-        break;
       case 9:
         return const Icon(MdiIcons.bankTransfer);
-        break;
       case 10:
         return const Icon(Icons.notifications_active);
-        break;
       case 11:
         return const Icon(Icons.settings);
-        break;
       case 12:
         return const Icon(Icons.info_outline);
-        break;
       case 13:
         return const Icon(Icons.question_answer_outlined);
-        break;
       default:
         return const SizedBox.shrink();
     }
@@ -1644,11 +1612,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     // Set up UserProvider. If key is empty, redirect to the Settings page.
     // Else, open the default
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    await _userProvider.loadPreferences();
+    await _userProvider!.loadPreferences();
 
     // User Provider was started in Main
     // If key is empty, redirect to the Settings page.
-    if (!_userProvider.basic.userApiKeyValid) {
+    if (!_userProvider!.basic!.userApiKeyValid!) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
@@ -1664,7 +1632,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       _activeDrawerIndex = int.parse(defaultSection);
 
       // Firestore get auth and init
-      FirebaseAuth.instance.authStateChanges().listen((User user) async {
+      FirebaseAuth.instance.authStateChanges().listen((User? user) async {
         // Only execute once, otherwise we risk creating users in a row below
         if (_drawerUserChecked) return;
         _drawerUserChecked = true;
@@ -1753,7 +1721,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   Future<void> _updateFirebaseDetails() async {
     // We save the key because the API call will reset it
     // Then get user's profile and update
-    final savedKey = _userProvider.basic.userApiKey;
+    final savedKey = _userProvider!.basic!.userApiKey;
     final dynamic prof = await Get.find<ApiCallerController>().getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
@@ -1803,7 +1771,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       // Appwidget dialog
       if (Platform.isAndroid) {
         if (!await Prefs().getAppwidgetExplanationShown()) {
-          int widgets = await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+          int widgets = (await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
           if (widgets > 0) {
             await _showAppwidgetExplanationDialog(context);
             Prefs().setAppwidgetExplanationShown(true);
@@ -1820,7 +1788,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         if (savedSeconds < 86400) return;
 
         // If we are still in an old dialog, get DB to see if we can are free to show it
-        int allowed = (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value;
+        int? allowed =
+            (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
         if (allowed == 1) {
           // If we are allowed to proceed, show the dialog
           await showDialog(
@@ -1880,7 +1849,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   _openDrawer() {
     if (routeWithDrawer) {
-      _scaffoldKey.currentState.openDrawer();
+      _scaffoldKey.currentState!.openDrawer();
     }
   }
 
@@ -1928,7 +1897,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.secondBackground,
+                      color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -1949,7 +1918,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                               Flexible(
                                 child: Text(
                                   "STOCK MARKET UPDATE!",
-                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
+                                  style: TextStyle(fontSize: 11, color: _themeProvider!.mainText),
                                 ),
                               ),
                             ],
@@ -1958,7 +1927,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                         Flexible(
                           child: Text(
                             update,
-                            style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 11, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 15),
@@ -1996,9 +1965,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,

@@ -12,11 +12,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsIOS extends StatefulWidget {
   final Function callback;
-  final bool lootRangersEnabled;
+  final bool? lootRangersEnabled;
 
   LootNotificationsIOS({
-    @required this.callback,
-    @required this.lootRangersEnabled,
+    required this.callback,
+    required this.lootRangersEnabled,
   });
 
   @override
@@ -24,12 +24,12 @@ class LootNotificationsIOS extends StatefulWidget {
 }
 
 class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
-  String _lootNotificationAheadDropDownValue;
+  String? _lootNotificationAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -68,7 +68,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
               String message = 'Here you can specify your preferred alerting '
                   'method and launch time before the loot level is reached';
 
-              if (widget.lootRangersEnabled) {
+              if (widget.lootRangersEnabled!) {
                 message += ' (also applies to Loot Rangers, if available)';
               }
 
@@ -232,7 +232,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootNotificationAhead(value);
+        Prefs().setLootNotificationAhead(value!);
         setState(() {
           _lootNotificationAheadDropDownValue = value;
         });

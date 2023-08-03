@@ -14,11 +14,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AddFriendResult {
   bool success;
-  String errorReason = "";
-  String friendId = "";
-  String friendName = "";
+  String? errorReason = "";
+  String? friendId = "";
+  String? friendName = "";
 
-  AddFriendResult({@required this.success, this.errorReason, this.friendId, this.friendName});
+  AddFriendResult({required this.success, this.errorReason, this.friendId, this.friendName});
 }
 
 class UpdateFriendResult {
@@ -26,7 +26,7 @@ class UpdateFriendResult {
   int numberErrors;
   int numberSuccessful;
 
-  UpdateFriendResult({@required this.success, @required this.numberErrors, @required this.numberSuccessful});
+  UpdateFriendResult({required this.success, required this.numberErrors, required this.numberSuccessful});
 }
 
 class FriendsProvider extends ChangeNotifier {
@@ -41,11 +41,11 @@ class FriendsProvider extends ChangeNotifier {
   String _currentFilter = '';
   String get currentFilter => _currentFilter;
 
-  FriendSortType _currentSort;
+  FriendSortType? _currentSort;
 
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
-  Future<AddFriendResult> addFriend(String friendId, {String notes = '', String notesColor = ''}) async {
+  Future<AddFriendResult> addFriend(String friendId, {String? notes = '', String? notesColor = ''}) async {
     for (var fri in _friends) {
       if (fri.playerId.toString() == friendId) {
         return AddFriendResult(
@@ -81,7 +81,7 @@ class FriendsProvider extends ChangeNotifier {
     }
   }
 
-  void deleteFriend(FriendModel friend) {
+  void deleteFriend(FriendModel? friend) {
     _oldFriendsList = List<FriendModel>.from(_friends);
     _friends.remove(friend);
     notifyListeners();
@@ -175,14 +175,14 @@ class FriendsProvider extends ChangeNotifier {
   }
 
   void _getFriendFaction(FriendModel myNewFriendModel) {
-    if (myNewFriendModel.faction.factionId != 0) {
+    if (myNewFriendModel.faction!.factionId != 0) {
       myNewFriendModel.hasFaction = true;
     } else {
       myNewFriendModel.hasFaction = false;
     }
   }
 
-  void setFriendNote(FriendModel friend, String note, String color) {
+  void setFriendNote(FriendModel friend, String note, String? color) {
     friend.personalNote = note;
     friend.personalNoteColor = color;
     _saveFriendsSharedPrefs();
@@ -243,22 +243,22 @@ class FriendsProvider extends ChangeNotifier {
     _currentSort = sortType;
     switch (sortType) {
       case FriendSortType.levelDes:
-        _friends.sort((a, b) => b.level.compareTo(a.level));
+        _friends.sort((a, b) => b.level!.compareTo(a.level!));
         break;
       case FriendSortType.levelAsc:
-        _friends.sort((a, b) => a.level.compareTo(b.level));
+        _friends.sort((a, b) => a.level!.compareTo(b.level!));
         break;
       case FriendSortType.factionDes:
-        _friends.sort((a, b) => b.faction.factionName.compareTo(a.faction.factionName));
+        _friends.sort((a, b) => b.faction!.factionName!.compareTo(a.faction!.factionName!));
         break;
       case FriendSortType.factionAsc:
-        _friends.sort((a, b) => a.faction.factionName.compareTo(b.faction.factionName));
+        _friends.sort((a, b) => a.faction!.factionName!.compareTo(b.faction!.factionName!));
         break;
       case FriendSortType.nameDes:
-        _friends.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        _friends.sort((a, b) => b.name!.toLowerCase().compareTo(a.name!.toLowerCase()));
         break;
       case FriendSortType.nameAsc:
-        _friends.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        _friends.sort((a, b) => a.name!.toLowerCase().compareTo(b.name!.toLowerCase()));
         break;
     }
     _saveSortSharedPrefs();
@@ -267,8 +267,8 @@ class FriendsProvider extends ChangeNotifier {
   }
 
   void _saveSortSharedPrefs() {
-    String sortToSave;
-    switch (_currentSort) {
+    late String sortToSave;
+    switch (_currentSort!) {
       case FriendSortType.levelDes:
         sortToSave = 'levelDes';
         break;

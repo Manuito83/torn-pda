@@ -13,7 +13,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/travel/travel_notification_text.dart';
 
 class TravelOptionsIOS extends StatefulWidget {
-  final Function callback;
+  final Function? callback;
 
   TravelOptionsIOS({
     this.callback,
@@ -24,12 +24,12 @@ class TravelOptionsIOS extends StatefulWidget {
 }
 
 class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
-  String _travelNotificationAheadDropDownValue;
+  String? _travelNotificationAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -224,7 +224,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setTravelNotificationAhead(value);
+        Prefs().setTravelNotificationAhead(value!);
         setState(() {
           _travelNotificationAheadDropDownValue = value;
         });
@@ -242,12 +242,12 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
 
   Future<bool> _willPopCallback() async {
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     return true;
   }
 
-  Future<void> _showNotificationTextDialog() async {
+  _showNotificationTextDialog() async {
     var title = await Prefs().getTravelNotificationTitle();
     var body = await Prefs().getTravelNotificationBody();
 
@@ -274,7 +274,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
     routeWithDrawer = false;
     routeName = "profile_notifications";
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     Navigator.of(context).pop();
   }

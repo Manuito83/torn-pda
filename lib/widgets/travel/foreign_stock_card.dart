@@ -37,37 +37,37 @@ class ForeignStockCard extends StatefulWidget {
   final bool inventoryEnabled;
   final bool showArrivalTime;
   final bool showBarsCooldownAnalysis;
-  final int capacity;
-  final OwnProfileExtended profile;
+  final int? capacity;
+  final OwnProfileExtended? profile;
   final Function flagPressedCallback;
   final Function requestMoneyRefresh;
   final Function(ForeignStock) memberHiddenCallback;
-  final TravelTicket ticket;
-  final Map<String, dynamic> activeRestocks;
+  final TravelTicket? ticket;
+  final Map<String, dynamic>? activeRestocks;
 
-  final int travellingTimeStamp;
+  final int? travellingTimeStamp;
   final CountryName travellingCountry;
-  final String travellingCountryFullName;
+  final String? travellingCountryFullName;
 
   final bool displayShowcase;
 
   ForeignStockCard({
-    @required this.foreignStock,
-    @required this.inventoryEnabled,
-    @required this.showArrivalTime,
-    @required this.showBarsCooldownAnalysis,
-    @required this.capacity,
-    @required this.profile,
-    @required this.flagPressedCallback,
-    @required this.requestMoneyRefresh,
-    @required this.memberHiddenCallback,
-    @required this.ticket,
-    @required this.activeRestocks,
-    @required this.travellingTimeStamp,
-    @required this.travellingCountry,
-    @required this.travellingCountryFullName,
-    @required this.displayShowcase,
-    @required Key key,
+    required this.foreignStock,
+    required this.inventoryEnabled,
+    required this.showArrivalTime,
+    required this.showBarsCooldownAnalysis,
+    required this.capacity,
+    required this.profile,
+    required this.flagPressedCallback,
+    required this.requestMoneyRefresh,
+    required this.memberHiddenCallback,
+    required this.ticket,
+    required this.activeRestocks,
+    required this.travellingTimeStamp,
+    required this.travellingCountry,
+    required this.travellingCountryFullName,
+    required this.displayShowcase,
+    required Key key,
   }) : super(key: key);
 
   @override
@@ -77,7 +77,7 @@ class ForeignStockCard extends StatefulWidget {
 class _ForeignStockCardState extends State<ForeignStockCard> {
   var _expandableController = ExpandableController();
 
-  Future _footerInformationRetrieved;
+  Future? _footerInformationRetrieved;
   bool _footerSuccessful = false;
 
   var _periodicMap = SplayTreeMap();
@@ -87,7 +87,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   var _projectedRestockDateTime = DateTime.now();
   var _depletionTrendPerSecond = 0.0;
 
-  var _invQuantity = 0;
+  int? _invQuantity = 0;
 
   var _delayedDepartureTime = DateTime.now();
   String _codeName = "";
@@ -97,8 +97,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   DateTime _earliestBackToTorn = DateTime.now();
 
-  Stream _browserHasClosed;
-  StreamSubscription _browserHasClosedSubscription;
+  late Stream _browserHasClosed;
+  late StreamSubscription _browserHasClosedSubscription;
 
   // Used for mid-trip calculations
   bool _flyingToThisCountry = false;
@@ -106,15 +106,15 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   bool _landedInWidgetCountry = false;
   String _tripExplanatory = "";
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   List<Color> gradientColors = [
     const Color(0xff23b6e6),
     const Color(0xff02d39a),
   ];
 
-  Timer _ticker;
+  Timer? _ticker;
 
   // Showcases
   GlobalKey _showcaseMoneyIcon = GlobalKey();
@@ -186,7 +186,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             child: Card(
               shape: RoundedRectangleBorder(
                 side: BorderSide(
-                  color: widget.activeRestocks.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
+                  color: widget.activeRestocks!.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
                   width: 1.5,
                 ),
                 borderRadius: BorderRadius.circular(4.0),
@@ -200,8 +200,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                         'later at any time by using the \'eye\' icon in the app bar.',
                     targetPadding: const EdgeInsets.all(10),
                     disableMovingAnimation: true,
-                    textColor: _themeProvider.mainText,
-                    tooltipBackgroundColor: _themeProvider.secondBackground,
+                    textColor: _themeProvider.mainText!,
+                    tooltipBackgroundColor: _themeProvider.secondBackground!,
                     descTextStyle: TextStyle(fontSize: 13),
                     tooltipPadding: EdgeInsets.all(20),
                     child: SizedBox(height: 80),
@@ -210,7 +210,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: ExpandablePanel(
-                        collapsed: null,
+                        collapsed: Container(),
                         controller: _expandableController,
                         theme: ExpandableThemeData(
                           hasIcon: false,
@@ -257,7 +257,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       }
 
       if (showCases.isNotEmpty) {
-        ShowCaseWidget.of(_).startShowCase(showCases);
+        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
@@ -311,7 +311,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     var whenToTravel = "";
     var arrivalTime = "";
     var depletesTime = "";
-    Color whenToTravelColor = _themeProvider.mainText;
+    Color? whenToTravelColor = _themeProvider.mainText;
 
     bool delayDeparture = false;
 
@@ -320,14 +320,14 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     //  - If there are no items: arrive when restock happens
     //  - Does NOT take into account a restock that depletes quickly
 
-    if (_earliestArrival.isAfter(_projectedRestockDateTime) || widget.foreignStock.quantity > 0) {
+    if (_earliestArrival.isAfter(_projectedRestockDateTime) || widget.foreignStock.quantity! > 0) {
       // Checks > 0 in case restock has happened already
 
       delayDeparture = false;
 
       // Avoid dividing by 0 if we have no trend
-      if (widget.foreignStock.quantity > 0 && _depletionTrendPerSecond > 0) {
-        var secondsToDeplete = widget.foreignStock.quantity / _depletionTrendPerSecond;
+      if (widget.foreignStock.quantity! > 0 && _depletionTrendPerSecond > 0) {
+        var secondsToDeplete = widget.foreignStock.quantity! / _depletionTrendPerSecond;
 
         // If depleting very slowly (more than a day)
         if (secondsToDeplete > 86400) {
@@ -352,7 +352,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       else {
         // This will avoid recommending to travel with empty empty with no known
         // average restock time
-        if (widget.foreignStock.quantity > 0 || average != "unknown") {
+        if (widget.foreignStock.quantity! > 0 || average != "unknown") {
           whenToTravel = "Travel NOW";
         }
       }
@@ -505,7 +505,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                       child: CheckboxListTile(
                         checkColor: Colors.white,
                         activeColor: Colors.blue,
-                        value: widget.activeRestocks.keys.contains(_codeName) ? true : false,
+                        value: widget.activeRestocks!.keys.contains(_codeName) ? true : false,
                         title: Text(
                           "Restock alert (auto)",
                           style: TextStyle(
@@ -521,7 +521,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                           ),
                         ),
                         onChanged: (ticked) async {
-                          if (ticked) {
+                          if (ticked!) {
                             await _addToActiveRestockAlerts();
                           } else {
                             await _removeToActiveRestockAlerts();
@@ -559,13 +559,13 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   Future _addToActiveRestockAlerts() async {
     var time = DateTime.now().millisecondsSinceEpoch;
-    if (!widget.activeRestocks.keys.contains(_codeName)) {
-      Map<String, dynamic> tempMap = widget.activeRestocks;
+    if (!widget.activeRestocks!.keys.contains(_codeName)) {
+      Map<String, dynamic> tempMap = widget.activeRestocks!;
       tempMap.addAll({_codeName: time});
       firestore.updateActiveRestockAlerts(tempMap).then((success) async {
         if (success) {
           setState(() {
-            widget.activeRestocks.addAll({_codeName: time});
+            widget.activeRestocks!.addAll({_codeName: time});
           });
           Prefs().setActiveRestocks(json.encode(tempMap));
 
@@ -578,7 +578,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.orange[700],
+              contentColor: Colors.orange[700]!,
               duration: Duration(seconds: 4),
               contentPadding: EdgeInsets.all(10),
             );
@@ -589,13 +589,13 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Future _removeToActiveRestockAlerts() async {
-    if (widget.activeRestocks.keys.contains(_codeName)) {
-      Map<String, dynamic> tempMap = widget.activeRestocks;
+    if (widget.activeRestocks!.keys.contains(_codeName)) {
+      Map<String, dynamic> tempMap = widget.activeRestocks!;
       tempMap.removeWhere((key, value) => key == _codeName);
       firestore.updateActiveRestockAlerts(tempMap).then((success) {
         if (success) {
           setState(() {
-            widget.activeRestocks.removeWhere((key, value) => key == _codeName);
+            widget.activeRestocks!.removeWhere((key, value) => key == _codeName);
           });
           Prefs().setActiveRestocks(json.encode(tempMap));
         }
@@ -615,7 +615,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           children: [
             SizedBox(
               width: 100,
-              child: Text(stock.name),
+              child: Text(stock.name!),
             ),
             if (widget.inventoryEnabled)
               SizedBox(
@@ -636,8 +636,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           child: Text(
             'x${stock.quantity}',
             style: TextStyle(
-              color: stock.quantity > 0 ? Colors.green : Colors.red,
-              fontWeight: stock.quantity > 0 ? FontWeight.bold : FontWeight.normal,
+              color: stock.quantity! > 0 ? Colors.green : Colors.red,
+              fontWeight: stock.quantity! > 0 ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
@@ -668,9 +668,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     Widget costWidget;
     String moneyToBuy = '';
     String moneyToBuyExtra = '';
-    Color moneyToBuyColor = Colors.grey;
-    if (widget.profile.moneyOnHand >= stock.cost * widget.capacity) {
-      moneyToBuy = 'You have the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
+    Color? moneyToBuyColor = Colors.grey;
+    if (widget.profile!.moneyOnHand! >= stock.cost! * widget.capacity!) {
+      moneyToBuy = 'You have the \$${costCurrency.format(stock.cost! * widget.capacity!)} necessary to '
           'buy ${widget.capacity} ${stock.name}';
       moneyToBuyColor = Colors.green[800];
       costWidget = Row(
@@ -683,8 +683,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                   ' If you do, tap the safe to vault icon to access it in game.',
               targetPadding: const EdgeInsets.all(10),
               disableMovingAnimation: true,
-              textColor: _themeProvider.mainText,
-              tooltipBackgroundColor: _themeProvider.secondBackground,
+              textColor: _themeProvider.mainText!,
+              tooltipBackgroundColor: _themeProvider.secondBackground!,
               descTextStyle: TextStyle(fontSize: 13),
               tooltipPadding: EdgeInsets.all(20),
               child: Icon(
@@ -699,7 +699,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: moneyToBuyColor,
+                contentColor: moneyToBuyColor!,
                 duration: Duration(seconds: 4),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -710,12 +710,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         ],
       );
     } else {
-      var howMany = (widget.profile.moneyOnHand / stock.cost).floor();
+      var howMany = (widget.profile!.moneyOnHand! / stock.cost!).floor();
       String howManyString = howMany == 0 ? "cannot buy a single" : "can only buy $howMany";
       moneyToBuy = 'You $howManyString ${stock.name} with the money you have.';
       moneyToBuyExtra = 'You need '
-          '\$${costCurrency.format((stock.cost * widget.capacity) - widget.profile.moneyOnHand)} more '
-          '(a total of \$${costCurrency.format(stock.cost * widget.capacity)}) to buy ${widget.capacity}.';
+          '\$${costCurrency.format((stock.cost! * widget.capacity!) - widget.profile!.moneyOnHand!)} more '
+          '(a total of \$${costCurrency.format(stock.cost! * widget.capacity!)}) to buy ${widget.capacity}.';
       moneyToBuyColor = Colors.orange[800];
       costWidget = Row(
         children: [
@@ -803,7 +803,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
 
     // Profit per hour
-    String profitPerHourFormatted = formatProfit(inputInt: (stock.profit * widget.capacity).abs());
+    String profitPerHourFormatted = formatProfit(inputInt: (stock.profit * widget.capacity!).abs());
     if (stock.profit <= 0) {
       profitPerHourFormatted = '-\$$profitPerHourFormatted';
     } else {
@@ -836,7 +836,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           Text(
-            '(\$${costCurrency.format(stock.cost * widget.capacity)})',
+            '(\$${costCurrency.format(stock.cost! * widget.capacity!)})',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 9),
           ),
         ],
@@ -855,8 +855,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             description: '\nTap any flag to access the Travel Agency directly from this section!',
             targetPadding: const EdgeInsets.all(10),
             disableMovingAnimation: true,
-            textColor: _themeProvider.mainText,
-            tooltipBackgroundColor: _themeProvider.secondBackground,
+            textColor: _themeProvider.mainText!,
+            tooltipBackgroundColor: _themeProvider.secondBackground!,
             descTextStyle: TextStyle(fontSize: 13),
             tooltipPadding: EdgeInsets.all(20),
             child: CountryCodeAndFlag(stock: stock),
@@ -876,8 +876,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           description: '\nClick to expand the item card and learn more details about your travel and stock!',
           targetPadding: const EdgeInsets.all(10),
           disableMovingAnimation: true,
-          textColor: _themeProvider.mainText,
-          tooltipBackgroundColor: _themeProvider.secondBackground,
+          textColor: _themeProvider.mainText!,
+          tooltipBackgroundColor: _themeProvider.secondBackground!,
           descTextStyle: TextStyle(fontSize: 13),
           tooltipPadding: EdgeInsets.all(20),
           child: Padding(
@@ -893,17 +893,17 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     // Currency configuration
     final costCurrency = new NumberFormat("#,##0", "en_US");
 
-    var moneyOnHand = widget.profile.moneyOnHand;
+    var moneyOnHand = widget.profile!.moneyOnHand!;
     String moneyToBuy = '';
     Color moneyToBuyColor = Colors.grey;
-    if (moneyOnHand >= stock.cost * widget.capacity) {
-      moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
+    if (moneyOnHand >= stock.cost! * widget.capacity!) {
+      moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost! * widget.capacity!)} necessary to '
           'buy ${widget.capacity} ${stock.name}';
       moneyToBuyColor = Colors.green;
     } else {
-      moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} '
+      moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost! * widget.capacity!)} '
           'necessary to buy ${widget.capacity} ${stock.name}. Add another '
-          '\$${costCurrency.format((stock.cost * widget.capacity) - moneyOnHand)}';
+          '\$${costCurrency.format((stock.cost! * widget.capacity!) - moneyOnHand)}';
       moneyToBuyColor = Colors.red;
     }
 
@@ -921,7 +921,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Row _returnLastUpdated() {
-    var inputTime = DateTime.fromMillisecondsSinceEpoch(widget.foreignStock.timestamp * 1000);
+    var inputTime = DateTime.fromMillisecondsSinceEpoch(widget.foreignStock.timestamp! * 1000);
     var timeDifference = DateTime.now().difference(inputTime);
     var timeString;
     var color;
@@ -987,7 +987,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
       if (restockList.length > 0) {
         var sum = 0;
-        for (var res in restockList) sum += res;
+        for (int res in restockList) sum += res;
         _averageTimeToRestock = sum ~/ restockList.length;
 
         var twentyPercent = _averageTimeToRestock * 0.2;
@@ -1011,7 +1011,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       _projectedRestockDateTime = lastEmptyDateTime.add(Duration(seconds: _averageTimeToRestock));
 
       // CURRENT DEPLETION TREND
-      if (widget.foreignStock.quantity > 0) {
+      if (widget.foreignStock.quantity! > 0) {
         var inverseList = [];
         var inverseMap = SplayTreeMap<int, int>.from(firestoreMap, (a, b) => b.compareTo(a));
         inverseMap.entries.forEach((e) => inverseList.add("${e.key}, ${e.value}"));
@@ -1062,7 +1062,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
     bool anyAffectation = false;
 
-    DateTime energyTime = DateTime.now().add(Duration(seconds: widget.profile.energy.fulltime));
+    DateTime energyTime = DateTime.now().add(Duration(seconds: widget.profile!.energy!.fulltime!));
     if (energyTime.isBefore(_earliestBackToTorn)) {
       anyAffectation = true;
       Duration energyGap = _earliestBackToTorn.difference(energyTime);
@@ -1097,7 +1097,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       );
     }
 
-    DateTime nerveTime = DateTime.now().add(Duration(seconds: widget.profile.nerve.fulltime));
+    DateTime nerveTime = DateTime.now().add(Duration(seconds: widget.profile!.nerve!.fulltime!));
     if (nerveTime.isBefore(_earliestBackToTorn)) {
       anyAffectation = true;
       Duration nerveGap = _earliestBackToTorn.difference(nerveTime);
@@ -1132,7 +1132,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       );
     }
 
-    DateTime drugsTime = DateTime.now().add(Duration(seconds: widget.profile.cooldowns.drug));
+    DateTime drugsTime = DateTime.now().add(Duration(seconds: widget.profile!.cooldowns!.drug!));
     if (drugsTime.isBefore(_earliestBackToTorn)) {
       anyAffectation = true;
       Duration drugsGap = _earliestBackToTorn.difference(drugsTime);
@@ -1167,7 +1167,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       );
     }
 
-    DateTime medicalTime = DateTime.now().add(Duration(seconds: widget.profile.cooldowns.medical));
+    DateTime medicalTime = DateTime.now().add(Duration(seconds: widget.profile!.cooldowns!.medical!));
     if (medicalTime.isBefore(_earliestBackToTorn)) {
       anyAffectation = true;
       Duration medicalGap = _earliestBackToTorn.difference(medicalTime);
@@ -1202,7 +1202,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       );
     }
 
-    DateTime boosterTime = DateTime.now().add(Duration(seconds: widget.profile.cooldowns.booster));
+    DateTime boosterTime = DateTime.now().add(Duration(seconds: widget.profile!.cooldowns!.booster!));
     if (boosterTime.isBefore(_earliestBackToTorn)) {
       anyAffectation = true;
       Duration boosterGap = _earliestBackToTorn.difference(boosterTime);
@@ -1423,7 +1423,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   LineChartData _mainChartData() {
     var spots = <FlSpot>[];
     double count = 0;
-    double maxY = 0;
+    double? maxY = 0;
     var timestamps = <int>[];
 
     _periodicMap.forEach((key, value) {
@@ -1434,11 +1434,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     });
 
     double interval;
-    if (maxY > 1000) {
+    if (maxY! > 1000) {
       interval = 1000;
-    } else if (maxY > 200 && maxY <= 1000) {
+    } else if (maxY! > 200 && maxY! <= 1000) {
       interval = 200;
-    } else if (maxY > 20 && maxY <= 200) {
+    } else if (maxY! > 20 && maxY! <= 200) {
       interval = 20;
     } else {
       interval = 2;
@@ -1536,7 +1536,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                 child: SizedBox(
                   width: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 120 : 80,
                   child: Text(
-                    _timeFormatter(date),
+                    _timeFormatter(date)!,
                     style: myStyle,
                   ),
                 ),
@@ -1550,7 +1550,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             interval: interval,
             reservedSize: 20,
             getTitlesWidget: (yValue, titleMeta) {
-              if (maxY > 1000) {
+              if (maxY! > 1000) {
                 return Text(
                   "${(yValue / 1000).truncate().toStringAsFixed(0)}K",
                   style: TextStyle(
@@ -1582,7 +1582,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       minX: 0,
       maxX: _periodicMap.length.toDouble(),
       minY: 0,
-      maxY: maxY + maxY * 0.1,
+      maxY: maxY! + maxY! * 0.1,
       lineBarsData: [
         LineChartBarData(
           spots: spots,
@@ -1614,7 +1614,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     _tripExplanatory = "";
 
     var now = DateTime.now();
-    var travelTs = DateTime.fromMillisecondsSinceEpoch(widget.travellingTimeStamp * 1000);
+    var travelTs = DateTime.fromMillisecondsSinceEpoch(widget.travellingTimeStamp! * 1000);
 
     // If we are travelling or stopped in another country abroad
     if (travelTs.isAfter(now) || widget.travellingCountry != CountryName.TORN) {
@@ -1735,14 +1735,14 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             country: widget.foreignStock.countryFullName,
             stockCodeName: _codeName,
             itemId: widget.foreignStock.id,
-            countryId: widget.foreignStock.country.index,
+            countryId: widget.foreignStock.country!.index,
           ),
         );
       },
     );
   }
 
-  String _timeFormatter(DateTime time) {
+  String? _timeFormatter(DateTime time) {
     return TimeFormatter(
       inputTime: time,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -1750,7 +1750,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     ).formatHour;
   }
 
-  String _dateFormatter(DateTime time) {
+  String? _dateFormatter(DateTime time) {
     return TimeFormatter(
       inputTime: time,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -1801,7 +1801,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.grey[700],
+                    contentColor: Colors.grey[700]!,
                     duration: Duration(seconds: 6),
                     contentPadding: EdgeInsets.all(10),
                   );
@@ -2017,7 +2017,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.grey[700],
+      contentColor: Colors.grey[700]!,
       duration: Duration(seconds: 4),
       contentPadding: EdgeInsets.all(15),
     );
@@ -2043,15 +2043,15 @@ class CountryCodeAndFlag extends StatelessWidget {
   final ForeignStock stock;
   final bool dense;
 
-  const CountryCodeAndFlag({@required this.stock, this.dense = false});
+  const CountryCodeAndFlag({required this.stock, this.dense = false});
 
   @override
   Widget build(BuildContext context) {
-    String countryCode;
-    String flag;
+    late String countryCode;
+    late String flag;
 
     if (stock.country != null) {
-      switch (stock.country) {
+      switch (stock.country!) {
         case CountryName.JAPAN:
           countryCode = 'JPN';
           flag = 'images/flags/stock/japan.png';
@@ -2102,7 +2102,7 @@ class CountryCodeAndFlag extends StatelessWidget {
     } else if (stock.countryCode != null) {
       // Requested from hidden stocks, codes differ!
 
-      switch (stock.countryCode.toUpperCase()) {
+      switch (stock.countryCode!.toUpperCase()) {
         case 'JAP':
           countryCode = 'JPN';
           flag = 'images/flags/stock/japan.png';

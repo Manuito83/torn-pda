@@ -113,7 +113,7 @@ class ShortcutsProvider extends ChangeNotifier {
     for (var savedShortRaw in savedLoad) {
       try {
         var savedShort = shortcutFromJson(savedShortRaw);
-        if (savedShort.isCustom) {
+        if (savedShort.isCustom!) {
           activateSavedShortcut(savedShort);
         } else {
           for (var stockShort in _allShortcuts) {

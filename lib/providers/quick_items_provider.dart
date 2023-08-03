@@ -80,8 +80,8 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   void decreaseInventory(QuickItem item) {
-    if (item.inventory > 0) {
-      item.inventory--;
+    if (item.inventory! > 0) {
+      item.inventory = item.inventory! - 1;
       _saveListAfterChanges();
       notifyListeners();
     }
@@ -132,7 +132,7 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   void changeLoadoutName(QuickItem loadout, String name) {
-    if (!loadout.isLoadout) return;
+    if (!loadout.isLoadout!) return;
     for (QuickItem item in _activeQuickItemsList) {
       if (loadout.loadoutNumber == item.loadoutNumber) {
         item.loadoutName = name;
@@ -168,9 +168,9 @@ class QuickItemsProvider extends ChangeNotifier {
       _fullQuickItemsList.clear();
 
       // Add Torn items
-      allTornItems.items.forEach((itemNumber, itemProperties) {
+      allTornItems.items!.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type) ||
-            _quickItemExceptions.contains(itemProperties.name.toLowerCase())) {
+            _quickItemExceptions.contains(itemProperties.name!.toLowerCase())) {
           // If the item was saved as active, mark it as such so that we can
           // filter it in our full list
           var savedActive = false;
@@ -190,13 +190,13 @@ class QuickItemsProvider extends ChangeNotifier {
           );
         }
       });
-      _fullQuickItemsList.sort((a, b) => a.name.compareTo(b.name));
+      _fullQuickItemsList.sort((a, b) => a.name!.compareTo(b.name!));
 
       // Insert loadouts at the beginning after sorting
       for (int i = 0; i < 9; i++) {
         var savedActive = false;
         for (var saved in _activeQuickItemsList) {
-          if (saved.isLoadout && saved.loadoutNumber == i + 1) {
+          if (saved.isLoadout! && saved.loadoutNumber == i + 1) {
             savedActive = true;
             break;
           }
@@ -228,7 +228,7 @@ class QuickItemsProvider extends ChangeNotifier {
       if (fullUpdate) {
         for (var quickItem in _fullQuickItemsList) {
           bool found = false;
-          for (var invItem in inventoryItems.inventory) {
+          for (var invItem in inventoryItems.inventory!) {
             if (invItem.name == quickItem.name) {
               found = true;
               quickItem.inventory = invItem.quantity;
@@ -243,7 +243,7 @@ class QuickItemsProvider extends ChangeNotifier {
 
       for (var quickItem in _activeQuickItemsList) {
         bool found = false;
-        for (var invItem in inventoryItems.inventory) {
+        for (var invItem in inventoryItems.inventory!) {
           if (invItem.name == quickItem.name) {
             found = true;
             quickItem.inventory = invItem.quantity;

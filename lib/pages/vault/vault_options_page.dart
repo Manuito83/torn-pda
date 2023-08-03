@@ -13,7 +13,7 @@ class VaultOptionsPage extends StatefulWidget {
   final bool vaultDetected;
   final Function callback;
 
-  VaultOptionsPage({@required this.vaultDetected, @required this.callback});
+  VaultOptionsPage({required this.vaultDetected, required this.callback});
 
   @override
   _VaultOptionsPageState createState() => _VaultOptionsPageState();
@@ -22,9 +22,9 @@ class VaultOptionsPage extends StatefulWidget {
 class _VaultOptionsPageState extends State<VaultOptionsPage> {
   bool _vaultEnabled = true;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
-  Future _preferencesLoaded;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  Future? _preferencesLoaded;
 
   @override
   void initState() {

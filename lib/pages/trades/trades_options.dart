@@ -13,12 +13,12 @@ import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesOptions extends StatefulWidget {
-  final int playerId;
+  final int? playerId;
   final Function callback;
 
   TradesOptions({
-    @required this.playerId,
-    @required this.callback,
+    required this.playerId,
+    required this.callback,
   });
 
   @override
@@ -32,10 +32,10 @@ class _TradesOptionsState extends State<TradesOptions> {
   bool _awhEnabled = true;
   bool _tornTraderEnabled = true;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   @override
   void initState() {
@@ -252,21 +252,21 @@ class _TradesOptionsState extends State<TradesOptions> {
                   widget.playerId,
                 );
 
-                if (auth.error) {
+                if (auth.error!) {
                   BotToast.showText(
                     text: 'There was an issue contacting Torn Trader, please try again later!',
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.orange[800],
+                    contentColor: Colors.orange[800]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
                   return;
                 }
 
-                if (auth.allowed) {
+                if (auth.allowed!) {
                   Prefs().setTornTraderEnabled(activated);
                   setState(() {
                     _tornTraderEnabled = true;
@@ -277,7 +277,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.green[500],
+                    contentColor: Colors.green[500]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
@@ -289,7 +289,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.orange[800],
+                    contentColor: Colors.orange[800]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );

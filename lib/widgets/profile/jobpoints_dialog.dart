@@ -11,18 +11,18 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class JobPointsDialog extends StatefulWidget {
-  final int currentType;
-  final int currentPoints;
-  final Jobpoints jobpoints;
-  final Job job;
+  final int? currentType;
+  final int? currentPoints;
+  final Jobpoints? jobpoints;
+  final Job? job;
   final bool unemployed;
 
   JobPointsDialog({
-    @required this.currentType,
-    @required this.currentPoints,
-    @required this.jobpoints,
-    @required this.job,
-    @required this.unemployed,
+    required this.currentType,
+    required this.currentPoints,
+    required this.jobpoints,
+    required this.job,
+    required this.unemployed,
   });
 
   @override
@@ -30,7 +30,7 @@ class JobPointsDialog extends StatefulWidget {
 }
 
 class _JobPointsDialogState extends State<JobPointsDialog> {
-  ThemeProvider _themeProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -146,7 +146,7 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
         Column(
           children: [
             Text(
-              widget.job.companyName == 'None' ? widget.job.job : HtmlParser.fix(widget.job.companyName),
+              widget.job!.companyName == 'None' ? widget.job!.job! : HtmlParser.fix(widget.job!.companyName),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -165,7 +165,7 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
   }
 
   Widget _jopPoints() {
-    if (widget.jobpoints.jobs == null) {
+    if (widget.jobpoints!.jobs == null) {
       return Text(
         'No starter-job points found!',
         style: TextStyle(
@@ -177,37 +177,37 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
     return Column(
       children: [
         Text(
-          'Army: ${widget.jobpoints.jobs.army}',
+          'Army: ${widget.jobpoints!.jobs!.army}',
           style: TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Casino: ${widget.jobpoints.jobs.casino}',
+          'Casino: ${widget.jobpoints!.jobs!.casino}',
           style: TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Education: ${widget.jobpoints.jobs.education}',
+          'Education: ${widget.jobpoints!.jobs!.education}',
           style: TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Grocer: ${widget.jobpoints.jobs.grocer}',
+          'Grocer: ${widget.jobpoints!.jobs!.grocer}',
           style: TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Law: ${widget.jobpoints.jobs.law}',
+          'Law: ${widget.jobpoints!.jobs!.law}',
           style: TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Medical: ${widget.jobpoints.jobs.medical}',
+          'Medical: ${widget.jobpoints!.jobs!.medical}',
           style: TextStyle(
             fontSize: 12,
           ),
@@ -219,9 +219,9 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
   Widget _companyPoints() {
     var jobs = <Widget>[];
 
-    if (widget.jobpoints.companies != null) {
+    if (widget.jobpoints!.companies != null) {
       jobs.add(Divider());
-      widget.jobpoints.companies.forEach((type, details) {
+      widget.jobpoints!.companies!.forEach((type, details) {
         jobs.add(
           Text(
             '${details.name}: ${details.jobpoints}',

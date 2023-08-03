@@ -15,9 +15,9 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import '../../utils/shared_prefs.dart';
 
 Future<void> openWebViewSimpleDialog({
-  BuildContext context,
-  String initUrl,
-  Function callBack,
+  BuildContext? context,
+  String? initUrl,
+  Function? callBack,
   bool captchaWorkflow = false,
 }) async {
   if (callBack == null && captchaWorkflow) {
@@ -25,7 +25,7 @@ Future<void> openWebViewSimpleDialog({
     return;
   }
 
-  double width = MediaQuery.of(context).size.width;
+  double width = MediaQuery.of(context!).size.width;
   double hPad = 15;
   double frame = 6;
 
@@ -63,15 +63,15 @@ Future<void> openWebViewSimpleDialog({
 }
 
 class WebViewSimpleDialog extends StatefulWidget {
-  final String customUrl;
-  final bool captchaWorkflow;
-  final Function callback;
+  final String? customUrl;
+  final bool? captchaWorkflow;
+  final Function? callback;
 
   const WebViewSimpleDialog({
     this.customUrl,
     this.captchaWorkflow,
     this.callback,
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -79,13 +79,13 @@ class WebViewSimpleDialog extends StatefulWidget {
 }
 
 class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
-  InAppWebViewController webView;
+  late InAppWebViewController webView;
   var _initialWebViewSettings = InAppWebViewSettings();
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
-  URLRequest _initialUrl;
+  URLRequest? _initialUrl;
 
   // We need to destroy the webview before closing the dialog
   // See: https://github.com/flutter/flutter/issues/112542
@@ -95,7 +95,7 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _initialUrl = URLRequest(url: WebUri(widget.customUrl));
+    _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     _initialWebViewSettings = InAppWebViewSettings(
@@ -232,12 +232,12 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       },
       onLoadResource: (c, resource) async {
         // If this is a widget captcha, try to capture the success message to request auth again
-        if (widget.captchaWorkflow) {
+        if (widget.captchaWorkflow!) {
           if (resource.url.toString().contains("favicon.ico")) {
             // Try to get captcha success message twice in a row
             fireCallbackOnCaptchaSuccess(String value) {
               if (value.isNotEmpty && value.contains('"success"')) {
-                widget.callback("captchaWorkflow");
+                widget.callback!("captchaWorkflow");
                 Navigator.pop(context);
               }
             }

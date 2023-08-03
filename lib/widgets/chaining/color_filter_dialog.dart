@@ -13,7 +13,7 @@ class ColorFilterDialog extends StatefulWidget {
 }
 
 class _ColorFilterDialogState extends State<ColorFilterDialog> {
-  TargetsProvider _targetsProvider;
+  late TargetsProvider _targetsProvider;
 
   @override
   void initState() {

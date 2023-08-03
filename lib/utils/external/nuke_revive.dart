@@ -1,6 +1,3 @@
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:http/http.dart' as http;
 
@@ -10,15 +7,15 @@ import 'package:torn_pda/models/profile/revive_services/nuke_revive_model.dart';
 
 class NukeRevive {
   String playerId;
-  String playerName;
-  String playerFaction;
-  String playerLocation;
+  String? playerName;
+  String? playerFaction;
+  String? playerLocation;
 
   NukeRevive({
-    @required this.playerId,
-    @required this.playerName,
-    @required this.playerFaction,
-    @required this.playerLocation,
+    required this.playerId,
+    required this.playerName,
+    required this.playerFaction,
+    required this.playerLocation,
   });
 
   Future<String> callMedic() async {

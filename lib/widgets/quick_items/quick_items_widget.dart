@@ -19,12 +19,12 @@ import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 
 class QuickItemsWidget extends StatefulWidget {
-  final InAppWebViewController inAppWebViewController;
-  final WebViewController webViewController;
+  final InAppWebViewController? inAppWebViewController;
+  final WebViewController? webViewController;
   final bool faction;
 
   QuickItemsWidget({
-    @required this.faction,
+    required this.faction,
     this.inAppWebViewController,
     this.webViewController,
   });
@@ -34,10 +34,10 @@ class QuickItemsWidget extends StatefulWidget {
 }
 
 class _QuickItemsWidgetState extends State<QuickItemsWidget> {
-  QuickItemsProvider _itemsProvider;
-  QuickItemsProviderFaction _itemsProviderFaction;
+  late QuickItemsProvider _itemsProvider;
+  late QuickItemsProviderFaction _itemsProviderFaction;
 
-  Timer _inventoryRefreshTimer;
+  late Timer _inventoryRefreshTimer;
 
   @override
   void initState() {
@@ -94,7 +94,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     }
 
     for (var item in itemList) {
-      Color qtyColor;
+      Color? qtyColor;
       if (item.inventory == 0) {
         qtyColor = Colors.orange[300];
       } else {
@@ -103,13 +103,13 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
 
       double qtyFontSize = 12;
       var itemQty = item.inventory.toString();
-      if (!item.isLoadout && !widget.faction) {
-        if (item.inventory > 999 && item.inventory < 100000) {
-          itemQty = "${(item.inventory / 1000).truncate().toStringAsFixed(0)}K";
-        } else if (item.inventory >= 100000) {
+      if (!item.isLoadout! && !widget.faction) {
+        if (item.inventory! > 999 && item.inventory! < 100000) {
+          itemQty = "${(item.inventory! / 1000).truncate().toStringAsFixed(0)}K";
+        } else if (item.inventory! >= 100000) {
           itemQty = "∞";
         }
-        if (item.inventory >= 10000 && item.inventory < 100000) {
+        if (item.inventory! >= 10000 && item.inventory! < 100000) {
           qtyFontSize = 11;
         }
       }
@@ -123,14 +123,14 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
-            side: item.isLoadout || item.isEnergyPoints || item.isNervePoints ? BorderSide(color: Colors.blue) : null,
-            avatar: item.isLoadout
+            side: item.isLoadout! || item.isEnergyPoints! || item.isNervePoints! ? BorderSide(color: Colors.blue) : null,
+            avatar: item.isLoadout!
                 ? null
                 : widget.faction
-                    ? item.isEnergyPoints || item.isNervePoints
+                    ? item.isEnergyPoints! || item.isNervePoints!
                         ? Icon(
                             MdiIcons.alphaPCircleOutline,
-                            color: item.isEnergyPoints ? Colors.green : Colors.red,
+                            color: item.isEnergyPoints! ? Colors.green : Colors.red,
                           )
                         : CircleAvatar(
                             child: Image.asset(
@@ -148,29 +148,29 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                           ),
                         ),
                       ),
-            label: item.isLoadout
+            label: item.isLoadout!
                 ? Text(
-                    item.loadoutName,
+                    item.loadoutName!,
                     style: TextStyle(fontSize: 11),
                   )
-                : item.isEnergyPoints || item.isNervePoints
+                : item.isEnergyPoints! || item.isNervePoints!
                     ? Text(
-                        item.isEnergyPoints ? "E Refill" : "N Refill",
+                        item.isEnergyPoints! ? "E Refill" : "N Refill",
                         style: TextStyle(fontSize: 11),
                       )
-                    : item.name.split(' ').length > 1
-                        ? _splitName(item.name.replaceAll("Blood Bag : ", "Blood: "))
+                    : item.name!.split(' ').length > 1
+                        ? _splitName(item.name!.replaceAll("Blood Bag : ", "Blood: "))
                         : Text(
-                            item.name.replaceAll("Blood Bag : ", "Blood: "),
+                            item.name!.replaceAll("Blood Bag : ", "Blood: "),
                             softWrap: true,
                             overflow: TextOverflow.clip,
                             maxLines: 2,
                             style: TextStyle(fontSize: 11),
                           ),
             onPressed: () async {
-              if (item.isLoadout) {
-                var js = changeLoadOutJS(item: item.name.split(" ")[1], attackWebview: false);
-                await widget.inAppWebViewController.evaluateJavascript(source: js);
+              if (item.isLoadout!) {
+                var js = changeLoadOutJS(item: item.name!.split(" ")[1], attackWebview: false);
+                await widget.inAppWebViewController!.evaluateJavascript(source: js);
               } else {
                 var js = quickItemsJS(
                   item: item.number.toString(),
@@ -178,7 +178,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                   eRefill: item.isEnergyPoints,
                   nRefill: item.isNervePoints,
                 );
-                await widget.inAppWebViewController.evaluateJavascript(source: js);
+                await widget.inAppWebViewController!.evaluateJavascript(source: js);
                 if (!widget.faction) {
                   _itemsProvider.decreaseInventory(item);
                 }

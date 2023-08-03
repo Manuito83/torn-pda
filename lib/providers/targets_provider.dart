@@ -25,11 +25,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AddTargetResult {
   bool success;
-  String errorReason = "";
-  String targetId = "";
-  String targetName = "";
+  String? errorReason = "";
+  String? targetId = "";
+  String? targetName = "";
 
-  AddTargetResult({@required this.success, this.errorReason, this.targetId, this.targetName});
+  AddTargetResult({required this.success, this.errorReason, this.targetId, this.targetName});
 }
 
 class UpdateTargetsResult {
@@ -37,7 +37,7 @@ class UpdateTargetsResult {
   int numberErrors;
   int numberSuccessful;
 
-  UpdateTargetsResult({@required this.success, @required this.numberErrors, @required this.numberSuccessful});
+  UpdateTargetsResult({required this.success, required this.numberErrors, required this.numberSuccessful});
 }
 
 class TargetsProvider extends ChangeNotifier {
@@ -54,7 +54,7 @@ class TargetsProvider extends ChangeNotifier {
   List<String> _currentColorFilterOut = [];
   List<String> get currentColorFilterOut => _currentColorFilterOut;
 
-  TargetSortType _currentSort;
+  TargetSortType? _currentSort;
 
   TargetsProvider() {
     restorePreferences();
@@ -63,10 +63,10 @@ class TargetsProvider extends ChangeNotifier {
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
   Future<AddTargetResult> addTarget({
-    @required String targetId,
-    @required dynamic attacks,
-    String notes = '',
-    String notesColor = '',
+    required String? targetId,
+    required dynamic attacks,
+    String? notes = '',
+    String? notesColor = '',
   }) async {
     for (var tar in _targets) {
       if (tar.playerId.toString() == targetId) {
@@ -113,7 +113,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void _getTargetFaction(TargetModel myNewTargetModel) {
-    if (myNewTargetModel.faction.factionId != 0) {
+    if (myNewTargetModel.faction!.factionId != 0) {
       myNewTargetModel.hasFaction = true;
     } else {
       myNewTargetModel.hasFaction = false;
@@ -123,77 +123,75 @@ class TargetsProvider extends ChangeNotifier {
   void _getRespectFF(
     AttackModel attackModel,
     TargetModel myNewTargetModel, {
-    double oldRespect = -1,
-    double oldFF = -1,
+    double? oldRespect = -1,
+    double? oldFF = -1,
   }) {
     double respect = -1;
-    double fairFight = -1; // Unknown
+    double? fairFight = -1; // Unknown
     List<bool> userWonOrDefended = <bool>[];
-    if (attackModel is AttackModel) {
-      attackModel.attacks.forEach((key, value) {
-        // We look for the our target in the the attacks list
-        if (myNewTargetModel.playerId == value.defenderId || myNewTargetModel.playerId == value.attackerId) {
-          // Only update if we have still not found a positive value (because
-          // we lost or we have no records)
-          if (value.respectGain > 0) {
-            fairFight = value.modifiers.fairFight;
-            respect = fairFight * 0.25 * (log(myNewTargetModel.level) + 1);
-          } else if (respect == -1) {
-            respect = 0;
-            fairFight = 1.00;
-          }
+    attackModel.attacks!.forEach((key, value) {
+      // We look for the our target in the the attacks list
+      if (myNewTargetModel.playerId == value.defenderId || myNewTargetModel.playerId == value.attackerId) {
+        // Only update if we have still not found a positive value (because
+        // we lost or we have no records)
+        if (value.respectGain > 0) {
+          fairFight = value.modifiers!.fairFight;
+          respect = fairFight! * 0.25 * (log(myNewTargetModel.level!) + 1);
+        } else if (respect == -1) {
+          respect = 0;
+          fairFight = 1.00;
+        }
 
-          if (myNewTargetModel.playerId == value.defenderId) {
-            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
-              // If we attacked and lost
-              userWonOrDefended.add(false);
-            } else {
-              userWonOrDefended.add(true);
-            }
-          } else if (myNewTargetModel.playerId == value.attackerId) {
-            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
-              // If we were attacked and the attacker lost
-              userWonOrDefended.add(true);
-            } else {
-              userWonOrDefended.add(false);
-            }
+        if (myNewTargetModel.playerId == value.defenderId) {
+          if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+            // If we attacked and lost
+            userWonOrDefended.add(false);
+          } else {
+            userWonOrDefended.add(true);
+          }
+        } else if (myNewTargetModel.playerId == value.attackerId) {
+          if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+            // If we were attacked and the attacker lost
+            userWonOrDefended.add(true);
+          } else {
+            userWonOrDefended.add(false);
           }
         }
-      });
-
-      // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
-      // Otherwise, they default to -1 upon class instantiation
-      if (respect != -1) {
-        myNewTargetModel.respectGain = respect;
-      } else if (respect == -1 && oldRespect != -1) {
-        // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or
-        // otherwise it will default to -1). This can happen when the last attack on this target is not within the
-        // last 100 total attacks and therefore it's not returned in the attackModel.
-        myNewTargetModel.respectGain = oldRespect;
       }
+    });
 
-      // Same as above
-      if (fairFight != -1) {
-        myNewTargetModel.fairFight = fairFight;
-      } else if (fairFight == -1 && oldFF != -1) {
-        myNewTargetModel.fairFight = oldFF;
-      }
+    // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
+    // Otherwise, they default to -1 upon class instantiation
+    if (respect != -1) {
+      myNewTargetModel.respectGain = respect;
+    } else if (respect == -1 && oldRespect != -1) {
+      // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or
+      // otherwise it will default to -1). This can happen when the last attack on this target is not within the
+      // last 100 total attacks and therefore it's not returned in the attackModel.
+      myNewTargetModel.respectGain = oldRespect;
+    }
 
-      if (userWonOrDefended.isNotEmpty) {
-        myNewTargetModel.userWonOrDefended = userWonOrDefended.first;
-      } else {
-        myNewTargetModel.userWonOrDefended = true; // Placeholder
-      }
+    // Same as above
+    if (fairFight != -1) {
+      myNewTargetModel.fairFight = fairFight;
+    } else if (fairFight == -1 && oldFF != -1) {
+      myNewTargetModel.fairFight = oldFF;
+    }
+
+    if (userWonOrDefended.isNotEmpty) {
+      myNewTargetModel.userWonOrDefended = userWonOrDefended.first;
+    } else {
+      myNewTargetModel.userWonOrDefended = true; // Placeholder
     }
   }
 
-  void setTargetNote(TargetModel changedTarget, String note, String color) {
+  void setTargetNote(TargetModel? changedTarget, String? note, String? color) {
     // We are not updating the target directly, but instead looping for the correct one because
     // after an attack the targets get updated several times: if the user wants to change the note
     // right after the attack, the good target might have been replaced and the note does not get
     // updated. Therefore, we just loop whenever the user submits the new text.
     for (var tar in _targets) {
-      if (tar.playerId == changedTarget.playerId) {
+      if (tar.playerId == changedTarget!.playerId) {
         tar.personalNote = note;
         tar.personalNoteColor = color;
         _saveTargetsSharedPrefs();
@@ -204,8 +202,8 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   Future<bool> updateTarget({
-    @required TargetModel targetToUpdate,
-    @required dynamic attacks,
+    required TargetModel targetToUpdate,
+    required dynamic attacks,
   }) async {
     targetToUpdate.isUpdating = true;
     notifyListeners();
@@ -301,7 +299,7 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> updateTargetsAfterAttacks({@required List<String> lastAttackedTargets}) async {
+  Future<void> updateTargetsAfterAttacks({required List<String> lastAttackedTargets}) async {
     // Copies the list locally, as it will be erased by the webview after it has been sent
     // so that other attacks are possible
     List<String> lastAttackedCopy = List<String>.from(lastAttackedTargets);
@@ -374,7 +372,7 @@ class TargetsProvider extends ChangeNotifier {
     _saveTargetsSharedPrefs();
   }
 
-  void deleteTargetById(String removedId) {
+  void deleteTargetById(String? removedId) {
     _oldTargetsList = List<TargetModel>.from(_targets);
     for (var tar in _targets) {
       if (tar.playerId.toString() == removedId) {
@@ -410,64 +408,64 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortTargets(TargetSortType sortType) {
+  void sortTargets(TargetSortType? sortType) {
     _currentSort = sortType;
-    switch (sortType) {
+    switch (sortType!) {
       case TargetSortType.levelDes:
-        _targets.sort((a, b) => b.level.compareTo(a.level));
+        _targets.sort((a, b) => b.level!.compareTo(a.level!));
         break;
       case TargetSortType.levelAsc:
-        _targets.sort((a, b) => a.level.compareTo(b.level));
+        _targets.sort((a, b) => a.level!.compareTo(b.level!));
         break;
       case TargetSortType.respectDes:
-        _targets.sort((a, b) => b.respectGain.compareTo(a.respectGain));
+        _targets.sort((a, b) => b.respectGain!.compareTo(a.respectGain!));
         break;
       case TargetSortType.respectAsc:
-        _targets.sort((a, b) => a.respectGain.compareTo(b.respectGain));
+        _targets.sort((a, b) => a.respectGain!.compareTo(b.respectGain!));
         break;
       case TargetSortType.ffDes:
-        _targets.sort((a, b) => b.fairFight.compareTo(a.fairFight));
+        _targets.sort((a, b) => b.fairFight!.compareTo(a.fairFight!));
         break;
       case TargetSortType.ffAsc:
-        _targets.sort((a, b) => a.fairFight.compareTo(b.fairFight));
+        _targets.sort((a, b) => a.fairFight!.compareTo(b.fairFight!));
         break;
       case TargetSortType.nameDes:
-        _targets.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        _targets.sort((a, b) => b.name!.toLowerCase().compareTo(a.name!.toLowerCase()));
         break;
       case TargetSortType.nameAsc:
-        _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        _targets.sort((a, b) => a.name!.toLowerCase().compareTo(b.name!.toLowerCase()));
         break;
       case TargetSortType.lifeDes:
-        _targets.sort((a, b) => b.lifeSort.compareTo(a.lifeSort));
+        _targets.sort((a, b) => b.lifeSort!.compareTo(a.lifeSort!));
         break;
       case TargetSortType.lifeAsc:
-        _targets.sort((a, b) => a.lifeSort.compareTo(b.lifeSort));
+        _targets.sort((a, b) => a.lifeSort!.compareTo(b.lifeSort!));
         break;
       case TargetSortType.colorDes:
-        _targets.sort((a, b) => b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) => b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase()));
         break;
       case TargetSortType.colorAsc:
-        _targets.sort((a, b) => a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) => a.personalNoteColor!.toLowerCase().compareTo(b.personalNoteColor!.toLowerCase()));
         break;
       case TargetSortType.onlineDes:
-        _targets.sort((a, b) => b.lastAction.timestamp.compareTo(a.lastAction.timestamp));
+        _targets.sort((a, b) => b.lastAction!.timestamp!.compareTo(a.lastAction!.timestamp!));
         break;
       case TargetSortType.onlineAsc:
-        _targets.sort((a, b) => a.lastAction.timestamp.compareTo(b.lastAction.timestamp));
+        _targets.sort((a, b) => a.lastAction!.timestamp!.compareTo(b.lastAction!.timestamp!));
         break;
       case TargetSortType.notesDes:
-        _targets.sort((a, b) => b.personalNote.toLowerCase().compareTo(a.personalNote.toLowerCase()));
+        _targets.sort((a, b) => b.personalNote!.toLowerCase().compareTo(a.personalNote!.toLowerCase()));
         break;
       case TargetSortType.notesAsc:
         _targets.sort((a, b) {
-          if (a.personalNote.isEmpty && b.personalNote.isNotEmpty) {
+          if (a.personalNote!.isEmpty && b.personalNote!.isNotEmpty) {
             return 1;
-          } else if (a.personalNote.isNotEmpty && b.personalNote.isEmpty) {
+          } else if (a.personalNote!.isNotEmpty && b.personalNote!.isEmpty) {
             return -1;
-          } else if (a.personalNote.isEmpty && b.personalNote.isEmpty) {
+          } else if (a.personalNote!.isEmpty && b.personalNote!.isEmpty) {
             return 0;
           } else {
-            return a.personalNote.toLowerCase().compareTo(b.personalNote.toLowerCase());
+            return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
           }
         });
         break;
@@ -502,8 +500,8 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void _saveSortSharedPrefs() {
-    String sortToSave;
-    switch (_currentSort) {
+    late String sortToSave;
+    switch (_currentSort!) {
       case TargetSortType.levelDes:
         sortToSave = 'levelDes';
         break;
@@ -660,18 +658,18 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   Future<String> postTargetsToYata({
-    @required List<TargetsOnlyLocal> onlyLocal,
-    @required List<TargetsBothSides> bothSides,
+    required List<TargetsOnlyLocal> onlyLocal,
+    required List<TargetsBothSides> bothSides,
   }) async {
     var modelOut = YataTargetsExportModel();
     modelOut.key = _u.alternativeYataKey;
     //modelOut.user = "Torn PDA $appVersion";
 
-    var targets = Map<String, YataExportTarget>();
+    var targets = Map<String?, YataExportTarget>();
     for (var localTarget in onlyLocal) {
       // Max chars in Yata notes is 128
-      if (localTarget.noteLocal.length > 128) {
-        localTarget.noteLocal = localTarget.noteLocal.substring(0, 127);
+      if (localTarget.noteLocal!.length > 128) {
+        localTarget.noteLocal = localTarget.noteLocal!.substring(0, 127);
       }
       var exportDetails = YataExportTarget()
         ..note = localTarget.noteLocal
@@ -680,8 +678,8 @@ class TargetsProvider extends ChangeNotifier {
     }
     for (var bothSidesTarget in bothSides) {
       // Max chars in Yata notes is 128
-      if (bothSidesTarget.noteLocal.length > 128) {
-        bothSidesTarget.noteLocal = bothSidesTarget.noteLocal.substring(0, 127);
+      if (bothSidesTarget.noteLocal!.length > 128) {
+        bothSidesTarget.noteLocal = bothSidesTarget.noteLocal!.substring(0, 127);
       }
       var exportDetails = YataExportTarget()
         ..note = bothSidesTarget.noteLocal
@@ -721,11 +719,11 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  int _getLifeSort(TargetModel myNewTargetModel) {
-    if (myNewTargetModel.status.state != "Hospital") {
-      return myNewTargetModel.life.current;
+  int? _getLifeSort(TargetModel myNewTargetModel) {
+    if (myNewTargetModel.status!.state != "Hospital") {
+      return myNewTargetModel.life!.current;
     } else {
-      return -(myNewTargetModel.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
+      return -(myNewTargetModel.status!.until! - DateTime.now().millisecondsSinceEpoch / 1000).round();
     }
   }
 }

@@ -43,34 +43,34 @@ class OtherProfileModel {
     this.bazaar,
   });
 
-  String rank;
-  int level;
-  String gender;
-  String property;
-  String signup;
-  int awards;
-  int friends;
-  int enemies;
-  int forumPosts;
-  int karma;
-  int age;
-  String role;
-  int donator;
-  int playerId;
-  String name;
-  int propertyId;
+  String? rank;
+  int? level;
+  String? gender;
+  String? property;
+  String? signup;
+  int? awards;
+  int? friends;
+  int? enemies;
+  int? forumPosts;
+  int? karma;
+  int? age;
+  String? role;
+  int? donator;
+  int? playerId;
+  String? name;
+  int? propertyId;
   dynamic competition;
-  Life life;
-  Status status;
-  Job job;
-  Faction faction;
-  Married married;
+  Life? life;
+  Status? status;
+  Job? job;
+  Faction? faction;
+  Married? married;
   //Basicicons basicicons;
-  States states;
-  LastAction lastAction;
-  Criminalrecord criminalrecord;
-  Personalstats personalstats;
-  List<Bazaar> bazaar;
+  States? states;
+  LastAction? lastAction;
+  Criminalrecord? criminalrecord;
+  Personalstats? personalstats;
+  List<Bazaar>? bazaar;
 
   factory OtherProfileModel.fromJson(Map<String, dynamic> json) => OtherProfileModel(
         rank: json["rank"] == null ? null : json["rank"],
@@ -121,17 +121,17 @@ class OtherProfileModel {
         "name": name == null ? null : name,
         "property_id": propertyId == null ? null : propertyId,
         "competition": competition,
-        "life": life == null ? null : life.toJson(),
-        "status": status == null ? null : status.toJson(),
-        "job": job == null ? null : job.toJson(),
-        "faction": faction == null ? null : faction.toJson(),
-        "married": married == null ? null : married.toJson(),
+        "life": life == null ? null : life!.toJson(),
+        "status": status == null ? null : status!.toJson(),
+        "job": job == null ? null : job!.toJson(),
+        "faction": faction == null ? null : faction!.toJson(),
+        "married": married == null ? null : married!.toJson(),
         //"basicicons": basicicons == null ? null : basicicons.toJson(),
-        "states": states == null ? null : states.toJson(),
-        "last_action": lastAction == null ? null : lastAction.toJson(),
-        "criminalrecord": criminalrecord == null ? null : criminalrecord.toJson(),
-        "personalstats": personalstats == null ? null : personalstats.toJson(),
-        "bazaar": bazaar == null ? null : List<dynamic>.from(bazaar.map((x) => x.toJson())),
+        "states": states == null ? null : states!.toJson(),
+        "last_action": lastAction == null ? null : lastAction!.toJson(),
+        "criminalrecord": criminalrecord == null ? null : criminalrecord!.toJson(),
+        "personalstats": personalstats == null ? null : personalstats!.toJson(),
+        "bazaar": bazaar == null ? null : List<dynamic>.from(bazaar!.map((x) => x.toJson())),
       };
 }
 
@@ -179,10 +179,10 @@ class Bazaar {
     this.marketPrice,
   });
 
-  int id;
-  String name;
-  String type;
-  int quantity;
+  int? id;
+  String? name;
+  String? type;
+  int? quantity;
   dynamic price; // Sometimes returns a double (?)
   dynamic marketPrice;
 
@@ -218,15 +218,15 @@ class Criminalrecord {
     this.total,
   });
 
-  int sellingIllegalProducts;
-  int theft;
-  int autoTheft;
-  int drugDeals;
-  int computerCrimes;
-  int murder;
-  int fraudCrimes;
-  int other;
-  int total;
+  int? sellingIllegalProducts;
+  int? theft;
+  int? autoTheft;
+  int? drugDeals;
+  int? computerCrimes;
+  int? murder;
+  int? fraudCrimes;
+  int? other;
+  int? total;
 
   factory Criminalrecord.fromJson(Map<String, dynamic> json) => Criminalrecord(
         sellingIllegalProducts: json["selling_illegal_products"] == null ? null : json["selling_illegal_products"],
@@ -262,11 +262,11 @@ class Faction {
     this.factionTag,
   });
 
-  String position;
-  int factionId;
-  int daysInFaction;
-  String factionName;
-  String factionTag;
+  String? position;
+  int? factionId;
+  int? daysInFaction;
+  String? factionName;
+  String? factionTag;
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
         position: json["position"] == null ? null : json["position"],
@@ -294,11 +294,11 @@ class Job {
     this.companyType,
   });
 
-  String job;
-  String position;
-  int companyId;
-  String companyName;
-  int companyType;
+  String? job;
+  String? position;
+  int? companyId;
+  String? companyName;
+  int? companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         job: json["job"] == null ? null : json["job"],
@@ -324,9 +324,9 @@ class LastAction {
     this.relative,
   });
 
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
         status: json["status"] == null ? null : json["status"],
@@ -351,12 +351,12 @@ class Life {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Life.fromJson(Map<String, dynamic> json) => Life(
         current: json["current"] == null ? null : json["current"],
@@ -384,9 +384,9 @@ class Married {
     this.duration,
   });
 
-  int spouseId;
-  String spouseName;
-  int duration;
+  int? spouseId;
+  String? spouseName;
+  int? duration;
 
   factory Married.fromJson(Map<String, dynamic> json) => Married(
         spouseId: json["spouse_id"] == null ? null : json["spouse_id"],
@@ -544,145 +544,145 @@ class Personalstats {
     this.jobpointsused,
   });
 
-  int useractivity;
-  int itemsbought;
-  int pointsbought;
-  int itemsboughtabroad;
-  int weaponsbought;
-  int itemssent;
-  int auctionswon;
-  int auctionsells;
-  int attackswon;
-  int attackslost;
-  int attacksdraw;
-  int bestkillstreak;
-  int moneymugged;
-  int attacksstealthed;
-  int attackhits;
-  int attackmisses;
-  int attackdamage;
-  int attackcriticalhits;
-  int respectforfaction;
-  int onehitkills;
-  int defendswon;
-  int defendslost;
-  int defendsstalemated;
-  int bestdamage;
-  int roundsfired;
-  int yourunaway;
-  int theyrunaway;
-  int highestbeaten;
-  int peoplebusted;
-  int failedbusts;
-  int peoplebought;
-  int peopleboughtspent;
-  int virusescoded;
-  int cityfinds;
-  int traveltimes;
-  int bountiesplaced;
-  int bountiesreceived;
-  int bountiescollected;
-  int totalbountyreward;
-  int revives;
-  int revivesreceived;
-  int medicalitemsused;
-  int statenhancersused;
-  int refills;
-  int trainsreceived;
-  int totalbountyspent;
-  int drugsused;
-  int overdosed;
-  int meritsbought;
-  int timesloggedin;
-  int personalsplaced;
-  int classifiedadsplaced;
-  int mailssent;
-  int friendmailssent;
-  int factionmailssent;
-  int companymailssent;
-  int spousemailssent;
-  int largestmug;
-  int cantaken;
-  int exttaken;
-  int kettaken;
-  int lsdtaken;
-  int opitaken;
-  int shrtaken;
-  int spetaken;
-  int pcptaken;
-  int xantaken;
-  int victaken;
-  int chahits;
-  int heahits;
-  int axehits;
-  int grehits;
-  int machits;
-  int pishits;
-  int rifhits;
-  int shohits;
-  int smghits;
-  int piehits;
-  int slahits;
-  int argtravel;
-  int mextravel;
-  int dubtravel;
-  int hawtravel;
-  int japtravel;
-  int lontravel;
-  int soutravel;
-  int switravel;
-  int chitravel;
-  int cantravel;
-  int dumpfinds;
-  int dumpsearches;
-  int itemsdumped;
-  int daysbeendonator;
-  int caytravel;
-  int jailed;
-  int hospital;
-  int attacksassisted;
-  int bloodwithdrawn;
-  int networth;
-  int missionscompleted;
-  int contractscompleted;
-  int dukecontractscompleted;
-  int missioncreditsearned;
-  int consumablesused;
-  int candyused;
-  int alcoholused;
-  int energydrinkused;
-  int nerverefills;
-  int unarmoredwon;
-  int h2Hhits;
-  int organisedcrimes;
-  int territorytime;
-  int territoryjoins;
-  int arrestsmade;
-  int tokenrefills;
-  int booksread;
-  int traveltime;
-  int boostersused;
-  int rehabs;
-  int rehabcost;
-  int awards;
-  int receivedbountyvalue;
-  int raceswon;
-  int racesentered;
-  int racingpointsearned;
-  int specialammoused;
-  int cityitemsbought;
-  int hollowammoused;
-  int tracerammoused;
-  int piercingammoused;
-  int incendiaryammoused;
-  int attackswonabroad;
-  int defendslostabroad;
-  int retals;
-  int elo;
-  int reviveskill;
-  int activestreak;
-  int bestactivestreak;
-  int jobpointsused;
+  int? useractivity;
+  int? itemsbought;
+  int? pointsbought;
+  int? itemsboughtabroad;
+  int? weaponsbought;
+  int? itemssent;
+  int? auctionswon;
+  int? auctionsells;
+  int? attackswon;
+  int? attackslost;
+  int? attacksdraw;
+  int? bestkillstreak;
+  int? moneymugged;
+  int? attacksstealthed;
+  int? attackhits;
+  int? attackmisses;
+  int? attackdamage;
+  int? attackcriticalhits;
+  int? respectforfaction;
+  int? onehitkills;
+  int? defendswon;
+  int? defendslost;
+  int? defendsstalemated;
+  int? bestdamage;
+  int? roundsfired;
+  int? yourunaway;
+  int? theyrunaway;
+  int? highestbeaten;
+  int? peoplebusted;
+  int? failedbusts;
+  int? peoplebought;
+  int? peopleboughtspent;
+  int? virusescoded;
+  int? cityfinds;
+  int? traveltimes;
+  int? bountiesplaced;
+  int? bountiesreceived;
+  int? bountiescollected;
+  int? totalbountyreward;
+  int? revives;
+  int? revivesreceived;
+  int? medicalitemsused;
+  int? statenhancersused;
+  int? refills;
+  int? trainsreceived;
+  int? totalbountyspent;
+  int? drugsused;
+  int? overdosed;
+  int? meritsbought;
+  int? timesloggedin;
+  int? personalsplaced;
+  int? classifiedadsplaced;
+  int? mailssent;
+  int? friendmailssent;
+  int? factionmailssent;
+  int? companymailssent;
+  int? spousemailssent;
+  int? largestmug;
+  int? cantaken;
+  int? exttaken;
+  int? kettaken;
+  int? lsdtaken;
+  int? opitaken;
+  int? shrtaken;
+  int? spetaken;
+  int? pcptaken;
+  int? xantaken;
+  int? victaken;
+  int? chahits;
+  int? heahits;
+  int? axehits;
+  int? grehits;
+  int? machits;
+  int? pishits;
+  int? rifhits;
+  int? shohits;
+  int? smghits;
+  int? piehits;
+  int? slahits;
+  int? argtravel;
+  int? mextravel;
+  int? dubtravel;
+  int? hawtravel;
+  int? japtravel;
+  int? lontravel;
+  int? soutravel;
+  int? switravel;
+  int? chitravel;
+  int? cantravel;
+  int? dumpfinds;
+  int? dumpsearches;
+  int? itemsdumped;
+  int? daysbeendonator;
+  int? caytravel;
+  int? jailed;
+  int? hospital;
+  int? attacksassisted;
+  int? bloodwithdrawn;
+  int? networth;
+  int? missionscompleted;
+  int? contractscompleted;
+  int? dukecontractscompleted;
+  int? missioncreditsearned;
+  int? consumablesused;
+  int? candyused;
+  int? alcoholused;
+  int? energydrinkused;
+  int? nerverefills;
+  int? unarmoredwon;
+  int? h2Hhits;
+  int? organisedcrimes;
+  int? territorytime;
+  int? territoryjoins;
+  int? arrestsmade;
+  int? tokenrefills;
+  int? booksread;
+  int? traveltime;
+  int? boostersused;
+  int? rehabs;
+  int? rehabcost;
+  int? awards;
+  int? receivedbountyvalue;
+  int? raceswon;
+  int? racesentered;
+  int? racingpointsearned;
+  int? specialammoused;
+  int? cityitemsbought;
+  int? hollowammoused;
+  int? tracerammoused;
+  int? piercingammoused;
+  int? incendiaryammoused;
+  int? attackswonabroad;
+  int? defendslostabroad;
+  int? retals;
+  int? elo;
+  int? reviveskill;
+  int? activestreak;
+  int? bestactivestreak;
+  int? jobpointsused;
 
   factory Personalstats.fromJson(Map<String, dynamic> json) => Personalstats(
         useractivity: json["useractivity"] == null ? null : json["useractivity"],
@@ -975,8 +975,8 @@ class States {
     this.jailTimestamp,
   });
 
-  int hospitalTimestamp;
-  int jailTimestamp;
+  int? hospitalTimestamp;
+  int? jailTimestamp;
 
   factory States.fromJson(Map<String, dynamic> json) => States(
         hospitalTimestamp: json["hospital_timestamp"] == null ? null : json["hospital_timestamp"],

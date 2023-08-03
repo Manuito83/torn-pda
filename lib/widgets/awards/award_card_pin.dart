@@ -10,11 +10,10 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class AwardCardPin extends StatefulWidget {
-  AwardCardPin({@required this.award, @required this.pinConditionChange});
+  AwardCardPin({required this.award, required this.pinConditionChange});
 
   final Award award;
   final Function pinConditionChange;
@@ -24,16 +23,9 @@ class AwardCardPin extends StatefulWidget {
 }
 
 class _AwardCardPinState extends State<AwardCardPin> {
-  AwardsProvider _pinProvider;
-  UserDetailsProvider _userProvider;
+  late AwardsProvider _pinProvider;
 
   bool _pinActive = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,17 +41,17 @@ class _AwardCardPinState extends State<AwardCardPin> {
               children: [
                 Row(
                   children: [
-                    Text(widget.award.name),
+                    Text(widget.award.name!),
                     SizedBox(width: 8),
                     GestureDetector(
                       onTap: () {
                         BotToast.showText(
-                          text: widget.award.description,
+                          text: widget.award.description!,
                           textStyle: TextStyle(
                             fontSize: 13,
                             color: Colors.white,
                           ),
-                          contentColor: Colors.grey[700],
+                          contentColor: Colors.grey[700]!,
                           duration: Duration(seconds: 6),
                           contentPadding: EdgeInsets.all(10),
                         );
@@ -83,14 +75,13 @@ class _AwardCardPinState extends State<AwardCardPin> {
                           );
 
                           var resultString = "";
-                          Color resultColor = Colors.transparent;
+                          Color? resultColor = Colors.transparent;
                           if (result) {
                             widget.pinConditionChange();
                             resultString = "Unpinned ${widget.award.name}!";
                             resultColor = Colors.green[700];
                           } else {
-                            resultString =
-                                "Error unpinning ${widget.award.name}! "
+                            resultString = "Error unpinning ${widget.award.name}! "
                                 "Please try again or do it directly in YATA";
                             resultColor = Colors.red[700];
                           }
@@ -107,7 +98,7 @@ class _AwardCardPinState extends State<AwardCardPin> {
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor: resultColor,
+                            contentColor: resultColor!,
                             duration: Duration(seconds: 6),
                             contentPadding: EdgeInsets.all(10),
                           );
@@ -135,25 +126,24 @@ class _AwardCardPinState extends State<AwardCardPin> {
   }
 
   Widget pinDetails() {
-    var achievedPercentage = (widget.award.achieve * 100).truncate();
+    var achievedPercentage = (widget.award.achieve! * 100).truncate();
     final decimalFormat = new NumberFormat("#,##0", "en_US");
 
     Widget commentIconRow = SizedBox.shrink();
-    if (widget.award.comment != null && widget.award.comment.trim() != "") {
-      widget.award.comment = HtmlParser.fix(
-          widget.award.comment.replaceAll("<br>", "\n").replaceAll("  ", ""));
+    if (widget.award.comment != null && widget.award.comment!.trim() != "") {
+      widget.award.comment = HtmlParser.fix(widget.award.comment!.replaceAll("<br>", "\n").replaceAll("  ", ""));
       commentIconRow = Row(
         children: [
           SizedBox(width: 4),
           GestureDetector(
             onTap: () {
               BotToast.showText(
-                text: widget.award.comment,
+                text: widget.award.comment!,
                 textStyle: TextStyle(
                   fontSize: 13,
                   color: Colors.white,
                 ),
-                contentColor: Colors.grey[700],
+                contentColor: Colors.grey[700]!,
                 duration: Duration(seconds: 6),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -179,15 +169,14 @@ class _AwardCardPinState extends State<AwardCardPin> {
               ),
             ),
             Text(
-              ' - ${decimalFormat.format(widget.award.current.ceil())}'
-              '/${decimalFormat.format(widget.award.goal.ceil())}',
+              ' - ${decimalFormat.format(widget.award.current!.ceil())}'
+              '/${decimalFormat.format(widget.award.goal!.ceil())}',
               style: TextStyle(fontSize: 12),
             ),
             if (widget.award.daysLeft != -99)
-              widget.award.daysLeft > 0 &&
-                      widget.award.daysLeft < double.maxFinite
+              widget.award.daysLeft! > 0 && widget.award.daysLeft! < double.maxFinite
                   ? Text(
-                      " - ${decimalFormat.format(widget.award.daysLeft.round())} "
+                      " - ${decimalFormat.format(widget.award.daysLeft!.round())} "
                       "days",
                       style: TextStyle(fontSize: 12),
                     )
@@ -200,8 +189,7 @@ class _AwardCardPinState extends State<AwardCardPin> {
                         )
                       : Text(
                           " - ${(DateFormat('yyyy-MM-dd').format(
-                            DateTime.fromMillisecondsSinceEpoch(
-                                widget.award.dateAwarded.round() * 1000),
+                            DateTime.fromMillisecondsSinceEpoch(widget.award.dateAwarded!.round() * 1000),
                           ))}",
                           style: TextStyle(
                             fontSize: 12,

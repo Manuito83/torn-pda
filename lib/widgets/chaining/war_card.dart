@@ -36,12 +36,12 @@ import 'package:torn_pda/utils/html_parser.dart';
 import '../notes_dialog.dart';
 
 class WarCard extends StatefulWidget {
-  final Member memberModel;
+  final Member? memberModel;
 
   // Key is needed to update at least the hospital counter individually
   WarCard({
-    @required this.memberModel,
-    Key key,
+    required this.memberModel,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -49,19 +49,19 @@ class WarCard extends StatefulWidget {
 }
 
 class _WarCardState extends State<WarCard> {
-  Member _member;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ChainStatusProvider _chainProvider;
-  WebViewProvider _webViewProvider;
+  Member? _member;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late ChainStatusProvider _chainProvider;
+  late WebViewProvider _webViewProvider;
 
-  Timer _updatedTicker;
-  Timer _lifeTicker;
+  Timer? _updatedTicker;
+  Timer? _lifeTicker;
 
   String _currentLifeString = "";
-  String _lastUpdatedString;
-  int _lastUpdatedMinutes;
+  late String _lastUpdatedString;
+  late int _lastUpdatedMinutes;
 
   bool _addButtonActive = true;
 
@@ -107,7 +107,7 @@ class _WarCardState extends State<WarCard> {
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: _chainProvider.panicTargets.where((t) => t.name == _member.name).length > 0
+                  color: _chainProvider.panicTargets.where((t) => t.name == _member!.name).length > 0
                       ? Colors.blue
                       : Colors.transparent,
                   width: 2,
@@ -135,7 +135,7 @@ class _WarCardState extends State<WarCard> {
                                 SizedBox(
                                   width: 95,
                                   child: Text(
-                                    '${_member.name}',
+                                    '${_member!.name}',
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class _WarCardState extends State<WarCard> {
                               transitionDuration: Duration(milliseconds: 500),
                               transitionType: ContainerTransitionType.fadeThrough,
                               openBuilder: (BuildContext context, VoidCallback _) {
-                                return MemberDetailsPage(memberId: _member.memberId.toString());
+                                return MemberDetailsPage(memberId: _member!.memberId.toString());
                               },
                               closedElevation: 0,
                               closedShape: const RoundedRectangleBorder(
@@ -169,7 +169,7 @@ class _WarCardState extends State<WarCard> {
                                   Radius.circular(56 / 2),
                                 ),
                               ),
-                              openColor: _themeProvider.canvas,
+                              openColor: _themeProvider.canvas!,
                               closedColor: Colors.transparent,
                               closedBuilder: (BuildContext context, VoidCallback openContainer) {
                                 return SizedBox(
@@ -184,7 +184,7 @@ class _WarCardState extends State<WarCard> {
                             ),
                             SizedBox(width: 3),
                             Text(
-                              'L${_member.level}',
+                              'L${_member!.level}',
                             ),
                             Row(
                               children: [
@@ -214,8 +214,8 @@ class _WarCardState extends State<WarCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      _returnRespectFF(_member.respectGain, _member.fairFight),
-                      if (!_member.overrideEasyLife) _returnEasyHealth(_member) else _returnFullHealth(_member),
+                      _returnRespectFF(_member!.respectGain, _member!.fairFight),
+                      if (!_member!.overrideEasyLife!) _returnEasyHealth(_member) else _returnFullHealth(_member),
                     ],
                   ),
                 ),
@@ -284,7 +284,7 @@ class _WarCardState extends State<WarCard> {
                             ),
                             Flexible(
                               child: Text(
-                                '${_member.personalNote}',
+                                '${_member!.personalNote}',
                                 style: TextStyle(
                                   color: _returnTargetNoteColor(),
                                   fontSize: 12,
@@ -298,7 +298,7 @@ class _WarCardState extends State<WarCard> {
                       Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Text(
-                          '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member.memberId) + 1}'
+                          '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member!.memberId) + 1}'
                           '/${_w.orderedCardsDetails.length}',
                           style: TextStyle(
                             color: Colors.brown[400],
@@ -331,7 +331,7 @@ class _WarCardState extends State<WarCard> {
   }
 
   Widget _refreshIcon() {
-    if (_member.isUpdating) {
+    if (_member!.isUpdating!) {
       return Padding(
         padding: const EdgeInsets.all(4.0),
         child: CircularProgressIndicator(),
@@ -354,7 +354,7 @@ class _WarCardState extends State<WarCard> {
     var targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     var targetList = targetsProvider.allTargets;
     for (var tar in targetList) {
-      if (tar.playerId == _member.memberId) {
+      if (tar.playerId == _member!.memberId) {
         existingTarget = true;
       }
     }
@@ -368,15 +368,15 @@ class _WarCardState extends State<WarCard> {
           color: Colors.red,
         ),
         onPressed: () {
-          targetsProvider.deleteTargetById(_member.memberId.toString());
+          targetsProvider.deleteTargetById(_member!.memberId.toString());
           BotToast.showText(
             clickClose: true,
-            text: HtmlParser.fix('Removed ${_member.name}!'),
+            text: HtmlParser.fix('Removed ${_member!.name}!'),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.orange[900],
+            contentColor: Colors.orange[900]!,
             duration: Duration(seconds: 5),
             contentPadding: EdgeInsets.all(10),
           );
@@ -408,7 +408,7 @@ class _WarCardState extends State<WarCard> {
                 // that this target is in our previous attacks. Respect won't be calculated,
                 // but it will be much faster
                 AddTargetResult tryAddTarget = await targetsProvider.addTarget(
-                  targetId: _member.memberId.toString(),
+                  targetId: _member!.memberId.toString(),
                   attacks: await targetsProvider.getAttacks(),
                 );
 
@@ -421,19 +421,19 @@ class _WarCardState extends State<WarCard> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.green[700],
+                    contentColor: Colors.green[700]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
                 } else if (!tryAddTarget.success) {
                   BotToast.showText(
                     clickClose: true,
-                    text: HtmlParser.fix('Error adding ${_member.memberId}. ${tryAddTarget.errorReason}'),
+                    text: HtmlParser.fix('Error adding ${_member!.memberId}. ${tryAddTarget.errorReason}'),
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.red[900],
+                    contentColor: Colors.red[900]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
@@ -452,12 +452,12 @@ class _WarCardState extends State<WarCard> {
   }
 
   Widget _factionName() {
-    Color borderColor = Colors.grey;
+    Color? borderColor = Colors.grey;
     List<double> dashPattern = [1, 2];
-    if (_member.factionLeader == _member.memberId) {
+    if (_member!.factionLeader == _member!.memberId) {
       borderColor = Colors.red[500];
       dashPattern = [1, 0];
-    } else if (_member.factionColeader == _member.memberId) {
+    } else if (_member!.factionColeader == _member!.memberId) {
       borderColor = Colors.orange[700];
       dashPattern = [1, 0];
     }
@@ -465,14 +465,14 @@ class _WarCardState extends State<WarCard> {
     void showFactionToast() {
       BotToast.showText(
         clickClose: true,
-        text: HtmlParser.fix("${_member.name} belongs to faction "
-            "${_member.factionName} as "
-            "${_member.position}"),
+        text: HtmlParser.fix("${_member!.name} belongs to faction "
+            "${_member!.factionName} as "
+            "${_member!.position}"),
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[600],
+        contentColor: Colors.grey[600]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
@@ -484,9 +484,9 @@ class _WarCardState extends State<WarCard> {
         child: DottedBorder(
           padding: const EdgeInsets.all(2),
           dashPattern: dashPattern,
-          color: borderColor,
+          color: borderColor!,
           child: Text(
-            HtmlParser.fix(_member.factionName),
+            HtmlParser.fix(_member!.factionName),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -496,16 +496,16 @@ class _WarCardState extends State<WarCard> {
   }
 
   Color _borderColor() {
-    if (_member.justUpdatedWithSuccess) {
+    if (_member!.justUpdatedWithSuccess!) {
       return Colors.green;
-    } else if (_member.justUpdatedWithError) {
+    } else if (_member!.justUpdatedWithError!) {
       return Colors.red;
     } else {
       return Colors.transparent;
     }
   }
 
-  Widget _returnRespectFF(double respect, double fairFight) {
+  Widget _returnRespectFF(double? respect, double? fairFight) {
     TextSpan respectResult;
     TextSpan fairFightResult;
 
@@ -518,7 +518,7 @@ class _WarCardState extends State<WarCard> {
         ),
       );
     } else if (respect == 0) {
-      if (_member.userWonOrDefended) {
+      if (_member!.userWonOrDefended!) {
         respectResult = TextSpan(
           text: '0 (def)',
           style: TextStyle(
@@ -538,7 +538,7 @@ class _WarCardState extends State<WarCard> {
       }
     } else {
       respectResult = TextSpan(
-        text: respect.toStringAsFixed(2),
+        text: respect!.toStringAsFixed(2),
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: _themeProvider.mainText,
@@ -557,7 +557,7 @@ class _WarCardState extends State<WarCard> {
       );
     } else {
       var ffColor = Colors.red;
-      if (fairFight >= 2.2 && fairFight < 2.8) {
+      if (fairFight! >= 2.2 && fairFight < 2.8) {
         ffColor = Colors.orange;
       } else if (fairFight >= 2.8) {
         ffColor = Colors.green;
@@ -615,23 +615,23 @@ class _WarCardState extends State<WarCard> {
     );
   }
 
-  Widget _returnEasyHealth(Member target) {
-    Color lifeBarColor = Colors.transparent;
+  Widget _returnEasyHealth(Member? target) {
+    Color? lifeBarColor = Colors.transparent;
 
     String lifeText = "";
-    if (_member.status.state == "Hospital") {
+    if (_member!.status!.state == "Hospital") {
       lifeText = "Hospital";
       lifeBarColor = Colors.red[300];
-    } else if (_member.status.state == "Jail") {
+    } else if (_member!.status!.state == "Jail") {
       lifeText = "Jailed";
       lifeBarColor = Colors.brown[300];
-    } else if (_member.status.state == "Okay") {
+    } else if (_member!.status!.state == "Okay") {
       lifeText = "Okay";
       lifeBarColor = Colors.green[300];
-    } else if (_member.status.state == "Traveling") {
+    } else if (_member!.status!.state == "Traveling") {
       lifeText = "Okay";
       lifeBarColor = Colors.blue[300];
-    } else if (_member.status.state == "Abroad") {
+    } else if (_member!.status!.state == "Abroad") {
       lifeText = "Okay";
       lifeBarColor = Colors.blue[300];
     }
@@ -641,7 +641,7 @@ class _WarCardState extends State<WarCard> {
       children: <Widget>[
         Flexible(
           child: LinearPercentIndicator(
-            padding: null,
+            padding: EdgeInsets.all(0),
             barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 14,
@@ -657,16 +657,16 @@ class _WarCardState extends State<WarCard> {
     );
   }
 
-  Widget _returnFullHealth(Member target) {
-    Color lifeBarColor = Colors.green;
+  Widget _returnFullHealth(Member? target) {
+    Color? lifeBarColor = Colors.green;
     Widget hospitalWarning = SizedBox.shrink();
-    String lifeText = _member.lifeCurrent == -1 ? "?" : _member.lifeCurrent.toString();
+    String lifeText = _member!.lifeCurrent == -1 ? "?" : _member!.lifeCurrent.toString();
 
-    if (_member.status.state == "Hospital") {
+    if (_member!.status!.state == "Hospital") {
       // Handle if target is still in hospital
       var now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-      if (_member.status.until > now) {
-        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
+      if (_member!.status!.until! > now) {
+        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target!.status!.until! * 1000);
         if (_lifeTicker == null) {
           _lifeTicker = Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         }
@@ -691,20 +691,20 @@ class _WarCardState extends State<WarCard> {
       _lifeTicker?.cancel();
     }
 
-    if (_member.status.state == "Traveling" || _member.status.state == "Abroad") {
+    if (_member!.status!.state == "Traveling" || _member!.status!.state == "Abroad") {
       lifeBarColor = Colors.blue[300];
     }
 
     // Found players in federal jail with a higher life than their maximum. Correct it if it's the
     // case to avoid issues with percentage bar
-    double lifePercentage;
-    if (_member.lifeCurrent != -1) {
-      if (_member.lifeCurrent / _member.lifeMaximum > 1) {
+    double? lifePercentage;
+    if (_member!.lifeCurrent != -1) {
+      if (_member!.lifeCurrent! / _member!.lifeMaximum! > 1) {
         lifePercentage = 1;
-      } else if (_member.lifeCurrent / _member.lifeMaximum > 1) {
+      } else if (_member!.lifeCurrent! / _member!.lifeMaximum! > 1) {
         lifePercentage = 0;
       } else {
-        lifePercentage = _member.lifeCurrent / _member.lifeMaximum;
+        lifePercentage = _member!.lifeCurrent! / _member!.lifeMaximum!;
       }
     }
 
@@ -717,7 +717,7 @@ class _WarCardState extends State<WarCard> {
         ),
         Flexible(
           child: LinearPercentIndicator(
-            padding: null,
+            padding: EdgeInsets.all(0),
             barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 14,
@@ -735,10 +735,10 @@ class _WarCardState extends State<WarCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(state: _member.status.state, description: _member.status.description);
+    var country = countryCheck(state: _member!.status!.state, description: _member!.status!.description);
 
-    if (_member.status.color == "blue" || (country != "Torn" && _member.status.color == "red")) {
-      var destination = _member.status.color == "blue" ? _member.status.description : country;
+    if (_member!.status!.color == "blue" || (country != "Torn" && _member!.status!.color == "red")) {
+      var destination = _member!.status!.color == "blue" ? _member!.status!.description! : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -773,7 +773,7 @@ class _WarCardState extends State<WarCard> {
             onTap: () {
               BotToast.showText(
                 clickClose: true,
-                text: _member.status.description,
+                text: _member!.status!.description!,
                 textStyle: TextStyle(
                   fontSize: 14,
                   color: Colors.white,
@@ -788,13 +788,13 @@ class _WarCardState extends State<WarCard> {
                 Padding(
                   padding: const EdgeInsets.only(right: 3),
                   child: RotatedBox(
-                    quarterTurns: _member.status.description.contains('Traveling to ')
+                    quarterTurns: _member!.status!.description!.contains('Traveling to ')
                         ? 1 // If traveling to another country
-                        : _member.status.description.contains('Returning ')
+                        : _member!.status!.description!.contains('Returning ')
                             ? 3 // If returning to Torn
                             : 0, // If staying abroad (blue but not moving)
                     child: Icon(
-                      _member.status.description.contains('In ')
+                      _member!.status!.description!.contains('In ')
                           ? Icons.location_city_outlined
                           : Icons.airplanemode_active,
                       color: Colors.blue,
@@ -820,7 +820,7 @@ class _WarCardState extends State<WarCard> {
   }
 
   void _returnLastUpdated() {
-    var timeDifference = DateTime.now().difference(_member.lastUpdated);
+    var timeDifference = DateTime.now().difference(_member!.lastUpdated!);
     _lastUpdatedMinutes = timeDifference.inMinutes;
     if (timeDifference.inMinutes < 1) {
       _lastUpdatedString = 'now';
@@ -842,12 +842,12 @@ class _WarCardState extends State<WarCard> {
   Widget _statsWidget() {
     void _showDetailedStatsDialog() {
       String lastUpdated = "";
-      if (_member.statsExactUpdated != 0) {
-        lastUpdated = readTimestamp(_member.statsExactUpdated);
+      if (_member!.statsExactUpdated != 0) {
+        lastUpdated = readTimestamp(_member!.statsExactUpdated!);
       }
 
       Widget strWidget;
-      if (_member.statsStr == -1) {
+      if (_member!.statsStr == -1) {
         strWidget = Text(
           "Strength: unknown",
           style: TextStyle(fontSize: 12),
@@ -855,7 +855,7 @@ class _WarCardState extends State<WarCard> {
       } else {
         var strDiff = "";
         Color strColor;
-        var result = _userProvider.basic.strength - _member.statsStr;
+        var result = _userProvider.basic!.strength! - _member!.statsStr!;
         if (result == 0) {
           strDiff = "Same as you";
           strColor = Colors.orange;
@@ -871,7 +871,7 @@ class _WarCardState extends State<WarCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Strength: ${formatBigNumbers(_member.statsStr)}",
+              "Strength: ${formatBigNumbers(_member!.statsStr!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -883,7 +883,7 @@ class _WarCardState extends State<WarCard> {
       }
 
       Widget spdWidget;
-      if (_member.statsSpd == -1) {
+      if (_member!.statsSpd == -1) {
         spdWidget = Text(
           "Speed: unknown",
           style: TextStyle(fontSize: 12),
@@ -891,7 +891,7 @@ class _WarCardState extends State<WarCard> {
       } else {
         var spdDiff = "";
         Color spdColor;
-        var result = _userProvider.basic.speed - _member.statsSpd;
+        var result = _userProvider.basic!.speed! - _member!.statsSpd!;
         if (result == 0) {
           spdDiff = "Same as you";
           spdColor = Colors.orange;
@@ -907,7 +907,7 @@ class _WarCardState extends State<WarCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Speed: ${formatBigNumbers(_member.statsSpd)}",
+              "Speed: ${formatBigNumbers(_member!.statsSpd!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -919,7 +919,7 @@ class _WarCardState extends State<WarCard> {
       }
 
       Widget defWidget;
-      if (_member.statsDef == -1) {
+      if (_member!.statsDef == -1) {
         defWidget = Text(
           "Defense: unknown",
           style: TextStyle(fontSize: 12),
@@ -927,7 +927,7 @@ class _WarCardState extends State<WarCard> {
       } else {
         var defDiff = "";
         Color defColor;
-        var result = _userProvider.basic.defense - _member.statsDef;
+        var result = _userProvider.basic!.defense! - _member!.statsDef!;
         if (result == 0) {
           defDiff = "Same as you";
           defColor = Colors.orange;
@@ -943,7 +943,7 @@ class _WarCardState extends State<WarCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Defense: ${formatBigNumbers(_member.statsDef)}",
+              "Defense: ${formatBigNumbers(_member!.statsDef!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -955,7 +955,7 @@ class _WarCardState extends State<WarCard> {
       }
 
       Widget dexWidget;
-      if (_member.statsDex == -1) {
+      if (_member!.statsDex == -1) {
         dexWidget = Text(
           "Dexterity: unknown",
           style: TextStyle(fontSize: 12),
@@ -963,7 +963,7 @@ class _WarCardState extends State<WarCard> {
       } else {
         var dexDiff = "";
         Color dexColor;
-        var result = _userProvider.basic.dexterity - _member.statsDex;
+        var result = _userProvider.basic!.dexterity! - _member!.statsDex!;
         if (result == 0) {
           dexDiff = "Same as you";
           dexColor = Colors.orange;
@@ -979,7 +979,7 @@ class _WarCardState extends State<WarCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Dexterity: ${formatBigNumbers(_member.statsDex)}",
+              "Dexterity: ${formatBigNumbers(_member!.statsDex!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -991,15 +991,15 @@ class _WarCardState extends State<WarCard> {
       }
 
       Widget totalWidget;
-      if (_member.statsExactTotal == -1) {
+      if (_member!.statsExactTotal == -1) {
         totalWidget = Text(
-          "TOTAL: unknown (>${formatBigNumbers(_member.statsExactTotalKnown)})",
+          "TOTAL: unknown (>${formatBigNumbers(_member!.statsExactTotalKnown!)})",
           style: TextStyle(fontSize: 12),
         );
       } else {
         var totalDiff = "";
         Color totalColor;
-        var result = _userProvider.basic.total - _member.statsExactTotal;
+        var result = _userProvider.basic!.total! - _member!.statsExactTotal!;
         if (result == 0) {
           totalDiff = "Same as you";
           totalColor = Colors.orange;
@@ -1015,7 +1015,7 @@ class _WarCardState extends State<WarCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "TOTAL: ${formatBigNumbers(_member.statsExactTotal)}",
+              "TOTAL: ${formatBigNumbers(_member!.statsExactTotal!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -1027,7 +1027,7 @@ class _WarCardState extends State<WarCard> {
       }
 
       Widget sourceWidget = SizedBox.shrink();
-      if (widget.memberModel.spiesSource.isNotEmpty) {
+      if (widget.memberModel!.spiesSource!.isNotEmpty) {
         sourceWidget = Row(
           children: [
             Text(
@@ -1038,7 +1038,7 @@ class _WarCardState extends State<WarCard> {
               height: 16,
               width: 16,
               child: Image.asset(
-                widget.memberModel.spiesSource == "yata"
+                widget.memberModel!.spiesSource == "yata"
                     ? 'images/icons/yata_logo.png'
                     : 'images/icons/tornstats_logo.png',
               ),
@@ -1077,16 +1077,16 @@ class _WarCardState extends State<WarCard> {
         ),
         toastBuilder: (cancelFunc) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Text(_member.name),
+          title: Text(_member!.name!),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_member.factionName != "0")
+              if (_member!.factionName != "0")
                 Padding(
                   padding: const EdgeInsets.all(4),
                   child: Text(
-                    "Faction: ${_member.factionName}",
+                    "Faction: ${_member!.factionName}",
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -1137,33 +1137,34 @@ class _WarCardState extends State<WarCard> {
       );
     }
 
-    if (_member.statsExactTotalKnown != -1) {
-      Color exactColor = Colors.green;
-      if (_userProvider.basic.total < _member.statsExactTotalKnown - _member.statsExactTotalKnown * 0.1) {
+    if (_member!.statsExactTotalKnown != -1) {
+      Color? exactColor = Colors.green;
+      if (_userProvider.basic!.total! < _member!.statsExactTotalKnown! - _member!.statsExactTotalKnown! * 0.1) {
         exactColor = Colors.red[700];
-      } else if ((_userProvider.basic.total >= _member.statsExactTotalKnown - _member.statsExactTotalKnown * 0.1) &&
-          (_userProvider.basic.total <= _member.statsExactTotalKnown + _member.statsExactTotalKnown * 0.1)) {
+      } else if ((_userProvider.basic!.total! >=
+              _member!.statsExactTotalKnown! - _member!.statsExactTotalKnown! * 0.1) &&
+          (_userProvider.basic!.total! <= _member!.statsExactTotalKnown! + _member!.statsExactTotalKnown! * 0.1)) {
         exactColor = Colors.orange[700];
       }
 
-      int totalToShow = 0;
-      if (_member.statsExactTotal != -1) {
+      int? totalToShow = 0;
+      if (_member!.statsExactTotal != -1) {
         // TornStats adds all 4 stats into total if total is unknown, but then rounds. So it might happen that the
         // total sum is actually higher than the one calculated and rounded by TS
-        totalToShow = max(_member.statsExactTotal, _member.statsExactTotalKnown);
+        totalToShow = max(_member!.statsExactTotal!, _member!.statsExactTotalKnown!);
       } else {
-        totalToShow = _member.statsExactTotalKnown;
+        totalToShow = _member!.statsExactTotalKnown;
       }
 
       bool someStatUnknown = false;
-      if (_member.statsStr == -1 || _member.statsDef == -1 || _member.statsDex == -1 || _member.statsSpd == -1) {
+      if (_member!.statsStr == -1 || _member!.statsDef == -1 || _member!.statsDex == -1 || _member!.statsSpd == -1) {
         someStatUnknown = true;
       }
 
       return Row(
         children: [
           Text(
-            "${formatBigNumbers(totalToShow)}",
+            "${formatBigNumbers(totalToShow!)}",
             style: TextStyle(
               fontSize: 12,
               color: exactColor,
@@ -1193,8 +1194,8 @@ class _WarCardState extends State<WarCard> {
           ),
         ],
       );
-    } else if (_member.statsEstimated.isNotEmpty) {
-      if (!_member.statsComparisonSuccess) {
+    } else if (_member!.statsEstimated!.isNotEmpty) {
+      if (!_member!.statsComparisonSuccess!) {
         return Text(
           "unk stats",
           style: TextStyle(
@@ -1210,18 +1211,18 @@ class _WarCardState extends State<WarCard> {
       int refillComparison = 0;
       Color refillColor = Colors.orange;
       int enhancementComparison = 0;
-      Color enhancementColor = _themeProvider.mainText;
+      Color? enhancementColor = _themeProvider.mainText;
       int cansComparison = 0;
       Color cansColor = Colors.orange;
       Color sslColor = Colors.green;
       bool sslProb = true;
-      int ecstasy = 0;
-      int lsd = 0;
+      int? ecstasy = 0;
+      int? lsd = 0;
 
       List<Widget> additional = <Widget>[];
       // XANAX
-      int otherXanax = _member.memberXanax;
-      int myXanax = _member.myXanax;
+      int otherXanax = _member!.memberXanax!;
+      int myXanax = _member!.myXanax!;
       xanaxComparison = otherXanax - myXanax;
       if (xanaxComparison < -10) {
         xanaxColor = Colors.green;
@@ -1234,8 +1235,8 @@ class _WarCardState extends State<WarCard> {
       );
 
       // REFILLS
-      int otherRefill = _member.memberRefill;
-      int myRefill = _member.myRefill;
+      int otherRefill = _member!.memberRefill!;
+      int myRefill = _member!.myRefill!;
       refillComparison = otherRefill - myRefill;
       refillColor = Colors.orange;
       if (refillComparison < -10) {
@@ -1249,8 +1250,8 @@ class _WarCardState extends State<WarCard> {
       );
 
       // ENHANCER
-      int otherEnhancement = _member.memberEnhancement;
-      int myEnhancement = _member.myEnhancement;
+      int otherEnhancement = _member!.memberEnhancement!;
+      int myEnhancement = _member!.myEnhancement!;
       enhancementComparison = otherEnhancement - myEnhancement;
       if (enhancementComparison < 0) {
         enhancementColor = Colors.green;
@@ -1263,8 +1264,8 @@ class _WarCardState extends State<WarCard> {
       );
 
       // CANS
-      int otherCans = _member.memberCans;
-      int myCans = _member.myCans;
+      int otherCans = _member!.memberCans!;
+      int myCans = _member!.myCans!;
       cansComparison = otherCans - myCans;
       if (cansComparison < 0) {
         cansColor = Colors.green;
@@ -1283,12 +1284,12 @@ class _WarCardState extends State<WarCard> {
       /// if (esc + xan) < 150 & LSD > 100 SSL is red
       Widget sslWidget = SizedBox.shrink();
       sslColor = Colors.green;
-      ecstasy = _member.memberEcstasy;
-      lsd = _member.memberLsd;
-      if (otherXanax + ecstasy > 150) {
+      ecstasy = _member!.memberEcstasy;
+      lsd = _member!.memberLsd;
+      if (otherXanax + ecstasy! > 150) {
         sslProb = false;
       } else {
-        if (lsd > 50 && lsd < 50) {
+        if (lsd! > 50 && lsd < 50) {
           sslColor = Colors.orange;
         } else if (lsd > 100) {
           sslColor = Colors.red;
@@ -1324,7 +1325,7 @@ class _WarCardState extends State<WarCard> {
           ),
           SizedBox(width: 5),
           Text(
-            _member.statsEstimated,
+            _member!.statsEstimated!,
             style: TextStyle(
               fontSize: 11,
             ),
@@ -1350,7 +1351,7 @@ class _WarCardState extends State<WarCard> {
                 cansColor,
                 sslColor,
                 sslProb,
-                _member,
+                _member!,
               );
             },
           ),
@@ -1367,20 +1368,16 @@ class _WarCardState extends State<WarCard> {
     }
   }
 
-  Color _returnTargetNoteColor() {
-    switch (_member.personalNoteColor) {
+  Color? _returnTargetNoteColor() {
+    switch (_member!.personalNoteColor) {
       case 'red':
         return Colors.red[600];
-        break;
       case 'orange':
         return Colors.orange[600];
-        break;
       case 'green':
         return Colors.green[600];
-        break;
       default:
         return _themeProvider.mainText;
-        break;
     }
   }
 
@@ -1407,11 +1404,11 @@ class _WarCardState extends State<WarCard> {
   }
 
   void _updateThisMember() async {
-    bool success = await _w.updateSingleMemberFull(_member);
-    String message = "Updated ${_member.name}!";
-    Color color = Colors.green;
+    bool success = await _w.updateSingleMemberFull(_member!);
+    String message = "Updated ${_member!.name}!";
+    Color? color = Colors.green;
     if (!success) {
-      message = "Error updating ${_member.name}!";
+      message = "Error updating ${_member!.name}!";
       color = Colors.orange[700];
     }
     BotToast.showText(
@@ -1421,7 +1418,7 @@ class _WarCardState extends State<WarCard> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: color,
+      contentColor: color!,
       duration: Duration(seconds: 3),
       contentPadding: EdgeInsets.all(10),
     );
@@ -1469,7 +1466,7 @@ class _WarCardState extends State<WarCard> {
       }
 
       if (_lifeTicker != null) {
-        _lifeTicker.cancel();
+        _lifeTicker!.cancel();
         _lifeTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
@@ -1483,9 +1480,9 @@ class _WarCardState extends State<WarCard> {
   _releaseFromHospital() async {
     await Future.delayed(const Duration(seconds: 5));
     if (_lifeTicker != null) {
-      _lifeTicker.cancel();
+      _lifeTicker!.cancel();
     }
-    _member.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    _member!.status!.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     if (mounted) {
       setState(() {});
     }
@@ -1498,12 +1495,12 @@ class _WarCardState extends State<WarCard> {
         List<WarCardDetails> myTargetList = _w.orderedCardsDetails;
 
         // Adjust the list (remove targets above the one selected)
-        myTargetList.removeRange(0, myTargetList.indexWhere((element) => element.memberId == _member.memberId));
+        myTargetList.removeRange(0, myTargetList.indexWhere((element) => element.memberId == _member!.memberId));
 
         List<String> attacksIds = <String>[];
-        List<String> attacksNames = <String>[];
-        List<String> attackNotes = <String>[];
-        List<String> attacksNotesColor = <String>[];
+        List<String?> attacksNames = <String?>[];
+        List<String?> attackNotes = <String?>[];
+        List<String?> attacksNotesColor = <String?>[];
         for (var tar in myTargetList) {
           attacksIds.add(tar.memberId.toString());
           attacksNames.add(tar.name);
@@ -1534,7 +1531,7 @@ class _WarCardState extends State<WarCard> {
 
         break;
       case BrowserSetting.external:
-        var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_member.memberId}';
+        var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_member!.memberId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
@@ -1545,16 +1542,16 @@ class _WarCardState extends State<WarCard> {
   Widget _lastOnlineWidget() {
     return Row(
       children: [
-        _member.lastAction.status == "Offline"
+        _member!.lastAction!.status == "Offline"
             ? Icon(Icons.remove_circle, size: 12, color: Colors.grey)
-            : _member.lastAction.status == "Idle"
+            : _member!.lastAction!.status == "Idle"
                 ? Icon(Icons.adjust, size: 12, color: Colors.orange)
                 : Icon(Icons.circle, size: 12, color: Colors.green),
-        if (_member.lastAction.status == "Offline" || _member.lastAction.status == "Idle")
+        if (_member!.lastAction!.status == "Offline" || _member!.lastAction!.status == "Idle")
           Padding(
             padding: const EdgeInsets.only(left: 2),
             child: Text(
-              _member.lastAction.relative
+              _member!.lastAction!.relative!
                   .replaceAll("minute ago", "m")
                   .replaceAll("minutes ago", "m")
                   .replaceAll("hour ago", "h")
@@ -1563,7 +1560,7 @@ class _WarCardState extends State<WarCard> {
                   .replaceAll("days ago", "d"),
               style: TextStyle(
                 fontSize: 11,
-                color: _member.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                color: _member!.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
               ),
             ),
           ),
@@ -1577,7 +1574,7 @@ class _WarCardState extends State<WarCard> {
     int refillCompare,
     Color refillColor,
     int enhancementCompare,
-    Color enhancementColor,
+    Color? enhancementColor,
     int cansCompare,
     Color cansColor,
     Color sslColor,
@@ -1756,7 +1753,7 @@ class _WarCardState extends State<WarCard> {
       ),
       toastBuilder: (cancelFunc) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: Text(member.name),
+        title: Text(member.name!),
         backgroundColor: _themeProvider.secondBackground,
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1770,11 +1767,11 @@ class _WarCardState extends State<WarCard> {
                   style: TextStyle(fontSize: 12),
                 ),
               ),
-            if (member.lastAction.relative.isNotEmpty)
+            if (member.lastAction!.relative!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(2),
                 child: Text(
-                  "Online: ${member.lastAction.relative.replaceAll("0 minutes ago", "now")}",
+                  "Online: ${member.lastAction!.relative!.replaceAll("0 minutes ago", "now")}",
                   style: TextStyle(fontSize: 12),
                 ),
               ),

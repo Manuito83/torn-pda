@@ -27,20 +27,20 @@ class YataSpyModel {
     this.targetFactionId,
   });
 
-  int strength;
-  int speed;
-  int defense;
-  int dexterity;
-  int total;
-  int strengthTimestamp;
-  int speedTimestamp;
-  int defenseTimestamp;
-  int dexterityTimestamp;
-  int totalTimestamp;
-  int update;
-  String targetName;
-  String targetFactionName;
-  int targetFactionId;
+  int? strength;
+  int? speed;
+  int? defense;
+  int? dexterity;
+  int? total;
+  int? strengthTimestamp;
+  int? speedTimestamp;
+  int? defenseTimestamp;
+  int? dexterityTimestamp;
+  int? totalTimestamp;
+  int? update;
+  String? targetName;
+  String? targetFactionName;
+  int? targetFactionId;
 
   factory YataSpyModel.fromJson(Map<String, dynamic> json) => YataSpyModel(
     strength: json["strength"] == null ? null : json["strength"],

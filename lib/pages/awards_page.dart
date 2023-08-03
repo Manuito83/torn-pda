@@ -31,13 +31,13 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
-  double playerScore = 0;
-  int achievedAwards = 0;
-  int totalAwards = 0;
-  int achievedHonors = 0;
-  int totalHonors = 0;
-  int achievedMedals = 0;
-  int totalMedals = 0;
+  double? playerScore = 0;
+  int? achievedAwards = 0;
+  int? totalAwards = 0;
+  int? achievedHonors = 0;
+  int? totalHonors = 0;
+  int? achievedMedals = 0;
+  int? totalMedals = 0;
 }
 
 class AwardsPage extends StatefulWidget {
@@ -49,24 +49,24 @@ class _AwardsPageState extends State<AwardsPage> {
   // Main list with all awards
   var _allAwards = <Award>[];
   var _allAwardsCards = <Widget>[];
-  var _allCategories = Map<String, String>();
-  List<dynamic> _allAwardsGraphs;
+  var _allCategories = Map<String?, String>();
+  List<dynamic>? _allAwardsGraphs;
 
   // Active categories
-  var _hiddenCategories = <String>[];
+  var _hiddenCategories = <String?>[];
 
-  Future _getAwardsPayload;
+  Future? _getAwardsPayload;
   bool _apiSuccess = false;
-  String _errorReason = "";
+  String? _errorReason = "";
 
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ThemeProvider _themeProvider;
-  AwardsProvider _pinProvider;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late ThemeProvider _themeProvider;
+  late AwardsProvider _pinProvider;
 
   PanelController _pc = new PanelController();
   final double _initFabHeight = 25.0;
-  double _fabHeight;
+  double? _fabHeight;
   double _panelHeightOpen = 360;
   double _panelHeightClosed = 75.0;
 
@@ -242,7 +242,7 @@ class _AwardsPageState extends State<AwardsPage> {
             child: Row(
               children: [
                 Text('Your rarity score: '
-                    '${double.parse((_headerInfo.playerScore / 10000).toStringAsFixed(2))}'),
+                    '${double.parse((_headerInfo.playerScore! / 10000).toStringAsFixed(2))}'),
                 SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
@@ -259,7 +259,7 @@ class _AwardsPageState extends State<AwardsPage> {
                         fontSize: 13,
                         color: Colors.white,
                       ),
-                      contentColor: Colors.green[700],
+                      contentColor: Colors.green[700]!,
                       duration: Duration(seconds: 6),
                       contentPadding: EdgeInsets.all(10),
                     );
@@ -302,7 +302,7 @@ class _AwardsPageState extends State<AwardsPage> {
           // We need to decrease _allAwards by 1, because the header moves the
           // list one position compared to the _allAwardsCards list
 
-          if (!_showAchievedAwards && _allAwards[index - 1].achieve * 100.truncate() == 100) {
+          if (!_showAchievedAwards && _allAwards[index - 1].achieve! * 100.truncate() == 100) {
             return SizedBox.shrink();
           }
 
@@ -326,7 +326,7 @@ class _AwardsPageState extends State<AwardsPage> {
           boxShadow: [
             BoxShadow(
               blurRadius: 2.0,
-              color: Colors.orange[800],
+              color: Colors.orange[800]!,
             ),
           ]),
       margin: const EdgeInsets.all(24.0),
@@ -371,7 +371,7 @@ class _AwardsPageState extends State<AwardsPage> {
                 RawChip(
                   showCheckmark: true,
                   selected: _hiddenCategories.isEmpty ? true : false,
-                  side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600], width: 1.5),
+                  side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600]!, width: 1.5),
                   avatar: CircleAvatar(
                     backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
                   ),
@@ -394,7 +394,7 @@ class _AwardsPageState extends State<AwardsPage> {
                         fullList.add(cat);
                       }
                       setState(() {
-                        _hiddenCategories = List<String>.from(fullList);
+                        _hiddenCategories = List<String?>.from(fullList);
                       });
                     }
                     Prefs().setHiddenAwardCategories(_hiddenCategories);
@@ -429,7 +429,7 @@ class _AwardsPageState extends State<AwardsPage> {
                     fontSize: 13,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.green[800],
+                  contentColor: Colors.green[800]!,
                   duration: Duration(seconds: 6),
                   contentPadding: EdgeInsets.all(10),
                 );
@@ -443,8 +443,10 @@ class _AwardsPageState extends State<AwardsPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -460,7 +462,7 @@ class _AwardsPageState extends State<AwardsPage> {
                 onPressed: () async {
                   // Only pass awards that are being shown in the active list
                   var graphsToPass = <dynamic>[];
-                  for (var awardGraph in _allAwardsGraphs) {
+                  for (var awardGraph in _allAwardsGraphs!) {
                     for (var award in _allAwards) {
                       if (awardGraph[0] == award.name) {
                         if (!_hiddenCategories.contains(award.category)) {
@@ -598,7 +600,7 @@ class _AwardsPageState extends State<AwardsPage> {
     var catChips = <Widget>[];
     for (var cat in _allCategories.keys) {
       Widget catIcon = SizedBox.shrink();
-      String catStats = _allCategories[cat];
+      String? catStats = _allCategories[cat];
       switch (cat) {
         case "crimes":
           catIcon = Image.asset(
@@ -697,9 +699,9 @@ class _AwardsPageState extends State<AwardsPage> {
         RawChip(
           showCheckmark: false,
           selected: _hiddenCategories.contains(cat) ? false : true,
-          side: BorderSide(color: _hiddenCategories.contains(cat) ? Colors.grey[600] : Colors.green, width: 1.5),
+          side: BorderSide(color: _hiddenCategories.contains(cat) ? Colors.grey[600]! : Colors.green, width: 1.5),
           avatar: catIcon,
-          label: Text(catStats, style: TextStyle(fontSize: 12)),
+          label: Text(catStats!, style: TextStyle(fontSize: 12)),
           selectedColor: Colors.transparent,
           disabledColor: Colors.grey,
           onSelected: (bool isSelected) {
@@ -723,7 +725,7 @@ class _AwardsPageState extends State<AwardsPage> {
                 fontSize: 13,
                 color: Colors.white,
               ),
-              contentColor: Colors.green[800],
+              contentColor: Colors.green[800]!,
               duration: Duration(seconds: 2),
               contentPadding: EdgeInsets.all(10),
             );
@@ -741,7 +743,7 @@ class _AwardsPageState extends State<AwardsPage> {
   Future _fetchYataAndPopulate() async {
     await _restorePrefs();
 
-    var reply = await YataComm.getAwards(_userProvider.basic.userApiKey);
+    var reply = await YataComm.getAwards(_userProvider.basic!.userApiKey);
     if (reply is YataError) {
       _errorReason = reply.reason;
     } else {
@@ -777,7 +779,7 @@ class _AwardsPageState extends State<AwardsPage> {
               errorBuilder: (
                 BuildContext context,
                 Object exception,
-                StackTrace stackTrace,
+                StackTrace? stackTrace,
               ) {
                 return SizedBox.shrink();
               },
@@ -788,7 +790,7 @@ class _AwardsPageState extends State<AwardsPage> {
               errorBuilder: (
                 BuildContext context,
                 Object exception,
-                StackTrace stackTrace,
+                StackTrace? stackTrace,
               ) {
                 return SizedBox.shrink();
               },
@@ -809,15 +811,19 @@ class _AwardsPageState extends State<AwardsPage> {
             name: value["name"],
             description: value["description"],
             type: value["awardType"],
-            image: image,
+            image: image as Image?,
             achieve: value["achieve"].toDouble(),
-            circulation: value["circulation"].toDouble(),
+            circulation: value["circulation"] == null ? 0 : value["circulation"].toDouble(),
             rScore: value["rScore"] == null ? 0 : value["rScore"].toDouble(),
             rarity: value["rarity"],
             // Goal might be null sometimes (e.g. travel awards for < level 15)
             goal: value["goal"] == null ? 0 : value["goal"].toDouble(),
-            current: value["current"].toDouble(),
-            dateAwarded: value["awarded_time"].toDouble(),
+            current: value["current"] == null
+                ? 0
+                : value["current"] is String
+                    ? double.parse(value["current"])
+                    : value["current"].toDouble(),
+            dateAwarded: value["awarded_time"] == null ? 0 : value["awarded_time"].toDouble(),
             daysLeft: value["left"] == null
                 ? -99 // Means no time
                 : value["left"] is String
@@ -844,7 +850,7 @@ class _AwardsPageState extends State<AwardsPage> {
           }
 
           // Add to pinned list
-          if (singleAward.pinned) {
+          if (singleAward.pinned!) {
             _pinProvider.pinnedAwards.add(singleAward);
             _pinProvider.pinnedNames.add(singleAward.name);
           }
@@ -951,7 +957,7 @@ class _AwardsPageState extends State<AwardsPage> {
 
     _allCategories.forEach((key, value) {
       for (var catStats in statModel.entries) {
-        if (key.toLowerCase() == catStats.key.toLowerCase()) {
+        if (key!.toLowerCase() == catStats.key.toLowerCase()) {
           _allCategories.update(key, (value) => catStats.value);
         }
       }
@@ -959,15 +965,16 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   void _sortAwards(AwardsSort choice, {bool initialLoad = false}) {
-    String sortToSave;
-    switch (choice.type) {
+    late String sortToSave;
+    if (choice.type == null) return;
+    switch (choice.type!) {
       case AwardsSortType.percentageDes:
-        _allAwards.sort((a, b) => b.achieve.compareTo(a.achieve));
+        _allAwards.sort((a, b) => b.achieve!.compareTo(a.achieve!));
         _buildAwardsWidgetList();
         sortToSave = 'percentageDes';
         break;
       case AwardsSortType.percentageAsc:
-        _allAwards.sort((a, b) => a.achieve.compareTo(b.achieve));
+        _allAwards.sort((a, b) => a.achieve!.compareTo(b.achieve!));
         _buildAwardsWidgetList();
         sortToSave = 'percentageAsc';
         break;
@@ -982,27 +989,27 @@ class _AwardsPageState extends State<AwardsPage> {
         sortToSave = 'categoryAsc';
         break;
       case AwardsSortType.nameDes:
-        _allAwards.sort((a, b) => b.name.trim().compareTo(a.name.trim()));
+        _allAwards.sort((a, b) => b.name!.trim().compareTo(a.name!.trim()));
         _buildAwardsWidgetList();
         sortToSave = 'nameDes';
         break;
       case AwardsSortType.nameAsc:
-        _allAwards.sort((a, b) => a.name.trim().compareTo(b.name.trim()));
+        _allAwards.sort((a, b) => a.name!.trim().compareTo(b.name!.trim()));
         _buildAwardsWidgetList();
         sortToSave = 'nameAsc';
         break;
       case AwardsSortType.rarityAsc:
-        _allAwards.sort((a, b) => b.rarity.compareTo(a.rarity));
+        _allAwards.sort((a, b) => b.rarity!.compareTo(a.rarity!));
         _buildAwardsWidgetList();
         sortToSave = 'rarityAsc';
         break;
       case AwardsSortType.rarityDesc:
-        _allAwards.sort((a, b) => a.rarity.compareTo(b.rarity));
+        _allAwards.sort((a, b) => a.rarity!.compareTo(b.rarity!));
         _buildAwardsWidgetList();
         sortToSave = 'rarityDesc';
         break;
       case AwardsSortType.daysAsc:
-        _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+        _allAwards.sort((a, b) => a.daysLeft!.compareTo(b.daysLeft!));
         // As there are some awards with daysLeft = -99 that would go first in list
         // (which makes no sense, as daysLeft cannot be accounted for these), we have
         // to take them out from the beginning and add them to the end before rebuilding the list
@@ -1022,7 +1029,7 @@ class _AwardsPageState extends State<AwardsPage> {
         sortToSave = 'daysAsc';
         break;
       case AwardsSortType.daysDes:
-        _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
+        _allAwards.sort((a, b) => b.daysLeft!.compareTo(a.daysLeft!));
         _buildAwardsWidgetList();
         sortToSave = 'daysDes';
         break;

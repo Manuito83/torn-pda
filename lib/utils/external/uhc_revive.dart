@@ -1,9 +1,6 @@
 // Dart imports:
 import 'dart:convert';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:http/http.dart' as http;
 
@@ -12,19 +9,19 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/revive_services/uhc_revive_model.dart';
 
 class UhcRevive {
-  int playerId;
-  String playerName;
-  String playerFaction;
-  int playerFactionId;
+  int? playerId;
+  String? playerName;
+  String? playerFaction;
+  int? playerFactionId;
 
   UhcRevive({
-    @required this.playerId,
-    @required this.playerName,
-    @required this.playerFaction,
-    @required this.playerFactionId,
+    required this.playerId,
+    required this.playerName,
+    required this.playerFaction,
+    required this.playerFactionId,
   });
 
-  Future<String> callMedic() async {
+  Future<String?> callMedic() async {
     var modelOut = UhcReviveModel()
       ..userID = playerId
       ..userName = "$playerName"

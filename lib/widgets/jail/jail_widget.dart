@@ -11,15 +11,15 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/jail/jail_record_dialog.dart';
 
 class JailWidget extends StatefulWidget {
-  final InAppWebViewController webview;
+  final InAppWebViewController? webview;
   final Function fireScriptCallback;
   final String playerName;
 
   const JailWidget({
-    @required this.webview,
-    @required this.fireScriptCallback,
-    @required this.playerName,
-    Key key,
+    required this.webview,
+    required this.fireScriptCallback,
+    required this.playerName,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -38,9 +38,9 @@ class _JailWidgetState extends State<JailWidget> {
   final _scrollController = ScrollController();
   final _expandableController = ExpandableController();
 
-  Future _getPreferences;
+  Future? _getPreferences;
 
-  JailModel _jailModel;
+  late JailModel _jailModel;
   bool _panelExpanded = false;
 
   @override
@@ -165,7 +165,7 @@ class _JailWidgetState extends State<JailWidget> {
                     ),
                 ],
               ),
-              collapsed: null,
+              collapsed: Container(),
               expanded: Padding(
                 padding: const EdgeInsets.all(5),
                 child: _vaultExpanded(),
@@ -387,17 +387,6 @@ class _JailWidgetState extends State<JailWidget> {
         ),
       ],
     );
-  }
-
-  RangeValues _values = RangeValues(0, 250000);
-  double _valueToPercent(double value) {
-    if (value <= 40000) {
-      return value * 0.5 / 40000;
-    } else if (value <= 175000) {
-      return 0.5 + (value - 40000) * 0.4 / (175000 - 40000);
-    } else {
-      return 0.9 + (value - 175000) * 0.1 / (250000 - 175000);
-    }
   }
 
   /// From 0-40000, travel 50%

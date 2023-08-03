@@ -7,9 +7,9 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 
 class IconsFilterPage extends StatefulWidget {
-  const IconsFilterPage({@required this.settingsProvider, Key key}) : super(key: key);
+  const IconsFilterPage({required this.settingsProvider, Key? key}) : super(key: key);
 
-  final SettingsProvider settingsProvider;
+  final SettingsProvider? settingsProvider;
 
   @override
   _IconsFilterPageState createState() => _IconsFilterPageState();
@@ -17,12 +17,12 @@ class IconsFilterPage extends StatefulWidget {
 
 class _IconsFilterPageState extends State<IconsFilterPage> {
   List<String> filteredIcons = <String>[];
-  ThemeProvider _themeProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
     super.initState();
-    filteredIcons = widget.settingsProvider.iconsFiltered;
+    filteredIcons = widget.settingsProvider!.iconsFiltered;
 
     var s = Provider.of<SettingsProvider>(context, listen: false);
     routeWithDrawer = false;
@@ -44,8 +44,8 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          appBar: widget.settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !widget.settingsProvider.appBarTop
+          appBar: widget.settingsProvider!.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !widget.settingsProvider!.appBarTop
               ? SizedBox(
                   height: AppBar().preferredSize.height,
                   child: buildAppBar(),
@@ -69,7 +69,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                       itemCount: allowedIcons.length,
                       itemBuilder: (context, i) {
                         String key = allowedIcons.keys.elementAt(i);
-                        return _iconFilterCard(key, allowedIcons[key]);
+                        return _iconFilterCard(key, allowedIcons[key]!);
                       },
                     ),
                   ),
@@ -85,7 +85,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: widget.settingsProvider.appBarTop ? 2 : 0,
+      elevation: widget.settingsProvider!.appBarTop ? 2 : 0,
       title: Text("Filter icons"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
@@ -111,12 +111,12 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                     Image.asset('images/icons/status/${key}.png', width: 24),
                     SizedBox(width: 10),
                     Flexible(
-                      child: Text(values["name"]),
+                      child: Text(values["name"]!),
                     ),
                   ],
                 ),
               ),
-              if (values["url"].isNotEmpty)
+              if (values["url"]!.isNotEmpty)
                 IconButton(
                   icon: Icon(Icons.link),
                   onPressed: () {
@@ -126,7 +126,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                         fontSize: 14,
                         color: Colors.white,
                       ),
-                      contentColor: Colors.blue[700],
+                      contentColor: Colors.blue[700]!,
                       duration: Duration(seconds: 5),
                       contentPadding: EdgeInsets.all(10),
                     );
@@ -137,16 +137,16 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                 activeTrackColor: Colors.green[200],
                 inactiveThumbColor: Colors.red,
                 inactiveTrackColor: Colors.red[200],
-                value: !widget.settingsProvider.iconsFiltered.contains(key) || false,
+                value: !widget.settingsProvider!.iconsFiltered.contains(key) || false,
                 onChanged: (value) {
                   setState(() {
-                    List<String> newList = widget.settingsProvider.iconsFiltered;
+                    List<String> newList = widget.settingsProvider!.iconsFiltered;
                     if (value) {
                       newList.remove(key);
-                      widget.settingsProvider.changeIconsFiltered = newList;
+                      widget.settingsProvider!.changeIconsFiltered = newList;
                     } else {
                       newList.add(key);
-                      widget.settingsProvider.changeIconsFiltered = newList;
+                      widget.settingsProvider!.changeIconsFiltered = newList;
                     }
                   });
                 },

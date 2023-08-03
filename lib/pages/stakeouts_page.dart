@@ -21,7 +21,7 @@ import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class StakeoutsPage extends StatefulWidget {
   const StakeoutsPage({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -33,8 +33,8 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   final _addFormKey = GlobalKey<FormState>();
 
   StakeoutsController _s = Get.find();
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   // Showcases
   GlobalKey _showcaseInfo = GlobalKey();
@@ -107,7 +107,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   Widget _mainColumn() {
     return GetBuilder<StakeoutsController>(builder: (s) {
       int sleepTime = s.timeUntilStakeoutsSlept();
-      String sleepString = "";
+      String? sleepString = "";
       if (sleepTime > 0) {
         sleepString = TimeFormatter(
           inputTime: DateTime.fromMillisecondsSinceEpoch(sleepTime),
@@ -127,7 +127,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                   Column(
                     children: [
                       Text("Alerts silenced until"),
-                      Text(sleepString),
+                      Text(sleepString!),
                     ],
                   ),
                   ElevatedButton(
@@ -188,8 +188,10 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -207,7 +209,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.grey[800],
+                contentColor: Colors.grey[800]!,
                 duration: const Duration(seconds: 3),
                 contentPadding: const EdgeInsets.all(10),
               );
@@ -222,8 +224,8 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
           description: '\nMake sure to read this to understand how stakeouts are implemented in Torn PDA!',
           targetPadding: const EdgeInsets.all(10),
           disableMovingAnimation: true,
-          textColor: _themeProvider.mainText,
-          tooltipBackgroundColor: _themeProvider.secondBackground,
+          textColor: _themeProvider.mainText!,
+          tooltipBackgroundColor: _themeProvider.secondBackground!,
           descTextStyle: TextStyle(fontSize: 13),
           tooltipPadding: EdgeInsets.all(20),
           child: Padding(
@@ -235,7 +237,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                 color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.mainText,
               ),
               onTap: () {
-                return showDialog<void>(
+                showDialog<void>(
                   context: context,
                   barrierDismissible: false, // user must tap button!
                   builder: (BuildContext context) {
@@ -248,7 +250,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
         ),
         GetBuilder<StakeoutsController>(builder: (s) {
           return Switch(
-            value: s.stakeoutsEnabled,
+            value: s.stakeoutsEnabled!,
             onChanged: (value) {
               value ? s.enableStakeOuts() : s.disableStakeouts();
               BotToast.showText(text: "Stakeouts ${value ? 'enabled' : 'disabled'}!");
@@ -313,7 +315,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                               labelText: 'Insert player ID',
                             ),
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Cannot be empty!";
                               }
                               final n = num.tryParse(value);
@@ -331,7 +333,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                               TextButton(
                                 child: const Text("Add"),
                                 onPressed: () async {
-                                  if (_addFormKey.currentState.validate()) {
+                                  if (_addFormKey.currentState!.validate()) {
                                     // Get rid of dialog first
                                     Navigator.of(context).pop();
                                     // Copy controller's text ot local variable
@@ -348,7 +350,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                                         fontSize: 14,
                                         color: Colors.white,
                                       ),
-                                      contentColor: tryAddStakeout.success ? Colors.green : Colors.orange[700],
+                                      contentColor: tryAddStakeout.success ? Colors.green : Colors.orange[700]!,
                                       duration: const Duration(seconds: 3),
                                       contentPadding: const EdgeInsets.all(10),
                                     );
@@ -397,7 +399,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
 
 class StakeoutTargetsList extends StatelessWidget {
   StakeoutTargetsList({
-    @required this.stakeoutsController,
+    required this.stakeoutsController,
   });
 
   final StakeoutsController stakeoutsController;

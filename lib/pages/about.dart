@@ -21,15 +21,15 @@ import '../main.dart';
 class AboutPage extends StatefulWidget {
   final String uid;
 
-  AboutPage({@required this.uid});
+  AboutPage({required this.uid});
 
   @override
   _AboutPageState createState() => _AboutPageState();
 }
 
 class _AboutPageState extends State<AboutPage> {
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -623,8 +623,10 @@ class _AboutPageState extends State<AboutPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),

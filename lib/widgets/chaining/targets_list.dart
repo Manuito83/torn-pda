@@ -17,15 +17,15 @@ import 'package:torn_pda/widgets/chaining/target_card.dart';
 class TargetsList extends StatefulWidget {
   final List<TargetModel> targets;
 
-  TargetsList({@required this.targets});
+  TargetsList({required this.targets});
 
   @override
   State<TargetsList> createState() => _TargetsListState();
 }
 
 class _TargetsListState extends State<TargetsList> {
-  TargetsProvider _targetsProvider;
-  ChainStatusProvider _chainStatusProvider;
+  late TargetsProvider _targetsProvider;
+  late ChainStatusProvider _chainStatusProvider;
 
   @override
   void initState() {
@@ -57,7 +57,7 @@ class _TargetsListState extends State<TargetsList> {
   }
 
   Widget SlidableCard(int index, BuildContext context) {
-    if (!widget.targets[index].name.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
+    if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
         _targetsProvider.currentColorFilterOut.contains(widget.targets[index].personalNoteColor)) {
       return SizedBox.shrink();
     }
@@ -79,7 +79,7 @@ class _TargetsListState extends State<TargetsList> {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.orange[800],
+                contentColor: Colors.orange[800]!,
                 duration: Duration(seconds: 5),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -99,7 +99,7 @@ class _TargetsListState extends State<TargetsList> {
                   icon: MdiIcons.alphaPCircleOutline,
                   onPressed: (context) {
                     String message = "Added ${widget.targets[index].name} as a Panic Mode target!";
-                    Color messageColor = Colors.green;
+                    Color? messageColor = Colors.green;
 
                     if (_chainStatusProvider.panicTargets.length < 10) {
                       setState(() {
@@ -108,7 +108,7 @@ class _TargetsListState extends State<TargetsList> {
                             ..name = widget.targets[index].name
                             ..level = widget.targets[index].level
                             ..id = widget.targets[index].playerId
-                            ..factionName = widget.targets[index].faction.factionName,
+                            ..factionName = widget.targets[index].faction!.factionName,
                         );
                       });
                     } else {
@@ -122,7 +122,7 @@ class _TargetsListState extends State<TargetsList> {
                         fontSize: 14,
                         color: Colors.white,
                       ),
-                      contentColor: messageColor,
+                      contentColor: messageColor!,
                       duration: Duration(seconds: 5),
                       contentPadding: EdgeInsets.all(10),
                     );
@@ -142,7 +142,7 @@ class _TargetsListState extends State<TargetsList> {
                           ..name = widget.targets[index].name
                           ..level = widget.targets[index].level
                           ..id = widget.targets[index].playerId
-                          ..factionName = widget.targets[index].faction.factionName,
+                          ..factionName = widget.targets[index].faction!.factionName,
                       );
                     });
 

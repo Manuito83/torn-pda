@@ -15,8 +15,8 @@ class FriendlyFaction {
     this.id,
   });
 
-  String name;
-  int id;
+  String? name;
+  int? id;
 
   factory FriendlyFaction.fromJson(Map<String, dynamic> json) => FriendlyFaction(
     name: json["name"] == null ? null : json["name"],

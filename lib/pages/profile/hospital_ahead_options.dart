@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class HospitalAheadOptions extends StatefulWidget {
-  final Function callback;
+  final Function? callback;
 
   HospitalAheadOptions({
     this.callback,
@@ -25,14 +25,14 @@ class HospitalAheadOptions extends StatefulWidget {
 }
 
 class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
-  int _hospitalNotificationAheadValue;
-  int _hospitalAlarmAheadDropDownValue;
-  int _hospitalTimerAheadDropDownValue;
+  int? _hospitalNotificationAheadValue;
+  int? _hospitalAlarmAheadDropDownValue;
+  int? _hospitalTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -275,7 +275,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalNotificationAhead(value);
+        Prefs().setHospitalNotificationAhead(value!);
         setState(() {
           _hospitalNotificationAheadValue = value;
         });
@@ -341,7 +341,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalAlarmAhead(value);
+        Prefs().setHospitalAlarmAhead(value!);
         setState(() {
           _hospitalAlarmAheadDropDownValue = value;
         });
@@ -420,7 +420,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalTimerAhead(value);
+        Prefs().setHospitalTimerAhead(value!);
         setState(() {
           _hospitalTimerAheadDropDownValue = value;
         });
@@ -442,7 +442,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
 
   _goBack() {
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     routeWithDrawer = false;
     routeName = "profile_notifications";

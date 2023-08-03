@@ -15,7 +15,7 @@ class TabSaveModel {
     this.tabsSave,
   });
 
-  List<TabsSave> tabsSave;
+  List<TabsSave>? tabsSave;
 
   factory TabSaveModel.fromJson(Map<String, dynamic> json) => TabSaveModel(
         tabsSave:
@@ -23,7 +23,7 @@ class TabSaveModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "tabsSave": tabsSave == null ? null : List<dynamic>.from(tabsSave.map((x) => x.toJson())),
+        "tabsSave": tabsSave == null ? null : List<dynamic>.from(tabsSave!.map((x) => x.toJson())),
       };
 }
 
@@ -37,12 +37,12 @@ class TabsSave {
     this.historyForward,
   });
 
-  GlobalKey tabKey;
-  String url;
-  String pageTitle;
-  bool chatRemovalActive;
-  List<String> historyBack;
-  List<String> historyForward;
+  GlobalKey? tabKey;
+  String? url;
+  String? pageTitle;
+  bool? chatRemovalActive;
+  List<String?>? historyBack;
+  List<String?>? historyForward;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
         tabKey: json["tabKey"] == null ? null : json["tabKey"],
@@ -58,7 +58,7 @@ class TabsSave {
         "url": url == null ? null : url,
         "pageTitle": pageTitle == null ? null : pageTitle,
         "chat": chatRemovalActive == null ? null : chatRemovalActive,
-        "historyBack": historyBack == null ? null : List<dynamic>.from(historyBack.map((x) => x)),
-        "historyForward": historyForward == null ? null : List<dynamic>.from(historyForward.map((x) => x)),
+        "historyBack": historyBack == null ? null : List<dynamic>.from(historyBack!.map((x) => x)),
+        "historyForward": historyForward == null ? null : List<dynamic>.from(historyForward!.map((x) => x)),
       };
 }

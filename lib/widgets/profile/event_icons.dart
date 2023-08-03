@@ -7,13 +7,13 @@ import 'package:torn_pda/providers/theme_provider.dart';
 
 class EventIcons extends StatelessWidget {
   const EventIcons({
-    Key key,
-    @required this.message,
-    @required this.themeProvider,
+    Key? key,
+    required this.message,
+    required this.themeProvider,
   }) : super(key: key);
 
   final String message;
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -43,20 +43,20 @@ class EventIcons extends StatelessWidget {
         message.contains('successfully assaulted')) {
       insideIcon = Icon(
         MdiIcons.fencing,
-        color: themeProvider.mainText,
+        color: themeProvider!.mainText,
         size: 20,
       );
     } else if (message.contains('You are now known in the city as')) {
       insideIcon = Icon(
         MdiIcons.thoughtBubble,
-        color: themeProvider.mainText,
+        color: themeProvider!.mainText,
         size: 20,
       );
     } else if (message.contains('jail') || message.contains('arrested you')) {
       insideIcon = Center(
         child: Image.asset(
           'images/icons/jail.png',
-          color: themeProvider.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
+          color: themeProvider!.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
           width: 20,
           height: 20,
         ),
@@ -91,7 +91,7 @@ class EventIcons extends StatelessWidget {
     } else if (message.contains('purchased membership')) {
       insideIcon = Icon(
         Icons.fitness_center,
-        color: themeProvider.mainText,
+        color: themeProvider!.mainText,
         size: 20,
       );
     } else if (message.contains('You upgraded your level')) {
@@ -149,7 +149,7 @@ class EventIcons extends StatelessWidget {
         child: Center(
           child: Icon(
             MdiIcons.fingerprint,
-            color: themeProvider.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
+            color: themeProvider!.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
           ),
         ),
       );
@@ -162,7 +162,7 @@ class EventIcons extends StatelessWidget {
             'images/icons/faction.png',
             width: 15,
             height: 15,
-            color: themeProvider.mainText,
+            color: themeProvider!.mainText,
           ),
         ),
       );

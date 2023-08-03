@@ -7,21 +7,21 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'foreign_stock_button.dart';
 
 class ArrivalButton extends StatefulWidget {
-  final OwnProfileExtended user;
-  final ThemeProvider themeProvider;
-  final UserDetailsProvider userProv;
-  final SettingsProvider settingsProv;
+  final OwnProfileExtended? user;
+  final ThemeProvider? themeProvider;
+  final UserDetailsProvider? userProv;
+  final SettingsProvider? settingsProv;
   final Function launchBrowser;
   final Function updateCallback;
 
   const ArrivalButton({
-    @required this.user,
-    @required this.themeProvider,
-    @required this.userProv,
-    @required this.settingsProv,
-    @required this.launchBrowser({String url, bool shortTap}),
-    @required this.updateCallback,
-    Key key,
+    required this.user,
+    required this.themeProvider,
+    required this.userProv,
+    required this.settingsProv,
+    required this.launchBrowser({required String? url, required bool? shortTap}),
+    required this.updateCallback,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -29,7 +29,7 @@ class ArrivalButton extends StatefulWidget {
 }
 
 class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateMixin {
-  AnimationController _resizableController;
+  late AnimationController _resizableController;
 
   @override
   void initState() {
@@ -73,7 +73,7 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
               return ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: widget.themeProvider.cardColor,
+                  backgroundColor: widget.themeProvider!.cardColor,
                   side: BorderSide(
                     width: _resizableController.value * 8,
                     color: Colors.orange,
@@ -84,7 +84,7 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
                     Icon(
                       Icons.flight_land,
                       size: 22,
-                      color: widget.themeProvider.mainText,
+                      color: widget.themeProvider!.mainText,
                     ),
                     SizedBox(width: 6),
                     Column(
@@ -93,14 +93,14 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
                           "APPROACHING",
                           style: TextStyle(
                             fontSize: 8,
-                            color: widget.themeProvider.mainText,
+                            color: widget.themeProvider!.mainText,
                           ),
                         ),
                         Text(
-                          widget.user.travel.destination.toUpperCase(),
+                          widget.user!.travel!.destination!.toUpperCase(),
                           style: TextStyle(
                             fontSize: 8,
-                            color: widget.themeProvider.mainText,
+                            color: widget.themeProvider!.mainText,
                           ),
                         ),
                       ],
@@ -119,7 +119,7 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
         ForeignStockButton(
           userProv: widget.userProv,
           settingsProv: widget.settingsProv,
-          launchBrowser: widget.launchBrowser,
+          launchBrowser: widget.launchBrowser as dynamic Function({bool? shortTap, String? url}),
           updateCallback: widget.updateCallback,
         ),
       ],

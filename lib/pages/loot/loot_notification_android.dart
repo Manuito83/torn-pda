@@ -12,11 +12,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsAndroid extends StatefulWidget {
   final Function callback;
-  final bool lootRangersEnabled;
+  final bool? lootRangersEnabled;
 
   LootNotificationsAndroid({
-    @required this.callback,
-    @required this.lootRangersEnabled,
+    required this.callback,
+    required this.lootRangersEnabled,
   });
 
   @override
@@ -24,15 +24,15 @@ class LootNotificationsAndroid extends StatefulWidget {
 }
 
 class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
-  String _lootTypeDropDownValue;
-  String _lootNotificationAheadDropDownValue;
-  String _lootAlarmAheadDropDownValue;
-  String _lootTimerAheadDropDownValue;
+  String? _lootTypeDropDownValue;
+  String? _lootNotificationAheadDropDownValue;
+  String? _lootAlarmAheadDropDownValue;
+  String? _lootTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -71,7 +71,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
               String message = 'Here you can specify your preferred alerting '
                   'method and launch time before the loot level is reached';
 
-              if (widget.lootRangersEnabled) {
+              if (widget.lootRangersEnabled!) {
                 message += ' (also applies to Loot Rangers, if available)';
               }
 
@@ -248,7 +248,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootNotificationType(value);
+        Prefs().setLootNotificationType(value!);
         setState(() {
           _lootTypeDropDownValue = value;
         });
@@ -340,7 +340,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootNotificationAhead(value);
+        Prefs().setLootNotificationAhead(value!);
         setState(() {
           _lootNotificationAheadDropDownValue = value;
         });
@@ -419,7 +419,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootAlarmAhead(value);
+        Prefs().setLootAlarmAhead(value!);
         setState(() {
           _lootAlarmAheadDropDownValue = value;
         });
@@ -511,7 +511,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootTimerAhead(value);
+        Prefs().setLootTimerAhead(value!);
         setState(() {
           _lootTimerAheadDropDownValue = value;
         });

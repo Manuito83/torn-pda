@@ -10,7 +10,7 @@ class RevivingServicesDialog extends StatefulWidget {
 }
 
 class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
   bool _nukeReviveEnabled = true;
   bool _uhcReviveEnabled = true;
   bool _helaReviveEnabled = true;

@@ -9,9 +9,9 @@ LootRangers lootRangersFromJson(String str) => LootRangers.fromJson(json.decode(
 String lootRangersToJson(LootRangers data) => json.encode(data.toJson());
 
 class LootRangers {
-  Time time;
-  Map<String, Npc> npcs;
-  List<int> order;
+  Time? time;
+  Map<String, Npc>? npcs;
+  List<int>? order;
 
   LootRangers({
     this.time,
@@ -26,16 +26,16 @@ class LootRangers {
       );
 
   Map<String, dynamic> toJson() => {
-        "time": time.toJson(),
-        "npcs": Map.from(npcs).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-        "order": List<dynamic>.from(order.map((x) => x)),
+        "time": time!.toJson(),
+        "npcs": Map.from(npcs!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "order": List<dynamic>.from(order!.map((x) => x)),
       };
 }
 
 class Npc {
-  String name;
-  int hospOut;
-  bool clear;
+  String? name;
+  int? hospOut;
+  bool? clear;
 
   Npc({
     this.name,
@@ -57,8 +57,8 @@ class Npc {
 }
 
 class Time {
-  int clear;
-  int current;
+  int? clear;
+  int? current;
 
   Time({
     this.clear,

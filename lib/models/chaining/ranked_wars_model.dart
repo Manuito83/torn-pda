@@ -13,7 +13,7 @@ class RankedWarsModel {
     this.rankedwars,
   });
 
-  Map<String, RankedWar> rankedwars;
+  Map<String, RankedWar>? rankedwars;
 
   factory RankedWarsModel.fromJson(Map<String, dynamic> json) => RankedWarsModel(
         rankedwars: json["rankedwars"] == null
@@ -25,7 +25,7 @@ class RankedWarsModel {
 
   Map<String, dynamic> toJson() => {
         "rankedwars":
-            rankedwars == null ? null : Map.from(rankedwars).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+            rankedwars == null ? null : Map.from(rankedwars!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -35,8 +35,8 @@ class RankedWar {
     this.war,
   });
 
-  Map<String, WarFaction> factions;
-  War war;
+  Map<String, WarFaction>? factions;
+  War? war;
 
   factory RankedWar.fromJson(Map<String, dynamic> json) => RankedWar(
         factions: json["factions"] == null
@@ -47,8 +47,8 @@ class RankedWar {
 
   Map<String, dynamic> toJson() => {
         "factions":
-            factions == null ? null : Map.from(factions).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-        "war": war == null ? null : war.toJson(),
+            factions == null ? null : Map.from(factions!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "war": war == null ? null : war!.toJson(),
       };
 }
 
@@ -59,9 +59,9 @@ class WarFaction {
     this.chain,
   });
 
-  String name;
-  int score;
-  int chain;
+  String? name;
+  int? score;
+  int? chain;
 
   factory WarFaction.fromJson(Map<String, dynamic> json) => WarFaction(
         name: json["name"] == null ? null : json["name"],
@@ -84,10 +84,10 @@ class War {
     this.winner,
   });
 
-  int start;
-  int end;
-  int target;
-  int winner;
+  int? start;
+  int? end;
+  int? target;
+  int? winner;
 
   factory War.fromJson(Map<String, dynamic> json) => War(
         start: json["start"] == null ? null : json["start"],

@@ -21,15 +21,15 @@ class UserPerksModel {
     this.bookPerks,
   });
 
-  List<String> jobPerks;
-  List<String> propertyPerks;
-  List<String> stockPerks;
-  List<String> meritPerks;
-  List<String> educationPerks;
-  List<String> enhancerPerks;
-  List<String> companyPerks;
-  List<String> factionPerks;
-  List<dynamic> bookPerks;
+  List<String>? jobPerks;
+  List<String>? propertyPerks;
+  List<String>? stockPerks;
+  List<String>? meritPerks;
+  List<String>? educationPerks;
+  List<String>? enhancerPerks;
+  List<String>? companyPerks;
+  List<String>? factionPerks;
+  List<dynamic>? bookPerks;
 
   factory UserPerksModel.fromJson(Map<String, dynamic> json) => UserPerksModel(
         jobPerks: json["job_perks"] == null ? null : List<String>.from(json["job_perks"].map((x) => x)),
@@ -45,14 +45,14 @@ class UserPerksModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "job_perks": jobPerks == null ? null : List<dynamic>.from(jobPerks.map((x) => x)),
-        "property_perks": propertyPerks == null ? null : List<dynamic>.from(propertyPerks.map((x) => x)),
-        "stock_perks": stockPerks == null ? null : List<dynamic>.from(stockPerks.map((x) => x)),
-        "merit_perks": meritPerks == null ? null : List<dynamic>.from(meritPerks.map((x) => x)),
-        "education_perks": educationPerks == null ? null : List<dynamic>.from(educationPerks.map((x) => x)),
-        "enhancer_perks": enhancerPerks == null ? null : List<dynamic>.from(enhancerPerks.map((x) => x)),
-        "company_perks": companyPerks == null ? null : List<dynamic>.from(companyPerks.map((x) => x)),
-        "faction_perks": factionPerks == null ? null : List<dynamic>.from(factionPerks.map((x) => x)),
-        "book_perks": bookPerks == null ? null : List<dynamic>.from(bookPerks.map((x) => x)),
+        "job_perks": jobPerks == null ? null : List<dynamic>.from(jobPerks!.map((x) => x)),
+        "property_perks": propertyPerks == null ? null : List<dynamic>.from(propertyPerks!.map((x) => x)),
+        "stock_perks": stockPerks == null ? null : List<dynamic>.from(stockPerks!.map((x) => x)),
+        "merit_perks": meritPerks == null ? null : List<dynamic>.from(meritPerks!.map((x) => x)),
+        "education_perks": educationPerks == null ? null : List<dynamic>.from(educationPerks!.map((x) => x)),
+        "enhancer_perks": enhancerPerks == null ? null : List<dynamic>.from(enhancerPerks!.map((x) => x)),
+        "company_perks": companyPerks == null ? null : List<dynamic>.from(companyPerks!.map((x) => x)),
+        "faction_perks": factionPerks == null ? null : List<dynamic>.from(factionPerks!.map((x) => x)),
+        "book_perks": bookPerks == null ? null : List<dynamic>.from(bookPerks!.map((x) => x)),
       };
 }

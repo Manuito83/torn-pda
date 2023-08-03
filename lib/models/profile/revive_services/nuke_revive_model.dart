@@ -18,11 +18,11 @@ class NukeReviveModel {
     this.appInfo,
   });
 
-  String uid;
-  String player;
-  String faction;
-  String country;
-  String appInfo;
+  String? uid;
+  String? player;
+  String? faction;
+  String? country;
+  String? appInfo;
 
   factory NukeReviveModel.fromJson(Map<String, dynamic> json) => NukeReviveModel(
     uid: json["uid"] == null ? null : json["uid"],

@@ -14,7 +14,7 @@ class CrimesProvider extends ChangeNotifier {
 
   void activateCrime(Crime newCrime) {
     activeCrimesList.add(newCrime);
-    activeCrimesList.sort((a, b) => a.nerve.compareTo(b.nerve));
+    activeCrimesList.sort((a, b) => a.nerve!.compareTo(b.nerve!));
     _saveListAfterChanges();
     notifyListeners();
   }

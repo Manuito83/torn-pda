@@ -20,19 +20,19 @@ import 'package:torn_pda/utils/html_parser.dart';
 class MemberDetailsPage extends StatefulWidget {
   final String memberId;
 
-  MemberDetailsPage({@required this.memberId});
+  MemberDetailsPage({required this.memberId});
 
   @override
   _MemberDetailsPageState createState() => _MemberDetailsPageState();
 }
 
 class _MemberDetailsPageState extends State<MemberDetailsPage> {
-  UserDetailsProvider _userDetails;
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late UserDetailsProvider _userDetails;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
-  Future _memberFetched;
-  TargetModel _member;
+  Future? _memberFetched;
+  TargetModel? _member;
 
   @override
   void initState() {
@@ -87,7 +87,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '${_member.name} [${_member.playerId}]',
+                                    '${_member!.name} [${_member!.playerId}]',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -102,9 +102,9 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                                         icon: Icon(Icons.content_copy),
                                         iconSize: 20,
                                         onPressed: () {
-                                          Clipboard.setData(ClipboardData(text: _member.playerId.toString()));
+                                          Clipboard.setData(ClipboardData(text: _member!.playerId.toString()));
                                           BotToast.showText(
-                                            text: "Your target's ID [${_member.playerId}] has been "
+                                            text: "Your target's ID [${_member!.playerId}] has been "
                                                 "copied to the clipboard!",
                                             textStyle: TextStyle(
                                               fontSize: 14,
@@ -120,11 +120,11 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                                   ),
                                 ],
                               ),
-                              Text('${_member.rank}'),
+                              Text('${_member!.rank}'),
                               SizedBox(height: 20),
-                              Text('Level: ${_member.level}'),
-                              Text('Gender: ${_member.gender}'),
-                              Text('Age: ${_member.age} days'),
+                              Text('Level: ${_member!.level}'),
+                              Text('Gender: ${_member!.gender}'),
+                              Text('Age: ${_member!.age} days'),
                               SizedBox(height: 20),
                               _returnLife(),
                               SizedBox(height: 5),
@@ -132,12 +132,12 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                               SizedBox(height: 5),
                               _returnStatus(),
                               SizedBox(height: 20),
-                              Text('Awards: ${_member.awards} '
-                                  '(you have ${_userDetails.basic.awards})'),
+                              Text('Awards: ${_member!.awards} '
+                                  '(you have ${_userDetails.basic!.awards})'),
                               SizedBox(height: 20),
-                              Text('Donator: ${_member.donator == 0 ? 'NO' : 'YES'}'),
-                              Text('Friends/Enemies: ${_member.friends}'
-                                  '/${_member.enemies}'),
+                              Text('Donator: ${_member!.donator == 0 ? 'NO' : 'YES'}'),
+                              Text('Friends/Enemies: ${_member!.friends}'
+                                  '/${_member!.enemies}'),
                               SizedBox(height: 20),
                               _returnFaction(),
                               _returnJob(),
@@ -206,20 +206,21 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
           child: Text('Life'),
         ),
         LinearPercentIndicator(
-          padding: null,
+          padding: EdgeInsets.all(0),
           barRadius: Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,
           backgroundColor: Colors.grey,
           center: Text(
-            '${_member.life.current}',
+            '${_member!.life!.current}',
             style: TextStyle(color: Colors.black),
           ),
-          percent:
-              _member.life.current / _member.life.maximum > 1.0 ? 1.0 : _member.life.current / _member.life.maximum,
+          percent: _member!.life!.current! / _member!.life!.maximum! > 1.0
+              ? 1.0
+              : _member!.life!.current! / _member!.life!.maximum!,
         ),
-        _member.status.state == "Hospital"
+        _member!.status!.state == "Hospital"
             ? Icon(
                 Icons.local_hospital,
                 size: 20,
@@ -238,7 +239,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
           'Last action: ',
         ),
         Text(
-          _member.lastAction.relative == "0 minutes ago" ? 'now' : _member.lastAction.relative,
+          _member!.lastAction!.relative == "0 minutes ago" ? 'now' : _member!.lastAction!.relative!,
         ),
         Padding(
           padding: const EdgeInsets.only(left: 8.0),
@@ -246,7 +247,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: _returnLastActionColor(_member.lastAction.status),
+              color: _returnLastActionColor(_member!.lastAction!.status),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.black),
             ),
@@ -256,26 +257,24 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
     );
   }
 
-  Color _returnLastActionColor(String status) {
+  Color _returnLastActionColor(String? status) {
     switch (status) {
       case 'Online':
         return Colors.green;
-        break;
       case 'Idle':
         return Colors.orange;
-        break;
       default:
         return Colors.grey;
     }
   }
 
   Widget _returnStatus() {
-    Color stateColor;
-    if (_member.status.color == 'red') {
+    Color? stateColor;
+    if (_member!.status!.color == 'red') {
       stateColor = Colors.red;
-    } else if (_member.status.color == 'green') {
+    } else if (_member!.status!.color == 'green') {
       stateColor = Colors.green;
-    } else if (_member.status.color == 'blue') {
+    } else if (_member!.status!.color == 'blue') {
       stateColor = Colors.blue;
     }
 
@@ -291,21 +290,21 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text('Status: ${_member.status.state}'),
+        Text('Status: ${_member!.status!.state}'),
         stateBall,
       ],
     );
   }
 
   Widget _returnFaction() {
-    if (_member.faction.factionId != 0) {
+    if (_member!.faction!.factionId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Faction: ${HtmlParser.fix(_member.faction.factionName)}'),
-            Text('Position: ${_member.faction.position}'),
-            Text('Joined: ${_member.faction.daysInFaction} days ago'),
+            Text('Faction: ${HtmlParser.fix(_member!.faction!.factionName)}'),
+            Text('Position: ${_member!.faction!.position}'),
+            Text('Joined: ${_member!.faction!.daysInFaction} days ago'),
           ],
         ),
       );
@@ -315,13 +314,13 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
   }
 
   Widget _returnJob() {
-    if (_member.job.companyId != 0) {
+    if (_member!.job!.companyId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Company: ${HtmlParser.fix(_member.job.companyName)}'),
-            Text('Position: ${_member.job.job}'),
+            Text('Company: ${HtmlParser.fix(_member!.job!.companyName)}'),
+            Text('Position: ${_member!.job!.job}'),
           ],
         ),
       );
@@ -333,11 +332,11 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
   Widget _returnDiscord() {
     // Discord was introduced in v1.7.1 for targets, reason why we
     // perform a null check
-    if (_member.discord == null) {
+    if (_member!.discord == null) {
       return SizedBox.shrink();
     }
 
-    if (_member.discord.discordId == "") {
+    if (_member!.discord!.discordId == "") {
       return SizedBox.shrink();
     }
 
@@ -356,9 +355,9 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                 icon: Icon(Icons.content_copy),
                 iconSize: 20,
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: _member.discord.discordId));
+                  Clipboard.setData(ClipboardData(text: _member!.discord!.discordId));
                   BotToast.showText(
-                    text: "Your target's Discord ID (${_member.discord.discordId}) has been "
+                    text: "Your target's Discord ID (${_member!.discord!.discordId}) has been "
                         "copied to the clipboard!",
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -378,7 +377,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
   }
 
   Widget _returnCompetition() {
-    if (_member.competition == null) {
+    if (_member!.competition == null) {
       return SizedBox.shrink();
     }
 
@@ -393,45 +392,45 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          if (_member.competition.name != null)
+          if (_member!.competition!.name != null)
             Text(
-              '"${_member.competition.name}"',
+              '"${_member!.competition!.name}"',
             ),
-          if (_member.competition.attacks != null)
+          if (_member!.competition!.attacks != null)
             Text(
-              'Attacks: ${_member.competition.attacks}',
+              'Attacks: ${_member!.competition!.attacks}',
             ),
-          if (_member.competition.image != null)
+          if (_member!.competition!.image != null)
             Text(
-              'Image: ${_member.competition.image}',
+              'Image: ${_member!.competition!.image}',
             ),
-          if (_member.competition.score != null)
+          if (_member!.competition!.score != null)
             Text(
-              'Score: ${_member.competition.score.ceil()}',
+              'Score: ${_member!.competition!.score!.ceil()}',
             ),
-          if (_member.competition.team != null)
+          if (_member!.competition!.team != null)
             Text(
-              'Team: ${_member.competition.team}',
+              'Team: ${_member!.competition!.team}',
             ),
-          if (_member.competition.text != null)
+          if (_member!.competition!.text != null)
             Text(
-              'Text: ${_member.competition.text}',
+              'Text: ${_member!.competition!.text}',
             ),
-          if (_member.competition.total != null)
+          if (_member!.competition!.total != null)
             Text(
-              'Total (accumulated): ${_member.competition.total}',
+              'Total (accumulated): ${_member!.competition!.total}',
             ),
-          if (_member.competition.treatsCollectedTotal != null)
+          if (_member!.competition!.treatsCollectedTotal != null)
             Text(
-              'Treats collected: ${_member.competition.treatsCollectedTotal}',
+              'Treats collected: ${_member!.competition!.treatsCollectedTotal}',
             ),
-          if (_member.competition.votes != null)
+          if (_member!.competition!.votes != null)
             Text(
-              'Votes: ${_member.competition.votes}',
+              'Votes: ${_member!.competition!.votes}',
             ),
-          if (_member.competition.position != null)
+          if (_member!.competition!.position != null)
             Text(
-              'Position: ${_member.competition.position}',
+              'Position: ${_member!.competition!.position}',
             ),
         ],
       ),

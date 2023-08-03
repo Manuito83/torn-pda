@@ -31,8 +31,8 @@ class StakeoutCard extends StatefulWidget {
 
   // Key is needed to update at least the hospital counter individually
   StakeoutCard({
-    @required this.stakeout,
-    @required Key key,
+    required this.stakeout,
+    required Key key,
   }) : super(key: key);
 
   @override
@@ -40,11 +40,11 @@ class StakeoutCard extends StatefulWidget {
 }
 
 class _StakeoutCardState extends State<StakeoutCard> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  WebViewProvider _webViewProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
-  Stakeout _stakeout;
+  Stakeout? _stakeout;
   final StakeoutsController _s = Get.put(StakeoutsController());
 
   var _expandableController = ExpandableController();
@@ -62,13 +62,13 @@ class _StakeoutCardState extends State<StakeoutCard> {
     _webViewProvider = context.read<WebViewProvider>();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-    _expandableController.expanded = _stakeout.cardExpanded;
+    _expandableController.expanded = _stakeout!.cardExpanded;
     _expandableController.addListener(() {
       _s.setCardExpanded(stakeout: _stakeout, cardExpanded: _expandableController.expanded);
     });
 
-    _lifePercentageTextController.text = _stakeout.lifeBelowPercentageLimit.toString();
-    _offlineHoursTextController.text = _stakeout.offlineLongerThanLimit.toString();
+    _lifePercentageTextController.text = _stakeout!.lifeBelowPercentageLimit.toString();
+    _offlineHoursTextController.text = _stakeout!.offlineLongerThanLimit.toString();
   }
 
   @override
@@ -90,7 +90,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
             backgroundColor: Colors.red,
             icon: Icons.delete,
             onPressed: (context) {
-              _s.removeStakeout(removeId: _stakeout.id);
+              _s.removeStakeout(removeId: _stakeout!.id);
             },
           ),
         ],
@@ -107,7 +107,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
               ),
             ),
             child: ExpandablePanel(
-              collapsed: null,
+              collapsed: Container(),
               controller: _expandableController,
               header: _header(),
               expanded: _footer(),
@@ -140,7 +140,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                         SizedBox(
                           width: 95,
                           child: Text(
-                            '${_stakeout.name}',
+                            '${_stakeout!.name}',
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -163,7 +163,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 child: Row(
                   children: <Widget>[
                     // If last fetch was more than 10 minutes ago, we don't should Status details
-                    if (DateTime.now().millisecondsSinceEpoch - _stakeout.lastFetch < 600000)
+                    if (DateTime.now().millisecondsSinceEpoch - _stakeout!.lastFetch! < 600000)
                       Row(
                         children: <Widget>[
                           _travelIcon(),
@@ -171,16 +171,16 @@ class _StakeoutCardState extends State<StakeoutCard> {
                             width: 14,
                             height: 14,
                             decoration: BoxDecoration(
-                              color: _returnStatusColor(_stakeout.lastAction.status),
+                              color: _returnStatusColor(_stakeout!.lastAction!.status),
                               shape: BoxShape.circle,
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.only(left: 13),
                             child: Text(
-                              _stakeout.lastAction.relative == "0 minutes ago"
+                              _stakeout!.lastAction!.relative == "0 minutes ago"
                                   ? 'now'
-                                  : _stakeout.lastAction.relative.replaceAll(' ago', ''),
+                                  : _stakeout!.lastAction!.relative!.replaceAll(' ago', ''),
                             ),
                           ),
                         ],
@@ -201,14 +201,14 @@ class _StakeoutCardState extends State<StakeoutCard> {
               Flexible(
                 child: Row(
                   children: [
-                    if (!_s.isAnyOptionActive(stakeout: _stakeout))
+                    if (!_s.isAnyOptionActive(stakeout: _stakeout!))
                       Flexible(
                         child: Text(
                           "Nothing enabled, expand the card for options!",
                           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.orange[800]),
                         ),
                       ),
-                    if (_stakeout.okayEnabled)
+                    if (_stakeout!.okayEnabled)
                       GestureDetector(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
@@ -221,7 +221,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           _showTooltip("Is okay");
                         },
                       ),
-                    if (_stakeout.hospitalEnabled)
+                    if (_stakeout!.hospitalEnabled)
                       GestureDetector(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 8),
@@ -235,7 +235,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           _showTooltip("Is hospitalized");
                         },
                       ),
-                    if (_stakeout.revivableEnabled)
+                    if (_stakeout!.revivableEnabled)
                       GestureDetector(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 8),
@@ -248,7 +248,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           _showTooltip("Is revivable");
                         },
                       ),
-                    if (_stakeout.landedEnabled)
+                    if (_stakeout!.landedEnabled)
                       GestureDetector(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
@@ -261,7 +261,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           _showTooltip("Has landed");
                         },
                       ),
-                    if (_stakeout.onlineEnabled)
+                    if (_stakeout!.onlineEnabled)
                       GestureDetector(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
@@ -274,7 +274,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           _showTooltip("Is online");
                         },
                       ),
-                    if (_stakeout.lifeBelowPercentageEnabled)
+                    if (_stakeout!.lifeBelowPercentageEnabled)
                       GestureDetector(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
@@ -284,17 +284,17 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           ),
                         ),
                         onTap: () {
-                          _showTooltip("Life below ${_stakeout.lifeBelowPercentageLimit}%");
+                          _showTooltip("Life below ${_stakeout!.lifeBelowPercentageLimit}%");
                         },
                       ),
-                    if (_stakeout.offlineLongerThanEnabled)
+                    if (_stakeout!.offlineLongerThanEnabled)
                       GestureDetector(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
                           child: Icon(Icons.hourglass_bottom_outlined, color: Colors.orange[800]),
                         ),
                         onTap: () {
-                          _showTooltip("Offline time longer than${_stakeout.offlineLongerThanEnabled} hours");
+                          _showTooltip("Offline time longer than${_stakeout!.offlineLongerThanEnabled} hours");
                         },
                       ),
                   ],
@@ -334,7 +334,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                     ),
                     Flexible(
                       child: Text(
-                        '${_stakeout.personalNote}',
+                        '${_stakeout!.personalNote}',
                         style: TextStyle(fontSize: 12, color: _returnTargetNoteColor()),
                       ),
                     ),
@@ -372,7 +372,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Switch(
-                value: _stakeout.okayEnabled,
+                value: _stakeout!.okayEnabled,
                 onChanged: (value) {
                   _s.setOkay(stakeout: _stakeout, okayEnabled: value);
                 },
@@ -400,7 +400,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Switch(
-                value: _stakeout.hospitalEnabled,
+                value: _stakeout!.hospitalEnabled,
                 onChanged: (value) {
                   _s.setHospital(stakeout: _stakeout, hospitalEnabled: value);
                 },
@@ -427,7 +427,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Switch(
-                value: _stakeout.revivableEnabled,
+                value: _stakeout!.revivableEnabled,
                 onChanged: (value) {
                   _s.setRevivable(stakeout: _stakeout, revivableEnabled: value);
                 },
@@ -454,7 +454,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Switch(
-                value: _stakeout.landedEnabled,
+                value: _stakeout!.landedEnabled,
                 onChanged: (value) {
                   _s.setLanded(stakeout: _stakeout, landedEnabled: value);
                 },
@@ -481,7 +481,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Switch(
-                value: _stakeout.onlineEnabled,
+                value: _stakeout!.onlineEnabled,
                 onChanged: (value) {
                   _s.setOnline(stakeout: _stakeout, onlineEnabled: value);
                 },
@@ -508,7 +508,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Switch(
-                value: _stakeout.lifeBelowPercentageEnabled,
+                value: _stakeout!.lifeBelowPercentageEnabled,
                 onChanged: (value) {
                   _s.setLifePercentageEnabled(stakeout: _stakeout, lifePercentageEnabled: value);
                 },
@@ -517,7 +517,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
               ),
             ],
           ),
-          if (_stakeout.lifeBelowPercentageEnabled)
+          if (_stakeout!.lifeBelowPercentageEnabled)
             Padding(
               padding: const EdgeInsets.only(left: 33, right: 5, bottom: 10),
               child: Row(
@@ -529,7 +529,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       decoration: BoxDecoration(border: Border.all()),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("${_stakeout.lifeBelowPercentageLimit}%"),
+                        child: Text("${_stakeout!.lifeBelowPercentageLimit}%"),
                       ),
                     ),
                     onTap: () {
@@ -557,7 +557,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Switch(
-                value: _stakeout.offlineLongerThanEnabled,
+                value: _stakeout!.offlineLongerThanEnabled,
                 onChanged: (value) {
                   _s.setOfflineLongerThanEnabled(stakeout: _stakeout, offlineLongerThanEnabled: value);
                 },
@@ -566,7 +566,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
               ),
             ],
           ),
-          if (_stakeout.offlineLongerThanEnabled)
+          if (_stakeout!.offlineLongerThanEnabled)
             Padding(
               padding: const EdgeInsets.only(left: 33, right: 5, bottom: 10),
               child: Row(
@@ -578,7 +578,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       decoration: BoxDecoration(border: Border.all()),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text("${_stakeout.offlineLongerThanLimit}h"),
+                        child: Text("${_stakeout!.offlineLongerThanLimit}h"),
                       ),
                     ),
                     onTap: () {
@@ -616,26 +616,22 @@ class _StakeoutCardState extends State<StakeoutCard> {
     );
   }
 
-  Color _returnTargetNoteColor() {
-    switch (_stakeout.personalNoteColor) {
+  Color? _returnTargetNoteColor() {
+    switch (_stakeout!.personalNoteColor) {
       case 'red':
         return Colors.red[600];
-        break;
       case 'orange':
         return Colors.orange[600];
-        break;
       case 'green':
         return Colors.green[600];
-        break;
       default:
         return _themeProvider.mainText;
-        break;
     }
   }
 
-  void _openBrowser({@required bool shortTap}) async {
+  void _openBrowser({required bool shortTap}) async {
     var browserType = _settingsProvider.currentBrowser;
-    String url = 'https://www.torn.com/profiles.php?XID=${_stakeout.id}';
+    String url = 'https://www.torn.com/profiles.php?XID=${_stakeout!.id}';
     switch (browserType) {
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
@@ -666,10 +662,10 @@ class _StakeoutCardState extends State<StakeoutCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(state: _stakeout.status.state, description: _stakeout.status.description);
+    var country = countryCheck(state: _stakeout!.status!.state, description: _stakeout!.status!.description);
 
-    if (_stakeout.status.color == "blue" || (country != "Torn" && _stakeout.status.color == "red")) {
-      var destination = _stakeout.status.color == "blue" ? _stakeout.status.description : country;
+    if (_stakeout!.status!.color == "blue" || (country != "Torn" && _stakeout!.status!.color == "red")) {
+      var destination = _stakeout!.status!.color == "blue" ? _stakeout!.status!.description! : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -701,7 +697,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
           borderRadius: BorderRadius.circular(100),
           onTap: () {
             BotToast.showText(
-              text: _stakeout.status.description,
+              text: _stakeout!.status!.description!,
               textStyle: TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -716,13 +712,13 @@ class _StakeoutCardState extends State<StakeoutCard> {
               Padding(
                 padding: const EdgeInsets.only(right: 3),
                 child: RotatedBox(
-                  quarterTurns: _stakeout.status.description.contains('Traveling to ')
+                  quarterTurns: _stakeout!.status!.description!.contains('Traveling to ')
                       ? 1 // If traveling to another country
-                      : _stakeout.status.description.contains('Returning ')
+                      : _stakeout!.status!.description!.contains('Returning ')
                           ? 3 // If returning to Torn
                           : 0, // If staying abroad (blue but not moving)
                   child: Icon(
-                    _stakeout.status.description.contains('In ')
+                    _stakeout!.status!.description!.contains('In ')
                         ? Icons.location_city_outlined
                         : Icons.airplanemode_active,
                     color: Colors.blue,
@@ -746,14 +742,12 @@ class _StakeoutCardState extends State<StakeoutCard> {
     }
   }
 
-  Color _returnStatusColor(String status) {
+  Color _returnStatusColor(String? status) {
     switch (status) {
       case 'Online':
         return Colors.green;
-        break;
       case 'Idle':
         return Colors.orange;
-        break;
       default:
         return Colors.grey;
     }
@@ -822,7 +816,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     )
                                   ],
                                   validator: (value) {
-                                    if (value.isEmpty) {
+                                    if (value!.isEmpty) {
                                       return "Empty!";
                                     }
                                     final n = num.tryParse(value);
@@ -839,7 +833,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     return null;
                                   },
                                   onEditingComplete: () {
-                                    if (_lifePercentageFormController.currentState.validate()) {
+                                    if (_lifePercentageFormController.currentState!.validate()) {
                                       _s.setLifePercentageLimit(
                                         stakeout: _stakeout,
                                         percentage: int.tryParse(_lifePercentageTextController.text),
@@ -848,7 +842,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     }
                                   },
                                   onTapOutside: (value) {
-                                    if (_lifePercentageFormController.currentState.validate()) {
+                                    if (_lifePercentageFormController.currentState!.validate()) {
                                       _s.setLifePercentageLimit(
                                         stakeout: _stakeout,
                                         percentage: int.tryParse(_lifePercentageTextController.text),
@@ -963,7 +957,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     )
                                   ],
                                   validator: (value) {
-                                    if (value.isEmpty) {
+                                    if (value!.isEmpty) {
                                       return "Empty!";
                                     }
                                     final n = num.tryParse(value);
@@ -980,7 +974,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     return null;
                                   },
                                   onEditingComplete: () {
-                                    if (_offlineHoursFormController.currentState.validate()) {
+                                    if (_offlineHoursFormController.currentState!.validate()) {
                                       _s.setOfflineLongerThanLimit(
                                         stakeout: _stakeout,
                                         hours: int.tryParse(_offlineHoursTextController.text),
@@ -989,7 +983,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     }
                                   },
                                   onTapOutside: (value) {
-                                    if (_offlineHoursFormController.currentState.validate()) {
+                                    if (_offlineHoursFormController.currentState!.validate()) {
                                       _s.setOfflineLongerThanLimit(
                                         stakeout: _stakeout,
                                         hours: int.tryParse(_offlineHoursTextController.text),

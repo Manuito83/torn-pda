@@ -11,9 +11,9 @@ String foreignStockOutModelToJson(ForeignStockOutModel data) =>
     json.encode(data.toJson());
 
 class ForeignStockOutItem {
-  int id;
-  int quantity;
-  int cost;
+  int? id;
+  int? quantity;
+  int? cost;
 
   ForeignStockOutItem({
     this.id,
@@ -36,12 +36,12 @@ class ForeignStockOutItem {
 }
 
 class ForeignStockOutModel {
-  String client;
-  String version;
-  String authorName;
-  int authorId;
-  String country;
-  List<ForeignStockOutItem> items;
+  String? client;
+  String? version;
+  String? authorName;
+  int? authorId;
+  String? country;
+  List<ForeignStockOutItem>? items;
 
   ForeignStockOutModel(
       {this.client,
@@ -72,6 +72,6 @@ class ForeignStockOutModel {
         "author_name": authorName,
         "author_id": authorId,
         "country": country,
-        "items": List<dynamic>.from(items.map((x) => x.toJson())),
+        "items": List<dynamic>.from(items!.map((x) => x.toJson())),
       };
 }

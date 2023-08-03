@@ -13,7 +13,7 @@ import 'package:torn_pda/widgets/chaining/attack_card.dart';
 class AttacksList extends StatelessWidget {
   final List<Attack> attacks;
 
-  AttacksList({@required this.attacks});
+  AttacksList({required this.attacks});
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +63,7 @@ class AttacksList extends StatelessWidget {
         }
       }
       // Filter by search text and discard if it does not match
-      if (!thisAttack.targetName
-          .toUpperCase()
-          .contains(wordFilter.toUpperCase())) {
+      if (!thisAttack.targetName!.toUpperCase().contains(wordFilter.toUpperCase())) {
         addThisAttack = false;
       }
       // Finally, add to list if it qualifies
@@ -86,20 +84,24 @@ class AttacksList extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'API ERROR: ',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-            ),
-            Text(
-              attacksProvider.getApiErrorMessage,
-              style: TextStyle(
-                color: Colors.red,
+            Flexible(
+              child: Column(
+                children: [
+                  Text(
+                    'API ERROR',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    attacksProvider.getApiErrorMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

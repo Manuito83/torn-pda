@@ -6,12 +6,12 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AnnouncementDialog extends StatelessWidget {
   const AnnouncementDialog({
-    @required ThemeProvider themeProvider,
-    Key key,
+    required ThemeProvider? themeProvider,
+    Key? key,
   })  : _themeProvider = themeProvider,
         super(key: key);
 
-  final ThemeProvider _themeProvider;
+  final ThemeProvider? _themeProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class AnnouncementDialog extends StatelessWidget {
             RichText(
               text: TextSpan(
                 text: "Give Torn PDA a thumbs up in the ",
-                style: TextStyle(fontSize: 14, color: _themeProvider.mainText),
+                style: TextStyle(fontSize: 14, color: _themeProvider!.mainText),
                 children: <InlineSpan>[
                   WidgetSpan(
                     child: GestureDetector(

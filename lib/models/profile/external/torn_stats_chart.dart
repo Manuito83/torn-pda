@@ -16,10 +16,10 @@ class StatsChartTornStats {
     this.data,
   });
 
-  bool status;
-  String message;
-  int shareHof;
-  List<Datum> data;
+  bool? status;
+  String? message;
+  int? shareHof;
+  List<Datum>? data;
 
   factory StatsChartTornStats.fromJson(Map<String, dynamic> json) => StatsChartTornStats(
         status: json["status"] == null ? null : json["status"],
@@ -32,7 +32,7 @@ class StatsChartTornStats {
         "status": status == null ? null : status,
         "message": message == null ? null : message,
         "share_hof": shareHof == null ? null : shareHof,
-        "data": data == null ? null : List<dynamic>.from(data.map((x) => x.toJson())),
+        "data": data == null ? null : List<dynamic>.from(data!.map((x) => x.toJson())),
       };
 }
 
@@ -46,12 +46,12 @@ class Datum {
     this.timestamp,
   });
 
-  int strength;
-  int defense;
-  int speed;
-  int dexterity;
-  int total;
-  int timestamp;
+  int? strength;
+  int? defense;
+  int? speed;
+  int? dexterity;
+  int? total;
+  int? timestamp;
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
         strength: json["strength"] == null ? null : json["strength"],

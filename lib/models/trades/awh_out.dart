@@ -18,12 +18,12 @@ class ArsonWarehouseOut {
     this.myItems,
   });
 
-  int version;
-  int tradeId;
-  int me;
-  String them;
-  List<AwhItem> theirItems;
-  List<AwhItem> myItems;
+  int? version;
+  int? tradeId;
+  int? me;
+  String? them;
+  List<AwhItem>? theirItems;
+  List<AwhItem>? myItems;
 
   factory ArsonWarehouseOut.fromJson(Map<String, dynamic> json) => ArsonWarehouseOut(
     version: json["version"] == null ? null : json["version"],
@@ -39,8 +39,8 @@ class ArsonWarehouseOut {
     "trade_id": tradeId == null ? null : tradeId,
     "me": me == null ? null : me,
     "them": them == null ? null : them,
-    "their_items": theirItems == null ? null : List<dynamic>.from(theirItems.map((x) => x.toJson())),
-    "my_items": myItems == null ? null : List<dynamic>.from(myItems.map((x) => x.toJson())),
+    "their_items": theirItems == null ? null : List<dynamic>.from(theirItems!.map((x) => x.toJson())),
+    "my_items": myItems == null ? null : List<dynamic>.from(myItems!.map((x) => x.toJson())),
   };
 }
 
@@ -50,8 +50,8 @@ class AwhItem {
     this.quantity,
   });
 
-  String name;
-  int quantity;
+  String? name;
+  int? quantity;
 
   factory AwhItem.fromJson(Map<String, dynamic> json) => AwhItem(
     name: json["name"] == null ? null : json["name"],

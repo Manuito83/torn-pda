@@ -55,9 +55,9 @@ class SettingsPage extends StatefulWidget {
   final StatsController statsController;
 
   SettingsPage({
-    @required this.changeUID,
-    @required this.statsController,
-    Key key,
+    required this.changeUID,
+    required this.statsController,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -66,39 +66,39 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final _formKey = GlobalKey<FormState>();
-  Timer _ticker;
+  Timer? _ticker;
 
-  String _myCurrentKey = '';
+  String? _myCurrentKey = '';
   bool _userToLoad = false;
   bool _apiError = false;
   String _errorReason = '';
   String _errorDetails = '';
   bool _apiIsLoading = false;
-  OwnProfileBasic _userProfile;
+  late OwnProfileBasic _userProfile;
 
-  Future _preferencesRestored;
+  Future? _preferencesRestored;
 
-  String _openSectionValue;
-  String _onAppExitValue;
-  String _openBrowserValue;
-  String _timeFormatValue;
-  String _timeZoneValue;
-  String _vibrationValue;
-  bool _manualAlarmSound;
-  bool _manualAlarmVibration;
-  bool _removeNotificationsLaunch;
+  String? _openSectionValue;
+  String? _onAppExitValue;
+  String? _openBrowserValue;
+  String? _timeFormatValue;
+  String? _timeZoneValue;
+  String? _vibrationValue;
+  late bool _manualAlarmSound;
+  late bool _manualAlarmVibration;
+  late bool _removeNotificationsLaunch;
 
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ThemeProvider _themeProvider;
-  ShortcutsProvider _shortcutsProvider;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late ThemeProvider _themeProvider;
+  late ShortcutsProvider _shortcutsProvider;
   ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   var _expandableController = ExpandableController();
 
   var _apiKeyInputController = TextEditingController();
 
-  String _appBarPosition = "top";
+  String? _appBarPosition = "top";
 
   int _androidSdk = 0;
 
@@ -630,7 +630,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       if (event.error != null) {
                         message = "CONNECTION PROBLEM\n\n${event.error}";
                       } else {
-                        if (event.summary.transmitted == event.summary.received) {
+                        if (event.summary!.transmitted == event.summary!.received) {
                           message = "SUCCESS\n\n${event.summary}";
                         } else {
                           message = "CONNECTION PROBLEM\n\n${event.summary}";
@@ -1441,8 +1441,10 @@ class _SettingsPageState extends State<SettingsPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -1472,7 +1474,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
         child: Card(
           child: ExpandablePanel(
-            collapsed: null,
+            collapsed: Container(),
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Column(
@@ -1542,7 +1544,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   child: Text("Reload"),
                                   onPressed: () {
                                     FocusScope.of(context).requestFocus(new FocusNode());
-                                    if (_formKey.currentState.validate()) {
+                                    if (_formKey.currentState!.validate()) {
                                       _myCurrentKey = _apiKeyInputController.text.trim();
                                       _getApiDetails(userTriggered: true, reload: true);
                                     }
@@ -1556,7 +1558,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   onPressed: () async {
                                     FocusScope.of(context).requestFocus(new FocusNode());
                                     // Removes the form error
-                                    _formKey.currentState.reset();
+                                    _formKey.currentState!.reset();
                                     _apiKeyInputController.clear();
                                     _myCurrentKey = '';
                                     _userProvider.removeUser();
@@ -1590,7 +1592,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
         child: Card(
           child: ExpandablePanel(
-            collapsed: null,
+            collapsed: Container(),
             controller: _expandableController,
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
@@ -1643,7 +1645,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 child: Text("Load"),
                                 onPressed: () {
                                   FocusScope.of(context).requestFocus(new FocusNode());
-                                  if (_formKey.currentState.validate()) {
+                                  if (_formKey.currentState!.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text.trim();
                                     _getApiDetails(userTriggered: true);
                                   }
@@ -1665,7 +1667,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  SizedBox _apiKeyForm({@required bool enabled}) {
+  SizedBox _apiKeyForm({required bool enabled}) {
     return SizedBox(
       width: 300,
       child: Form(
@@ -1673,7 +1675,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: TextFormField(
           enabled: enabled,
           validator: (value) {
-            if (value.isEmpty) {
+            if (value!.isEmpty) {
               return "The API Key is empty!";
             }
             return null;
@@ -1697,7 +1699,7 @@ class _SettingsPageState extends State<SettingsPage> {
           // hitting the "Load" button
           onEditingComplete: () {
             FocusScope.of(context).requestFocus(new FocusNode());
-            if (_formKey.currentState.validate()) {
+            if (_formKey.currentState!.validate()) {
               _myCurrentKey = _apiKeyInputController.text.trim();
               _getApiDetails(userTriggered: true);
             }
@@ -1825,9 +1827,9 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             Text("Gender: ${_userProfile.gender}"),
             Text("Level: ${_userProfile.level}"),
-            Text("Life: ${_userProfile.life.current}"),
-            Text("Status: ${_userProfile.status.description}"),
-            Text("Last action: ${_userProfile.lastAction.relative}"),
+            Text("Life: ${_userProfile.life!.current}"),
+            Text("Status: ${_userProfile.status!.description}"),
+            Text("Last action: ${_userProfile.lastAction!.relative}"),
             Text("Rank: ${_userProfile.rank}"),
           ],
         ),
@@ -1944,7 +1946,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         // TODO: use settings provider for this?
-        Prefs().setDefaultSection(value);
+        Prefs().setDefaultSection(value!);
         setState(() {
           _openSectionValue = value;
         });
@@ -2170,7 +2172,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _settingsProvider.changeShowDateInClock = value;
+          _settingsProvider.changeShowDateInClock = value!;
         });
       },
     );
@@ -2209,7 +2211,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _settingsProvider.changeShowSecondsInClock = value;
+          _settingsProvider.changeShowSecondsInClock = value!;
         });
       },
     );
@@ -2287,12 +2289,12 @@ class _SettingsPageState extends State<SettingsPage> {
         reconfigureNotificationChannels(mod: value);
         // Update channel preferences
         firestore.setVibrationPattern(value);
-        Prefs().setVibrationPattern(value);
+        Prefs().setVibrationPattern(value!);
         setState(() {
           _vibrationValue = value;
         });
 
-        if (await Vibration.hasVibrator()) {
+        if ((await Vibration.hasVibrator())!) {
           if (value == 'short') {
             Vibration.vibrate(pattern: [0, 400]);
           } else if (value == 'medium') {
@@ -2493,7 +2495,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _getApiDetails({@required bool userTriggered, bool reload = false}) async {
+  void _getApiDetails({required bool userTriggered, bool reload = false}) async {
     try {
       setState(() {
         _apiIsLoading = true;
@@ -2518,7 +2520,7 @@ class _SettingsPageState extends State<SettingsPage> {
           var user = await firebaseAuth.getUID();
           // Only sign in if there is currently no user registered (to avoid duplicates)
           if (user == null || (user is User && user.uid.isEmpty)) {
-            User mFirebaseUser = await firebaseAuth.signInAnon();
+            User mFirebaseUser = await (firebaseAuth.signInAnon() as FutureOr<User>);
             firestore.setUID(mFirebaseUser.uid);
             // Returns UID to Drawer so that it can be passed to settings
             widget.changeUID(mFirebaseUser.uid);
@@ -2538,7 +2540,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
           // Update the home widget if it's installed
           if (Platform.isAndroid) {
-            if ((await pdaWidget_numberInstalled()) > 0) {
+            if ((await pdaWidget_numberInstalled())! > 0) {
               pdaWidget_fetchData();
             }
           }
@@ -2579,10 +2581,10 @@ class _SettingsPageState extends State<SettingsPage> {
       });
     });
 
-    if (_userProvider.basic.userApiKeyValid) {
+    if (_userProvider.basic!.userApiKeyValid!) {
       setState(() {
-        _apiKeyInputController.text = _userProvider.basic.userApiKey;
-        _myCurrentKey = _userProvider.basic.userApiKey;
+        _apiKeyInputController.text = _userProvider.basic!.userApiKey!;
+        _myCurrentKey = _userProvider.basic!.userApiKey;
         _apiIsLoading = true;
       });
       _getApiDetails(userTriggered: false);
@@ -2708,7 +2710,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _shortcutsProvider.changeShortcutTile(value);
+          _shortcutsProvider.changeShortcutTile(value!);
         });
       },
     );
@@ -2747,7 +2749,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _shortcutsProvider.changeShortcutMenu(value);
+          _shortcutsProvider.changeShortcutMenu(value!);
         });
       },
     );

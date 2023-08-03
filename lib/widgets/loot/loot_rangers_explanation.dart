@@ -6,12 +6,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 class LootRangersExplanationDialog extends StatelessWidget {
   const LootRangersExplanationDialog({
-    @required ThemeProvider themeProvider,
-    Key key,
+    required ThemeProvider? themeProvider,
+    Key? key,
   })  : _themeProvider = themeProvider,
         super(key: key);
 
-  final ThemeProvider _themeProvider;
+  final ThemeProvider? _themeProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class LootRangersExplanationDialog extends StatelessWidget {
           "schedule attacks on the NPCs.\n\nThe group works to coordinate attack times that are most likely "
           "to be successful, taking into account the time zones of Torn players.\n\n"
           "For more details, join the Loot Rangers!",
-          defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+          defaultStyle: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
           patternList: [
             EasyRichTextPattern(
               targetString: 'join the Loot Rangers',

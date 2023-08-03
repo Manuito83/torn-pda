@@ -12,7 +12,7 @@ import 'package:torn_pda/widgets/friends/friend_card.dart';
 class FriendsList extends StatelessWidget {
   final List<FriendModel> friends;
 
-  FriendsList({@required this.friends});
+  FriendsList({required this.friends});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class FriendsList extends StatelessWidget {
     String filter = friendsProvider.currentFilter;
     List<Widget> filteredCards = <Widget>[];
     for (var thisFriend in friends) {
-      if (thisFriend.name.toUpperCase().contains(filter.toUpperCase())) {
+      if (thisFriend.name!.toUpperCase().contains(filter.toUpperCase())) {
         filteredCards.add(FriendCard(friendModel: thisFriend));
       }
     }

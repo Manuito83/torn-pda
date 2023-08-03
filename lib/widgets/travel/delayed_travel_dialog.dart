@@ -21,19 +21,19 @@ import 'package:torn_pda/utils/time_formatter.dart';
 
 class DelayedTravelDialog extends StatefulWidget {
   final DateTime boardingTime;
-  final String country;
+  final String? country;
   final String stockCodeName;
-  final String stockName;
-  final int itemId;
+  final String? stockName;
+  final int? itemId;
   final int countryId;
 
   DelayedTravelDialog({
-    @required this.boardingTime,
-    @required this.country,
-    @required this.stockCodeName,
-    @required this.stockName,
-    @required this.itemId,
-    @required this.countryId,
+    required this.boardingTime,
+    required this.country,
+    required this.stockCodeName,
+    required this.stockName,
+    required this.itemId,
+    required this.countryId,
   });
 
   @override
@@ -41,12 +41,12 @@ class DelayedTravelDialog extends StatefulWidget {
 }
 
 class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   bool _notificationActive = false;
 
-  var _delayMinutes = 0;
+  int? _delayMinutes = 0;
 
   bool _alarmSound = true;
   bool _alarmVibration = true;
@@ -131,7 +131,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.orange[700],
+                                  contentColor: Colors.orange[700]!,
                                   duration: Duration(seconds: 5),
                                   contentPadding: EdgeInsets.all(10),
                                 );
@@ -140,12 +140,12 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 Navigator.of(context).pop();
                                 BotToast.showText(
                                   text: 'Boarding call notification set for '
-                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
                                   textStyle: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.green[700],
+                                  contentColor: Colors.green[700]!,
                                   duration: Duration(seconds: 5),
                                   contentPadding: EdgeInsets.all(10),
                                 );
@@ -162,12 +162,12 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 _setAlarm();
                                 BotToast.showText(
                                   text: 'Boarding call alarm set for '
-                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
                                   textStyle: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.green[700],
+                                  contentColor: Colors.green[700]!,
                                   duration: Duration(seconds: 5),
                                   contentPadding: EdgeInsets.all(10),
                                 );
@@ -183,12 +183,12 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 _setTimer();
                                 BotToast.showText(
                                   text: 'Boarding call timer set for '
-                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
                                   textStyle: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.green[700],
+                                  contentColor: Colors.green[700]!,
                                   duration: Duration(seconds: 5),
                                   contentPadding: EdgeInsets.all(10),
                                 );
@@ -362,7 +362,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
         notificationTitle,
         notificationSubtitle,
         //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-        tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes)),
+        tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes!)),
         platformChannelSpecifics,
         payload: '211',
         androidAllowWhileIdle: true, // Deliver at exact time
@@ -397,7 +397,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
       thisSound = 'silent';
     }
 
-    var alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes));
+    var alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes!));
     var hour = alarmTime.hour;
     var minute = alarmTime.minute;
     var message = 'Flight Boarding - ${widget.stockName}';
@@ -417,7 +417,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   }
 
   void _setTimer() {
-    var totalSeconds = widget.boardingTime.difference(DateTime.now()).inSeconds + _delayMinutes * 60;
+    var totalSeconds = widget.boardingTime.difference(DateTime.now()).inSeconds + _delayMinutes! * 60;
     var message = 'Flight Boarding - ${widget.stockName}';
 
     AndroidIntent intent = AndroidIntent(
@@ -431,7 +431,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     intent.launch();
   }
 
-  String _timeFormatter(DateTime time) {
+  String? _timeFormatter(DateTime time) {
     return TimeFormatter(
       inputTime: time,
       timeFormatSetting: _settingsProvider.currentTimeFormat,

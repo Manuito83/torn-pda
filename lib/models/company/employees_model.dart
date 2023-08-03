@@ -9,14 +9,14 @@ CompanyEmployees companyEmployeesFromJson(String str) => CompanyEmployees.fromJs
 String companyEmployeesToJson(CompanyEmployees data) => json.encode(data.toJson());
 
 class CompanyEmployees {
-  Map<String, CompanyEmployee> companyEmployees;
+  Map<String, CompanyEmployee>? companyEmployees;
 
   CompanyEmployees({
     this.companyEmployees,
   });
 
   factory CompanyEmployees.fromJson(Map<String, dynamic> json) {
-    if (json["company_employees"] == null) return null;
+    if (json["company_employees"] == null) throw ArgumentError("PDA Error at company employees!");
     return CompanyEmployees(
       companyEmployees: Map.from(json["company_employees"])
           .map((k, v) => MapEntry<String, CompanyEmployee>(k, CompanyEmployee.fromJson(v))),
@@ -24,21 +24,21 @@ class CompanyEmployees {
   }
 
   Map<String, dynamic> toJson() => {
-        "company_employees": Map.from(companyEmployees).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "company_employees": Map.from(companyEmployees!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
 class CompanyEmployee {
-  String name;
-  String position;
-  int daysInCompany;
-  int manualLabor;
-  int intelligence;
-  int endurance;
-  Effectiveness effectiveness;
-  LastAction lastAction;
-  Status status;
-  int wage;
+  String? name;
+  String? position;
+  int? daysInCompany;
+  int? manualLabor;
+  int? intelligence;
+  int? endurance;
+  Effectiveness? effectiveness;
+  LastAction? lastAction;
+  Status? status;
+  int? wage;
 
   CompanyEmployee({
     this.name,
@@ -73,21 +73,21 @@ class CompanyEmployee {
         "manual_labor": manualLabor,
         "intelligence": intelligence,
         "endurance": endurance,
-        "effectiveness": effectiveness.toJson(),
-        "last_action": lastAction.toJson(),
-        "status": status.toJson(),
+        "effectiveness": effectiveness!.toJson(),
+        "last_action": lastAction!.toJson(),
+        "status": status!.toJson(),
         "wage": wage,
       };
 }
 
 class Effectiveness {
-  int workingStats;
-  int settledIn;
-  int directorEducation;
-  int total;
-  int addiction;
-  int merits;
-  int inactivity;
+  int? workingStats;
+  int? settledIn;
+  int? directorEducation;
+  int? total;
+  int? addiction;
+  int? merits;
+  int? inactivity;
 
   Effectiveness({
     this.workingStats,
@@ -121,9 +121,9 @@ class Effectiveness {
 }
 
 class LastAction {
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   LastAction({
     this.status,
@@ -145,11 +145,11 @@ class LastAction {
 }
 
 class Status {
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
+  String? description;
+  String? details;
+  String? state;
+  String? color;
+  int? until;
 
   Status({
     this.description,

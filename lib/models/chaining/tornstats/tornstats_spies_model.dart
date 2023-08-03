@@ -16,10 +16,10 @@ class TornStatsSpiesModel {
     this.spies,
   });
 
-  bool status;
-  String message;
-  User user;
-  List<SpyElement> spies;
+  bool? status;
+  String? message;
+  User? user;
+  List<SpyElement>? spies;
 
   factory TornStatsSpiesModel.fromJson(Map<String, dynamic> json) => TornStatsSpiesModel(
         status: json["status"] == null ? null : json["status"],
@@ -31,8 +31,8 @@ class TornStatsSpiesModel {
   Map<String, dynamic> toJson() => {
         "status": status == null ? null : status,
         "message": message == null ? null : message,
-        "user": user == null ? null : user.toJson(),
-        "spies": spies == null ? null : List<dynamic>.from(spies.map((x) => x.toJson())),
+        "user": user == null ? null : user!.toJson(),
+        "spies": spies == null ? null : List<dynamic>.from(spies!.map((x) => x.toJson())),
       };
 }
 
@@ -50,16 +50,16 @@ class SpyElement {
     this.playerFaction,
   });
 
-  int strength;
-  int speed;
-  int defense;
-  int dexterity;
-  int total;
-  int timestamp;
-  String playerName;
-  String playerId;
-  int playerLevel;
-  String playerFaction;
+  int? strength;
+  int? speed;
+  int? defense;
+  int? dexterity;
+  int? total;
+  int? timestamp;
+  String? playerName;
+  String? playerId;
+  int? playerLevel;
+  String? playerFaction;
 
   factory SpyElement.fromJson(Map<String, dynamic> json) => SpyElement(
         strength: json["strength"] == null
@@ -117,11 +117,11 @@ class User {
     this.total,
   });
 
-  int strength;
-  int speed;
-  int defense;
-  int dexterity;
-  int total;
+  int? strength;
+  int? speed;
+  int? defense;
+  int? dexterity;
+  int? total;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
         strength: json["strength"] == null ? null : json["strength"],

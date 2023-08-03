@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+// ignore: unused_import
 import 'dart:developer';
 import 'dart:io';
 
@@ -56,31 +57,31 @@ class _LootPageState extends State<LootPage> {
 
   final databaseReference = FirebaseDatabase.instance.ref();
 
-  bool _dbLootRangersEnabled = false;
+  bool? _dbLootRangersEnabled = false;
 
   Map<String, LootModel> _mainLootInfo = Map<String, LootModel>();
   Map<String, int> _dbLootInfo = Map<String, int>();
-  Future _getInitialLootInformation;
+  Future? _getInitialLootInformation;
   bool _apiSuccess = false;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  ThemeProvider? _themeProvider;
 
   bool _firstLoad = true;
   int _tornTicks = 0;
-  Timer _tickerUpdateTimes;
+  late Timer _tickerUpdateTimes;
 
-  LootTimeType _lootTimeType;
-  NotificationType _lootNotificationType;
-  int _lootNotificationAhead;
-  int _lootAlarmAhead;
-  int _lootTimerAhead;
-  bool _alarmSound;
-  bool _alarmVibration;
+  LootTimeType? _lootTimeType;
+  NotificationType? _lootNotificationType;
+  late int _lootNotificationAhead;
+  late int _lootAlarmAhead;
+  late int _lootTimerAhead;
+  late bool _alarmSound;
+  bool? _alarmVibration;
 
   int _lootRangersTime = 0;
   List<String> _lootRangersIdOrder = <String>[];
-  List<String> _lootRangersNameOrder = <String>[];
+  List<String?> _lootRangersNameOrder = <String?>[];
 
   // Payload is: 400idlevel (new: 499 for Loot Rangers)
   var _activeNotificationsIds = <int>[];
@@ -109,7 +110,7 @@ class _LootPageState extends State<LootPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.canvas,
+      backgroundColor: _themeProvider!.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -118,7 +119,7 @@ class _LootPageState extends State<LootPage> {
             )
           : null,
       body: Container(
-        color: _themeProvider.canvas,
+        color: _themeProvider!.canvas,
         child: FutureBuilder(
           future: _getInitialLootInformation,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -148,7 +149,7 @@ class _LootPageState extends State<LootPage> {
                           )
                         else
                           SizedBox.shrink(),
-                        if (_lootRangersIdOrder.isNotEmpty && _dbLootRangersEnabled)
+                        if (_lootRangersIdOrder.isNotEmpty && _dbLootRangersEnabled!)
                           Padding(
                             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
                             child: Text(
@@ -195,8 +196,10 @@ class _LootPageState extends State<LootPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -245,7 +248,7 @@ class _LootPageState extends State<LootPage> {
             ? IconButton(
                 icon: Icon(
                   Icons.alarm_on,
-                  color: _themeProvider.buttonText,
+                  color: _themeProvider!.buttonText,
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -266,7 +269,7 @@ class _LootPageState extends State<LootPage> {
             ? IconButton(
                 icon: Icon(
                   Icons.alarm_on,
-                  color: _themeProvider.buttonText,
+                  color: _themeProvider!.buttonText,
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -315,7 +318,7 @@ class _LootPageState extends State<LootPage> {
       var npcBoxes = <Widget>[];
 
       // If Loot Rangers is active, return LR's order
-      if (_lootRangersIdOrder.isNotEmpty && _dbLootRangersEnabled) {
+      if (_lootRangersIdOrder.isNotEmpty && _dbLootRangersEnabled!) {
         final sortedMap = Map<String, LootModel>();
         final originalMap = Map<String, LootModel>.of(_mainLootInfo);
         for (var id in _lootRangersIdOrder) {
@@ -347,9 +350,9 @@ class _LootPageState extends State<LootPage> {
             children: npcLevels,
           );
 
-          npcDetails.timings.forEach((levelNumber, levelDetails) {
+          npcDetails.timings!.forEach((levelNumber, levelDetails) {
             // Time formatting
-            var levelDateTime = DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
+            var levelDateTime = DateTime.fromMillisecondsSinceEpoch(levelDetails.ts! * 1000);
             var time = TimeFormatter(
               inputTime: levelDateTime,
               timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -362,7 +365,7 @@ class _LootPageState extends State<LootPage> {
               isPast = true;
             }
             bool isCurrent = false;
-            if (levelNumber == npcDetails.levels.current.toString()) {
+            if (levelNumber == npcDetails.levels!.current.toString()) {
               isCurrent = true;
             }
 
@@ -386,7 +389,7 @@ class _LootPageState extends State<LootPage> {
                 timeString += " at $time";
               }
               if (timeDiff.inMinutes < 10) {
-                if (npcDetails.levels.next >= 4) {
+                if (npcDetails.levels!.next! >= 4) {
                   style = TextStyle(
                     color: Colors.orange,
                     fontWeight: FontWeight.bold,
@@ -398,9 +401,9 @@ class _LootPageState extends State<LootPage> {
                 }
               }
             }
-            String typeString;
-            IconData iconData;
-            switch (_lootNotificationType) {
+            String? typeString;
+            IconData? iconData;
+            switch (_lootNotificationType!) {
               case NotificationType.notification:
                 typeString = 'notification';
                 iconData = Icons.chat_bubble_outline;
@@ -431,7 +434,7 @@ class _LootPageState extends State<LootPage> {
                   color: _lootNotificationType == NotificationType.notification && isPending ? Colors.green : null,
                 ),
                 onTap: () async {
-                  switch (_lootNotificationType) {
+                  switch (_lootNotificationType!) {
                     case NotificationType.notification:
                       if (isPending) {
                         setState(() {
@@ -471,7 +474,7 @@ class _LootPageState extends State<LootPage> {
                             fontSize: 14,
                             color: Colors.white,
                           ),
-                          contentColor: Colors.green[700],
+                          contentColor: Colors.green[700]!,
                           duration: Duration(milliseconds: 1500),
                           contentPadding: EdgeInsets.all(10),
                         );
@@ -490,7 +493,7 @@ class _LootPageState extends State<LootPage> {
                           fontSize: 14,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.green[700],
+                        contentColor: Colors.green[700]!,
                         duration: Duration(milliseconds: 1500),
                         contentPadding: EdgeInsets.all(10),
                       );
@@ -508,7 +511,7 @@ class _LootPageState extends State<LootPage> {
                           fontSize: 14,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.green[700],
+                        contentColor: Colors.green[700]!,
                         duration: Duration(milliseconds: 1500),
                         contentPadding: EdgeInsets.all(10),
                       );
@@ -559,7 +562,7 @@ class _LootPageState extends State<LootPage> {
             child: GestureDetector(
               child: Icon(
                 MdiIcons.knifeMilitary,
-                color: npcDetails.levels.current >= 4 ? Colors.red : _themeProvider.mainText,
+                color: npcDetails.levels!.current! >= 4 ? Colors.red : _themeProvider!.mainText,
               ),
               onTap: () async {
                 var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
@@ -581,7 +584,7 @@ class _LootPageState extends State<LootPage> {
           );
 
           Color cardBorderColor() {
-            if (npcDetails.levels.current >= 4) {
+            if (npcDetails.levels!.current! >= 4) {
               return Colors.orange;
             } else {
               return Colors.transparent;
@@ -619,7 +622,7 @@ class _LootPageState extends State<LootPage> {
                             child: Row(
                               children: [
                                 Text(
-                                  '${npcDetails.name} [${npcId ?? "?"}]',
+                                  '${npcDetails.name} [${npcId}]',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 SizedBox(width: 10),
@@ -653,18 +656,18 @@ class _LootPageState extends State<LootPage> {
     if (response.statusCode == 200) {
       final lrJson = lootRangersFromJson(response.body);
 
-      if (lrJson.time.clear == 0) {
+      if (lrJson.time!.clear == 0) {
         _lootRangersTime = 0;
       } else {
-        _lootRangersTime = lrJson.time.clear * 1000;
+        _lootRangersTime = lrJson.time!.clear! * 1000;
       }
 
       _lootRangersNameOrder.clear();
-      for (int i = 0; i < lrJson.order.length; i++) {
-        var id = lrJson.order[i];
-        lrJson.npcs.forEach((key, value) {
+      for (int i = 0; i < lrJson.order!.length; i++) {
+        var id = lrJson.order![i];
+        lrJson.npcs!.forEach((key, value) {
           // If [clear] is false, the NPC won't participate in this attack
-          if (value.clear) {
+          if (value.clear!) {
             if (key.toString() == id.toString()) {
               _lootRangersNameOrder.add(value.name);
               _lootRangersIdOrder.add(key);
@@ -676,7 +679,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   Widget _lootRangersWidget() {
-    if (_lootRangersNameOrder.isEmpty || _lootRangersIdOrder.isEmpty || !_dbLootRangersEnabled) {
+    if (_lootRangersNameOrder.isEmpty || _lootRangersIdOrder.isEmpty || !_dbLootRangersEnabled!) {
       return SizedBox.shrink();
     }
 
@@ -696,9 +699,9 @@ class _LootPageState extends State<LootPage> {
     }
 
     // Loot Rangers notification icon
-    String typeString;
-    IconData iconData;
-    switch (_lootNotificationType) {
+    String? typeString;
+    IconData? iconData;
+    switch (_lootNotificationType!) {
       case NotificationType.notification:
         typeString = 'notification';
         iconData = Icons.chat_bubble_outline;
@@ -728,7 +731,7 @@ class _LootPageState extends State<LootPage> {
         color: _lootNotificationType == NotificationType.notification && isPending ? Colors.green : null,
       ),
       onTap: () async {
-        switch (_lootNotificationType) {
+        switch (_lootNotificationType!) {
           case NotificationType.notification:
             if (isPending) {
               setState(() {
@@ -742,7 +745,7 @@ class _LootPageState extends State<LootPage> {
               });
               _activeNotificationsIds.add(499);
 
-              String time = TimeFormatter(
+              String? time = TimeFormatter(
                 inputTime: DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
                 timeFormatSetting: _settingsProvider.currentTimeFormat,
                 timeZoneSetting: _settingsProvider.currentTimeZone,
@@ -773,7 +776,7 @@ class _LootPageState extends State<LootPage> {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.green[700],
+                contentColor: Colors.green[700]!,
                 duration: Duration(milliseconds: 1500),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -791,7 +794,7 @@ class _LootPageState extends State<LootPage> {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.green[700],
+              contentColor: Colors.green[700]!,
               duration: Duration(milliseconds: 1500),
               contentPadding: EdgeInsets.all(10),
             );
@@ -808,7 +811,7 @@ class _LootPageState extends State<LootPage> {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.green[700],
+              contentColor: Colors.green[700]!,
               duration: Duration(milliseconds: 1500),
               contentPadding: EdgeInsets.all(10),
             );
@@ -864,7 +867,7 @@ class _LootPageState extends State<LootPage> {
                     child: Icon(
                       MdiIcons.knifeMilitary,
                       size: 20,
-                      color: minutesRemaining > 0 && minutesRemaining < 2 ? Colors.red : _themeProvider.mainText,
+                      color: minutesRemaining > 0 && minutesRemaining < 2 ? Colors.red : _themeProvider!.mainText,
                     ),
                     onTap: () async {
                       // This is a Loot Rangers alert for one or more NPCs
@@ -932,7 +935,7 @@ class _LootPageState extends State<LootPage> {
               ..id = key
               ..image = NpcImage(
                 npcId: key,
-                level: value.levels.current,
+                level: value.levels!.current,
               ),
           );
         });
@@ -952,25 +955,25 @@ class _LootPageState extends State<LootPage> {
           for (var npc in _mainLootInfo.values) {
             // Update main timing values comparing stored TS with current time
             var timingsList = <Timing>[];
-            npc.timings.forEach((key, value) {
-              value.due = value.ts - tsNow;
+            npc.timings!.forEach((key, value) {
+              value.due = value.ts! - tsNow;
               timingsList.add(Timing(
                 due: value.due,
                 ts: value.ts,
               ));
             });
             // Make sure to advance levels if the times comes in between updates
-            if (timingsList[0].due > 0) {
-              npc.levels.current = 0;
-              npc.levels.next = 1;
-            } else if (timingsList[4].due < 0) {
-              npc.levels.current = 5;
-              npc.levels.next = 5;
+            if (timingsList[0].due! > 0) {
+              npc.levels!.current = 0;
+              npc.levels!.next = 1;
+            } else if (timingsList[4].due! < 0) {
+              npc.levels!.current = 5;
+              npc.levels!.next = 5;
             } else {
               for (var i = 0; i < 4; i++) {
-                if (timingsList[i].due < 0 && timingsList[i + 1].due > 0) {
-                  npc.levels.current = i + 1;
-                  npc.levels.next = i + 2;
+                if (timingsList[i].due! < 0 && timingsList[i + 1].due! > 0) {
+                  npc.levels!.current = i + 1;
+                  npc.levels!.next = i + 2;
                 }
               }
             }
@@ -985,18 +988,18 @@ class _LootPageState extends State<LootPage> {
   Future<bool> _fetchDatabase() async {
     try {
       // Get current NPCs
-      String dbNpcsResult = (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value;
+      String dbNpcsResult = (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
       _npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
       // Get their hospital out times
       Map<dynamic, dynamic> dbHopsResult =
-          (await FirebaseDatabase.instance.ref().child("loot/hospital").once()).snapshot.value;
+          (await FirebaseDatabase.instance.ref().child("loot/hospital").once()).snapshot.value as Map<dynamic, dynamic>;
       dbHopsResult.forEach((key, value) {
         _dbLootInfo[key.toString()] = value;
       });
 
       _dbLootRangersEnabled =
-          (await FirebaseDatabase.instance.ref().child("loot/lootRangersActive").once()).snapshot.value;
+          (await FirebaseDatabase.instance.ref().child("loot/lootRangersActive").once()).snapshot.value as bool?;
 
       return true;
     } catch (e) {
@@ -1021,39 +1024,39 @@ class _LootPageState extends State<LootPage> {
               newNpcLoot.name = tornTarget.name;
 
               // If Torn gives a more up to date hospital out value
-              if (tornTarget.status.until - 60 > dbHospOut) {
-                newNpcLoot.hospout = tornTarget.status.until;
+              if (tornTarget.status!.until! - 60 > dbHospOut) {
+                newNpcLoot.hospout = tornTarget.status!.until;
               } else {
                 newNpcLoot.hospout = dbHospOut;
               }
 
               newNpcLoot.levels = Levels();
-              if (tornTarget.status.state == 'Hospital') {
-                newNpcLoot.levels.current = 0;
-                newNpcLoot.levels.next = 1;
+              if (tornTarget.status!.state == 'Hospital') {
+                newNpcLoot.levels!.current = 0;
+                newNpcLoot.levels!.next = 1;
                 newNpcLoot.status = "hospitalized";
               } else {
                 newNpcLoot.status = "loot";
-                switch (tornTarget.status.details) {
+                switch (tornTarget.status!.details) {
                   case ('Loot level I'):
-                    newNpcLoot.levels.current = 1;
-                    newNpcLoot.levels.next = 2;
+                    newNpcLoot.levels!.current = 1;
+                    newNpcLoot.levels!.next = 2;
                     break;
                   case ('Loot level II'):
-                    newNpcLoot.levels.current = 2;
-                    newNpcLoot.levels.next = 3;
+                    newNpcLoot.levels!.current = 2;
+                    newNpcLoot.levels!.next = 3;
                     break;
                   case ('Loot level III'):
-                    newNpcLoot.levels.current = 3;
-                    newNpcLoot.levels.next = 4;
+                    newNpcLoot.levels!.current = 3;
+                    newNpcLoot.levels!.next = 4;
                     break;
                   case ('Loot level IV'):
-                    newNpcLoot.levels.current = 4;
-                    newNpcLoot.levels.next = 5;
+                    newNpcLoot.levels!.current = 4;
+                    newNpcLoot.levels!.next = 5;
                     break;
                   case ('Loot level V'):
-                    newNpcLoot.levels.current = 5;
-                    newNpcLoot.levels.next = 5;
+                    newNpcLoot.levels!.current = 5;
+                    newNpcLoot.levels!.next = 5;
                     break;
                 }
               }
@@ -1063,8 +1066,8 @@ class _LootPageState extends State<LootPage> {
               var lootDelays = [0, 30 * 60, 90 * 60, 210 * 60, 450 * 60];
               for (var i = 0; i < lootDelays.length; i++) {
                 var thisLevel = Timing(
-                  due: newNpcLoot.hospout + lootDelays[i] - tsNow,
-                  ts: newNpcLoot.hospout + lootDelays[i],
+                  due: newNpcLoot.hospout! + lootDelays[i] - tsNow,
+                  ts: newNpcLoot.hospout! + lootDelays[i],
                 );
                 newTimingMap.addAll({(i + 1).toString(): thisLevel});
               }
@@ -1305,19 +1308,19 @@ class _LootPageState extends State<LootPage> {
 }
 
 class NpcImagesModel {
-  NpcImage image;
-  String id;
+  late NpcImage image;
+  String? id;
 }
 
 class NpcImage extends StatelessWidget {
-  final int level;
-  final String npcId;
+  final int? level;
+  final String? npcId;
 
   const NpcImage({
-    int level,
-    String npcId,
-    bool useQuickBrowser,
-    Key key,
+    int? level,
+    String? npcId,
+    bool? useQuickBrowser,
+    Key? key,
   })  : level = level,
         npcId = npcId,
         super(key: key);
@@ -1325,8 +1328,8 @@ class NpcImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget npcImage;
-    var shadow = <BoxShadow>[];
-    if (level >= 4) {
+    List<BoxShadow>? shadow = <BoxShadow>[];
+    if (level! >= 4) {
       shadow = [
         BoxShadow(
           color: Colors.red,
@@ -1342,7 +1345,7 @@ class NpcImage extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.grey[900], width: 2),
+          border: Border.all(color: Colors.grey[900]!, width: 2),
           boxShadow: shadow,
         ),
         child: ClipRRect(
@@ -1350,7 +1353,7 @@ class NpcImage extends StatelessWidget {
             child: Image.asset(
               'images/npcs/npc_$npcId.png',
               height: 60,
-              errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+              errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
                 return Image.asset(
                   "images/npcs/npc_0.png",
                   height: 60,

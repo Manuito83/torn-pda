@@ -17,14 +17,14 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 class VaultConfigurationDialog extends StatefulWidget {
   final VaultStatusModel vaultStatus;
   final VaultTransactionModel lastTransaction;
-  final UserDetailsProvider userProvider;
+  final UserDetailsProvider? userProvider;
   final Function callbackShares;
 
   VaultConfigurationDialog({
-    @required this.lastTransaction,
-    @required this.vaultStatus,
-    @required this.userProvider,
-    @required this.callbackShares,
+    required this.lastTransaction,
+    required this.vaultStatus,
+    required this.userProvider,
+    required this.callbackShares,
   });
 
   @override
@@ -32,7 +32,7 @@ class VaultConfigurationDialog extends StatefulWidget {
 }
 
 class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
-  ThemeProvider _themeProvider;
+  late ThemeProvider _themeProvider;
 
   final _ownAmountController = new TextEditingController();
   final _spouseAmountController = new TextEditingController();
@@ -96,7 +96,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 3),
                       child: Text(
-                        "${widget.userProvider.basic.name}'s share",
+                        "${widget.userProvider!.basic!.name}'s share",
                         style: TextStyle(fontSize: 13),
                       ),
                     ),
@@ -128,9 +128,9 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                           );
 
                           // Set the other fields value
-                          if (ownAmount <= widget.lastTransaction.balance) {
+                          if (ownAmount <= widget.lastTransaction.balance!) {
                             setState(() {
-                              var spouse = _moneyFormat.format(widget.lastTransaction.balance - ownAmount);
+                              var spouse = _moneyFormat.format(widget.lastTransaction.balance! - ownAmount);
                               _spouseAmountController.text = spouse;
                             });
                           } else {
@@ -139,7 +139,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                         }
                       },
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return "Cannot be empty!";
                         }
                         return null;
@@ -149,9 +149,9 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 3),
                       child: Text(
-                        widget.userProvider.basic.married?.spouseId == 0
+                        widget.userProvider!.basic!.married?.spouseId == 0
                             ? "Spouse's share"
-                            : "${widget.userProvider.basic.married.spouseName}'s share",
+                            : "${widget.userProvider!.basic!.married!.spouseName}'s share",
                         style: TextStyle(fontSize: 13),
                       ),
                     ),
@@ -183,9 +183,9 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                           );
 
                           // Set the other fields value
-                          if (spouseAmount <= widget.lastTransaction.balance) {
+                          if (spouseAmount <= widget.lastTransaction.balance!) {
                             setState(() {
-                              var own = _moneyFormat.format(widget.lastTransaction.balance - spouseAmount);
+                              var own = _moneyFormat.format(widget.lastTransaction.balance! - spouseAmount);
                               _ownAmountController.text = own;
                             });
                           } else {
@@ -194,7 +194,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                         }
                       },
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return "Cannot be empty!";
                         }
                         return null;
@@ -209,7 +209,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                           onPressed: () async {
                             var success = false;
 
-                            if (_vaultFormKey.currentState.validate()) {
+                            if (_vaultFormKey.currentState!.validate()) {
                               // Check if quantities add correctly, otherwise throw (might happen
                               // if 'own' or 'spouse' are strings (with 'Not enough money!' text)
                               try {
@@ -225,7 +225,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.red[700],
+                                  contentColor: Colors.red[700]!,
                                   duration: Duration(seconds: 3),
                                   contentPadding: EdgeInsets.all(10),
                                 );
@@ -235,8 +235,8 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                                 Navigator.of(context).pop();
 
                                 widget.vaultStatus
-                                  ..total = widget.lastTransaction.balance
-                                  ..timestamp = widget.lastTransaction.date
+                                  ..total = widget.lastTransaction.balance!
+                                  ..timestamp = widget.lastTransaction.date!
                                   ..player = _cleanNumber(_ownAmountController.text)
                                   ..spouse = _cleanNumber(_spouseAmountController.text)
                                   ..error = false;

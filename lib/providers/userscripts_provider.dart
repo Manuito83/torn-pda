@@ -2,7 +2,6 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 // Flutter imports:
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -38,7 +37,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   UnmodifiableListView<UserScript> getHandlerSources({
-    @required String apiKey,
+    required String apiKey,
   }) {
     var scriptList = <UserScript>[];
     if (_userScriptsEnabled) {
@@ -73,24 +72,24 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   UnmodifiableListView<UserScript> getCondSources({
-    @required String url,
-    @required String apiKey,
-    @required UserScriptTime time,
+    required String url,
+    required String apiKey,
+    required UserScriptTime time,
   }) {
     var scriptListToAdd = <UserScript>[];
     if (_userScriptsEnabled) {
       for (var script in _userScriptList) {
-        if (script.enabled) {
+        if (script.enabled!) {
           if (time != script.time) continue;
 
           bool add = false;
-          if (script.urls.isEmpty) {
+          if (script.urls!.isEmpty) {
             // Add the continuous scripts
             add = true;
           } else {
-            for (String u in script.urls) {
+            for (String? u in script.urls as Iterable<String?>) {
               // Add the ones that match this URL
-              if (url.contains(u.replaceAll("*", ""))) {
+              if (url.contains(u!.replaceAll("*", ""))) {
                 add = true;
                 break;
               }
@@ -102,7 +101,7 @@ class UserScriptsProvider extends ChangeNotifier {
               UserScript(
                 groupName: script.name,
                 injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                source: adaptSource(script.source, apiKey),
+                source: adaptSource(script.source!, apiKey),
               ),
             );
           }
@@ -112,17 +111,17 @@ class UserScriptsProvider extends ChangeNotifier {
     return UnmodifiableListView(scriptListToAdd);
   }
 
-  List<String> getScriptsToRemove({
-    @required String url,
+  List<String?> getScriptsToRemove({
+    required String url,
   }) {
-    var scriptListToRemove = <String>[];
+    var scriptListToRemove = <String?>[];
     if (_userScriptsEnabled) {
       for (var script in _userScriptList) {
         //if (script.enabled) {
-        if (script.urls.isNotEmpty) {
+        if (script.urls!.isNotEmpty) {
           var found = false;
-          for (String u in script.urls) {
-            if (script.enabled && url.contains(u.replaceAll("*", ""))) {
+          for (String? u in script.urls as Iterable<String?>) {
+            if (script.enabled! && url.contains(u!.replaceAll("*", ""))) {
               found = true;
               break;
             }
@@ -146,12 +145,12 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void addUserScript(
-    String name,
+    String? name,
     UserScriptTime time,
     String source, {
-    bool enabled = true,
-    int exampleCode = 0,
-    int version = 0,
+    bool? enabled = true,
+    int? exampleCode = 0,
+    int? version = 0,
     edited = false,
     allScriptFirstLoad = false,
   }) {
@@ -176,7 +175,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void updateUserScript(
-    UserScriptModel editedModel,
+    UserScriptModel? editedModel,
     String name,
     UserScriptTime time,
     String source,
@@ -231,9 +230,9 @@ class UserScriptsProvider extends ChangeNotifier {
     // in a user-inserted script (with exampleCode == 0)
     for (var s = 0; s < exampleScripts.length; s++) {
       for (var existingScript in _userScriptList) {
-        if (existingScript.name.toLowerCase() == exampleScripts[s].name.toLowerCase() &&
+        if (existingScript.name!.toLowerCase() == exampleScripts[s].name!.toLowerCase() &&
             existingScript.exampleCode == 0) {
-          exampleScripts[s].name += " (example)";
+          exampleScripts[s].name = exampleScripts[s].name! + " (example)";
           break;
         }
       }
@@ -284,7 +283,7 @@ class UserScriptsProvider extends ChangeNotifier {
     if (matches.length > 0) {
       for (Match match in matches) {
         try {
-          var noWildcard = match.group(2).replaceAll("*", "");
+          var noWildcard = match.group(2)!.replaceAll("*", "");
           urls.add(noWildcard);
         } catch (e) {
           //
@@ -295,7 +294,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   _sort() {
-    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _userScriptList.sort((a, b) => a.name!.toLowerCase().compareTo(b.name!.toLowerCase()));
   }
 
   void changeScriptsFirstTime(bool value) {
@@ -324,7 +323,7 @@ class UserScriptsProvider extends ChangeNotifier {
           addUserScript(
             example.name,
             example.time,
-            example.source,
+            example.source!,
             enabled: example.enabled,
             exampleCode: example.exampleCode,
             allScriptFirstLoad: true,
@@ -341,7 +340,7 @@ class UserScriptsProvider extends ChangeNotifier {
               // Check if the script with the same name already exists in the list
               // (user-reported bug)
               bool scriptExists = _userScriptList.any((script) {
-                return script.name.toLowerCase() == decodedModel.name.toLowerCase();
+                return script.name!.toLowerCase() == decodedModel.name!.toLowerCase();
               });
 
               if (scriptExists) continue;
@@ -349,7 +348,7 @@ class UserScriptsProvider extends ChangeNotifier {
               addUserScript(
                 decodedModel.name,
                 decodedModel.time,
-                decodedModel.source,
+                decodedModel.source!,
                 enabled: decodedModel.enabled,
                 exampleCode: decodedModel.exampleCode,
                 version: decodedModel.version,
@@ -366,14 +365,14 @@ class UserScriptsProvider extends ChangeNotifier {
         // Update example scripts to latest versions
         for (var script in _userScriptList) {
           // Look for saved scripts than come from examples
-          if (script.exampleCode > 0) {
+          if (script.exampleCode! > 0) {
             if (script.edited == null) continue;
-            if (!script.edited) {
+            if (!script.edited!) {
               // If the script has not been edited, find the example script and see if we need to update the source
               for (var example in exampleScripts) {
                 if (script.exampleCode == example.exampleCode &&
                     script.version != null &&
-                    script.version < example.version) {
+                    script.version! < example.version!) {
                   script.source = example.source;
                   script.version = example.version;
                 }

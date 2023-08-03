@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class JailAheadOptions extends StatefulWidget {
-  final Function callback;
+  final Function? callback;
 
   JailAheadOptions({
     this.callback,
@@ -25,14 +25,14 @@ class JailAheadOptions extends StatefulWidget {
 }
 
 class _JailAheadOptionsState extends State<JailAheadOptions> {
-  int _jailNotificationAheadValue;
-  int _jailAlarmAheadDropDownValue;
-  int _jailTimerAheadDropDownValue;
+  int? _jailNotificationAheadValue;
+  int? _jailAlarmAheadDropDownValue;
+  int? _jailTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -277,7 +277,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setJailNotificationAhead(value);
+        Prefs().setJailNotificationAhead(value!);
         setState(() {
           _jailNotificationAheadValue = value;
         });
@@ -343,7 +343,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setJailAlarmAhead(value);
+        Prefs().setJailAlarmAhead(value!);
         setState(() {
           _jailAlarmAheadDropDownValue = value;
         });
@@ -422,7 +422,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setJailTimerAhead(value);
+        Prefs().setJailTimerAhead(value!);
         setState(() {
           _jailTimerAheadDropDownValue = value;
         });
@@ -444,7 +444,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
 
   _goBack() {
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     routeWithDrawer = false;
     routeName = "profile_notifications";

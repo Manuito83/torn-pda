@@ -54,7 +54,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   }
 
   String notificationIcon = "notification_icon";
-  Color notificationColor = Colors.grey;
+  Color? notificationColor = Colors.grey;
 
   if (channel.contains("Alerts energy")) {
     notificationIcon = "notification_energy";
@@ -280,11 +280,11 @@ Future showNotificationBoth(Map payload, int notId) async {
 }
 
 class VibrationModifier {
-  String channelIdModifier;
-  Int64List vibrationPattern;
+  String? channelIdModifier;
+  Int64List? vibrationPattern;
 }
 
-Future<VibrationModifier> getNotificationChannelsModifiers({String mod = ""}) async {
+Future<VibrationModifier> getNotificationChannelsModifiers({String? mod = ""}) async {
   var savedPattern = mod;
   if (mod == "") {
     savedPattern = await Prefs().getVibrationPattern();
@@ -332,7 +332,7 @@ Future<VibrationModifier> getNotificationChannelsModifiers({String mod = ""}) as
   return modifier;
 }
 
-Future configureNotificationChannels({String mod = ""}) async {
+Future configureNotificationChannels({String? mod = ""}) async {
   List<AndroidNotificationChannel> channels = [];
 
   var modifier = await getNotificationChannelsModifiers(mod: mod);
@@ -747,7 +747,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   }
 }
 
-Future reconfigureNotificationChannels({String mod}) async {
+Future reconfigureNotificationChannels({String? mod}) async {
   if (Platform.isAndroid) {
     const platform = const MethodChannel('tornpda.channel');
     platform.invokeMethod('deleteNotificationChannels');

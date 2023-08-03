@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class DisregardCrimeDialog extends StatefulWidget {
   final Function disregardCallback;
 
-  DisregardCrimeDialog({@required this.disregardCallback});
+  DisregardCrimeDialog({required this.disregardCallback});
 
   @override
   _DisregardCrimeDialogState createState() => _DisregardCrimeDialogState();

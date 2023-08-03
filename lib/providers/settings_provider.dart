@@ -44,7 +44,7 @@ class SettingsProvider extends ChangeNotifier {
     _currentBrowser = browserType;
 
     // SHARED PREFS
-    String browserSave;
+    late String browserSave;
     switch (_currentBrowser) {
       case BrowserSetting.app:
         browserSave = 'app';
@@ -105,11 +105,11 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _onAppExit = 'ask';
-  String get onAppExit => _onAppExit;
-  set changeOnAppExit(String choice) {
+  String? _onAppExit = 'ask';
+  String? get onAppExit => _onAppExit;
+  set changeOnAppExit(String? choice) {
     _onAppExit = choice;
-    Prefs().setOnAppExit(_onAppExit);
+    Prefs().setOnAppExit(_onAppExit!);
     notifyListeners();
   }
 
@@ -119,7 +119,7 @@ class SettingsProvider extends ChangeNotifier {
     _currentTimeFormat = timeFormatSetting;
 
     // SHARED PREFS
-    String timeFormatSave;
+    late String timeFormatSave;
     switch (_currentTimeFormat) {
       case TimeFormatSetting.h24:
         timeFormatSave = '24';
@@ -138,7 +138,7 @@ class SettingsProvider extends ChangeNotifier {
   set changeTimeZone(TimeZoneSetting timeZoneSetting) {
     _currentTimeZone = timeZoneSetting;
     // SHARED PREFS
-    String timeZoneSave;
+    late String timeZoneSave;
     switch (_currentTimeZone) {
       case TimeZoneSetting.localTime:
         timeZoneSave = 'local';
@@ -209,8 +209,8 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _browserRefreshMethod = BrowserRefreshSetting.both;
-  BrowserRefreshSetting get browserRefreshMethod => _browserRefreshMethod;
+  BrowserRefreshSetting? _browserRefreshMethod = BrowserRefreshSetting.both;
+  BrowserRefreshSetting? get browserRefreshMethod => _browserRefreshMethod;
   set changeBrowserRefreshMethod(BrowserRefreshSetting value) {
     _browserRefreshMethod = value;
     switch (value) {
@@ -395,11 +395,11 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _profileStatsEnabled = "0";
-  String get profileStatsEnabled => _profileStatsEnabled;
-  set changeProfileStatsEnabled(String value) {
+  String? _profileStatsEnabled = "0";
+  String? get profileStatsEnabled => _profileStatsEnabled;
+  set changeProfileStatsEnabled(String? value) {
     _profileStatsEnabled = value;
-    Prefs().setProfileStatsEnabled(_profileStatsEnabled);
+    Prefs().setProfileStatsEnabled(_profileStatsEnabled!);
     notifyListeners();
   }
 
@@ -479,11 +479,11 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _lifeBarOption = 'ask';
-  String get lifeBarOption => _lifeBarOption;
-  set changeLifeBarOption(String choice) {
+  String? _lifeBarOption = 'ask';
+  String? get lifeBarOption => _lifeBarOption;
+  set changeLifeBarOption(String? choice) {
     _lifeBarOption = choice;
-    Prefs().setLifeBarOption(_lifeBarOption);
+    Prefs().setLifeBarOption(_lifeBarOption!);
     notifyListeners();
   }
 
@@ -552,10 +552,10 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _iconsFiltered = [];
-  List<String> get iconsFiltered => _iconsFiltered;
+  List<String> get iconsFiltered => _iconsFiltered as List<String>;
   set changeIconsFiltered(List<String> icons) {
     _iconsFiltered = icons;
-    Prefs().setIconsFiltered(_iconsFiltered);
+    Prefs().setIconsFiltered(_iconsFiltered as List<String>);
     notifyListeners();
   }
 
@@ -579,8 +579,8 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _travelTicket = TravelTicket.private;
-  TravelTicket get travelTicket => _travelTicket;
+  TravelTicket? _travelTicket = TravelTicket.private;
+  TravelTicket? get travelTicket => _travelTicket;
   set changeTravelTicket(TravelTicket ticket) {
     _travelTicket = ticket;
     String ticketString = "private";

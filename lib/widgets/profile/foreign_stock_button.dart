@@ -6,17 +6,17 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ForeignStockButton extends StatelessWidget {
-  final UserDetailsProvider userProv;
-  final SettingsProvider settingsProv;
+  final UserDetailsProvider? userProv;
+  final SettingsProvider? settingsProv;
   final Function launchBrowser;
   final Function updateCallback;
 
   const ForeignStockButton({
-    @required this.userProv,
-    @required this.settingsProv,
-    @required this.launchBrowser({String url, bool shortTap}),
-    @required this.updateCallback,
-    Key key,
+    required this.userProv,
+    required this.settingsProv,
+    required this.launchBrowser({required String? url, required bool? shortTap}),
+    required this.updateCallback,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -25,7 +25,7 @@ class ForeignStockButton extends StatelessWidget {
       transitionDuration: Duration(seconds: 1),
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
-        return ForeignStockPage(apiKey: userProv.basic.userApiKey);
+        return ForeignStockPage(apiKey: userProv!.basic!.userApiKey);
       },
       closedElevation: 3,
       closedShape: const RoundedRectangleBorder(
@@ -33,11 +33,11 @@ class ForeignStockButton extends StatelessWidget {
           Radius.circular(56 / 2),
         ),
       ),
-      onClosed: (ReturnFlagPressed returnFlag) async {
+      onClosed: (ReturnFlagPressed? returnFlag) async {
         if (returnFlag == null) return;
         if (returnFlag.flagPressed) {
           var url = 'https://www.torn.com/travelagency.php';
-          if (settingsProv.currentBrowser == BrowserSetting.external) {
+          if (settingsProv!.currentBrowser == BrowserSetting.external) {
             if (await canLaunchUrl(Uri.parse(url))) {
               await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
             }

@@ -9,8 +9,8 @@ import 'package:get/get.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum AttackTypeFilter {
@@ -34,20 +34,19 @@ class AttacksProvider extends ChangeNotifier {
   AttackTypeFilter _currentTypeFilter = AttackTypeFilter.all;
   AttackTypeFilter get currentTypeFilter => _currentTypeFilter;
 
-  AttackSortType _currentSort;
+  AttackSortType? _currentSort;
 
   String _ownId = '';
 
-  OwnProfileBasic _userDetails;
-  AttacksProvider(this._userDetails);
+  UserController _u = Get.put(UserController());
 
-  void initializeAttacks() async {
+  Future initializeAttacks() async {
     await restoreSharedPreferences();
     dynamic attacksResult = await Get.find<ApiCallerController>().getAttacks();
     if (attacksResult is AttackModel) {
       _apiError = false;
       _attacks.clear();
-      attacksResult.attacks.forEach((key, thisAttack) {
+      attacksResult.attacks!.forEach((key, thisAttack) {
         // If someone attacked in stealth, it is of no use to us
         if (thisAttack.attackerName != null) {
           // Determine who's the actual target
@@ -86,7 +85,7 @@ class AttacksProvider extends ChangeNotifier {
       bool sameTargetFound = false;
       for (var i = 0; i < _attacks.length; i++) {
         // Skip loop if attacker was anonymous (so that we don't join anonymous attackers together)
-        if (_attacks[i].attackerName.isEmpty) continue;
+        if (_attacks[i].attackerName!.isEmpty) continue;
         if (_attacks[i].targetId == thisAttack.targetId) {
           // If we have attacked the same person more than one
           // add won/lost to the series list, but then do nothing more
@@ -125,7 +124,7 @@ class AttacksProvider extends ChangeNotifier {
         // Also, standardize respect as double
         thisAttack.respectGain = respectGain;
       }
-      double modifiers = thisAttack.modifiers.getTotalModifier;
+      double modifiers = thisAttack.modifiers!.getTotalModifier;
       if (thisAttack.result == Result.MUGGED) {
         modifiers *= 0.75;
       }
@@ -162,7 +161,7 @@ class AttacksProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortAttacks(AttackSortType sortType) {
+  void sortAttacks(AttackSortType? sortType) {
     _currentSort = sortType;
     switch (sortType) {
       case AttackSortType.levelDes:
@@ -178,10 +177,13 @@ class AttacksProvider extends ChangeNotifier {
         _attacks.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
       case AttackSortType.dateDes:
-        _attacks.sort((a, b) => b.timestampEnded.compareTo(a.timestampEnded));
+        _attacks.sort((a, b) => b.timestampEnded!.compareTo(a.timestampEnded!));
         break;
       case AttackSortType.dateAsc:
-        _attacks.sort((a, b) => a.timestampEnded.compareTo(b.timestampEnded));
+        _attacks.sort((a, b) => a.timestampEnded!.compareTo(b.timestampEnded!));
+        break;
+      default:
+        _attacks.sort((a, b) => b.timestampEnded!.compareTo(a.timestampEnded!));
         break;
     }
     _saveSortSharedPrefs();
@@ -189,7 +191,7 @@ class AttacksProvider extends ChangeNotifier {
   }
 
   void _saveSortSharedPrefs() {
-    String sortToSave;
+    late String sortToSave;
     switch (_currentSort) {
       case AttackSortType.levelDes:
         sortToSave = 'levelDes';
@@ -204,9 +206,12 @@ class AttacksProvider extends ChangeNotifier {
         sortToSave = 'respectDes';
         break;
       case AttackSortType.dateAsc:
-        sortToSave = 'dateDes';
+        sortToSave = 'dateAsc';
         break;
       case AttackSortType.dateDes:
+        sortToSave = 'dateDes';
+        break;
+      default:
         sortToSave = 'dateDes';
         break;
     }
@@ -215,13 +220,13 @@ class AttacksProvider extends ChangeNotifier {
 
   Future<void> restoreSharedPreferences() async {
     // User key
-    _ownId = _userDetails.playerId.toString();
+    _ownId = _u.apiKey!;
 
     // Attack sort
     String attackSort = await Prefs().getAttackSort();
     switch (attackSort) {
       case '':
-        _currentSort = AttackSortType.levelDes;
+        _currentSort = AttackSortType.dateDes;
         break;
       case 'levelDes':
         _currentSort = AttackSortType.levelDes;

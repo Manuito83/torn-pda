@@ -14,7 +14,7 @@ class CityOptions extends StatefulWidget {
   final Function callback;
 
   CityOptions({
-    @required this.callback,
+    required this.callback,
   });
 
   @override
@@ -24,10 +24,10 @@ class CityOptions extends StatefulWidget {
 class _CityOptionsState extends State<CityOptions> {
   bool _cityEnabled = true;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
   @override
   void initState() {

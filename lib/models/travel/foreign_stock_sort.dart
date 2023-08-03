@@ -1,18 +1,8 @@
-enum StockSortType {
-  country,
-  name,
-  type,
-  quantity,
-  price,
-  value,
-  profit,
-  arrivalTime,
-  inventoryQuantity
-}
+enum StockSortType { country, name, type, quantity, price, value, profit, arrivalTime, inventoryQuantity }
 
 class StockSort {
-  StockSortType type;
-  String description;
+  StockSortType? type;
+  String? description;
 
   StockSort({this.type}) {
     switch (type) {
@@ -42,6 +32,9 @@ class StockSort {
         break;
       case StockSortType.inventoryQuantity:
         description = 'Sort by quantity (inventory)';
+        break;
+      default:
+        description = 'Sort by name';
         break;
     }
   }

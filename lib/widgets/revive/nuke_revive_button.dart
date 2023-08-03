@@ -1,5 +1,4 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,17 +13,17 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NukeReviveButton extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final OwnProfileExtended user;
-  final SettingsProvider settingsProvider;
-  final WebViewProvider webViewProvider;
+  final ThemeProvider? themeProvider;
+  final OwnProfileExtended? user;
+  final SettingsProvider? settingsProvider;
+  final WebViewProvider? webViewProvider;
 
   const NukeReviveButton({
-    @required this.themeProvider,
-    @required this.settingsProvider,
-    @required this.webViewProvider,
+    required this.themeProvider,
+    required this.settingsProvider,
+    required this.webViewProvider,
     this.user,
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -32,7 +31,7 @@ class NukeReviveButton extends StatefulWidget {
 }
 
 class _NukeReviveButtonState extends State<NukeReviveButton> {
-  OwnProfileExtended _user;
+  OwnProfileExtended? _user;
 
   @override
   void initState() {
@@ -85,7 +84,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: widget.themeProvider.secondBackground,
+                      color: widget.themeProvider!.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -107,7 +106,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                               Flexible(
                                 child: Text(
                                   "REQUEST A REVIVE FROM NUKE",
-                                  style: TextStyle(fontSize: 11, color: widget.themeProvider.mainText),
+                                  style: TextStyle(fontSize: 11, color: widget.themeProvider!.mainText),
                                 ),
                               ),
                             ],
@@ -201,7 +200,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
+                                    contentColor: Colors.red[800]!,
                                     duration: Duration(seconds: 5),
                                     contentPadding: EdgeInsets.all(10),
                                   );
@@ -209,7 +208,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                   return;
                                 }
 
-                                if (_user.status.color != 'red' && _user.status.state != "Hospital") {
+                                if (_user!.status!.color != 'red' && _user!.status!.state != "Hospital") {
                                   BotToast.showText(
                                     text: 'According to Torn you are not currently hospitalized, please wait a '
                                         'few seconds and try again!',
@@ -217,7 +216,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
+                                    contentColor: Colors.red[800]!,
                                     duration: Duration(seconds: 5),
                                     contentPadding: EdgeInsets.all(10),
                                   );
@@ -226,10 +225,10 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                 }
 
                                 var nuke = NukeRevive(
-                                  playerId: _user.playerId.toString(),
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerLocation: _user.travel.destination,
+                                  playerId: _user!.playerId.toString(),
+                                  playerName: _user!.name,
+                                  playerFaction: _user!.faction!.factionName,
+                                  playerLocation: _user!.travel!.destination,
                                 );
 
                                 nuke.callMedic().then((value) {
@@ -240,7 +239,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                         fontSize: 13,
                                         color: Colors.white,
                                       ),
-                                      contentColor: Colors.green[800],
+                                      contentColor: Colors.green[800]!,
                                       duration: Duration(seconds: 5),
                                       contentPadding: EdgeInsets.all(10),
                                     );
@@ -253,7 +252,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                         fontSize: 13,
                                         color: Colors.white,
                                       ),
-                                      contentColor: Colors.red[800],
+                                      contentColor: Colors.red[800]!,
                                       duration: Duration(seconds: 5),
                                       contentPadding: EdgeInsets.all(10),
                                     );
@@ -279,9 +278,9 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: widget.themeProvider.secondBackground,
+                    backgroundColor: widget.themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: widget.themeProvider.secondBackground,
+                      backgroundColor: widget.themeProvider!.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,

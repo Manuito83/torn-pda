@@ -16,18 +16,18 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class FriendDetailsPage extends StatefulWidget {
-  final FriendModel friend;
+  final FriendModel? friend;
 
-  FriendDetailsPage({@required this.friend});
+  FriendDetailsPage({required this.friend});
 
   @override
   _FriendDetailsPageState createState() => _FriendDetailsPageState();
 }
 
 class _FriendDetailsPageState extends State<FriendDetailsPage> {
-  UserDetailsProvider _userDetails;
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late UserDetailsProvider _userDetails;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -76,7 +76,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            '${widget.friend.name} [${widget.friend.playerId}]',
+                            '${widget.friend!.name} [${widget.friend!.playerId}]',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -91,9 +91,9 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                                 icon: Icon(Icons.content_copy),
                                 iconSize: 20,
                                 onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: widget.friend.playerId.toString()));
+                                  Clipboard.setData(ClipboardData(text: widget.friend!.playerId.toString()));
                                   BotToast.showText(
-                                    text: "Your friend's ID [${widget.friend.playerId}] has been "
+                                    text: "Your friend's ID [${widget.friend!.playerId}] has been "
                                         "copied to the clipboard!",
                                     textStyle: TextStyle(
                                       fontSize: 14,
@@ -109,11 +109,11 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                           ),
                         ],
                       ),
-                      Text('${widget.friend.rank}'),
+                      Text('${widget.friend!.rank}'),
                       SizedBox(height: 20),
-                      Text('Level: ${widget.friend.level}'),
-                      Text('Gender: ${widget.friend.gender}'),
-                      Text('Age: ${widget.friend.age} days'),
+                      Text('Level: ${widget.friend!.level}'),
+                      Text('Gender: ${widget.friend!.gender}'),
+                      Text('Age: ${widget.friend!.age} days'),
                       SizedBox(height: 20),
                       _returnLife(),
                       SizedBox(height: 5),
@@ -121,12 +121,12 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                       SizedBox(height: 5),
                       _returnStatus(),
                       SizedBox(height: 20),
-                      Text('Awards: ${widget.friend.awards} '
-                          '(you have ${_userDetails.basic.awards})'),
+                      Text('Awards: ${widget.friend!.awards} '
+                          '(you have ${_userDetails.basic!.awards})'),
                       SizedBox(height: 20),
-                      Text('Donator: ${widget.friend.donator == 0 ? 'NO' : 'YES'}'),
-                      Text('Friends/Enemies: ${widget.friend.friends}'
-                          '/${widget.friend.enemies}'),
+                      Text('Donator: ${widget.friend!.donator == 0 ? 'NO' : 'YES'}'),
+                      Text('Friends/Enemies: ${widget.friend!.friends}'
+                          '/${widget.friend!.enemies}'),
                       SizedBox(height: 20),
                       _returnFaction(),
                       _returnJob(),
@@ -148,7 +148,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text('${widget.friend.name}'),
+      title: Text('${widget.friend!.name}'),
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
@@ -167,21 +167,21 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
           child: Text('Life'),
         ),
         LinearPercentIndicator(
-          padding: null,
+          padding: EdgeInsets.all(0),
           barRadius: Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,
           backgroundColor: Colors.grey,
           center: Text(
-            '${widget.friend.life.current}',
+            '${widget.friend!.life!.current}',
             style: TextStyle(color: Colors.black),
           ),
-          percent: widget.friend.life.current / widget.friend.life.maximum > 1.0
+          percent: widget.friend!.life!.current! / widget.friend!.life!.maximum! > 1.0
               ? 1.0
-              : widget.friend.life.current / widget.friend.life.maximum,
+              : widget.friend!.life!.current! / widget.friend!.life!.maximum!,
         ),
-        widget.friend.status.state == "Hospital"
+        widget.friend!.status!.state == "Hospital"
             ? Icon(
                 Icons.local_hospital,
                 size: 20,
@@ -200,7 +200,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
           'Last action: ',
         ),
         Text(
-          widget.friend.lastAction.relative == "0 minutes ago" ? 'now' : widget.friend.lastAction.relative,
+          widget.friend!.lastAction!.relative == "0 minutes ago" ? 'now' : widget.friend!.lastAction!.relative!,
         ),
         Padding(
           padding: const EdgeInsets.only(left: 8.0),
@@ -208,7 +208,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: _returnLastActionColor(widget.friend.lastAction.status),
+              color: _returnLastActionColor(widget.friend!.lastAction!.status),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.black),
             ),
@@ -218,26 +218,24 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     );
   }
 
-  Color _returnLastActionColor(String status) {
+  Color _returnLastActionColor(String? status) {
     switch (status) {
       case 'Online':
         return Colors.green;
-        break;
       case 'Idle':
         return Colors.orange;
-        break;
       default:
         return Colors.grey;
     }
   }
 
   Widget _returnStatus() {
-    Color stateColor;
-    if (widget.friend.status.color == 'red') {
+    Color? stateColor;
+    if (widget.friend!.status!.color == 'red') {
       stateColor = Colors.red;
-    } else if (widget.friend.status.color == 'green') {
+    } else if (widget.friend!.status!.color == 'green') {
       stateColor = Colors.green;
-    } else if (widget.friend.status.color == 'blue') {
+    } else if (widget.friend!.status!.color == 'blue') {
       stateColor = Colors.blue;
     }
 
@@ -253,21 +251,21 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text('Status: ${widget.friend.status.state}'),
+        Text('Status: ${widget.friend!.status!.state}'),
         stateBall,
       ],
     );
   }
 
   Widget _returnFaction() {
-    if (widget.friend.faction.factionId != 0) {
+    if (widget.friend!.faction!.factionId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Faction: ${HtmlParser.fix(widget.friend.faction.factionName)}'),
-            Text('Position: ${widget.friend.faction.position}'),
-            Text('Joined: ${widget.friend.faction.daysInFaction} days ago'),
+            Text('Faction: ${HtmlParser.fix(widget.friend!.faction!.factionName)}'),
+            Text('Position: ${widget.friend!.faction!.position}'),
+            Text('Joined: ${widget.friend!.faction!.daysInFaction} days ago'),
           ],
         ),
       );
@@ -277,13 +275,13 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
   }
 
   Widget _returnJob() {
-    if (widget.friend.job.companyId != 0) {
+    if (widget.friend!.job!.companyId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Company: ${HtmlParser.fix(widget.friend.job.companyName)}'),
-            Text('Position: ${widget.friend.job.job}'),
+            Text('Company: ${HtmlParser.fix(widget.friend!.job!.companyName)}'),
+            Text('Position: ${widget.friend!.job!.job}'),
           ],
         ),
       );
@@ -293,7 +291,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
   }
 
   Widget _returnDiscord() {
-    if (widget.friend.discord.discordId != "") {
+    if (widget.friend!.discord!.discordId != "") {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Row(
@@ -309,9 +307,9 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                   icon: Icon(Icons.content_copy),
                   iconSize: 20,
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: widget.friend.discord.discordId));
+                    Clipboard.setData(ClipboardData(text: widget.friend!.discord!.discordId));
                     BotToast.showText(
-                      text: "Your friend's Discord ID (${widget.friend.discord.discordId}) has been "
+                      text: "Your friend's Discord ID (${widget.friend!.discord!.discordId}) has been "
                           "copied to the clipboard!",
                       textStyle: TextStyle(
                         fontSize: 14,
@@ -334,7 +332,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
   }
 
   Widget _returnCompetition() {
-    if (widget.friend.competition == null) {
+    if (widget.friend!.competition == null) {
       return SizedBox.shrink();
     }
 
@@ -349,45 +347,45 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          if (widget.friend.competition.name != null)
+          if (widget.friend!.competition!.name != null)
             Text(
-              '"${widget.friend.competition.name}"',
+              '"${widget.friend!.competition!.name}"',
             ),
-          if (widget.friend.competition.attacks != null)
+          if (widget.friend!.competition!.attacks != null)
             Text(
-              'Attacks: ${widget.friend.competition.attacks}',
+              'Attacks: ${widget.friend!.competition!.attacks}',
             ),
-          if (widget.friend.competition.image != null)
+          if (widget.friend!.competition!.image != null)
             Text(
-              'Image: ${widget.friend.competition.image}',
+              'Image: ${widget.friend!.competition!.image}',
             ),
-          if (widget.friend.competition.score != null)
+          if (widget.friend!.competition!.score != null)
             Text(
-              'Score: ${widget.friend.competition.score.ceil()}',
+              'Score: ${widget.friend!.competition!.score!.ceil()}',
             ),
-          if (widget.friend.competition.team != null)
+          if (widget.friend!.competition!.team != null)
             Text(
-              'Team: ${widget.friend.competition.team}',
+              'Team: ${widget.friend!.competition!.team}',
             ),
-          if (widget.friend.competition.text != null)
+          if (widget.friend!.competition!.text != null)
             Text(
-              'Text: ${widget.friend.competition.text}',
+              'Text: ${widget.friend!.competition!.text}',
             ),
-          if (widget.friend.competition.total != null)
+          if (widget.friend!.competition!.total != null)
             Text(
-              'Total (accumulated): ${widget.friend.competition.total}',
+              'Total (accumulated): ${widget.friend!.competition!.total}',
             ),
-          if (widget.friend.competition.treatsCollectedTotal != null)
+          if (widget.friend!.competition!.treatsCollectedTotal != null)
             Text(
-              'Treats collected: ${widget.friend.competition.treatsCollectedTotal}',
+              'Treats collected: ${widget.friend!.competition!.treatsCollectedTotal}',
             ),
-          if (widget.friend.competition.votes != null)
+          if (widget.friend!.competition!.votes != null)
             Text(
-              'Votes: ${widget.friend.competition.votes}',
+              'Votes: ${widget.friend!.competition!.votes}',
             ),
-          if (widget.friend.competition.position != null)
+          if (widget.friend!.competition!.position != null)
             Text(
-              'Position: ${widget.friend.competition.position}',
+              'Position: ${widget.friend!.competition!.position}',
             ),
         ],
       ),

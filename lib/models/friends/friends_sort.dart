@@ -8,8 +8,8 @@ enum FriendSortType {
 }
 
 class FriendSort {
-  FriendSortType type;
-  String description;
+  FriendSortType? type;
+  late String description;
 
   FriendSort({this.type}) {
     switch (type) {
@@ -30,6 +30,9 @@ class FriendSort {
         break;
       case FriendSortType.factionAsc:
         description = 'Sort by faction (asc)';
+        break;
+      default:
+        description = 'Sort by level (asc)';
         break;
     }
   }

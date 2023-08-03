@@ -4,15 +4,15 @@ import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class LoadoutsNameDialog extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final QuickItemsProvider quickItemsProvider;
+  final ThemeProvider? themeProvider;
+  final QuickItemsProvider? quickItemsProvider;
   final QuickItem loadout;
 
   LoadoutsNameDialog({
-    @required this.themeProvider,
-    @required this.quickItemsProvider,
-    @required this.loadout,
-    Key key,
+    required this.themeProvider,
+    required this.quickItemsProvider,
+    required this.loadout,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -25,7 +25,7 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController.text = widget.loadout.loadoutName;
+    _nameController.text = widget.loadout.loadoutName!;
   }
 
   @override
@@ -49,7 +49,7 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: widget.themeProvider.secondBackground,
+                  color: widget.themeProvider!.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -66,7 +66,7 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
                     Flexible(
                       child: Text(
                         "Enter a custom name for this loadout (${widget.loadout.loadoutNumber}):",
-                        style: TextStyle(fontSize: 12, color: widget.themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: widget.themeProvider!.mainText),
                       ),
                     ),
                     SizedBox(height: 8),
@@ -89,7 +89,7 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
                         TextButton(
                           child: Text("Save"),
                           onPressed: () {
-                            widget.quickItemsProvider.changeLoadoutName(widget.loadout, _nameController.text);
+                            widget.quickItemsProvider!.changeLoadoutName(widget.loadout, _nameController.text);
                             Navigator.of(context).pop();
                           },
                         ),
@@ -110,9 +110,9 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.secondBackground,
+                backgroundColor: widget.themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: widget.themeProvider.secondBackground,
+                  backgroundColor: widget.themeProvider!.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 34,

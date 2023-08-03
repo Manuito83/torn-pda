@@ -12,8 +12,8 @@ enum AwardsSortType {
 }
 
 class AwardsSort {
-  AwardsSortType type;
-  String description;
+  AwardsSortType? type;
+  late String description;
 
   AwardsSort({this.type}) {
     switch (type) {
@@ -46,6 +46,9 @@ class AwardsSort {
         break;
       case AwardsSortType.daysAsc:
         description = 'Sort by days left (asc)';
+        break;
+      default:
+        description = 'Sort by % (des)';
         break;
     }
   }

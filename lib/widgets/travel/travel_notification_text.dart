@@ -14,8 +14,8 @@ class TravelNotificationTextDialog extends StatefulWidget {
   final String body;
 
   TravelNotificationTextDialog({
-    @required this.title,
-    @required this.body,
+    required this.title,
+    required this.body,
   });
 
   @override
@@ -23,7 +23,7 @@ class TravelNotificationTextDialog extends StatefulWidget {
 }
 
 class _TravelNotificationTextDialogState extends State<TravelNotificationTextDialog> {
-  ThemeProvider _themeProvider;
+  late ThemeProvider _themeProvider;
 
   final _notificationTitleController = new TextEditingController();
   final _notificationBodyController = new TextEditingController();
@@ -85,7 +85,7 @@ class _TravelNotificationTextDialogState extends State<TravelNotificationTextDia
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return "Cannot be empty!";
                         }
                         return null;
@@ -107,7 +107,7 @@ class _TravelNotificationTextDialogState extends State<TravelNotificationTextDia
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return "Cannot be empty!";
                         }
                         return null;
@@ -120,7 +120,7 @@ class _TravelNotificationTextDialogState extends State<TravelNotificationTextDia
                         TextButton(
                           child: Text("Change"),
                           onPressed: () async {
-                            if (_notificationFormKey.currentState.validate()) {
+                            if (_notificationFormKey.currentState!.validate()) {
                               // Get rid of dialog first, so that it can't
                               // be pressed twice
                               Navigator.of(context).pop();

@@ -17,28 +17,28 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
-  bool warnAboutChainsEnabled;
-  bool warnAboutExcessEnergyEnabled;
-  bool shortcutsEnabled;
-  bool showHeaderWallet;
-  bool showHeaderIcons;
-  bool dedicatedTravelCard;
-  bool disableTravelSection;
-  bool expandEvents;
-  int eventsShowNumber;
-  bool expandMessages;
-  int messagesShowNumber;
-  bool expandBasicInfo;
-  bool expandNetworth;
-  List<String> sectionSort;
-  bool oCrimesReactivated;
+  bool? warnAboutChainsEnabled;
+  bool? warnAboutExcessEnergyEnabled;
+  bool? shortcutsEnabled;
+  bool? showHeaderWallet;
+  bool? showHeaderIcons;
+  bool? dedicatedTravelCard;
+  bool? disableTravelSection;
+  bool? expandEvents;
+  int? eventsShowNumber;
+  bool? expandMessages;
+  int? messagesShowNumber;
+  bool? expandBasicInfo;
+  bool? expandNetworth;
+  List<String>? sectionSort;
+  late bool oCrimesReactivated;
 }
 
 class ProfileOptionsPage extends StatefulWidget {
-  ProfileOptionsPage({@required this.apiValid, @required this.user, @required this.callBackTimings});
+  ProfileOptionsPage({required this.apiValid, required this.user, required this.callBackTimings});
 
   final bool apiValid;
-  final OwnProfileExtended user;
+  final OwnProfileExtended? user;
   final Function callBackTimings;
 
   @override
@@ -57,15 +57,15 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _expandNetworth = false;
   bool _oCrimesReactivated = false;
 
-  List<String> _sectionList;
+  List<String>? _sectionList;
 
   int _messagesNumber = 25;
   int _eventsNumber = 25;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  SettingsProvider? _settingsProvider;
 
   @override
   void initState() {
@@ -75,7 +75,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
     routeWithDrawer = false;
     routeName = "profile_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
       if (mounted && routeName == "profile_options") _goBack();
     });
   }
@@ -92,8 +92,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
+          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider!.appBarTop
               ? SizedBox(
                   height: AppBar().preferredSize.height,
                   child: buildAppBar(),
@@ -146,14 +146,14 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                   builder: (context) {
                                                     if (Platform.isAndroid) {
                                                       return ProfileNotificationsAndroid(
-                                                        energyMax: widget.user.energy.maximum,
-                                                        nerveMax: widget.user.nerve.maximum,
+                                                        energyMax: widget.user!.energy!.maximum,
+                                                        nerveMax: widget.user!.nerve!.maximum,
                                                         callback: widget.callBackTimings,
                                                       );
                                                     } else {
                                                       return ProfileNotificationsIOS(
-                                                        energyMax: widget.user.energy.maximum,
-                                                        nerveMax: widget.user.nerve.maximum,
+                                                        energyMax: widget.user!.energy!.maximum,
+                                                        nerveMax: widget.user!.nerve!.maximum,
                                                         callback: widget.callBackTimings,
                                                       );
                                                     }
@@ -375,10 +375,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   children: <Widget>[
                                     Text("Show next Ranked War"),
                                     Switch(
-                                      value: _settingsProvider.rankedWarsInProfile,
+                                      value: _settingsProvider!.rankedWarsInProfile,
                                       onChanged: (value) {
                                         setState(() {
-                                          _settingsProvider.changeRankedWarsInProfile = value;
+                                          _settingsProvider!.changeRankedWarsInProfile = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -463,11 +463,11 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   children: <Widget>[
                                     Text("Show organized crimes"),
                                     Switch(
-                                      value: _settingsProvider.oCrimesEnabled,
+                                      value: _settingsProvider!.oCrimesEnabled,
                                       onChanged: (value) {
                                         _oCrimesReactivated = value;
                                         setState(() {
-                                          _settingsProvider.changeOCrimesEnabled = value;
+                                          _settingsProvider!.changeOCrimesEnabled = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -508,12 +508,12 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   children: <Widget>[
                                     Text("Show stats chart"),
                                     Switch(
-                                      value: _settingsProvider.tornStatsChartEnabled,
+                                      value: _settingsProvider!.tornStatsChartEnabled,
                                       onChanged: (value) {
                                         setState(() {
-                                          _settingsProvider.setTornStatsChartEnabled = value;
+                                          _settingsProvider!.setTornStatsChartEnabled = value;
                                           if (!value) {
-                                            _settingsProvider.setTornStatsChartDateTime = 0;
+                                            _settingsProvider!.setTornStatsChartDateTime = 0;
                                           }
                                         });
                                       },
@@ -536,7 +536,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
-                              if (_settingsProvider.tornStatsChartEnabled)
+                              if (_settingsProvider!.tornStatsChartEnabled)
                                 Column(
                                   children: [
                                     Padding(
@@ -546,10 +546,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         children: <Widget>[
                                           Text("Show with card collapsed"),
                                           Switch(
-                                            value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
+                                            value: _settingsProvider!.tornStatsChartInCollapsedMiscCard,
                                             onChanged: (value) {
                                               setState(() {
-                                                _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
+                                                _settingsProvider!.setTornStatsChartInCollapsedMiscCard = value;
                                               });
                                             },
                                             activeTrackColor: Colors.lightGreenAccent,
@@ -728,7 +728,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 20),
                                 child: Container(
-                                  height: _sectionList.length * 40.0 + 40,
+                                  height: _sectionList!.length * 40.0 + 40,
                                   child: ReorderableListView(
                                     shrinkWrap: true,
                                     physics: NeverScrollableScrollPhysics(),
@@ -737,12 +737,12 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         // removing the item at oldIndex will shorten the list by 1
                                         newIndex -= 1;
                                       }
-                                      var oldItem = _sectionList[oldIndex];
+                                      var oldItem = _sectionList![oldIndex];
                                       setState(() {
-                                        _sectionList.removeAt(oldIndex);
-                                        _sectionList.insert(newIndex, oldItem);
+                                        _sectionList!.removeAt(oldIndex);
+                                        _sectionList!.insert(newIndex, oldItem);
                                       });
-                                      Prefs().setProfileSectionOrder(_sectionList);
+                                      Prefs().setProfileSectionOrder(_sectionList!);
                                     },
                                     children: _currentSectionSort(),
                                   ),
@@ -784,7 +784,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
       title: Text("Profile Options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
@@ -879,7 +879,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setEventsShowNumber(int.parse(value));
+        Prefs().setEventsShowNumber(int.parse(value!));
         setState(() {
           _eventsNumber = int.parse(value);
         });
@@ -971,7 +971,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setMessagesShowNumber(int.parse(value));
+        Prefs().setMessagesShowNumber(int.parse(value!));
         setState(() {
           _messagesNumber = int.parse(value);
         });
@@ -1031,7 +1031,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   List<Widget> _currentSectionSort() {
     var myList = <Widget>[];
-    for (var section in _sectionList) {
+    for (var section in _sectionList!) {
       myList.add(
         SizedBox(
           height: 40,
@@ -1064,7 +1064,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   DropdownButton _lifeBarDropdown() {
     return DropdownButton<String>(
-      value: _settingsProvider.lifeBarOption,
+      value: _settingsProvider!.lifeBarOption,
       items: [
         DropdownMenuItem(
           value: "ask",
@@ -1108,7 +1108,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _settingsProvider.changeLifeBarOption = value;
+          _settingsProvider!.changeLifeBarOption = value;
         });
       },
     );

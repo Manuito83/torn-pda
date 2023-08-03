@@ -7,7 +7,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 
 class TctClock extends StatefulWidget {
   const TctClock({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -15,7 +15,7 @@ class TctClock extends StatefulWidget {
 }
 
 class _TctClockState extends State<TctClock> {
-  Timer _oneSecTimer;
+  late Timer _oneSecTimer;
   DateTime _currentTctTime = DateTime.now().toUtc();
 
   @override
@@ -34,7 +34,7 @@ class _TctClockState extends State<TctClock> {
   Widget build(BuildContext context) {
     var settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     TimeFormatSetting timePrefs = settingsProvider.currentTimeFormat;
-    DateFormat formatter;
+    late DateFormat formatter;
     switch (timePrefs) {
       case TimeFormatSetting.h24:
         formatter = DateFormat(settingsProvider.showSecondsInClock ? 'HH:mm:ss' : 'HH:mm');

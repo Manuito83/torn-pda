@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 
 class TabsHideReminderDialog extends StatelessWidget {
-  const TabsHideReminderDialog({Key key}) : super(key: key);
+  const TabsHideReminderDialog({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

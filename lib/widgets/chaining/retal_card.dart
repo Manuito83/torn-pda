@@ -39,9 +39,9 @@ class RetalCard extends StatefulWidget {
 
   // Key is needed to update at least the hospital counter individually
   RetalCard({
-    @required this.retalModel,
-    @required this.expiryTimeStamp,
-    @required Key key,
+    required this.retalModel,
+    required this.expiryTimeStamp,
+    required Key key,
   }) : super(key: key);
 
   @override
@@ -49,15 +49,15 @@ class RetalCard extends StatefulWidget {
 }
 
 class _RetalCardState extends State<RetalCard> {
-  Retal _retal;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ChainStatusProvider _chainProvider;
-  WebViewProvider _webViewProvider;
+  Retal? _retal;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late ChainStatusProvider _chainProvider;
+  late WebViewProvider _webViewProvider;
 
-  Timer _expiryTicker;
-  Timer _lifeTicker;
+  Timer? _expiryTicker;
+  Timer? _lifeTicker;
 
   String _currentLifeString = "";
 
@@ -103,7 +103,7 @@ class _RetalCardState extends State<RetalCard> {
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: _chainProvider.panicTargets.where((t) => t.name == _retal.name).length > 0
+                  color: _chainProvider.panicTargets.where((t) => t.name == _retal!.name).length > 0
                       ? Colors.blue
                       : Colors.transparent,
                   width: 2,
@@ -131,7 +131,7 @@ class _RetalCardState extends State<RetalCard> {
                                 SizedBox(
                                   width: 95,
                                   child: Text(
-                                    '${_retal.name}',
+                                    '${_retal!.name}',
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -155,7 +155,7 @@ class _RetalCardState extends State<RetalCard> {
                             _factionName(),
                             SizedBox(width: 3),
                             Text(
-                              'L${_retal.level}',
+                              'L${_retal!.level}',
                             ),
                             Row(
                               children: [
@@ -179,8 +179,8 @@ class _RetalCardState extends State<RetalCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      _returnRespectFF(_retal.respectGain, _retal.fairFight),
-                      if (!_retal.overrideEasyLife) _returnEasyHealth(_retal) else _returnFullHealth(_retal),
+                      _returnRespectFF(_retal!.respectGain, _retal!.fairFight),
+                      if (!_retal!.overrideEasyLife) _returnEasyHealth(_retal) else _returnFullHealth(_retal),
                     ],
                   ),
                 ),
@@ -244,7 +244,7 @@ class _RetalCardState extends State<RetalCard> {
     var targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     var targetList = targetsProvider.allTargets;
     for (var tar in targetList) {
-      if (tar.playerId == _retal.retalId) {
+      if (tar.playerId == _retal!.retalId) {
         existingTarget = true;
       }
     }
@@ -258,15 +258,15 @@ class _RetalCardState extends State<RetalCard> {
           color: Colors.red,
         ),
         onPressed: () {
-          targetsProvider.deleteTargetById(_retal.retalId.toString());
+          targetsProvider.deleteTargetById(_retal!.retalId.toString());
           BotToast.showText(
             clickClose: true,
-            text: HtmlParser.fix('Removed ${_retal.name}!'),
+            text: HtmlParser.fix('Removed ${_retal!.name}!'),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.orange[900],
+            contentColor: Colors.orange[900]!,
             duration: Duration(seconds: 5),
             contentPadding: EdgeInsets.all(10),
           );
@@ -298,7 +298,7 @@ class _RetalCardState extends State<RetalCard> {
                 // that this target is in our previous attacks. Respect won't be calculated,
                 // but it will be much faster
                 AddTargetResult tryAddTarget = await targetsProvider.addTarget(
-                  targetId: _retal.retalId.toString(),
+                  targetId: _retal!.retalId.toString(),
                   attacks: await targetsProvider.getAttacks(),
                 );
 
@@ -311,19 +311,19 @@ class _RetalCardState extends State<RetalCard> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.green[700],
+                    contentColor: Colors.green[700]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
                 } else if (!tryAddTarget.success) {
                   BotToast.showText(
                     clickClose: true,
-                    text: HtmlParser.fix('Error adding ${_retal.retalId}. ${tryAddTarget.errorReason}'),
+                    text: HtmlParser.fix('Error adding ${_retal!.retalId}. ${tryAddTarget.errorReason}'),
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.red[900],
+                    contentColor: Colors.red[900]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
@@ -342,12 +342,12 @@ class _RetalCardState extends State<RetalCard> {
   }
 
   Widget _factionName() {
-    Color borderColor = Colors.grey;
+    Color? borderColor = Colors.grey;
     List<double> dashPattern = [1, 2];
-    if (_retal.factionLeader == _retal.retalId) {
+    if (_retal!.factionLeader == _retal!.retalId) {
       borderColor = Colors.red[500];
       dashPattern = [1, 0];
-    } else if (_retal.factionColeader == _retal.retalId) {
+    } else if (_retal!.factionColeader == _retal!.retalId) {
       borderColor = Colors.orange[700];
       dashPattern = [1, 0];
     }
@@ -355,14 +355,14 @@ class _RetalCardState extends State<RetalCard> {
     void showFactionToast() {
       BotToast.showText(
         clickClose: true,
-        text: HtmlParser.fix("${_retal.name} belongs to faction "
-            "${_retal.factionName} as "
-            "${_retal.position}"),
+        text: HtmlParser.fix("${_retal!.name} belongs to faction "
+            "${_retal!.factionName} as "
+            "${_retal!.position}"),
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[600],
+        contentColor: Colors.grey[600]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
@@ -374,9 +374,9 @@ class _RetalCardState extends State<RetalCard> {
         child: DottedBorder(
           padding: const EdgeInsets.all(2),
           dashPattern: dashPattern,
-          color: borderColor,
+          color: borderColor!,
           child: Text(
-            HtmlParser.fix(_retal.factionName),
+            HtmlParser.fix(_retal!.factionName),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -386,16 +386,16 @@ class _RetalCardState extends State<RetalCard> {
   }
 
   Color _borderColor() {
-    if (_retal.justUpdatedWithSuccess) {
+    if (_retal!.justUpdatedWithSuccess!) {
       return Colors.green;
-    } else if (_retal.justUpdatedWithError) {
+    } else if (_retal!.justUpdatedWithError!) {
       return Colors.red;
     } else {
       return Colors.transparent;
     }
   }
 
-  Widget _returnRespectFF(double respect, double fairFight) {
+  Widget _returnRespectFF(double? respect, double? fairFight) {
     TextSpan respectResult;
     TextSpan fairFightResult;
 
@@ -408,7 +408,7 @@ class _RetalCardState extends State<RetalCard> {
         ),
       );
     } else if (respect == 0) {
-      if (_retal.userWonOrDefended) {
+      if (_retal!.userWonOrDefended!) {
         respectResult = TextSpan(
           text: '0 (def)',
           style: TextStyle(
@@ -428,7 +428,7 @@ class _RetalCardState extends State<RetalCard> {
       }
     } else {
       respectResult = TextSpan(
-        text: respect.toStringAsFixed(2),
+        text: respect!.toStringAsFixed(2),
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: _themeProvider.mainText,
@@ -447,7 +447,7 @@ class _RetalCardState extends State<RetalCard> {
       );
     } else {
       var ffColor = Colors.red;
-      if (fairFight >= 2.2 && fairFight < 2.8) {
+      if (fairFight! >= 2.2 && fairFight < 2.8) {
         ffColor = Colors.orange;
       } else if (fairFight >= 2.8) {
         ffColor = Colors.green;
@@ -505,23 +505,23 @@ class _RetalCardState extends State<RetalCard> {
     );
   }
 
-  Widget _returnEasyHealth(Retal target) {
-    Color lifeBarColor = Colors.transparent;
+  Widget _returnEasyHealth(Retal? target) {
+    Color? lifeBarColor = Colors.transparent;
 
     String lifeText = "";
-    if (_retal.status.state == "Hospital") {
+    if (_retal!.status.state == "Hospital") {
       lifeText = "Hospital";
       lifeBarColor = Colors.red[300];
-    } else if (_retal.status.state == "Jail") {
+    } else if (_retal!.status.state == "Jail") {
       lifeText = "Jailed";
       lifeBarColor = Colors.brown[300];
-    } else if (_retal.status.state == "Okay") {
+    } else if (_retal!.status.state == "Okay") {
       lifeText = "Okay";
       lifeBarColor = Colors.green[300];
-    } else if (_retal.status.state == "Traveling") {
+    } else if (_retal!.status.state == "Traveling") {
       lifeText = "Okay";
       lifeBarColor = Colors.blue[300];
-    } else if (_retal.status.state == "Abroad") {
+    } else if (_retal!.status.state == "Abroad") {
       lifeText = "Okay";
       lifeBarColor = Colors.blue[300];
     }
@@ -531,7 +531,7 @@ class _RetalCardState extends State<RetalCard> {
       children: <Widget>[
         Flexible(
           child: LinearPercentIndicator(
-            padding: null,
+            padding: EdgeInsets.all(0),
             barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 14,
@@ -547,16 +547,16 @@ class _RetalCardState extends State<RetalCard> {
     );
   }
 
-  Widget _returnFullHealth(Retal target) {
-    Color lifeBarColor = Colors.green;
+  Widget _returnFullHealth(Retal? target) {
+    Color? lifeBarColor = Colors.green;
     Widget hospitalWarning = SizedBox.shrink();
-    String lifeText = _retal.lifeCurrent == -1 ? "?" : _retal.lifeCurrent.toString();
+    String lifeText = _retal!.lifeCurrent == -1 ? "?" : _retal!.lifeCurrent.toString();
 
-    if (_retal.status.state == "Hospital") {
+    if (_retal!.status.state == "Hospital") {
       // Handle if target is still in hospital
       var now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-      if (_retal.status.until > now) {
-        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
+      if (_retal!.status.until! > now) {
+        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target!.status.until! * 1000);
         if (_lifeTicker == null) {
           _lifeTicker = Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         }
@@ -581,20 +581,20 @@ class _RetalCardState extends State<RetalCard> {
       _lifeTicker?.cancel();
     }
 
-    if (_retal.status.state == "Traveling" || _retal.status.state == "Abroad") {
+    if (_retal!.status.state == "Traveling" || _retal!.status.state == "Abroad") {
       lifeBarColor = Colors.blue[300];
     }
 
     // Found players in federal jail with a higher life than their maximum. Correct it if it's the
     // case to avoid issues with percentage bar
-    double lifePercentage;
-    if (_retal.lifeCurrent != -1) {
-      if (_retal.lifeCurrent / _retal.lifeMaximum > 1) {
+    double? lifePercentage;
+    if (_retal!.lifeCurrent != -1) {
+      if (_retal!.lifeCurrent! / _retal!.lifeMaximum! > 1) {
         lifePercentage = 1;
-      } else if (_retal.lifeCurrent / _retal.lifeMaximum > 1) {
+      } else if (_retal!.lifeCurrent! / _retal!.lifeMaximum! > 1) {
         lifePercentage = 0;
       } else {
-        lifePercentage = _retal.lifeCurrent / _retal.lifeMaximum;
+        lifePercentage = _retal!.lifeCurrent! / _retal!.lifeMaximum!;
       }
     }
 
@@ -607,7 +607,7 @@ class _RetalCardState extends State<RetalCard> {
         ),
         Flexible(
           child: LinearPercentIndicator(
-            padding: null,
+            padding: EdgeInsets.all(0),
             barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 14,
@@ -625,10 +625,10 @@ class _RetalCardState extends State<RetalCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(state: _retal.status.state, description: _retal.status.description);
+    var country = countryCheck(state: _retal!.status.state, description: _retal!.status.description);
 
-    if (_retal.status.color == "blue" || (country != "Torn" && _retal.status.color == "red")) {
-      var destination = _retal.status.color == "blue" ? _retal.status.description : country;
+    if (_retal!.status.color == "blue" || (country != "Torn" && _retal!.status.color == "red")) {
+      var destination = _retal!.status.color == "blue" ? _retal!.status.description! : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -663,7 +663,7 @@ class _RetalCardState extends State<RetalCard> {
             onTap: () {
               BotToast.showText(
                 clickClose: true,
-                text: _retal.status.description,
+                text: _retal!.status.description!,
                 textStyle: TextStyle(
                   fontSize: 14,
                   color: Colors.white,
@@ -678,13 +678,13 @@ class _RetalCardState extends State<RetalCard> {
                 Padding(
                   padding: const EdgeInsets.only(right: 3),
                   child: RotatedBox(
-                    quarterTurns: _retal.status.description.contains('Traveling to ')
+                    quarterTurns: _retal!.status.description!.contains('Traveling to ')
                         ? 1 // If traveling to another country
-                        : _retal.status.description.contains('Returning ')
+                        : _retal!.status.description!.contains('Returning ')
                             ? 3 // If returning to Torn
                             : 0, // If staying abroad (blue but not moving)
                     child: Icon(
-                      _retal.status.description.contains('In ')
+                      _retal!.status.description!.contains('In ')
                           ? Icons.location_city_outlined
                           : Icons.airplanemode_active,
                       color: Colors.blue,
@@ -712,12 +712,12 @@ class _RetalCardState extends State<RetalCard> {
   Widget _statsWidget() {
     void _showDetailedStatsDialog() {
       String lastUpdated = "";
-      if (_retal.statsExactUpdated != 0) {
-        lastUpdated = readTimestamp(_retal.statsExactUpdated);
+      if (_retal!.statsExactUpdated != 0) {
+        lastUpdated = readTimestamp(_retal!.statsExactUpdated!);
       }
 
       Widget strWidget;
-      if (_retal.statsStr == -1) {
+      if (_retal!.statsStr == -1) {
         strWidget = Text(
           "Strength: unknown",
           style: TextStyle(fontSize: 12),
@@ -725,7 +725,7 @@ class _RetalCardState extends State<RetalCard> {
       } else {
         var strDiff = "";
         Color strColor;
-        var result = _userProvider.basic.strength - _retal.statsStr;
+        var result = _userProvider.basic!.strength! - _retal!.statsStr!;
         if (result == 0) {
           strDiff = "Same as you";
           strColor = Colors.orange;
@@ -741,7 +741,7 @@ class _RetalCardState extends State<RetalCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Strength: ${formatBigNumbers(_retal.statsStr)}",
+              "Strength: ${formatBigNumbers(_retal!.statsStr!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -753,7 +753,7 @@ class _RetalCardState extends State<RetalCard> {
       }
 
       Widget spdWidget;
-      if (_retal.statsSpd == -1) {
+      if (_retal!.statsSpd == -1) {
         spdWidget = Text(
           "Speed: unknown",
           style: TextStyle(fontSize: 12),
@@ -761,7 +761,7 @@ class _RetalCardState extends State<RetalCard> {
       } else {
         var spdDiff = "";
         Color spdColor;
-        var result = _userProvider.basic.speed - _retal.statsSpd;
+        var result = _userProvider.basic!.speed! - _retal!.statsSpd!;
         if (result == 0) {
           spdDiff = "Same as you";
           spdColor = Colors.orange;
@@ -777,7 +777,7 @@ class _RetalCardState extends State<RetalCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Speed: ${formatBigNumbers(_retal.statsSpd)}",
+              "Speed: ${formatBigNumbers(_retal!.statsSpd!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -789,7 +789,7 @@ class _RetalCardState extends State<RetalCard> {
       }
 
       Widget defWidget;
-      if (_retal.statsDef == -1) {
+      if (_retal!.statsDef == -1) {
         defWidget = Text(
           "Defense: unknown",
           style: TextStyle(fontSize: 12),
@@ -797,7 +797,7 @@ class _RetalCardState extends State<RetalCard> {
       } else {
         var defDiff = "";
         Color defColor;
-        var result = _userProvider.basic.defense - _retal.statsDef;
+        var result = _userProvider.basic!.defense! - _retal!.statsDef!;
         if (result == 0) {
           defDiff = "Same as you";
           defColor = Colors.orange;
@@ -813,7 +813,7 @@ class _RetalCardState extends State<RetalCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Defense: ${formatBigNumbers(_retal.statsDef)}",
+              "Defense: ${formatBigNumbers(_retal!.statsDef!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -825,7 +825,7 @@ class _RetalCardState extends State<RetalCard> {
       }
 
       Widget dexWidget;
-      if (_retal.statsDex == -1) {
+      if (_retal!.statsDex == -1) {
         dexWidget = Text(
           "Dexterity: unknown",
           style: TextStyle(fontSize: 12),
@@ -833,7 +833,7 @@ class _RetalCardState extends State<RetalCard> {
       } else {
         var dexDiff = "";
         Color dexColor;
-        var result = _userProvider.basic.dexterity - _retal.statsDex;
+        var result = _userProvider.basic!.dexterity! - _retal!.statsDex!;
         if (result == 0) {
           dexDiff = "Same as you";
           dexColor = Colors.orange;
@@ -849,7 +849,7 @@ class _RetalCardState extends State<RetalCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Dexterity: ${formatBigNumbers(_retal.statsDex)}",
+              "Dexterity: ${formatBigNumbers(_retal!.statsDex!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -861,15 +861,15 @@ class _RetalCardState extends State<RetalCard> {
       }
 
       Widget totalWidget;
-      if (_retal.statsExactTotal == -1) {
+      if (_retal!.statsExactTotal == -1) {
         totalWidget = Text(
-          "TOTAL: unknown (>${formatBigNumbers(_retal.statsExactTotalKnown)})",
+          "TOTAL: unknown (>${formatBigNumbers(_retal!.statsExactTotalKnown)})",
           style: TextStyle(fontSize: 12),
         );
       } else {
         var totalDiff = "";
         Color totalColor;
-        var result = _userProvider.basic.total - _retal.statsExactTotal;
+        var result = _userProvider.basic!.total! - _retal!.statsExactTotal!;
         if (result == 0) {
           totalDiff = "Same as you";
           totalColor = Colors.orange;
@@ -885,7 +885,7 @@ class _RetalCardState extends State<RetalCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "TOTAL: ${formatBigNumbers(_retal.statsExactTotal)}",
+              "TOTAL: ${formatBigNumbers(_retal!.statsExactTotal!)}",
               style: TextStyle(fontSize: 12),
             ),
             Text(
@@ -947,16 +947,16 @@ class _RetalCardState extends State<RetalCard> {
         ),
         toastBuilder: (cancelFunc) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Text(_retal.name),
+          title: Text(_retal!.name!),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_retal.factionName != "0")
+              if (_retal!.factionName != "0")
                 Padding(
                   padding: const EdgeInsets.all(4),
                   child: Text(
-                    "Faction: ${_retal.factionName}",
+                    "Faction: ${_retal!.factionName}",
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -1007,26 +1007,26 @@ class _RetalCardState extends State<RetalCard> {
       );
     }
 
-    if (_retal.statsExactTotalKnown != -1) {
-      Color exactColor = Colors.green;
-      if (_userProvider.basic.total < _retal.statsExactTotalKnown - _retal.statsExactTotalKnown * 0.1) {
+    if (_retal!.statsExactTotalKnown != -1) {
+      Color? exactColor = Colors.green;
+      if (_userProvider.basic!.total! < _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) {
         exactColor = Colors.red[700];
-      } else if ((_userProvider.basic.total >= _retal.statsExactTotalKnown - _retal.statsExactTotalKnown * 0.1) &&
-          (_userProvider.basic.total <= _retal.statsExactTotalKnown + _retal.statsExactTotalKnown * 0.1)) {
+      } else if ((_userProvider.basic!.total! >= _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) &&
+          (_userProvider.basic!.total! <= _retal!.statsExactTotalKnown + _retal!.statsExactTotalKnown * 0.1)) {
         exactColor = Colors.orange[700];
       }
 
       int totalToShow = 0;
-      if (_retal.statsExactTotal != -1) {
+      if (_retal!.statsExactTotal != -1) {
         // TornStats adds all 4 stats into total if total is unknown, but then rounds. So it might happen that the
         // total sum is actually higher than the one calculated and rounded by TS
-        totalToShow = max(_retal.statsExactTotal, _retal.statsExactTotalKnown);
+        totalToShow = max(_retal!.statsExactTotal!, _retal!.statsExactTotalKnown);
       } else {
-        totalToShow = _retal.statsExactTotalKnown;
+        totalToShow = _retal!.statsExactTotalKnown;
       }
 
       bool someStatUnknown = false;
-      if (_retal.statsStr == -1 || _retal.statsDef == -1 || _retal.statsDex == -1 || _retal.statsSpd == -1) {
+      if (_retal!.statsStr == -1 || _retal!.statsDef == -1 || _retal!.statsDex == -1 || _retal!.statsSpd == -1) {
         someStatUnknown = true;
       }
 
@@ -1063,8 +1063,8 @@ class _RetalCardState extends State<RetalCard> {
           ),
         ],
       );
-    } else if (_retal.statsEstimated.isNotEmpty) {
-      if (!_retal.statsComparisonSuccess) {
+    } else if (_retal!.statsEstimated.isNotEmpty) {
+      if (!_retal!.statsComparisonSuccess) {
         return Text(
           "unk stats",
           style: TextStyle(
@@ -1080,18 +1080,18 @@ class _RetalCardState extends State<RetalCard> {
       int refillComparison = 0;
       Color refillColor = Colors.orange;
       int enhancementComparison = 0;
-      Color enhancementColor = _themeProvider.mainText;
+      Color? enhancementColor = _themeProvider.mainText;
       int cansComparison = 0;
       Color cansColor = Colors.orange;
       Color sslColor = Colors.green;
       bool sslProb = true;
-      int ecstasy = 0;
-      int lsd = 0;
+      int? ecstasy = 0;
+      int? lsd = 0;
 
       List<Widget> additional = <Widget>[];
       // XANAX
-      int otherXanax = _retal.retalXanax;
-      int myXanax = _retal.myXanax;
+      int otherXanax = _retal!.retalXanax!;
+      int myXanax = _retal!.myXanax!;
       xanaxComparison = otherXanax - myXanax;
       if (xanaxComparison < -10) {
         xanaxColor = Colors.green;
@@ -1104,8 +1104,8 @@ class _RetalCardState extends State<RetalCard> {
       );
 
       // REFILLS
-      int otherRefill = _retal.retalRefill;
-      int myRefill = _retal.myRefill;
+      int otherRefill = _retal!.retalRefill!;
+      int myRefill = _retal!.myRefill!;
       refillComparison = otherRefill - myRefill;
       refillColor = Colors.orange;
       if (refillComparison < -10) {
@@ -1119,8 +1119,8 @@ class _RetalCardState extends State<RetalCard> {
       );
 
       // ENHANCER
-      int otherEnhancement = _retal.retalEnhancement;
-      int myEnhancement = _retal.myEnhancement;
+      int otherEnhancement = _retal!.retalEnhancement!;
+      int myEnhancement = _retal!.myEnhancement!;
       enhancementComparison = otherEnhancement - myEnhancement;
       if (enhancementComparison < 0) {
         enhancementColor = Colors.green;
@@ -1133,8 +1133,8 @@ class _RetalCardState extends State<RetalCard> {
       );
 
       // CANS
-      int otherCans = _retal.retalCans;
-      int myCans = _retal.myCans;
+      int otherCans = _retal!.retalCans!;
+      int myCans = _retal!.myCans!;
       cansComparison = otherCans - myCans;
       if (cansComparison < 0) {
         cansColor = Colors.green;
@@ -1153,12 +1153,12 @@ class _RetalCardState extends State<RetalCard> {
       /// if (esc + xan) < 150 & LSD > 100 SSL is red
       Widget sslWidget = SizedBox.shrink();
       sslColor = Colors.green;
-      ecstasy = _retal.retalEcstasy;
-      lsd = _retal.retalLsd;
-      if (otherXanax + ecstasy > 150) {
+      ecstasy = _retal!.retalEcstasy;
+      lsd = _retal!.retalLsd;
+      if (otherXanax + ecstasy! > 150) {
         sslProb = false;
       } else {
-        if (lsd > 50 && lsd < 50) {
+        if (lsd! > 50 && lsd < 50) {
           sslColor = Colors.orange;
         } else if (lsd > 100) {
           sslColor = Colors.red;
@@ -1194,7 +1194,7 @@ class _RetalCardState extends State<RetalCard> {
           ),
           SizedBox(width: 5),
           Text(
-            _retal.statsEstimated,
+            _retal!.statsEstimated,
             style: TextStyle(
               fontSize: 11,
             ),
@@ -1220,7 +1220,7 @@ class _RetalCardState extends State<RetalCard> {
                 cansColor,
                 sslColor,
                 sslProb,
-                _retal,
+                _retal!,
               );
             },
           ),
@@ -1272,7 +1272,7 @@ class _RetalCardState extends State<RetalCard> {
       }
 
       if (_lifeTicker != null) {
-        _lifeTicker.cancel();
+        _lifeTicker!.cancel();
         _lifeTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
@@ -1286,9 +1286,9 @@ class _RetalCardState extends State<RetalCard> {
   _releaseFromHospital() async {
     await Future.delayed(const Duration(seconds: 5));
     if (_lifeTicker != null) {
-      _lifeTicker.cancel();
+      _lifeTicker!.cancel();
     }
-    _retal.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    _retal!.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     if (mounted) {
       setState(() {});
     }
@@ -1301,12 +1301,12 @@ class _RetalCardState extends State<RetalCard> {
         List<RetalsCardDetails> myTargetList = _r.orderedCardsDetails;
 
         // Adjust the list (remove targets above the one selected)
-        myTargetList.removeRange(0, myTargetList.indexWhere((element) => element.retalId == _retal.retalId));
+        myTargetList.removeRange(0, myTargetList.indexWhere((element) => element.retalId == _retal!.retalId));
 
         List<String> attacksIds = <String>[];
-        List<String> attacksNames = <String>[];
-        List<String> attackNotes = <String>[];
-        List<String> attacksNotesColor = <String>[];
+        List<String?> attacksNames = <String?>[];
+        List<String?> attackNotes = <String?>[];
+        List<String?> attacksNotesColor = <String?>[];
         for (var tar in myTargetList) {
           attacksIds.add(tar.retalId.toString());
           attacksNames.add(tar.name);
@@ -1339,7 +1339,7 @@ class _RetalCardState extends State<RetalCard> {
 
         break;
       case BrowserSetting.external:
-        var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_retal.retalId}';
+        var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_retal!.retalId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
@@ -1350,16 +1350,16 @@ class _RetalCardState extends State<RetalCard> {
   Widget _lastOnlineWidget() {
     return Row(
       children: [
-        _retal.lastAction.status == "Offline"
+        _retal!.lastAction.status == "Offline"
             ? Icon(Icons.remove_circle, size: 12, color: Colors.grey)
-            : _retal.lastAction.status == "Idle"
+            : _retal!.lastAction.status == "Idle"
                 ? Icon(Icons.adjust, size: 12, color: Colors.orange)
                 : Icon(Icons.circle, size: 12, color: Colors.green),
-        if (_retal.lastAction.status == "Offline" || _retal.lastAction.status == "Idle")
+        if (_retal!.lastAction.status == "Offline" || _retal!.lastAction.status == "Idle")
           Padding(
             padding: const EdgeInsets.only(left: 2),
             child: Text(
-              _retal.lastAction.relative
+              _retal!.lastAction.relative!
                   .replaceAll("minute ago", "m")
                   .replaceAll("minutes ago", "m")
                   .replaceAll("hour ago", "h")
@@ -1368,7 +1368,7 @@ class _RetalCardState extends State<RetalCard> {
                   .replaceAll("days ago", "d"),
               style: TextStyle(
                 fontSize: 11,
-                color: _retal.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                color: _retal!.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
               ),
             ),
           )
@@ -1393,7 +1393,7 @@ class _RetalCardState extends State<RetalCard> {
     int refillCompare,
     Color refillColor,
     int enhancementCompare,
-    Color enhancementColor,
+    Color? enhancementColor,
     int cansCompare,
     Color cansColor,
     Color sslColor,
@@ -1572,7 +1572,7 @@ class _RetalCardState extends State<RetalCard> {
       ),
       toastBuilder: (cancelFunc) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: Text(retal.name),
+        title: Text(retal.name!),
         backgroundColor: _themeProvider.secondBackground,
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1586,11 +1586,11 @@ class _RetalCardState extends State<RetalCard> {
                   style: TextStyle(fontSize: 12),
                 ),
               ),
-            if (retal.lastAction.relative.isNotEmpty)
+            if (retal.lastAction.relative!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(2),
                 child: Text(
-                  "Online: ${retal.lastAction.relative.replaceAll("0 minutes ago", "now")}",
+                  "Online: ${retal.lastAction.relative!.replaceAll("0 minutes ago", "now")}",
                   style: TextStyle(fontSize: 12),
                 ),
               ),
@@ -1634,8 +1634,8 @@ class CurrentRetalExpiryWidget extends StatefulWidget {
   final int expiryTimeStamp;
 
   CurrentRetalExpiryWidget({
-    @required this.expiryTimeStamp,
-    Key key,
+    required this.expiryTimeStamp,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -1643,7 +1643,7 @@ class CurrentRetalExpiryWidget extends StatefulWidget {
 }
 
 class _CurrentRetalExpiryWidgetState extends State<CurrentRetalExpiryWidget> {
-  Timer _expiryTicker;
+  Timer? _expiryTicker;
   Widget _currentExpiryWidget = SizedBox.shrink();
 
   @override

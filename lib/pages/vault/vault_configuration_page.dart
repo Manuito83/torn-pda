@@ -17,15 +17,15 @@ import 'package:torn_pda/widgets/vault/vault_configuration_dialog.dart';
 
 class VaultConfigurationPage extends StatefulWidget {
   final Function callback;
-  final UserDetailsProvider userProvider;
+  final UserDetailsProvider? userProvider;
   final VaultStatusModel vaultStatus;
   final VaultTransactionModel lastTransaction;
 
   VaultConfigurationPage({
-    @required this.callback,
-    @required this.userProvider,
-    @required this.vaultStatus,
-    @required this.lastTransaction,
+    required this.callback,
+    required this.userProvider,
+    required this.vaultStatus,
+    required this.lastTransaction,
   });
 
   @override
@@ -35,8 +35,8 @@ class VaultConfigurationPage extends StatefulWidget {
 class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +119,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
     Widget options = SizedBox.shrink();
 
     var spouseName =
-        widget.userProvider.basic.married?.spouseId == 0 ? "Spouse" : widget.userProvider.basic.married.spouseName;
+        widget.userProvider!.basic!.married?.spouseId == 0 ? "Spouse" : widget.userProvider!.basic!.married!.spouseName;
 
     // If we have never initialise (or we deleted) the share
     if (widget.vaultStatus.player == null) {
@@ -128,7 +128,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
         children: [
           Text("Total: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
           SizedBox(height: 10),
-          Text("${widget.userProvider.basic.name}: ?"),
+          Text("${widget.userProvider!.basic!.name}: ?"),
           Text("$spouseName: ?"),
         ],
       );
@@ -140,19 +140,19 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
       );
     } else {
       var firstButtonText = "Change";
-      var time = DateTime.fromMillisecondsSinceEpoch(widget.vaultStatus.timestamp);
+      var time = DateTime.fromMillisecondsSinceEpoch(widget.vaultStatus.timestamp!);
       var formatter = TimeFormatter(
           inputTime: time,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone);
 
-      if (!widget.vaultStatus.error) {
+      if (!widget.vaultStatus.error!) {
         top = Text("Last transaction on ${formatter.formatMonthDay} @${formatter.formatHour}");
         share = Column(
           children: [
             Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
             SizedBox(height: 10),
-            Text("${widget.userProvider.basic.name}: "
+            Text("${widget.userProvider!.basic!.name}: "
                 "${_moneyFormat.format(widget.vaultStatus.player)}"),
             Text("$spouseName: "
                 "${_moneyFormat.format(widget.vaultStatus.spouse)}"),
@@ -177,7 +177,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
             ),
             SizedBox(height: 10),
             Text(
-              "${widget.userProvider.basic.name}: "
+              "${widget.userProvider!.basic!.name}: "
               "${_moneyFormat.format(widget.vaultStatus.player)}",
               style: TextStyle(
                 color: Colors.orange[800],
@@ -203,7 +203,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
               SizedBox(height: 20),
               Text("In the vault now: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
               SizedBox(height: 10),
-              Text("${widget.userProvider.basic.name}: ?"),
+              Text("${widget.userProvider!.basic!.name}: ?"),
               Text("$spouseName: ?"),
             ],
           ),
@@ -296,7 +296,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
                   widget.vaultStatus
                     ..player = null
                     ..spouse = null;
-                  if (widget.vaultStatus.error) {
+                  if (widget.vaultStatus.error!) {
                     widget.vaultStatus.total = widget.lastTransaction.balance;
                   }
                 });

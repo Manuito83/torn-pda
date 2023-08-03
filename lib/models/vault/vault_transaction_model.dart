@@ -17,11 +17,11 @@ class VaultTransactionModel {
     this.balance,
   });
 
-  int date;
-  bool playerTransaction;
-  int amount;
-  bool isDeposit;
-  int balance;
+  int? date;
+  bool? playerTransaction;
+  int? amount;
+  bool? isDeposit;
+  int? balance;
 
   factory VaultTransactionModel.fromJson(Map<String, dynamic> json) => VaultTransactionModel(
     date: json["date"] == null ? null : json["date"],

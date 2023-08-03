@@ -14,14 +14,14 @@ class PropertyModel {
     this.property,
   });
 
-  Property property;
+  Property? property;
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) => PropertyModel(
     property: json["property"] == null ? null : Property.fromJson(json["property"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "property": property == null ? null : property.toJson(),
+    "property": property == null ? null : property!.toJson(),
   };
 }
 
@@ -37,13 +37,13 @@ class Property {
     this.usersLiving,
   });
 
-  int ownerId;
-  int propertyType;
-  int happy;
-  int upkeep;
-  List<String> upgrades;
-  List<dynamic> staff;
-  Rented rented;
+  int? ownerId;
+  int? propertyType;
+  int? happy;
+  int? upkeep;
+  List<String>? upgrades;
+  List<dynamic>? staff;
+  Rented? rented;
   dynamic usersLiving;
 
   factory Property.fromJson(Map<String, dynamic> json) => Property(
@@ -62,9 +62,9 @@ class Property {
     "property_type": propertyType == null ? null : propertyType,
     "happy": happy == null ? null : happy,
     "upkeep": upkeep == null ? null : upkeep,
-    "upgrades": upgrades == null ? null : List<dynamic>.from(upgrades.map((x) => x)),
-    "staff": staff == null ? null : List<dynamic>.from(staff.map((x) => x)),
-    "rented": rented == null ? null : rented.toJson(),
+    "upgrades": upgrades == null ? null : List<dynamic>.from(upgrades!.map((x) => x)),
+    "staff": staff == null ? null : List<dynamic>.from(staff!.map((x) => x)),
+    "rented": rented == null ? null : rented!.toJson(),
     "users_living": usersLiving,
   };
 }
@@ -77,10 +77,10 @@ class Rented {
     this.costPerDay,
   });
 
-  int userId;
-  int daysLeft;
-  String totalCost;
-  String costPerDay;
+  int? userId;
+  int? daysLeft;
+  String? totalCost;
+  String? costPerDay;
 
   factory Rented.fromJson(Map<String, dynamic> json) => Rented(
     userId: json["user_id"] == null ? null : json["user_id"],

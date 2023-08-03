@@ -7,7 +7,7 @@ import 'package:torn_pda/utils/external/yata_comm.dart';
 
 class AwardsProvider extends ChangeNotifier {
   var pinnedAwards = <Award>[];
-  var pinnedNames = <String>[];
+  var pinnedNames = <String?>[];
 
   Future<bool> addPinned (Award newPin) async {
     var result = await YataComm.getPin(newPin.awardKey);

@@ -1,15 +1,8 @@
-enum AttackSortType {
-  levelDes,
-  levelAsc,
-  respectDes,
-  respectAsc,
-  dateDes,
-  dateAsc
-}
+enum AttackSortType { levelDes, levelAsc, respectDes, respectAsc, dateDes, dateAsc }
 
 class AttackSort {
-  AttackSortType type;
-  String description;
+  AttackSortType? type;
+  late String description;
 
   AttackSort({this.type}) {
     switch (type) {
@@ -31,6 +24,8 @@ class AttackSort {
       case AttackSortType.dateAsc:
         description = 'Date (asc)';
         break;
+      default:
+        description = 'Sort by respect (des)';
     }
   }
 }

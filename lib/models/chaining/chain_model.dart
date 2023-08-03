@@ -10,7 +10,7 @@ ChainModel chainModelFromJson(String str) => ChainModel.fromJson(json.decode(str
 String chainModelToJson(ChainModel data) => json.encode(data.toJson());
 
 class ChainModel {
-  ChainDetails chain;
+  ChainDetails? chain;
 
   ChainModel({
     this.chain,
@@ -21,17 +21,17 @@ class ChainModel {
   );
 
   Map<String, dynamic> toJson() => {
-    "chain": chain.toJson(),
+    "chain": chain!.toJson(),
   };
 }
 
 class ChainDetails {
-  int current;
-  int max;
-  int timeout;
-  double modifier;
-  int cooldown;
-  int start;
+  int? current;
+  int? max;
+  int? timeout;
+  double? modifier;
+  int? cooldown;
+  int? start;
 
   ChainDetails({
     this.current = 0,

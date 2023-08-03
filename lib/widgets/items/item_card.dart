@@ -16,18 +16,18 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ItemCard extends StatefulWidget {
   final Item item;
-  final SettingsProvider settingsProvider;
-  final ThemeProvider themeProvider;
+  final SettingsProvider? settingsProvider;
+  final ThemeProvider? themeProvider;
   final bool inventorySuccess;
   final bool pinned;
 
   ItemCard({
-    @required this.item,
-    @required this.settingsProvider,
-    @required this.themeProvider,
-    @required this.inventorySuccess,
-    @required this.pinned,
-    Key key,
+    required this.item,
+    required this.settingsProvider,
+    required this.themeProvider,
+    required this.inventorySuccess,
+    required this.pinned,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -37,10 +37,10 @@ class ItemCard extends StatefulWidget {
 class _ItemCardState extends State<ItemCard> {
   var _expandableController = ExpandableController();
 
-  Future _footerInformationRetrieved;
+  Future? _footerInformationRetrieved;
   bool _footerSuccessful = false;
 
-  MarketItemModel _marketItem;
+  late MarketItemModel _marketItem;
 
   final decimalFormat = new NumberFormat("#,##0", "en_US");
 
@@ -74,8 +74,8 @@ class _ItemCardState extends State<ItemCard> {
           ),
           child: ExpandablePanel(
             controller: _expandableController,
-            collapsed: null,
-            theme: ExpandableThemeData(iconColor: widget.themeProvider.mainText),
+            collapsed: Container(),
+            theme: ExpandableThemeData(iconColor: widget.themeProvider!.mainText),
             header: Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
               child: Column(
@@ -94,7 +94,7 @@ class _ItemCardState extends State<ItemCard> {
                                     'images/torn_items/small/${widget.item.id}_small.png',
                                     width: 35,
                                     height: 35,
-                                    errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+                                    errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
                                       return Padding(
                                         padding: const EdgeInsets.only(left: 10),
                                         child: Text("?"),
@@ -118,7 +118,7 @@ class _ItemCardState extends State<ItemCard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.item.name,
+                                    widget.item.name!,
                                     style: TextStyle(fontSize: 12),
                                   ),
                                   Text(
@@ -128,7 +128,7 @@ class _ItemCardState extends State<ItemCard> {
                                   Row(
                                     children: [
                                       Text(
-                                        "Circulation: ${formatBigNumbers(widget.item.circulation)}",
+                                        "Circulation: ${formatBigNumbers(widget.item.circulation!)}",
                                         style: TextStyle(fontSize: 10),
                                       ),
                                       _rarityIcon(),
@@ -155,8 +155,8 @@ class _ItemCardState extends State<ItemCard> {
                                         : widget.inventorySuccess
                                             ? widget.item.inventoryOwned > 0
                                                 ? Colors.green
-                                                : widget.themeProvider.mainText
-                                            : widget.themeProvider.mainText,
+                                                : widget.themeProvider!.mainText
+                                            : widget.themeProvider!.mainText,
                                     height: 14,
                                   ),
                                   SizedBox(height: 4),
@@ -237,7 +237,7 @@ class _ItemCardState extends State<ItemCard> {
     );
 
     Widget requirement = SizedBox.shrink();
-    if (widget.item.requirement.isNotEmpty) {
+    if (widget.item.requirement!.isNotEmpty) {
       requirement = Padding(
         padding: EdgeInsetsDirectional.only(top: 15),
         child: Text(
@@ -251,7 +251,7 @@ class _ItemCardState extends State<ItemCard> {
     }
 
     Widget effect = SizedBox.shrink();
-    if (widget.item.effect.isNotEmpty) {
+    if (widget.item.effect!.isNotEmpty) {
       effect = Padding(
         padding: EdgeInsetsDirectional.only(top: 15),
         child: Text(
@@ -284,27 +284,27 @@ class _ItemCardState extends State<ItemCard> {
         padding: EdgeInsetsDirectional.only(top: 15),
         child: Column(
           children: [
-            Text("Full body coverage: ${widget.item.coverage.fullBodyCoverage}",
+            Text("Full body coverage: ${widget.item.coverage!.fullBodyCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Head coverage: ${widget.item.coverage.headCoverage}",
+            Text("Head coverage: ${widget.item.coverage!.headCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Throat coverage: ${widget.item.coverage.throatCoverage}",
+            Text("Throat coverage: ${widget.item.coverage!.throatCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Foot coverage: ${widget.item.coverage.footCoverage}",
+            Text("Foot coverage: ${widget.item.coverage!.footCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Leg coverage: ${widget.item.coverage.legCoverage}",
+            Text("Leg coverage: ${widget.item.coverage!.legCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Hand coverage: ${widget.item.coverage.handCoverage}",
+            Text("Hand coverage: ${widget.item.coverage!.handCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Arm coverage: ${widget.item.coverage.armCoverage}",
+            Text("Arm coverage: ${widget.item.coverage!.armCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Heart coverage: ${widget.item.coverage.heartCoverage}",
+            Text("Heart coverage: ${widget.item.coverage!.heartCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Stomach coverage: ${widget.item.coverage.stomachCoverage}",
+            Text("Stomach coverage: ${widget.item.coverage!.stomachCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Chest coverage: ${widget.item.coverage.chestCoverage}",
+            Text("Chest coverage: ${widget.item.coverage!.chestCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
-            Text("Groin coverage: ${widget.item.coverage.groinCoverage}",
+            Text("Groin coverage: ${widget.item.coverage!.groinCoverage}",
                 style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
           ],
         ),
@@ -329,7 +329,7 @@ class _ItemCardState extends State<ItemCard> {
       if (_marketItem.bazaar != null) {
         List<Widget> bazaarList = <Widget>[];
         var bIndex = 0;
-        for (var b in _marketItem.bazaar) {
+        for (var b in _marketItem.bazaar!) {
           if (bIndex >= 3) break;
           bIndex++;
           bazaarList.add(
@@ -361,7 +361,7 @@ class _ItemCardState extends State<ItemCard> {
       if (_marketItem.itemmarket != null) {
         List<Widget> marketList = <Widget>[];
         var mIndex = 0;
-        for (var m in _marketItem.itemmarket) {
+        for (var m in _marketItem.itemmarket!) {
           if (mIndex >= 3) break;
           mIndex++;
           marketList.add(
@@ -442,22 +442,22 @@ class _ItemCardState extends State<ItemCard> {
     } else if (widget.item.circulation == 1) {
       file = "one_of_a_kind";
       message = "One of a kind";
-    } else if (widget.item.circulation > 1 && widget.item.circulation < 100) {
+    } else if (widget.item.circulation! > 1 && widget.item.circulation! < 100) {
       file = "extremely_rare";
       message = "Extremely rare";
-    } else if (widget.item.circulation >= 100 && widget.item.circulation < 500) {
+    } else if (widget.item.circulation! >= 100 && widget.item.circulation! < 500) {
       file = "very_rare";
       message = "Very rare";
-    } else if (widget.item.circulation >= 500 && widget.item.circulation < 1000) {
+    } else if (widget.item.circulation! >= 500 && widget.item.circulation! < 1000) {
       file = "rare";
       message = "Rare";
-    } else if (widget.item.circulation >= 1000 && widget.item.circulation < 2500) {
+    } else if (widget.item.circulation! >= 1000 && widget.item.circulation! < 2500) {
       file = "limited";
       message = "Limited";
-    } else if (widget.item.circulation >= 2500 && widget.item.circulation < 5000) {
+    } else if (widget.item.circulation! >= 2500 && widget.item.circulation! < 5000) {
       file = "uncommon";
       message = "Uncommon";
-    } else if (widget.item.circulation >= 5000 && widget.item.circulation < 500000) {
+    } else if (widget.item.circulation! >= 5000 && widget.item.circulation! < 500000) {
       file = "common";
       message = "Common";
     } else {

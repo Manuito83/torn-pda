@@ -6,8 +6,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class SharePriceOptions extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final SettingsProvider settingsProvider;
+  final ThemeProvider? themeProvider;
+  final SettingsProvider? settingsProvider;
   final Function stockMarketInMenuCallback;
 
   SharePriceOptions(this.themeProvider, this.settingsProvider, this.stockMarketInMenuCallback);
@@ -38,7 +38,7 @@ class _SharePriceOptionsState extends State<SharePriceOptions> {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: widget.themeProvider.secondBackground,
+                  color: widget.themeProvider!.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -70,7 +70,7 @@ class _SharePriceOptionsState extends State<SharePriceOptions> {
                             ),
                           ),
                           Switch(
-                            value: widget.settingsProvider.stockExchangeInMenu,
+                            value: widget.settingsProvider!.stockExchangeInMenu,
                             onChanged: (enabled) {
                               setState(() {
                                 widget.stockMarketInMenuCallback(enabled);
@@ -101,9 +101,9 @@ class _SharePriceOptionsState extends State<SharePriceOptions> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.secondBackground,
+                backgroundColor: widget.themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: widget.themeProvider.secondBackground,
+                  backgroundColor: widget.themeProvider!.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 34,

@@ -18,10 +18,10 @@ class TacInModel {
     this.targets,
   });
 
-  bool incorrectPremium;
+  bool? incorrectPremium;
 
-  int premium;
-  Map<String, Target> targets;
+  int? premium;
+  Map<String, Target>? targets;
 
 
   factory TacInModel.fromJson(Map<String, dynamic> json) => TacInModel(
@@ -33,7 +33,7 @@ class TacInModel {
   Map<String, dynamic> toJson() => {
     "incorrectPremium": incorrectPremium == null ? null : incorrectPremium,
     "premium": premium == null ? null : premium,
-    "targets": targets == null ? null : Map.from(targets).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+    "targets": targets == null ? null : Map.from(targets!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
   };
 }
 
@@ -51,15 +51,15 @@ class Target {
     this.respect,
   });
 
-  bool optimal;
+  bool? optimal;
 
-  String username;
-  int userlevel;
-  int estimatedstats;
-  String battlestats;
-  String rank;
-  double fairfight;
-  double respect;
+  String? username;
+  int? userlevel;
+  int? estimatedstats;
+  String? battlestats;
+  String? rank;
+  double? fairfight;
+  double? respect;
 
   factory Target.fromJson(Map<String, dynamic> json) => Target(
     optimal: json["optimal"] == null ? null : json["optimal"],

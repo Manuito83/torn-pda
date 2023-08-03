@@ -1,11 +1,11 @@
 class TravelModel {
   bool abroad;
-  String destination;
-  int timeLeft;
-  int timeStamp;
-  DateTime timeArrival;
-  int departed;
-  int moneyOnhand;
+  String? destination;
+  int? timeLeft;
+  int? timeStamp;
+  DateTime? timeArrival;
+  int? departed;
+  int? moneyOnhand;
 
   TravelModel({
     this.abroad = false,

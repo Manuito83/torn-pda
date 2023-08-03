@@ -3,7 +3,7 @@ import 'dart:async';
 class MultiTapDetector {
   int lastTap = DateTime.now().millisecondsSinceEpoch;
   int consecutiveTaps = 0;
-  Timer tapTimer;
+  Timer? tapTimer;
   int maxTaps;
 
   MultiTapDetector({this.maxTaps = 3});

@@ -16,18 +16,18 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class TargetDetailsPage extends StatefulWidget {
-  final TargetModel target;
+  final TargetModel? target;
 
-  TargetDetailsPage({@required this.target});
+  TargetDetailsPage({required this.target});
 
   @override
   _TargetDetailsPageState createState() => _TargetDetailsPageState();
 }
 
 class _TargetDetailsPageState extends State<TargetDetailsPage> {
-  UserDetailsProvider _userDetails;
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late UserDetailsProvider _userDetails;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -76,7 +76,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            '${widget.target.name} [${widget.target.playerId}]',
+                            '${widget.target!.name} [${widget.target!.playerId}]',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -91,9 +91,9 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                                 icon: Icon(Icons.content_copy),
                                 iconSize: 20,
                                 onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: widget.target.playerId.toString()));
+                                  Clipboard.setData(ClipboardData(text: widget.target!.playerId.toString()));
                                   BotToast.showText(
-                                    text: "Your target's ID [${widget.target.playerId}] has been "
+                                    text: "Your target's ID [${widget.target!.playerId}] has been "
                                         "copied to the clipboard!",
                                     textStyle: TextStyle(
                                       fontSize: 14,
@@ -109,11 +109,11 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                           ),
                         ],
                       ),
-                      Text('${widget.target.rank}'),
+                      Text('${widget.target!.rank}'),
                       SizedBox(height: 20),
-                      Text('Level: ${widget.target.level}'),
-                      Text('Gender: ${widget.target.gender}'),
-                      Text('Age: ${widget.target.age} days'),
+                      Text('Level: ${widget.target!.level}'),
+                      Text('Gender: ${widget.target!.gender}'),
+                      Text('Age: ${widget.target!.age} days'),
                       SizedBox(height: 20),
                       _returnLife(),
                       SizedBox(height: 5),
@@ -121,12 +121,12 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                       SizedBox(height: 5),
                       _returnStatus(),
                       SizedBox(height: 20),
-                      Text('Awards: ${widget.target.awards} '
-                          '(you have ${_userDetails.basic.awards})'),
+                      Text('Awards: ${widget.target!.awards} '
+                          '(you have ${_userDetails.basic!.awards})'),
                       SizedBox(height: 20),
-                      Text('Donator: ${widget.target.donator == 0 ? 'NO' : 'YES'}'),
-                      Text('Friends/Enemies: ${widget.target.friends}'
-                          '/${widget.target.enemies}'),
+                      Text('Donator: ${widget.target!.donator == 0 ? 'NO' : 'YES'}'),
+                      Text('Friends/Enemies: ${widget.target!.friends}'
+                          '/${widget.target!.enemies}'),
                       SizedBox(height: 20),
                       _returnFaction(),
                       _returnJob(),
@@ -166,21 +166,21 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
           child: Text('Life'),
         ),
         LinearPercentIndicator(
-          padding: null,
+          padding: EdgeInsets.all(0),
           barRadius: Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,
           backgroundColor: Colors.grey,
           center: Text(
-            '${widget.target.life.current}',
+            '${widget.target!.life!.current}',
             style: TextStyle(color: Colors.black),
           ),
-          percent: widget.target.life.current / widget.target.life.maximum > 1.0
+          percent: widget.target!.life!.current! / widget.target!.life!.maximum! > 1.0
               ? 1.0
-              : widget.target.life.current / widget.target.life.maximum,
+              : widget.target!.life!.current! / widget.target!.life!.maximum!,
         ),
-        widget.target.status.state == "Hospital"
+        widget.target!.status!.state == "Hospital"
             ? Icon(
                 Icons.local_hospital,
                 size: 20,
@@ -199,7 +199,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
           'Last action: ',
         ),
         Text(
-          widget.target.lastAction.relative == "0 minutes ago" ? 'now' : widget.target.lastAction.relative,
+          widget.target!.lastAction!.relative == "0 minutes ago" ? 'now' : widget.target!.lastAction!.relative!,
         ),
         Padding(
           padding: const EdgeInsets.only(left: 8.0),
@@ -207,7 +207,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: _returnLastActionColor(widget.target.lastAction.status),
+              color: _returnLastActionColor(widget.target!.lastAction!.status),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.black),
             ),
@@ -217,26 +217,24 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
     );
   }
 
-  Color _returnLastActionColor(String status) {
+  Color _returnLastActionColor(String? status) {
     switch (status) {
       case 'Online':
         return Colors.green;
-        break;
       case 'Idle':
         return Colors.orange;
-        break;
       default:
         return Colors.grey;
     }
   }
 
   Widget _returnStatus() {
-    Color stateColor;
-    if (widget.target.status.color == 'red') {
+    Color? stateColor;
+    if (widget.target!.status!.color == 'red') {
       stateColor = Colors.red;
-    } else if (widget.target.status.color == 'green') {
+    } else if (widget.target!.status!.color == 'green') {
       stateColor = Colors.green;
-    } else if (widget.target.status.color == 'blue') {
+    } else if (widget.target!.status!.color == 'blue') {
       stateColor = Colors.blue;
     }
 
@@ -252,21 +250,21 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text('Status: ${widget.target.status.state}'),
+        Text('Status: ${widget.target!.status!.state}'),
         stateBall,
       ],
     );
   }
 
   Widget _returnFaction() {
-    if (widget.target.faction.factionId != 0) {
+    if (widget.target!.faction!.factionId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Faction: ${HtmlParser.fix(widget.target.faction.factionName)}'),
-            Text('Position: ${widget.target.faction.position}'),
-            Text('Joined: ${widget.target.faction.daysInFaction} days ago'),
+            Text('Faction: ${HtmlParser.fix(widget.target!.faction!.factionName)}'),
+            Text('Position: ${widget.target!.faction!.position}'),
+            Text('Joined: ${widget.target!.faction!.daysInFaction} days ago'),
           ],
         ),
       );
@@ -276,13 +274,13 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
   }
 
   Widget _returnJob() {
-    if (widget.target.job.companyId != 0) {
+    if (widget.target!.job!.companyId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Company: ${HtmlParser.fix(widget.target.job.companyName)}'),
-            Text('Position: ${widget.target.job.job}'),
+            Text('Company: ${HtmlParser.fix(widget.target!.job!.companyName)}'),
+            Text('Position: ${widget.target!.job!.job}'),
           ],
         ),
       );
@@ -294,11 +292,11 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
   Widget _returnDiscord() {
     // Discord was introduced in v1.7.1 for targets, reason why we
     // perform a null check
-    if (widget.target.discord == null) {
+    if (widget.target!.discord == null) {
       return SizedBox.shrink();
     }
 
-    if (widget.target.discord.discordId == "") {
+    if (widget.target!.discord!.discordId == "") {
       return SizedBox.shrink();
     }
 
@@ -317,9 +315,9 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                 icon: Icon(Icons.content_copy),
                 iconSize: 20,
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: widget.target.discord.discordId));
+                  Clipboard.setData(ClipboardData(text: widget.target!.discord!.discordId));
                   BotToast.showText(
-                    text: "Your target's Discord ID (${widget.target.discord.discordId}) has been "
+                    text: "Your target's Discord ID (${widget.target!.discord!.discordId}) has been "
                         "copied to the clipboard!",
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -339,7 +337,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
   }
 
   Widget _returnCompetition() {
-    if (widget.target.competition == null) {
+    if (widget.target!.competition == null) {
       return SizedBox.shrink();
     }
 
@@ -354,45 +352,45 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          if (widget.target.competition.name != null)
+          if (widget.target!.competition!.name != null)
             Text(
-              '"${widget.target.competition.name}"',
+              '"${widget.target!.competition!.name}"',
             ),
-          if (widget.target.competition.attacks != null)
+          if (widget.target!.competition!.attacks != null)
             Text(
-              'Attacks: ${widget.target.competition.attacks}',
+              'Attacks: ${widget.target!.competition!.attacks}',
             ),
-          if (widget.target.competition.image != null)
+          if (widget.target!.competition!.image != null)
             Text(
-              'Image: ${widget.target.competition.image}',
+              'Image: ${widget.target!.competition!.image}',
             ),
-          if (widget.target.competition.score != null)
+          if (widget.target!.competition!.score != null)
             Text(
-              'Score: ${widget.target.competition.score.ceil()}',
+              'Score: ${widget.target!.competition!.score!.ceil()}',
             ),
-          if (widget.target.competition.team != null)
+          if (widget.target!.competition!.team != null)
             Text(
-              'Team: ${widget.target.competition.team}',
+              'Team: ${widget.target!.competition!.team}',
             ),
-          if (widget.target.competition.text != null)
+          if (widget.target!.competition!.text != null)
             Text(
-              'Text: ${widget.target.competition.text}',
+              'Text: ${widget.target!.competition!.text}',
             ),
-          if (widget.target.competition.total != null)
+          if (widget.target!.competition!.total != null)
             Text(
-              'Total (accumulated): ${widget.target.competition.total}',
+              'Total (accumulated): ${widget.target!.competition!.total}',
             ),
-          if (widget.target.competition.treatsCollectedTotal != null)
+          if (widget.target!.competition!.treatsCollectedTotal != null)
             Text(
-              'Treats collected: ${widget.target.competition.treatsCollectedTotal}',
+              'Treats collected: ${widget.target!.competition!.treatsCollectedTotal}',
             ),
-          if (widget.target.competition.votes != null)
+          if (widget.target!.competition!.votes != null)
             Text(
-              'Votes: ${widget.target.competition.votes}',
+              'Votes: ${widget.target!.competition!.votes}',
             ),
-          if (widget.target.competition.position != null)
+          if (widget.target!.competition!.position != null)
             Text(
-              'Position: ${widget.target.competition.position}',
+              'Position: ${widget.target!.competition!.position}',
             ),
         ],
       ),

@@ -10,7 +10,7 @@ ItemsModel itemsModelFromJson(String str) => ItemsModel.fromJson(json.decode(str
 String itemsModelToJson(ItemsModel data) => json.encode(data.toJson());
 
 class ItemsModel {
-  Map<String, Item> items;
+  Map<String, Item>? items;
 
   ItemsModel({
     this.items,
@@ -23,27 +23,27 @@ class ItemsModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "items": items == null ? null : Map.from(items).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "items": items == null ? null : Map.from(items!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
 class Item {
-  String id; // Manually entered, as it doesn't follow the same order in the map
-  int inventoryOwned;
+  String? id; // Manually entered, as it doesn't follow the same order in the map
+  int inventoryOwned = 0;
   int totalValue;
   //
-  String name;
-  String description;
-  String effect;
-  String requirement;
-  ItemType type;
-  String weaponType;
-  int buyPrice;
-  int sellPrice;
-  int marketValue;
-  int circulation;
-  String image;
-  Coverage coverage;
+  String? name;
+  String? description;
+  String? effect;
+  String? requirement;
+  ItemType? type;
+  String? weaponType;
+  int? buyPrice;
+  int? sellPrice;
+  int? marketValue;
+  int? circulation;
+  String? image;
+  Coverage? coverage;
 
   Item({
     this.id,
@@ -83,14 +83,14 @@ class Item {
         "description": description == null ? null : description,
         "effect": effect == null ? null : effect,
         "requirement": requirement == null ? null : requirement,
-        "type": type == null ? null : typeValues.reverse[type],
+        "type": type == null ? null : typeValues.reverse![type],
         "weapon_type": weaponType == null ? null : weaponType,
         "buy_price": buyPrice == null ? null : buyPrice,
         "sell_price": sellPrice == null ? null : sellPrice,
         "market_value": marketValue == null ? null : marketValue,
         "circulation": circulation == null ? null : circulation,
         "image": image == null ? null : image,
-        "coverage": coverage == null ? null : coverage.toJson(),
+        "coverage": coverage == null ? null : coverage!.toJson(),
       };
 }
 
@@ -167,17 +167,17 @@ class Coverage {
     this.throatCoverage,
   });
 
-  double fullBodyCoverage;
-  double heartCoverage;
-  double stomachCoverage;
-  double chestCoverage;
-  double armCoverage;
-  double legCoverage;
-  double groinCoverage;
-  double handCoverage;
-  double footCoverage;
-  double headCoverage;
-  double throatCoverage;
+  double? fullBodyCoverage;
+  double? heartCoverage;
+  double? stomachCoverage;
+  double? chestCoverage;
+  double? armCoverage;
+  double? legCoverage;
+  double? groinCoverage;
+  double? handCoverage;
+  double? footCoverage;
+  double? headCoverage;
+  double? throatCoverage;
 
   factory Coverage.fromJson(Map<String, dynamic> json) => Coverage(
         fullBodyCoverage: json["Full Body Coverage"] == null ? 0 : json["Full Body Coverage"].toDouble(),
@@ -210,11 +210,11 @@ class Coverage {
 
 class EnumValues<T> {
   Map<String, T> map;
-  Map<T, String> reverseMap;
+  Map<T, String>? reverseMap;
 
   EnumValues(this.map);
 
-  Map<T, String> get reverse {
+  Map<T, String>? get reverse {
     if (reverseMap == null) {
       reverseMap = map.map((k, v) => new MapEntry(v, k));
     }

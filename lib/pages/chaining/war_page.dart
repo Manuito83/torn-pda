@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:developer';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -36,8 +35,8 @@ import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class WarOptions {
-  String description;
-  IconData iconData;
+  String? description;
+  IconData? iconData;
 
   WarOptions({this.description}) {
     switch (description) {
@@ -61,7 +60,7 @@ class WarPage extends StatefulWidget {
   //final Function tabCallback;
 
   const WarPage({
-    Key key,
+    Key? key,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -80,10 +79,10 @@ class _WarPageState extends State<WarPage> {
 
   final _chainWidgetKey = GlobalKey();
 
-  WarController _w;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  WebViewProvider _webViewProvider;
+  WarController _w = Get.put(WarController());
+  ThemeProvider? _themeProvider;
+  SettingsProvider? _settingsProvider;
+  WebViewProvider? _webViewProvider;
 
   bool _quickUpdateActive = false;
 
@@ -119,6 +118,8 @@ class _WarPageState extends State<WarPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _webViewProvider = context.read<WebViewProvider>();
 
+    _performQuickUpdate(firstTime: true);
+
     routeWithDrawer = true;
     routeName = "chaining_war";
   }
@@ -134,11 +135,6 @@ class _WarPageState extends State<WarPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_w == null) {
-      _w = Get.put(WarController());
-      _performQuickUpdate(firstTime: true);
-    }
-
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return ShowCaseWidget(
       builder: Builder(builder: (_) {
@@ -150,17 +146,17 @@ class _WarPageState extends State<WarPage> {
           });
         }
         return Scaffold(
-          backgroundColor: _themeProvider.canvas,
+          backgroundColor: _themeProvider!.canvas,
           drawer: const Drawer(),
-          appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
+          appBar: _settingsProvider!.appBarTop ? buildAppBar(_) : null,
+          bottomNavigationBar: !_settingsProvider!.appBarTop
               ? SizedBox(
                   height: AppBar().preferredSize.height,
                   child: buildAppBar(_),
                 )
               : null,
           body: Container(
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
@@ -177,76 +173,79 @@ class _WarPageState extends State<WarPage> {
   }
 
   Widget _mainColumn() {
-    return GetBuilder<WarController>(builder: (w) {
-      int hiddenMembers = w.getHiddenMembersNumber();
-      return Column(
-        children: <Widget>[
-          if (w.factions.where((f) => f.hidden).length > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                "${w.factions.where((f) => f.hidden).length} "
-                "${w.factions.where((f) => f.hidden).length == 1 ? 'faction is' : 'factions are'} filtered out",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.orange[700],
+    return GetBuilder<WarController>(
+      init: _w,
+      builder: (w) {
+        int hiddenMembers = w.getHiddenMembersNumber();
+        return Column(
+          children: <Widget>[
+            if (w.factions.where((f) => f.hidden!).length > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  "${w.factions.where((f) => f.hidden!).length} "
+                  "${w.factions.where((f) => f.hidden!).length == 1 ? 'faction is' : 'factions are'} filtered out",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange[700],
+                  ),
                 ),
               ),
-            ),
-          if (hiddenMembers > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                "${hiddenMembers} ${hiddenMembers == 1 ? 'target is' : 'targets are'} hidden",
-                style: TextStyle(
-                  fontSize: 12,
+            if (hiddenMembers > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  "${hiddenMembers} ${hiddenMembers == 1 ? 'target is' : 'targets are'} hidden",
+                  style: TextStyle(
+                    fontSize: 12,
+                  ),
                 ),
               ),
+            const SizedBox(height: 5),
+            if (w.showChainWidget)
+              ChainWidget(
+                key: _chainWidgetKey,
+                alwaysDarkBackground: false,
+                callBackOptions: _callBackChainOptions,
+              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _onlineFilter(),
+                SizedBox(width: 10),
+                _okayFilter(w),
+                SizedBox(width: 10),
+                _countryFilter(w),
+                SizedBox(width: 5),
+                _travelingFilter(w),
+                SizedBox(width: 10),
+                _chainWidgetToggler(w),
+              ],
             ),
-          const SizedBox(height: 5),
-          if (w.showChainWidget)
-            ChainWidget(
-              key: _chainWidgetKey,
-              alwaysDarkBackground: false,
-              callBackOptions: _callBackChainOptions,
-            ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _onlineFilter(),
-              SizedBox(width: 10),
-              _okayFilter(w),
-              SizedBox(width: 10),
-              _countryFilter(w),
-              SizedBox(width: 5),
-              _travelingFilter(w),
-              SizedBox(width: 10),
-              _chainWidgetToggler(w),
-            ],
-          ),
-          SizedBox(height: 5),
-          if (context.orientation == Orientation.portrait)
-            Flexible(
-              child: WarTargetsList(
+            SizedBox(height: 5),
+            if (context.orientation == Orientation.portrait)
+              Flexible(
+                child: WarTargetsList(
+                  warController: w,
+                  offlineSelector: w.onlineFilter,
+                  okayFilterActive: w.okayFilter,
+                  countryFilterActive: w.countryFilter,
+                  travelingFilterActive: w.travelingFilter,
+                ),
+              )
+            else
+              WarTargetsList(
                 warController: w,
                 offlineSelector: w.onlineFilter,
                 okayFilterActive: w.okayFilter,
                 countryFilterActive: w.countryFilter,
                 travelingFilterActive: w.travelingFilter,
               ),
-            )
-          else
-            WarTargetsList(
-              warController: w,
-              offlineSelector: w.onlineFilter,
-              okayFilterActive: w.okayFilter,
-              countryFilterActive: w.countryFilter,
-              travelingFilterActive: w.travelingFilter,
-            ),
-          if (_settingsProvider.appBarTop) SizedBox(height: 50),
-        ],
-      );
-    });
+            if (_settingsProvider!.appBarTop) SizedBox(height: 50),
+          ],
+        );
+      },
+    );
   }
 
   Widget _onlineFilter() {
@@ -257,24 +256,24 @@ class _WarPageState extends State<WarPage> {
         borderWidth: 1,
         cornerRadius: 5,
         doubleTapDisable: true,
-        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
         initialLabelIndex: _w.onlineFilter == 0
             ? null
             : _w.onlineFilter == 1
                 ? 0
                 : 1,
-        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? [Colors.blueGrey]
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? [Colors.blueGrey]
-                : [Colors.blueGrey[900]],
-        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                : [Colors.blueGrey[900]!],
+        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? Colors.white
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? Colors.grey[800]
                 : Colors.black,
-        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
         totalSwitches: 2,
         animate: true,
         animationDuration: 500,
@@ -316,7 +315,7 @@ class _WarPageState extends State<WarPage> {
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[700],
+            contentColor: Colors.grey[700]!,
             duration: const Duration(seconds: 3),
             contentPadding: const EdgeInsets.all(10),
           );
@@ -333,20 +332,20 @@ class _WarPageState extends State<WarPage> {
         borderWidth: 1,
         cornerRadius: 5,
         doubleTapDisable: true,
-        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
         initialLabelIndex: !w.okayFilter ? null : 0,
-        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? [Colors.blueGrey]
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? [Colors.blueGrey]
-                : [Colors.blueGrey[900]],
-        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                : [Colors.blueGrey[900]!],
+        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? Colors.white
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? Colors.grey[800]
                 : Colors.black,
-        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
         totalSwitches: 1,
         animate: true,
         animationDuration: 500,
@@ -380,7 +379,7 @@ class _WarPageState extends State<WarPage> {
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[700],
+            contentColor: Colors.grey[700]!,
             duration: const Duration(seconds: 3),
             contentPadding: const EdgeInsets.all(10),
           );
@@ -397,20 +396,20 @@ class _WarPageState extends State<WarPage> {
         borderWidth: 1,
         cornerRadius: 5,
         doubleTapDisable: true,
-        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
         initialLabelIndex: !w.countryFilter ? null : 0,
-        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? [Colors.blueGrey]
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? [Colors.blueGrey]
-                : [Colors.blueGrey[900]],
-        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                : [Colors.blueGrey[900]!],
+        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? Colors.white
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? Colors.grey[800]
                 : Colors.black,
-        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
         totalSwitches: 1,
         animate: true,
         animationDuration: 500,
@@ -444,7 +443,7 @@ class _WarPageState extends State<WarPage> {
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[700],
+            contentColor: Colors.grey[700]!,
             duration: const Duration(seconds: 3),
             contentPadding: const EdgeInsets.all(10),
           );
@@ -461,20 +460,20 @@ class _WarPageState extends State<WarPage> {
         borderWidth: 1,
         cornerRadius: 5,
         doubleTapDisable: true,
-        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
         initialLabelIndex: !w.travelingFilter ? null : 0,
-        activeBgColor: _themeProvider.currentTheme == AppTheme.light
-            ? [Colors.red[200]]
-            : _themeProvider.currentTheme == AppTheme.dark
-                ? [Colors.red[500]]
-                : [Colors.red[900]],
-        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
+            ? [Colors.red[200]!]
+            : _themeProvider!.currentTheme == AppTheme.dark
+                ? [Colors.red[500]!]
+                : [Colors.red[900]!],
+        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? Colors.white
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? Colors.grey[800]
                 : Colors.black,
-        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
         totalSwitches: 1,
         animate: true,
         animationDuration: 500,
@@ -508,7 +507,7 @@ class _WarPageState extends State<WarPage> {
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[700],
+            contentColor: Colors.grey[700]!,
             duration: const Duration(seconds: 3),
             contentPadding: const EdgeInsets.all(10),
           );
@@ -525,20 +524,20 @@ class _WarPageState extends State<WarPage> {
         borderWidth: 1,
         cornerRadius: 5,
         doubleTapDisable: true,
-        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
         initialLabelIndex: !w.showChainWidget ? null : 0,
-        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? [Colors.blueGrey]
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? [Colors.blueGrey]
-                : [Colors.blueGrey[900]],
-        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                : [Colors.blueGrey[900]!],
+        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? Colors.white
-            : _themeProvider.currentTheme == AppTheme.dark
+            : _themeProvider!.currentTheme == AppTheme.dark
                 ? Colors.grey[800]
                 : Colors.black,
-        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
         totalSwitches: 1,
         animate: true,
         animationDuration: 500,
@@ -558,7 +557,7 @@ class _WarPageState extends State<WarPage> {
   AppBar buildAppBar(BuildContext _) {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War"),
       leadingWidth: 80,
@@ -567,8 +566,10 @@ class _WarPageState extends State<WarPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -584,8 +585,8 @@ class _WarPageState extends State<WarPage> {
               "\n\nIf you don't know the faction's ID, you can optionally insert one of it's members' "
               "ID (look for the 'person' icon)."
               "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",
-          textColor: _themeProvider.mainText,
-          tooltipBackgroundColor: _themeProvider.secondBackground,
+          textColor: _themeProvider!.mainText!,
+          tooltipBackgroundColor: _themeProvider!.secondBackground!,
           descTextStyle: TextStyle(fontSize: 13),
           tooltipPadding: EdgeInsets.all(20),
           child: IconButton(
@@ -608,8 +609,8 @@ class _WarPageState extends State<WarPage> {
               "a quick update with minimal target information (some stats and life information won't be available).\n\n"
               "A long-press will start a slower but full update of all targets.\n\n"
               "Alternatively, you can update targets individually.",
-          textColor: _themeProvider.mainText,
-          tooltipBackgroundColor: _themeProvider.secondBackground,
+          textColor: _themeProvider!.mainText!,
+          tooltipBackgroundColor: _themeProvider!.secondBackground!,
           descTextStyle: TextStyle(fontSize: 13),
           tooltipPadding: EdgeInsets.all(20),
           child: Padding(
@@ -638,7 +639,7 @@ class _WarPageState extends State<WarPage> {
                     // Full update
                     onLongPress: () async {
                       String message = "";
-                      Color messageColor = Colors.green;
+                      Color? messageColor = Colors.green;
                       // Count all members
                       int allMembers = _w.orderedCardsDetails.length;
                       int updatedMembers = 0;
@@ -683,7 +684,7 @@ class _WarPageState extends State<WarPage> {
                             fontSize: 14,
                             color: Colors.white,
                           ),
-                          contentColor: messageColor,
+                          contentColor: messageColor!,
                           duration: const Duration(seconds: 3),
                           contentPadding: const EdgeInsets.all(10),
                         );
@@ -733,11 +734,11 @@ class _WarPageState extends State<WarPage> {
           itemBuilder: (BuildContext context) {
             return _popupOptionsChoices.map((WarOptions choice) {
               // Don't return hidden members option if there is none
-              if (choice.description.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
+              if (choice.description!.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
                 return null;
               }
               // Nuke revive
-              if (choice.description.contains("Nuke")) {
+              if (choice.description!.contains("Nuke")) {
                 if (!_w.nukeReviveActive) {
                   return null;
                 }
@@ -751,7 +752,7 @@ class _WarPageState extends State<WarPage> {
                 );
               }
               // UHC revive
-              if (choice.description.contains("UHC")) {
+              if (choice.description!.contains("UHC")) {
                 if (!_w.uhcReviveActive) {
                   return null;
                 }
@@ -769,13 +770,13 @@ class _WarPageState extends State<WarPage> {
                 value: choice,
                 child: Row(
                   children: [
-                    Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
+                    Icon(choice.iconData, size: 20, color: _themeProvider!.mainText),
                     const SizedBox(width: 10),
-                    Text(choice.description),
+                    Text(choice.description!),
                   ],
                 ),
               );
-            }).toList();
+            }).toList() as List<PopupMenuEntry<WarOptions>>;
           },
         ),
         IconButton(
@@ -807,7 +808,7 @@ class _WarPageState extends State<WarPage> {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.grey[700],
+          contentColor: Colors.grey[700]!,
           duration: const Duration(seconds: 3),
           contentPadding: const EdgeInsets.all(10),
         );
@@ -816,7 +817,7 @@ class _WarPageState extends State<WarPage> {
       int updatedMembers = await _w.updateAllMembersEasy();
 
       String message = "";
-      Color messageColor = Colors.green;
+      Color? messageColor = Colors.green;
       // Count all members
       int allMembers = _w.orderedCardsDetails.length;
 
@@ -843,7 +844,7 @@ class _WarPageState extends State<WarPage> {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: messageColor,
+          contentColor: messageColor!,
           duration: const Duration(seconds: 5),
           contentPadding: const EdgeInsets.all(10),
         );
@@ -942,6 +943,9 @@ class _WarPageState extends State<WarPage> {
       case WarSortType.notesAsc:
         _w.sortTargets(WarSortType.notesAsc);
         break;
+      default:
+        _w.sortTargets(WarSortType.nameAsc);
+        break;
     }
   }
 
@@ -954,14 +958,14 @@ class _WarPageState extends State<WarPage> {
 
 class AddFactionDialog extends StatelessWidget {
   const AddFactionDialog({
-    Key key,
-    @required this.themeProvider,
-    @required this.addFormKey,
-    @required this.addIdController,
-    @required this.warController,
+    Key? key,
+    required this.themeProvider,
+    required this.addFormKey,
+    required this.addIdController,
+    required this.warController,
   }) : super(key: key);
 
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
   final GlobalKey<FormState> addFormKey;
   final TextEditingController addIdController;
   final WarController warController;
@@ -985,7 +989,7 @@ class AddFactionDialog extends StatelessWidget {
         ),
         margin: const EdgeInsets.only(top: 30),
         decoration: BoxDecoration(
-          color: themeProvider.secondBackground,
+          color: themeProvider!.secondBackground,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
@@ -1031,7 +1035,7 @@ class AddFactionDialog extends StatelessWidget {
                         labelText: !warController.addFromUserId ? 'Insert faction ID' : 'Insert user ID',
                       ),
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return "Cannot be empty!";
                         }
                         final n = num.tryParse(value);
@@ -1047,7 +1051,7 @@ class AddFactionDialog extends StatelessWidget {
                     icon: warController.addFromUserId
                         ? Image.asset(
                             'images/icons/faction.png',
-                            color: themeProvider.mainText,
+                            color: themeProvider!.mainText,
                             width: 16,
                           )
                         : Icon(Icons.person),
@@ -1073,7 +1077,7 @@ class AddFactionDialog extends StatelessWidget {
                   TextButton(
                     child: const Text("Add"),
                     onPressed: () async {
-                      if (addFormKey.currentState.validate()) {
+                      if (addFormKey.currentState!.validate()) {
                         warController.setAddUserActive(true);
 
                         BotToast.showText(
@@ -1083,7 +1087,7 @@ class AddFactionDialog extends StatelessWidget {
                             fontSize: 14,
                             color: Colors.white,
                           ),
-                          contentColor: Colors.grey[700],
+                          contentColor: Colors.grey[700]!,
                           duration: const Duration(seconds: 3),
                           contentPadding: const EdgeInsets.all(10),
                         );
@@ -1103,7 +1107,7 @@ class AddFactionDialog extends StatelessWidget {
                           dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
                           String convertError = "";
                           if (target is TargetModel) {
-                            inputId = target.faction.factionId.toString();
+                            inputId = target.faction!.factionId.toString();
                             if (inputId == "0") {
                               convertError = "${target.name} does not belong to a faction!";
                             }
@@ -1119,7 +1123,7 @@ class AddFactionDialog extends StatelessWidget {
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
-                              contentColor: Colors.orange[700],
+                              contentColor: Colors.orange[700]!,
                               duration: const Duration(seconds: 3),
                               contentPadding: const EdgeInsets.all(10),
                             );
@@ -1128,9 +1132,9 @@ class AddFactionDialog extends StatelessWidget {
                           }
                         }
 
-                        final addFactionResult = await warController.addFaction(inputId, targets);
+                        final addFactionResult = (await warController.addFaction(inputId, targets))!;
 
-                        Color messageColor = Colors.green;
+                        Color? messageColor = Colors.green;
                         if (addFactionResult.isEmpty || addFactionResult == "error_existing") {
                           messageColor = Colors.orange[700];
                         }
@@ -1154,7 +1158,7 @@ class AddFactionDialog extends StatelessWidget {
                             fontSize: 14,
                             color: Colors.white,
                           ),
-                          contentColor: messageColor,
+                          contentColor: messageColor!,
                           duration: Duration(seconds: time),
                           contentPadding: const EdgeInsets.all(10),
                         );
@@ -1192,13 +1196,13 @@ class AddFactionDialog extends StatelessWidget {
               },
               child: Icon(
                 Icons.remove_red_eye_outlined,
-                color: faction.hidden ? Colors.red : themeProvider.mainText,
+                color: faction.hidden! ? Colors.red : themeProvider!.mainText,
               ),
             ),
             SizedBox(width: 5),
             Flexible(
               child: Card(
-                color: themeProvider.cardColor,
+                color: themeProvider!.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -1234,20 +1238,20 @@ class AddFactionDialog extends StatelessWidget {
 
 class HiddenMembersDialog extends StatelessWidget {
   const HiddenMembersDialog({
-    Key key,
-    @required this.themeProvider,
-    @required this.warController,
+    Key? key,
+    required this.themeProvider,
+    required this.warController,
   }) : super(key: key);
 
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
   final WarController warController;
 
   @override
   Widget build(BuildContext context) {
-    final List<Member> hiddenMembers = warController.getHiddenMembersDetails();
+    final List<Member?> hiddenMembers = warController.getHiddenMembersDetails();
     List<Widget> hiddenCards = buildCards(hiddenMembers, context);
     return AlertDialog(
-      backgroundColor: themeProvider.secondBackground,
+      backgroundColor: themeProvider!.secondBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -1282,9 +1286,9 @@ class HiddenMembersDialog extends StatelessWidget {
     );
   }
 
-  List<Widget> buildCards(List<Member> hiddenMembers, BuildContext context) {
+  List<Widget> buildCards(List<Member?> hiddenMembers, BuildContext context) {
     List<Widget> hiddenCards = <Widget>[];
-    for (Member m in hiddenMembers) {
+    for (Member? m in hiddenMembers) {
       hiddenCards.add(
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -1300,7 +1304,7 @@ class HiddenMembersDialog extends StatelessWidget {
             ),
             Expanded(
               child: Card(
-                color: themeProvider.cardColor,
+                color: themeProvider!.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
                   child: Column(
@@ -1311,7 +1315,7 @@ class HiddenMembersDialog extends StatelessWidget {
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           Text(
-                            m.name,
+                            m!.name!,
                             style: TextStyle(fontSize: 13),
                           ),
                           Text(
@@ -1326,11 +1330,11 @@ class HiddenMembersDialog extends StatelessWidget {
                             'images/icons/faction.png',
                             width: 11,
                             height: 11,
-                            color: themeProvider.mainText,
+                            color: themeProvider!.mainText,
                           ),
                           SizedBox(width: 5),
                           Text(
-                            m.factionName,
+                            m.factionName!,
                             style: TextStyle(fontSize: 13),
                           ),
                         ],
@@ -1350,11 +1354,11 @@ class HiddenMembersDialog extends StatelessWidget {
 
 class WarTargetsList extends StatefulWidget {
   WarTargetsList({
-    @required this.warController,
-    @required this.offlineSelector,
-    @required this.okayFilterActive,
-    @required this.countryFilterActive,
-    @required this.travelingFilterActive,
+    required this.warController,
+    required this.offlineSelector,
+    required this.okayFilterActive,
+    required this.countryFilterActive,
+    required this.travelingFilterActive,
   });
 
   final WarController warController;
@@ -1368,7 +1372,7 @@ class WarTargetsList extends StatefulWidget {
 }
 
 class _WarTargetsListState extends State<WarTargetsList> {
-  ChainStatusProvider _chainStatusProvider;
+  late ChainStatusProvider _chainStatusProvider;
 
   @override
   void initState() {
@@ -1401,13 +1405,13 @@ class _WarTargetsListState extends State<WarTargetsList> {
   }
 
   List<WarCard> getChildrenTarget() {
-    List<Member> members = <Member>[];
+    List<Member?> members = <Member?>[];
     List<WarCard> filteredCards = <WarCard>[];
 
     widget.warController.factions.forEach((faction) {
-      if (!faction.hidden) {
-        faction.members.forEach((key, value) {
-          value.memberId = int.parse(key);
+      if (!faction.hidden!) {
+        faction.members!.forEach((key, value) {
+          value!.memberId = int.parse(key);
           value.factionName = faction.name;
           value.factionLeader = faction.leader;
           value.factionColeader = faction.coLeader;
@@ -1416,33 +1420,33 @@ class _WarTargetsListState extends State<WarTargetsList> {
       }
     });
 
-    for (Member thisMember in members) {
-      if (thisMember.hidden) continue;
-      if (thisMember.status.state.contains("Federal") && thisMember.status.state.contains("Fallen")) continue;
+    for (Member? thisMember in members) {
+      if (thisMember!.hidden!) continue;
+      if (thisMember.status!.state!.contains("Federal") && thisMember.status!.state!.contains("Fallen")) continue;
 
-      if ((thisMember.lastAction.status.contains("Online") || thisMember.lastAction.status.contains("Idle")) &&
+      if ((thisMember.lastAction!.status!.contains("Online") || thisMember.lastAction!.status!.contains("Idle")) &&
           widget.offlineSelector == 2) {
         continue;
       }
 
-      if ((thisMember.lastAction.status.contains("Offline") && widget.offlineSelector == 1)) {
+      if ((thisMember.lastAction!.status!.contains("Offline") && widget.offlineSelector == 1)) {
         continue;
       }
 
-      if (widget.okayFilterActive && thisMember.status.color == "red") {
+      if (widget.okayFilterActive && thisMember.status!.color == "red") {
         continue;
       }
 
       if (widget.countryFilterActive &&
           countryCheck(
-                state: thisMember.status.state,
-                description: thisMember.status.description,
+                state: thisMember.status!.state,
+                description: thisMember.status!.description,
               ) !=
               widget.warController.playerLocation) {
         continue;
       }
 
-      if (widget.travelingFilterActive && travelingCheck(state: thisMember.status.state)) {
+      if (widget.travelingFilterActive && travelingCheck(state: thisMember.status!.state)) {
         continue;
       }
 
@@ -1451,65 +1455,70 @@ class _WarTargetsListState extends State<WarTargetsList> {
 
     switch (widget.warController.currentSort) {
       case WarSortType.levelDes:
-        filteredCards.sort((a, b) => b.memberModel.level.compareTo(a.memberModel.level));
+        filteredCards.sort((a, b) => b.memberModel!.level!.compareTo(a.memberModel!.level!));
         break;
       case WarSortType.levelAsc:
-        filteredCards.sort((a, b) => a.memberModel.level.compareTo(b.memberModel.level));
+        filteredCards.sort((a, b) => a.memberModel!.level!.compareTo(b.memberModel!.level!));
         break;
       case WarSortType.respectDes:
-        filteredCards.sort((a, b) => b.memberModel.respectGain.compareTo(a.memberModel.respectGain));
+        filteredCards.sort((a, b) => b.memberModel!.respectGain!.compareTo(a.memberModel!.respectGain!));
         break;
       case WarSortType.respectAsc:
-        filteredCards.sort((a, b) => a.memberModel.respectGain.compareTo(b.memberModel.respectGain));
+        filteredCards.sort((a, b) => a.memberModel!.respectGain!.compareTo(b.memberModel!.respectGain!));
         break;
       case WarSortType.nameDes:
-        filteredCards.sort((a, b) => b.memberModel.name.toLowerCase().compareTo(a.memberModel.name.toLowerCase()));
+        filteredCards.sort((a, b) => b.memberModel!.name!.toLowerCase().compareTo(a.memberModel!.name!.toLowerCase()));
         break;
       case WarSortType.nameAsc:
-        filteredCards.sort((a, b) => a.memberModel.name.toLowerCase().compareTo(b.memberModel.name.toLowerCase()));
+        filteredCards.sort((a, b) => a.memberModel!.name!.toLowerCase().compareTo(b.memberModel!.name!.toLowerCase()));
         break;
       case WarSortType.lifeDes:
-        filteredCards.sort((a, b) => b.memberModel.lifeSort.compareTo(a.memberModel.lifeSort));
+        filteredCards.sort((a, b) => b.memberModel!.lifeSort!.compareTo(a.memberModel!.lifeSort!));
         break;
       case WarSortType.lifeAsc:
-        filteredCards.sort((a, b) => a.memberModel.lifeSort.compareTo(b.memberModel.lifeSort));
+        filteredCards.sort((a, b) => a.memberModel!.lifeSort!.compareTo(b.memberModel!.lifeSort!));
         break;
       case WarSortType.statsDes:
-        filteredCards.sort((a, b) => b.memberModel.statsSort.compareTo(a.memberModel.statsSort));
+        filteredCards.sort((a, b) => b.memberModel!.statsSort!.compareTo(a.memberModel!.statsSort!));
         break;
       case WarSortType.statsAsc:
-        filteredCards.sort((a, b) => a.memberModel.statsSort.compareTo(b.memberModel.statsSort));
+        filteredCards.sort((a, b) => a.memberModel!.statsSort!.compareTo(b.memberModel!.statsSort!));
         break;
       case WarSortType.onlineDes:
-        filteredCards.sort((a, b) => b.memberModel.lastAction.timestamp.compareTo(a.memberModel.lastAction.timestamp));
+        filteredCards
+            .sort((a, b) => b.memberModel!.lastAction!.timestamp!.compareTo(a.memberModel!.lastAction!.timestamp!));
         break;
       case WarSortType.onlineAsc:
-        filteredCards.sort((a, b) => a.memberModel.lastAction.timestamp.compareTo(b.memberModel.lastAction.timestamp));
+        filteredCards
+            .sort((a, b) => a.memberModel!.lastAction!.timestamp!.compareTo(b.memberModel!.lastAction!.timestamp!));
         break;
       case WarSortType.colorDes:
         filteredCards.sort((a, b) =>
-            b.memberModel.personalNoteColor.toLowerCase().compareTo(a.memberModel.personalNoteColor.toLowerCase()));
+            b.memberModel!.personalNoteColor!.toLowerCase().compareTo(a.memberModel!.personalNoteColor!.toLowerCase()));
         break;
       case WarSortType.colorAsc:
         filteredCards.sort((a, b) =>
-            a.memberModel.personalNoteColor.toLowerCase().compareTo(b.memberModel.personalNoteColor.toLowerCase()));
+            a.memberModel!.personalNoteColor!.toLowerCase().compareTo(b.memberModel!.personalNoteColor!.toLowerCase()));
         break;
       case WarSortType.notesDes:
         filteredCards.sort(
-            (a, b) => b.memberModel.personalNote.toLowerCase().compareTo(a.memberModel.personalNote.toLowerCase()));
+            (a, b) => b.memberModel!.personalNote!.toLowerCase().compareTo(a.memberModel!.personalNote!.toLowerCase()));
         break;
       case WarSortType.notesAsc:
         filteredCards.sort((a, b) {
-          if (a.memberModel.personalNote.isEmpty && b.memberModel.personalNote.isNotEmpty) {
+          if (a.memberModel!.personalNote!.isEmpty && b.memberModel!.personalNote!.isNotEmpty) {
             return 1;
-          } else if (a.memberModel.personalNote.isNotEmpty && b.memberModel.personalNote.isEmpty) {
+          } else if (a.memberModel!.personalNote!.isNotEmpty && b.memberModel!.personalNote!.isEmpty) {
             return -1;
-          } else if (a.memberModel.personalNote.isEmpty && b.memberModel.personalNote.isEmpty) {
+          } else if (a.memberModel!.personalNote!.isEmpty && b.memberModel!.personalNote!.isEmpty) {
             return 0;
           } else {
-            return a.memberModel.personalNote.toLowerCase().compareTo(b.memberModel.personalNote.toLowerCase());
+            return a.memberModel!.personalNote!.toLowerCase().compareTo(b.memberModel!.personalNote!.toLowerCase());
           }
         });
+        break;
+      default:
+        filteredCards.sort((a, b) => a.memberModel!.name!.toLowerCase().compareTo(b.memberModel!.name!.toLowerCase()));
         break;
     }
 
@@ -1517,10 +1526,10 @@ class _WarTargetsListState extends State<WarTargetsList> {
     for (int i = 0; i < filteredCards.length; i++) {
       WarCardDetails details = WarCardDetails()
         ..cardPosition = i + 1
-        ..memberId = filteredCards[i].memberModel.memberId
-        ..name = filteredCards[i].memberModel.name
-        ..personalNote = filteredCards[i].memberModel.personalNote
-        ..personalNoteColor = filteredCards[i].memberModel.personalNoteColor;
+        ..memberId = filteredCards[i].memberModel!.memberId
+        ..name = filteredCards[i].memberModel!.name
+        ..personalNote = filteredCards[i].memberModel!.personalNote
+        ..personalNoteColor = filteredCards[i].memberModel!.personalNoteColor;
 
       widget.warController.orderedCardsDetails.add(details);
     }
@@ -1549,23 +1558,23 @@ class _WarTargetsListState extends State<WarTargetsList> {
         motion: const ScrollMotion(),
         extentRatio: 0.5,
         children: [
-          _chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel.name).length == 0
+          _chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel!.name).length == 0
               ? SlidableAction(
                   label: 'Add to panic!',
                   backgroundColor: Colors.blue,
                   icon: MdiIcons.alphaPCircleOutline,
                   onPressed: (context) {
-                    String message = "Added ${filteredCard.memberModel.name} as a Panic Mode target!";
-                    Color messageColor = Colors.green;
+                    String message = "Added ${filteredCard.memberModel!.name} as a Panic Mode target!";
+                    Color? messageColor = Colors.green;
 
                     if (_chainStatusProvider.panicTargets.length < 10) {
                       setState(() {
                         _chainStatusProvider.addPanicTarget(
                           PanicTargetModel()
-                            ..name = filteredCard.memberModel.name
-                            ..level = filteredCard.memberModel.level
-                            ..id = filteredCard.memberModel.memberId
-                            ..factionName = filteredCard.memberModel.factionName,
+                            ..name = filteredCard.memberModel!.name
+                            ..level = filteredCard.memberModel!.level
+                            ..id = filteredCard.memberModel!.memberId
+                            ..factionName = filteredCard.memberModel!.factionName,
                         );
                         // Convert to target with the needed fields
                       });
@@ -1581,7 +1590,7 @@ class _WarTargetsListState extends State<WarTargetsList> {
                         fontSize: 14,
                         color: Colors.white,
                       ),
-                      contentColor: messageColor,
+                      contentColor: messageColor!,
                       duration: Duration(seconds: 5),
                       contentPadding: EdgeInsets.all(10),
                     );
@@ -1592,16 +1601,16 @@ class _WarTargetsListState extends State<WarTargetsList> {
                   backgroundColor: Colors.blue,
                   icon: MdiIcons.alphaPCircleOutline,
                   onPressed: (context) {
-                    String message = "Removed ${filteredCard.memberModel.name} as a Panic Mode target!";
+                    String message = "Removed ${filteredCard.memberModel!.name} as a Panic Mode target!";
                     Color messageColor = Colors.green;
 
                     setState(() {
                       _chainStatusProvider.removePanicTarget(
                         PanicTargetModel()
-                          ..name = filteredCard.memberModel.name
-                          ..level = filteredCard.memberModel.level
-                          ..id = filteredCard.memberModel.memberId
-                          ..factionName = filteredCard.memberModel.factionName,
+                          ..name = filteredCard.memberModel!.name
+                          ..level = filteredCard.memberModel!.level
+                          ..id = filteredCard.memberModel!.memberId
+                          ..factionName = filteredCard.memberModel!.factionName,
                       );
                     });
 

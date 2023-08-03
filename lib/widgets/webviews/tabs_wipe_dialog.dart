@@ -5,7 +5,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import '../../providers/theme_provider.dart';
 
 class TabsWipeDialog extends StatelessWidget {
-  const TabsWipeDialog({Key key}) : super(key: key);
+  const TabsWipeDialog({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

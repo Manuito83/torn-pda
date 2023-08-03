@@ -10,11 +10,11 @@ HelaReviveModel helaReviveModelFromJson(String str) => HelaReviveModel.fromJson(
 String helaReviveModelToJson(HelaReviveModel data) => json.encode(data.toJson());
 
 class HelaReviveModel {
-  String vendor;
-  int tornId;
-  String username;
-  String source;
-  String type;
+  String? vendor;
+  int? tornId;
+  String? username;
+  String? source;
+  String? type;
 
   HelaReviveModel({
     this.vendor,

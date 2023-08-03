@@ -17,11 +17,11 @@ class TornStatsSpyModel {
     this.attacks,
   });
 
-  bool status;
-  String message;
-  Compare compare;
-  Spy spy;
-  Attacks attacks;
+  bool? status;
+  String? message;
+  Compare? compare;
+  Spy? spy;
+  Attacks? attacks;
 
   factory TornStatsSpyModel.fromJson(Map<String, dynamic> json) => TornStatsSpyModel(
         status: json["status"] == null ? null : json["status"],
@@ -34,9 +34,9 @@ class TornStatsSpyModel {
   Map<String, dynamic> toJson() => {
         "status": status == null ? null : status,
         "message": message == null ? null : message,
-        "compare": compare == null ? null : compare.toJson(),
-        "spy": spy == null ? null : spy.toJson(),
-        "attacks": attacks == null ? null : attacks.toJson(),
+        "compare": compare == null ? null : compare!.toJson(),
+        "spy": spy == null ? null : spy!.toJson(),
+        "attacks": attacks == null ? null : attacks!.toJson(),
       };
 }
 
@@ -46,8 +46,8 @@ class Attacks {
     this.message,
   });
 
-  bool status;
-  String message;
+  bool? status;
+  String? message;
 
   factory Attacks.fromJson(Map<String, dynamic> json) => Attacks(
         status: json["status"] == null ? null : json["status"],
@@ -66,8 +66,8 @@ class Compare {
     this.data,
   });
 
-  bool status;
-  Data data;
+  bool? status;
+  Data? data;
 
   factory Compare.fromJson(Map<String, dynamic> json) => Compare(
         status: json["status"] == null ? null : json["status"],
@@ -76,7 +76,7 @@ class Compare {
 
   Map<String, dynamic> toJson() => {
         "status": status == null ? null : status,
-        "data": data == null ? null : data.toJson(),
+        "data": data == null ? null : data!.toJson(),
       };
 }
 
@@ -86,8 +86,8 @@ class Data {
     this.attacksLost,
   });
 
-  AttacksLostClass attacksWon;
-  AttacksLostClass attacksLost;
+  AttacksLostClass? attacksWon;
+  AttacksLostClass? attacksLost;
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
         attacksWon: json["Attacks Won"] == null ? null : AttacksLostClass.fromJson(json["Attacks Won"]),
@@ -95,8 +95,8 @@ class Data {
       );
 
   Map<String, dynamic> toJson() => {
-        "Attacks Won": attacksWon == null ? null : attacksWon.toJson(),
-        "Attacks Lost": attacksLost == null ? null : attacksLost.toJson(),
+        "Attacks Won": attacksWon == null ? null : attacksWon!.toJson(),
+        "Attacks Lost": attacksLost == null ? null : attacksLost!.toJson(),
       };
 }
 
@@ -106,8 +106,8 @@ class AttacksLostClass {
     this.difference,
   });
 
-  int amount;
-  int difference;
+  int? amount;
+  int? difference;
 
   factory AttacksLostClass.fromJson(Map<String, dynamic> json) => AttacksLostClass(
         amount: json["amount"] == null ? null : json["amount"],
@@ -146,28 +146,28 @@ class Spy {
     this.deltaTotal,
   });
 
-  String type;
-  bool status;
-  String message;
-  String playerName;
-  String playerId;
-  int playerLevel;
-  String playerFaction;
-  double targetScore;
-  double yourScore;
-  double fairFightBonus;
-  String difference;
-  int timestamp;
+  String? type;
+  bool? status;
+  String? message;
+  String? playerName;
+  String? playerId;
+  int? playerLevel;
+  String? playerFaction;
+  double? targetScore;
+  double? yourScore;
+  double? fairFightBonus;
+  String? difference;
+  int? timestamp;
   dynamic strength;
-  int deltaStrength;
+  int? deltaStrength;
   dynamic defense;
-  int deltaDefense;
+  int? deltaDefense;
   dynamic speed;
-  int deltaSpeed;
+  int? deltaSpeed;
   dynamic dexterity;
-  int deltaDexterity;
+  int? deltaDexterity;
   dynamic total;
-  int deltaTotal;
+  int? deltaTotal;
 
   factory Spy.fromJson(Map<String, dynamic> json) => Spy(
         type: json["type"] == null ? null : json["type"],

@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 
 class Countdown extends StatefulWidget {
   final int seconds;
-  final Function callback;
+  final Function? callback;
 
   Countdown({
-    @required this.seconds,
+    required this.seconds,
     this.callback,
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -17,9 +17,9 @@ class Countdown extends StatefulWidget {
 }
 
 class _CurrentRetalExpiryWidgetState extends State<Countdown> {
-  Timer _expiryTicker;
+  Timer? _expiryTicker;
 
-  Widget _currentExpiryWidget;
+  late Widget _currentExpiryWidget;
 
   int _currentSeconds = 0;
 
@@ -51,7 +51,7 @@ class _CurrentRetalExpiryWidgetState extends State<Countdown> {
       _currentSeconds--;
     } else {
       _currentSeconds = widget.seconds;
-      widget.callback();
+      widget.callback!();
     }
 
     setState(() {

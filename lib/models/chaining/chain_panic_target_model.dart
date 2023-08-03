@@ -16,10 +16,10 @@ class PanicTargetModel {
     this.factionName,
   });
 
-  String name;
-  int id;
-  int level;
-  String factionName;
+  String? name;
+  int? id;
+  int? level;
+  String? factionName;
 
   factory PanicTargetModel.fromJson(Map<String, dynamic> json) => PanicTargetModel(
         name: json["name"] == null ? null : json["name"],

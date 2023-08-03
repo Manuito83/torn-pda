@@ -20,13 +20,13 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileNotificationsIOS extends StatefulWidget {
   final Function callback;
-  final int energyMax;
-  final int nerveMax;
+  final int? energyMax;
+  final int? nerveMax;
 
   ProfileNotificationsIOS({
-    @required this.callback,
-    @required this.energyMax,
-    @required this.nerveMax,
+    required this.callback,
+    required this.energyMax,
+    required this.nerveMax,
   });
 
   @override
@@ -37,15 +37,15 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 
-  int _energyDivisions;
+  int? _energyDivisions;
 
-  double _energyTrigger;
-  double _nerveTrigger;
+  late double _energyTrigger;
+  late double _nerveTrigger;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -199,7 +199,7 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                     Slider(
                       value: _energyTrigger.toDouble(),
                       min: _energyMin,
-                      max: widget.energyMax.toDouble(),
+                      max: widget.energyMax!.toDouble(),
                       divisions: _energyDivisions,
                       onChanged: (double newValue) {
                         setState(() {
@@ -235,7 +235,7 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                     Slider(
                       value: _nerveTrigger.toDouble(),
                       min: _nerveMin,
-                      max: widget.nerveMax.toDouble(),
+                      max: widget.nerveMax!.toDouble(),
                       onChanged: (double newValue) {
                         setState(() {
                           _nerveTrigger = newValue;
@@ -346,27 +346,25 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   Future _restorePreferences() async {
     var energyTrigger = await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
-      energyTrigger = widget.energyMax;
+    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax!) {
+      energyTrigger = widget.energyMax!;
     }
 
     var nerveTrigger = await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
-      nerveTrigger = widget.nerveMax;
+    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax!) {
+      nerveTrigger = widget.nerveMax!;
     }
 
     setState(() {
-      _energyDivisions = ((widget.energyMax - _energyMin) / 5).floor();
+      _energyDivisions = ((widget.energyMax! - _energyMin) / 5).floor();
       _energyTrigger = energyTrigger.toDouble();
       _nerveTrigger = nerveTrigger.toDouble();
     });
   }
 
   _goBack() async {
-    if (widget.callback != null) {
-      widget.callback();
-    }
+    widget.callback();
     routeName = "profile_options";
     routeWithDrawer = false;
     Navigator.of(context).pop();

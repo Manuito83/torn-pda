@@ -20,14 +20,14 @@ import 'package:torn_pda/utils/html_parser.dart';
 
 class ProfileCheckAddButton extends StatefulWidget {
   final int profileId;
-  final int factionId;
-  final String playerName;
+  final int? factionId;
+  final String? playerName;
 
   const ProfileCheckAddButton({
-    @required this.profileId,
-    @required this.factionId,
+    required this.profileId,
+    required this.factionId,
     this.playerName = "Player",
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -35,10 +35,10 @@ class ProfileCheckAddButton extends StatefulWidget {
 }
 
 class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  TargetsProvider _targetsProvider;
-  ChainStatusProvider _chainStatusProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late TargetsProvider _targetsProvider;
+  late ChainStatusProvider _chainStatusProvider;
 
   // Showcases
   GlobalKey _showcaseButton = GlobalKey();
@@ -92,8 +92,8 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
                             'he/she is at least associated with one of them.\n\nTry it out!',
                         targetPadding: const EdgeInsets.all(10),
                         disableMovingAnimation: true,
-                        textColor: _themeProvider.mainText,
-                        tooltipBackgroundColor: _themeProvider.secondBackground,
+                        textColor: _themeProvider.mainText!,
+                        tooltipBackgroundColor: _themeProvider.secondBackground!,
                         descTextStyle: TextStyle(fontSize: 13),
                         tooltipPadding: EdgeInsets.all(20),
                         child: Icon(
@@ -135,15 +135,15 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
       if (!_settingsProvider.showCases.contains("profile_check_button")) {
         // Prevent the showcase from activating if we have reset the showcase while a tab with a profile is open
-        if (!webviewProvider.currentTabUrl().contains('loader.php?sid=attack&user2ID=') &&
-            !webviewProvider.currentTabUrl().contains('loader2.php?sid=getInAttack&user2ID=') &&
-            !webviewProvider.currentTabUrl().contains('torn.com/profiles.php?XID=')) {
+        if (!webviewProvider.currentTabUrl()!.contains('loader.php?sid=attack&user2ID=') &&
+            !webviewProvider.currentTabUrl()!.contains('loader2.php?sid=getInAttack&user2ID=') &&
+            !webviewProvider.currentTabUrl()!.contains('torn.com/profiles.php?XID=')) {
           return;
         }
 
         _settingsProvider.addShowCase = "profile_check_button";
         showCases.add(_showcaseButton);
-        ShowCaseWidget.of(_).startShowCase(showCases);
+        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
@@ -166,14 +166,14 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
 
 class ProfileCheckAddDialog extends StatefulWidget {
   final int profileId;
-  final String playerName;
-  final int factionId;
+  final String? playerName;
+  final int? factionId;
 
   const ProfileCheckAddDialog({
-    @required this.profileId,
-    @required this.factionId,
+    required this.profileId,
+    required this.factionId,
     this.playerName,
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -181,7 +181,7 @@ class ProfileCheckAddDialog extends StatefulWidget {
 }
 
 class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
-  TargetsProvider _targetsProvider;
+  late TargetsProvider _targetsProvider;
   bool _toggleTargetActive = false;
   bool _isTarget = false;
 
@@ -189,7 +189,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   bool _toggleStakeoutActive = false;
   bool _isStakeout = false;
 
-  ChainStatusProvider _chainStatusProvider;
+  late ChainStatusProvider _chainStatusProvider;
   bool _togglePanicActive = false;
   bool _isPanic = false;
 
@@ -228,7 +228,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
                   child: ElevatedButton(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: widget.profileId.toString()));
-                      _showToast(text: 'ID copied!', color: Colors.blue[700], seconds: 1);
+                      _showToast(text: 'ID copied!', color: Colors.blue[700]!, seconds: 1);
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -245,7 +245,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
                     onPressed: () {
                       String url = "https://www.torn.com/profiles.php?XID=${widget.profileId}";
                       Clipboard.setData(ClipboardData(text: url));
-                      _showToast(text: 'Link copied!', color: Colors.blue[700], seconds: 1);
+                      _showToast(text: 'Link copied!', color: Colors.blue[700]!, seconds: 1);
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -412,7 +412,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
       _targetsProvider.deleteTargetById(widget.profileId.toString());
       _showToast(
         text: 'Removed from Torn PDA targets!',
-        color: Colors.orange[900],
+        color: Colors.orange[900]!,
         seconds: 3,
       );
     } else {
@@ -424,13 +424,13 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
       if (tryAddTarget.success) {
         _showToast(
           text: 'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your main targets list in Torn PDA!',
-          color: Colors.green[700],
+          color: Colors.green[700]!,
           seconds: 3,
         );
       } else if (!tryAddTarget.success) {
         _showToast(
           text: 'Error adding ${widget.profileId}. ${tryAddTarget.errorReason}',
-          color: Colors.red[900],
+          color: Colors.red[900]!,
           seconds: 4,
         );
       }
@@ -452,7 +452,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
       _s.removeStakeout(removeId: widget.profileId.toString());
       _showToast(
         text: 'Removed from stakeouts!',
-        color: Colors.orange[900],
+        color: Colors.orange[900]!,
         seconds: 3,
       );
     } else {
@@ -460,13 +460,13 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
       if (result.success) {
         _showToast(
           text: 'Added ${widget.playerName}, remember to activate the desired options in the Stakeouts section!',
-          color: Colors.green[700],
+          color: Colors.green[700]!,
           seconds: 4,
         );
       } else {
         _showToast(
           text: 'Error adding ${widget.playerName}: ${result.error}',
-          color: Colors.red[900],
+          color: Colors.red[900]!,
           seconds: 4,
         );
       }
@@ -488,20 +488,20 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
       _chainStatusProvider.removePanicTargetById(widget.profileId);
       _showToast(
         text: 'Removed panic target!',
-        color: Colors.orange[900],
+        color: Colors.orange[900]!,
         seconds: 3,
       );
     } else {
       dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: widget.profileId.toString());
       String message = "";
-      Color messageColor = Colors.green[700];
+      Color? messageColor = Colors.green[700];
       if (target is TargetModel) {
         _chainStatusProvider.addPanicTarget(
           PanicTargetModel()
             ..name = target.name
             ..level = target.level
             ..id = target.playerId
-            ..factionName = target.faction.factionName,
+            ..factionName = target.faction!.factionName,
         );
         message = "Added ${target.name} to panic!";
       } else {
@@ -510,7 +510,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
       }
       _showToast(
         text: message,
-        color: messageColor,
+        color: messageColor!,
         seconds: 3,
       );
     }
@@ -531,22 +531,22 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
       _w.removeFaction(widget.factionId);
       _showToast(
         text: 'Removed ${widget.playerName}\'s faction from War!',
-        color: Colors.orange[900],
+        color: Colors.orange[900]!,
         seconds: 3,
       );
     } else {
       final targets = _targetsProvider.allTargets;
-      final addFactionResult = await _w.addFaction(widget.factionId.toString(), targets);
+      final addFactionResult = (await _w.addFaction(widget.factionId.toString(), targets))!;
       if (addFactionResult.isNotEmpty) {
         _showToast(
           text: "Added $addFactionResult to war factions!",
-          color: Colors.green[700],
+          color: Colors.green[700]!,
           seconds: 3,
         );
       } else {
         _showToast(
           text: "There was an error adding ${widget.playerName}'s faction to War!",
-          color: Colors.red[900],
+          color: Colors.red[900]!,
           seconds: 3,
         );
       }
@@ -559,7 +559,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     });
   }
 
-  _showToast({@required String text, @required Color color, @required int seconds}) {
+  _showToast({required String text, required Color color, required int seconds}) {
     BotToast.showText(
       clickClose: true,
       text: HtmlParser.fix(text),

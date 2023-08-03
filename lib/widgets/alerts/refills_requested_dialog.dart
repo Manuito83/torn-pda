@@ -6,16 +6,16 @@ import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 
 class RefillsRequestedDialog extends StatefulWidget {
-  final FirebaseUserModel userModel;
+  final FirebaseUserModel? userModel;
 
-  RefillsRequestedDialog({@required this.userModel});
+  RefillsRequestedDialog({required this.userModel});
 
   @override
   _RefillsRequestedDialogState createState() => _RefillsRequestedDialogState();
 }
 
 class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
-  FirebaseUserModel _firebaseUserModel;
+  FirebaseUserModel? _firebaseUserModel;
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                 children: <Widget>[
                   Text("Energy"),
                   Switch(
-                    value: _firebaseUserModel.refillsRequested.contains('energy'),
+                    value: _firebaseUserModel!.refillsRequested.contains('energy'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
@@ -68,7 +68,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                 children: <Widget>[
                   Text("Nerve"),
                   Switch(
-                    value: _firebaseUserModel.refillsRequested.contains('nerve'),
+                    value: _firebaseUserModel!.refillsRequested.contains('nerve'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
@@ -91,7 +91,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                 children: <Widget>[
                   Text("Casino tokens"),
                   Switch(
-                    value: _firebaseUserModel.refillsRequested.contains('token'),
+                    value: _firebaseUserModel!.refillsRequested.contains('token'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {

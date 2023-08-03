@@ -4,7 +4,6 @@
 
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
 
 Stakeout stakeoutFromJson(String str) => Stakeout.fromJson(json.decode(str));
@@ -20,14 +19,14 @@ class Stakeout {
   int lastPass;
 
   /// [lastFetch] is updated when we fetched the stakeout from Torn for the last time
-  int lastFetch;
+  int? lastFetch;
 
-  String id;
-  String name;
-  Status status;
-  LastAction lastAction;
+  String? id;
+  String? name;
+  Status? status;
+  LastAction? lastAction;
   String personalNote;
-  String personalNoteColor;
+  String? personalNoteColor;
 
   bool okayLast;
   bool okayEnabled;
@@ -46,11 +45,11 @@ class Stakeout {
 
   bool lifeBelowPercentageLast;
   bool lifeBelowPercentageEnabled;
-  int lifeBelowPercentageLimit;
+  int? lifeBelowPercentageLimit;
 
   bool offlineLongerThanLast;
   bool offlineLongerThanEnabled;
-  int offlineLongerThanLimit;
+  int? offlineLongerThanLimit;
 
   Stakeout({
     this.cardExpanded = false,
@@ -58,10 +57,10 @@ class Stakeout {
     this.lastFetch = 0,
 
     // Main
-    @required this.id,
-    @required this.name,
-    @required this.status,
-    @required this.lastAction,
+    required this.id,
+    required this.name,
+    required this.status,
+    required this.lastAction,
     this.personalNote = "",
     this.personalNoteColor = "",
 
@@ -128,8 +127,8 @@ class Stakeout {
         "name": name,
         "personalNote": personalNote,
         "personalNoteColor": personalNoteColor,
-        "status": status.toJson(),
-        "lastAction": lastAction.toJson(),
+        "status": status!.toJson(),
+        "lastAction": lastAction!.toJson(),
         "okayLast": okayLast,
         "okayEnabled": okayEnabled,
         "hospitalLast": hospitalLast,

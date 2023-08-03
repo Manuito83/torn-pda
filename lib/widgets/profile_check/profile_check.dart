@@ -40,16 +40,16 @@ enum SpiesSource {
 
 class ProfileAttackCheckWidget extends StatefulWidget {
   final int profileId;
-  final String apiKey;
+  final String? apiKey;
   final ProfileCheckType profileCheckType;
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
 
   ProfileAttackCheckWidget({
-    @required this.profileId,
-    @required this.apiKey,
-    @required this.profileCheckType,
-    @required Key key,
-    @required this.themeProvider,
+    required this.profileId,
+    required this.apiKey,
+    required this.profileCheckType,
+    required Key key,
+    required this.themeProvider,
   }) : super(key: key);
 
   @override
@@ -59,17 +59,17 @@ class ProfileAttackCheckWidget extends StatefulWidget {
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   final navigatorKey = GlobalKey<NavigatorState>();
 
-  Future _checkedPerson;
+  Future? _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
 
-  SettingsProvider _settingsProvider;
+  late SettingsProvider _settingsProvider;
   UserController _u = Get.put(UserController());
 
-  UserDetailsProvider _userDetails;
+  late UserDetailsProvider _userDetails;
   var _expandableController = ExpandableController();
 
-  Widget _statsWidget; // Has to be null at the beginning
+  Widget? _statsWidget; // Has to be null at the beginning
   Widget _errorDetailsWidget = SizedBox.shrink();
 
   var _isTornPda = false;
@@ -84,9 +84,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   // own faction and lastly friendly faction)
   var _networthWidgetEnabled = false;
 
-  String _playerName = "Player";
-  String _factionName = "Faction";
-  int _factionId = 0;
+  String? _playerName = "Player";
+  String? _factionName = "Faction";
+  int? _factionId = 0;
 
   Widget _tornPdaWidget = SizedBox.shrink();
   Widget _partnerWidget = SizedBox.shrink();
@@ -96,7 +96,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   Widget _playerOrFactionWidget = SizedBox.shrink();
   Widget _networthWidget = SizedBox.shrink();
 
-  Color _backgroundColor = Colors.grey[900];
+  Color? _backgroundColor = Colors.grey[900];
 
   @override
   void initState() {
@@ -114,13 +114,13 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         if (snapshot.connectionState == ConnectionState.done) {
           if (_infoToShow) {
             return ExpandablePanel(
-              collapsed: null,
+              collapsed: Container(),
               controller: _expandableController,
               expanded: mainWidgetBox(),
             );
           } else if (_errorToShow) {
             return ExpandablePanel(
-              collapsed: null,
+              collapsed: Container(),
               controller: _expandableController,
               expanded: _errorDetailsWidget,
             );
@@ -143,7 +143,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             child: Row(
               children: [
                 Expanded(
-                  child: _statsWidget,
+                  child: _statsWidget!,
                 ),
                 ProfileCheckAddButton(
                   profileId: widget.profileId,
@@ -219,8 +219,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     if (otherProfile is OtherProfileModel) {
       _playerName = otherProfile.name;
-      _factionName = otherProfile.faction.factionName;
-      _factionId = otherProfile.faction.factionId;
+      _factionName = otherProfile.faction!.factionName;
+      _factionId = otherProfile.faction!.factionId;
 
       // Estimated stats is not awaited, since it can take a few seconds
       // to contact YATA and decide what we show
@@ -230,30 +230,30 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _isTornPda = true;
       }
 
-      if (otherProfile.married.spouseId == _userDetails.basic.playerId) {
+      if (otherProfile.married!.spouseId == _userDetails.basic!.playerId) {
         _isPartner = true;
       }
 
-      if (otherProfile.playerId == _userDetails.basic.playerId) {
+      if (otherProfile.playerId == _userDetails.basic!.playerId) {
         _isOwnPlayer = true;
       }
 
-      if (_userDetails.basic.faction.factionId != 0 &&
-          otherProfile.faction.factionId == _userDetails.basic.faction.factionId) {
+      if (_userDetails.basic!.faction!.factionId != 0 &&
+          otherProfile.faction!.factionId == _userDetails.basic!.faction!.factionId) {
         _isOwnFaction = true;
       }
 
       var settingsProvider = context.read<SettingsProvider>();
       for (var fact in settingsProvider.friendlyFactions) {
-        if (otherProfile.faction.factionId == fact.id) {
+        if (otherProfile.faction!.factionId == fact.id) {
           _isFriendlyFaction = true;
           break;
         }
       }
 
       if (!_isOwnPlayer &&
-          otherProfile.job.companyId != 0 &&
-          otherProfile.job.companyId == _userDetails.basic.job.companyId) {
+          otherProfile.job!.companyId != 0 &&
+          otherProfile.job!.companyId == _userDetails.basic!.job!.companyId) {
         _isWorkColleague = true;
       }
 
@@ -342,7 +342,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
       } else if (_isOwnFaction) {
         String factionText = "This is a fellow faction member "
-            "(${otherProfile.faction.position})!";
+            "(${otherProfile.faction!.position})!";
         Color factionColor = Colors.green;
         if (widget.profileCheckType == ProfileCheckType.attack) {
           factionColor = Colors.black;
@@ -372,7 +372,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
       } else if (_isFriendlyFaction) {
         String factionText = "This is an allied faction member "
-            "(${otherProfile.faction.factionName})!";
+            "(${otherProfile.faction!.factionName})!";
         Color factionColor = Colors.green;
         if (widget.profileCheckType == ProfileCheckType.attack) {
           factionColor = Colors.black;
@@ -439,7 +439,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       }
 
       if (_isWorkColleague) {
-        Color colleagueTextColor = Colors.brown[300];
+        Color? colleagueTextColor = Colors.brown[300];
         String colleagueText = "This is a work colleague!";
         if (widget.profileCheckType == ProfileCheckType.attack) {
           colleagueTextColor = Colors.black;
@@ -471,13 +471,13 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       if (_networthWidgetEnabled) {
         int bazaar = 0;
-        if (otherProfile.bazaar.isNotEmpty) {
-          for (var b in otherProfile.bazaar) {
+        if (otherProfile.bazaar!.isNotEmpty) {
+          for (var b in otherProfile.bazaar!) {
             if (b.marketPrice is double) {
               b.marketPrice = b.marketPrice.round();
             }
 
-            bazaar += b.marketPrice * b.quantity;
+            bazaar += int.parse(b.marketPrice * b.quantity);
           }
         }
 
@@ -495,7 +495,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 SizedBox(width: 10),
                 Flexible(
                   child: Text(
-                    "${formatBigNumbers(otherProfile.personalstats.networth)}",
+                    "${formatBigNumbers(otherProfile.personalstats!.networth!)}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -560,14 +560,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     // 2 is only if spies
 
     if (_settingsProvider.profileStatsEnabled == "0" || _settingsProvider.profileStatsEnabled == "2") {
-      int strength = 0;
-      int defense = 0;
-      int speed = 0;
-      int dexterity = 0;
-      int total = 0;
-      int timestamp = 0;
+      int? strength = 0;
+      int? defense = 0;
+      int? speed = 0;
+      int? dexterity = 0;
+      int? total = 0;
+      int? timestamp = 0;
       bool spyFound = false;
-      SpiesSource spiesSource;
+      SpiesSource? spiesSource;
 
       try {
         if (_settingsProvider.spiesSource == SpiesSource.yata) {
@@ -594,17 +594,15 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 5));
           if (resp.statusCode == 200) {
             TornStatsSpyModel spyJson = tornStatsSpyModelFromJson(resp.body);
-            if (spyJson != null) {
-              if (!spyJson.message.contains("ERROR") && !spyJson.spy.message.contains("not found")) {
-                spiesSource = SpiesSource.tornStats;
-                strength = spyJson.spy.strength;
-                defense = spyJson.spy.defense;
-                speed = spyJson.spy.speed;
-                dexterity = spyJson.spy.dexterity;
-                total = spyJson.spy.total;
-                timestamp = spyJson.spy.timestamp;
-                spyFound = true;
-              }
+            if (!spyJson.message!.contains("ERROR") && !spyJson.spy!.message!.contains("not found")) {
+              spiesSource = SpiesSource.tornStats;
+              strength = spyJson.spy!.strength;
+              defense = spyJson.spy!.defense;
+              speed = spyJson.spy!.speed;
+              dexterity = spyJson.spy!.dexterity;
+              total = spyJson.spy!.total;
+              timestamp = spyJson.spy!.timestamp;
+              spyFound = true;
             }
           }
         }
@@ -619,9 +617,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // STR
         var strColor = Colors.white;
         if (strength != -1) {
-          if (_userDetails.basic.strength >= strength) {
+          if (_userDetails.basic!.strength! >= strength!) {
             strColor = Colors.green;
-          } else if (_userDetails.basic.strength * 1.15 > strength) {
+          } else if (_userDetails.basic!.strength! * 1.15 > strength) {
             strColor = Colors.orange;
           } else {
             strColor = Colors.red;
@@ -655,9 +653,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // SPD
         var spdColor = Colors.white;
         if (speed != -1) {
-          if (_userDetails.basic.speed >= speed) {
+          if (_userDetails.basic!.speed! >= speed!) {
             spdColor = Colors.green;
-          } else if (_userDetails.basic.speed * 1.15 > speed) {
+          } else if (_userDetails.basic!.speed! * 1.15 > speed) {
             spdColor = Colors.orange;
           } else {
             spdColor = Colors.red;
@@ -691,9 +689,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // DEF
         var defColor = Colors.white;
         if (defense != -1) {
-          if (_userDetails.basic.defense >= defense) {
+          if (_userDetails.basic!.defense! >= defense!) {
             defColor = Colors.green;
-          } else if (_userDetails.basic.defense * 1.15 > defense) {
+          } else if (_userDetails.basic!.defense! * 1.15 > defense) {
             defColor = Colors.orange;
           } else {
             defColor = Colors.red;
@@ -727,9 +725,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // DEX
         var dexColor = Colors.white;
         if (dexterity != -1) {
-          if (_userDetails.basic.dexterity >= dexterity) {
+          if (_userDetails.basic!.dexterity! >= dexterity!) {
             dexColor = Colors.green;
-          } else if (_userDetails.basic.dexterity * 1.15 > dexterity) {
+          } else if (_userDetails.basic!.dexterity! * 1.15 > dexterity) {
             dexColor = Colors.orange;
           } else {
             dexColor = Colors.red;
@@ -757,16 +755,16 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
         Widget onlineStatus = Row(
           children: [
-            otherProfile.lastAction.status == "Offline"
+            otherProfile.lastAction!.status == "Offline"
                 ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
-                : otherProfile.lastAction.status == "Idle"
+                : otherProfile.lastAction!.status == "Idle"
                     ? Icon(Icons.adjust, size: 12, color: Colors.orange)
                     : Icon(Icons.circle, size: 12, color: Colors.green),
-            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+            if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
               Padding(
                 padding: const EdgeInsets.only(left: 2),
                 child: Text(
-                  otherProfile.lastAction.relative
+                  otherProfile.lastAction!.relative!
                       .replaceAll("minute ago", "m")
                       .replaceAll("minutes ago", "m")
                       .replaceAll("hour ago", "h")
@@ -775,7 +773,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                       .replaceAll("days ago", "d"),
                   style: TextStyle(
                     fontSize: 11,
-                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                    color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
                   ),
                 ),
               ),
@@ -785,9 +783,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Color infoColorStats = Colors.white;
         if (total != -1) {
           infoColorStats = Colors.red;
-          if (_userDetails.basic.total >= total) {
+          if (_userDetails.basic!.total! >= total!) {
             infoColorStats = Colors.green;
-          } else if (_userDetails.basic.total * 1.15 > total) {
+          } else if (_userDetails.basic!.total! * 1.15 > total) {
             infoColorStats = Colors.orange;
           }
         }
@@ -857,9 +855,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         } else {
           try {
             estimatedStats = StatsCalculator.calculateStats(
-              criminalRecordTotal: otherProfile.criminalrecord.total,
+              criminalRecordTotal: otherProfile.criminalrecord!.total,
               level: otherProfile.level,
-              networth: otherProfile.personalstats.networth,
+              networth: otherProfile.personalstats!.networth,
               rank: otherProfile.rank,
             );
           } catch (e) {
@@ -878,15 +876,15 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Color cansColor = Colors.orange;
         Color sslColor = Colors.green;
         bool sslProb = true;
-        int ecstasy = 0;
-        int lsd = 0;
+        int? ecstasy = 0;
+        int? lsd = 0;
 
         List<Widget> additional = <Widget>[];
         var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
         if (own is OwnPersonalStatsModel) {
           // XANAX
-          int otherXanax = otherProfile.personalstats.xantaken;
-          int myXanax = own.personalstats.xantaken;
+          int otherXanax = otherProfile.personalstats!.xantaken!;
+          int myXanax = own.personalstats!.xantaken!;
           xanaxComparison = otherXanax - myXanax;
           if (xanaxComparison < -10) {
             xanaxColor = Colors.green;
@@ -899,8 +897,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
 
           // REFILLS
-          int otherRefill = otherProfile.personalstats.refills;
-          int myRefill = own.personalstats.refills;
+          int otherRefill = otherProfile.personalstats!.refills!;
+          int myRefill = own.personalstats!.refills!;
           refillComparison = otherRefill - myRefill;
           refillColor = Colors.orange;
           if (refillComparison < -10) {
@@ -914,8 +912,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
 
           // ENHANCEMENT
-          int otherEnhancement = otherProfile.personalstats.statenhancersused;
-          int myEnhancement = own.personalstats.statenhancersused;
+          int otherEnhancement = otherProfile.personalstats!.statenhancersused!;
+          int myEnhancement = own.personalstats!.statenhancersused!;
           enhancementComparison = otherEnhancement - myEnhancement;
           if (enhancementComparison < 0) {
             enhancementColor = Colors.green;
@@ -928,8 +926,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
 
           // CANS
-          int otherCans = otherProfile.personalstats.energydrinkused;
-          int myCans = own.personalstats.energydrinkused;
+          int otherCans = otherProfile.personalstats!.energydrinkused!;
+          int myCans = own.personalstats!.energydrinkused!;
           cansComparison = otherCans - myCans;
           if (cansComparison < 0) {
             cansColor = Colors.green;
@@ -948,12 +946,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           /// if (esc + xan) < 150 & LSD > 100 SSL is red
           Widget sslWidget = SizedBox.shrink();
           sslColor = Colors.green;
-          ecstasy = otherProfile.personalstats.exttaken;
-          lsd = otherProfile.personalstats.lsdtaken;
-          if (otherXanax + ecstasy > 150) {
+          ecstasy = otherProfile.personalstats!.exttaken;
+          lsd = otherProfile.personalstats!.lsdtaken;
+          if (otherXanax + ecstasy! > 150) {
             sslProb = false;
           } else {
-            if (lsd > 50 && lsd < 50) {
+            if (lsd! > 50 && lsd < 50) {
               sslColor = Colors.orange;
             } else if (lsd > 100) {
               sslColor = Colors.red;
@@ -982,16 +980,16 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // ONLINE STATUS
         Widget onlineStatus = Row(
           children: [
-            otherProfile.lastAction.status == "Offline"
+            otherProfile.lastAction!.status == "Offline"
                 ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
-                : otherProfile.lastAction.status == "Idle"
+                : otherProfile.lastAction!.status == "Idle"
                     ? Icon(Icons.adjust, size: 12, color: Colors.orange)
                     : Icon(Icons.circle, size: 12, color: Colors.green),
-            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+            if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
               Padding(
                 padding: const EdgeInsets.only(left: 2),
                 child: Text(
-                  otherProfile.lastAction.relative
+                  otherProfile.lastAction!.relative!
                       .replaceAll("minute ago", "m")
                       .replaceAll("minutes ago", "m")
                       .replaceAll("hour ago", "h")
@@ -1000,7 +998,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                       .replaceAll("days ago", "d"),
                   style: TextStyle(
                     fontSize: 11,
-                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                    color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
                   ),
                 ),
               ),
@@ -1085,19 +1083,19 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   void _showSpiedDetailsDialog({
-    @required int strength,
-    @required int defense,
-    @required int speed,
-    @required int dexterity,
-    @required int total,
-    @required int update,
-    @required String name,
-    @required String factionName,
-    @required SpiesSource spiesSource,
+    required int? strength,
+    required int? defense,
+    required int? speed,
+    required int? dexterity,
+    required int? total,
+    required int? update,
+    required String? name,
+    required String? factionName,
+    required SpiesSource? spiesSource,
   }) {
     String lastUpdated = "";
     if (update != 0) {
-      lastUpdated = readTimestamp(update);
+      lastUpdated = readTimestamp(update!);
     }
 
     Widget strWidget;
@@ -1109,7 +1107,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var strDiff = "";
       Color strColor;
-      var result = _userDetails.basic.strength - strength;
+      var result = _userDetails.basic!.strength! - strength!;
       if (result == 0) {
         strDiff = "Same as you";
         strColor = Colors.orange;
@@ -1145,7 +1143,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var spdDiff = "";
       Color spdColor;
-      var result = _userDetails.basic.speed - speed;
+      var result = _userDetails.basic!.speed! - speed!;
       if (result == 0) {
         spdDiff = "Same as you";
         spdColor = Colors.orange;
@@ -1181,7 +1179,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var defDiff = "";
       Color defColor;
-      var result = _userDetails.basic.defense - defense;
+      var result = _userDetails.basic!.defense! - defense!;
       if (result == 0) {
         defDiff = "Same as you";
         defColor = Colors.orange;
@@ -1217,7 +1215,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var dexDiff = "";
       Color dexColor;
-      var result = _userDetails.basic.dexterity - dexterity;
+      var result = _userDetails.basic!.dexterity! - dexterity!;
       if (result == 0) {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
@@ -1253,7 +1251,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var totalDiff = "";
       Color totalColor;
-      var result = _userDetails.basic.total - total;
+      var result = _userDetails.basic!.total! - total!;
       if (result == 0) {
         totalDiff = "Same as you";
         totalColor = Colors.orange;
@@ -1305,13 +1303,13 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: name.isNotEmpty ? Text(name) : Text("Spied stats"),
+          title: name!.isNotEmpty ? Text(name) : Text("Spied stats"),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (factionName != "0" && factionName.isNotEmpty)
+                if (factionName != "0" && factionName!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(4),
                     child: Text(
@@ -1373,7 +1371,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     int refillCompare,
     Color refillColor,
     int enhancementCompare,
-    Color enhancementColor,
+    Color? enhancementColor,
     int cansCompare,
     Color cansColor,
     Color sslColor,
@@ -1428,7 +1426,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
 
     String enhancementRelative = "";
-    if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider.mainText;
+    if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider!.mainText;
     if (enhancementCompare > 0) {
       enhancementRelative = "${enhancementCompare.abs()} MORE than you";
     } else if (enhancementCompare == 0) {
@@ -1505,15 +1503,15 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Xanax: ${otherProfile.personalstats.xantaken}",
+                "Xanax: ${otherProfile.personalstats!.xantaken}",
                 style: TextStyle(fontSize: 12),
               ),
               Text(
-                "Ecstasy: ${otherProfile.personalstats.exttaken}",
+                "Ecstasy: ${otherProfile.personalstats!.exttaken}",
                 style: TextStyle(fontSize: 12),
               ),
               Text(
-                "LSD: ${otherProfile.personalstats.lsdtaken}",
+                "LSD: ${otherProfile.personalstats!.lsdtaken}",
                 style: TextStyle(fontSize: 12),
               ),
             ],
@@ -1529,25 +1527,25 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       builder: (_) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Text(otherProfile.name),
+          title: Text(otherProfile.name!),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (otherProfile.faction.factionName != "0")
+                if (otherProfile.faction!.factionName != "0")
                   Padding(
                     padding: const EdgeInsets.all(2),
                     child: Text(
-                      "Faction: ${otherProfile.faction.factionName}",
+                      "Faction: ${otherProfile.faction!.factionName}",
                       style: TextStyle(fontSize: 12),
                     ),
                   ),
-                if (otherProfile.lastAction.relative.isNotEmpty)
+                if (otherProfile.lastAction!.relative!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(2),
                     child: Text(
-                      "Online: ${otherProfile.lastAction.relative.replaceAll(RegExp('0 minutes ago'), "now")}",
+                      "Online: ${otherProfile.lastAction!.relative!.replaceAll(RegExp('0 minutes ago'), "now")}",
                       style: TextStyle(fontSize: 12),
                     ),
                   ),

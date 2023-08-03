@@ -1,6 +1,3 @@
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:intl/intl.dart';
 
@@ -8,26 +5,23 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 
 class TimeFormatter {
-  final DateTime inputTime;
+  final DateTime? inputTime;
   final TimeFormatSetting timeFormatSetting;
   final TimeZoneSetting timeZoneSetting;
 
-  TimeFormatter(
-      {@required this.inputTime,
-        @required this.timeFormatSetting,
-        @required this.timeZoneSetting});
+  TimeFormatter({required this.inputTime, required this.timeFormatSetting, required this.timeZoneSetting});
 
-  String _hourFormatted;
-  String get formatHour {
-    DateTime timeZonedTime;
-    String zoneId;
+  String? _hourFormatted;
+  String? get formatHour {
+    late DateTime timeZonedTime;
+    String? zoneId;
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
-        timeZonedTime = inputTime.toLocal();
+        timeZonedTime = inputTime!.toLocal();
         zoneId = 'LT';
         break;
       case TimeZoneSetting.tornTime:
-        timeZonedTime = inputTime.toUtc();
+        timeZonedTime = inputTime!.toUtc();
         zoneId = 'TCT';
         break;
     }
@@ -46,15 +40,15 @@ class TimeFormatter {
     return _hourFormatted;
   }
 
-  String _dayWeekFormatted;
-  String get formatDayWeek {
-    DateTime timeZonedTime;
+  String? _dayWeekFormatted;
+  String? get formatDayWeek {
+    late DateTime timeZonedTime;
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
-        timeZonedTime = inputTime.toLocal();
+        timeZonedTime = inputTime!.toLocal();
         break;
       case TimeZoneSetting.tornTime:
-        timeZonedTime = inputTime.toUtc();
+        timeZonedTime = inputTime!.toUtc();
         break;
     }
 
@@ -64,15 +58,15 @@ class TimeFormatter {
     return _dayWeekFormatted;
   }
 
-  String _monthDayFormatted;
-  String get formatMonthDay {
-    DateTime timeZonedTime;
+  String? _monthDayFormatted;
+  String? get formatMonthDay {
+    late DateTime timeZonedTime;
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
-        timeZonedTime = inputTime.toLocal();
+        timeZonedTime = inputTime!.toLocal();
         break;
       case TimeZoneSetting.tornTime:
-        timeZonedTime = inputTime.toUtc();
+        timeZonedTime = inputTime!.toUtc();
         break;
     }
 
@@ -81,5 +75,4 @@ class TimeFormatter {
 
     return _monthDayFormatted;
   }
-
 }

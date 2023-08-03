@@ -7,13 +7,13 @@ import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class BountiesWidget extends StatefulWidget {
-  final InAppWebViewController webview;
+  final InAppWebViewController? webview;
   final Function fireScriptCallback;
 
   const BountiesWidget({
-    @required this.webview,
-    @required this.fireScriptCallback,
-    Key key,
+    required this.webview,
+    required this.fireScriptCallback,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -24,9 +24,9 @@ class _BountiesWidgetState extends State<BountiesWidget> {
   final _scrollController = ScrollController();
   final _expandableController = ExpandableController();
 
-  Future _getPreferences;
+  Future? _getPreferences;
 
-  BountiesModel _bountiesModel;
+  late BountiesModel _bountiesModel;
   bool _panelExpanded = false;
 
   @override
@@ -123,7 +123,7 @@ class _BountiesWidgetState extends State<BountiesWidget> {
                     ),
                 ],
               ),
-              collapsed: null,
+              collapsed: Container(),
               expanded: Padding(
                 padding: const EdgeInsets.all(5),
                 child: _vaultExpanded(),

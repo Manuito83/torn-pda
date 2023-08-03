@@ -12,7 +12,7 @@ import 'package:torn_pda/private/yata_config.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 
 class YataError {
-  String reason;
+  String? reason;
 }
 
 class YataComm {
@@ -27,7 +27,7 @@ class YataComm {
   static CookieJar _cj = CookieJar();
   static HttpClient _client = HttpClient();
 
-  static Future<dynamic> getAwards(String apiKey) async {
+  static Future<dynamic> getAwards(String? apiKey) async {
     Map<String, String> headers = {
       "referer": _url,
     };

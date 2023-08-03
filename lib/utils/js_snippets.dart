@@ -1,10 +1,7 @@
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 String easyCrimesJS({
-  @required String nerve,
-  @required String crime,
-  @required String doCrime,
+  required String nerve,
+  required String? crime,
+  required String doCrime,
 }) {
   return '''
     var first_load = true;
@@ -560,7 +557,7 @@ String restoreChatJS() {
   ''';
 }
 
-String quickItemsJS({@required String item, bool faction = false, bool eRefill = false, bool nRefill = false}) {
+String quickItemsJS({required String item, bool faction = false, bool? eRefill = false, bool? nRefill = false}) {
   String timeRegex =
       r'/<span class="counter-wrap[\s=\-"a-zA-Z0-9]*data-time="[0-9]+"[\s=\-"a-zA-Z0-9]*>[0-9:]*<\/span>/g';
 
@@ -767,7 +764,7 @@ String quickItemsJS({@required String item, bool faction = false, bool eRefill =
   ''';
 }
 
-String changeLoadOutJS({@required String item, @required bool attackWebview}) {
+String changeLoadOutJS({required String item, required bool attackWebview}) {
   return '''
     var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=${item}';
     
@@ -791,7 +788,7 @@ String changeLoadOutJS({@required String item, @required bool attackWebview}) {
   ''';
 }
 
-String chatHighlightJS({@required String highlightMap}) {
+String chatHighlightJS({required String highlightMap}) {
   return '''
     // Credit: Torn Tools
     
@@ -889,16 +886,16 @@ String chatHighlightJS({@required String highlightMap}) {
 }
 
 String jailJS({
-  @required int levelMin,
-  @required int levelMax,
-  @required int timeMin,
-  @required int timeMax,
-  @required int scoreMin,
-  @required int scoreMax,
-  @required bool bailTicked,
-  @required bool bustTicked,
-  @required bool excludeSelf,
-  @required String excludeName,
+  required int? levelMin,
+  required int? levelMax,
+  required int? timeMin,
+  required int? timeMax,
+  required int? scoreMin,
+  required int? scoreMax,
+  required bool? bailTicked,
+  required bool? bustTicked,
+  required bool? excludeSelf,
+  required String? excludeName,
 }) {
   return '''
     // Credit to TornTools for implementation logic
@@ -1114,8 +1111,8 @@ String MiniProfiles() {
 }
 
 String bountiesJS({
-  @required int levelMax,
-  @required bool removeNotAvailable,
+  required int? levelMax,
+  required bool? removeNotAvailable,
 }) {
   return '''
     // Credit to TornTools for implementation logic
@@ -1188,7 +1185,7 @@ String bountiesJS({
   ''';
 }
 
-String ocNNB({@required String members}) {
+String ocNNB({required String members}) {
   return '''
     // Credits: some functions and logic thanks to Torn Tools
 

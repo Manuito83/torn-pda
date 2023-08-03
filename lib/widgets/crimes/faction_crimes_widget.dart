@@ -5,8 +5,8 @@ class FactionCrimesWidget extends StatefulWidget {
   final String source;
 
   FactionCrimesWidget({
-    Key key,
-    @required this.source,
+    Key? key,
+    required this.source,
   }) : super(key: key);
 
   @override

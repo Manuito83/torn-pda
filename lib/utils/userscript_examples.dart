@@ -13,8 +13,8 @@ class ScriptsExamples {
     return exampleList;
   }
 
-  static List<String> getUrls(String source) {
-    var urls = <String>[];
+  static List<String?> getUrls(String source) {
+    var urls = <String?>[];
     final regex = RegExp(r'(@match+\s+)(.*)');
     var matches = regex.allMatches(source);
     if (matches.length > 0) {

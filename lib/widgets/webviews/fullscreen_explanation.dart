@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 
 class FullScreenExplanationDialog extends StatelessWidget {
-  const FullScreenExplanationDialog({Key key}) : super(key: key);
+  const FullScreenExplanationDialog({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

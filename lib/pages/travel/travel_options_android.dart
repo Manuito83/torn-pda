@@ -13,7 +13,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/travel/travel_notification_text.dart';
 
 class TravelOptionsAndroid extends StatefulWidget {
-  final Function callback;
+  final Function? callback;
 
   TravelOptionsAndroid({
     this.callback,
@@ -24,14 +24,14 @@ class TravelOptionsAndroid extends StatefulWidget {
 }
 
 class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
-  String _travelNotificationAheadDropDownValue;
-  String _travelAlarmAheadDropDownValue;
-  String _travelTimerAheadDropDownValue;
+  String? _travelNotificationAheadDropDownValue;
+  String? _travelAlarmAheadDropDownValue;
+  String? _travelTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -286,7 +286,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setTravelNotificationAhead(value);
+        Prefs().setTravelNotificationAhead(value!);
         setState(() {
           _travelNotificationAheadDropDownValue = value;
         });
@@ -352,7 +352,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setTravelAlarmAhead(value);
+        Prefs().setTravelAlarmAhead(value!);
         setState(() {
           _travelAlarmAheadDropDownValue = value;
         });
@@ -431,7 +431,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setTravelTimerAhead(value);
+        Prefs().setTravelTimerAhead(value!);
         setState(() {
           _travelTimerAheadDropDownValue = value;
         });
@@ -453,12 +453,12 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
 
   Future<bool> _willPopCallback() async {
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     return true;
   }
 
-  Future<void> _showNotificationTextDialog() async {
+  _showNotificationTextDialog() async {
     var title = await Prefs().getTravelNotificationTitle();
     var body = await Prefs().getTravelNotificationBody();
 
@@ -485,7 +485,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
     routeWithDrawer = false;
     routeName = "profile_notifications";
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     Navigator.of(context).pop();
   }

@@ -9,7 +9,7 @@ class LootFilterDialog extends StatefulWidget {
   final Map<String, LootModel> allNpcs;
   final List<String> filteredNpcs;
 
-  LootFilterDialog({@required this.allNpcs, @required this.filteredNpcs});
+  LootFilterDialog({required this.allNpcs, required this.filteredNpcs});
 
   @override
   _LootFilterDialogState createState() => _LootFilterDialogState();
@@ -63,7 +63,7 @@ class _LootFilterDialogState extends State<LootFilterDialog> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text(value.name),
+            Text(value.name!),
             Switch(
               value: widget.filteredNpcs.contains(key) ? true : false,
               onChanged: (value) {

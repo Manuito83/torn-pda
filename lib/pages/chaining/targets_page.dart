@@ -29,8 +29,8 @@ import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class TargetsOptions {
-  String description;
-  IconData iconData;
+  String? description;
+  IconData? iconData;
 
   TargetsOptions({this.description}) {
     switch (description) {
@@ -55,8 +55,8 @@ class TargetsPage extends StatefulWidget {
   //final Function tabCallback;
 
   const TargetsPage({
-    Key key,
-    @required this.retaliationCallback,
+    Key? key,
+    required this.retaliationCallback,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -70,13 +70,13 @@ class _TargetsPageState extends State<TargetsPage> {
 
   final _addFormKey = GlobalKey<FormState>();
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
   final _chainWidgetKey = GlobalKey();
 
-  TargetsProvider _targetsProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late TargetsProvider _targetsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   // For appBar search
   Icon _searchIcon = const Icon(Icons.search);
@@ -88,7 +88,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   /// Dictates if it has been pressed and is showing a circular
   /// progress indicator while fetching data from Yata
-  bool _yataButtonEnabled = true;
+  bool? _yataButtonEnabled = true;
 
   final _popupSortChoices = <TargetSort>[
     TargetSort(type: TargetSortType.levelDes),
@@ -276,8 +276,10 @@ class _TargetsPageState extends State<TargetsPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -288,7 +290,7 @@ class _TargetsPageState extends State<TargetsPage> {
           icon: _searchIcon,
           onPressed: () {
             setState(() {
-              Color myColor = Colors.white;
+              Color? myColor = Colors.white;
               if (_searchController.text != '') {
                 myColor = Colors.orange[500];
               }
@@ -350,7 +352,7 @@ class _TargetsPageState extends State<TargetsPage> {
           future: _preferencesLoaded,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              if (_yataButtonEnabled) {
+              if (_yataButtonEnabled!) {
                 if (_yataButtonInProgress) {
                   return IconButton(
                     icon: const Icon(MdiIcons.alphaYCircleOutline),
@@ -374,7 +376,7 @@ class _TargetsPageState extends State<TargetsPage> {
                             fontSize: 13,
                             color: Colors.white,
                           ),
-                          contentColor: Colors.red[800],
+                          contentColor: Colors.red[800]!,
                           duration: const Duration(seconds: 5),
                           contentPadding: const EdgeInsets.all(10),
                         );
@@ -493,7 +495,7 @@ class _TargetsPageState extends State<TargetsPage> {
                               labelText: 'Insert player ID',
                             ),
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Cannot be empty!";
                               }
                               final n = num.tryParse(value);
@@ -511,7 +513,7 @@ class _TargetsPageState extends State<TargetsPage> {
                               TextButton(
                                 child: const Text("Add"),
                                 onPressed: () async {
-                                  if (_addFormKey.currentState.validate()) {
+                                  if (_addFormKey.currentState!.validate()) {
                                     // Get rid of dialog first, so that it can't
                                     // be pressed twice
                                     Navigator.of(context).pop();
@@ -534,7 +536,7 @@ class _TargetsPageState extends State<TargetsPage> {
                                         fontSize: 14,
                                         color: Colors.white,
                                       ),
-                                      contentColor: tryAddTarget.success ? Colors.green : Colors.orange[700],
+                                      contentColor: tryAddTarget.success ? Colors.green : Colors.orange[700]!,
                                       duration: const Duration(seconds: 3),
                                       contentPadding: const EdgeInsets.all(10),
                                     );
@@ -637,6 +639,9 @@ class _TargetsPageState extends State<TargetsPage> {
       case TargetSortType.notesAsc:
         _targetsProvider.sortTargets(TargetSortType.notesAsc);
         break;
+      default:
+        _targetsProvider.sortTargets(TargetSortType.ffAsc);
+        break;
     }
   }
 
@@ -652,7 +657,7 @@ class _TargetsPageState extends State<TargetsPage> {
               children: [
                 Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
                 const SizedBox(width: 10),
-                Text(choice.description),
+                Text(choice.description!),
               ],
             ),
           );
@@ -664,12 +669,12 @@ class _TargetsPageState extends State<TargetsPage> {
   Future _openOption(TargetsOptions choice) async {
     switch (choice.description) {
       case "Options":
-        final TargetsOptionsReturn newOptions = await Navigator.push(
+        final TargetsOptionsReturn newOptions = await (Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => TargetsOptionsPage(),
           ),
-        );
+        ) as FutureOr<TargetsOptionsReturn>);
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
@@ -708,7 +713,7 @@ class _TargetsPageState extends State<TargetsPage> {
     // If we have no targets locally, we'll import all incoming (we assume that [bothSides] and
     // [onlyLocal] are zero
     if (_targetsProvider.allTargets.isEmpty) {
-      importedTargets.targets.forEach((key, yataTarget) {
+      importedTargets.targets!.forEach((key, yataTarget) {
         onlyYata.add(
           TargetsOnlyYata()
             ..id = key
@@ -720,7 +725,7 @@ class _TargetsPageState extends State<TargetsPage> {
     }
     // Otherwise, we'll see how many are new or only local
     else {
-      importedTargets.targets.forEach((key, yataTarget) {
+      importedTargets.targets!.forEach((key, yataTarget) {
         bool foundLocally = false;
         for (final localTarget in _targetsProvider.allTargets) {
           if (!foundLocally) {
@@ -751,7 +756,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
       for (final localTarget in _targetsProvider.allTargets) {
         bool foundInYata = false;
-        importedTargets.targets.forEach((key, yataTarget) {
+        importedTargets.targets!.forEach((key, yataTarget) {
           if (!foundInYata) {
             if (localTarget.playerId.toString() == key) {
               foundInYata = true;
@@ -783,20 +788,16 @@ class _TargetsPageState extends State<TargetsPage> {
     );
   }
 
-  int _yataColorCode(String colorString) {
+  int _yataColorCode(String? colorString) {
     switch (colorString) {
       case "z":
         return 0;
-        break;
       case "green":
         return 1;
-        break;
       case "orange":
         return 2;
-        break;
       case "red":
         return 3;
-        break;
     }
     return 0;
   }

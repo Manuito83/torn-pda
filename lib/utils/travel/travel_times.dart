@@ -1,6 +1,3 @@
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Project imports:
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 
@@ -12,44 +9,32 @@ enum TravelTicket {
 }
 
 class TravelTimes {
-  static CountryName getCountry({@required String plainName}) {
+  static CountryName getCountry({required String plainName}) {
     switch (plainName) {
       case "Torn":
         return CountryName.TORN;
-        break;
       case "Argentina":
         return CountryName.ARGENTINA;
-        break;
       case "Canada":
         return CountryName.CANADA;
-        break;
       case "Cayman Islands":
         return CountryName.CAYMAN_ISLANDS;
-        break;
       case "China":
         return CountryName.CHINA;
-        break;
       case "Hawaii":
         return CountryName.HAWAII;
-        break;
       case "Japan":
         return CountryName.JAPAN;
-        break;
       case "Mexico":
         return CountryName.MEXICO;
-        break;
       case "South Africa":
         return CountryName.SOUTH_AFRICA;
-        break;
       case "Switzerland":
         return CountryName.SWITZERLAND;
-        break;
       case "UAE":
         return CountryName.UAE;
-        break;
       case "United Kingdom":
         return CountryName.UNITED_KINGDOM;
-        break;
     }
     return CountryName.TORN;
   }
@@ -57,10 +42,10 @@ class TravelTimes {
   /// Provide either a capitalized ("Argentina") name for [countryName] or a CountryName for [code]
   static int travelTimeMinutesOneWay({
     String countryName = "",
-    CountryName countryCode = CountryName.TORN,
-    @required TravelTicket ticket,
+    CountryName? countryCode = CountryName.TORN,
+    required TravelTicket? ticket,
   }) {
-    CountryName code = countryCode;
+    CountryName? code = countryCode;
 
     if (countryName.isNotEmpty) {
       code = getCountry(plainName: countryName);
@@ -80,7 +65,7 @@ class TravelTimes {
     int tripUAE = 0;
     int tripCanada = 0;
 
-    switch (travelTicket) {
+    switch (travelTicket!) {
       case TravelTicket.standard:
         tripJapan = 225;
         tripHawaii = 134;
@@ -135,40 +120,29 @@ class TravelTimes {
         break;
     }
 
-    switch (code) {
+    switch (code!) {
       case CountryName.ARGENTINA:
         return tripArgentina;
-        break;
       case CountryName.CANADA:
         return tripCanada;
-        break;
       case CountryName.CAYMAN_ISLANDS:
         return tripCayman;
-        break;
       case CountryName.CHINA:
         return tripChina;
-        break;
       case CountryName.HAWAII:
         return tripHawaii;
-        break;
       case CountryName.JAPAN:
         return tripJapan;
-        break;
       case CountryName.MEXICO:
         return tripMexico;
-        break;
       case CountryName.SOUTH_AFRICA:
         return tripSouthAfrica;
-        break;
       case CountryName.SWITZERLAND:
         return tripSwitzerland;
-        break;
       case CountryName.UAE:
         return tripUAE;
-        break;
       case CountryName.UNITED_KINGDOM:
         return tripUK;
-        break;
       case CountryName.TORN:
         // no travel time
         break;

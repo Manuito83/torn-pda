@@ -34,35 +34,35 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewUrlDialog extends StatefulWidget {
-  final Function callFindInPage;
-  final String title;
+  final Function? callFindInPage;
+  final String? title;
   final String url;
-  final InAppWebViewController inAppWebview;
-  final WebViewController stockWebView;
-  final UserDetailsProvider userProvider;
+  final InAppWebViewController? inAppWebview;
+  final WebViewController? stockWebView;
+  final UserDetailsProvider? userProvider;
 
   WebviewUrlDialog(
       {this.callFindInPage,
-      @required this.title,
-      @required this.url,
+      required this.title,
+      required this.url,
       this.inAppWebview,
       this.stockWebView,
-      @required this.userProvider});
+      required this.userProvider});
 
   @override
   _WebviewUrlDialogState createState() => _WebviewUrlDialogState();
 }
 
 class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
-  ThemeProvider _themeProvider;
-  ShortcutsProvider _shortcutsProvider;
-  SettingsProvider _settingsProvider;
+  ThemeProvider? _themeProvider;
+  late ShortcutsProvider _shortcutsProvider;
+  late SettingsProvider _settingsProvider;
 
   final _customURLController = new TextEditingController();
   var _customURLKey = GlobalKey<FormState>();
 
-  String _currentUrl;
-  String _pageTitle;
+  String? _currentUrl;
+  String? _pageTitle;
 
   @override
   void initState() {
@@ -97,7 +97,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: _themeProvider.secondBackground,
+                  color: _themeProvider!.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -114,18 +114,18 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     Flexible(
                       child: Text(
                         "OPTIONS",
-                        style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                       ),
                     ),
                     SizedBox(height: 15),
                     if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
-                        widget.userProvider.basic.faction.factionId != 0)
+                        widget.userProvider!.basic!.faction!.factionId != 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            primary: Colors.red,
-                            onPrimary: Colors.white,
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.max,
@@ -184,24 +184,24 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               String exactStats = "";
                               String estimatedStats = "";
                               if (spyFoundInYata) {
-                                String total = formatBigNumbers(spyModel.total);
-                                String str = formatBigNumbers(spyModel.strength);
-                                String spd = formatBigNumbers(spyModel.speed);
-                                String def = formatBigNumbers(spyModel.defense);
-                                String dex = formatBigNumbers(spyModel.dexterity);
+                                String total = formatBigNumbers(spyModel.total!);
+                                String str = formatBigNumbers(spyModel.strength!);
+                                String spd = formatBigNumbers(spyModel.speed!);
+                                String def = formatBigNumbers(spyModel.defense!);
+                                String dex = formatBigNumbers(spyModel.dexterity!);
                                 exactStats = "${total} (STR $str, SPD $spd, DEF $def, DEX $dex), "
-                                    "updated ${readTimestamp(spyModel.update)}";
+                                    "updated ${readTimestamp(spyModel.update!)}";
                               } else {
                                 estimatedStats = StatsCalculator.calculateStats(
-                                  criminalRecordTotal: t.criminalrecord.total,
+                                  criminalRecordTotal: t.criminalrecord!.total,
                                   level: t.level,
-                                  networth: t.personalstats.networth,
+                                  networth: t.personalstats!.networth,
                                   rank: t.rank,
                                 );
 
-                                estimatedStats += "\n- Xanax: ${t.personalstats.xantaken}";
-                                estimatedStats += "\n- Refills (E): ${t.personalstats.refills}";
-                                estimatedStats += "\n- Drinks (E): ${t.personalstats.energydrinkused}";
+                                estimatedStats += "\n- Xanax: ${t.personalstats!.xantaken}";
+                                estimatedStats += "\n- Refills (E): ${t.personalstats!.refills}";
+                                estimatedStats += "\n- Drinks (E): ${t.personalstats!.energydrinkused}";
                                 estimatedStats += "\n(tap to get a comparison with you)";
                               }
 
@@ -209,13 +209,13 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 attackId: attackId,
                                 attackName: t.name,
                                 attackLevel: t.level.toString(),
-                                attackLife: "${t.life.current}/${t.life.maximum}",
+                                attackLife: "${t.life!.current}/${t.life!.maximum}",
                                 attackAge: t.age.toString(),
                                 estimatedStats: estimatedStats,
                                 exactStats: exactStats,
-                                xanax: t.personalstats.xantaken.toString(),
-                                refills: t.personalstats.refills.toString(),
-                                drinks: t.personalstats.energydrinkused.toString(),
+                                xanax: t.personalstats!.xantaken.toString(),
+                                refills: t.personalstats!.refills.toString(),
+                                drinks: t.personalstats!.energydrinkused.toString(),
                               );
                             } else {
                               membersNotified = await firebaseFunctions.sendAttackAssistMessage(
@@ -225,7 +225,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
                             String membersMessage = "$membersNotified faction member${membersNotified == 1 ? "" : "s"} "
                                 "${membersNotified == 1 ? "has" : "have"} been notified!";
-                            Color membersColor = Colors.green;
+                            Color? membersColor = Colors.green;
 
                             if (membersNotified == 0) {
                               membersMessage = "No faction member could be notified (not using Torn PDA or "
@@ -243,7 +243,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
-                              contentColor: membersColor,
+                              contentColor: membersColor!,
                               duration: Duration(seconds: 5),
                               contentPadding: EdgeInsets.all(10),
                             );
@@ -262,7 +262,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 TextFormField(
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: _themeProvider.mainText,
+                                    color: _themeProvider!.mainText,
                                   ),
                                   controller: _customURLController,
                                   maxLength: 300,
@@ -279,7 +279,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     labelStyle: TextStyle(fontSize: 12),
                                   ),
                                   validator: (value) {
-                                    if (value.replaceAll(' ', '').isEmpty) {
+                                    if (value!.replaceAll(' ', '').isEmpty) {
                                       return "Cannot be empty!";
                                     }
                                     return null;
@@ -317,7 +317,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                         onPressed: () {
                           Navigator.of(context).pop();
-                          widget.inAppWebview.loadUrl(
+                          widget.inAppWebview!.loadUrl(
                             urlRequest: URLRequest(
                               url: WebUri("https://www.torn.com"),
                             ),
@@ -349,8 +349,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           // otherwise we can change _currentUrl while the copy
                           // is being performed and hang the app
                           var copied = _currentUrl;
-                          if (_currentUrl.length > 60) {
-                            copied = _currentUrl.substring(0, 60) + "...";
+                          if (_currentUrl!.length > 60) {
+                            copied = _currentUrl!.substring(0, 60) + "...";
                           }
 
                           BotToast.showText(
@@ -445,7 +445,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
-                            widget.callFindInPage();
+                            widget.callFindInPage!();
                           },
                         ),
                       ),
@@ -468,8 +468,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                         onPressed: () async {
                           Navigator.of(context).pop();
-                          if (await canLaunchUrl(Uri.parse(_currentUrl))) {
-                            await launchUrl(Uri.parse(_currentUrl), mode: LaunchMode.externalApplication);
+                          if (await canLaunchUrl(Uri.parse(_currentUrl!))) {
+                            await launchUrl(Uri.parse(_currentUrl!), mode: LaunchMode.externalApplication);
                           }
                         },
                       ),
@@ -497,14 +497,16 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     child: Icon(MdiIcons.minus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
-                                        if (newOptions.android.initialScale == 0) {
-                                          newOptions.android.initialScale = 350;
-                                        } else if (newOptions.android.initialScale > 100) {
-                                          newOptions.android.initialScale -= 5;
+                                        InAppWebViewSettings newOptions = (await widget.inAppWebview!.getSettings())!;
+                                        if (newOptions.initialScale == 0) {
+                                          newOptions.initialScale = 350;
+                                        } else if (newOptions.initialScale != null) {
+                                          if (newOptions.initialScale! > 100) {
+                                            newOptions.initialScale = newOptions.initialScale! - 5;
+                                          }
                                         }
-                                        widget.inAppWebview.setOptions(options: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                        widget.inAppWebview!.setSettings(settings: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.initialScale ?? 0;
                                       }
                                     },
                                   ),
@@ -516,9 +518,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     child: Icon(MdiIcons.refresh),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
-                                        newOptions.android.initialScale = 0;
-                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        InAppWebViewSettings newOptions = (await widget.inAppWebview!.getSettings())!;
+                                        newOptions.initialScale = 0;
+                                        widget.inAppWebview!.setSettings(settings: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = 0;
                                       }
                                     },
@@ -531,13 +533,14 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     child: Icon(MdiIcons.plus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        InAppWebViewGroupOptions newOptions =
+                                            (await widget.inAppWebview!.getOptions())!;
                                         if (newOptions.android.initialScale == 0) {
                                           newOptions.android.initialScale = 100;
                                         } else if (newOptions.android.initialScale < 350) {
                                           newOptions.android.initialScale += 5;
                                         }
-                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        widget.inAppWebview!.setOptions(options: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
                                       }
                                     },
@@ -606,9 +609,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: _themeProvider.secondBackground,
+                backgroundColor: _themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: _themeProvider.secondBackground,
+                  backgroundColor: _themeProvider!.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 25,
@@ -617,7 +620,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       "images/icons/pda_icon.png",
                       width: 18,
                       height: 18,
-                      color: _themeProvider.mainText,
+                      color: _themeProvider!.mainText,
                     ),
                   ),
                 ),
@@ -630,7 +633,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
   }
 
   void onCustomURLSubmitted() {
-    if (_customURLKey.currentState.validate()) {
+    if (_customURLKey.currentState!.validate()) {
       String url = _customURLController.text.replaceAll(" ", "");
       if (!url.toLowerCase().contains("https://") && !url.toLowerCase().contains("http://")) {
         url = 'https://' + url;
@@ -639,13 +642,13 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
       }
 
       if (widget.inAppWebview != null) {
-        widget.inAppWebview.loadUrl(
+        widget.inAppWebview!.loadUrl(
           urlRequest: URLRequest(
             url: WebUri(url),
           ),
         );
       } else {
-        widget.stockWebView.loadUrl(
+        widget.stockWebView!.loadUrl(
           _customURLController.text,
         );
       }
@@ -655,7 +658,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
     }
   }
 
-  Future<void> _openCustomShortcutDialog(String title, String url) {
+  Future<void> _openCustomShortcutDialog(String? title, String? url) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -689,15 +692,15 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 }
 
 class CustomShortcutDialog extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final String title;
-  final String url;
+  final ThemeProvider? themeProvider;
+  final String? title;
+  final String? url;
 
   const CustomShortcutDialog({
-    @required this.themeProvider,
-    @required this.title,
-    @required this.url,
-    Key key,
+    required this.themeProvider,
+    required this.title,
+    required this.url,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -705,7 +708,7 @@ class CustomShortcutDialog extends StatefulWidget {
 }
 
 class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
-  ShortcutsProvider _shortcutsProvider;
+  late ShortcutsProvider _shortcutsProvider;
 
   final _customURLController = new TextEditingController();
   final _customShortcutNameController = new TextEditingController();
@@ -718,8 +721,8 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
   void initState() {
     super.initState();
     _shortcutsProvider = context.read<ShortcutsProvider>();
-    _customShortcutNameController.text = widget.title;
-    _customShortcutURLController.text = widget.url;
+    _customShortcutNameController.text = widget.title!;
+    _customShortcutURLController.text = widget.url!;
   }
 
   @override
@@ -743,7 +746,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: widget.themeProvider.secondBackground,
+                  color: widget.themeProvider!.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -761,7 +764,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                       child: Text(
                         "Add a name and URL for your custom shortcut. Note: "
                         "ensure URL begins with 'https://'",
-                        style: TextStyle(fontSize: 12, color: widget.themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: widget.themeProvider!.mainText),
                       ),
                     ),
                     SizedBox(height: 15),
@@ -773,7 +776,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                           TextFormField(
                             style: TextStyle(
                               fontSize: 14,
-                              color: widget.themeProvider.mainText,
+                              color: widget.themeProvider!.mainText,
                             ),
                             textCapitalization: TextCapitalization.sentences,
                             controller: _customShortcutNameController,
@@ -786,7 +789,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                               labelText: 'Name',
                             ),
                             validator: (value) {
-                              if (value.replaceAll(' ', '').isEmpty) {
+                              if (value!.replaceAll(' ', '').isEmpty) {
                                 return "Cannot be empty!";
                               }
                               return null;
@@ -807,7 +810,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                                 TextFormField(
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: widget.themeProvider.mainText,
+                                    color: widget.themeProvider!.mainText,
                                   ),
                                   controller: _customShortcutURLController,
                                   maxLength: 300,
@@ -819,7 +822,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                                     labelText: 'URL',
                                   ),
                                   validator: (value) {
-                                    if (value.replaceAll(' ', '').isEmpty) {
+                                    if (value!.replaceAll(' ', '').isEmpty) {
                                       return "Cannot be empty!";
                                     }
                                     if (!value.toLowerCase().contains('https://')) {
@@ -843,10 +846,10 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                         TextButton(
                           child: Text("Add"),
                           onPressed: () {
-                            if (!_customShortcutURLKey.currentState.validate()) {
+                            if (!_customShortcutURLKey.currentState!.validate()) {
                               return;
                             }
-                            if (!_customShortcutNameKey.currentState.validate()) {
+                            if (!_customShortcutNameKey.currentState!.validate()) {
                               return;
                             }
 
@@ -883,9 +886,9 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.secondBackground,
+                backgroundColor: widget.themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: widget.themeProvider.secondBackground,
+                  backgroundColor: widget.themeProvider!.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 25,
@@ -894,7 +897,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                       "images/icons/pda_icon.png",
                       width: 18,
                       height: 18,
-                      color: widget.themeProvider.mainText,
+                      color: widget.themeProvider!.mainText,
                     ),
                   ),
                 ),

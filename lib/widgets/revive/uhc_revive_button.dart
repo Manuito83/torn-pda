@@ -1,5 +1,4 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,17 +13,17 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UhcReviveButton extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final OwnProfileExtended user;
-  final SettingsProvider settingsProvider;
-  final WebViewProvider webViewProvider;
+  final ThemeProvider? themeProvider;
+  final OwnProfileExtended? user;
+  final SettingsProvider? settingsProvider;
+  final WebViewProvider? webViewProvider;
 
   const UhcReviveButton({
-    @required this.themeProvider,
-    @required this.settingsProvider,
-    @required this.webViewProvider,
+    required this.themeProvider,
+    required this.settingsProvider,
+    required this.webViewProvider,
     this.user,
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -32,7 +31,7 @@ class UhcReviveButton extends StatefulWidget {
 }
 
 class _UhcReviveButtonState extends State<UhcReviveButton> {
-  OwnProfileExtended _user;
+  OwnProfileExtended? _user;
 
   @override
   void initState() {
@@ -85,7 +84,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: widget.themeProvider.secondBackground,
+                      color: widget.themeProvider!.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -107,7 +106,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                               Flexible(
                                 child: Text(
                                   "REQUEST A REVIVE FROM UHC",
-                                  style: TextStyle(fontSize: 11, color: widget.themeProvider.mainText),
+                                  style: TextStyle(fontSize: 11, color: widget.themeProvider!.mainText),
                                 ),
                               ),
                             ],
@@ -202,7 +201,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
+                                    contentColor: Colors.red[800]!,
                                     duration: Duration(seconds: 5),
                                     contentPadding: EdgeInsets.all(10),
                                   );
@@ -210,7 +209,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                   return;
                                 }
 
-                                if (_user.status.color != 'red' && _user.status.state != "Hospital") {
+                                if (_user!.status!.color != 'red' && _user!.status!.state != "Hospital") {
                                   BotToast.showText(
                                     text: 'According to Torn you are not currently hospitalized, please wait a '
                                         'few seconds and try again!',
@@ -218,7 +217,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
+                                    contentColor: Colors.red[800]!,
                                     duration: Duration(seconds: 5),
                                     contentPadding: EdgeInsets.all(10),
                                   );
@@ -227,15 +226,15 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                 }
 
                                 var uhc = UhcRevive(
-                                  playerId: _user.playerId,
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerFactionId: _user.faction.factionId,
+                                  playerId: _user!.playerId,
+                                  playerName: _user!.name,
+                                  playerFaction: _user!.faction!.factionName,
+                                  playerFactionId: _user!.faction!.factionId,
                                 );
 
                                 uhc.callMedic().then((value) {
-                                  var resultString = "";
-                                  var resultColor = Colors.transparent;
+                                  String? resultString = "";
+                                  Color? resultColor = Colors.transparent;
 
                                   if (value == "200") {
                                     resultString = "Request received by UHC!\n\n"
@@ -253,12 +252,12 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                   }
 
                                   BotToast.showText(
-                                    text: resultString,
+                                    text: resultString!,
                                     textStyle: TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: resultColor,
+                                    contentColor: resultColor!,
                                     duration: Duration(seconds: 5),
                                     contentPadding: EdgeInsets.all(10),
                                   );
@@ -284,9 +283,9 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: widget.themeProvider.secondBackground,
+                    backgroundColor: widget.themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: widget.themeProvider.secondBackground,
+                      backgroundColor: widget.themeProvider!.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,

@@ -10,14 +10,14 @@ BarsModel barsModelFromJson(String str) => BarsModel.fromJson(json.decode(str));
 String barsModelToJson(BarsModel data) => json.encode(data.toJson());
 
 class BarsModel {
-  int serverTime;
+  int? serverTime;
   // PersonalBars class covers 4 different bars, as the parameters are the same,
   // this might change in the future
-  PersonalBars happy;
-  PersonalBars life;
-  PersonalBars energy;
-  PersonalBars nerve;
-  ChainBars chain;
+  PersonalBars? happy;
+  PersonalBars? life;
+  PersonalBars? energy;
+  PersonalBars? nerve;
+  ChainBars? chain;
 
   BarsModel({
     this.serverTime,
@@ -39,20 +39,20 @@ class BarsModel {
 
   Map<String, dynamic> toJson() => {
     "server_time": serverTime == null ? null : serverTime,
-    "happy": happy == null ? null : happy.toJson(),
-    "life": life == null ? null : life.toJson(),
-    "energy": energy == null ? null : energy.toJson(),
-    "nerve": nerve == null ? null : nerve.toJson(),
-    "chain": chain == null ? null : chain.toJson(),
+    "happy": happy == null ? null : happy!.toJson(),
+    "life": life == null ? null : life!.toJson(),
+    "energy": energy == null ? null : energy!.toJson(),
+    "nerve": nerve == null ? null : nerve!.toJson(),
+    "chain": chain == null ? null : chain!.toJson(),
   };
 }
 
 class ChainBars {
-  int current;
-  int maximum;
-  int timeout;
-  double modifier;
-  int cooldown;
+  int? current;
+  int? maximum;
+  int? timeout;
+  double? modifier;
+  int? cooldown;
 
   ChainBars({
     this.current,
@@ -80,12 +80,12 @@ class ChainBars {
 }
 
 class PersonalBars {
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   PersonalBars({
     this.current,

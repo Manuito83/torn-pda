@@ -23,11 +23,11 @@ class WebViewFullAwh extends StatefulWidget {
   final Function awhMessageCallback;
 
   WebViewFullAwh({
-    @required this.customUrl,
-    @required this.customTitle,
-    @required this.sellerName,
-    @required this.sellerId,
-    @required this.awhMessageCallback,
+    required this.customUrl,
+    required this.customTitle,
+    required this.sellerName,
+    required this.sellerId,
+    required this.awhMessageCallback,
   });
 
   @override
@@ -35,15 +35,15 @@ class WebViewFullAwh extends StatefulWidget {
 }
 
 class _WebViewFullAwhState extends State<WebViewFullAwh> {
-  InAppWebViewController webView;
+  InAppWebViewController? webView;
   var _initialWebViewSettings = InAppWebViewSettings();
-  URLRequest _initialUrl;
+  URLRequest? _initialUrl;
   String _pageTitle = "";
 
   double progress = 0;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -113,7 +113,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
                     ? LinearProgressIndicator(
                         value: progress,
                         backgroundColor: Colors.blueGrey[100],
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange[300]),
+                        valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
                       )
                     : Container(height: 2),
               )
@@ -125,7 +125,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
             onWebViewCreated: (c) {
               webView = c;
               // For Arson Warehouse
-              webView.addJavaScriptHandler(
+              webView!.addJavaScriptHandler(
                   handlerName: 'copyToClipboard',
                   callback: (args) {
                     if (args.length > 0) {
@@ -151,7 +151,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
                           fontSize: 14,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.green[800],
+                        contentColor: Colors.green[800]!,
                         duration: Duration(seconds: 2),
                         contentPadding: EdgeInsets.all(10),
                       );
@@ -160,9 +160,9 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
             },
             onCreateWindow: (c, request) {
               // Allows IOS to open links with target=_blank
-              webView.loadUrl(urlRequest: request.request);
+              webView!.loadUrl(urlRequest: request.request);
               return;
-            },
+            } as Future<bool?> Function(InAppWebViewController, CreateWindowAction)?,
             onLoadStart: (c, uri) async {},
             onProgressChanged: (c, progress) async {
               if (mounted) {

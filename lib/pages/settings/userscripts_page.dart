@@ -30,9 +30,9 @@ class UserScriptsPage extends StatefulWidget {
 }
 
 class _UserScriptsPageState extends State<UserScriptsPage> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserScriptsProvider _userScriptsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserScriptsProvider _userScriptsProvider;
 
   bool _firstTimeNotAccepted = false;
 
@@ -118,7 +118,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                           minWidth: 1.0,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
                               shape: MaterialStateProperty.all<OutlinedBorder>(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
@@ -141,7 +141,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                           minWidth: 1.0,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
                               shape: MaterialStateProperty.all<OutlinedBorder>(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
@@ -199,8 +199,8 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     for (var script in _userScriptsProvider.userScriptList) {
       var exampleUpdatable = false;
       var custom = false;
-      if (script.exampleCode > 0) {
-        if (script.edited != null && !script.edited) {
+      if (script.exampleCode! > 0) {
+        if (script.edited != null && !script.edited!) {
           exampleUpdatable = true;
         }
       } else {
@@ -222,7 +222,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         height: 20,
                         width: 60,
                         child: Switch(
-                          value: script.enabled,
+                          value: script.enabled!,
                           activeTrackColor: Colors.green[100],
                           activeColor: Colors.green,
                           inactiveThumbColor: Colors.red[100],
@@ -232,7 +232,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         ),
                       ),
                       SizedBox(width: 10),
-                      Flexible(child: Text(script.name, style: TextStyle(fontSize: 13))),
+                      Flexible(child: Text(script.name!, style: TextStyle(fontSize: 13))),
                     ],
                   ),
                 ),
@@ -252,7 +252,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
-                                contentColor: Colors.grey[800],
+                                contentColor: Colors.grey[800]!,
                                 duration: Duration(seconds: 2),
                                 contentPadding: EdgeInsets.all(10),
                               );
@@ -273,7 +273,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.green[800],
+                                    contentColor: Colors.green[800]!,
                                     duration: Duration(seconds: 4),
                                     contentPadding: EdgeInsets.all(10),
                                   );
@@ -295,7 +295,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.grey[800],
+                                    contentColor: Colors.grey[800]!,
                                     duration: Duration(seconds: 7),
                                     contentPadding: EdgeInsets.all(10),
                                   );
@@ -305,7 +305,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     GestureDetector(
                       child: Icon(Icons.edit, size: 20),
                       onTap: () {
-                        return showDialog<void>(
+                        showDialog<void>(
                           context: context,
                           barrierDismissible: false, // user must tap button!
                           builder: (BuildContext context) {
@@ -987,7 +987,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.orange[800],
+                  contentColor: Colors.orange[800]!,
                   duration: Duration(seconds: 2),
                   contentPadding: EdgeInsets.all(10),
                 );

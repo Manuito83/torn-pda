@@ -22,14 +22,14 @@ class TornTraderInModel {
   bool serverError;
   bool authError;
 
-  Trade trade;
+  Trade? trade;
 
   factory TornTraderInModel.fromJson(Map<String, dynamic> json) => TornTraderInModel(
     trade: json["trade"] == null ? null : Trade.fromJson(json["trade"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "trade": trade == null ? null : trade.toJson(),
+    "trade": trade == null ? null : trade!.toJson(),
   };
 }
 
@@ -42,11 +42,11 @@ class Trade {
     this.totalProfit,
   });
 
-  String tradeUrl;
-  String tradeTotal;
-  List<TtInItem> items;
-  List<TradeMessage> tradeMessages;
-  String totalProfit;
+  String? tradeUrl;
+  String? tradeTotal;
+  List<TtInItem>? items;
+  List<TradeMessage>? tradeMessages;
+  String? totalProfit;
 
   factory Trade.fromJson(Map<String, dynamic> json) => Trade(
     tradeUrl: json["trade_url"] == null ? null : json["trade_url"],
@@ -59,8 +59,8 @@ class Trade {
   Map<String, dynamic> toJson() => {
     "trade_url": tradeUrl == null ? null : tradeUrl,
     "trade_total": tradeTotal == null ? null : tradeTotal,
-    "items": items == null ? null : List<dynamic>.from(items.map((x) => x.toJson())),
-    "trade_messages": tradeMessages == null ? null : List<dynamic>.from(tradeMessages.map((x) => x.toJson())),
+    "items": items == null ? null : List<dynamic>.from(items!.map((x) => x.toJson())),
+    "trade_messages": tradeMessages == null ? null : List<dynamic>.from(tradeMessages!.map((x) => x.toJson())),
     "total_profit": totalProfit == null ? null : totalProfit,
   };
 }
@@ -75,12 +75,12 @@ class TtInItem {
     this.profit,
   });
 
-  String name;
-  int id;
-  String price;
-  int quantity;
-  String total;
-  int profit;
+  String? name;
+  int? id;
+  String? price;
+  int? quantity;
+  String? total;
+  int? profit;
 
   factory TtInItem.fromJson(Map<String, dynamic> json) => TtInItem(
     name: json["name"] == null ? null : json["name"],
@@ -107,8 +107,8 @@ class TradeMessage {
     this.message,
   });
 
-  String name;
-  String message;
+  String? name;
+  String? message;
 
   factory TradeMessage.fromJson(Map<String, dynamic> json) => TradeMessage(
     name: json["name"] == null ? null : json["name"],

@@ -18,11 +18,11 @@ class TornTraderOutModel {
     this.appVersion,
   });
 
-  int buyer;
-  String seller;
-  int tradeId;
-  List<TtOutItem> items;
-  String appVersion;
+  int? buyer;
+  String? seller;
+  int? tradeId;
+  List<TtOutItem>? items;
+  String? appVersion;
 
   factory TornTraderOutModel.fromJson(Map<String, dynamic> json) => TornTraderOutModel(
     buyer: json["buyer"] == null ? null : json["buyer"],
@@ -36,7 +36,7 @@ class TornTraderOutModel {
     "buyer": buyer == null ? null : buyer,
     "seller": seller == null ? null : seller,
     "trade_id": tradeId == null ? null : tradeId,
-    "items": items == null ? null : List<dynamic>.from(items.map((x) => x.toJson())),
+    "items": items == null ? null : List<dynamic>.from(items!.map((x) => x.toJson())),
     "app_version": appVersion == null ? null : appVersion,
   };
 }
@@ -48,9 +48,9 @@ class TtOutItem {
     this.id,
   });
 
-  String name;
-  int quantity;
-  int id;
+  String? name;
+  int? quantity;
+  int? id;
 
   factory TtOutItem.fromJson(Map<String, dynamic> json) => TtOutItem(
     name: json["name"] == null ? null : json["name"],

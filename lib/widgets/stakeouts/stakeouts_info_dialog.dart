@@ -6,7 +6,7 @@ import '../../providers/stakeouts_controller.dart';
 
 class StakeoutsInfoDialog extends StatefulWidget {
   const StakeoutsInfoDialog({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -115,7 +115,7 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                                       )
                                     ],
                                     validator: (value) {
-                                      if (value.isEmpty) {
+                                      if (value!.isEmpty) {
                                         return "Cannot be empty!";
                                       }
                                       final n = num.tryParse(value);
@@ -132,8 +132,8 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                                       return null;
                                     },
                                     onEditingComplete: () {
-                                      if (_maxDelayFormState.currentState.validate()) {
-                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text);
+                                      if (_maxDelayFormState.currentState!.validate()) {
+                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text)!;
                                       }
                                       FocusScopeNode currentFocus = FocusScope.of(context);
                                       if (!currentFocus.hasPrimaryFocus) {
@@ -141,8 +141,8 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                                       }
                                     },
                                     onTapOutside: (value) {
-                                      if (_maxDelayFormState.currentState.validate()) {
-                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text);
+                                      if (_maxDelayFormState.currentState!.validate()) {
+                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text)!;
                                       }
                                     },
                                   ),

@@ -17,8 +17,8 @@ class SharePriceDialog extends StatefulWidget {
   final Function callbackPrices;
 
   SharePriceDialog({
-    @required this.stock,
-    @required this.callbackPrices,
+    required this.stock,
+    required this.callbackPrices,
   });
 
   @override
@@ -26,7 +26,7 @@ class SharePriceDialog extends StatefulWidget {
 }
 
 class _SharePriceDialogState extends State<SharePriceDialog> {
-  ThemeProvider _themeProvider;
+  late ThemeProvider _themeProvider;
 
   bool _inputCashGain = true;
   bool _inputCashLoss = true;
@@ -48,8 +48,8 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     super.initState();
 
     if (widget.stock.alertGain == null) {
-      double initCash = widget.stock.currentPrice + 10;
-      double initPercent = (widget.stock.currentPrice + 10) * 100 / widget.stock.currentPrice - 100;
+      double initCash = widget.stock.currentPrice! + 10;
+      double initPercent = (widget.stock.currentPrice! + 10) * 100 / widget.stock.currentPrice! - 100;
       _gainHintCash = "\$${removeZeroDecimals(initCash)}";
       _gainHintPercent = "+${initPercent.toStringAsFixed(2)}%";
     } else {
@@ -59,12 +59,12 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
         selection: TextSelection.collapsed(offset: gainExisting.length),
       );
       _gainHintCash = "\$${removeZeroDecimals(widget.stock.alertGain)}";
-      _gainHintPercent = "+${(widget.stock.alertGain * 100 / widget.stock.currentPrice - 100).toStringAsFixed(2)}%";
+      _gainHintPercent = "+${(widget.stock.alertGain! * 100 / widget.stock.currentPrice! - 100).toStringAsFixed(2)}%";
     }
 
     if (widget.stock.alertLoss == null) {
-      double initCash = widget.stock.currentPrice - 10;
-      double initPercent = (widget.stock.currentPrice - 10) * 100 / widget.stock.currentPrice - 100;
+      double initCash = widget.stock.currentPrice! - 10;
+      double initPercent = (widget.stock.currentPrice! - 10) * 100 / widget.stock.currentPrice! - 100;
       _lossHintCash = "\$${removeZeroDecimals(initCash)}";
       _lossHintPercent = "${initPercent.toStringAsFixed(2)}%";
     } else {
@@ -74,7 +74,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
         selection: TextSelection.collapsed(offset: lossExisting.length),
       );
       _lossHintCash = "\$${removeZeroDecimals(widget.stock.alertLoss)}";
-      _lossHintPercent = "${(widget.stock.alertLoss * 100 / widget.stock.currentPrice - 100).toStringAsFixed(2)}%";
+      _lossHintPercent = "${(widget.stock.alertLoss! * 100 / widget.stock.currentPrice! - 100).toStringAsFixed(2)}%";
     }
   }
 
@@ -180,17 +180,17 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                   // so that we keep both always up to date
                                   // Percentage hint
                                   var sign = "";
-                                  if (gainInput > widget.stock.currentPrice) {
+                                  if (gainInput > widget.stock.currentPrice!) {
                                     sign = "+";
                                   }
-                                  var percentage = (gainInput * 100 / widget.stock.currentPrice) - 100;
+                                  var percentage = (gainInput * 100 / widget.stock.currentPrice!) - 100;
 
                                   // Cash hint
                                   double cash = 0;
                                   if (_inputCashGain) {
                                     cash = gainInput;
                                   } else {
-                                    cash = (gainInput * widget.stock.currentPrice / 100) + widget.stock.currentPrice;
+                                    cash = (gainInput * widget.stock.currentPrice! / 100) + widget.stock.currentPrice!;
                                   }
 
                                   setState(() {
@@ -219,9 +219,9 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 double priceValidator = _cleanNumber(_gainController.text);
                                 if (!_inputCashGain) {
                                   priceValidator =
-                                      (priceValidator * widget.stock.currentPrice / 100) + widget.stock.currentPrice;
+                                      (priceValidator * widget.stock.currentPrice! / 100) + widget.stock.currentPrice!;
                                 }
-                                if (value.isNotEmpty && priceValidator <= widget.stock.currentPrice) {
+                                if (value!.isNotEmpty && priceValidator <= widget.stock.currentPrice!) {
                                   return "Must be above ${widget.stock.currentPrice}!";
                                 }
                                 return null;
@@ -328,17 +328,17 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                   // so that we keep both always up to date
                                   // Percentage hint
                                   var sign = "";
-                                  if (lossInput > widget.stock.currentPrice) {
+                                  if (lossInput > widget.stock.currentPrice!) {
                                     sign = "+";
                                   }
-                                  var percentage = (lossInput * 100 / widget.stock.currentPrice) - 100;
+                                  var percentage = (lossInput * 100 / widget.stock.currentPrice!) - 100;
 
                                   // Cash hint
                                   double cash = 0;
                                   if (_inputCashLoss) {
                                     cash = lossInput;
                                   } else {
-                                    cash = widget.stock.currentPrice - (lossInput * widget.stock.currentPrice / 100);
+                                    cash = widget.stock.currentPrice! - (lossInput * widget.stock.currentPrice! / 100);
                                   }
 
                                   setState(() {
@@ -367,9 +367,9 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 double priceValidator = _cleanNumber(_lossController.text);
                                 if (!_inputCashLoss) {
                                   priceValidator =
-                                      widget.stock.currentPrice + (priceValidator * widget.stock.currentPrice / 100);
+                                      widget.stock.currentPrice! + (priceValidator * widget.stock.currentPrice! / 100);
                                 }
-                                if (value.isNotEmpty && priceValidator >= widget.stock.currentPrice) {
+                                if (value!.isNotEmpty && priceValidator >= widget.stock.currentPrice!) {
                                   return "Must be below ${widget.stock.currentPrice}!";
                                 }
                                 if (value.isNotEmpty && priceValidator <= 0) {
@@ -436,11 +436,11 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                             bool success = false;
 
                             // Might be passed as null if we are removing
-                            double gain;
-                            double loss;
+                            late double gain;
+                            late double loss;
 
                             try {
-                              if (_formKey.currentState.validate()) {
+                              if (_formKey.currentState!.validate()) {
                                 Navigator.of(context).pop();
                                 String action = "${widget.stock.acronym}-";
                                 // If all is empty, we'll delete the
@@ -451,7 +451,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                   if (_gainController.text.isNotEmpty) {
                                     gain = _cleanNumberAbs(_gainController.text);
                                     if (!_inputCashGain) {
-                                      gain = (gain * widget.stock.currentPrice / 100) + widget.stock.currentPrice;
+                                      gain = (gain * widget.stock.currentPrice! / 100) + widget.stock.currentPrice!;
                                       gain = _cleanNumberAbs(gain.toStringAsFixed(2));
                                     }
                                     action += "G-$gain-";
@@ -462,7 +462,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                   if (_lossController.text.isNotEmpty) {
                                     loss = _cleanNumberAbs(_lossController.text);
                                     if (!_inputCashLoss) {
-                                      loss = widget.stock.currentPrice - (loss * widget.stock.currentPrice / 100);
+                                      loss = widget.stock.currentPrice! - (loss * widget.stock.currentPrice! / 100);
                                       loss = _cleanNumberAbs(loss.toStringAsFixed(2));
                                     }
                                     action += "L-${_cleanNumberAbs(loss.toStringAsFixed(2))}";
@@ -501,7 +501,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
-                                contentColor: Colors.red[800],
+                                contentColor: Colors.red[800]!,
                                 duration: Duration(seconds: 3),
                                 contentPadding: EdgeInsets.all(10),
                               );
@@ -558,18 +558,18 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     return double.parse(text).abs();
   }
 
-  String removeZeroDecimals(double input) {
+  String removeZeroDecimals(double? input) {
     return input.toString().replaceAll(RegExp(r"([.]*0)(?!.*\d)"), "");
   }
 
-  Color _returnColor({@required bool fromGain}) {
+  Color? _returnColor({required bool fromGain}) {
     if (fromGain) {
-      if (_cleanNumber(_gainHintCash.replaceAll("\$", "")) < widget.stock.currentPrice) {
+      if (_cleanNumber(_gainHintCash.replaceAll("\$", "")) < widget.stock.currentPrice!) {
         return Colors.orange[800];
       }
     } else if (!fromGain) {
       double lossCheck = _cleanNumber(_lossHintCash.replaceAll("\$", ""));
-      if (lossCheck > widget.stock.currentPrice || lossCheck <= 0) {
+      if (lossCheck > widget.stock.currentPrice! || lossCheck <= 0) {
         return Colors.orange[800];
       }
     }

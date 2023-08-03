@@ -18,8 +18,8 @@ import 'package:torn_pda/widgets/countdown.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class WarOptions {
-  String description;
-  IconData iconData;
+  String? description;
+  IconData? iconData;
 
   WarOptions({this.description}) {
     switch (description) {
@@ -43,7 +43,7 @@ class RetalsPage extends StatefulWidget {
   //final Function tabCallback;
 
   const RetalsPage({
-    Key key,
+    Key? key,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -54,9 +54,9 @@ class RetalsPage extends StatefulWidget {
 class _RetalsPageState extends State<RetalsPage> {
   final _chainWidgetKey = GlobalKey();
 
-  RetalsController _r;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  RetalsController? _r;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   @override
   void initState() {
@@ -194,8 +194,10 @@ class _RetalsPageState extends State<RetalsPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -254,8 +256,8 @@ class _RetalsPageState extends State<RetalsPage> {
   }
 
   _updateRetal() {
-    if (_r.browserIsOpen) return;
-    _r.retrieveRetals(context);
+    if (_r!.browserIsOpen) return;
+    _r!.retrieveRetals(context);
   }
 
   _disclaimerDialog() {
@@ -336,7 +338,7 @@ class _RetalsPageState extends State<RetalsPage> {
 
 class RetalsTargetsList extends StatelessWidget {
   RetalsTargetsList({
-    @required this.retalsController,
+    required this.retalsController,
   });
 
   final RetalsController retalsController;

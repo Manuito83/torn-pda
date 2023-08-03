@@ -15,8 +15,8 @@ class InventoryModel {
     this.inventory,
   });
 
-  List<DisplayCabinet> display;
-  List<InventoryItem> inventory;
+  List<DisplayCabinet>? display;
+  List<InventoryItem>? inventory;
 
   factory InventoryModel.fromJson(Map<String, dynamic> json) => InventoryModel(
         display: json["display"] == null
@@ -28,8 +28,8 @@ class InventoryModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "display": display == null ? null : List<dynamic>.from(display.map((x) => x.toJson())),
-        "inventory": inventory == null ? null : List<dynamic>.from(inventory.map((x) => x.toJson())),
+        "display": display == null ? null : List<dynamic>.from(display!.map((x) => x.toJson())),
+        "inventory": inventory == null ? null : List<dynamic>.from(inventory!.map((x) => x.toJson())),
       };
 }
 
@@ -44,13 +44,13 @@ class DisplayCabinet {
     this.marketPrice,
   });
 
-  int id;
-  int uid;
-  String name;
-  String type;
-  int quantity;
-  int circulation;
-  int marketPrice;
+  int? id;
+  int? uid;
+  String? name;
+  String? type;
+  int? quantity;
+  int? circulation;
+  int? marketPrice;
 
   factory DisplayCabinet.fromJson(Map<String, dynamic> json) => DisplayCabinet(
         id: json["ID"] == null ? null : json["ID"],
@@ -84,13 +84,13 @@ class InventoryItem {
     this.marketPrice,
   });
 
-  int id;
-  int uid;
-  String name;
-  String type;
-  int quantity;
-  int equipped;
-  int marketPrice;
+  int? id;
+  int? uid;
+  String? name;
+  String? type;
+  int? quantity;
+  int? equipped;
+  int? marketPrice;
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) => InventoryItem(
         id: json["ID"] == null ? null : json["ID"],

@@ -12,11 +12,11 @@ import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 
 class CrimesWidget extends StatefulWidget {
-  final InAppWebViewController controller;
+  final InAppWebViewController? controller;
 
   CrimesWidget({
-    Key key,
-    @required this.controller,
+    Key? key,
+    required this.controller,
   }) : super(key: key);
 
   @override
@@ -24,7 +24,7 @@ class CrimesWidget extends StatefulWidget {
 }
 
 class _CrimesWidgetState extends State<CrimesWidget> {
-  CrimesProvider _crimesProvider;
+  late CrimesProvider _crimesProvider;
 
   @override
   void initState() {
@@ -66,15 +66,15 @@ class _CrimesWidgetState extends State<CrimesWidget> {
     var myList = <Widget>[];
     for (var crime in _crimesProvider.activeCrimesList) {
       String doCrime;
-      if (crime.nerve <= 3) {
+      if (crime.nerve! <= 3) {
         doCrime = '2';
       } else {
         doCrime = '4';
       }
-      Color nerveColor;
-      if (crime.nerve < 11) {
+      Color? nerveColor;
+      if (crime.nerve! < 11) {
         nerveColor = Colors.green[300];
-      } else if (crime.nerve < 15) {
+      } else if (crime.nerve! < 15) {
         nerveColor = Colors.orange;
       } else {
         nerveColor = Colors.red;
@@ -99,7 +99,7 @@ class _CrimesWidgetState extends State<CrimesWidget> {
               ),
             ),
             label: Text(
-              crime.shortName,
+              crime.shortName!,
               style: TextStyle(fontSize: 12),
             ),
             onPressed: () async {
@@ -108,7 +108,7 @@ class _CrimesWidgetState extends State<CrimesWidget> {
                 crime: crime.action,
                 doCrime: doCrime,
               );
-              await widget.controller.evaluateJavascript(source: myCrime);
+              await widget.controller!.evaluateJavascript(source: myCrime);
             },
           ),
         ),

@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class WarAheadOptions extends StatefulWidget {
-  final Function callback;
+  final Function? callback;
 
   WarAheadOptions({
     this.callback,
@@ -25,14 +25,14 @@ class WarAheadOptions extends StatefulWidget {
 }
 
 class _WarAheadOptionsState extends State<WarAheadOptions> {
-  int _warNotificationAheadValue;
-  int _warAlarmAheadDropDownValue;
-  int _warTimerAheadDropDownValue;
+  int? _warNotificationAheadValue;
+  int? _warAlarmAheadDropDownValue;
+  int? _warTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -277,7 +277,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setRankedWarNotificationAhead(value);
+        Prefs().setRankedWarNotificationAhead(value!);
         setState(() {
           _warNotificationAheadValue = value;
         });
@@ -356,7 +356,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setRankedWarAlarmAhead(value);
+        Prefs().setRankedWarAlarmAhead(value!);
         setState(() {
           _warAlarmAheadDropDownValue = value;
         });
@@ -435,7 +435,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setRankedWarTimerAhead(value);
+        Prefs().setRankedWarTimerAhead(value!);
         setState(() {
           _warTimerAheadDropDownValue = value;
         });
@@ -458,7 +458,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
 
   _goBack() {
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     routeWithDrawer = false;
     routeName = "profile_notifications";

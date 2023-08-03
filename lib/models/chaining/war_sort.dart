@@ -18,8 +18,8 @@ enum WarSortType {
 }
 
 class WarSort {
-  WarSortType type;
-  String description;
+  WarSortType? type;
+  late String description;
 
   WarSort({this.type}) {
     switch (type) {
@@ -70,6 +70,9 @@ class WarSort {
         break;
       case WarSortType.notesAsc:
         description = 'Sort by note (asc)';
+        break;
+      default:
+        description = 'Sort by respect (des)';
         break;
     }
   }

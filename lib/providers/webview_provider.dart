@@ -39,26 +39,26 @@ enum UiMode {
 class TabDetails {
   bool sleepTab = false;
   bool initialised = false;
-  Widget webView;
-  SleepingWebView sleepingWebView;
-  GlobalKey<WebViewFullState> webViewKey;
-  String currentUrl = "https://www.torn.com";
-  String pageTitle = "";
+  Widget? webView;
+  SleepingWebView? sleepingWebView;
+  GlobalKey<WebViewFullState>? webViewKey;
+  String? currentUrl = "https://www.torn.com";
+  String? pageTitle = "";
   bool chatRemovalActiveTab = false;
-  List<String> historyBack = <String>[];
-  List<String> historyForward = <String>[];
+  List<String?> historyBack = <String?>[];
+  List<String?> historyForward = <String?>[];
   bool isChainingBrowser = false;
-  DateTime lastUsedTime;
+  DateTime? lastUsedTime;
 }
 
 class SleepingWebView {
-  final String customUrl;
-  final GlobalKey<WebViewFullState> key;
+  final String? customUrl;
+  final GlobalKey<WebViewFullState>? key;
   //final bool dialog;
   final bool useTabs;
   final bool chatRemovalActive;
   final bool isChainingBrowser;
-  final ChainingPayload chainingPayload;
+  final ChainingPayload? chainingPayload;
 
   const SleepingWebView({
     this.customUrl = 'https://www.torn.com',
@@ -126,9 +126,9 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   pdaIconActivation({
-    @required bool shortTap,
-    @required BuildContext context,
-    @required automaticLogin,
+    required bool shortTap,
+    required BuildContext context,
+    required automaticLogin,
   }) {
     browserShowInForeground = true;
 
@@ -243,7 +243,7 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _secondaryInitialised = false;
 
-  DateTime _lastBrowserOpenedTime;
+  DateTime? _lastBrowserOpenedTime;
 
   var _onlyLoadTabsWhenUsed = true;
   bool get onlyLoadTabsWhenUsed => _onlyLoadTabsWhenUsed;
@@ -255,11 +255,11 @@ class WebViewProvider extends ChangeNotifier {
 
   /// [recallLastSession] should be used to open a browser session where we left it last time
   Future initialiseMain({
-    @required String initUrl,
-    @required BuildContext context,
+    required String? initUrl,
+    required BuildContext context,
     bool recallLastSession = false,
     bool isChainingBrowser = false,
-    ChainingPayload chainingPayload,
+    ChainingPayload? chainingPayload,
     bool restoreSessionCookie = false,
   }) async {
     if (restoreSessionCookie) {
@@ -300,26 +300,26 @@ class WebViewProvider extends ChangeNotifier {
     _hideTabs = await Prefs().getHideTabs();
 
     // Add the main opener
-    String url = initUrl;
+    String? url = initUrl;
     if (recallLastSession) {
       String savedJson = await Prefs().getWebViewMainTab();
       TabSaveModel savedMain = tabSaveModelFromJson(savedJson);
-      if (savedMain.tabsSave.length > 0) {
-        String saveMain = savedMain.tabsSave[0].url;
-        String authUrl = await _assessNativeAuth(inputUrl: saveMain, context: context);
+      if (savedMain.tabsSave!.length > 0) {
+        String? saveMain = savedMain.tabsSave![0].url;
+        String? authUrl = await _assessNativeAuth(inputUrl: saveMain, context: context);
         addTab(
           url: authUrl,
-          pageTitle: savedMain.tabsSave[0].pageTitle,
-          chatRemovalActive: savedMain.tabsSave[0].chatRemovalActive,
-          historyBack: savedMain.tabsSave[0].historyBack,
-          historyForward: savedMain.tabsSave[0].historyForward,
+          pageTitle: savedMain.tabsSave![0].pageTitle,
+          chatRemovalActive: savedMain.tabsSave![0].chatRemovalActive,
+          historyBack: savedMain.tabsSave![0].historyBack,
+          historyForward: savedMain.tabsSave![0].historyForward,
         );
       } else {
-        String authUrl = await _assessNativeAuth(inputUrl: "https://www.torn.com", context: context);
+        String? authUrl = await _assessNativeAuth(inputUrl: "https://www.torn.com", context: context);
         await addTab(url: authUrl, chatRemovalActive: chatRemovalActiveGlobal);
       }
     } else {
-      String authUrl = await _assessNativeAuth(inputUrl: url, context: context);
+      String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
       await addTab(
         url: authUrl,
         chatRemovalActive: chatRemovalActiveGlobal,
@@ -330,14 +330,14 @@ class WebViewProvider extends ChangeNotifier {
     _currentTab = 0;
   }
 
-  Future initialiseSecondary({@required bool useTabs, bool recallLastSession = false}) async {
+  Future initialiseSecondary({required bool useTabs, bool recallLastSession = false}) async {
     var savedJson = await Prefs().getWebViewSecondaryTabs();
     var savedWebViews = tabSaveModelFromJson(savedJson);
     bool sleepTabsByDefault = await Prefs().getOnlyLoadTabsWhenUsed();
 
     _secondaryInitialised = true;
 
-    for (var wv in savedWebViews.tabsSave) {
+    for (var wv in savedWebViews.tabsSave!) {
       if (useTabs) {
         addTab(
           tabKey: wv.tabKey,
@@ -372,7 +372,7 @@ class WebViewProvider extends ChangeNotifier {
       // Awake WebView if we are recalling it
       if (_tabList[_currentTab].sleepTab) {
         _tabList[_currentTab].sleepTab = false;
-        _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView);
+        _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView!);
       }
     } else {
       _currentTab = 0;
@@ -380,16 +380,16 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   Future addTab({
-    GlobalKey tabKey,
-    int windowId,
+    GlobalKey? tabKey,
+    int? windowId,
     bool sleepTab = false,
-    String url = "https://www.torn.com",
-    String pageTitle = "",
-    bool chatRemovalActive,
-    List<String> historyBack,
-    List<String> historyForward,
+    String? url = "https://www.torn.com",
+    String? pageTitle = "",
+    bool? chatRemovalActive,
+    List<String?>? historyBack,
+    List<String?>? historyForward,
     bool isChainingBrowser = false,
-    ChainingPayload chainingPayload,
+    ChainingPayload? chainingPayload,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     var key = GlobalKey<WebViewFullState>();
@@ -433,11 +433,11 @@ class WebViewProvider extends ChangeNotifier {
   /// saved, but without the actual webView), so that if the other browser type uses tabs, these are not lost
   /// between sessions.
   void addHiddenTab({
-    String url = "https://www.torn.com",
-    String pageTitle = "Torn",
-    bool chatRemovalActive,
-    List<String> historyBack,
-    List<String> historyForward,
+    String? url = "https://www.torn.com",
+    String? pageTitle = "Torn",
+    bool? chatRemovalActive,
+    List<String?>? historyBack,
+    List<String?>? historyForward,
   }) {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     _tabList.add(
@@ -451,7 +451,7 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void removeTab({int position, bool calledFromTab = false}) async {
+  void removeTab({int? position, bool calledFromTab = false}) async {
     if (calledFromTab) {
       position = _currentTab;
     }
@@ -468,10 +468,10 @@ class WebViewProvider extends ChangeNotifier {
       var activated = _tabList[_currentTab];
       if (activated.sleepTab) {
         activated.sleepTab = false;
-        activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView);
+        activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView!);
       }
 
-      _tabList[_currentTab]?.webViewKey?.currentState?.resumeThisWebview();
+      _tabList[_currentTab].webViewKey?.currentState?.resumeThisWebview();
     } else if (_currentTab == _tabList.length - 1) {
       // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
       _currentTab = _tabList.length - 2;
@@ -479,7 +479,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
     if (wasLast) {
-      _tabList[_currentTab]?.webViewKey?.currentState?.resumeThisWebview();
+      _tabList[_currentTab].webViewKey?.currentState?.resumeThisWebview();
       // Notify listeners first so that the tab changes
       notifyListeners();
       // Then wait 200 milliseconds so that the animated stack view changes its child
@@ -496,7 +496,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void wipeTabs() async {
     _currentTab = 0;
-    _tabList[0]?.webViewKey?.currentState?.resumeThisWebview();
+    _tabList[0].webViewKey?.currentState?.resumeThisWebview();
     _tabList.removeRange(1, _tabList.length);
     notifyListeners();
     _saveTabs();
@@ -509,7 +509,7 @@ class WebViewProvider extends ChangeNotifier {
     if (newActiveTab == _currentTab) return;
 
     var deactivated = _tabList[_currentTab];
-    deactivated?.webViewKey?.currentState?.pauseThisWebview();
+    deactivated.webViewKey?.currentState?.pauseThisWebview();
 
     _currentTab = newActiveTab;
     var activated = _tabList[_currentTab];
@@ -520,10 +520,10 @@ class WebViewProvider extends ChangeNotifier {
     // Awake WebView if necessary
     if (activated.sleepTab) {
       activated.sleepTab = false;
-      activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView);
+      activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView!);
     }
 
-    activated?.webViewKey?.currentState?.resumeThisWebview();
+    activated.webViewKey?.currentState?.resumeThisWebview();
 
     _callAssessMethods();
     notifyListeners();
@@ -544,7 +544,7 @@ class WebViewProvider extends ChangeNotifier {
       if (_tabList[i].lastUsedTime == null) return;
 
       // Only sleep if 24 hours have elapsed
-      Duration timeDifference = now.difference(_tabList[i].lastUsedTime);
+      Duration timeDifference = now.difference(_tabList[i].lastUsedTime!);
       if (timeDifference.inHours < 24) return;
 
       if (_tabList[i].webView != null && !_tabList[i].isChainingBrowser && _tabList[i] != _tabList[currentTab]) {
@@ -649,7 +649,7 @@ class WebViewProvider extends ChangeNotifier {
     // Awake remaining tab if necessary
     if (_tabList[0].sleepTab) {
       _tabList[_currentTab].sleepTab = false;
-      _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView);
+      _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView!);
     }
 
     _tabList[0].webViewKey?.currentState?.resumeThisWebview();
@@ -670,8 +670,8 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void reportTabLoadUrl(Key reporterKey, String newUrl) {
-    var tab = getTabFromKey(reporterKey);
+  void reportTabLoadUrl(Key? reporterKey, String newUrl) {
+    var tab = getTabFromKey(reporterKey)!;
     // Tab initialised prevents the first URL (generic to Torn) to be inserted in the history and also forward history
     // from getting removed (first thing the webView does is to visit the generic URL)
     if (tab.initialised) {
@@ -692,8 +692,8 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void reportTabPageTitle(Key reporterKey, String pageTitle) {
-    var tab = getTabFromKey(reporterKey);
+  void reportTabPageTitle(Key? reporterKey, String? pageTitle) {
+    var tab = getTabFromKey(reporterKey)!;
     tab.pageTitle = pageTitle;
 
     // Pause timers for tabs that load which are not active (e.g. at the initialization, we pause all except the main)
@@ -768,14 +768,14 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
-  void addToHistoryBack({@required TabDetails tab, @required String url}) {
+  void addToHistoryBack({required TabDetails tab, required String? url}) {
     tab.historyBack.add(url);
     if (tab.historyBack.length > 25) {
       tab.historyBack.removeAt(0);
     }
   }
 
-  void addToHistoryForward({@required TabDetails tab, @required String url}) {
+  void addToHistoryForward({required TabDetails tab, required String? url}) {
     tab.historyForward.add(url);
     if (tab.historyForward.length > 25) {
       tab.historyForward.removeAt(0);
@@ -788,12 +788,11 @@ class WebViewProvider extends ChangeNotifier {
     // This might be executed before the browser is ready, so wait for it
     if (_tabList.isEmpty) {
       var start = DateTime.now();
-      while (DateTime.now().difference(start).inMilliseconds < 3000 &&
-          (_tabList.isEmpty || _tabList[_currentTab] == null)) {
+      while (DateTime.now().difference(start).inMilliseconds < 3000 && _tabList.isEmpty) {
         await Future.delayed(Duration(milliseconds: 500));
       }
     }
-    if (_tabList.isNotEmpty && _tabList[_currentTab] != null) {
+    if (_tabList.isNotEmpty) {
       tab = _tabList[_currentTab];
       tab.webViewKey?.currentState?.assessErrorCases();
     }
@@ -815,7 +814,7 @@ class WebViewProvider extends ChangeNotifier {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[600],
+        contentColor: Colors.grey[600]!,
         duration: const Duration(seconds: 1),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -827,7 +826,7 @@ class WebViewProvider extends ChangeNotifier {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[600],
+        contentColor: Colors.grey[600]!,
         duration: const Duration(seconds: 1),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -853,7 +852,7 @@ class WebViewProvider extends ChangeNotifier {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[600],
+        contentColor: Colors.grey[600]!,
         duration: const Duration(seconds: 1),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -865,7 +864,7 @@ class WebViewProvider extends ChangeNotifier {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[600],
+        contentColor: Colors.grey[600]!,
         duration: const Duration(seconds: 1),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -884,7 +883,7 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  void loadMainTabUrl(String url) {
+  void loadMainTabUrl(String? url) {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
     tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
@@ -893,11 +892,11 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  void convertToChainingBrowser({ChainingPayload chainingPayload}) {
+  void convertToChainingBrowser({ChainingPayload? chainingPayload}) {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
     tab.isChainingBrowser = true;
-    tab.webViewKey?.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload);
+    tab.webViewKey?.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload!);
     if (_currentTab != 0) {
       activateTab(0);
     }
@@ -914,7 +913,7 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void loadCurrentTabUrl(String url) {
+  void loadCurrentTabUrl(String? url) {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl != null) {
       tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
@@ -922,7 +921,7 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  String currentTabUrl() {
+  String? currentTabUrl() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl != null) {
       return tab.webViewKey?.currentState?.reportCurrentUrl();
@@ -930,7 +929,7 @@ class WebViewProvider extends ChangeNotifier {
     return "";
   }
 
-  String currentTabTitle() {
+  String? currentTabTitle() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl != null) {
       return tab.webViewKey?.currentState?.reportCurrentTitle();
@@ -948,7 +947,7 @@ class WebViewProvider extends ChangeNotifier {
     TabSaveModel saveSecondaryModel = TabSaveModel()..tabsSave = <TabsSave>[];
     for (var i = 0; i < _tabList.length; i++) {
       if (i == 0) {
-        saveMainModel.tabsSave.add(
+        saveMainModel.tabsSave!.add(
           TabsSave()
             ..url = _tabList[0].currentUrl
             ..pageTitle = _tabList[0].pageTitle
@@ -957,7 +956,7 @@ class WebViewProvider extends ChangeNotifier {
             ..historyForward = _tabList[0].historyForward,
         );
       } else {
-        saveSecondaryModel.tabsSave.add(
+        saveSecondaryModel.tabsSave!.add(
           TabsSave()
             ..url = _tabList[i].currentUrl
             ..pageTitle = _tabList[i].pageTitle
@@ -990,7 +989,7 @@ class WebViewProvider extends ChangeNotifier {
     _currentTab = 0;
   }
 
-  TabDetails getTabFromKey(Key reporterKey) {
+  TabDetails? getTabFromKey(Key? reporterKey) {
     for (var tab in _tabList) {
       // Null check because not all webview have a key (sleeping tabs!)
       if (tab.webView?.key == reporterKey) {
@@ -1003,14 +1002,14 @@ class WebViewProvider extends ChangeNotifier {
 
   void _callAssessMethods() {
     var tab = _tabList[_currentTab];
-    if (tab.currentUrl.contains("gym.php") || tab.currentUrl.contains("index.php?page=hunting")) {
+    if (tab.currentUrl!.contains("gym.php") || tab.currentUrl!.contains("index.php?page=hunting")) {
       tab.webViewKey?.currentState?.assessEnergyWarning();
     }
   }
 
   // This can be called from the WebView and ensures that several BotToasts are not shown at the start if
   // several tabs are open to the gym
-  void showEnergyWarningMessage(String message, Key reporterKey) {
+  void showEnergyWarningMessage(String message, Key? reporterKey) {
     for (var tab in _tabList) {
       // Null check because not all webview have a key (sleeping tabs!)
       if (tab.webView?.key == reporterKey) {
@@ -1047,18 +1046,18 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   Future openBrowserPreference({
-    @required BuildContext context,
-    @required String url,
-    @required BrowserTapType browserTapType,
+    required BuildContext context,
+    required String? url,
+    required BrowserTapType browserTapType,
     bool recallLastSession = false,
     // Chaining
     final bool isChainingBrowser = false,
-    final ChainingPayload chainingPayload,
+    final ChainingPayload? chainingPayload,
   }) async {
     // Checking _tabList might not be enough to ensure that the browser is closed. We might get duplicates
     // with double presses or even notifications, try to open the browser twice (creating repeated keys)
     // This ensures that a browser open request only happens once
-    if (_lastBrowserOpenedTime != null && (DateTime.now().difference(_lastBrowserOpenedTime).inMilliseconds) < 1500) {
+    if (_lastBrowserOpenedTime != null && (DateTime.now().difference(_lastBrowserOpenedTime!).inMilliseconds) < 1500) {
       return;
     }
     _lastBrowserOpenedTime = DateTime.now();
@@ -1070,7 +1069,7 @@ class WebViewProvider extends ChangeNotifier {
     if (browserType == 'app') {
       analytics.setCurrentScreen(screenName: 'browser_full');
 
-      String authUrl = await _assessNativeAuth(inputUrl: url, context: context);
+      String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
 
       WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
       w.stackView = WebViewStackView(
@@ -1093,13 +1092,13 @@ class WebViewProvider extends ChangeNotifier {
         removeAllChatsFullScreen();
       }
     } else {
-      if (await canLaunchUrl(Uri.parse(url))) {
+      if (await canLaunchUrl(Uri.parse(url!))) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       }
     }
   }
 
-  UiMode _decideBrowserScreenMode({@required BrowserTapType tapType, @required BuildContext context}) {
+  UiMode _decideBrowserScreenMode({required BrowserTapType tapType, required BuildContext context}) {
     SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
 
     if (tapType == BrowserTapType.chain) {
@@ -1119,7 +1118,7 @@ class WebViewProvider extends ChangeNotifier {
     return UiMode.window;
   }
 
-  void changeTornTheme({@required bool dark}) {
+  void changeTornTheme({required bool dark}) {
     if (!dark) {
       pendingThemeSync = "light";
     } else {
@@ -1140,7 +1139,7 @@ class WebViewProvider extends ChangeNotifier {
   /// At least used in the following cases:
   /// 1.- On main tab init: in case the user only uses the browser, it will fire after an app's launch when browser rebuilds
   /// 2.- Whenever the user launches the browser from a tap (other than the PDA icon, which does not load any URL itself)
-  Future<String> _assessNativeAuth({@required String inputUrl, @required BuildContext context}) async {
+  Future<String?> _assessNativeAuth({required String? inputUrl, required BuildContext context}) async {
     NativeUserProvider nativeUser = context.read<NativeUserProvider>();
     NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
     UserDetailsProvider userProvider = context.read<UserDetailsProvider>();
@@ -1150,14 +1149,14 @@ class WebViewProvider extends ChangeNotifier {
       return inputUrl;
     }
 
-    String originalInitUrl = inputUrl;
+    String originalInitUrl = inputUrl!;
     String authUrlToLoad;
     if (!originalInitUrl.contains("torn.com")) return inputUrl;
     // Auth redirects to attack pages might fail
     if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
 
     int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inHours;
-    if (nativeAuth.lastAuthRedirect == null || elapsedSinceLastAuth > 6) {
+    if (elapsedSinceLastAuth > 6) {
       log("Entering auth process!");
 
       bool error = false;
@@ -1169,7 +1168,7 @@ class WebViewProvider extends ChangeNotifier {
         TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
           context: context,
           loginData: GetInitDataModel(
-            playerId: userProvider.basic.playerId,
+            playerId: userProvider.basic!.playerId,
             sToken: nativeUser.playerSToken,
           ),
         );
@@ -1218,7 +1217,7 @@ class WebViewProvider extends ChangeNotifier {
     return inputUrl;
   }
 
-  updatePullToRefresh(BrowserRefreshSetting value) {
+  updatePullToRefresh(BrowserRefreshSetting? value) {
     if (_tabList.isEmpty) return;
     for (var tab in _tabList) {
       // Null check because not all webview have a key (sleeping tabs!)
@@ -1228,7 +1227,7 @@ class WebViewProvider extends ChangeNotifier {
 
   /// Uses the already generated shortcuts list
   Widget getIcon(int i, BuildContext context) {
-    var url = tabList[i].currentUrl;
+    var url = tabList[i].currentUrl!;
 
     var themeProvider = context.read<ThemeProvider>();
     Widget boxWidget = const ImageIcon(AssetImage('images/icons/pda_icon.png'));
@@ -1283,8 +1282,8 @@ class WebViewProvider extends ChangeNotifier {
     // the standard URL in shortcuts. That's why there are some more in the list above.
     var shortProvider = context.read<ShortcutsProvider>();
     for (var short in shortProvider.allShortcuts) {
-      if (url.contains(short.url)) {
-        boxWidget = ImageIcon(AssetImage(short.iconUrl));
+      if (url.contains(short.url!)) {
+        boxWidget = ImageIcon(AssetImage(short.iconUrl!));
         // Return if the coincidence is not with the default shortcut
         if (short.name != "Home") {
           return boxWidget;

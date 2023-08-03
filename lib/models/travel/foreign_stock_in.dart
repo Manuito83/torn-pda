@@ -18,8 +18,8 @@ class ForeignStockInModel {
     this.timestamp,
   });
 
-  Map<String, CountryDetails> countries;
-  int timestamp;
+  Map<String, CountryDetails>? countries;
+  int? timestamp;
 
   factory ForeignStockInModel.fromJson(Map<String, dynamic> json) => ForeignStockInModel(
         countries: json["stocks"] == null
@@ -30,7 +30,7 @@ class ForeignStockInModel {
 
   Map<String, dynamic> toJson() => {
         "stocks":
-            countries == null ? null : Map.from(countries).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+            countries == null ? null : Map.from(countries!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
         "timestamp": timestamp == null ? null : timestamp,
       };
 }
@@ -41,8 +41,8 @@ class CountryDetails {
     this.stocks,
   });
 
-  int update;
-  List<ForeignStock> stocks;
+  int? update;
+  List<ForeignStock>? stocks;
 
   factory CountryDetails.fromJson(Map<String, dynamic> json) => CountryDetails(
         update: json["update"] == null ? null : json["update"],
@@ -53,7 +53,7 @@ class CountryDetails {
 
   Map<String, dynamic> toJson() => {
         "update": update == null ? null : update,
-        "stocks": stocks == null ? null : List<dynamic>.from(stocks.map((x) => x.toJson())),
+        "stocks": stocks == null ? null : List<dynamic>.from(stocks!.map((x) => x.toJson())),
       };
 }
 
@@ -72,20 +72,20 @@ class ForeignStock {
 
   // NOT INCLUDED WITH YATA IMPORT
   // Calculated, NOT exported to Shared Preferences!
-  CountryName country;
-  String countryCode;
-  String countryFullName;
-  DateTime arrivalTime;
-  int timestamp;
-  ItemType itemType;
+  CountryName? country;
+  String? countryCode;
+  String? countryFullName;
+  late DateTime arrivalTime;
+  int? timestamp;
+  ItemType? itemType;
   int value = 0;
   int profit = 0;
-  int inventoryQuantity = 0;
+  int? inventoryQuantity = 0;
 
-  int id;
-  String name;
-  int quantity;
-  int cost;
+  int? id;
+  String? name;
+  int? quantity;
+  int? cost;
 
   factory ForeignStock.fromJson(Map<String, dynamic> json) => ForeignStock(
         id: json["id"] == null ? null : json["id"],

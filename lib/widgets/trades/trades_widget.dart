@@ -22,14 +22,14 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_full_awh.dart';
 
 class TradesWidget extends StatefulWidget {
-  final ThemeProvider themeProv;
-  final UserDetailsProvider userProv;
-  final InAppWebViewController webView;
+  final ThemeProvider? themeProv;
+  final UserDetailsProvider? userProv;
+  final InAppWebViewController? webView;
 
   TradesWidget({
-    @required this.themeProv,
-    @required this.userProv,
-    @required this.webView,
+    required this.themeProv,
+    required this.userProv,
+    required this.webView,
   });
 
   @override
@@ -43,7 +43,7 @@ class _TradesWidgetState extends State<TradesWidget> {
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
   final _moneyDecimalFormat = new NumberFormat("#,##0.##", "en_US");
 
-  TradesProvider _tradesProv;
+  late TradesProvider _tradesProv;
 
   @override
   void dispose() {
@@ -57,7 +57,7 @@ class _TradesWidgetState extends State<TradesWidget> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
-        collapsed: null,
+        collapsed: Container(),
         theme: ExpandableThemeData(
           hasIcon: false,
           iconColor: Colors.grey,
@@ -138,7 +138,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                                         fontSize: 14,
                                         color: Colors.white,
                                       ),
-                                      contentColor: Colors.orange[800],
+                                      contentColor: Colors.orange[800]!,
                                       duration: Duration(seconds: 5),
                                       contentPadding: EdgeInsets.all(10),
                                     );
@@ -199,7 +199,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                       3),
               child: Scrollbar(
                 controller: _scrollController,
-                isAlwaysShown: true,
+                thumbVisibility: true,
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   child: Row(
@@ -422,7 +422,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     padding: EdgeInsets.all(0),
                     iconSize: 23,
                     onPressed: () {
-                      _copyToClipboard(_tradesProv.container.ttUrl, "Receipt URL");
+                      _copyToClipboard(_tradesProv.container.ttUrl!, "Receipt URL");
                     },
                     icon: Icon(
                       Icons.receipt_long_outlined,
@@ -480,15 +480,15 @@ class _TradesWidgetState extends State<TradesWidget> {
     if (_tradesProv.container.ttActive &&
         side == 'right' &&
         (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)) {
-      var ttItems = _tradesProv.container.ttItems;
+      var ttItems = _tradesProv.container.ttItems!;
 
       for (var ttProduct in ttItems) {
         if (ttProduct.price == null) {
           continue;
         }
 
-        String itemName = ttProduct.name;
-        if (ttProduct.quantity > 1) {
+        String itemName = ttProduct.name!;
+        if (ttProduct.quantity! > 1) {
           itemName += ' x${ttProduct.quantity}';
         }
 
@@ -503,13 +503,13 @@ class _TradesWidgetState extends State<TradesWidget> {
         );
 
         // Item price
-        String itemPriceTotal = '${ttProduct.total.replaceAll(" ", "")}';
+        String itemPriceTotal = '${ttProduct.total!.replaceAll(" ", "")}';
         String itemPriceIndividual = "";
-        if (ttProduct.quantity > 1) {
-          itemPriceIndividual += '(@ ${ttProduct.price.replaceAll(" ", "")})';
+        if (ttProduct.quantity! > 1) {
+          itemPriceIndividual += '(@ ${ttProduct.price!.replaceAll(" ", "")})';
         }
         String itemProfit;
-        if (ttProduct.profit >= 0) {
+        if (ttProduct.profit! >= 0) {
           itemProfit = '\$${_moneyFormat.format(ttProduct.profit)}';
         } else {
           itemProfit = '\$-${_moneyFormat.format(ttProduct.profit)}';
@@ -646,7 +646,7 @@ class _TradesWidgetState extends State<TradesWidget> {
 
     // Item name
     for (var item in sideItems) {
-      String itemName = item.name;
+      String? itemName = item.name;
       if (itemName == 'No items in trade') {
         continue;
       } else {
@@ -688,7 +688,7 @@ class _TradesWidgetState extends State<TradesWidget> {
 
     // PROPERTIES
     for (var property in sideProperties) {
-      String propertyName = property.name;
+      String? propertyName = property.name;
       if (propertyName == 'No properties in trade') {
         continue;
       } else {
@@ -727,7 +727,7 @@ class _TradesWidgetState extends State<TradesWidget> {
 
     // SHARES
     for (var share in sideShares) {
-      String shareName = share.name;
+      String? shareName = share.name;
       if (shareName == 'No shares in trade') {
         continue;
       } else {
@@ -808,7 +808,7 @@ class _TradesWidgetState extends State<TradesWidget> {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.red[800],
+        contentColor: Colors.red[800]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
@@ -816,31 +816,31 @@ class _TradesWidgetState extends State<TradesWidget> {
   }
 
   void _copyTornTraderMessages() {
-    if (_tradesProv.container.ttMessages.isEmpty) {
+    if (_tradesProv.container.ttMessages!.isEmpty) {
       BotToast.showText(
         text: "You have no predefined messages!",
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.orange[800],
+        contentColor: Colors.orange[800]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
-    } else if (_tradesProv.container.ttMessages.length == 1) {
-      String thisMessage = _tradesProv.container.ttMessages[0].message;
+    } else if (_tradesProv.container.ttMessages!.length == 1) {
+      String thisMessage = _tradesProv.container.ttMessages![0].message!;
       _copyToClipboard(thisMessage, 'Message "$thisMessage"');
     } else {
       var options = <Widget>[];
-      for (var msg in _tradesProv.container.ttMessages) {
+      for (var msg in _tradesProv.container.ttMessages!) {
         options.add(
           SimpleDialogOption(
             onPressed: () {
-              _copyToClipboard(msg.message, 'Message "${msg.message}"');
+              _copyToClipboard(msg.message!, 'Message "${msg.message}"');
               Navigator.of(context).pop();
             },
             child: Text(
-              msg.message,
+              msg.message!,
               style: TextStyle(
                 fontSize: 12,
               ),
@@ -890,7 +890,7 @@ class _TradesWidgetState extends State<TradesWidget> {
 
   Widget _awhContainer() {
     var dark = "";
-    if (widget.themeProv.currentTheme == AppTheme.dark) {
+    if (widget.themeProv!.currentTheme == AppTheme.dark) {
       dark = "dark&";
     }
 
@@ -918,7 +918,7 @@ class _TradesWidgetState extends State<TradesWidget> {
     }
 
     awhContainer
-      ..me = widget.userProv.basic.playerId
+      ..me = widget.userProv!.basic!.playerId
       ..them = _tradesProv.container.sellerName
       ..tradeId = _tradesProv.container.tradeId
       ..version = 1
@@ -961,6 +961,6 @@ class _TradesWidgetState extends State<TradesWidget> {
   }
 
   void _backFromAwhWithMessage() async {
-    await widget.webView.evaluateJavascript(source: "chat.r(${_tradesProv.container.sellerId})");
+    await widget.webView!.evaluateJavascript(source: "chat.r(${_tradesProv.container.sellerId})");
   }
 }

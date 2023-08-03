@@ -28,20 +28,20 @@ class TacTarget {
   });
 
   // Does not get saved
-  int currentLife;
-  int maxLife;
-  bool hospital;
-  bool abroad;
+  int? currentLife;
+  int? maxLife;
+  bool? hospital;
+  bool? abroad;
 
-  bool optimal;
-  String id;
-  String username;
-  int userLevel;
-  int estimatedStats;
-  String battleStats;
-  String rank;
-  double fairfight;
-  double respect;
+  bool? optimal;
+  String? id;
+  String? username;
+  int? userLevel;
+  int? estimatedStats;
+  String? battleStats;
+  String? rank;
+  double? fairfight;
+  double? respect;
 
   factory TacTarget.fromJson(Map<String, dynamic> json) => TacTarget(
     battleStats: json["battleStats"] == null ? null : json["battleStats"],

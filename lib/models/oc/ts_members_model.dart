@@ -21,9 +21,9 @@ class TornStatsMembersModel {
     this.members,
   });
 
-  bool status;
-  String message;
-  Map<String, Member> members;
+  bool? status;
+  String? message;
+  Map<String, Member>? members;
 
   factory TornStatsMembersModel.fromJson(Map<String, dynamic> json) => TornStatsMembersModel(
         status: json["status"] ?? false,
@@ -36,7 +36,7 @@ class TornStatsMembersModel {
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
-        "members": Map.from(members).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "members": Map.from(members!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -50,12 +50,12 @@ class Member {
     this.verified,
   });
 
-  String name;
-  int naturalNerve;
-  int crimeSuccess;
-  int psychDegree;
-  int federalJudge;
-  int verified;
+  String? name;
+  int? naturalNerve;
+  int? crimeSuccess;
+  int? psychDegree;
+  int? federalJudge;
+  int? verified;
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
         name: json["name"],

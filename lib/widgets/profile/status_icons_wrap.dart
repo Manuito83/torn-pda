@@ -61,15 +61,15 @@ final allowedIcons = <String, Map<String, String>>{
 
 class StatusIconsWrap extends StatefulWidget {
   StatusIconsWrap({
-    Key key,
-    @required this.user,
-    @required this.openBrowser,
-    @required this.settingsProvider,
+    Key? key,
+    required this.user,
+    required this.openBrowser,
+    required this.settingsProvider,
   }) : super(key: key);
 
-  final OwnProfileExtended user;
+  final OwnProfileExtended? user;
   final Function openBrowser;
-  final SettingsProvider settingsProvider;
+  final SettingsProvider? settingsProvider;
 
   @override
   _StatusIconsWrapState createState() => _StatusIconsWrapState();
@@ -79,8 +79,8 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
   @override
   Widget build(BuildContext context) {
     List<Widget> iconList = <Widget>[];
-    if (widget.user.icons is TornIcons) {
-      iconList = _fillIcons(widget.user.icons as TornIcons);
+    if (widget.user!.icons is TornIcons) {
+      iconList = _fillIcons(widget.user!.icons as TornIcons);
     }
 
     return Wrap(
@@ -96,12 +96,12 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
 
     parsedIcons.forEach((iconNumber, details) {
       if (details != null) {
-        if (allowedIcons.containsKey(iconNumber) && !widget.settingsProvider.iconsFiltered.contains(iconNumber)) {
+        if (allowedIcons.containsKey(iconNumber) && !widget.settingsProvider!.iconsFiltered.contains(iconNumber)) {
           bool skip = false;
 
           // See https://www.torn.com/forums.php#/p=threads&f=19&t=16251998&b=0&a=0&start=0
           if (iconNumber == "icon12") {
-            if (widget.user.life.current > widget.user.life.maximum / 4) {
+            if (widget.user!.life!.current! > widget.user!.life!.maximum! / 4) {
               skip = true;
             }
           }
@@ -120,17 +120,17 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.blue[700],
+                    contentColor: Colors.blue[700]!,
                     duration: const Duration(seconds: 5),
                     contentPadding: const EdgeInsets.all(10),
                   );
                 },
                 onDoubleTap: () {
-                  final String url = _constructUrl(iconNumber);
+                  final String? url = _constructUrl(iconNumber);
                   widget.openBrowser(url: url, shortTap: true);
                 },
                 onLongPress: () {
-                  final String url = _constructUrl(iconNumber);
+                  final String? url = _constructUrl(iconNumber);
                   widget.openBrowser(url: url, shortTap: false);
                 },
               ),
@@ -143,12 +143,12 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
     return iconList;
   }
 
-  String _constructUrl(String key) {
-    String url = "https://www.torn.com";
-    if (allowedIcons[key]["url"].isNotEmpty) {
-      url = allowedIcons[key]["url"];
+  String? _constructUrl(String key) {
+    String? url = "https://www.torn.com";
+    if (allowedIcons[key]!["url"]!.isNotEmpty) {
+      url = allowedIcons[key]!["url"];
       if (key == "icon13") {
-        url += widget.user.playerId.toString();
+        url = url! + widget.user!.playerId.toString();
       }
     }
     return url;

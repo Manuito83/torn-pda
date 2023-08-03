@@ -30,20 +30,20 @@ class Shortcut {
     this.addCompanyId = false,
   });
 
-  bool active;
-  bool visible;
-  String name;
-  String nickname;
-  String url;
-  String originalName;
-  String originalNickname;
-  String originalUrl;
-  String iconUrl;
-  Color color;
-  bool isCustom;
-  bool addPlayerId;
-  bool addFactionId;
-  bool addCompanyId;
+  bool? active;
+  bool? visible;
+  String? name;
+  String? nickname;
+  String? url;
+  String? originalName;
+  String? originalNickname;
+  String? originalUrl;
+  String? iconUrl;
+  Color? color;
+  bool? isCustom;
+  bool? addPlayerId;
+  bool? addFactionId;
+  bool? addCompanyId;
 
   factory Shortcut.fromJson(Map<String, dynamic> json) => Shortcut(
         active: json["active"] == null ? null : json["active"],

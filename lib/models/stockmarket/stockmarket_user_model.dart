@@ -13,7 +13,7 @@ class StockMarketUserModel {
     this.stocks,
   });
 
-  Map<String, Stock> stocks;
+  Map<String, Stock>? stocks;
 
   factory StockMarketUserModel.fromJson(Map<String, dynamic> json) {
     if (json["stocks"] is List) {
@@ -30,7 +30,7 @@ class StockMarketUserModel {
   }
 
   Map<String, dynamic> toJson() => {
-        "stocks": stocks == null ? null : Map.from(stocks).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "stocks": stocks == null ? null : Map.from(stocks!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -41,9 +41,9 @@ class Stock {
     this.transactions,
   });
 
-  int stockId;
-  int totalShares;
-  Map<String, Transaction> transactions;
+  int? stockId;
+  int? totalShares;
+  Map<String, Transaction>? transactions;
 
   factory Stock.fromJson(Map<String, dynamic> json) => Stock(
         stockId: json["stock_id"] == null ? null : json["stock_id"],
@@ -58,7 +58,7 @@ class Stock {
         "total_shares": totalShares == null ? null : totalShares,
         "transactions": transactions == null
             ? null
-            : Map.from(transactions).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+            : Map.from(transactions!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -69,9 +69,9 @@ class Transaction {
     this.timeBought,
   });
 
-  int shares;
-  double boughtPrice;
-  int timeBought;
+  int? shares;
+  double? boughtPrice;
+  int? timeBought;
 
   factory Transaction.fromJson(Map<String, dynamic> json) => Transaction(
         shares: json["shares"] == null ? null : json["shares"],

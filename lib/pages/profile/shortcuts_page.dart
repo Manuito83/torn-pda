@@ -21,9 +21,9 @@ class ShortcutsPage extends StatefulWidget {
 }
 
 class _ShortcutsPageState extends State<ShortcutsPage> {
-  SettingsProvider _settingsProvider;
-  ShortcutsProvider _shortcutsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ShortcutsProvider _shortcutsProvider;
+  late ThemeProvider _themeProvider;
 
   final _customNameController = new TextEditingController();
   final _customURLController = new TextEditingController();
@@ -168,8 +168,8 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                         backgroundColor: Colors.blue,
                         icon: Icons.edit,
                         onPressed: (context) {
-                          _customNameController.text = short.nickname;
-                          _customURLController.text = short.url;
+                          _customNameController.text = short.nickname!;
+                          _customURLController.text = short.url!;
                           _openEditDialog(short);
                         },
                       ),
@@ -179,7 +179,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     height: 50,
                     child: Card(
                       shape: RoundedRectangleBorder(
-                        side: BorderSide(color: short.color, width: 1.5),
+                        side: BorderSide(color: short.color!, width: 1.5),
                         borderRadius: BorderRadius.circular(4.0),
                       ),
                       child: Padding(
@@ -189,7 +189,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             Padding(
                               padding: EdgeInsets.all(2),
                               child: Image.asset(
-                                short.iconUrl,
+                                short.iconUrl!,
                                 width: 18,
                                 height: 18,
                                 color: _themeProvider.mainText,
@@ -201,7 +201,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
-                                  Flexible(child: Text(short.name)),
+                                  Flexible(child: Text(short.name!)),
                                   Icon(Icons.reorder),
                                 ],
                               ),
@@ -246,7 +246,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
         height: 50,
         child: Card(
           shape: RoundedRectangleBorder(
-            side: BorderSide(color: Colors.orange[500], width: 1.5),
+            side: BorderSide(color: Colors.orange[500]!, width: 1.5),
             borderRadius: BorderRadius.circular(4.0),
           ),
           child: Padding(
@@ -297,15 +297,15 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
           for (var short in shortcutProvider.allShortcuts) {
             allShortcuts.add(
               // Don't show those that are active
-              !short.active
+              !short.active!
                   ? AnimatedOpacity(
-                      opacity: short.visible ? 1 : 0,
+                      opacity: short.visible! ? 1 : 0,
                       duration: Duration(milliseconds: 300),
                       child: Container(
                         height: 50,
                         child: Card(
                           shape: RoundedRectangleBorder(
-                            side: BorderSide(color: short.color, width: 1.5),
+                            side: BorderSide(color: short.color!, width: 1.5),
                             borderRadius: BorderRadius.circular(4.0),
                           ),
                           child: Padding(
@@ -315,7 +315,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 Padding(
                                   padding: EdgeInsets.all(2),
                                   child: Image.asset(
-                                    short.iconUrl,
+                                    short.iconUrl!,
                                     width: 18,
                                     height: 18,
                                     color: _themeProvider.mainText,
@@ -326,9 +326,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Flexible(child: Text(short.name)),
+                                      Flexible(child: Text(short.name!)),
                                       TextButton(
-                                        onPressed: !short.visible
+                                        onPressed: !short.visible!
                                             // Avoid double press
                                             ? null
                                             : () async {
@@ -398,7 +398,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.orange[800],
+                contentColor: Colors.orange[800]!,
                 duration: Duration(seconds: 2),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -571,7 +571,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   labelText: 'Name',
                                 ),
                                 validator: (value) {
-                                  if (value.replaceAll(' ', '').isEmpty) {
+                                  if (value!.replaceAll(' ', '').isEmpty) {
                                     return "Cannot be empty!";
                                   }
                                   return null;
@@ -604,7 +604,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                         labelText: 'URL',
                                       ),
                                       validator: (value) {
-                                        if (value.replaceAll(' ', '').isEmpty) {
+                                        if (value!.replaceAll(' ', '').isEmpty) {
                                           return "Cannot be empty!";
                                         }
                                         if (!value.toLowerCase().contains('https://')) {
@@ -622,8 +622,8 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             IconButton(
                               icon: Icon(Icons.paste),
                               onPressed: () async {
-                                ClipboardData data = await Clipboard.getData('text/plain');
-                                _customURLController.text = data.text;
+                                ClipboardData data = (await Clipboard.getData('text/plain'))!;
+                                _customURLController.text = data.text!;
                               },
                             ),
                           ],
@@ -647,10 +647,10 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             TextButton(
                               child: Text("Add"),
                               onPressed: () {
-                                if (!_customNameKey.currentState.validate()) {
+                                if (!_customNameKey.currentState!.validate()) {
                                   return;
                                 }
-                                if (!_customURLKey.currentState.validate()) {
+                                if (!_customURLKey.currentState!.validate()) {
                                   return;
                                 }
 
@@ -779,7 +779,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   labelText: 'Name',
                                 ),
                                 validator: (value) {
-                                  if (value.replaceAll(' ', '').isEmpty) {
+                                  if (value!.replaceAll(' ', '').isEmpty) {
                                     return "Cannot be empty!";
                                   }
                                   return null;
@@ -812,7 +812,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                         labelText: 'URL',
                                       ),
                                       validator: (value) {
-                                        if (value.replaceAll(' ', '').isEmpty) {
+                                        if (value!.replaceAll(' ', '').isEmpty) {
                                           return "Cannot be empty!";
                                         }
                                         if (!value.toLowerCase().contains('https://')) {
@@ -830,8 +830,8 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             IconButton(
                               icon: Icon(Icons.paste),
                               onPressed: () async {
-                                ClipboardData data = await Clipboard.getData('text/plain');
-                                _customURLController.text = data.text;
+                                ClipboardData data = (await Clipboard.getData('text/plain'))!;
+                                _customURLController.text = data.text!;
                               },
                             ),
                           ],
@@ -855,10 +855,10 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             TextButton(
                               child: Text("Save"),
                               onPressed: () {
-                                if (!_customNameKey.currentState.validate()) {
+                                if (!_customNameKey.currentState!.validate()) {
                                   return;
                                 }
-                                if (!_customURLKey.currentState.validate()) {
+                                if (!_customURLKey.currentState!.validate()) {
                                   return;
                                 }
 

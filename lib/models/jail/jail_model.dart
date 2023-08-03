@@ -10,16 +10,16 @@ String jailModelToJson(JailModel data) => json.encode(data.toJson());
 
 class JailModel {
   JailModel({
-    this.levelMin,
-    this.levelMax,
-    this.timeMin,
-    this.timeMax,
-    this.scoreMin,
-    this.scoreMax,
-    this.bailTicked,
-    this.bustTicked,
-    this.excludeSelf,
-    this.excludeName,
+    this.levelMin = 1,
+    this.levelMax = 100,
+    this.timeMin = 0,
+    this.timeMax = 100,
+    this.scoreMin = 0,
+    this.scoreMax = 250000,
+    this.bailTicked = false,
+    this.bustTicked = false,
+    this.excludeSelf = false,
+    this.excludeName = "",
   });
 
   int levelMin;
@@ -47,15 +47,15 @@ class JailModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "levelMin": levelMin == null ? null : levelMin,
-        "levelMax": levelMax == null ? null : levelMax,
-        "timeMin": timeMin == null ? null : timeMin,
-        "timeMax": timeMax == null ? null : timeMax,
-        "scoreMin": scoreMin == null ? null : scoreMin,
-        "scoreMax": scoreMax == null ? null : scoreMax,
-        "bailTicked": bailTicked == null ? null : bailTicked,
-        "bustTicked": bustTicked == null ? null : bustTicked,
-        "excludeSelf": excludeSelf == null ? null : excludeSelf,
-        "excludeName": excludeName == null ? null : excludeName,
+        "levelMin": levelMin,
+        "levelMax": levelMax,
+        "timeMin": timeMin,
+        "timeMax": timeMax,
+        "scoreMin": scoreMin,
+        "scoreMax": scoreMax,
+        "bailTicked": bailTicked,
+        "bustTicked": bustTicked,
+        "excludeSelf": excludeSelf,
+        "excludeName": excludeName,
       };
 }

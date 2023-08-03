@@ -92,7 +92,7 @@ enum ApiSelection {
 }
 
 class ApiError {
-  int errorId;
+  int? errorId;
   String errorReason = "";
   String pdaErrorDetails = "";
   ApiError({this.errorId = 0, this.pdaErrorDetails = ""}) {
@@ -169,16 +169,16 @@ class ApiError {
 class _ApiCallRequest {
   final Completer<dynamic> completer;
   final ApiSelection apiSelection;
-  final String prefix;
+  final String? prefix;
   final int limit;
-  final int from;
-  final String forcedApiKey;
+  final int? from;
+  final String? forcedApiKey;
   final DateTime timestamp;
 
   _ApiCallRequest({
-    @required this.completer,
-    @required this.timestamp,
-    @required this.apiSelection,
+    required this.completer,
+    required this.timestamp,
+    required this.apiSelection,
     this.prefix = "",
     this.limit = 100,
     this.from,
@@ -193,7 +193,7 @@ class ApiCallerController extends GetxController {
   final _callQueue = Queue<_ApiCallRequest>();
   final _callCount = 0.obs;
   List<DateTime> _callTimestamps = [];
-  Timer _timer;
+  Timer? _timer;
 
   final _callCountStream = BehaviorSubject<int>.seeded(0);
   Stream<int> get callCountStream => _callCountStream.stream;
@@ -233,11 +233,11 @@ class ApiCallerController extends GetxController {
 
   // Launches an API call based on the provided parameters
   Future<dynamic> enqueueApiCall({
-    @required ApiSelection apiSelection,
-    String prefix = "",
+    required ApiSelection apiSelection,
+    String? prefix = "",
     int limit = 100,
-    int from,
-    String forcedApiKey = "",
+    int? from,
+    String? forcedApiKey = "",
   }) async {
     // Remove timestamps older than 60 seconds and add the current timestamp
     final now = DateTime.now();
@@ -334,7 +334,7 @@ class ApiCallerController extends GetxController {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.orange[700],
+          contentColor: Colors.orange[700]!,
           duration: const Duration(seconds: 2),
           contentPadding: const EdgeInsets.all(10),
         );
@@ -342,7 +342,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getAppWidgetInfo({@required int limit, @required String forcedApiKey}) async {
+  Future<dynamic> getAppWidgetInfo({required int limit, required String? forcedApiKey}) async {
     dynamic apiResult;
     await enqueueApiCall(apiSelection: ApiSelection.appWidget, limit: limit, forcedApiKey: forcedApiKey).then((value) {
       apiResult = value;
@@ -379,7 +379,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getOwnProfileBasic({String forcedApiKey = ""}) async {
+  Future<dynamic> getOwnProfileBasic({String? forcedApiKey = ""}) async {
     dynamic apiResult;
     await enqueueApiCall(apiSelection: ApiSelection.ownBasic, forcedApiKey: forcedApiKey).then((value) {
       apiResult = value;
@@ -396,7 +396,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getOwnProfileExtended({@required int limit, String forcedApiKey = ""}) async {
+  Future<dynamic> getOwnProfileExtended({required int limit, String forcedApiKey = ""}) async {
     dynamic apiResult;
     await enqueueApiCall(apiSelection: ApiSelection.ownExtended, limit: limit, forcedApiKey: forcedApiKey)
         .then((value) {
@@ -414,7 +414,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getEvents({@required int limit, int from}) async {
+  Future<dynamic> getEvents({required int limit, int? from}) async {
     dynamic apiResult;
     await enqueueApiCall(apiSelection: ApiSelection.events, limit: limit, from: from).then((value) {
       apiResult = value;
@@ -471,7 +471,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getOtherProfileExtended({@required String playerId}) async {
+  Future<dynamic> getOtherProfileExtended({required String playerId}) async {
     dynamic apiResult;
     await enqueueApiCall(prefix: playerId, apiSelection: ApiSelection.otherProfile).then((value) {
       apiResult = value;
@@ -488,7 +488,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getOtherProfileBasic({@required String playerId}) async {
+  Future<dynamic> getOtherProfileBasic({required String? playerId}) async {
     dynamic apiResult;
     await enqueueApiCall(prefix: playerId, apiSelection: ApiSelection.basicProfile).then((value) {
       apiResult = value;
@@ -505,7 +505,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getTarget({@required String playerId}) async {
+  Future<dynamic> getTarget({required String? playerId}) async {
     dynamic apiResult;
     await enqueueApiCall(prefix: playerId, apiSelection: ApiSelection.target).then((value) {
       apiResult = value;
@@ -658,7 +658,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getFaction({@required String factionId}) async {
+  Future<dynamic> getFaction({required String factionId}) async {
     dynamic apiResult;
     await enqueueApiCall(prefix: factionId, apiSelection: ApiSelection.faction).then((value) {
       apiResult = value;
@@ -675,7 +675,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getFactionCrimes({@required String playerId}) async {
+  Future<dynamic> getFactionCrimes({required String playerId}) async {
     dynamic apiResult;
     await enqueueApiCall(apiSelection: ApiSelection.factionCrimes).then((value) {
       apiResult = value;
@@ -699,7 +699,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getFriends({@required String playerId}) async {
+  Future<dynamic> getFriends({required String playerId}) async {
     dynamic apiResult;
     await enqueueApiCall(prefix: playerId, apiSelection: ApiSelection.friends).then((value) {
       apiResult = value;
@@ -716,7 +716,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getProperty({@required String propertyId}) async {
+  Future<dynamic> getProperty({required String propertyId}) async {
     dynamic apiResult;
     await enqueueApiCall(prefix: propertyId, apiSelection: ApiSelection.property).then((value) {
       apiResult = value;
@@ -767,7 +767,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getMarketItem({@required String itemId}) async {
+  Future<dynamic> getMarketItem({required String? itemId}) async {
     dynamic apiResult;
     await enqueueApiCall(prefix: itemId, apiSelection: ApiSelection.marketItem).then((value) {
       apiResult = value;
@@ -836,13 +836,13 @@ class ApiCallerController extends GetxController {
   }
 
   Future<dynamic> _launchApiCall({
-    @required ApiSelection apiSelection,
-    String prefix = "",
+    required ApiSelection apiSelection,
+    String? prefix = "",
     int limit = 100,
-    int from,
-    String forcedApiKey = "",
+    int? from,
+    String? forcedApiKey = "",
   }) async {
-    String apiKey = "";
+    String? apiKey = "";
     if (forcedApiKey != "") {
       apiKey = forcedApiKey;
     } else {
@@ -942,7 +942,7 @@ class ApiCallerController extends GetxController {
         url += 'company/?selections=employees';
         break;
     }
-    url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit${from != null ? "&from=$from" : ""}';
+    url += '&key=${apiKey!.trim()}&comment=PDA-App&limit=$limit${from != null ? "&from=$from" : ""}';
 
     try {
       final response = await http.get(
@@ -966,7 +966,7 @@ class ApiCallerController extends GetxController {
           },
         );
         // We limit to a bit more here (it will be shown to the user)
-        String error = response == null ? "null" : response.body.toString();
+        String error = response.body.toString();
         if (error.isEmpty) {
           error = "Torn API is returning an empty string, please try again in a while. You can check "
               "if there are issues with the API directly in Torn, by visiting https://api.torn.com and trying "
@@ -992,13 +992,18 @@ class ApiCallerController extends GetxController {
           name: 'api_status_error',
           parameters: {
             'status_code': response.statusCode,
-            'response_body': jsonResponse.length > 99 ? jsonResponse.substring(0, 99) : jsonResponse,
+            'response_body':
+                jsonResponse.length > 99 ? jsonResponse.substring(0, 99).toString() : jsonResponse.toString(),
           },
         );
 
         String e = response.body.toString();
+        int? errorParsed = 0;
+        if (response.body.contains('"code":')) {
+          errorParsed = int.tryParse(response.body.split('"code":')[1].split(",")[0]);
+        }
         return ApiError(
-          errorId: 0,
+          errorId: errorParsed ?? 0,
           // We limit to a bit more here (it might get shown to the user)
           pdaErrorDetails: "API STATUS ERROR\n[${response.statusCode}: ${e.length > 300 ? e.substring(0, 300) : e}]",
         );

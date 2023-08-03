@@ -21,13 +21,13 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileNotificationsAndroid extends StatefulWidget {
   final Function callback;
-  final int energyMax;
-  final int nerveMax;
+  final int? energyMax;
+  final int? nerveMax;
 
   ProfileNotificationsAndroid({
-    @required this.callback,
-    @required this.energyMax,
-    @required this.nerveMax,
+    required this.callback,
+    required this.energyMax,
+    required this.nerveMax,
   });
 
   @override
@@ -38,26 +38,26 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 
-  int _energyDivisions;
+  int? _energyDivisions;
 
-  double _energyTrigger;
-  double _nerveTrigger;
+  late double _energyTrigger;
+  late double _nerveTrigger;
 
-  String _travelDropDownValue;
-  String _energyDropDownValue;
-  String _nerveDropDownValue;
-  String _lifeDropDownValue;
-  String _drugDropDownValue;
-  String _medicalDropDownValue;
-  String _boosterDropDownValue;
-  String _hospitalDropDownValue;
-  String _jailDropDownValue;
-  String _rankedWarDropDownValue;
+  String? _travelDropDownValue;
+  String? _energyDropDownValue;
+  String? _nerveDropDownValue;
+  String? _lifeDropDownValue;
+  String? _drugDropDownValue;
+  String? _medicalDropDownValue;
+  String? _boosterDropDownValue;
+  String? _hospitalDropDownValue;
+  String? _jailDropDownValue;
+  String? _rankedWarDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -147,7 +147,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
 
   Widget _rowsWithTypes() {
     var types = <Widget>[];
-    String typeString;
+    late String typeString;
     ProfileNotification profileType;
     ProfileNotification.values.forEach((element) {
       switch (element) {
@@ -283,7 +283,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                     Slider(
                       value: _energyTrigger.toDouble(),
                       min: _energyMin,
-                      max: widget.energyMax.toDouble(),
+                      max: widget.energyMax!.toDouble(),
                       divisions: _energyDivisions,
                       onChanged: (double newValue) {
                         setState(() {
@@ -319,7 +319,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                     Slider(
                       value: _nerveTrigger.toDouble(),
                       min: _nerveMin,
-                      max: widget.nerveMax.toDouble(),
+                      max: widget.nerveMax!.toDouble(),
                       onChanged: (double newValue) {
                         setState(() {
                           _nerveTrigger = newValue;
@@ -428,7 +428,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   }
 
   DropdownButton _typeDropDown(ProfileNotification notificationType) {
-    String value;
+    String? value;
     switch (notificationType) {
       case ProfileNotification.travel:
         value = _travelDropDownValue;
@@ -508,61 +508,61 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
       onChanged: (value) {
         switch (notificationType) {
           case ProfileNotification.travel:
-            Prefs().setTravelNotificationType(value);
+            Prefs().setTravelNotificationType(value!);
             setState(() {
               _travelDropDownValue = value;
             });
             break;
           case ProfileNotification.energy:
-            Prefs().setEnergyNotificationType(value);
+            Prefs().setEnergyNotificationType(value!);
             setState(() {
               _energyDropDownValue = value;
             });
             break;
           case ProfileNotification.nerve:
-            Prefs().setNerveNotificationType(value);
+            Prefs().setNerveNotificationType(value!);
             setState(() {
               _nerveDropDownValue = value;
             });
             break;
           case ProfileNotification.life:
-            Prefs().setLifeNotificationType(value);
+            Prefs().setLifeNotificationType(value!);
             setState(() {
               _lifeDropDownValue = value;
             });
             break;
           case ProfileNotification.drugs:
-            Prefs().setDrugNotificationType(value);
+            Prefs().setDrugNotificationType(value!);
             setState(() {
               _drugDropDownValue = value;
             });
             break;
           case ProfileNotification.medical:
-            Prefs().setMedicalNotificationType(value);
+            Prefs().setMedicalNotificationType(value!);
             setState(() {
               _medicalDropDownValue = value;
             });
             break;
           case ProfileNotification.booster:
-            Prefs().setBoosterNotificationType(value);
+            Prefs().setBoosterNotificationType(value!);
             setState(() {
               _boosterDropDownValue = value;
             });
             break;
           case ProfileNotification.hospital:
-            Prefs().setHospitalNotificationType(value);
+            Prefs().setHospitalNotificationType(value!);
             setState(() {
               _hospitalDropDownValue = value;
             });
             break;
           case ProfileNotification.jail:
-            Prefs().setJailNotificationType(value);
+            Prefs().setJailNotificationType(value!);
             setState(() {
               _jailDropDownValue = value;
             });
             break;
           case ProfileNotification.rankedWar:
-            Prefs().setRankedWarNotificationType(value);
+            Prefs().setRankedWarNotificationType(value!);
             setState(() {
               _rankedWarDropDownValue = value;
             });
@@ -578,15 +578,15 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
     var energyType = await Prefs().getEnergyNotificationType();
     var energyTrigger = await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
-      energyTrigger = widget.energyMax;
+    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax!) {
+      energyTrigger = widget.energyMax!;
     }
 
     var nerveType = await Prefs().getNerveNotificationType();
     var nerveTrigger = await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
-      nerveTrigger = widget.nerveMax;
+    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax!) {
+      nerveTrigger = widget.nerveMax!;
     }
 
     var lifeType = await Prefs().getLifeNotificationType();
@@ -600,7 +600,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
     setState(() {
       _travelDropDownValue = travelType;
 
-      _energyDivisions = ((widget.energyMax - _energyMin) / 5).floor();
+      _energyDivisions = ((widget.energyMax! - _energyMin) / 5).floor();
 
       _energyDropDownValue = energyType;
       _energyTrigger = energyTrigger.toDouble();
@@ -619,9 +619,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   }
 
   _goBack() async {
-    if (widget.callback != null) {
-      widget.callback();
-    }
+    widget.callback();
     routeName = "profile_options";
     routeWithDrawer = false;
     Navigator.of(context).pop();

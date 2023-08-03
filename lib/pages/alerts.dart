@@ -38,15 +38,15 @@ class AlertsSettings extends StatefulWidget {
 }
 
 class _AlertsSettingsState extends State<AlertsSettings> {
-  FirebaseUserModel _firebaseUserModel;
+  FirebaseUserModel? _firebaseUserModel;
 
-  Future _getFirebaseAndTornDetails;
+  Future? _getFirebaseAndTornDetails;
 
   bool _factionApiAccess = false;
   bool _factionApiAccessCheckError = false;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  ThemeProvider? _themeProvider;
 
   @override
   void initState() {
@@ -66,7 +66,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Scaffold(
-      backgroundColor: _themeProvider.canvas,
+      backgroundColor: _themeProvider!.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -75,7 +75,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             )
           : null,
       body: Container(
-        color: _themeProvider.canvas,
+        color: _themeProvider!.canvas,
         child: FutureBuilder(
           future: _getFirebaseAndTornDetails,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -83,7 +83,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               if (snapshot.data[0] is FirebaseUserModel) {
                 if (_firebaseUserModel == null) {
                   // We don't use the snapshot data any longer if we have updated the model after a reset
-                  _firebaseUserModel = snapshot.data[0] as FirebaseUserModel;
+                  _firebaseUserModel = snapshot.data[0] as FirebaseUserModel?;
                 }
                 return SingleChildScrollView(
                   child: Column(
@@ -103,7 +103,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.travelNotification ?? false,
+                          value: _firebaseUserModel!.travelNotification ?? false,
                           title: const Text("Travel"),
                           subtitle: const Text(
                             "Get notified just before you arrive",
@@ -125,7 +125,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.foreignRestockNotification ?? false,
+                          value: _firebaseUserModel!.foreignRestockNotification ?? false,
                           title: const Text("Foreign stocks"),
                           subtitle: const Text(
                             "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
@@ -148,7 +148,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.energyNotification ?? false,
+                          value: _firebaseUserModel!.energyNotification ?? false,
                           title: const Text("Energy full"),
                           subtitle: const Text(
                             "Get notified once you reach full energy",
@@ -170,7 +170,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.nerveNotification ?? false,
+                          value: _firebaseUserModel!.nerveNotification ?? false,
                           title: const Text("Nerve full"),
                           subtitle: const Text(
                             "Get notified once you reach full nerve",
@@ -192,7 +192,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.hospitalNotification ?? false,
+                          value: _firebaseUserModel!.hospitalNotification ?? false,
                           title: const Text("Hospital admission and release"),
                           subtitle: const Text(
                             "If you are offline, you'll be notified if you are "
@@ -215,7 +215,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.drugsNotification ?? false,
+                          value: _firebaseUserModel!.drugsNotification ?? false,
                           title: const Text("Drugs cooldown"),
                           subtitle: const Text(
                             "Get notified when your drugs cooldown "
@@ -238,7 +238,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.medicalNotification ?? false,
+                          value: _firebaseUserModel!.medicalNotification ?? false,
                           title: const Text("Medical cooldown"),
                           subtitle: const Text(
                             "Get notified when your medical cooldown "
@@ -261,7 +261,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.boosterNotification ?? false,
+                          value: _firebaseUserModel!.boosterNotification ?? false,
                           title: const Text("Booster cooldown"),
                           subtitle: const Text(
                             "Get notified when your booster cooldown "
@@ -284,7 +284,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.lootAlerts.isNotEmpty ?? false,
+                          value: _firebaseUserModel!.lootAlerts.isNotEmpty,
                           title: const Text("Loot"),
                           subtitle: const Text(
                             "Get notified when an NPC is about to reach level 4 or 5 (between 5 and 6 "
@@ -316,7 +316,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.lootRangersAlerts ?? false,
+                          value: _firebaseUserModel!.lootRangersAlerts ?? false,
                           title: Row(
                             children: [
                               const Text("Loot Rangers attack"),
@@ -359,7 +359,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.racingNotification ?? false,
+                          value: _firebaseUserModel!.racingNotification ?? false,
                           title: const Text("Racing"),
                           subtitle: const Text(
                             "Get notified when you cross the finish line",
@@ -381,7 +381,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.messagesNotification ?? false,
+                          value: _firebaseUserModel!.messagesNotification ?? false,
                           title: const Text("Messages"),
                           subtitle: const Text(
                             "Get notified when you receive new messages",
@@ -403,7 +403,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.eventsNotification ?? false,
+                          value: _firebaseUserModel!.eventsNotification ?? false,
                           title: const Text("Events"),
                           subtitle: const Text(
                             "Get notified when you receive new events",
@@ -420,7 +420,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
-                      if (_firebaseUserModel?.eventsNotification)
+                      if (_firebaseUserModel!.eventsNotification!)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
                           child: Row(
@@ -458,7 +458,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.refillsNotification ?? false,
+                          value: _firebaseUserModel!.refillsNotification ?? false,
                           title: const Text("Refills"),
                           subtitle: const Text(
                             "Get notified if you still have unused refills",
@@ -475,7 +475,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
-                      if (_firebaseUserModel?.refillsNotification)
+                      if (_firebaseUserModel!.refillsNotification!)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
                           child: Row(
@@ -609,7 +609,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                             ],
                           ),
                         ),
-                      if (_firebaseUserModel?.refillsNotification)
+                      if (_firebaseUserModel!.refillsNotification!)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
                           child: Row(
@@ -682,7 +682,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.factionAssistMessage ?? false,
+                          value: _firebaseUserModel!.factionAssistMessage ?? false,
                           title: const Text("Faction assist messages"),
                           subtitle: const Text(
                             "Receive attack assist messages manually triggered by your faction mates",
@@ -704,7 +704,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.retalsNotification ?? false,
+                          value: _firebaseUserModel!.retalsNotification ?? false,
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
@@ -746,7 +746,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                             ),
                           ),
                           onChanged: (enabled) async {
-                            if (!enabled) {
+                            if (!enabled!) {
                               setState(() {
                                 _firebaseUserModel?.retalsNotification = enabled;
                               });
@@ -785,7 +785,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
-                                contentColor: Colors.orange[900],
+                                contentColor: Colors.orange[900]!,
                                 duration: Duration(seconds: seconds),
                                 contentPadding: EdgeInsets.all(10),
                               );
@@ -793,7 +793,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
-                      if (_firebaseUserModel.retalsNotification && _factionApiAccess)
+                      if (_firebaseUserModel!.retalsNotification! && _factionApiAccess)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
                           child: Row(
@@ -869,8 +869,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
       leading: IconButton(
         icon: const Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-          scaffoldState.openDrawer();
+          final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+          if (scaffoldState != null) {
+            scaffoldState.openDrawer();
+          }
         },
       ),
       actions: <Widget>[
@@ -1008,7 +1010,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               final _userProv = context.read<UserDetailsProvider>();
 
               // We save the key because the API call will reset it
-              final savedKey = _userProv.basic.userApiKey;
+              final savedKey = _userProv.basic!.userApiKey;
 
               final dynamic myProfile = await Get.find<ApiCallerController>().getOwnProfileBasic();
 
@@ -1017,7 +1019,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                   ..userApiKey = savedKey
                   ..userApiKeyValid = true;
 
-                FirebaseUserModel fb = await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+                FirebaseUserModel? fb = await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
                 setState(() {
                   _firebaseUserModel = fb;
                 });
@@ -1037,7 +1039,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.green[800],
+                  contentColor: Colors.green[800]!,
                   duration: const Duration(seconds: 5),
                   contentPadding: const EdgeInsets.all(10),
                 );
@@ -1054,7 +1056,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.orange[800],
+              contentColor: Colors.orange[800]!,
               duration: const Duration(seconds: 5),
               contentPadding: const EdgeInsets.all(10),
             );

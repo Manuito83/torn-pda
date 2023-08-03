@@ -20,13 +20,13 @@ class TacFilters {
     this.useOptimal = false,
   });
 
-  int minLevel;
-  int maxLevel;
-  int maxLife;
-  int battleStats;
-  int rank;
-  int optimalLevel;
-  bool useOptimal;
+  int? minLevel;
+  int? maxLevel;
+  int? maxLife;
+  int? battleStats;
+  int? rank;
+  int? optimalLevel;
+  bool? useOptimal;
 
   factory TacFilters.fromJson(Map<String, dynamic> json) => TacFilters(
     minLevel: json["minLevel"] == null ? null : json["minLevel"],

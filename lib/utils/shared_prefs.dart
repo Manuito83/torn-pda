@@ -2112,14 +2112,14 @@ class Prefs {
     return prefs.setBool(_kShowAchievedAwards, value);
   }
 
-  Future<List<String>> getHiddenAwardCategories() async {
+  Future<List<String?>> getHiddenAwardCategories() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getStringList(_kHiddenAwardCategories) ?? <String>[];
   }
 
-  Future<bool> setHiddenAwardCategories(List<String> value) async {
+  Future<bool> setHiddenAwardCategories(List<String?> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kHiddenAwardCategories, value);
+    return prefs.setStringList(_kHiddenAwardCategories, value as List<String>);
   }
 
   /// ----------------------------
@@ -2390,7 +2390,7 @@ class Prefs {
     return prefs.setBool(_kUserScriptsEnabled, value);
   }
 
-  Future<String> getUserScriptsList() async {
+  Future<String?> getUserScriptsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kUserScriptsList) ?? null;
   }

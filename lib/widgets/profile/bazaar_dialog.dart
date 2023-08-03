@@ -10,7 +10,7 @@ import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 
 class BazaarDialog extends StatelessWidget {
-  final List<Bazaar> bazaarModel;
+  final List<Bazaar>? bazaarModel;
   final Function openTapCallback;
   final Function openLongPressCallback;
   final int items;
@@ -21,11 +21,11 @@ class BazaarDialog extends StatelessWidget {
   final double frame = 10;
 
   BazaarDialog({
-    @required this.bazaarModel,
-    @required this.openTapCallback,
-    @required this.openLongPressCallback,
-    @required this.items,
-    @required this.money,
+    required this.bazaarModel,
+    required this.openTapCallback,
+    required this.openLongPressCallback,
+    required this.items,
+    required this.money,
   });
 
   @override
@@ -73,7 +73,7 @@ class BazaarDialog extends StatelessWidget {
                   style: TextStyle(fontSize: 13),
                 ),
                 Text(
-                  bazaarModel.length == 1 ? "" : " (${bazaarModel.length} stacks)",
+                  bazaarModel!.length == 1 ? "" : " (${bazaarModel!.length} stacks)",
                   style: TextStyle(fontSize: 13),
                 ),
               ],
@@ -117,9 +117,9 @@ class BazaarDialog extends StatelessWidget {
     // Currency configuration
     final costCurrency = new NumberFormat("#,##0", "en_US");
 
-    bazaarModel.forEach((element) {
+    bazaarModel!.forEach((element) {
       var marketDiff = element.marketPrice - element.price;
-      Color marketColor = Colors.green;
+      Color? marketColor = Colors.green;
       var marketString = "";
       if (marketDiff.isNegative) {
         marketString = "\$${costCurrency.format(marketDiff.abs())} above market";
@@ -139,7 +139,7 @@ class BazaarDialog extends StatelessWidget {
                   children: [
                     Image.asset(
                       'images/torn_items/small/${element.id}_small.png',
-                      errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+                      errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
                         return SizedBox.shrink();
                       },
                     ),
@@ -159,7 +159,7 @@ class BazaarDialog extends StatelessWidget {
                       SizedBox(height: 5),
                       Text(
                         "@ \$${costCurrency.format(element.price)}"
-                        "${element.quantity > 1 ? " ea. (\$${costCurrency.format(element.price * element.quantity)})" : ""}",
+                        "${element.quantity! > 1 ? " ea. (\$${costCurrency.format(element.price * element.quantity)})" : ""}",
                         style: TextStyle(
                           fontSize: 13,
                         ),

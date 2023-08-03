@@ -24,26 +24,26 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
-  const SettingsBrowserPage({Key key}) : super(key: key);
+  const SettingsBrowserPage({Key? key}) : super(key: key);
 
   @override
   _SettingsBrowserPageState createState() => _SettingsBrowserPageState();
 }
 
 class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
-  Timer _ticker;
+  Timer? _ticker;
 
-  Future _preferencesRestored;
+  Future? _preferencesRestored;
 
-  bool _highlightChat;
+  late bool _highlightChat;
   Color _highlightColor = Color(0xff7ca900);
 
-  int _browserStyle = 0;
+  int? _browserStyle = 0;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserScriptsProvider _userScriptsProvider;
-  WebViewProvider _webViewProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserScriptsProvider _userScriptsProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -589,7 +589,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           fontSize: 14,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.grey[600],
+                        contentColor: Colors.grey[600]!,
                         duration: const Duration(seconds: 3),
                         contentPadding: const EdgeInsets.all(10),
                       );
@@ -1881,6 +1881,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ],
       onChanged: (value) {
+        if (value == null) return;
         setState(() {
           _settingsProvider.changeBrowserRefreshMethod = value;
           _webViewProvider.updatePullToRefresh(value);

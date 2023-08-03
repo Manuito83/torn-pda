@@ -19,7 +19,6 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 enum TipClass {
   general,
@@ -42,14 +41,14 @@ abstract class TipTextBuilder {
     this.isExpanded,
   });
 
-  String headerValue;
-  bool isExpanded;
+  String? headerValue;
+  bool? isExpanded;
 
-  Text buildExpandedText();
+  Text? buildExpandedText();
 
   Text buildHeaderText() {
     return Text(
-      headerValue,
+      headerValue!,
       style: TextStyle(
         fontSize: 15,
       ),
@@ -58,15 +57,15 @@ abstract class TipTextBuilder {
 }
 
 class ExpandableTip extends TipTextBuilder {
-  ExpandableTip({this.expandedValue, String headerValue, bool isExpanded = false})
+  ExpandableTip({this.expandedValue, String? headerValue, bool isExpanded = false})
       : super(headerValue: headerValue, isExpanded: isExpanded);
 
-  String expandedValue;
+  String? expandedValue;
 
   @override
   Text buildExpandedText() {
     return Text(
-      expandedValue,
+      expandedValue!,
       style: TextStyle(
         fontSize: 13,
       ),
@@ -75,16 +74,16 @@ class ExpandableTip extends TipTextBuilder {
 }
 
 class ComplexExpandableTip extends TipTextBuilder {
-  ComplexExpandableTip({Text buildExpandedText(), String headerValue, bool isExpanded = false})
+  ComplexExpandableTip({Text buildExpandedText()?, String? headerValue, bool isExpanded = false})
       : super(headerValue: headerValue, isExpanded: isExpanded) {
     this._buildExpandedTextFn = buildExpandedText;
   }
 
-  Function _buildExpandedTextFn;
+  Function? _buildExpandedTextFn;
 
   @override
-  Text buildExpandedText() {
-    return this._buildExpandedTextFn();
+  Text? buildExpandedText() {
+    return this._buildExpandedTextFn!();
   }
 }
 
@@ -94,8 +93,8 @@ class TipsPage extends StatefulWidget {
 }
 
 class _TipsPageState extends State<TipsPage> {
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   var _generalTipList = <TipTextBuilder>[];
   var _browserGeneralTipList = <TipTextBuilder>[];
@@ -236,8 +235,10 @@ class _TipsPageState extends State<TipsPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -305,7 +306,7 @@ class _TipsPageState extends State<TipsPage> {
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 15),
             child: ListTile(title: tip.buildExpandedText()),
           ),
-          isExpanded: tip.isExpanded,
+          isExpanded: tip.isExpanded!,
         );
       }).toList(),
     );

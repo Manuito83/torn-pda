@@ -18,11 +18,11 @@ class LootModel {
     this.levels,
   });
 
-  String name;
-  int hospout;
-  String status;
-  Map<String, Timing> timings;
-  Levels levels;
+  String? name;
+  int? hospout;
+  String? status;
+  Map<String, Timing>? timings;
+  Levels? levels;
 
   factory LootModel.fromJson(Map<String, dynamic> json) => LootModel(
     name: json["name"] == null ? null : json["name"],
@@ -36,8 +36,8 @@ class LootModel {
     "name": name == null ? null : name,
     "hospout": hospout == null ? null : hospout,
     "status": status == null ? null : status,
-    "timings": timings == null ? null : Map.from(timings).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-    "levels": levels == null ? null : levels.toJson(),
+    "timings": timings == null ? null : Map.from(timings!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+    "levels": levels == null ? null : levels!.toJson(),
   };
 }
 
@@ -47,8 +47,8 @@ class Levels {
     this.next,
   });
 
-  int current;
-  int next;
+  int? current;
+  int? next;
 
   factory Levels.fromJson(Map<String, dynamic> json) => Levels(
     current: json["current"] == null ? null : json["current"],
@@ -67,8 +67,8 @@ class Timing {
     this.ts,
   });
 
-  int due;
-  int ts;
+  int? due;
+  int? ts;
 
   factory Timing.fromJson(Map<String, dynamic> json) => Timing(
     due: json["due"] == null ? null : json["due"],

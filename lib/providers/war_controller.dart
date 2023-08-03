@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -20,11 +19,11 @@ import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 
 class WarCardDetails {
-  int cardPosition;
-  int memberId;
-  String name;
-  String personalNote;
-  String personalNoteColor;
+  int? cardPosition;
+  int? memberId;
+  String? name;
+  String? personalNote;
+  String? personalNoteColor;
 }
 
 class WarController extends GetxController {
@@ -32,7 +31,7 @@ class WarController extends GetxController {
 
   List<FactionModel> factions = <FactionModel>[];
   List<WarCardDetails> orderedCardsDetails = <WarCardDetails>[];
-  WarSortType currentSort;
+  WarSortType? currentSort;
 
   // Filters
   List<String> activeFilters = [];
@@ -49,15 +48,15 @@ class WarController extends GetxController {
 
   bool addFromUserId = false;
 
-  DateTime _lastIntegrityCheck;
+  late DateTime _lastIntegrityCheck;
 
   SpiesSource _spiesSource = SpiesSource.yata;
 
-  DateTime _lastYataSpiesDownload;
-  List<YataSpyModel> _yataSpies = <YataSpyModel>[];
+  DateTime? _lastYataSpiesDownload;
+  List<YataSpyModel>? _yataSpies = <YataSpyModel>[];
 
-  DateTime _lastTornStatsSpiesDownload;
-  TornStatsSpiesModel _tornStatsSpies = TornStatsSpiesModel();
+  DateTime? _lastTornStatsSpiesDownload;
+  TornStatsSpiesModel? _tornStatsSpies = TornStatsSpiesModel();
 
   bool nukeReviveActive = false;
   bool uhcReviveActive = false;
@@ -78,7 +77,7 @@ class WarController extends GetxController {
     initialise(needsIntegrityCheck: _initWithIntegrity);
   }
 
-  Future<String> addFaction(String factionId, List<TargetModel> targets) async {
+  Future<String?> addFaction(String factionId, List<TargetModel> targets) async {
     stopUpdate();
 
     dynamic allAttacksSuccess = await getAllAttacks();
@@ -107,15 +106,15 @@ class WarController extends GetxController {
 
     // Add extra member information
     DateTime addedTime = DateTime.now();
-    faction.members.forEach((memberId, member) {
+    faction.members!.forEach((memberId, member) {
       // Last updated time
-      member.memberId = int.parse(memberId);
+      member!.memberId = int.parse(memberId);
       member.lastUpdated = addedTime;
       for (var t in targets) {
         // Try to match information with pre-existing targets
         if (t.playerId.toString() == memberId) {
           member.personalNoteColor = t.personalNoteColor;
-          if (t.personalNote.isNotEmpty) {
+          if (t.personalNote!.isNotEmpty) {
             member.personalNote = t.personalNote;
           }
           if (t.respectGain != -1) {
@@ -144,7 +143,7 @@ class WarController extends GetxController {
     return faction.name;
   }
 
-  void removeFaction(int removeId) {
+  void removeFaction(int? removeId) {
     stopUpdate();
     // Remove also if it was filtered
     factions.removeWhere((f) => f.id == removeId);
@@ -152,10 +151,10 @@ class WarController extends GetxController {
     update();
   }
 
-  void filterFaction(int factionId) {
+  void filterFaction(int? factionId) {
     stopUpdate();
     FactionModel faction = factions.where((f) => f.id == factionId).first;
-    faction.hidden = !faction.hidden;
+    faction.hidden = !faction.hidden!;
     savePreferences();
     update();
   }
@@ -192,16 +191,16 @@ class WarController extends GetxController {
       if (updatedTarget is OtherProfileModel) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
-        member.position = updatedTarget.faction.position;
+        member.position = updatedTarget.faction!.position;
         member.overrideEasyLife = true;
-        member.lifeMaximum = updatedTarget.life.maximum;
-        member.lifeCurrent = updatedTarget.life.current;
-        member.lastAction.relative = updatedTarget.lastAction.relative;
-        member.lastAction.status = updatedTarget.lastAction.status;
-        member.status.description = updatedTarget.status.description;
-        member.status.state = updatedTarget.status.state;
-        member.status.until = updatedTarget.status.until;
-        member.status.color = updatedTarget.status.color;
+        member.lifeMaximum = updatedTarget.life!.maximum;
+        member.lifeCurrent = updatedTarget.life!.current;
+        member.lastAction!.relative = updatedTarget.lastAction!.relative;
+        member.lastAction!.status = updatedTarget.lastAction!.status;
+        member.status!.description = updatedTarget.status!.description;
+        member.status!.state = updatedTarget.status!.state;
+        member.status!.until = updatedTarget.status!.until;
+        member.status!.color = updatedTarget.status!.color;
 
         member.lastUpdated = DateTime.now();
         if (allAttacksSuccess is AttackModel) {
@@ -212,25 +211,25 @@ class WarController extends GetxController {
         _assignSpiedStats(allSpiesSuccess, member);
 
         member.statsEstimated = StatsCalculator.calculateStats(
-          criminalRecordTotal: updatedTarget.criminalrecord.total,
+          criminalRecordTotal: updatedTarget.criminalrecord!.total,
           level: updatedTarget.level,
-          networth: updatedTarget.personalstats.networth,
+          networth: updatedTarget.personalstats!.networth,
           rank: updatedTarget.rank,
         );
 
         member.statsComparisonSuccess = false;
         if (ownStatsSuccess is OwnPersonalStatsModel) {
           member.statsComparisonSuccess = true;
-          member.memberXanax = updatedTarget.personalstats.xantaken;
-          member.myXanax = ownStatsSuccess.personalstats.xantaken;
-          member.memberRefill = updatedTarget.personalstats.refills;
-          member.myRefill = ownStatsSuccess.personalstats.refills;
-          member.memberEnhancement = updatedTarget.personalstats.statenhancersused;
-          member.memberCans = updatedTarget.personalstats.energydrinkused;
-          member.myCans = ownStatsSuccess.personalstats.energydrinkused;
-          member.myEnhancement = ownStatsSuccess.personalstats.statenhancersused;
-          member.memberEcstasy = updatedTarget.personalstats.exttaken;
-          member.memberLsd = updatedTarget.personalstats.lsdtaken;
+          member.memberXanax = updatedTarget.personalstats!.xantaken;
+          member.myXanax = ownStatsSuccess.personalstats!.xantaken;
+          member.memberRefill = updatedTarget.personalstats!.refills;
+          member.myRefill = ownStatsSuccess.personalstats!.refills;
+          member.memberEnhancement = updatedTarget.personalstats!.statenhancersused;
+          member.memberCans = updatedTarget.personalstats!.energydrinkused;
+          member.myCans = ownStatsSuccess.personalstats!.energydrinkused;
+          member.myEnhancement = ownStatsSuccess.personalstats!.statenhancersused;
+          member.memberEcstasy = updatedTarget.personalstats!.exttaken;
+          member.memberLsd = updatedTarget.personalstats!.lsdtaken;
         }
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
@@ -325,9 +324,9 @@ class WarController extends GetxController {
         // Loop through each faction in thisFactions
         for (FactionModel f in thisFactions) {
           // If the member is found in the faction, add the update task to the list
-          if (f.members.containsKey(card.memberId.toString())) {
+          if (f.members!.containsKey(card.memberId.toString())) {
             updateTasks.add(updateSingleMemberFull(
-              f.members[card.memberId.toString()],
+              f.members![card.memberId.toString()]!,
               allAttacks: allAttacksSuccess,
               ownStats: ownStatsSuccess,
             ));
@@ -354,9 +353,9 @@ class WarController extends GetxController {
           }
 
           // If the member is found in the faction, update the member
-          if (f.members.containsKey(card.memberId.toString())) {
+          if (f.members!.containsKey(card.memberId.toString())) {
             bool result = await updateSingleMemberFull(
-              f.members[card.memberId.toString()],
+              f.members![card.memberId.toString()]!,
               allAttacks: allAttacksSuccess,
               ownStats: ownStatsSuccess,
             );
@@ -407,8 +406,8 @@ class WarController extends GetxController {
     }
     final profile = apiPlayer as OwnProfileBasic;
     playerLocation = countryCheck(
-      state: profile.status.state,
-      description: profile.status.description,
+      state: profile.status!.state,
+      description: profile.status!.description,
     );
 
     for (FactionModel f in factions) {
@@ -420,33 +419,33 @@ class WarController extends GetxController {
 
       DateTime updatedTime = DateTime.now();
 
-      apiFaction.members.forEach((apiMemberId, apiMember) {
-        if (f.members.containsKey(apiMemberId)) {
-          f.members[apiMemberId].overrideEasyLife = false;
+      apiFaction.members!.forEach((apiMemberId, apiMember) {
+        if (f.members!.containsKey(apiMemberId)) {
+          f.members![apiMemberId]!.overrideEasyLife = false;
 
-          f.members[apiMemberId].justUpdatedWithSuccess = true;
+          f.members![apiMemberId]!.justUpdatedWithSuccess = true;
           update();
           Future.delayed(Duration(seconds: 2)).then((value) {
-            f.members[apiMemberId].justUpdatedWithSuccess = false;
+            f.members![apiMemberId]!.justUpdatedWithSuccess = false;
             update();
           });
 
           // Update only what's necessary (most info does not come from API)
-          f.members[apiMemberId].lastUpdated = updatedTime;
-          f.members[apiMemberId].status = apiMember.status;
-          f.members[apiMemberId].lastAction = apiMember.lastAction;
-          f.members[apiMemberId].level = apiMember.level;
-          f.members[apiMemberId].position = apiMember.position;
-          f.members[apiMemberId].name = apiMember.name;
+          f.members![apiMemberId]!.lastUpdated = updatedTime;
+          f.members![apiMemberId]!.status = apiMember!.status;
+          f.members![apiMemberId]!.lastAction = apiMember.lastAction;
+          f.members![apiMemberId]!.level = apiMember.level;
+          f.members![apiMemberId]!.position = apiMember.position;
+          f.members![apiMemberId]!.name = apiMember.name;
 
-          _assignSpiedStats(allSpiesSuccess, f.members[apiMemberId]);
+          _assignSpiedStats(allSpiesSuccess, f.members![apiMemberId]);
 
           if (allAttacksSuccess is AttackModel) {
             _getRespectFF(
               allAttacksSuccess,
-              f.members[apiMemberId],
-              oldRespect: f.members[apiMemberId].respectGain,
-              oldFF: f.members[apiMemberId].fairFight,
+              f.members![apiMemberId],
+              oldRespect: f.members![apiMemberId]!.respectGain,
+              oldFF: f.members![apiMemberId]!.fairFight,
             );
           }
 
@@ -460,7 +459,7 @@ class WarController extends GetxController {
     return numberUpdated;
   }
 
-  Future updateSomeMembersAfterAttack({@required List<String> lastAttackedMembers}) async {
+  Future updateSomeMembersAfterAttack({required List<String> lastAttackedMembers}) async {
     // Copies the list locally, as it will be erased by the webview after it has been sent
     // so that other attacks are possible
     List<String> lastAttackedCopy = List<String>.from(lastAttackedMembers);
@@ -484,9 +483,9 @@ class WarController extends GetxController {
           return;
         }
 
-        if (f.members.containsKey(id)) {
+        if (f.members!.containsKey(id)) {
           await updateSingleMemberFull(
-            f.members[id],
+            f.members![id]!,
             allAttacks: allAttacksSuccess,
             ownStats: ownStatsSuccess,
           );
@@ -511,15 +510,15 @@ class WarController extends GetxController {
     }
   }
 
-  Future<void> _updateResultAnimation({Member member, bool success}) async {
+  Future<void> _updateResultAnimation({Member? member, required bool success}) async {
     if (success) {
-      member.justUpdatedWithSuccess = true;
+      member!.justUpdatedWithSuccess = true;
       update();
       await Future.delayed(const Duration(seconds: 5), () {});
       member.justUpdatedWithSuccess = false;
       update();
     } else {
-      member.justUpdatedWithError = true;
+      member!.justUpdatedWithError = true;
       update();
       await Future.delayed(const Duration(seconds: 5), () {});
       member.justUpdatedWithError = false;
@@ -529,80 +528,78 @@ class WarController extends GetxController {
 
   void _getRespectFF(
     AttackModel attackModel,
-    Member member, {
-    double oldRespect = -1,
-    double oldFF = -1,
+    Member? member, {
+    double? oldRespect = -1,
+    double? oldFF = -1,
   }) {
     double respect = -1;
-    double fairFight = -1; // Unknown
+    double? fairFight = -1; // Unknown
     List<bool> userWonOrDefended = <bool>[];
-    if (attackModel is AttackModel) {
-      attackModel.attacks.forEach((key, value) {
-        // We look for the our target in the the attacks list
-        if (member.memberId == value.defenderId || member.memberId == value.attackerId) {
-          // Only update if we have still not found a positive value (because
-          // we lost or we have no records)
-          if (value.respectGain > 0) {
-            fairFight = value.modifiers.fairFight;
-            respect = fairFight * 0.25 * (log(member.level) + 1);
-          } else if (respect == -1) {
-            respect = 0;
-            fairFight = 1.00;
-          }
+    attackModel.attacks!.forEach((key, value) {
+      // We look for the our target in the the attacks list
+      if (member!.memberId == value.defenderId || member.memberId == value.attackerId) {
+        // Only update if we have still not found a positive value (because
+        // we lost or we have no records)
+        if (value.respectGain > 0) {
+          fairFight = value.modifiers!.fairFight;
+          respect = fairFight! * 0.25 * (log(member.level!) + 1);
+        } else if (respect == -1) {
+          respect = 0;
+          fairFight = 1.00;
+        }
 
-          if (member.memberId == value.defenderId) {
-            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
-              // If we attacked and lost
-              userWonOrDefended.add(false);
-            } else {
-              userWonOrDefended.add(true);
-            }
-          } else if (member.memberId == value.attackerId) {
-            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
-              // If we were attacked and the attacker lost
-              userWonOrDefended.add(true);
-            } else {
-              userWonOrDefended.add(false);
-            }
+        if (member.memberId == value.defenderId) {
+          if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+            // If we attacked and lost
+            userWonOrDefended.add(false);
+          } else {
+            userWonOrDefended.add(true);
+          }
+        } else if (member.memberId == value.attackerId) {
+          if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+            // If we were attacked and the attacker lost
+            userWonOrDefended.add(true);
+          } else {
+            userWonOrDefended.add(false);
           }
         }
-      });
-
-      // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
-      // Otherwise, they default to -1 upon class instantiation
-      if (respect != -1) {
-        member.respectGain = respect;
-      } else if (respect == -1 && oldRespect != -1) {
-        // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or
-        // otherwise it will default to -1). This can happen when the last attack on this target is not within the
-        // last 100 total attacks and therefore it's not returned in the attackModel.
-        member.respectGain = oldRespect;
       }
+    });
 
-      // Same as above
-      if (fairFight != -1) {
-        member.fairFight = fairFight;
-      } else if (fairFight == -1 && oldFF != -1) {
-        member.fairFight = oldFF;
-      }
+    // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
+    // Otherwise, they default to -1 upon class instantiation
+    if (respect != -1) {
+      member!.respectGain = respect;
+    } else if (respect == -1 && oldRespect != -1) {
+      // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or
+      // otherwise it will default to -1). This can happen when the last attack on this target is not within the
+      // last 100 total attacks and therefore it's not returned in the attackModel.
+      member!.respectGain = oldRespect;
+    }
 
-      if (userWonOrDefended.isNotEmpty) {
-        member.userWonOrDefended = userWonOrDefended.first;
-      } else {
-        member.userWonOrDefended = true; // Placeholder
-      }
+    // Same as above
+    if (fairFight != -1) {
+      member!.fairFight = fairFight;
+    } else if (fairFight == -1 && oldFF != -1) {
+      member!.fairFight = oldFF;
+    }
+
+    if (userWonOrDefended.isNotEmpty) {
+      member!.userWonOrDefended = userWonOrDefended.first;
+    } else {
+      member!.userWonOrDefended = true; // Placeholder
     }
   }
 
-  void setMemberNote(Member changedMember, String note, String color) {
+  void setMemberNote(Member? changedMember, String note, String? color) {
     // We are not updating the target directly, but instead looping for the correct one because
     // after an attack the targets get updated several times: if the user wants to change the note
     // right after the attack, the good target might have been replaced and the note does not get
     // updated. Therefore, we just loop whenever the user submits the new text.
     for (var f in factions) {
-      if (f.members.keys.contains(changedMember.memberId.toString())) {
-        f.members[changedMember.memberId.toString()].personalNote = note;
-        f.members[changedMember.memberId.toString()].personalNoteColor = color;
+      if (f.members!.keys.contains(changedMember!.memberId.toString())) {
+        f.members![changedMember.memberId.toString()]!.personalNote = note;
+        f.members![changedMember.memberId.toString()]!.personalNoteColor = color;
         savePreferences();
         update();
         break;
@@ -610,10 +607,10 @@ class WarController extends GetxController {
     }
   }
 
-  void hideMember(Member hiddenMember) {
+  void hideMember(Member? hiddenMember) {
     for (var f in factions) {
-      if (f.members.keys.contains(hiddenMember.memberId.toString())) {
-        f.members[hiddenMember.memberId.toString()].hidden = true;
+      if (f.members!.keys.contains(hiddenMember!.memberId.toString())) {
+        f.members![hiddenMember.memberId.toString()]!.hidden = true;
         savePreferences();
         update();
         break;
@@ -621,10 +618,10 @@ class WarController extends GetxController {
     }
   }
 
-  void unhideMember(Member hiddenMember) {
+  void unhideMember(Member? hiddenMember) {
     for (var f in factions) {
-      if (f.members.keys.contains(hiddenMember.memberId.toString())) {
-        f.members[hiddenMember.memberId.toString()].hidden = false;
+      if (f.members!.keys.contains(hiddenMember!.memberId.toString())) {
+        f.members![hiddenMember.memberId.toString()]!.hidden = false;
         savePreferences();
         update();
         break;
@@ -635,15 +632,15 @@ class WarController extends GetxController {
   int getHiddenMembersNumber() {
     int membersHidden = 0;
     for (FactionModel f in factions) {
-      membersHidden += f.members.values.where((m) => m.hidden).length;
+      membersHidden += f.members!.values.where((m) => m!.hidden!).length;
     }
     return membersHidden;
   }
 
-  List<Member> getHiddenMembersDetails() {
-    List<Member> membersHidden = <Member>[];
+  List<Member?> getHiddenMembersDetails() {
+    List<Member?> membersHidden = <Member?>[];
     for (FactionModel f in factions) {
-      membersHidden.addAll((f.members.values.where((m) => m.hidden)));
+      membersHidden.addAll((f.members!.values.where((m) => m!.hidden!)));
     }
     return membersHidden;
   }
@@ -800,7 +797,7 @@ class WarController extends GetxController {
       List<String> savedYataSpies = await Prefs().getYataSpies();
       for (String spyJson in savedYataSpies) {
         YataSpyModel spyModel = yataSpyModelFromJson(spyJson);
-        _yataSpies.add(spyModel);
+        _yataSpies!.add(spyModel);
       }
       _lastYataSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getYataSpiesTime());
     } else {
@@ -836,8 +833,8 @@ class WarController extends GetxController {
     Prefs().setShowChainWidgetInWars(showChainWidget);
 
     // Save sorting
-    String sortToSave;
-    switch (currentSort) {
+    late String sortToSave;
+    switch (currentSort!) {
       case WarSortType.levelDes:
         sortToSave = 'levelDes';
         break;
@@ -893,15 +890,15 @@ class WarController extends GetxController {
   void saveSpies() {
     if (_spiesSource == SpiesSource.yata) {
       List<String> yataSpiesSave = <String>[];
-      for (YataSpyModel spy in _yataSpies) {
+      for (YataSpyModel spy in _yataSpies!) {
         String spyJson = yataSpyModelToJson(spy);
         yataSpiesSave.add(spyJson);
       }
       Prefs().setYataSpies(yataSpiesSave);
-      Prefs().setYataSpiesTime(_lastYataSpiesDownload.millisecondsSinceEpoch);
+      Prefs().setYataSpiesTime(_lastYataSpiesDownload!.millisecondsSinceEpoch);
     } else {
-      Prefs().setTornStatsSpies(tornStatsSpiesModelToJson(_tornStatsSpies));
-      Prefs().setTornStatsSpiesTime(_lastTornStatsSpiesDownload.millisecondsSinceEpoch);
+      Prefs().setTornStatsSpies(tornStatsSpiesModelToJson(_tornStatsSpies!));
+      Prefs().setTornStatsSpiesTime(_lastTornStatsSpiesDownload!.millisecondsSinceEpoch);
     }
   }
 
@@ -911,9 +908,9 @@ class WarController extends GetxController {
     update();
   }
 
-  Future<List<YataSpyModel>> _getYataSpies(String apiKey) async {
+  Future<List<YataSpyModel>?> _getYataSpies(String? apiKey) async {
     // If spies where updated less than an hour ago
-    if (_lastYataSpiesDownload != null && DateTime.now().difference(_lastYataSpiesDownload).inHours < 1) {
+    if (_lastYataSpiesDownload != null && DateTime.now().difference(_lastYataSpiesDownload!).inHours < 1) {
       return _yataSpies;
     }
 
@@ -942,9 +939,9 @@ class WarController extends GetxController {
     return spies;
   }
 
-  Future<TornStatsSpiesModel> _getTornStatsSpies(String apiKey) async {
+  Future<TornStatsSpiesModel?> _getTornStatsSpies(String? apiKey) async {
     // If spies where updated less than an hour ago
-    if (_lastTornStatsSpiesDownload != null && DateTime.now().difference(_lastTornStatsSpiesDownload).inHours < 1) {
+    if (_lastTornStatsSpiesDownload != null && DateTime.now().difference(_lastTornStatsSpiesDownload!).inHours < 1) {
       return _tornStatsSpies;
     }
 
@@ -953,7 +950,7 @@ class WarController extends GetxController {
       var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 10));
       if (resp.statusCode == 200) {
         TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
-        if (spyJson != null && !spyJson.message.contains("Error")) {
+        if (!spyJson.message!.contains("Error")) {
           _lastTornStatsSpiesDownload = DateTime.now();
           _tornStatsSpies = spyJson;
           saveSpies();
@@ -994,16 +991,16 @@ class WarController extends GetxController {
       }
       FactionModel apiImport = apiResult as FactionModel;
 
-      Map<String, Member> oldFactionMembers = Map.from(faction.members);
+      Map<String, Member> oldFactionMembers = Map.from(faction.members!);
 
       // Remove members that do not longer belong to the faction
-      oldFactionMembers.removeWhere((memberId, memberDetails) => !apiImport.members.containsKey(memberId));
+      oldFactionMembers.removeWhere((memberId, memberDetails) => !apiImport.members!.containsKey(memberId));
 
       // Add new members that were not here before
-      apiImport.members.forEach((key, value) {
+      apiImport.members!.forEach((key, value) {
         if (!oldFactionMembers.containsKey(key)) {
-          faction.members[key] = apiImport.members[key];
-          updateSingleMemberFull(faction.members[key]);
+          faction.members![key] = apiImport.members![key];
+          updateSingleMemberFull(faction.members![key]!);
         }
       });
     }
@@ -1013,19 +1010,19 @@ class WarController extends GetxController {
     update();
   }
 
-  int _getLifeSort(Member member) {
-    if (member.status.state != "Hospital") {
+  int? _getLifeSort(Member member) {
+    if (member.status!.state != "Hospital") {
       return member.lifeCurrent;
     } else {
-      return -(member.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
+      return -(member.status!.until! - DateTime.now().millisecondsSinceEpoch / 1000).round();
     }
   }
 
-  void _assignSpiedStats(dynamic spies, Member member) {
+  void _assignSpiedStats(dynamic spies, Member? member) {
     if (spies != null) {
       if (_spiesSource == SpiesSource.yata) {
         for (YataSpyModel spy in spies) {
-          if (spy.targetName == member.name) {
+          if (spy.targetName == member!.name) {
             member.spiesSource = "yata";
             member.statsExactTotal = member.statsSort = spy.total;
             member.statsExactUpdated = spy.update;
@@ -1034,17 +1031,17 @@ class WarController extends GetxController {
             member.statsDef = spy.defense;
             member.statsDex = spy.dexterity;
             int known = 0;
-            if (spy.strength != 1) known += spy.strength;
-            if (spy.speed != 1) known += spy.speed;
-            if (spy.defense != 1) known += spy.defense;
-            if (spy.dexterity != 1) known += spy.dexterity;
-            member?.statsExactTotalKnown = known;
+            if (spy.strength != 1) known += spy.strength!;
+            if (spy.speed != 1) known += spy.speed!;
+            if (spy.defense != 1) known += spy.defense!;
+            if (spy.dexterity != 1) known += spy.dexterity!;
+            member.statsExactTotalKnown = known;
             break;
           }
         }
       } else {
         for (SpyElement spy in spies.spies) {
-          if (spy.playerName == member.name) {
+          if (spy.playerName == member!.name) {
             member.spiesSource = "tornstats";
             member.statsExactTotal = member.statsSort = spy.total;
             member.statsExactUpdated = spy.timestamp;
@@ -1053,11 +1050,11 @@ class WarController extends GetxController {
             member.statsDef = spy.defense;
             member.statsDex = spy.dexterity;
             int known = 0;
-            if (spy.strength != 1) known += spy.strength;
-            if (spy.speed != 1) known += spy.speed;
-            if (spy.defense != 1) known += spy.defense;
-            if (spy.dexterity != 1) known += spy.dexterity;
-            member?.statsExactTotalKnown = known;
+            if (spy.strength != 1) known += spy.strength!;
+            if (spy.speed != 1) known += spy.speed!;
+            if (spy.defense != 1) known += spy.defense!;
+            if (spy.dexterity != 1) known += spy.dexterity!;
+            member.statsExactTotalKnown = known;
             break;
           }
         }

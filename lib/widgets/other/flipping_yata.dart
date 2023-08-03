@@ -11,8 +11,8 @@ class FlippingYata extends StatefulWidget {
 
 class _FlippingYataState extends State<FlippingYata>
     with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-  Animation _flipAnim;
+  late AnimationController _controller;
+  late Animation _flipAnim;
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _FlippingYataState extends State<FlippingYata>
     return Center(
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (BuildContext context, Widget child) {
+        builder: (BuildContext context, Widget? child) {
           return Center(
             child: Container(
               child: Transform(

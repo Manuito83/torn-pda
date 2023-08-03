@@ -20,41 +20,41 @@ class TargetModel {
   bool justUpdatedWithSuccess = false;
 
   // External, exported/imported to Shared Preferences!
-  double respectGain;
-  double fairFight;
-  bool userWonOrDefended;
-  String personalNote;
-  String personalNoteColor;
-  DateTime lastUpdated;
-  bool hasFaction;
-  int lifeSort;
+  double? respectGain;
+  double? fairFight;
+  bool? userWonOrDefended;
+  String? personalNote;
+  String? personalNoteColor;
+  DateTime? lastUpdated;
+  bool? hasFaction;
+  int? lifeSort;
 
   // Internal from API profiles
-  String rank;
-  int level;
-  String gender;
-  String property;
-  DateTime signup;
-  int awards;
-  int friends;
-  int enemies;
-  int forumPosts;
-  int karma;
-  int age;
-  String role;
-  int donator;
-  int playerId;
-  String name;
-  int propertyId;
-  Life life;
-  Status status;
-  Job job;
-  Faction faction;
-  Married married;
-  States states;
-  LastAction lastAction;
-  Discord discord;
-  Competition competition;
+  String? rank;
+  int? level;
+  String? gender;
+  String? property;
+  DateTime? signup;
+  int? awards;
+  int? friends;
+  int? enemies;
+  int? forumPosts;
+  int? karma;
+  int? age;
+  String? role;
+  int? donator;
+  int? playerId;
+  String? name;
+  int? propertyId;
+  Life? life;
+  Status? status;
+  Job? job;
+  Faction? faction;
+  Married? married;
+  States? states;
+  LastAction? lastAction;
+  Discord? discord;
+  Competition? competition;
 
   TargetModel({
     // This first batch is here to export/import from SharedPreferences,
@@ -141,14 +141,14 @@ class TargetModel {
         "userWonOrDefended": userWonOrDefended,
         "personalNote": personalNote,
         "personalNoteColor": personalNoteColor,
-        "lastUpdated": lastUpdated.toIso8601String(),
+        "lastUpdated": lastUpdated!.toIso8601String(),
         "hasFaction": hasFaction,
         "lifeSort": lifeSort,
         "rank": rank,
         "level": level,
         "gender": gender,
         "property": property,
-        "signup": signup.toIso8601String(),
+        "signup": signup!.toIso8601String(),
         "awards": awards,
         "friends": friends,
         "enemies": enemies,
@@ -160,15 +160,15 @@ class TargetModel {
         "player_id": playerId,
         "name": name,
         "property_id": propertyId,
-        "life": life.toJson(),
-        "status": status.toJson(),
-        "job": job.toJson(),
-        "faction": faction.toJson(),
-        "married": married.toJson(),
-        "states": states.toJson(),
-        "last_action": lastAction.toJson(),
-        "discord": discord == null ? null : discord.toJson(),
-        "competition": competition == null ? null : competition.toJson(),
+        "life": life!.toJson(),
+        "status": status!.toJson(),
+        "job": job!.toJson(),
+        "faction": faction!.toJson(),
+        "married": married!.toJson(),
+        "states": states!.toJson(),
+        "last_action": lastAction!.toJson(),
+        "discord": discord == null ? null : discord!.toJson(),
+        "competition": competition == null ? null : competition!.toJson(),
       };
 }
 
@@ -178,8 +178,8 @@ class Discord {
     this.discordId,
   });
 
-  int userId;
-  String discordId;
+  int? userId;
+  String? discordId;
 
   factory Discord.fromJson(Map<String, dynamic> json) => Discord(
         userId: json["userID"] == null ? null : json["userID"],
@@ -193,10 +193,10 @@ class Discord {
 }
 
 class Faction {
-  String position;
-  int factionId;
-  int daysInFaction;
-  String factionName;
+  String? position;
+  int? factionId;
+  int? daysInFaction;
+  String? factionName;
 
   Faction({
     this.position,
@@ -229,11 +229,11 @@ class Job {
     this.companyType,
   });
 
-  String job;
-  String position;
-  int companyId;
-  String companyName;
-  int companyType;
+  String? job;
+  String? position;
+  int? companyId;
+  String? companyName;
+  int? companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         job: json["job"],
@@ -253,9 +253,9 @@ class Job {
 }
 
 class LastAction {
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   LastAction({
     this.status,
@@ -277,12 +277,12 @@ class LastAction {
 }
 
 class Life {
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   Life({
     this.current,
@@ -313,9 +313,9 @@ class Life {
 }
 
 class Married {
-  int spouseId;
-  String spouseName;
-  int duration;
+  int? spouseId;
+  String? spouseName;
+  int? duration;
 
   Married({
     this.spouseId,
@@ -337,8 +337,8 @@ class Married {
 }
 
 class States {
-  int hospitalTimestamp;
-  int jailTimestamp;
+  int? hospitalTimestamp;
+  int? jailTimestamp;
 
   States({
     this.hospitalTimestamp,
@@ -357,15 +357,15 @@ class States {
 }
 
 class Competition {
-  int attacks;
-  String image;
-  String name;
-  double score;
-  int team;
-  String text;
-  int total;
-  int treatsCollectedTotal;
-  int votes;
+  int? attacks;
+  String? image;
+  String? name;
+  double? score;
+  int? team;
+  String? text;
+  int? total;
+  int? treatsCollectedTotal;
+  int? votes;
   dynamic position;
 
   Competition({
@@ -398,7 +398,7 @@ class Competition {
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Competition model");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
-      return null;
+      throw ArgumentError("PDA Crash at Competition model");
     }
   }
 

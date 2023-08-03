@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class BounceTabBar extends StatefulWidget {
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
   final List<Widget> items;
   final ValueChanged<int> onTabChanged;
   final int initialIndex;
@@ -10,13 +10,13 @@ class BounceTabBar extends StatefulWidget {
   final bool locationTop;
 
   const BounceTabBar({
-    Key key,
+    Key? key,
     this.themeProvider,
-    @required this.items,
-    @required this.onTabChanged,
+    required this.items,
+    required this.onTabChanged,
     this.initialIndex = 0,
     this.movement = 150,
-    @required this.locationTop,
+    required this.locationTop,
   }) : super(key: key);
 
   @override
@@ -24,14 +24,14 @@ class BounceTabBar extends StatefulWidget {
 }
 
 class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-  Animation _animTabBarIn;
-  Animation _animTabBarOut;
-  Animation _animCircleItem;
-  Animation _animElevationIn;
-  Animation _animElevationOut;
+  late AnimationController _controller;
+  late Animation _animTabBarIn;
+  late Animation _animTabBarOut;
+  late Animation _animCircleItem;
+  late Animation _animElevationIn;
+  late Animation _animElevationOut;
 
-  int _currentIndex;
+  int? _currentIndex;
 
   @override
   void initState() {
@@ -110,7 +110,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
             child: Container(
               width: currentWidth,
               decoration: BoxDecoration(
-                color: widget.themeProvider.statusBar,
+                color: widget.themeProvider!.statusBar,
                 borderRadius: BorderRadius.vertical(
                   top: widget.locationTop ? Radius.zero : Radius.circular(20),
                   bottom: widget.locationTop ? Radius.circular(20) : Radius.zero,
@@ -124,7 +124,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
                     final child = widget.items[index];
                     final innerWidget = CircleAvatar(
                       radius: 25.0,
-                      backgroundColor: widget.themeProvider.statusBar,
+                      backgroundColor: widget.themeProvider!.statusBar,
                       child: child,
                     );
                     if (index == _currentIndex) {

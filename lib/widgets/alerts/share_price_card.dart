@@ -8,7 +8,7 @@ import 'package:torn_pda/widgets/alerts/share_price_dialog.dart';
 class SharePriceCard extends StatefulWidget {
   final StockMarketStock stock;
 
-  const SharePriceCard({@required this.stock});
+  const SharePriceCard({required this.stock});
 
   @override
   _SharePriceCardState createState() => _SharePriceCardState();
@@ -22,9 +22,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
       child: Card(
         shape: RoundedRectangleBorder(
           side: BorderSide(
-            color: widget.stock.alertGain != null || widget.stock.alertLoss != null
-                ? Colors.blue
-                : Colors.transparent,
+            color: widget.stock.alertGain != null || widget.stock.alertLoss != null ? Colors.blue : Colors.transparent,
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(4.0),
@@ -35,7 +33,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
             theme: ExpandableThemeData(
               hasIcon: false,
             ),
-            collapsed: null,
+            collapsed: Container(),
             expanded: expanded(),
             header: header(),
           ),
@@ -70,7 +68,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
             Row(
               children: [
                 Text("(${widget.stock.acronym}) ", style: TextStyle(fontSize: 12)),
-                Text(widget.stock.name, style: TextStyle(fontSize: 12)),
+                Text(widget.stock.name!, style: TextStyle(fontSize: 12)),
               ],
             ),
             SizedBox(height: 2),
@@ -103,7 +101,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
                       Padding(
                         padding: const EdgeInsets.only(right: 10),
                         child: Text(
-                          "\$${formatProfit(inputDouble: widget.stock.sharesOwned * widget.stock.currentPrice)}",
+                          "\$${formatProfit(inputDouble: widget.stock.sharesOwned! * widget.stock.currentPrice!)}",
                           style: TextStyle(color: Colors.green, fontSize: 10),
                         ),
                       ),
@@ -146,9 +144,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
                   else
                     Row(
                       children: [
-                        Text(
-                            "\$${removeZeroDecimals(widget.stock.alertGain)}",
-                            style: TextStyle(fontSize: 12)),
+                        Text("\$${removeZeroDecimals(widget.stock.alertGain)}", style: TextStyle(fontSize: 12)),
                         SizedBox(width: 10),
                       ],
                     )
@@ -208,7 +204,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
     });
   }
 
-  String removeZeroDecimals(double input) {
+  String removeZeroDecimals(double? input) {
     return input.toString().replaceAll(RegExp(r"([.]*0)(?!.*\d)"), "");
   }
 }

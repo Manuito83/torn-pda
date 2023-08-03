@@ -6,25 +6,23 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/bars_model.dart';
-import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
 class ChainWidget extends StatefulWidget {
   final bool alwaysDarkBackground;
-  final Function callBackOptions;
+  final Function? callBackOptions;
 
   ChainWidget({
-    @required Key key,
-    @required this.alwaysDarkBackground,
+    required Key key,
+    required this.alwaysDarkBackground,
     this.callBackOptions,
   }) : super(key: key);
 
@@ -33,12 +31,12 @@ class ChainWidget extends StatefulWidget {
 }
 
 class _ChainWidgetState extends State<ChainWidget> {
-  ThemeProvider _themeProvider;
+  late ThemeProvider _themeProvider;
 
-  Future _finishedLoadingChain;
-  Future _finishedGettingBars;
+  Future? _finishedLoadingChain;
+  Future? _finishedGettingBars;
 
-  ChainStatusProvider _chainStatusProvider;
+  late ChainStatusProvider _chainStatusProvider;
 
   bool _initialised = false;
 
@@ -58,7 +56,7 @@ class _ChainWidgetState extends State<ChainWidget> {
     initialise();
     _chainStatusProvider.widgetVisible = true;
 
-    Color titleColor;
+    Color? titleColor;
     if (widget.alwaysDarkBackground) {
       titleColor = Colors.white;
     } else {
@@ -149,7 +147,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     Text(
-                                      _chainStatusProvider.chainModel.chain.cooldown > 0 ? 'Cooldown ' : 'Chain ',
+                                      _chainStatusProvider.chainModel!.chain!.cooldown! > 0 ? 'Cooldown ' : 'Chain ',
                                       style: TextStyle(color: titleColor),
                                     ),
                                     Text(
@@ -158,7 +156,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                                         fontWeight: FontWeight.bold,
                                         color: _chainStatusProvider.currentSecondsCounter > 0 &&
                                                 _chainStatusProvider.currentSecondsCounter < 60 &&
-                                                _chainStatusProvider.chainModel.chain.cooldown == 0
+                                                _chainStatusProvider.chainModel!.chain!.cooldown == 0
                                             ? Colors.red
                                             : titleColor,
                                       ),
@@ -167,25 +165,25 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 ),
                               ),
                               LinearPercentIndicator(
-                                padding: null,
+                                padding: EdgeInsets.all(0),
                                 barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
                                 backgroundColor: Colors.grey,
-                                progressColor: _chainStatusProvider.chainModel.chain.cooldown > 0
+                                progressColor: _chainStatusProvider.chainModel!.chain!.cooldown! > 0
                                     ? Colors.green[200]
                                     : Colors.blue[200],
                                 center: Text(
-                                  _chainStatusProvider.chainModel.chain.cooldown > 0
-                                      ? '${_chainStatusProvider.chainModel.chain.current} hits'
-                                      : '${_chainStatusProvider.chainModel.chain.current}/${_chainStatusProvider.chainModel.chain.max}',
+                                  _chainStatusProvider.chainModel!.chain!.cooldown! > 0
+                                      ? '${_chainStatusProvider.chainModel!.chain!.current} hits'
+                                      : '${_chainStatusProvider.chainModel!.chain!.current}/${_chainStatusProvider.chainModel!.chain!.max}',
                                   style: TextStyle(color: Colors.black),
                                 ),
-                                percent: _chainStatusProvider.chainModel.chain.cooldown > 0
+                                percent: _chainStatusProvider.chainModel!.chain!.cooldown! > 0
                                     ? 1.0
-                                    : _chainStatusProvider.chainModel.chain.current /
-                                        _chainStatusProvider.chainModel.chain.max,
+                                    : _chainStatusProvider.chainModel!.chain!.current! /
+                                        _chainStatusProvider.chainModel!.chain!.max!,
                               ),
                             ],
                           );
@@ -212,7 +210,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                           return Column(
                             children: <Widget>[
                               LinearPercentIndicator(
-                                padding: null,
+                                padding: EdgeInsets.all(0),
                                 barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
@@ -232,14 +230,14 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 padding: EdgeInsets.symmetric(vertical: 2),
                               ),
                               LinearPercentIndicator(
-                                padding: null,
+                                padding: EdgeInsets.all(0),
                                 barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 3,
                                 backgroundColor: Colors.green[100],
                                 progressColor: Colors.green,
-                                percent: 1 - bars.energy.ticktime / bars.energy.interval,
+                                percent: 1 - bars.energy.ticktime / bars.energy.interval as double,
                               ),
                             ],
                           );
@@ -285,7 +283,7 @@ class _ChainWidgetState extends State<ChainWidget> {
   void _callBackChainOptions() {
     if (widget.callBackOptions != null) {
       setState(() {
-        widget.callBackOptions();
+        widget.callBackOptions!();
       });
     }
   }
@@ -295,31 +293,22 @@ class _ChainWidgetState extends State<ChainWidget> {
     switch (_chainStatusProvider.chainWatcherDefcon) {
       case WatchDefcon.cooldown:
         return 20.0;
-        break;
       case WatchDefcon.green1:
         return 20.0;
-        break;
       case WatchDefcon.green2:
         return 20.0;
-        break;
       case WatchDefcon.orange1:
         return 20.0;
-        break;
       case WatchDefcon.orange2:
         return 20.0;
-        break;
       case WatchDefcon.red1:
         return 20.0;
-        break;
       case WatchDefcon.red2:
         return 20.0;
-        break;
       case WatchDefcon.off:
         return 0.0;
-        break;
       case WatchDefcon.panic:
         return 20.0;
-        break;
     }
   }
 
@@ -337,7 +326,7 @@ class _ChainWidgetState extends State<ChainWidget> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.green[700],
+      contentColor: Colors.green[700]!,
       duration: Duration(seconds: 7),
       contentPadding: EdgeInsets.all(10),
     );
@@ -356,7 +345,7 @@ class _ChainWidgetState extends State<ChainWidget> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.orange[700],
+      contentColor: Colors.orange[700]!,
       duration: Duration(seconds: 5),
       contentPadding: EdgeInsets.all(10),
     );
@@ -378,7 +367,7 @@ class _ChainWidgetState extends State<ChainWidget> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.green[700],
+      contentColor: Colors.green[700]!,
       duration: Duration(seconds: 7),
       contentPadding: EdgeInsets.all(10),
     );
@@ -393,7 +382,7 @@ class _ChainWidgetState extends State<ChainWidget> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.orange[700],
+      contentColor: Colors.orange[700]!,
       duration: Duration(seconds: 5),
       contentPadding: EdgeInsets.all(10),
     );

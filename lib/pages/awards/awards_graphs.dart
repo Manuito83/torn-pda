@@ -18,7 +18,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class AwardsGraphs extends StatefulWidget {
-  AwardsGraphs({@required this.graphInfo});
+  AwardsGraphs({required this.graphInfo});
 
   final List<dynamic> graphInfo;
 
@@ -29,12 +29,12 @@ class AwardsGraphs extends StatefulWidget {
 class _AwardsGraphsState extends State<AwardsGraphs> {
   final Color barBackgroundColor = const Color(0xff72d8bf);
 
-  int _touchedIndex;
+  int? _touchedIndex;
 
   bool _landScape = false;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -127,7 +127,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
                     fontSize: 13,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.green[800],
+                  contentColor: Colors.green[800]!,
                   duration: Duration(seconds: 6),
                   contentPadding: EdgeInsets.all(10),
                 );
@@ -193,7 +193,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
             if (barTouchResponse?.spot != null &&
                 barTouchResponse is! PointerUpEvent &&
                 barTouchResponse is! PointerExitEvent) {
-              _touchedIndex = barTouchResponse.spot.touchedBarGroupIndex;
+              _touchedIndex = barTouchResponse!.spot!.touchedBarGroupIndex;
             } else {
               _touchedIndex = -1;
             }
@@ -275,8 +275,8 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   }
 
   BarChartGroupData makeGroupData({
-    int x,
-    double y,
+    required int x,
+    required double y,
     bool isTouched = false,
     Color barColor = Colors.white,
     double width = 2,

@@ -15,15 +15,15 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class VaultWidget extends StatefulWidget {
-  final List<dom.Element> vaultHtml;
-  final int playerId;
-  final UserDetailsProvider userProvider;
+  final List<dom.Element>? vaultHtml;
+  final int? playerId;
+  final UserDetailsProvider? userProvider;
 
   VaultWidget({
-    Key key,
-    @required this.vaultHtml,
-    @required this.playerId,
-    @required this.userProvider,
+    Key? key,
+    required this.vaultHtml,
+    required this.playerId,
+    required this.userProvider,
   }) : super(key: key);
 
   @override
@@ -31,7 +31,7 @@ class VaultWidget extends StatefulWidget {
 }
 
 class _VaultWidgetState extends State<VaultWidget> {
-  Future _vaultAssessed;
+  Future? _vaultAssessed;
   var _vaultStatus = VaultStatusModel();
   bool _firstUse = false;
 
@@ -74,7 +74,7 @@ class _VaultWidgetState extends State<VaultWidget> {
             ),
             if (_firstUse)
               SizedBox.shrink()
-            else if (!_firstUse && !_vaultStatus.error)
+            else if (!_firstUse && !_vaultStatus.error!)
               Padding(
                 padding: const EdgeInsets.only(left: 5),
                 child: _vaultConfigurationIcon(),
@@ -85,7 +85,7 @@ class _VaultWidgetState extends State<VaultWidget> {
           padding: const EdgeInsets.all(10),
           child: _vaultMain(),
         ),
-        expanded: null,
+        expanded: Container(),
       ),
     );
   }
@@ -95,7 +95,7 @@ class _VaultWidgetState extends State<VaultWidget> {
         future: _vaultAssessed,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            if (_vaultStatus.error) {
+            if (_vaultStatus.error!) {
               return Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -156,7 +156,7 @@ class _VaultWidgetState extends State<VaultWidget> {
                     child: Column(
                       children: [
                         Text(
-                          widget.userProvider.basic.name,
+                          widget.userProvider!.basic!.name!,
                           style: TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                         Text(
@@ -178,9 +178,9 @@ class _VaultWidgetState extends State<VaultWidget> {
                     child: Column(
                       children: [
                         Text(
-                          widget.userProvider.basic.married?.spouseId == 0
+                          widget.userProvider!.basic!.married?.spouseId == 0
                               ? "Spouse"
-                              : widget.userProvider.basic.married.spouseName,
+                              : widget.userProvider!.basic!.married!.spouseName!,
                           style: TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                         Text(
@@ -236,7 +236,7 @@ class _VaultWidgetState extends State<VaultWidget> {
           // Need to call setState to remove header gear icon (not included in FutureBuilder)
           _firstUse = true;
         });
-        _vaultStatus.total = transactions[0].balance;
+        _vaultStatus.total = transactions[0].balance!;
       }
     } else {
       setState(() {
@@ -248,25 +248,25 @@ class _VaultWidgetState extends State<VaultWidget> {
   Future<List<VaultTransactionModel>> _getTransactions() {
     var transactionList = <VaultTransactionModel>[];
     try {
-      for (var trans in widget.vaultHtml) {
-        var day = trans.querySelector(".date .transaction-date")?.text?.trim();
-        var hour = trans.querySelector(".date .transaction-time")?.text?.trim();
+      for (var trans in widget.vaultHtml!) {
+        String day = trans.querySelector(".date .transaction-date")?.text.trim() ?? "";
+        String hour = trans.querySelector(".date .transaction-time")?.text.trim() ?? "";
         var format = DateFormat("dd/MM/yy HH:mm:ss");
         var date = format.parse(day + " " + hour, true);
 
         var playerTransaction = false;
-        var name = trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"];
+        String name = trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"] ?? "";
         if (name.contains("[${widget.playerId}]")) {
           playerTransaction = true;
         }
 
         var isDeposit = false;
-        var type = trans.querySelector(".type")?.text?.trim();
+        String type = trans.querySelector(".type")?.text.trim() ?? "";
         if (type.contains("Deposit")) {
           isDeposit = true;
         }
 
-        var amountString = trans.querySelector("li.amount")?.text;
+        String amountString = trans.querySelector("li.amount")?.text ?? "";
         amountString = amountString
             .replaceAll("\$", "")
             .replaceAll("\n", "")
@@ -275,7 +275,7 @@ class _VaultWidgetState extends State<VaultWidget> {
             .replaceAll(",", "");
         var amount = int.tryParse(amountString);
 
-        var balanceString = trans.querySelector("li.balance")?.text;
+        String balanceString = trans.querySelector("li.balance")?.text ?? "";
         balanceString = balanceString
             .replaceAll("\$", "")
             .replaceAll("\n", "")
@@ -318,21 +318,21 @@ class _VaultWidgetState extends State<VaultWidget> {
     // The only exception is the index is 0, in which case it's the last transaction and it has
     // already been accounted for
     if (indexFound >= 1) {
-      var newPlayerAmount = _vaultStatus.player;
-      var newSpouseAmount = _vaultStatus.spouse;
+      var newPlayerAmount = _vaultStatus.player!;
+      var newSpouseAmount = _vaultStatus.spouse!;
       for (var i = 0; i < indexFound; i++) {
         var pendingTrans = transactions[i];
-        if (pendingTrans.playerTransaction) {
-          if (pendingTrans.isDeposit) {
-            newPlayerAmount += pendingTrans.amount;
+        if (pendingTrans.playerTransaction!) {
+          if (pendingTrans.isDeposit!) {
+            newPlayerAmount += pendingTrans.amount!;
           } else {
-            newPlayerAmount -= pendingTrans.amount;
+            newPlayerAmount -= pendingTrans.amount!;
           }
         } else {
-          if (pendingTrans.isDeposit) {
-            newSpouseAmount += pendingTrans.amount;
+          if (pendingTrans.isDeposit!) {
+            newSpouseAmount += pendingTrans.amount!;
           } else {
-            newSpouseAmount -= pendingTrans.amount;
+            newSpouseAmount -= pendingTrans.amount!;
           }
         }
       }
@@ -342,8 +342,8 @@ class _VaultWidgetState extends State<VaultWidget> {
         setState(() {
           _vaultStatus.player = newPlayerAmount;
           _vaultStatus.spouse = newSpouseAmount;
-          _vaultStatus.total = _lastTransaction.balance;
-          _vaultStatus.timestamp = _lastTransaction.date;
+          _vaultStatus.total = _lastTransaction.balance!;
+          _vaultStatus.timestamp = _lastTransaction.date!;
         });
         Prefs().setVaultShareCurrent(vaultStatusModelToJson(_vaultStatus));
       } else {
@@ -363,7 +363,7 @@ class _VaultWidgetState extends State<VaultWidget> {
     if (_vaultStatus.timestamp == null) {
       // If we have transactions, pass the last transaction timestamp
       if (_lastTransaction.date != null) {
-        _vaultStatus.timestamp = _lastTransaction.date;
+        _vaultStatus.timestamp = _lastTransaction.date!;
       }
     }
 
@@ -399,7 +399,7 @@ class _VaultWidgetState extends State<VaultWidget> {
   }
 
   _configurationCallback() {
-    if (_vaultStatus.player != null) {
+    if (_vaultStatus.player == null) {
       setState(() {
         _firstUse = false;
       });

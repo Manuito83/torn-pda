@@ -3,7 +3,6 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -19,7 +18,7 @@ import 'package:torn_pda/widgets/chaining/attacks_list.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class AttacksPage extends StatefulWidget {
-  const AttacksPage({Key key}) : super(key: key);
+  const AttacksPage({Key? key}) : super(key: key);
 
   @override
   _AttacksPageState createState() => _AttacksPageState();
@@ -28,11 +27,11 @@ class AttacksPage extends StatefulWidget {
 class _AttacksPageState extends State<AttacksPage> {
   final _searchController = new TextEditingController();
 
-  AttacksProvider _attacksProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late AttacksProvider _attacksProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
-  Color _filterTypeColor;
+  Color? _filterTypeColor;
   Text _filterText = Text('');
 
   final _popupChoices = <AttackSort>[
@@ -49,13 +48,8 @@ class _AttacksPageState extends State<AttacksPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _searchController.addListener(onSearchInputTextChange);
-    // Reset the filter so that we get all the targets
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _attacksProvider = Provider.of<AttacksProvider>(context, listen: false);
-      _attacksProvider.initializeAttacks();
-      _changeFilterColorAndText();
-    });
-
+    _attacksProvider = Provider.of<AttacksProvider>(context, listen: false);
+    _changeFilterColorAndText();
     routeWithDrawer = true;
     routeName = "chaining_attacks";
   }
@@ -63,6 +57,7 @@ class _AttacksPageState extends State<AttacksPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
@@ -73,59 +68,70 @@ class _AttacksPageState extends State<AttacksPage> {
               child: buildAppBar(),
             )
           : null,
-      body: Container(
-        color: _themeProvider.canvas,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-          child: Column(
-            children: <Widget>[
-              Form(
+      body: FutureBuilder(
+        future: _attacksProvider.initializeAttacks(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return Container(
+              color: _themeProvider.canvas,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                      child: Row(
+                    Form(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  labelText: "Search",
-                                  prefixIcon: Icon(Icons.search),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(12.0),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                            child: Row(
+                              children: <Widget>[
+                                Flexible(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextField(
+                                      controller: _searchController,
+                                      decoration: InputDecoration(
+                                        isDense: true,
+                                        labelText: "Search",
+                                        prefixIcon: Icon(Icons.search),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(12.0),
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: _filterText,
+                    ),
+                    Flexible(
+                      child: Consumer<AttacksProvider>(
+                        builder: (context, attacksProvider, child) => AttacksList(
+                          attacks: attacksProvider.allAttacks,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: _filterText,
-              ),
-              Flexible(
-                child: Consumer<AttacksProvider>(
-                  builder: (context, attacksProvider, child) => AttacksList(
-                    attacks: attacksProvider.allAttacks,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
       ),
     );
   }
@@ -141,8 +147,10 @@ class _AttacksPageState extends State<AttacksPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -176,7 +184,9 @@ class _AttacksPageState extends State<AttacksPage> {
             var filterType = _attacksProvider.currentTypeFilter;
             if (filterType == AttackTypeFilter.all) {
               _attacksProvider.setFilterType(AttackTypeFilter.unknownTargets);
-              _changeFilterColorAndText();
+              setState(() {
+                _changeFilterColorAndText();
+              });
 
               BotToast.showText(
                 text: 'Hiding people already added to the target list!',
@@ -190,7 +200,9 @@ class _AttacksPageState extends State<AttacksPage> {
               );
             } else {
               _attacksProvider.setFilterType(AttackTypeFilter.all);
-              _changeFilterColorAndText();
+              setState(() {
+                _changeFilterColorAndText();
+              });
 
               BotToast.showText(
                 text: 'Showing all recent attacks!',
@@ -256,21 +268,21 @@ class _AttacksPageState extends State<AttacksPage> {
       case AttackSortType.dateAsc:
         _attacksProvider.sortAttacks(AttackSortType.dateAsc);
         break;
+      default:
+        _attacksProvider.sortAttacks(AttackSortType.dateDes);
     }
   }
 
   void _changeFilterColorAndText() {
-    setState(() {
-      if (_attacksProvider.currentTypeFilter == AttackTypeFilter.all) {
-        _filterTypeColor = Colors.white;
-        _filterText = Text('Showing all recent attacks and targets');
-      } else {
-        _filterTypeColor = Colors.orange[200];
-        _filterText = Text(
-          'Filtering out existing targets',
-          style: TextStyle(color: Colors.orange[400]),
-        );
-      }
-    });
+    if (_attacksProvider.currentTypeFilter == AttackTypeFilter.all) {
+      _filterTypeColor = Colors.white;
+      _filterText = Text('Showing all recent attacks and targets');
+    } else {
+      _filterTypeColor = Colors.orange[200];
+      _filterText = Text(
+        'Filtering out existing targets',
+        style: TextStyle(color: Colors.orange[400]),
+      );
+    }
   }
 }

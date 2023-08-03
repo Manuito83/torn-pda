@@ -7,8 +7,6 @@ import 'dart:ui' as ui;
 import 'package:bot_toast/bot_toast.dart';
 
 // Useful for functions debugging
-// ignore: unused_import
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -30,7 +28,6 @@ import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
@@ -64,14 +61,14 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
     StreamController<ReceivedNotification>.broadcast();
 
-final StreamController<String> selectNotificationStream = StreamController<String>.broadcast();
+final StreamController<String?> selectNotificationStream = StreamController<String?>.broadcast();
 
 class ReceivedNotification {
   ReceivedNotification({
-    @required this.id,
-    @required this.title,
-    @required this.body,
-    @required this.payload,
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.payload,
   });
 
   final int id;
@@ -88,9 +85,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       final oldData = await Prefs().getDataStockMarket();
       var newData = "";
       if (oldData.isNotEmpty) {
-        newData = "$oldData\n${message.notification.body}";
+        newData = "$oldData\n${message.notification!.body}";
       } else {
-        newData = "$oldData${message.notification.body}";
+        newData = "$oldData${message.notification!.body}";
       }
       Prefs().setDataStockMarket(newData);
     }
@@ -109,8 +106,8 @@ Future<void> main() async {
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {
-    final AndroidFlutterLocalNotificationsPlugin androidImplementation =
-        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
     await androidImplementation.requestPermission();
   }
 
@@ -126,7 +123,7 @@ Future<void> main() async {
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-      final String payload = notificationResponse.payload;
+      final String? payload = notificationResponse.payload;
       if (notificationResponse.payload != null) {
         log('Notification payload: $payload');
         selectNotificationStream.add(payload);
@@ -174,11 +171,7 @@ Future<void> main() async {
         // UserDetailsProvider has to go first to initialize the others!
         ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
         ChangeNotifierProvider<TargetsProvider>(create: (context) => TargetsProvider()),
-        ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
-          create: (context) => AttacksProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider, AttacksProvider attacksProvider) =>
-              AttacksProvider(userProvider.basic),
-        ),
+        ChangeNotifierProvider<AttacksProvider>(create: (context) => AttacksProvider()),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProvider<FriendsProvider>(
@@ -233,8 +226,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeProvider _themeProvider;
-  WebViewProvider _webViewProvider;
+  late ThemeProvider _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -362,7 +355,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 class AppBorder extends StatefulWidget {
-  const AppBorder({Key key}) : super(key: key);
+  const AppBorder({Key? key}) : super(key: key);
 
   @override
   _AppBorderState createState() => _AppBorderState();

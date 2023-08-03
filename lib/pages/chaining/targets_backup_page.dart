@@ -24,11 +24,11 @@ class TargetsBackupPage extends StatefulWidget {
 }
 
 class _TargetsBackupPageState extends State<TargetsBackupPage> {
-  TargetsProvider _targetsProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late TargetsProvider _targetsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
-  TargetsBackupModel _tentativeImportModel;
+  late TargetsBackupModel _tentativeImportModel;
 
   bool _importActive = false;
   int _importSuccessEvents = 0;
@@ -47,7 +47,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
   String _importChoiceString = "you can either add them to your current list, or replace everything "
       "(you'll lose your current targets!).\n\nChoose wisely.";
 
-  Color _importHintStyle = Colors.black;
+  Color? _importHintStyle = Colors.black;
   String _importHintText = 'Paste here previously exported data';
   FontWeight _importHintWeight = FontWeight.normal;
 
@@ -216,7 +216,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value.isEmpty) {
+                                    if (value!.isEmpty) {
                                       return "Cannot be empty!";
                                     }
                                     return null;
@@ -228,7 +228,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                                     icon: Icon(Icons.file_download),
                                     label: Text("Import"),
                                     onPressed: () {
-                                      if (_importFormKey.currentState.validate()) {
+                                      if (_importFormKey.currentState!.validate()) {
                                         var numberImported = _importChecker();
                                         if (numberImported == 0) {
                                           BotToast.showText(
@@ -288,7 +288,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
       child: LinearPercentIndicator(
-        padding: null,
+        padding: EdgeInsets.all(0),
         barRadius: Radius.circular(10),
         alignment: MainAxisAlignment.center,
         width: 200,
@@ -296,10 +296,10 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
         progressColor: Colors.green[200],
         backgroundColor: Colors.red[200],
         center: Text(
-          '$_importSuccessEvents/${_tentativeImportModel.targetBackup.length}',
+          '$_importSuccessEvents/${_tentativeImportModel.targetBackup!.length}',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        percent: _importSuccessEvents / _tentativeImportModel.targetBackup.length,
+        percent: _importSuccessEvents / _tentativeImportModel.targetBackup!.length,
       ),
     );
   }
@@ -308,19 +308,19 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     try {
       String inputString = _importInputController.text;
       TargetsBackupModel inputModel = targetsBackupModelFromJson(inputString);
-      for (var tar in inputModel.targetBackup) {
-        if (tar.notesColor.length > 10) {
-          tar.notesColor = tar.notesColor.substring(0, 9);
+      for (var tar in inputModel.targetBackup!) {
+        if (tar.notesColor!.length > 10) {
+          tar.notesColor = tar.notesColor!.substring(0, 9);
         }
-        if (tar.notesColor.length > 200) {
-          tar.notesColor = tar.notesColor.substring(0, 199);
+        if (tar.notesColor!.length > 200) {
+          tar.notesColor = tar.notesColor!.substring(0, 199);
         }
         if (tar.notesColor != "red" && tar.notesColor != "green" && tar.notesColor != "blue") {
           tar.notesColor = "";
         }
       }
       _tentativeImportModel = inputModel;
-      return _tentativeImportModel.targetBackup.length;
+      return _tentativeImportModel.targetBackup!.length;
     } catch (e) {
       return 0;
     }
@@ -371,7 +371,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                   Padding(
                     padding: EdgeInsets.fromLTRB(30, 10, 30, 20),
                     child: Text(
-                      "${_tentativeImportModel.targetBackup.length} "
+                      "${_tentativeImportModel.targetBackup!.length} "
                               "new targets were found, " +
                           _importChoiceString,
                       style: TextStyle(
@@ -424,7 +424,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     );
   }
 
-  void onImportPressed({bool replace}) async {
+  void onImportPressed({required bool replace}) async {
     String existing = ' to the existing list';
     if (replace) {
       existing = '';
@@ -434,7 +434,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     if (mounted) {
       setState(() {
         // More readable variables makes it easier
-        var total = _tentativeImportModel.targetBackup.length;
+        var total = _tentativeImportModel.targetBackup!.length;
         var numWorked = _importSuccessEvents;
         _importInputController.text = "";
         if (numWorked == 0) {
@@ -462,7 +462,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     _importActive = true; // Show import status
     _importSuccessEvents = 0;
     dynamic attacks = await _targetsProvider.getAttacks();
-    for (var import in _tentativeImportModel.targetBackup) {
+    for (var import in _tentativeImportModel.targetBackup!) {
       var importResult = await _targetsProvider.addTarget(
         targetId: import.id.toString(),
         attacks: attacks,
@@ -477,7 +477,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
         }
       }
       // Avoid issues with API limits
-      if (_tentativeImportModel.targetBackup.length > 60) {
+      if (_tentativeImportModel.targetBackup!.length > 60) {
         await Future.delayed(const Duration(seconds: 1), () {});
       }
     }

@@ -23,9 +23,9 @@ class FriendsPage extends StatefulWidget {
 }
 
 class _FriendsPageState extends State<FriendsPage> {
-  ThemeProvider _themeProvider;
-  FriendsProvider _friendsProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  late FriendsProvider _friendsProvider;
+  late SettingsProvider _settingsProvider;
 
   final _searchController = new TextEditingController();
   final _addIdController = new TextEditingController();
@@ -101,7 +101,7 @@ class _FriendsPageState extends State<FriendsPage> {
               minWidth: 1.0,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                  backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
                   shape: MaterialStateProperty.all<OutlinedBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
@@ -124,7 +124,7 @@ class _FriendsPageState extends State<FriendsPage> {
               minWidth: 1.0,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                  backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
                   shape: MaterialStateProperty.all<OutlinedBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
@@ -194,8 +194,10 @@ class _FriendsPageState extends State<FriendsPage> {
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -206,7 +208,7 @@ class _FriendsPageState extends State<FriendsPage> {
           icon: _searchIcon,
           onPressed: () {
             setState(() {
-              Color myColor = Colors.white;
+              Color? myColor = Colors.white;
               if (_searchController.text != '') {
                 myColor = Colors.orange[500];
               }
@@ -350,7 +352,7 @@ class _FriendsPageState extends State<FriendsPage> {
                               labelText: 'Insert friend ID',
                             ),
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Cannot be empty!";
                               }
                               final n = num.tryParse(value);
@@ -368,7 +370,7 @@ class _FriendsPageState extends State<FriendsPage> {
                               TextButton(
                                 child: Text("Add"),
                                 onPressed: () async {
-                                  if (_addFormKey.currentState.validate()) {
+                                  if (_addFormKey.currentState!.validate()) {
                                     // Get rid of dialog first, so that it can't
                                     // be pressed twice
                                     Navigator.of(context).pop();
@@ -478,7 +480,7 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   void _selectSortPopup(FriendSort choice) {
-    switch (choice.type) {
+    switch (choice.type!) {
       case FriendSortType.levelDes:
         _friendsProvider.sortTargets(FriendSortType.levelDes);
         break;

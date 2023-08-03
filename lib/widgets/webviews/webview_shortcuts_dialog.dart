@@ -15,9 +15,9 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewShortcutsDialog extends StatefulWidget {
-  final InAppWebViewController inAppWebView;
-  final WebViewController stockWebview;
-  final bool fromShortcut;
+  final InAppWebViewController? inAppWebView;
+  final WebViewController? stockWebview;
+  final bool? fromShortcut;
 
   WebviewShortcutsDialog({
     this.inAppWebView,
@@ -30,10 +30,10 @@ class WebviewShortcutsDialog extends StatefulWidget {
 }
 
 class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
-  ThemeProvider _themeProvider;
-  ShortcutsProvider _shortcutsProvider;
-  UserDetailsProvider _userProv;
-  WebViewProvider _webViewProvider;
+  late ThemeProvider _themeProvider;
+  late ShortcutsProvider _shortcutsProvider;
+  late UserDetailsProvider _userProv;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -149,7 +149,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
           SizedBox(
             height: 25,
             child: Image.asset(
-              thisShortcut.iconUrl,
+              thisShortcut.iconUrl!,
               width: 16,
               color: _themeProvider.mainText,
             ),
@@ -159,7 +159,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                thisShortcut.nickname.toUpperCase(),
+                thisShortcut.nickname!.toUpperCase(),
                 style: const TextStyle(fontSize: 9),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.fade,
@@ -172,17 +172,17 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
 
     return InkWell(
       onLongPress: () {
-        String url = thisShortcut.url;
+        String? url = thisShortcut.url;
 
         if (thisShortcut.addPlayerId != null) {
-          if (thisShortcut.addPlayerId) {
-            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          if (thisShortcut.addPlayerId!) {
+            url = url!.replaceAll("##P##", _userProv.basic!.playerId.toString());
           }
-          if (thisShortcut.addFactionId) {
-            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+          if (thisShortcut.addFactionId!) {
+            url = url!.replaceAll("##F##", _userProv.basic!.faction!.factionId.toString());
           }
-          if (thisShortcut.addCompanyId) {
-            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+          if (thisShortcut.addCompanyId!) {
+            url = url!.replaceAll("##C##", _userProv.basic!.job!.companyId.toString());
           }
         }
 
@@ -190,8 +190,8 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
           _webViewProvider.addTab(url: url);
           _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
         } else if (widget.stockWebview != null) {
-          widget.stockWebview.loadUrl(url);
-        } else if (widget.fromShortcut) {
+          widget.stockWebview!.loadUrl(url!);
+        } else if (widget.fromShortcut!) {
           _webViewProvider.addTab(url: url);
           _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
         }
@@ -199,27 +199,27 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
         Navigator.of(context).pop();
       },
       onTap: () async {
-        String url = thisShortcut.url;
+        String? url = thisShortcut.url;
 
         if (thisShortcut.addPlayerId != null) {
-          if (thisShortcut.addPlayerId) {
-            url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+          if (thisShortcut.addPlayerId!) {
+            url = url!.replaceAll("##P##", _userProv.basic!.playerId.toString());
           }
-          if (thisShortcut.addFactionId) {
-            url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+          if (thisShortcut.addFactionId!) {
+            url = url!.replaceAll("##F##", _userProv.basic!.faction!.factionId.toString());
           }
-          if (thisShortcut.addCompanyId) {
-            url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+          if (thisShortcut.addCompanyId!) {
+            url = url!.replaceAll("##C##", _userProv.basic!.job!.companyId.toString());
           }
         }
 
         if (widget.inAppWebView != null) {
-          widget.inAppWebView.loadUrl(
-            urlRequest: URLRequest(url: WebUri(url)),
+          widget.inAppWebView!.loadUrl(
+            urlRequest: URLRequest(url: WebUri(url!)),
           );
         } else if (widget.stockWebview != null) {
-          widget.stockWebview.loadUrl(url);
-        } else if (widget.fromShortcut) {
+          widget.stockWebview!.loadUrl(url!);
+        } else if (widget.fromShortcut!) {
           _webViewProvider.loadCurrentTabUrl(url);
         }
 
@@ -227,7 +227,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
       },
       child: Card(
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: thisShortcut.color, width: 1.5),
+          side: BorderSide(color: thisShortcut.color!, width: 1.5),
           borderRadius: BorderRadius.circular(4.0),
         ),
         elevation: 2,

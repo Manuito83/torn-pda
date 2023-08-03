@@ -17,15 +17,15 @@ class StocksOptionsDialog extends StatefulWidget {
   final bool inventoryEnabled;
   final bool showArrivalTime;
   final bool showBarsCooldownAnalysis;
-  final SettingsProvider settingsProvider;
+  final SettingsProvider? settingsProvider;
 
   StocksOptionsDialog({
-    @required this.capacity,
-    @required this.callBack,
-    @required this.inventoryEnabled,
-    @required this.showArrivalTime,
-    @required this.showBarsCooldownAnalysis,
-    @required this.settingsProvider,
+    required this.capacity,
+    required this.callBack,
+    required this.inventoryEnabled,
+    required this.showArrivalTime,
+    required this.showBarsCooldownAnalysis,
+    required this.settingsProvider,
   });
 
   @override
@@ -33,12 +33,12 @@ class StocksOptionsDialog extends StatefulWidget {
 }
 
 class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
-  ThemeProvider _themeProvider;
+  late ThemeProvider _themeProvider;
 
-  int _capacity;
-  bool _inventoryEnabled;
-  bool _showArrivalTime;
-  bool _barsCooldownAnalysis;
+  late int _capacity;
+  late bool _inventoryEnabled;
+  late bool _showArrivalTime;
+  late bool _barsCooldownAnalysis;
 
   @override
   void initState() {
@@ -280,7 +280,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
 
   DropdownButton _timeFormatDropdown() {
     return DropdownButton<TravelTicket>(
-      value: widget.settingsProvider.travelTicket,
+      value: widget.settingsProvider!.travelTicket,
       items: [
         DropdownMenuItem(
           value: TravelTicket.standard,
@@ -336,8 +336,9 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
         ),
       ],
       onChanged: (value) {
+        if (value == null) return;
         setState(() {
-          widget.settingsProvider.changeTravelTicket = value;
+          widget.settingsProvider!.changeTravelTicket = value;
         });
         _callBackValues();
       },

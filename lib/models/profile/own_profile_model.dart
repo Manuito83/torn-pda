@@ -53,41 +53,41 @@ class OwnProfileExtended {
     this.icons,
   });
 
-  String rank;
-  int level;
-  String gender;
-  String property;
-  DateTime signup;
-  int awards;
-  int friends;
-  int enemies;
-  int forumPosts;
-  int karma;
-  int age;
-  String role;
-  int donator;
-  int playerId;
-  String name;
-  int propertyId;
-  int serverTime;
-  int moneyOnHand;
-  Life life;
-  Status status;
-  Job job;
-  Faction faction;
-  Married married;
-  States states;
-  LastAction lastAction;
-  Happy happy;
-  Energy energy;
-  Nerve nerve;
-  Chain chain;
-  Map<String, double> networth;
-  Cooldowns cooldowns;
-  List<Event> events;
+  String? rank;
+  int? level;
+  String? gender;
+  String? property;
+  DateTime? signup;
+  int? awards;
+  int? friends;
+  int? enemies;
+  int? forumPosts;
+  int? karma;
+  int? age;
+  String? role;
+  int? donator;
+  int? playerId;
+  String? name;
+  int? propertyId;
+  int? serverTime;
+  int? moneyOnHand;
+  Life? life;
+  Status? status;
+  Job? job;
+  Faction? faction;
+  Married? married;
+  States? states;
+  LastAction? lastAction;
+  Happy? happy;
+  Energy? energy;
+  Nerve? nerve;
+  Chain? chain;
+  Map<String, double?>? networth;
+  Cooldowns? cooldowns;
+  List<Event>? events;
   dynamic messages;
-  Notifications notifications;
-  Travel travel;
+  Notifications? notifications;
+  Travel? travel;
   dynamic icons;
 
   factory OwnProfileExtended.fromJson(Map<String, dynamic> json) {
@@ -123,7 +123,7 @@ class OwnProfileExtended {
       chain: json["chain"] == null ? null : Chain.fromJson(json["chain"]),
       networth: json["networth"] == null
           ? null
-          : Map.from(json["networth"]).map((k, v) => MapEntry<String, double>(k, v.toDouble())),
+          : Map.from(json["networth"]).map((k, v) => MapEntry<String, double?>(k, v.toDouble())),
       cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
       events: json["events"],
       messages: json["messages"],
@@ -145,7 +145,7 @@ class OwnProfileExtended {
         "level": level == null ? null : level,
         "gender": gender == null ? null : gender,
         "property": property == null ? null : property,
-        "signup": signup == null ? null : signup.toIso8601String(),
+        "signup": signup == null ? null : signup!.toIso8601String(),
         "awards": awards == null ? null : awards,
         "friends": friends == null ? null : friends,
         "enemies": enemies == null ? null : enemies,
@@ -159,23 +159,23 @@ class OwnProfileExtended {
         "property_id": propertyId == null ? null : propertyId,
         "server_time": serverTime == null ? null : serverTime,
         "money_onhand": moneyOnHand == null ? null : moneyOnHand,
-        "life": life == null ? null : life.toJson(),
-        "status": status == null ? null : status.toJson(),
-        "job": job == null ? null : job.toJson(),
-        "faction": faction == null ? null : faction.toJson(),
-        "married": married == null ? null : married.toJson(),
-        "states": states == null ? null : states.toJson(),
-        "last_action": lastAction == null ? null : lastAction.toJson(),
-        "happy": happy == null ? null : happy.toJson(),
-        "energy": energy == null ? null : energy.toJson(),
-        "nerve": nerve == null ? null : nerve.toJson(),
-        "chain": chain == null ? null : chain.toJson(),
-        "networth": networth == null ? null : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
-        "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
+        "life": life == null ? null : life!.toJson(),
+        "status": status == null ? null : status!.toJson(),
+        "job": job == null ? null : job!.toJson(),
+        "faction": faction == null ? null : faction!.toJson(),
+        "married": married == null ? null : married!.toJson(),
+        "states": states == null ? null : states!.toJson(),
+        "last_action": lastAction == null ? null : lastAction!.toJson(),
+        "happy": happy == null ? null : happy!.toJson(),
+        "energy": energy == null ? null : energy!.toJson(),
+        "nerve": nerve == null ? null : nerve!.toJson(),
+        "chain": chain == null ? null : chain!.toJson(),
+        "networth": networth == null ? null : Map.from(networth!).map((k, v) => MapEntry<String, dynamic>(k, v)),
+        "cooldowns": cooldowns == null ? null : cooldowns!.toJson(),
         "events": events,
         "messages": messages,
         "notifications": notifications,
-        "travel": travel == null ? null : travel.toJson(),
+        "travel": travel == null ? null : travel!.toJson(),
         "icons": icons == null ? null : icons.toJson(),
       };
 }
@@ -189,11 +189,11 @@ class Chain {
     this.cooldown,
   });
 
-  int current;
-  int maximum;
-  int timeout;
-  double modifier;
-  int cooldown;
+  int? current;
+  int? maximum;
+  int? timeout;
+  double? modifier;
+  int? cooldown;
 
   factory Chain.fromJson(Map<String, dynamic> json) => Chain(
         current: json["current"] == null ? null : json["current"],
@@ -219,9 +219,9 @@ class Cooldowns {
     this.booster,
   });
 
-  int drug;
-  int medical;
-  int booster;
+  int? drug;
+  int? medical;
+  int? booster;
 
   factory Cooldowns.fromJson(Map<String, dynamic> json) => Cooldowns(
         drug: json["drug"] == null ? null : json["drug"],
@@ -246,12 +246,12 @@ class Energy {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Energy.fromJson(Map<String, dynamic> json) => Energy(
         current: json["current"] == null ? null : json["current"],
@@ -282,12 +282,12 @@ class Nerve {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Nerve.fromJson(Map<String, dynamic> json) => Nerve(
         current: json["current"] == null ? null : json["current"],
@@ -318,12 +318,12 @@ class Happy {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Happy.fromJson(Map<String, dynamic> json) => Happy(
         current: json["current"] == null ? null : json["current"],
@@ -354,12 +354,12 @@ class Life {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Life.fromJson(Map<String, dynamic> json) => Life(
         current: json["current"] == null ? null : json["current"],
@@ -386,8 +386,8 @@ class Event {
     this.event,
   });
 
-  int timestamp;
-  String event;
+  int? timestamp;
+  String? event;
 
   factory Event.fromJson(Map<String, dynamic> json) => Event(
         timestamp: json["timestamp"] == null ? null : json["timestamp"],
@@ -411,13 +411,13 @@ class TornMessage {
     this.read,
   });
 
-  int timestamp;
-  int id;
-  String name;
-  String type;
+  int? timestamp;
+  int? id;
+  String? name;
+  String? type;
   dynamic title;
-  int seen;
-  int read;
+  int? seen;
+  int? read;
 
   factory TornMessage.fromJson(Map<String, dynamic> json) => TornMessage(
         timestamp: json["timestamp"] == null ? null : json["timestamp"],
@@ -448,10 +448,10 @@ class Notifications {
     this.competition,
   });
 
-  int messages;
-  int events;
-  int awards;
-  int competition;
+  int? messages;
+  int? events;
+  int? awards;
+  int? competition;
 
   factory Notifications.fromJson(Map<String, dynamic> json) => Notifications(
         messages: json["messages"],
@@ -477,11 +477,11 @@ class Faction {
     this.factionTag,
   });
 
-  String position;
-  int factionId;
-  int daysInFaction;
-  String factionName;
-  String factionTag;
+  String? position;
+  int? factionId;
+  int? daysInFaction;
+  String? factionName;
+  String? factionTag;
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
         position: json["position"] == null ? null : json["position"],
@@ -509,11 +509,11 @@ class Job {
     this.companyType,
   });
 
-  String job;
-  String position;
-  int companyId;
-  String companyName;
-  int companyType;
+  String? job;
+  String? position;
+  int? companyId;
+  String? companyName;
+  int? companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         job: json["job"] == null ? null : json["job"],
@@ -539,9 +539,9 @@ class LastAction {
     this.relative,
   });
 
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
         status: json["status"] == null ? null : json["status"],
@@ -563,9 +563,9 @@ class Married {
     this.duration,
   });
 
-  int spouseId;
-  String spouseName;
-  int duration;
+  int? spouseId;
+  String? spouseName;
+  int? duration;
 
   factory Married.fromJson(Map<String, dynamic> json) => Married(
         spouseId: json["spouse_id"] == null ? null : json["spouse_id"],
@@ -586,8 +586,8 @@ class States {
     this.jailTimestamp,
   });
 
-  int hospitalTimestamp;
-  int jailTimestamp;
+  int? hospitalTimestamp;
+  int? jailTimestamp;
 
   factory States.fromJson(Map<String, dynamic> json) => States(
         hospitalTimestamp: json["hospital_timestamp"] == null ? null : json["hospital_timestamp"],
@@ -608,10 +608,10 @@ class Travel {
     this.timeLeft,
   });
 
-  String destination;
-  int timestamp;
-  int departed;
-  int timeLeft;
+  String? destination;
+  int? timestamp;
+  int? departed;
+  int? timeLeft;
 
   factory Travel.fromJson(Map<String, dynamic> json) => Travel(
         destination: json["destination"] == null ? null : json["destination"],
@@ -683,57 +683,57 @@ class TornIcons {
     this.icon86,
   });
 
-  String icon3;
-  String icon4;
-  String icon12;
-  String icon13;
-  String icon15;
-  String icon16;
-  String icon17;
-  String icon18;
-  String icon20;
-  String icon29;
-  String icon30;
-  String icon31;
-  String icon32;
-  String icon33;
-  String icon37;
-  String icon39;
-  String icon40;
-  String icon41;
-  String icon42;
-  String icon43;
-  String icon44;
-  String icon45;
-  String icon46;
-  String icon47;
-  String icon48;
-  String icon49;
-  String icon50;
-  String icon51;
-  String icon52;
-  String icon53;
-  String icon57;
-  String icon58;
-  String icon59;
-  String icon60;
-  String icon61;
-  String icon63;
-  String icon64;
-  String icon65;
-  String icon66;
-  String icon67;
-  String icon68;
-  String icon75;
-  String icon76;
-  String icon78;
-  String icon79;
-  String icon80;
-  String icon81;
-  String icon83;
-  String icon84;
-  String icon85;
-  String icon86;
+  String? icon3;
+  String? icon4;
+  String? icon12;
+  String? icon13;
+  String? icon15;
+  String? icon16;
+  String? icon17;
+  String? icon18;
+  String? icon20;
+  String? icon29;
+  String? icon30;
+  String? icon31;
+  String? icon32;
+  String? icon33;
+  String? icon37;
+  String? icon39;
+  String? icon40;
+  String? icon41;
+  String? icon42;
+  String? icon43;
+  String? icon44;
+  String? icon45;
+  String? icon46;
+  String? icon47;
+  String? icon48;
+  String? icon49;
+  String? icon50;
+  String? icon51;
+  String? icon52;
+  String? icon53;
+  String? icon57;
+  String? icon58;
+  String? icon59;
+  String? icon60;
+  String? icon61;
+  String? icon63;
+  String? icon64;
+  String? icon65;
+  String? icon66;
+  String? icon67;
+  String? icon68;
+  String? icon75;
+  String? icon76;
+  String? icon78;
+  String? icon79;
+  String? icon80;
+  String? icon81;
+  String? icon83;
+  String? icon84;
+  String? icon85;
+  String? icon86;
 
   factory TornIcons.fromJson(Map<String, dynamic> json) => TornIcons(
         icon3: json["icon3"] == null ? null : json["icon3"],

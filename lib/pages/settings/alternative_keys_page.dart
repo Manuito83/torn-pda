@@ -1,6 +1,3 @@
-// Dart imports:
-import 'dart:async';
-
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,15 +14,15 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AlternativeKeysPage extends StatefulWidget {
-  const AlternativeKeysPage({Key key}) : super(key: key);
+  const AlternativeKeysPage({Key? key}) : super(key: key);
 
   @override
   _AlternativeKeysPageState createState() => _AlternativeKeysPageState();
 }
 
 class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   TextEditingController _yataKeyController = TextEditingController();
   TextEditingController _tornStatsKeyController = TextEditingController();
@@ -117,7 +114,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       w.alternativeYataKeyEnabled = enabled;
                       Prefs().setAlternativeYataKeyEnabled(enabled);
                       if (!enabled) {
-                        w.alternativeYataKey = w.apiKey;
+                        w.alternativeYataKey = w.apiKey!;
                       }
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -145,7 +142,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                         maxLength: 16,
                         onChanged: (key) {
                           if (key.isEmpty) {
-                            key = w.apiKey;
+                            key = w.apiKey!;
                           }
                           w.alternativeYataKey = key;
                           Prefs().setAlternativeYataKey(key);
@@ -187,7 +184,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       w.alternativeTornStatsKeyEnabled = enabled;
                       Prefs().setAlternativeTornStatsKeyEnabled(enabled);
                       if (!enabled) {
-                        w.alternativeTornStatsKey = w.apiKey;
+                        w.alternativeTornStatsKey = w.apiKey!;
                       }
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -215,7 +212,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                         maxLength: 16,
                         onChanged: (key) {
                           if (key.isEmpty) {
-                            key = w.apiKey;
+                            key = w.apiKey!;
                           }
                           w.alternativeTornStatsKey = key;
                           Prefs().setAlternativeTornStatsKey(key);

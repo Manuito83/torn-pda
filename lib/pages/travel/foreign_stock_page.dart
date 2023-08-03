@@ -33,13 +33,13 @@ class ReturnFlagPressed {
   bool flagPressed = false;
   bool shortTap = true;
 
-  ReturnFlagPressed({@required this.flagPressed, @required this.shortTap});
+  ReturnFlagPressed({required this.flagPressed, required this.shortTap});
 }
 
 class ForeignStockPage extends StatefulWidget {
-  final String apiKey;
+  final String? apiKey;
 
-  ForeignStockPage({@required this.apiKey});
+  ForeignStockPage({required this.apiKey});
 
   @override
   _ForeignStockPageState createState() => _ForeignStockPageState();
@@ -49,18 +49,18 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   PanelController _pc = new PanelController();
 
   final double _initFabHeight = 25.0;
-  double _fabHeight;
+  double? _fabHeight;
   double _panelHeightOpen = 300;
   double _panelHeightClosed = 75.0;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  ThemeProvider? _themeProvider;
+  SettingsProvider? _settingsProvider;
 
-  Future _apiCalled;
-  bool _apiSuccess;
+  Future? _apiCalled;
+  late bool _apiSuccess;
   bool _yataTimeOut = false;
 
-  var _activeRestocks = Map<String, dynamic>();
+  Map<String, dynamic>? _activeRestocks = Map<String, dynamic>();
 
   /// MODELS
   // CAUTION: model in 'foreign_stock_in.dart' has been altered with easier names for classes
@@ -74,15 +74,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   // arrays and some details need to be filled in for the stocks as we fetch from the API
   var _stocksYataModel = ForeignStockInModel();
   // This is the official items model from Torn
-  ItemsModel _allTornItems;
+  ItemsModel? _allTornItems;
 
   bool _inventoryEnabled = true;
   bool _showArrivalTime = true;
   bool _showBarsCooldownAnalysis = true;
-  InventoryModel _inventory;
+  InventoryModel? _inventory;
   //OwnProfileExtended _travelModel;
-  OwnProfileExtended _profile;
-  int _capacity;
+  OwnProfileExtended? _profile;
+  int _capacity = 1;
 
   final _filteredTypes = List<bool>.filled(4, true, growable: false);
   final _filteredFlags = List<bool>.filled(12, true, growable: false);
@@ -152,7 +152,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
     routeWithDrawer = false;
     routeName = "foreign_stock";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
       if (mounted && routeName == "foreign_stock") _goBack(false, false);
     });
   }
@@ -161,25 +161,25 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
+      color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : _themeProvider.currentTheme == AppTheme.dark
+          : _themeProvider!.currentTheme == AppTheme.dark
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
+          backgroundColor: _themeProvider!.canvas,
+          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider!.appBarTop
               ? SizedBox(
                   height: AppBar().preferredSize.height,
                   child: buildAppBar(),
                 )
               : null,
           body: Container(
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
             child: Stack(
               alignment: Alignment.topCenter,
               children: <Widget>[
@@ -341,7 +341,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
       title: Text("Foreign Stock"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
@@ -360,7 +360,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               return PopupMenuItem<StockSort>(
                 value: choice,
                 child: Text(
-                  choice.description,
+                  choice.description!,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: choice.description == _currentSort.description ? FontWeight.bold : FontWeight.normal,
@@ -376,7 +376,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           onPressed: _hiddenStocks.isEmpty
               ? null
               : () {
-                  return showDialog<void>(
+                  showDialog<void>(
                     context: context,
                     barrierDismissible: true, // user must tap button!
                     builder: (BuildContext context) {
@@ -402,12 +402,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
-          color: _themeProvider.secondBackground,
+          color: _themeProvider!.secondBackground,
           borderRadius: BorderRadius.all(Radius.circular(24.0)),
           boxShadow: [
             BoxShadow(
               blurRadius: 2.0,
-              color: Colors.orange[800],
+              color: Colors.orange[800]!,
             ),
           ]),
       margin: const EdgeInsets.all(22.0),
@@ -460,7 +460,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                           fontSize: 14,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.grey[700],
+                        contentColor: Colors.grey[700]!,
                         duration: Duration(seconds: 2),
                         contentPadding: EdgeInsets.all(10),
                       );
@@ -548,7 +548,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         Image.asset('images/flags/stock/uk.png', width: 25, height: 25),
         Icon(
           Icons.select_all,
-          color: _themeProvider.mainText,
+          color: _themeProvider!.mainText,
         ),
       ];
     } else {
@@ -566,7 +566,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         Image.asset('images/flags/stock/south-africa.png', width: 25, height: 25),
         Icon(
           Icons.select_all,
-          color: _themeProvider.mainText,
+          color: _themeProvider!.mainText,
         ),
       ];
     }
@@ -639,23 +639,23 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             'images/icons/ic_flower_black_48dp.png',
             width: 25,
             height: 25,
-            color: _themeProvider.mainText,
+            color: _themeProvider!.mainText,
           ),
           Image.asset(
             'images/icons/ic_dog_black_48dp.png',
             width: 25,
             height: 25,
-            color: _themeProvider.mainText,
+            color: _themeProvider!.mainText,
           ),
           Image.asset(
             'images/icons/ic_pill_black_48dp.png',
             width: 25,
             height: 25,
-            color: _themeProvider.mainText,
+            color: _themeProvider!.mainText,
           ),
           Icon(
             Icons.add_to_photos,
-            color: _themeProvider.mainText,
+            color: _themeProvider!.mainText,
           ),
         ].asMap().entries.map((widget) {
           return ToggleButtons(
@@ -698,7 +698,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           SizedBox(width: 6),
           Flexible(
             child: Text(
-              _timeStampToString(_stocksYataModel.timestamp),
+              _timeStampToString(_stocksYataModel.timestamp!),
               style: TextStyle(fontSize: 11),
             ),
           ),
@@ -789,11 +789,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           flagPressedCallback: _onFlagPressed,
           requestMoneyRefresh: _refreshMoney,
           memberHiddenCallback: _hideMember,
-          ticket: _settingsProvider.travelTicket,
+          ticket: _settingsProvider!.travelTicket,
           activeRestocks: _activeRestocks,
-          travellingTimeStamp: _profile.travel.timestamp,
-          travellingCountry: _returnCountryName(_profile.travel.destination),
-          travellingCountryFullName: _profile.travel.destination,
+          travellingTimeStamp: _profile!.travel!.timestamp,
+          travellingCountry: _returnCountryName(_profile!.travel!.destination),
+          travellingCountryFullName: _profile!.travel!.destination,
           displayShowcase: displayShowcase,
           key: UniqueKey(),
         ),
@@ -834,14 +834,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       // recalculate in real time in the card widget. This first calculation is
       // only to compare ones with the others and sort.
 
-      var itemList = _allTornItems.items.values.toList();
-      _stocksYataModel.countries.forEach((countryKey, countryDetails) {
-        for (var stock in countryDetails.stocks) {
+      var itemList = _allTornItems!.items!.values.toList();
+      _stocksYataModel.countries!.forEach((countryKey, countryDetails) {
+        for (var stock in countryDetails.stocks!) {
           // Match with Torn items (contained in itemList)
-          Item itemMatch = itemList[stock.id - 1];
+          Item itemMatch = itemList[stock.id! - 1];
 
           // Complete fields we need for value and profit
-          stock.value = itemMatch.marketValue - stock.cost;
+          stock.value = itemMatch.marketValue! - stock.cost!;
 
           // Assign actual profit depending on country (+ the country)
           stock.countryCode = countryKey;
@@ -895,7 +895,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           // Other fields contained in Yata and in Torn
           stock.profit = (stock.value /
                   (TravelTimes.travelTimeMinutesOneWay(
-                        ticket: _settingsProvider.travelTicket,
+                        ticket: _settingsProvider!.travelTicket,
                         countryCode: stock.country,
                       ) *
                       2 /
@@ -903,27 +903,27 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               .round();
 
           stock.timestamp = countryDetails.update;
-          stock.itemType = itemList[stock.id - 1].type;
+          stock.itemType = itemList[stock.id! - 1].type;
 
           stock.arrivalTime = DateTime.now().add(
             Duration(
               minutes: TravelTimes.travelTimeMinutesOneWay(
                 countryCode: stock.country,
-                ticket: _settingsProvider.travelTicket,
+                ticket: _settingsProvider!.travelTicket,
               ),
             ),
           );
 
-          var invQty = 0;
-          for (var invItem in _inventory.inventory) {
+          int invQty = 0;
+          for (var invItem in _inventory!.inventory!) {
             if (invItem.id == stock.id) {
-              invQty = invItem.quantity;
+              invQty = invItem.quantity!;
               break;
             }
           }
-          for (var displayItem in _inventory.display) {
+          for (var displayItem in _inventory!.display!) {
             if (displayItem.id == stock.id) {
-              invQty += displayItem.quantity;
+              invQty += displayItem.quantity!;
             }
           }
           stock.inventoryQuantity = invQty;
@@ -935,14 +935,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     } catch (e) {
       _apiSuccess = false;
 
-      if (_settingsProvider.debugMessages) {
+      if (_settingsProvider!.debugMessages) {
         BotToast.showText(
           text: "YATA debug catch: $e",
           textStyle: TextStyle(
             fontSize: 13,
             color: Colors.white,
           ),
-          contentColor: Colors.red[800],
+          contentColor: Colors.red[800]!,
           duration: Duration(seconds: 4),
           contentPadding: EdgeInsets.all(10),
         );
@@ -961,14 +961,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       } else {
         _apiSuccess = false;
 
-        if (_settingsProvider.debugMessages) {
+        if (_settingsProvider!.debugMessages) {
           BotToast.showText(
             text: "YATA debug error: ${responseDB.body}",
             textStyle: TextStyle(
               fontSize: 13,
               color: Colors.white,
             ),
-            contentColor: Colors.red[800],
+            contentColor: Colors.red[800]!,
             duration: Duration(seconds: 4),
             contentPadding: EdgeInsets.all(10),
           );
@@ -984,7 +984,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             fontSize: 13,
             color: Colors.white,
           ),
-          contentColor: Colors.red[800],
+          contentColor: Colors.red[800]!,
           duration: Duration(seconds: 4),
           contentPadding: EdgeInsets.all(10),
         );
@@ -998,7 +998,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     String error = "";
     if (itemsResponse is ApiError) {
       // Torn API generates lots of errors with this query (JAN 2023)
-      ApiError e = itemsResponse as ApiError;
+      ApiError e = itemsResponse;
       error = e.errorReason;
       log("Recalling API due to items error: ${e.errorReason}");
       BotToast.showText(
@@ -1008,12 +1008,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           fontSize: 13,
           color: Colors.white,
         ),
-        contentColor: Colors.orange[800],
+        contentColor: Colors.orange[800]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      itemsResponse = await Get.find<ApiCallerController>().getItems();
+      itemsResponse = await (Get.find<ApiCallerController>().getItems() as FutureOr<ApiError>);
     }
 
     if (itemsResponse is ApiError) {
@@ -1026,7 +1026,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             fontSize: 13,
             color: Colors.white,
           ),
-          contentColor: Colors.red[800],
+          contentColor: Colors.red[800]!,
           duration: Duration(seconds: 4),
           contentPadding: EdgeInsets.all(10),
         );
@@ -1043,7 +1043,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     String error = "";
     if (inventoryResponse is ApiError) {
       // Torn API generates lots of errors with this query (JAN 2023)
-      ApiError e = inventoryResponse as ApiError;
+      ApiError e = inventoryResponse;
       error = e.errorReason;
       log("Recalling API due to profile error: ${e.errorReason}");
       BotToast.showText(
@@ -1053,12 +1053,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           fontSize: 13,
           color: Colors.white,
         ),
-        contentColor: Colors.orange[800],
+        contentColor: Colors.orange[800]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      inventoryResponse = await Get.find<ApiCallerController>().getInventory();
+      inventoryResponse = await (Get.find<ApiCallerController>().getInventory() as FutureOr<ApiError>);
     }
 
     if (inventoryResponse is ApiError) {
@@ -1071,7 +1071,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             fontSize: 13,
             color: Colors.white,
           ),
-          contentColor: Colors.red[800],
+          contentColor: Colors.red[800]!,
           duration: Duration(seconds: 4),
           contentPadding: EdgeInsets.all(10),
         );
@@ -1088,7 +1088,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     String error = "";
     if (profileResponse is ApiError) {
       // Torn API generates lots of errors with this query (JAN 2023)
-      ApiError e = profileResponse as ApiError;
+      ApiError e = profileResponse;
       error = e.errorReason;
       log("Recalling API due to profile error: ${e.errorReason}");
       BotToast.showText(
@@ -1098,12 +1098,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           fontSize: 13,
           color: Colors.white,
         ),
-        contentColor: Colors.orange[800],
+        contentColor: Colors.orange[800]!,
         duration: Duration(seconds: 5),
         contentPadding: EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      profileResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
+      profileResponse = await (Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3) as FutureOr<ApiError>);
     }
 
     if (profileResponse is ApiError) {
@@ -1116,7 +1116,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             fontSize: 13,
             color: Colors.white,
           ),
-          contentColor: Colors.red[800],
+          contentColor: Colors.red[800]!,
           duration: Duration(seconds: 4),
           contentPadding: EdgeInsets.all(10),
         );
@@ -1177,11 +1177,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     var countryMap = Map<String, CountryDetails>();
-    _stocksYataModel.countries.forEach((countryKey, countryDetails) {
+    _stocksYataModel.countries!.forEach((countryKey, countryDetails) {
       var stockList = CountryDetails()..stocks = <ForeignStock>[];
       stockList.update = countryDetails.update;
 
-      for (var stock in countryDetails.stocks) {
+      for (var stock in countryDetails.stocks!) {
         var argentinaPosition = _alphabeticalFilter ? 0 : 5;
         var canadaPosition = _alphabeticalFilter ? 1 : 2;
         var caymanPosition = _alphabeticalFilter ? 2 : 1;
@@ -1194,60 +1194,62 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         var uaePosition = _alphabeticalFilter ? 9 : 9;
         var ukPosition = _alphabeticalFilter ? 10 : 4;
 
-        switch (stock.country) {
+        if (stock.country == null) continue;
+
+        switch (stock.country!) {
           case CountryName.ARGENTINA:
             if (_filteredFlags[argentinaPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.CANADA:
             if (_filteredFlags[canadaPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.CAYMAN_ISLANDS:
             if (_filteredFlags[caymanPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.CHINA:
             if (_filteredFlags[chinaPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.HAWAII:
             if (_filteredFlags[hawaiiPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.JAPAN:
             if (_filteredFlags[japanPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.MEXICO:
             if (_filteredFlags[mexicoPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.SOUTH_AFRICA:
             if (_filteredFlags[africaPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.SWITZERLAND:
             if (_filteredFlags[switzerlandPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.UAE:
             if (_filteredFlags[uaePosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.UNITED_KINGDOM:
             if (_filteredFlags[ukPosition] && filterDrug(stock)) {
-              stockList.stocks.add(stock);
+              stockList.stocks!.add(stock);
             }
             break;
           case CountryName.TORN:
@@ -1278,7 +1280,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     setState(() {
       _filteredStocksCards.clear();
       countryMap.forEach((countryKey, countryDetails) {
-        for (var stock in countryDetails.stocks) {
+        for (var stock in countryDetails.stocks!) {
           _filteredStocksCards.add(stock);
         }
       });
@@ -1287,17 +1289,17 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     });
   }
 
-  void _sortStocks(StockSort choice) {
+  void _sortStocks(StockSort? choice) {
     // This gets assigned here from the popUpMenu
     _currentSort = choice;
     setState(() {
-      switch (choice.type) {
+      switch (choice!.type) {
         case StockSortType.country:
-          _filteredStocksCards.sort((a, b) => a.country.index.compareTo(b.country.index));
+          _filteredStocksCards.sort((a, b) => a.country!.index.compareTo(b.country!.index));
           Prefs().setStockSort('country');
           break;
         case StockSortType.name:
-          _filteredStocksCards.sort((a, b) => a.name.compareTo(b.name));
+          _filteredStocksCards.sort((a, b) => a.name!.compareTo(b.name!));
           Prefs().setStockSort('name');
           break;
         case StockSortType.type:
@@ -1305,11 +1307,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           Prefs().setStockSort('type');
           break;
         case StockSortType.quantity:
-          _filteredStocksCards.sort((a, b) => b.quantity.compareTo(a.quantity));
+          _filteredStocksCards.sort((a, b) => b.quantity!.compareTo(a.quantity!));
           Prefs().setStockSort('quantity');
           break;
         case StockSortType.price:
-          _filteredStocksCards.sort((a, b) => b.cost.compareTo(a.cost));
+          _filteredStocksCards.sort((a, b) => b.cost!.compareTo(a.cost!));
           Prefs().setStockSort('price');
           break;
         case StockSortType.value:
@@ -1325,8 +1327,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           Prefs().setStockSort('arrivalTime');
           break;
         case StockSortType.inventoryQuantity:
-          _filteredStocksCards.sort((a, b) => b.inventoryQuantity.compareTo(a.inventoryQuantity));
+          _filteredStocksCards.sort((a, b) => b.inventoryQuantity!.compareTo(a.inventoryQuantity!));
           Prefs().setStockSort('inventoryQuantity');
+          break;
+        default:
+          _filteredStocksCards.sort((a, b) => a.name!.compareTo(b.name!));
+          Prefs().setStockSort('name');
           break;
       }
     });
@@ -1346,7 +1352,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     var sortString = await Prefs().getStockSort();
-    StockSortType sortType;
+    StockSortType? sortType;
     if (sortString == 'country') {
       sortType = StockSortType.country;
     } else if (sortString == 'name') {
@@ -1453,44 +1459,32 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _refreshController = RefreshController(initialRefresh: false);
   }
 
-  CountryName _returnCountryName(String country) {
+  CountryName _returnCountryName(String? country) {
     switch (country) {
       case "Argentina":
         return CountryName.ARGENTINA;
-        break;
       case "Canada":
         return CountryName.CANADA;
-        break;
       case "Cayman Islands":
         return CountryName.CAYMAN_ISLANDS;
-        break;
       case "China":
         return CountryName.CHINA;
-        break;
       case "Hawaii":
         return CountryName.HAWAII;
-        break;
       case "Japan":
         return CountryName.JAPAN;
-        break;
       case "Mexico":
         return CountryName.MEXICO;
-        break;
       case "South Africa":
         return CountryName.SOUTH_AFRICA;
-        break;
       case "Switzerland":
         return CountryName.SWITZERLAND;
-        break;
       case "UAE":
         return CountryName.UAE;
-        break;
       case "United Kingdom":
         return CountryName.UNITED_KINGDOM;
-        break;
       default:
         return CountryName.TORN;
-        break;
     }
   }
 
@@ -1516,7 +1510,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _saveHiddenStocks();
   }
 
-  _unhideMember(int id, String countryCode) {
+  _unhideMember(int? id, String? countryCode) {
     setState(() {
       _hiddenStocks.removeWhere((element) => element.id == id && element.countryCode == countryCode);
     });
@@ -1534,15 +1528,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 }
 
 class HiddenForeignStockDialog extends StatefulWidget {
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
   final List<ForeignStock> hiddenStocks;
-  final Function(int, String) unhide;
+  final Function(int?, String?) unhide;
 
   const HiddenForeignStockDialog({
-    Key key,
-    @required this.themeProvider,
-    @required this.hiddenStocks,
-    @required this.unhide,
+    Key? key,
+    required this.themeProvider,
+    required this.hiddenStocks,
+    required this.unhide,
   }) : super(key: key);
 
   @override
@@ -1554,7 +1548,7 @@ class _HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
   Widget build(BuildContext context) {
     List<Widget> hiddenCards = buildCards(widget.hiddenStocks, context);
     return AlertDialog(
-      backgroundColor: widget.themeProvider.secondBackground,
+      backgroundColor: widget.themeProvider!.secondBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -1610,7 +1604,7 @@ class _HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
             ),
             Expanded(
               child: Card(
-                color: widget.themeProvider.cardColor,
+                color: widget.themeProvider!.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
                   child: Column(
@@ -1621,7 +1615,7 @@ class _HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           Text(
-                            s.name,
+                            s.name!,
                             style: TextStyle(fontSize: 13),
                           ),
                           CountryCodeAndFlag(

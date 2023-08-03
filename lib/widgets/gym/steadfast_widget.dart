@@ -5,15 +5,15 @@ import 'package:torn_pda/models/perks/user_perks_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 
 class SteadfastDetails {
-  int strength = 0;
-  int speed = 0;
-  int defense = 0;
-  int dexterity = 0;
+  int? strength = 0;
+  int? speed = 0;
+  int? defense = 0;
+  int? dexterity = 0;
 }
 
 class GymWidget extends StatefulWidget {
   GymWidget({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -21,8 +21,8 @@ class GymWidget extends StatefulWidget {
 }
 
 class _GymWidgetState extends State<GymWidget> {
-  Future _steadFastFetched;
-  SteadfastDetails _steadfastDetails;
+  Future? _steadFastFetched;
+  SteadfastDetails? _steadfastDetails;
 
   @override
   void initState() {
@@ -50,10 +50,10 @@ class _GymWidgetState extends State<GymWidget> {
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     children: [
-                      Text("STR ${_steadfastDetails.strength}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("DEF ${_steadfastDetails.defense}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("SPD ${_steadfastDetails.speed}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("DEX ${_steadfastDetails.dexterity}%", style: TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("STR ${_steadfastDetails!.strength}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("DEF ${_steadfastDetails!.defense}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("SPD ${_steadfastDetails!.speed}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("DEX ${_steadfastDetails!.dexterity}%", style: TextStyle(color: Colors.white, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -76,30 +76,30 @@ class _GymWidgetState extends State<GymWidget> {
 
     UserPerksModel perks = perksResponse as UserPerksModel;
 
-    int strength = 0;
-    int speed = 0;
-    int defense = 0;
-    int dexterity = 0;
+    int? strength = 0;
+    int? speed = 0;
+    int? defense = 0;
+    int? dexterity = 0;
 
     try {
       RegExp reg = RegExp(r"([0-9]+)%");
-      for (String perk in perks.factionPerks) {
+      for (String perk in perks.factionPerks!) {
         if (perk.contains("strength gym gains")) {
-          var matches = reg.firstMatch(perk);
-          strength = int.tryParse(matches.group(1));
+          var matches = reg.firstMatch(perk)!;
+          strength = int.tryParse(matches.group(1)!);
         } else if (perk.contains("speed gym gains")) {
-          var matches = reg.firstMatch(perk);
-          speed = int.tryParse(matches.group(1));
+          var matches = reg.firstMatch(perk)!;
+          speed = int.tryParse(matches.group(1)!);
         } else if (perk.contains("defense gym gains")) {
-          var matches = reg.firstMatch(perk);
-          defense = int.tryParse(matches.group(1));
+          var matches = reg.firstMatch(perk)!;
+          defense = int.tryParse(matches.group(1)!);
         } else if (perk.contains("dexterity gym gains")) {
-          var matches = reg.firstMatch(perk);
-          dexterity = int.tryParse(matches.group(1));
+          var matches = reg.firstMatch(perk)!;
+          dexterity = int.tryParse(matches.group(1)!);
         }
       }
 
-      if (strength > 0 || speed > 0 || defense > 0 || dexterity > 0) {
+      if (strength! > 0 || speed! > 0 || defense! > 0 || dexterity! > 0) {
         _steadfastDetails = SteadfastDetails()
           ..strength = strength
           ..speed = speed

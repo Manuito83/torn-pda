@@ -10,14 +10,14 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/models/items_model.dart';
 
 class CityWidget extends StatefulWidget {
-  final InAppWebViewController controller;
+  final InAppWebViewController? controller;
   final List<Item> cityItems;
   final bool error;
 
   CityWidget({
-    @required this.controller,
-    @required this.cityItems,
-    @required this.error,
+    required this.controller,
+    required this.cityItems,
+    required this.error,
   });
 
   @override
@@ -83,7 +83,7 @@ class _CityWidgetState extends State<CityWidget> {
                   3),
           child: Scrollbar(
             controller: _scrollController,
-            isAlwaysShown: true,
+            thumbVisibility: true,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 5),
               child: SingleChildScrollView(
@@ -154,7 +154,7 @@ class _CityWidgetState extends State<CityWidget> {
       var itemQuantity = widget.cityItems.length;
       var totalPrice = 0;
       for (var item in widget.cityItems) {
-        totalPrice += item.marketValue;
+        totalPrice += item.marketValue!;
       }
       itemList.add(
         Padding(

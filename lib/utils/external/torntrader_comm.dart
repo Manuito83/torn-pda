@@ -9,7 +9,7 @@ import 'package:torn_pda/models/trades/torntrader/torntrader_out.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 
 class TornTraderComm {
-  static Future<TornTraderAuthModel> checkIfUserExists(int user) async {
+  static Future<TornTraderAuthModel> checkIfUserExists(int? user) async {
     var authModel = TornTraderAuthModel();
     try {
       var response =
@@ -30,12 +30,12 @@ class TornTraderComm {
     var inModel = TornTraderInModel();
 
     var authModel = await checkIfUserExists(buyerId);
-    if (authModel.error) {
+    if (authModel.error!) {
       inModel.serverError = true;
       return inModel;
     }
 
-    if (!authModel.allowed) {
+    if (!authModel.allowed!) {
       inModel.authError = true;
       return inModel;
     }
@@ -54,7 +54,7 @@ class TornTraderComm {
         quantity: product.quantity,
         id: product.id,
       );
-      outModel.items.add(item);
+      outModel.items!.add(item);
     }
 
     try {
@@ -63,7 +63,7 @@ class TornTraderComm {
             Uri.parse('https://torntrader.com/api/v1/trades'),
             headers: <String, String>{
               'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': authModel.token,
+              'Authorization': authModel.token!,
             },
             body: tornTraderOutToJson(outModel),
           )

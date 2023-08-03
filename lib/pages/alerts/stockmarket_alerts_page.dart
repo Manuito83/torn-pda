@@ -24,29 +24,29 @@ import 'package:torn_pda/widgets/alerts/share_price_options.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
-  final FirebaseUserModel fbUser;
+  final FirebaseUserModel? fbUser;
   final bool calledFromMenu;
   final Function stockMarketInMenuCallback;
 
-  StockMarketAlertsPage({this.fbUser, @required this.calledFromMenu, @required this.stockMarketInMenuCallback});
+  StockMarketAlertsPage({this.fbUser, required this.calledFromMenu, required this.stockMarketInMenuCallback});
 
   @override
   _StockMarketAlertsPageState createState() => _StockMarketAlertsPageState();
 }
 
 class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
-  FirebaseUserModel _fbUser;
+  FirebaseUserModel? _fbUser;
 
   var _stockList = <StockMarketStock>[];
 
-  SettingsProvider _settingsP;
-  ThemeProvider _themeProvider;
-  WebViewProvider _webViewProvider;
+  SettingsProvider? _settingsP;
+  ThemeProvider? _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   double _totalValue = 0;
   double _totalProfit = 0;
 
-  Future _stocksInitialised;
+  Future? _stocksInitialised;
   bool _errorInitializing = false;
 
   @override
@@ -61,7 +61,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       _fbUser = widget.fbUser;
 
       routeWithDrawer = false;
-      _settingsP.willPopShouldGoBack.stream.listen((event) {
+      _settingsP!.willPopShouldGoBack.stream.listen((event) {
         if (mounted && routeName == "stockmarket_alerts_page") _goBack();
       });
     } else {
@@ -75,23 +75,23 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
+      color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
-          : _themeProvider.canvas,
+              : _themeProvider!.canvas
+          : _themeProvider!.canvas,
       child: SafeArea(
         child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsP.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsP.appBarTop
+          backgroundColor: _themeProvider!.canvas,
+          appBar: _settingsP!.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsP!.appBarTop
               ? SizedBox(
                   height: AppBar().preferredSize.height,
                   child: buildAppBar(),
                 )
               : null,
           body: Container(
-            color: _themeProvider.canvas,
+            color: _themeProvider!.canvas,
             child: Builder(
               builder: (BuildContext context) {
                 return GestureDetector(
@@ -182,15 +182,17 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsP.appBarTop ? 2 : 0,
+      elevation: _settingsP!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: Text("Stock market alerts"),
       leading: new IconButton(
         icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
         onPressed: () {
           if (widget.calledFromMenu) {
-            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
+            final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+            if (scaffoldState != null) {
+              scaffoldState.openDrawer();
+            }
           } else {
             routeWithDrawer = true;
             _goBack();
@@ -235,7 +237,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       child: CheckboxListTile(
         checkColor: Colors.white,
         activeColor: Colors.blueGrey,
-        value: _fbUser.stockMarketNotification ?? false,
+        value: _fbUser!.stockMarketNotification ?? false,
         title: Text(
           "Stock Market notification",
           style: TextStyle(fontSize: 14),
@@ -300,14 +302,14 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     }
 
     // Convert all stocks to list
-    var allStocks = allStocksReply as StockMarketModel;
-    _stockList = allStocks.stocks.entries.map((e) => e.value).toList();
+    var allStocks = allStocksReply;
+    _stockList = allStocks.stocks!.entries.map((e) => e.value).toList();
 
     // Convert user stocks to list
-    var userStocks = userStocksReply as StockMarketUserModel;
+    var userStocks = userStocksReply;
     var ownedStocks = [];
     if (userStocks.stocks != null) {
-      ownedStocks = userStocks.stocks.entries.map((e) => e.value).toList();
+      ownedStocks = userStocks.stocks!.entries.map((e) => e.value).toList();
     }
 
     // Get owned stocks
@@ -321,8 +323,8 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           double totalMoneyGain = 0;
           double totalMoneySpent = 0;
           stockOwned.transactions.forEach((key, transaction) {
-            totalShares += transaction.shares;
-            var singleGain = listedStock.currentPrice - transaction.boughtPrice;
+            totalShares += int.parse(transaction.shares);
+            var singleGain = listedStock.currentPrice! - transaction.boughtPrice;
             totalMoneyGain += singleGain * transaction.shares;
             totalMoneySpent += transaction.boughtPrice * transaction.shares;
           });
@@ -333,37 +335,37 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           listedStock.percentageGain = averageGain * 100 / averageBought;
           listedStock.sharesOwned = totalShares;
 
-          _totalValue += totalShares * listedStock.currentPrice;
+          _totalValue += totalShares * listedStock.currentPrice!;
           _totalProfit += totalMoneyGain;
         }
       }
     }
 
     // Complete details based on what's saved in Firebase
-    for (var fbAlert in _fbUser.stockMarketShares) {
+    for (var fbAlert in _fbUser!.stockMarketShares) {
       var acronym = fbAlert.toString().substring(0, 3);
       var regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
-      var match = regex.firstMatch(fbAlert.toString());
+      var match = regex.firstMatch(fbAlert.toString())!;
       var fbGain = match.group(1);
       var fbLoss = match.group(2);
       for (var listedStock in _stockList) {
         if (listedStock.acronym == acronym) {
           if (fbGain != "n") {
-            listedStock.alertGain = double.tryParse(fbGain);
+            listedStock.alertGain = double.tryParse(fbGain!);
           }
           if (fbLoss != "n") {
-            listedStock.alertLoss = double.tryParse(fbLoss);
+            listedStock.alertLoss = double.tryParse(fbLoss!);
           }
         }
       }
     }
 
     // Sort by acronym, then by owned status
-    _stockList.sort((a, b) => a.acronym.compareTo(b.acronym));
+    _stockList.sort((a, b) => a.acronym!.compareTo(b.acronym!));
     _stockList.sort((a, b) => b.owned.compareTo(a.owned));
   }
 
-  void _launchBrowser({@required shortTap}) {
+  void _launchBrowser({required shortTap}) {
     String url = "https://www.torn.com/page.php?sid=stocks";
     _webViewProvider.openBrowserPreference(
       context: context,

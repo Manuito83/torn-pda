@@ -17,7 +17,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 
 class ChainWidgetOptions extends StatefulWidget {
-  final Function callBackOptions;
+  final Function? callBackOptions;
 
   ChainWidgetOptions({this.callBackOptions});
 
@@ -26,9 +26,9 @@ class ChainWidgetOptions extends StatefulWidget {
 }
 
 class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
-  ChainStatusProvider _chainStatusProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ChainStatusProvider _chainStatusProvider;
+  ThemeProvider? _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -41,14 +41,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
+        color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
+                : _themeProvider!.canvas
+            : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
+            backgroundColor: _themeProvider!.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -251,7 +251,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                       Image.asset(
                         'images/awards/categories/crosshair.png',
                         height: 15,
-                        color: _themeProvider.mainText,
+                        color: _themeProvider!.mainText,
                       ),
                       SizedBox(width: 10),
                       Text(
@@ -262,7 +262,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   IconButton(
                     icon: Icon(Icons.keyboard_arrow_right_outlined),
                     onPressed: () {
-                      return showDialog<void>(
+                      showDialog<void>(
                         context: context,
                         barrierDismissible: true,
                         builder: (BuildContext context) {
@@ -308,7 +308,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             Text(
               "Green pulse",
               style: TextStyle(
-                color: _chainStatusProvider.green2Enabled ? _themeProvider.mainText : Colors.grey,
+                color: _chainStatusProvider.green2Enabled ? _themeProvider!.mainText : Colors.grey,
               ),
             ),
             Switch(
@@ -386,7 +386,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Text(
                       "Orange pulse + ",
                       style: TextStyle(
-                        color: _chainStatusProvider.orange1Enabled ? _themeProvider.mainText : Colors.grey,
+                        color: _chainStatusProvider.orange1Enabled ? _themeProvider!.mainText : Colors.grey,
                       ),
                     ),
                     GestureDetector(
@@ -394,7 +394,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Icons.chat_bubble_outline,
                         size: 18,
                         color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.notificationsEnabled
-                            ? _themeProvider.mainText
+                            ? _themeProvider!.mainText
                             : Colors.grey,
                       ),
                       onTap: () {
@@ -404,14 +404,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Text(
                       " + ",
                       style: TextStyle(
-                        color: _chainStatusProvider.orange1Enabled ? _themeProvider.mainText : Colors.grey,
+                        color: _chainStatusProvider.orange1Enabled ? _themeProvider!.mainText : Colors.grey,
                       ),
                     ),
                     Text(
                       " caution ",
                       style: TextStyle(
                         color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.soundEnabled
-                            ? _themeProvider.mainText
+                            ? _themeProvider!.mainText
                             : Colors.grey,
                       ),
                     ),
@@ -420,7 +420,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Icons.volume_up,
                         size: 20,
                         color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.soundEnabled
-                            ? _themeProvider.mainText
+                            ? _themeProvider!.mainText
                             : Colors.grey,
                       ),
                       onTap: () {
@@ -503,7 +503,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   "Orange pulse + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.orange2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.orange2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 GestureDetector(
@@ -511,7 +511,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.chat_bubble_outline,
                     size: 18,
                     color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.notificationsEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -521,14 +521,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   " + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.orange2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.orange2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 Text(
                   " warning ",
                   style: TextStyle(
                     color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                 ),
@@ -537,7 +537,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.volume_up,
                     size: 20,
                     color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -618,7 +618,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   "Red pulse + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red1Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red1Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 GestureDetector(
@@ -626,7 +626,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.chat_bubble_outline,
                     size: 18,
                     color: _chainStatusProvider.red1Enabled && _chainStatusProvider.notificationsEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -636,14 +636,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   " + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red1Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red1Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 Text(
                   " caution ",
                   style: TextStyle(
                     color: _chainStatusProvider.red1Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                 ),
@@ -652,7 +652,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.volume_up,
                     size: 20,
                     color: _chainStatusProvider.red1Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -733,7 +733,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   "Red pulse + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 GestureDetector(
@@ -741,7 +741,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.chat_bubble_outline,
                     size: 18,
                     color: _chainStatusProvider.red2Enabled && _chainStatusProvider.notificationsEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -751,14 +751,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   " + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 Text(
                   " warning ",
                   style: TextStyle(
                     color: _chainStatusProvider.red2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                 ),
@@ -767,7 +767,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.volume_up,
                     size: 20,
                     color: _chainStatusProvider.red2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -845,7 +845,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   }
 
   Future<bool> _willPopCallback() async {
-    widget.callBackOptions();
+    widget.callBackOptions!();
     Navigator.of(context).pop();
     return true;
   }
@@ -858,7 +858,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         fontSize: 13,
         color: Colors.white,
       ),
-      contentColor: Colors.red[800],
+      contentColor: Colors.red[800]!,
       duration: const Duration(seconds: 5),
       contentPadding: const EdgeInsets.all(10),
     );
@@ -888,7 +888,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.secondBackground,
+                      color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -904,14 +904,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Flexible(
                           child: Text(
                             "Reset",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Flexible(
                           child: Text(
                             "This will reactivate and reset all warning levels to their default values.",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -942,9 +942,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -986,7 +986,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.secondBackground,
+                      color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -1002,7 +1002,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Flexible(
                           child: Text(
                             "Panic Mode",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -1018,7 +1018,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                             "with the screen active, for the Panic Mode to work as well.\n\n"
                             "NOTE: the browser used by Panic Mode does not contain any of the features (widgets, etc.) "
                             "of the standard browser, as it is designed to load as quickly as possible.",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -1042,9 +1042,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -1065,18 +1065,18 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
 
 class AddChainTargetDialog extends StatefulWidget {
   AddChainTargetDialog({
-    Key key,
-    @required this.themeProvider,
+    Key? key,
+    required this.themeProvider,
   }) : super(key: key);
 
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
 
   @override
   _AddChainTargetDialogState createState() => _AddChainTargetDialogState();
 }
 
 class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
-  ChainStatusProvider _chainProvider;
+  late ChainStatusProvider _chainProvider;
   final _addIdController = TextEditingController();
   final _addFormKey = GlobalKey<FormState>();
 
@@ -1106,7 +1106,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
           ),
           margin: const EdgeInsets.only(top: 30),
           decoration: BoxDecoration(
-            color: widget.themeProvider.secondBackground,
+            color: widget.themeProvider!.secondBackground,
             borderRadius: BorderRadius.circular(16),
             boxShadow: const [
               BoxShadow(
@@ -1143,7 +1143,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                           labelText: 'Insert user ID',
                         ),
                         validator: (value) {
-                          if (value.isEmpty) {
+                          if (value!.isEmpty) {
                             return "Cannot be empty!";
                           }
                           if (_chainProvider.panicTargets.length >= 10) {
@@ -1173,7 +1173,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                     TextButton(
                       child: const Text("Add"),
                       onPressed: () async {
-                        if (_addFormKey.currentState.validate()) {
+                        if (_addFormKey.currentState!.validate()) {
                           FocusScopeNode currentFocus = FocusScope.of(context);
                           if (!currentFocus.hasPrimaryFocus) {
                             currentFocus.unfocus();
@@ -1186,15 +1186,15 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
 
                           dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
                           String message = "";
-                          Color messageColor = Colors.green[700];
+                          Color? messageColor = Colors.green[700];
                           if (target is TargetModel) {
-                            inputId = target.faction.factionId.toString();
+                            inputId = target.faction!.factionId.toString();
                             _chainProvider.addPanicTarget(
                               PanicTargetModel()
                                 ..name = target.name
                                 ..level = target.level
                                 ..id = target.playerId
-                                ..factionName = target.faction.factionName,
+                                ..factionName = target.faction!.factionName,
                             );
                             message = "Added ${target.name}!";
                           } else {
@@ -1208,7 +1208,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor: messageColor,
+                            contentColor: messageColor!,
                             duration: const Duration(seconds: 3),
                             contentPadding: const EdgeInsets.all(10),
                           );
@@ -1248,7 +1248,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
             ),
             Flexible(
               child: Card(
-                color: widget.themeProvider.cardColor,
+                color: widget.themeProvider!.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(

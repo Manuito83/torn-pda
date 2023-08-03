@@ -32,27 +32,27 @@ class TargetCard extends StatefulWidget {
   final TargetModel targetModel;
 
   // Key is needed to update at least the hospital counter individually
-  TargetCard({@required this.targetModel, @required Key key}) : super(key: key);
+  TargetCard({required this.targetModel, required Key key}) : super(key: key);
 
   @override
   _TargetCardState createState() => _TargetCardState();
 }
 
 class _TargetCardState extends State<TargetCard> {
-  TargetModel _target;
-  TargetsProvider _targetsProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ChainStatusProvider _chainProvider;
-  WebViewProvider _webViewProvider;
+  TargetModel? _target;
+  late TargetsProvider _targetsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late ChainStatusProvider _chainProvider;
+  late WebViewProvider _webViewProvider;
 
-  Timer _updatedTicker;
-  Timer _lifeTicker;
+  Timer? _updatedTicker;
+  Timer? _lifeTicker;
 
   String _currentLifeString = "";
-  String _lastUpdatedString;
-  int _lastUpdatedMinutes;
+  String? _lastUpdatedString;
+  late int _lastUpdatedMinutes;
 
   @override
   void initState() {
@@ -98,7 +98,7 @@ class _TargetCardState extends State<TargetCard> {
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: _chainProvider.panicTargets.where((t) => t.name == _target.name).length > 0
+                  color: _chainProvider.panicTargets.where((t) => t.name == _target!.name).length > 0
                       ? Colors.blue
                       : Colors.transparent,
                   width: 2,
@@ -118,10 +118,11 @@ class _TargetCardState extends State<TargetCard> {
                         children: <Widget>[
                           GestureDetector(
                             onTap: () {
-                              if (_target.status.state.contains("Federal") || _target.status.state.contains("Fallen")) {
+                              if (_target!.status!.state!.contains("Federal") ||
+                                  _target!.status!.state!.contains("Fallen")) {
                                 BotToast.showText(
                                   text: "This player is "
-                                      "${_target.status.state.replaceAll("Federal", "in federal jail").toLowerCase()}"
+                                      "${_target!.status!.state!.replaceAll("Federal", "in federal jail").toLowerCase()}"
                                       " and cannot be attacked!",
                                   textStyle: TextStyle(
                                     fontSize: 14,
@@ -137,7 +138,8 @@ class _TargetCardState extends State<TargetCard> {
                             },
                             child: Row(
                               children: [
-                                if (_target.status.state.contains("Federal") || _target.status.state.contains("Fallen"))
+                                if (_target!.status!.state!.contains("Federal") ||
+                                    _target!.status!.state!.contains("Fallen"))
                                   Icon(MdiIcons.graveStone, size: 18)
                                 else
                                   _attackIcon(),
@@ -147,7 +149,7 @@ class _TargetCardState extends State<TargetCard> {
                                 SizedBox(
                                   width: 95,
                                   child: Text(
-                                    '${_target.name}',
+                                    '${_target!.name}',
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -182,7 +184,7 @@ class _TargetCardState extends State<TargetCard> {
                                     ),
                                   ),
                                   closedColor: Colors.transparent,
-                                  openColor: _themeProvider.canvas,
+                                  openColor: _themeProvider.canvas!,
                                   closedBuilder: (BuildContext context, VoidCallback openContainer) {
                                     return SizedBox(
                                       height: 22,
@@ -199,7 +201,7 @@ class _TargetCardState extends State<TargetCard> {
                               ],
                             ),
                             Text(
-                              'Lvl ${_target.level}',
+                              'Lvl ${_target!.level}',
                             ),
                             Padding(
                               padding: const EdgeInsets.only(right: 3),
@@ -222,8 +224,8 @@ class _TargetCardState extends State<TargetCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      _returnRespectFF(_target.respectGain, _target.fairFight),
-                      _returnHealth(_target),
+                      _returnRespectFF(_target!.respectGain, _target!.fairFight),
+                      _returnHealth(_target!),
                     ],
                   ),
                 ),
@@ -239,16 +241,16 @@ class _TargetCardState extends State<TargetCard> {
                             width: 14,
                             height: 14,
                             decoration: BoxDecoration(
-                              color: _returnStatusColor(_target.lastAction.status),
+                              color: _returnStatusColor(_target!.lastAction!.status),
                               shape: BoxShape.circle,
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.only(left: 13),
                             child: Text(
-                              _target.lastAction.relative == "0 minutes ago"
+                              _target!.lastAction!.relative == "0 minutes ago"
                                   ? 'now'
-                                  : _target.lastAction.relative.replaceAll(' ago', ''),
+                                  : _target!.lastAction!.relative!.replaceAll(' ago', ''),
                             ),
                           ),
                         ],
@@ -299,7 +301,7 @@ class _TargetCardState extends State<TargetCard> {
                             Text('Notes: '),
                             Flexible(
                               child: Text(
-                                '${_target.personalNote}',
+                                '${_target!.personalNote}',
                                 style: TextStyle(
                                   color: _returnTargetNoteColor(),
                                 ),
@@ -345,7 +347,7 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _refreshIcon() {
-    if (_target.isUpdating) {
+    if (_target!.isUpdating) {
       return Padding(
         padding: const EdgeInsets.all(4.0),
         child: CircularProgressIndicator(),
@@ -363,19 +365,19 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _factionIcon() {
-    if (_target.hasFaction) {
-      Color borderColor = Colors.transparent;
-      Color iconColor = _themeProvider.mainText;
-      if (_target.faction.factionId == _userProvider.basic.faction.factionId) {
+    if (_target!.hasFaction!) {
+      Color? borderColor = Colors.transparent;
+      Color? iconColor = _themeProvider.mainText;
+      if (_target!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
         borderColor = iconColor = Colors.green[500];
       }
 
       void showFactionToast() {
-        if (_target.faction.factionId == _userProvider.basic.faction.factionId) {
+        if (_target!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
           BotToast.showText(
-            text: HtmlParser.fix("${_target.name} belongs to your same faction "
-                "(${_target.faction.factionName}) as "
-                "${_target.faction.position}"),
+            text: HtmlParser.fix("${_target!.name} belongs to your same faction "
+                "(${_target!.faction!.factionName}) as "
+                "${_target!.faction!.position}"),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -386,14 +388,14 @@ class _TargetCardState extends State<TargetCard> {
           );
         } else {
           BotToast.showText(
-            text: HtmlParser.fix("${_target.name} belongs to faction "
-                "${_target.faction.factionName} as "
-                "${_target.faction.position}"),
+            text: HtmlParser.fix("${_target!.name} belongs to faction "
+                "${_target!.faction!.factionName} as "
+                "${_target!.faction!.position}"),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[600],
+            contentColor: Colors.grey[600]!,
             duration: Duration(seconds: 5),
             contentPadding: EdgeInsets.all(10),
           );
@@ -405,7 +407,7 @@ class _TargetCardState extends State<TargetCard> {
         child: Ink(
           decoration: BoxDecoration(
             border: Border.all(
-              color: borderColor,
+              color: borderColor!,
               width: 1.5,
             ),
             shape: BoxShape.circle,
@@ -433,16 +435,16 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Color _borderColor() {
-    if (_target.justUpdatedWithSuccess) {
+    if (_target!.justUpdatedWithSuccess) {
       return Colors.green;
-    } else if (_target.justUpdatedWithError) {
+    } else if (_target!.justUpdatedWithError) {
       return Colors.red;
     } else {
       return Colors.transparent;
     }
   }
 
-  Widget _returnRespectFF(double respect, double fairFight) {
+  Widget _returnRespectFF(double? respect, double? fairFight) {
     TextSpan respectResult;
     TextSpan fairFightResult;
 
@@ -454,7 +456,7 @@ class _TargetCardState extends State<TargetCard> {
         ),
       );
     } else if (respect == 0) {
-      if (_target.userWonOrDefended) {
+      if (_target!.userWonOrDefended!) {
         respectResult = TextSpan(
           text: '0 (def)',
           style: TextStyle(
@@ -472,7 +474,7 @@ class _TargetCardState extends State<TargetCard> {
       }
     } else {
       respectResult = TextSpan(
-        text: respect.toStringAsFixed(2),
+        text: respect!.toStringAsFixed(2),
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: _themeProvider.mainText,
@@ -489,7 +491,7 @@ class _TargetCardState extends State<TargetCard> {
       );
     } else {
       var ffColor = Colors.red;
-      if (fairFight >= 2.2 && fairFight < 2.8) {
+      if (fairFight! >= 2.2 && fairFight < 2.8) {
         ffColor = Colors.orange;
       } else if (fairFight >= 2.8) {
         ffColor = Colors.green;
@@ -545,16 +547,16 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _returnHealth(TargetModel target) {
-    Color lifeBarColor = Colors.green;
+    Color? lifeBarColor = Colors.green;
     Widget hospitalWarning = SizedBox.shrink();
-    String lifeText = _target.life.current.toString();
+    String lifeText = _target!.life!.current.toString();
 
-    if (target.status.state == "Hospital") {
+    if (target.status!.state == "Hospital") {
       // Handle if target is still in hospital
       var now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
 
-      if (target.status.until > now) {
-        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
+      if (target.status!.until! > now) {
+        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status!.until! * 1000);
         if (_lifeTicker == null) {
           _lifeTicker = Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         }
@@ -582,17 +584,17 @@ class _TargetCardState extends State<TargetCard> {
     double lifePercentage;
 
     // Avoid issues with dormant NPC reporting weird life values (0)
-    if (_target.life.current == 0 || _target.life.maximum == 0) {
+    if (_target!.life!.current == 0 || _target!.life!.maximum == 0) {
       lifePercentage = 0;
     } else {
       // Found players in federal jail with a higher life than their maximum. Correct it if it's the
       // case to avoid issues with percentage bar
-      if (_target.life.current / _target.life.maximum > 1) {
+      if (_target!.life!.current! / _target!.life!.maximum! > 1) {
         lifePercentage = 1;
-      } else if (_target.life.current / _target.life.maximum > 1) {
+      } else if (_target!.life!.current! / _target!.life!.maximum! > 1) {
         lifePercentage = 0;
       } else {
-        lifePercentage = _target.life.current / _target.life.maximum;
+        lifePercentage = _target!.life!.current! / _target!.life!.maximum!;
       }
     }
 
@@ -603,7 +605,7 @@ class _TargetCardState extends State<TargetCard> {
           'Life ',
         ),
         LinearPercentIndicator(
-          padding: null,
+          padding: EdgeInsets.all(0),
           barRadius: Radius.circular(10),
           width: 100,
           lineHeight: 16,
@@ -620,10 +622,10 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(state: _target.status.state, description: _target.status.description);
+    var country = countryCheck(state: _target!.status!.state, description: _target!.status!.description);
 
-    if (_target.status.color == "blue" || (country != "Torn" && _target.status.color == "red")) {
-      var destination = _target.status.color == "blue" ? _target.status.description : country;
+    if (_target!.status!.color == "blue" || (country != "Torn" && _target!.status!.color == "red")) {
+      var destination = _target!.status!.color == "blue" ? _target!.status!.description! : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -655,7 +657,7 @@ class _TargetCardState extends State<TargetCard> {
           borderRadius: BorderRadius.circular(100),
           onTap: () {
             BotToast.showText(
-              text: _target.status.description,
+              text: _target!.status!.description!,
               textStyle: TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -670,13 +672,13 @@ class _TargetCardState extends State<TargetCard> {
               Padding(
                 padding: const EdgeInsets.only(right: 3),
                 child: RotatedBox(
-                  quarterTurns: _target.status.description.contains('Traveling to ')
+                  quarterTurns: _target!.status!.description!.contains('Traveling to ')
                       ? 1 // If traveling to another country
-                      : _target.status.description.contains('Returning ')
+                      : _target!.status!.description!.contains('Returning ')
                           ? 3 // If returning to Torn
                           : 0, // If staying abroad (blue but not moving)
                   child: Icon(
-                    _target.status.description.contains('In ')
+                    _target!.status!.description!.contains('In ')
                         ? Icons.location_city_outlined
                         : Icons.airplanemode_active,
                     color: Colors.blue,
@@ -700,21 +702,19 @@ class _TargetCardState extends State<TargetCard> {
     }
   }
 
-  Color _returnStatusColor(String status) {
+  Color _returnStatusColor(String? status) {
     switch (status) {
       case 'Online':
         return Colors.green;
-        break;
       case 'Idle':
         return Colors.orange;
-        break;
       default:
         return Colors.grey;
     }
   }
 
   void _returnLastUpdated() {
-    var timeDifference = DateTime.now().difference(_target.lastUpdated);
+    var timeDifference = DateTime.now().difference(_target!.lastUpdated!);
     _lastUpdatedMinutes = timeDifference.inMinutes;
     if (timeDifference.inMinutes < 1) {
       _lastUpdatedString = 'now';
@@ -733,20 +733,16 @@ class _TargetCardState extends State<TargetCard> {
     }
   }
 
-  Color _returnTargetNoteColor() {
-    switch (_target.personalNoteColor) {
+  Color? _returnTargetNoteColor() {
+    switch (_target!.personalNoteColor) {
       case 'red':
         return Colors.red[600];
-        break;
       case 'orange':
         return Colors.orange[600];
-        break;
       case 'green':
         return Colors.green[600];
-        break;
       default:
         return _themeProvider.mainText;
-        break;
     }
   }
 
@@ -773,13 +769,13 @@ class _TargetCardState extends State<TargetCard> {
 
   void _updateThisTarget() async {
     bool updateWorked = await _targetsProvider.updateTarget(
-      targetToUpdate: _target,
+      targetToUpdate: _target!,
       attacks: await _targetsProvider.getAttacks(),
     );
     if (updateWorked) {
     } else {
       BotToast.showText(
-        text: "Error updating ${_target.name}!",
+        text: "Error updating ${_target!.name}!",
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,
@@ -833,7 +829,7 @@ class _TargetCardState extends State<TargetCard> {
       }
 
       if (_lifeTicker != null) {
-        _lifeTicker.cancel();
+        _lifeTicker!.cancel();
         _lifeTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
@@ -847,9 +843,9 @@ class _TargetCardState extends State<TargetCard> {
   _releaseFromHospital() async {
     await Future.delayed(const Duration(seconds: 5));
     if (_lifeTicker != null) {
-      _lifeTicker.cancel();
+      _lifeTicker!.cancel();
     }
-    _target.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    _target!.status!.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     if (mounted) {
       setState(() {});
     }
@@ -864,15 +860,15 @@ class _TargetCardState extends State<TargetCard> {
         var myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
         // First, find out where we are in the list
         for (var i = 0; i < myTargetList.length; i++) {
-          if (_target.playerId == myTargetList[i].playerId) {
+          if (_target!.playerId == myTargetList[i].playerId) {
             myTargetList.removeRange(0, i);
             break;
           }
         }
         List<String> attacksIds = <String>[];
-        List<String> attacksNames = <String>[];
-        List<String> attackNotes = <String>[];
-        List<String> attacksNotesColor = <String>[];
+        List<String?> attacksNames = <String?>[];
+        List<String?> attackNotes = <String?>[];
+        List<String?> attacksNotesColor = <String?>[];
         for (var tar in myTargetList) {
           attacksIds.add(tar.playerId.toString());
           attacksNames.add(tar.name);
@@ -903,7 +899,7 @@ class _TargetCardState extends State<TargetCard> {
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid='
-            'attack&user2ID=${_target.playerId}';
+            'attack&user2ID=${_target!.playerId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }

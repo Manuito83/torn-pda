@@ -16,8 +16,8 @@ enum ItemsSortType {
 }
 
 class ItemsSort {
-  ItemsSortType type;
-  String description;
+  ItemsSortType? type;
+  late String description;
 
   ItemsSort({this.type}) {
     switch (type) {

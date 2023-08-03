@@ -43,10 +43,10 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   var _mainCrimeList = <Crime>[];
   var _titleCrimeString = <String>[];
 
-  CrimesProvider _crimesProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  Future _preferencesLoaded;
+  late CrimesProvider _crimesProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  Future? _preferencesLoaded;
 
   @override
   void initState() {
@@ -143,7 +143,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
             setState(() {
               _titleCrimeString.clear();
               for (var crime in _mainCrimeList) {
-                if (crime.active) {
+                if (crime.active!) {
                   crime.active = false;
                 }
               }
@@ -155,7 +155,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
                 color: Colors.white,
               ),
               duration: Duration(seconds: 3),
-              contentColor: Colors.grey[700],
+              contentColor: Colors.grey[700]!,
               contentPadding: EdgeInsets.all(10),
             );
           },
@@ -190,18 +190,18 @@ class _CrimesOptionsState extends State<CrimesOptions> {
                       '${thisCrimesList[i].fullName}',
                       style: TextStyle(
                         fontSize: 13,
-                        color: thisCrimesList[i].active ? Colors.green : null,
-                        fontWeight: thisCrimesList[i].active ? FontWeight.bold : FontWeight.normal,
+                        color: thisCrimesList[i].active! ? Colors.green : null,
+                        fontWeight: thisCrimesList[i].active! ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],
                 ),
               ),
               Switch(
-                value: thisCrimesList[i].active,
+                value: thisCrimesList[i].active!,
                 onChanged: (bool value) {
                   setState(() {
-                    if (thisCrimesList[i].active) {
+                    if (thisCrimesList[i].active!) {
                       _deactivateCrime(thisCrimesList, i);
                     } else {
                       _activateCrime(thisCrimesList, i);
@@ -218,7 +218,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
       cardList.add(
         Card(
           child: ExpandablePanel(
-            collapsed: null,
+            collapsed: Container(),
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Row(

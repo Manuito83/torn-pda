@@ -27,7 +27,7 @@ import 'package:torn_pda/widgets/items/item_card.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class ItemsPage extends StatefulWidget {
-  ItemsPage({Key key}) : super(key: key);
+  ItemsPage({Key? key}) : super(key: key);
 
   @override
   _ItemsPageState createState() => _ItemsPageState();
@@ -47,14 +47,14 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   double _panelHeightOpen = 400.0;
   double _panelHeightClosed = 75.0;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  SettingsProvider? _settingsProvider;
+  ThemeProvider? _themeProvider;
 
   String _currentSearchFilter = '';
   final _searchController = new TextEditingController();
   final _searchFocusNode = FocusNode();
 
-  Future _loadedApiItems;
+  Future? _loadedApiItems;
   bool _itemsSuccess = false;
   bool _inventorySuccess = false;
   String _errorMessage = "";
@@ -107,17 +107,17 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
-      backgroundColor: _themeProvider.canvas,
+      backgroundColor: _themeProvider!.canvas,
       drawer: Drawer(),
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
+      appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider!.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
               child: buildAppBar(),
             )
           : null,
       body: Container(
-        color: _themeProvider.canvas,
+        color: _themeProvider!.canvas,
         child: Stack(
           children: [
             FutureBuilder(
@@ -220,15 +220,17 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
       leadingWidth: 80,
       leading: Row(
         children: [
           IconButton(
             icon: new Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                scaffoldState.openDrawer();
+              }
             },
           ),
           PdaBrowserIcon(),
@@ -316,12 +318,12 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       physics: _filterPhysics,
       child: Container(
         decoration: BoxDecoration(
-            color: _themeProvider.secondBackground,
+            color: _themeProvider!.secondBackground,
             borderRadius: BorderRadius.all(Radius.circular(20.0)),
             boxShadow: [
               BoxShadow(
                 blurRadius: 2.0,
-                color: Colors.orange[800],
+                color: Colors.orange[800]!,
               ),
             ]),
         margin: const EdgeInsets.all(24.0),
@@ -400,28 +402,28 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                               borderWidth: 1,
                               cornerRadius: 5,
                               doubleTapDisable: true,
-                              borderColor: _themeProvider.currentTheme == AppTheme.light
+                              borderColor: _themeProvider!.currentTheme == AppTheme.light
                                   ? [Colors.blueGrey]
-                                  : [Colors.grey[900]],
+                                  : [Colors.grey[900]!],
                               initialLabelIndex: _ownedItemsFilter == 0
                                   ? null
                                   : _ownedItemsFilter == 1
                                       ? 0
                                       : 1,
-                              activeBgColor: _themeProvider.currentTheme == AppTheme.light
+                              activeBgColor: _themeProvider!.currentTheme == AppTheme.light
                                   ? [Colors.blueGrey]
-                                  : _themeProvider.currentTheme == AppTheme.dark
+                                  : _themeProvider!.currentTheme == AppTheme.dark
                                       ? [Colors.blueGrey]
-                                      : [Colors.blueGrey[900]],
+                                      : [Colors.blueGrey[900]!],
                               activeFgColor:
-                                  _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                              inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                                  _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                              inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
                                   ? Colors.white
-                                  : _themeProvider.currentTheme == AppTheme.dark
+                                  : _themeProvider!.currentTheme == AppTheme.dark
                                       ? Colors.grey[800]
                                       : Colors.black,
                               inactiveFgColor:
-                                  _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                                  _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
                               totalSwitches: 2,
                               animate: true,
                               animationDuration: 500,
@@ -448,7 +450,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                     child: RawChip(
                       showCheckmark: true,
                       selected: _hiddenCategories.isEmpty ? true : false,
-                      side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600], width: 1.5),
+                      side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600]!, width: 1.5),
                       avatar: CircleAvatar(
                         backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
                       ),
@@ -503,7 +505,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         RawChip(
           showCheckmark: false,
           selected: _hiddenCategories.contains(cat.key) ? false : true,
-          side: BorderSide(color: _hiddenCategories.contains(cat.key) ? Colors.grey[600] : Colors.green, width: 1.5),
+          side: BorderSide(color: _hiddenCategories.contains(cat.key) ? Colors.grey[600]! : Colors.green, width: 1.5),
           label: Text(
             "${titleCapitalized} (${cat.value})",
             style: TextStyle(fontSize: 10),
@@ -548,8 +550,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
     List<String> savedPins = await Prefs().getPinnedItems();
 
-    var tornItems = apiItems as ItemsModel;
-    tornItems.items.forEach((id, details) {
+    var tornItems = apiItems;
+    tornItems.items!.forEach((id, details) {
       details.name = details.name;
       details.id = id;
 
@@ -559,43 +561,43 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
         try {
           // Bazaar
-          InventoryItem invItem = invModel.inventory.firstWhere((i) => i.id.toString() == id, orElse: () => null);
+          InventoryItem? invItem = invModel.inventory!.firstWhereOrNull((i) => i.id.toString() == id);
           if (invItem == null) {
             details.inventoryOwned = 0;
           } else {
             if (invItem.uid != null) {
               // This item is unique (does not have an quantity), but there can be other similar in our possession
-              details.inventoryOwned = invModel.inventory.where((i) => i.id.toString() == id).length;
+              details.inventoryOwned = invModel.inventory!.where((i) => i.id.toString() == id).length;
             } else {
-              details.inventoryOwned = invItem.quantity;
+              details.inventoryOwned = invItem.quantity ?? 0;
             }
           }
 
           // Cabinet
-          DisplayCabinet cabinetItem = invModel.display.firstWhere((i) => i.id.toString() == id, orElse: () => null);
+          DisplayCabinet? cabinetItem = invModel.display!.firstWhereOrNull((i) => i.id.toString() == id);
           if (cabinetItem != null) {
             if (cabinetItem.uid != null) {
               // This item is unique (does not have an quantity), but there can be other similar in our possession
               // So we add all similar ones we can find in our inventory
-              details.inventoryOwned += invModel.display.where((i) => i.id.toString() == id).length;
+              details.inventoryOwned += invModel.display!.where((i) => i.id.toString() == id).length;
             } else {
-              details.inventoryOwned += cabinetItem.quantity;
+              details.inventoryOwned += cabinetItem.quantity!;
             }
           }
 
           _inventorySuccess = true;
         } catch (e) {
-          log(e);
+          log(e.toString());
         }
       }
 
       if (details.inventoryOwned > 0) {
-        details.totalValue = details.inventoryOwned * details.marketValue;
+        details.totalValue = details.inventoryOwned * details.marketValue!;
       }
 
       // Populate categories
-      if (!_allCategories.containsKey(details.type.name)) {
-        _allCategories.addAll({details.type.name: ""});
+      if (!_allCategories.containsKey(details.type!.name)) {
+        _allCategories.addAll({details.type!.name: ""});
       }
 
       _allItems.add(details);
@@ -607,7 +609,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
     // Fill categories statistics
     _allCategories.forEach((key, value) {
-      int amount = _allItems.where((element) => element.type.name == key).length;
+      int amount = _allItems.where((element) => element.type!.name == key).length;
       _allCategories[key] = amount.toString();
     });
 
@@ -692,47 +694,47 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   void _sortAndRebuildItemsCards(ItemsSort choice, {bool initialLoad = false}) {
     _currentSort = choice;
-    String sortToSave;
+    late String sortToSave;
     switch (choice.type) {
       case ItemsSortType.nameDes:
         setState(() {
-          _allItems.sort((a, b) => b.name.compareTo(a.name));
-          _pinnedItems.sort((a, b) => b.name.compareTo(a.name));
+          _allItems.sort((a, b) => b.name!.compareTo(a.name!));
+          _pinnedItems.sort((a, b) => b.name!.compareTo(a.name!));
         });
         sortToSave = 'nameDes';
         break;
       case ItemsSortType.nameAsc:
         setState(() {
-          _allItems.sort((a, b) => a.name.compareTo(b.name));
-          _pinnedItems.sort((a, b) => a.name.compareTo(b.name));
+          _allItems.sort((a, b) => a.name!.compareTo(b.name!));
+          _pinnedItems.sort((a, b) => a.name!.compareTo(b.name!));
         });
         sortToSave = 'nameAsc';
         break;
       case ItemsSortType.categoryDes:
         setState(() {
-          _allItems.sort((a, b) => b.type.name.compareTo(a.type.name));
-          _pinnedItems.sort((a, b) => b.type.name.compareTo(a.type.name));
+          _allItems.sort((a, b) => b.type!.name.compareTo(a.type!.name));
+          _pinnedItems.sort((a, b) => b.type!.name.compareTo(a.type!.name));
         });
         sortToSave = 'categoryDes';
         break;
       case ItemsSortType.categoryAsc:
         setState(() {
-          _allItems.sort((a, b) => a.type.name.compareTo(b.type.name));
-          _pinnedItems.sort((a, b) => a.type.name.compareTo(b.type.name));
+          _allItems.sort((a, b) => a.type!.name.compareTo(b.type!.name));
+          _pinnedItems.sort((a, b) => a.type!.name.compareTo(b.type!.name));
         });
         sortToSave = 'categoryAsc';
         break;
       case ItemsSortType.valueDes:
         setState(() {
-          _allItems.sort((a, b) => b.marketValue.compareTo(a.marketValue));
-          _pinnedItems.sort((a, b) => b.marketValue.compareTo(a.marketValue));
+          _allItems.sort((a, b) => b.marketValue!.compareTo(a.marketValue!));
+          _pinnedItems.sort((a, b) => b.marketValue!.compareTo(a.marketValue!));
         });
         sortToSave = 'valueDes';
         break;
       case ItemsSortType.valueAsc:
         setState(() {
-          _allItems.sort((a, b) => a.marketValue.compareTo(b.marketValue));
-          _pinnedItems.sort((a, b) => a.marketValue.compareTo(b.marketValue));
+          _allItems.sort((a, b) => a.marketValue!.compareTo(b.marketValue!));
+          _pinnedItems.sort((a, b) => a.marketValue!.compareTo(b.marketValue!));
         });
         sortToSave = 'valueAsc';
         break;
@@ -766,31 +768,38 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         break;
       case ItemsSortType.circulationDes:
         setState(() {
-          _allItems.sort((a, b) => b.circulation.compareTo(a.circulation));
-          _pinnedItems.sort((a, b) => b.circulation.compareTo(a.circulation));
+          _allItems.sort((a, b) => b.circulation!.compareTo(a.circulation!));
+          _pinnedItems.sort((a, b) => b.circulation!.compareTo(a.circulation!));
         });
         sortToSave = 'circulationDes';
         break;
       case ItemsSortType.circulationAsc:
         setState(() {
-          _allItems.sort((a, b) => a.circulation.compareTo(b.circulation));
-          _pinnedItems.sort((a, b) => a.circulation.compareTo(b.circulation));
+          _allItems.sort((a, b) => a.circulation!.compareTo(b.circulation!));
+          _pinnedItems.sort((a, b) => a.circulation!.compareTo(b.circulation!));
         });
         sortToSave = 'circulationAsc';
         break;
       case ItemsSortType.idDes:
         setState(() {
-          _allItems.sort((a, b) => int.parse(b.id).compareTo(int.parse(a.id)));
-          _pinnedItems.sort((a, b) => int.parse(b.id).compareTo(int.parse(a.id)));
+          _allItems.sort((a, b) => int.parse(b.id!).compareTo(int.parse(a.id!)));
+          _pinnedItems.sort((a, b) => int.parse(b.id!).compareTo(int.parse(a.id!)));
         });
         sortToSave = 'circulationDes';
         break;
       case ItemsSortType.idAsc:
         setState(() {
-          _allItems.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
-          _pinnedItems.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+          _allItems.sort((a, b) => int.parse(a.id!).compareTo(int.parse(b.id!)));
+          _pinnedItems.sort((a, b) => int.parse(a.id!).compareTo(int.parse(b.id!)));
         });
         sortToSave = 'circulationAsc';
+        break;
+      default:
+        setState(() {
+          _allItems.sort((a, b) => b.name!.compareTo(a.name!));
+          _pinnedItems.sort((a, b) => b.name!.compareTo(a.name!));
+        });
+        sortToSave = 'nameDes';
         break;
     }
 
@@ -864,10 +873,10 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
     // Items
     for (Item item in _allItems) {
-      bool inSearch = item.name.toLowerCase().contains(_currentSearchFilter) ||
+      bool inSearch = item.name!.toLowerCase().contains(_currentSearchFilter) ||
           item.id.toString().toLowerCase().contains(_currentSearchFilter);
 
-      bool inCategoryFilter = !_hiddenCategories.contains(item.type.name);
+      bool inCategoryFilter = !_hiddenCategories.contains(item.type!.name);
       bool ownPass = true;
 
       if ((_ownedItemsFilter == 1 && item.inventoryOwned == 0) || (_ownedItemsFilter == 2 && item.inventoryOwned > 0)) {
@@ -918,7 +927,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   void _savePinnedItems() {
     List<String> pins = <String>[];
     for (Item pinnedItem in _pinnedItems) {
-      pins.add(pinnedItem.id);
+      pins.add(pinnedItem.id!);
     }
     Prefs().setPinnedItems(pins);
   }

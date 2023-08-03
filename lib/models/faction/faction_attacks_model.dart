@@ -13,7 +13,7 @@ class FactionAttacksModel {
     this.attacks,
   });
 
-  Map<String, Attack> attacks;
+  Map<String, Attack>? attacks;
 
   factory FactionAttacksModel.fromJson(Map<String, dynamic> json) => FactionAttacksModel(
         attacks: json["attacks"] == null
@@ -22,7 +22,7 @@ class FactionAttacksModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "attacks": attacks == null ? null : Map.from(attacks).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "attacks": attacks == null ? null : Map.from(attacks!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -50,26 +50,26 @@ class Attack {
     this.modifiers,
   });
 
-  String code;
-  int timestampStarted;
-  int timestampEnded;
+  String? code;
+  int? timestampStarted;
+  int? timestampEnded;
   dynamic attackerId;
-  String attackerName;
+  String? attackerName;
   dynamic attackerFaction;
-  String attackerFactionname;
-  int defenderId;
-  String defenderName;
-  int defenderFaction;
-  String defenderFactionname;
-  Result result;
-  int stealthed;
-  double respect;
-  int chain;
-  int raid;
-  int rankedWar;
-  double respectGain;
-  double respectLoss;
-  Modifiers modifiers;
+  String? attackerFactionname;
+  int? defenderId;
+  String? defenderName;
+  int? defenderFaction;
+  String? defenderFactionname;
+  Result? result;
+  int? stealthed;
+  double? respect;
+  int? chain;
+  int? raid;
+  int? rankedWar;
+  double? respectGain;
+  double? respectLoss;
+  Modifiers? modifiers;
 
   factory Attack.fromJson(Map<String, dynamic> json) => Attack(
         code: json["code"] == null ? null : json["code"],
@@ -106,7 +106,7 @@ class Attack {
         "defender_name": defenderName == null ? null : defenderName,
         "defender_faction": defenderFaction == null ? null : defenderFaction,
         "defender_factionname": defenderFactionname == null ? null : defenderFactionname,
-        "result": result == null ? null : resultValues.reverse[result],
+        "result": result == null ? null : resultValues.reverse![result],
         "stealthed": stealthed == null ? null : stealthed,
         "respect": respect == null ? null : respect,
         "chain": chain == null ? null : chain,
@@ -114,7 +114,7 @@ class Attack {
         "ranked_war": rankedWar == null ? null : rankedWar,
         "respect_gain": respectGain == null ? null : respectGain,
         "respect_loss": respectLoss == null ? null : respectLoss,
-        "modifiers": modifiers == null ? null : modifiers.toJson(),
+        "modifiers": modifiers == null ? null : modifiers!.toJson(),
       };
 }
 
@@ -128,12 +128,12 @@ class Modifiers {
     this.chainBonus,
   });
 
-  double fairFight;
-  double war;
-  double retaliation;
-  double groupAttack;
-  double overseas;
-  double chainBonus;
+  double? fairFight;
+  double? war;
+  double? retaliation;
+  double? groupAttack;
+  double? overseas;
+  double? chainBonus;
 
   factory Modifiers.fromJson(Map<String, dynamic> json) => Modifiers(
         fairFight: json["fair_fight"] == null ? null : json["fair_fight"].toDouble(),
@@ -170,11 +170,11 @@ final resultValues = EnumValues({
 
 class EnumValues<T> {
   Map<String, T> map;
-  Map<T, String> reverseMap;
+  Map<T, String>? reverseMap;
 
   EnumValues(this.map);
 
-  Map<T, String> get reverse {
+  Map<T, String>? get reverse {
     if (reverseMap == null) {
       reverseMap = map.map((k, v) => new MapEntry(v, k));
     }

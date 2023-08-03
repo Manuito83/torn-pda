@@ -17,8 +17,8 @@ class UserScriptsRevertDialog extends StatefulWidget {
 }
 
 class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
-  ThemeProvider _themeProvider;
-  UserScriptsProvider _userScriptsProvider;
+  late ThemeProvider _themeProvider;
+  late UserScriptsProvider _userScriptsProvider;
 
   bool _onlyRestoreNew = true;
   int _missingScripts = 0;

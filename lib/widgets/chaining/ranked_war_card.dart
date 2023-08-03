@@ -35,11 +35,11 @@ class RankedWarCard extends StatefulWidget {
 
   // Key is needed to update at least the hospital counter individually
   RankedWarCard({
-    @required this.rankedWar,
-    @required this.status,
-    @required this.warId,
-    @required this.ownFactionId,
-    @required Key key,
+    required this.rankedWar,
+    required this.status,
+    required this.warId,
+    required this.ownFactionId,
+    required Key key,
   }) : super(key: key);
 
   @override
@@ -47,9 +47,9 @@ class RankedWarCard extends StatefulWidget {
 }
 
 class _RankedWarCardState extends State<RankedWarCard> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  WebViewProvider _webViewProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   List<WarFaction> _factions = <WarFaction>[];
   List<String> _factionsIds = <String>[];
@@ -67,7 +67,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _webViewProvider = context.read<WebViewProvider>();
 
-    widget.rankedWar.factions.forEach((key, value) {
+    widget.rankedWar.factions!.forEach((key, value) {
       _factions.add(value);
       _factionsIds.add(key);
     });
@@ -87,7 +87,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
         elevation: 2,
         shape: RoundedRectangleBorder(
           side: BorderSide(
-            color: widget.rankedWar.factions.containsKey(widget.ownFactionId.toString())
+            color: widget.rankedWar.factions!.containsKey(widget.ownFactionId.toString())
                 ? Colors.blue
                 : Colors.transparent,
             width: 3,
@@ -146,7 +146,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
                             "Score: ${_factions[0].score}",
                             style: TextStyle(
                               fontSize: 11,
-                              color: _factions[0].score > _factions[1].score
+                              color: _factions[0].score! > _factions[1].score!
                                   ? Colors.green
                                   : _factions[0].score == _factions[1].score
                                       ? _themeProvider.mainText
@@ -181,7 +181,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
                             "Score: ${_factions[1].score}",
                             style: TextStyle(
                               fontSize: 11,
-                              color: _factions[1].score > _factions[0].score
+                              color: _factions[1].score! > _factions[0].score!
                                   ? Colors.green
                                   : _factions[1].score == _factions[0].score
                                       ? _themeProvider.mainText
@@ -242,13 +242,13 @@ class _RankedWarCardState extends State<RankedWarCard> {
     );
   }
 
-  Future<void> addFaction({bool left}) async {
+  Future<void> addFaction({required bool left}) async {
     int side = left ? 0 : 1;
 
     final targets = context.read<TargetsProvider>().allTargets;
-    final addFactionResult = await _w.addFaction(_factionsIds[side], targets);
+    final addFactionResult = (await _w.addFaction(_factionsIds[side], targets))!;
 
-    Color messageColor = Colors.green;
+    Color? messageColor = Colors.green;
     if (addFactionResult.isEmpty || addFactionResult == "error_existing") {
       messageColor = Colors.orange[700];
     }
@@ -276,13 +276,13 @@ class _RankedWarCardState extends State<RankedWarCard> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: messageColor,
+      contentColor: messageColor!,
       duration: Duration(seconds: time),
       contentPadding: const EdgeInsets.all(10),
     );
   }
 
-  void removeFaction({bool left}) {
+  void removeFaction({required bool left}) {
     int side = left ? 0 : 1;
 
     _w.removeFaction(int.parse(_factionsIds[0]));
@@ -304,19 +304,19 @@ class _RankedWarCardState extends State<RankedWarCard> {
   }
 
   Widget _progressBar() {
-    int progress = (_factions[0].score - _factions[1].score).abs();
-    double percentage = progress * 100 / widget.rankedWar.war.target;
+    int progress = (_factions[0].score! - _factions[1].score!).abs();
+    double percentage = progress * 100 / widget.rankedWar.war!.target!;
 
     return Column(
       children: [
         Text(
-          "Progress: $progress/${widget.rankedWar.war.target}",
+          "Progress: $progress/${widget.rankedWar.war!.target}",
           style: TextStyle(
             fontSize: 11,
           ),
         ),
         LinearPercentIndicator(
-          padding: null,
+          padding: EdgeInsets.all(0),
           barRadius: Radius.circular(10),
           alignment: MainAxisAlignment.center,
           width: 150,
@@ -338,7 +338,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
 
   Widget _winner() {
     String winner = "";
-    if (widget.rankedWar.war.winner.toString() == _factionsIds[0]) {
+    if (widget.rankedWar.war!.winner.toString() == _factionsIds[0]) {
       winner = HtmlParser.fix(_factions[0].name);
     } else {
       winner = HtmlParser.fix(_factions[1].name);
@@ -364,7 +364,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
     );
   }
 
-  void _launchBrowser({@required factionId, @required shortTap}) {
+  void _launchBrowser({required factionId, required shortTap}) {
     String url = "https://www.torn.com/factions.php?step=profile&ID=$factionId";
     _webViewProvider.openBrowserPreference(
       context: context,
@@ -375,20 +375,20 @@ class _RankedWarCardState extends State<RankedWarCard> {
 
   void _getTimeString() {
     if (widget.status == RankedWarStatus.active) {
-      DateTime date = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
+      DateTime date = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war!.start! * 1000);
       _titleString += "War #${widget.warId}, started ${_dayWeek(date)} @ ${_hour(date)}";
     } else if (widget.status == RankedWarStatus.upcoming) {
-      DateTime date = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
+      DateTime date = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war!.start! * 1000);
       _titleString += "War #${widget.warId}, starts ${_dayWeek(date)} @ ${_hour(date)}";
     } else if (widget.status == RankedWarStatus.finished) {
-      DateTime dateStart = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
-      DateTime dateEnd = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.end * 1000);
+      DateTime dateStart = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war!.start! * 1000);
+      DateTime dateEnd = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war!.end! * 1000);
       _titleString += "War #${widget.warId}, started ${_dayWeek(dateStart)} @ ${_hour(dateStart)}";
       _finishedString = "Finished ${_dayWeek(dateEnd)} @ ${_hour(dateEnd)}";
     }
   }
 
-  String _hour(DateTime date) {
+  String? _hour(DateTime date) {
     return TimeFormatter(
       inputTime: date,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -396,7 +396,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
     ).formatHour;
   }
 
-  String _dayWeek(DateTime date) {
+  String? _dayWeek(DateTime date) {
     return TimeFormatter(
       inputTime: date,
       timeFormatSetting: _settingsProvider.currentTimeFormat,

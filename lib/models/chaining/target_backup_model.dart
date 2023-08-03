@@ -10,7 +10,7 @@ TargetsBackupModel targetsBackupModelFromJson(String str) => TargetsBackupModel.
 String targetsBackupModelToJson(TargetsBackupModel data) => json.encode(data.toJson());
 
 class TargetsBackupModel {
-  List<TargetBackup> targetBackup;
+  List<TargetBackup>? targetBackup;
 
   TargetsBackupModel({
     this.targetBackup,
@@ -21,14 +21,14 @@ class TargetsBackupModel {
   );
 
   Map<String, dynamic> toJson() => {
-    "target_backup": targetBackup == null ? null : List<dynamic>.from(targetBackup.map((x) => x.toJson())),
+    "target_backup": targetBackup == null ? null : List<dynamic>.from(targetBackup!.map((x) => x.toJson())),
   };
 }
 
 class TargetBackup {
-  int id;
-  String notes;
-  String notesColor;
+  int? id;
+  String? notes;
+  String? notesColor;
 
   TargetBackup({
     this.id,

@@ -16,9 +16,9 @@ class YataTargetsDistribution extends StatefulWidget {
   final List<TargetsBothSides> bothSides;
 
   YataTargetsDistribution({
-    @required this.bothSides,
-    @required this.onlyYata,
-    @required this.onlyLocal,
+    required this.bothSides,
+    required this.onlyYata,
+    required this.onlyLocal,
   });
 
   @override
@@ -26,8 +26,8 @@ class YataTargetsDistribution extends StatefulWidget {
 }
 
 class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {

@@ -32,33 +32,33 @@ class TradesContainer {
   bool ttActive = false;
   String ttTotalMoney = "";
   String ttProfit = "";
-  String ttUrl = "";
+  String? ttUrl = "";
   bool ttServerError = false;
   bool ttAuthError = false;
-  var ttItems = <TtInItem>[];
-  var ttMessages = <TradeMessage>[];
+  List<TtInItem>? ttItems = <TtInItem>[];
+  List<TradeMessage>? ttMessages = <TradeMessage>[];
 
   // Arson Warehouse
   bool awhActive = false;
 }
 
 class TradesProvider extends ChangeNotifier {
-  int playerId;
+  int? playerId;
   var container = TradesContainer();
 
   void updateTrades({
-    @required playerId,
-    @required String sellerName,
-    @required int sellerId,
-    @required int tradeId,
-    @required List<dom.Element> leftMoneyElements,
-    @required List<dom.Element> leftItemsElements,
-    @required List<dom.Element> leftPropertyElements,
-    @required List<dom.Element> leftSharesElements,
-    @required List<dom.Element> rightMoneyElements,
-    @required List<dom.Element> rightItemsElements,
-    @required List<dom.Element> rightPropertyElements,
-    @required List<dom.Element> rightSharesElements,
+    required playerId,
+    required String sellerName,
+    required int sellerId,
+    required int tradeId,
+    required List<dom.Element> leftMoneyElements,
+    required List<dom.Element> leftItemsElements,
+    required List<dom.Element> leftPropertyElements,
+    required List<dom.Element> leftSharesElements,
+    required List<dom.Element> rightMoneyElements,
+    required List<dom.Element> rightItemsElements,
+    required List<dom.Element> rightPropertyElements,
+    required List<dom.Element> rightSharesElements,
   }) async {
     this.playerId = playerId;
 
@@ -72,7 +72,7 @@ class TradesProvider extends ChangeNotifier {
       var row = sideMoneyElement[0];
       RegExp regExp = new RegExp(r"([0-9][,]{0,3})+");
       try {
-        var match = regExp.stringMatch(row.innerHtml);
+        var match = regExp.stringMatch(row.innerHtml)!;
         return int.parse(match.replaceAll(",", ""));
       } catch (e) {
         return 0;
@@ -93,10 +93,10 @@ class TradesProvider extends ChangeNotifier {
       var row = pdaParser.HtmlParser.fix(itemLine.innerHtml.trim());
       thisItem.name = row.split(" x")[0].trim();
       row.split(" x").length > 1 ? thisItem.quantity = int.parse(row.split(" x")[1]) : thisItem.quantity = 1;
-      allTornItems.items.forEach((key, value) {
+      allTornItems.items!.forEach((key, value) {
         if (thisItem.name == value.name) {
           thisItem.id = int.parse(key);
-          thisItem.priceUnit = value.marketValue;
+          thisItem.priceUnit = value.marketValue ?? 0;
           thisItem.totalPrice = thisItem.priceUnit * thisItem.quantity;
         }
       });
@@ -145,11 +145,11 @@ class TradesProvider extends ChangeNotifier {
           } else {
             newModel
               ..ttActive = true
-              ..ttTotalMoney = tornTraderIn.trade.tradeTotal.replaceAll(" ", "")
-              ..ttProfit = tornTraderIn.trade.totalProfit.replaceAll(" ", "")
-              ..ttUrl = tornTraderIn.trade.tradeUrl
-              ..ttItems = tornTraderIn.trade.items
-              ..ttMessages = tornTraderIn.trade.tradeMessages;
+              ..ttTotalMoney = tornTraderIn.trade!.tradeTotal!.replaceAll(" ", "")
+              ..ttProfit = tornTraderIn.trade!.totalProfit!.replaceAll(" ", "")
+              ..ttUrl = tornTraderIn.trade!.tradeUrl
+              ..ttItems = tornTraderIn.trade!.items
+              ..ttMessages = tornTraderIn.trade!.tradeMessages;
           }
         }
       }
@@ -162,7 +162,7 @@ class TradesProvider extends ChangeNotifier {
       thisProperty.name = row.split(" (")[0].trim();
       RegExp regExp = new RegExp(r"[0-9]+ happiness");
       try {
-        var match = regExp.stringMatch(propertyLine.innerHtml);
+        var match = regExp.stringMatch(propertyLine.innerHtml)!;
         thisProperty.happiness = match.substring(0);
       } catch (e) {
         thisProperty.happiness = '';
@@ -189,12 +189,12 @@ class TradesProvider extends ChangeNotifier {
         RegExp regQuantity =
             new RegExp(r"([A-Z]{3}) (?:x)([0-9]+) (?:at) (?:\$)((?:[0-9]|[.]|[,])+) (?:\()(?:\$)((?:[0-9]|[,])+)");
         var matches = regQuantity.allMatches(shareLine.innerHtml);
-        thisShare.name = matches.elementAt(0).group(1);
-        thisShare.quantity = int.parse(matches.elementAt(0).group(2));
-        var singlePriceSplit = matches.elementAt(0).group(3).split('.');
+        thisShare.name = matches.elementAt(0).group(1) ?? "?";
+        thisShare.quantity = int.parse(matches.elementAt(0).group(2)!);
+        var singlePriceSplit = matches.elementAt(0).group(3)!.split('.');
         thisShare.shareUnit =
             double.parse(singlePriceSplit[0].replaceAll(',', '')) + double.parse('0.${singlePriceSplit[1]}');
-        thisShare.totalPrice = int.parse(matches.elementAt(0).group(4).replaceAll(',', ''));
+        thisShare.totalPrice = int.parse(matches.elementAt(0).group(4)!.replaceAll(',', ''));
       } catch (e) {
         thisShare.quantity = 0;
       }

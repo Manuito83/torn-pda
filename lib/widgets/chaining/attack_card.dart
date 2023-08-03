@@ -9,7 +9,6 @@ import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -19,16 +18,16 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 class AttackCard extends StatefulWidget {
   final Attack attackModel;
 
-  AttackCard({@required this.attackModel});
+  AttackCard({required this.attackModel});
 
   @override
   _AttackCardState createState() => _AttackCardState();
 }
 
 class _AttackCardState extends State<AttackCard> {
-  Attack _attack;
-  ThemeProvider _themeProvider;
-  UserDetailsProvider _userProvider;
+  late Attack _attack;
+  late ThemeProvider _themeProvider;
+  late UserDetailsProvider _userProvider;
 
   bool _addButtonActive = true;
 
@@ -58,8 +57,8 @@ class _AttackCardState extends State<AttackCard> {
                     children: <Widget>[
                       SizedBox(
                         height: 20,
-                        width: _attack.targetName.isNotEmpty ? 20 : 0,
-                        child: _attack.targetName.isNotEmpty
+                        width: _attack.targetName!.isNotEmpty ? 20 : 0,
+                        child: _attack.targetName!.isNotEmpty
                             ? GestureDetector(
                                 child: Icon(
                                   Icons.remove_red_eye,
@@ -88,13 +87,13 @@ class _AttackCardState extends State<AttackCard> {
                         padding: EdgeInsets.symmetric(horizontal: 5),
                       ),
                       SizedBox(
-                        width: _attack.targetName.isNotEmpty ? 70 : 175,
+                        width: _attack.targetName!.isNotEmpty ? 70 : 175,
                         child: Text(
-                          _attack.targetName.isNotEmpty ? '${_attack.targetName}' : "anonymous",
+                          _attack.targetName!.isNotEmpty ? '${_attack.targetName}' : "anonymous",
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontWeight: _attack.targetName.isNotEmpty ? FontWeight.bold : FontWeight.normal,
-                            fontStyle: _attack.targetName.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                            fontWeight: _attack.targetName!.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                            fontStyle: _attack.targetName!.isNotEmpty ? FontStyle.normal : FontStyle.italic,
                           ),
                         ),
                       ),
@@ -106,9 +105,9 @@ class _AttackCardState extends State<AttackCard> {
                       mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
                         SizedBox(
-                          width: _attack.targetName.isNotEmpty ? 85 : 0,
+                          width: _attack.targetName!.isNotEmpty ? 85 : 0,
                           child: Text(
-                            _attack.targetName.isNotEmpty ? ' [${_attack.targetId}]' : "",
+                            _attack.targetName!.isNotEmpty ? ' [${_attack.targetId}]' : "",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -127,7 +126,7 @@ class _AttackCardState extends State<AttackCard> {
                             SizedBox(
                               height: 20,
                               width: 20,
-                              child: _attack.targetName.isNotEmpty ? _returnAddTargetButton() : SizedBox.shrink(),
+                              child: _attack.targetName!.isNotEmpty ? _returnAddTargetButton() : SizedBox.shrink(),
                             ),
                           ],
                         ),
@@ -198,7 +197,7 @@ class _AttackCardState extends State<AttackCard> {
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.orange[900],
+            contentColor: Colors.orange[900]!,
             duration: Duration(seconds: 5),
             contentPadding: EdgeInsets.all(10),
           );
@@ -236,7 +235,7 @@ class _AttackCardState extends State<AttackCard> {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.green[700],
+              contentColor: Colors.green[700]!,
               duration: Duration(seconds: 5),
               contentPadding: EdgeInsets.all(10),
             );
@@ -253,7 +252,7 @@ class _AttackCardState extends State<AttackCard> {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.red[900],
+              contentColor: Colors.red[900]!,
               duration: Duration(seconds: 5),
               contentPadding: EdgeInsets.all(10),
             );
@@ -291,7 +290,7 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   String _returnDateFormatted() {
-    var date = new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
+    var date = new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded! * 1000);
     var formatter = new DateFormat('dd MMMM HH:mm');
     return formatter.format(date);
   }
@@ -349,7 +348,7 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   Widget _returnFairFight() {
-    dynamic ff = _attack.modifiers.fairFight;
+    dynamic ff = _attack.modifiers!.fairFight;
     if (ff is String) {
       ff = double.parse(ff);
     }
@@ -428,8 +427,8 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   Widget _factionIcon() {
-    String factionName = "";
-    int factionId = 0;
+    String? factionName = "";
+    int? factionId = 0;
     if (_attack.attackInitiated) {
       if (_attack.defenderFactionname != null && _attack.defenderFactionname != "") {
         factionName = _attack.defenderFactionname;
@@ -446,14 +445,14 @@ class _AttackCardState extends State<AttackCard> {
       }
     }
 
-    Color borderColor = Colors.transparent;
-    Color iconColor = _themeProvider.mainText;
-    if (factionId == _userProvider.basic.faction.factionId) {
+    Color? borderColor = Colors.transparent;
+    Color? iconColor = _themeProvider.mainText;
+    if (factionId == _userProvider.basic!.faction!.factionId) {
       borderColor = iconColor = Colors.green[500];
     }
 
     void showFactionToast() {
-      if (factionId == _userProvider.basic.faction.factionId) {
+      if (factionId == _userProvider.basic!.faction!.factionId) {
         BotToast.showText(
           text: HtmlParser.fix("${_attack.targetName} belongs to your same faction ($factionName)"),
           textStyle: TextStyle(
@@ -471,7 +470,7 @@ class _AttackCardState extends State<AttackCard> {
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.grey[600],
+          contentColor: Colors.grey[600]!,
           duration: Duration(seconds: 5),
           contentPadding: EdgeInsets.all(10),
         );
@@ -483,7 +482,7 @@ class _AttackCardState extends State<AttackCard> {
       child: Ink(
         decoration: BoxDecoration(
           border: Border.all(
-            color: borderColor,
+            color: borderColor!,
             width: 1.5,
           ),
           shape: BoxShape.circle,

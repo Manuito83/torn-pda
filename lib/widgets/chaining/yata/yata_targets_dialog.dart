@@ -19,9 +19,9 @@ class YataTargetsDialog extends StatefulWidget {
   final List<TargetsBothSides> bothSides;
 
   YataTargetsDialog({
-    @required this.bothSides,
-    @required this.onlyYata,
-    @required this.onlyLocal,
+    required this.bothSides,
+    required this.onlyYata,
+    required this.onlyLocal,
   });
 
   @override
@@ -29,13 +29,13 @@ class YataTargetsDialog extends StatefulWidget {
 }
 
 class _YataTargetsDialogState extends State<YataTargetsDialog> {
-  TargetsProvider _targetsProvider;
-  ThemeProvider _themeProvider;
+  late TargetsProvider _targetsProvider;
+  late ThemeProvider _themeProvider;
 
   bool _dialogInit = true;
 
   double _currentImportPercentage = 0;
-  String _currentImportTarget = "";
+  String? _currentImportTarget = "";
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +157,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
                   ),
                 ),
                 closedColor: Colors.transparent,
-                openColor: _themeProvider.canvas,
+                openColor: _themeProvider.canvas!,
                 closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
                     width: 20,
@@ -225,7 +225,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
                           fontSize: 13,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.red[800],
+                        contentColor: Colors.red[800]!,
                         duration: Duration(seconds: 5),
                         contentPadding: EdgeInsets.all(10),
                       );
@@ -236,7 +236,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
                           fontSize: 13,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.green[800],
+                        contentColor: Colors.green[800]!,
                         duration: Duration(seconds: 5),
                         contentPadding: EdgeInsets.all(10),
                       );
@@ -271,7 +271,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         ),
         SizedBox(height: 18),
         LinearPercentIndicator(
-          padding: null,
+          padding: EdgeInsets.all(0),
           barRadius: Radius.circular(10),
           alignment: MainAxisAlignment.center,
           width: 200,
@@ -286,7 +286,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         ),
         SizedBox(height: 6),
         Text(
-          _currentImportTarget,
+          _currentImportTarget!,
           style: TextStyle(fontSize: 13),
         ),
         SizedBox(height: 8),
@@ -362,20 +362,16 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
     }
   }
 
-  String _localColorCode(int colorInt) {
+  String _localColorCode(int? colorInt) {
     switch (colorInt) {
       case 0:
         return 'z';
-        break;
       case 1:
         return 'green';
-        break;
       case 2:
         return 'orange';
-        break;
       case 3:
         return 'red';
-        break;
     }
     return '';
   }

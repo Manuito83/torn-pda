@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 
 class TabsExcessDialog extends StatelessWidget {
-  const TabsExcessDialog({Key key}) : super(key: key);
+  const TabsExcessDialog({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

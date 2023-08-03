@@ -5,7 +5,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 
 class PdaBrowserIcon extends StatelessWidget {
   const PdaBrowserIcon({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override

@@ -24,17 +24,17 @@ class QuickItem {
     this.isNervePoints = false,
   });
 
-  bool active;
-  bool visible;
-  int number;
-  String name;
-  String description;
-  int inventory;
-  bool isLoadout;
-  int loadoutNumber;
-  String loadoutName;
-  bool isEnergyPoints;
-  bool isNervePoints;
+  bool? active;
+  bool? visible;
+  int? number;
+  String? name;
+  String? description;
+  int? inventory;
+  bool? isLoadout;
+  int? loadoutNumber;
+  String? loadoutName;
+  bool? isEnergyPoints;
+  bool? isNervePoints;
 
   factory QuickItem.fromJson(Map<String, dynamic> json) => QuickItem(
         active: json["active"] == null ? null : json["active"],

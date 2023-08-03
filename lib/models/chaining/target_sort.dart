@@ -18,8 +18,8 @@ enum TargetSortType {
 }
 
 class TargetSort {
-  TargetSortType type;
-  String description;
+  TargetSortType? type;
+  late String description;
 
   TargetSort({this.type}) {
     switch (type) {
@@ -70,6 +70,9 @@ class TargetSort {
         break;
       case TargetSortType.notesAsc:
         description = 'Sort by note (asc)';
+        break;
+      default:
+        description = 'Sort by respect (des)';
         break;
     }
   }

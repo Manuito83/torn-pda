@@ -77,8 +77,8 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   }
 
   void decreaseInventory(QuickItem item) {
-    if (item.inventory > 0) {
-      item.inventory--;
+    if (item.inventory! > 0) {
+      item.inventory = item.inventory! - 1;
       _saveListAfterChanges();
       notifyListeners();
     }
@@ -152,9 +152,9 @@ class QuickItemsProviderFaction extends ChangeNotifier {
       _fullQuickItemsListFaction.clear();
 
       // Add Torn items
-      allTornItems.items.forEach((itemNumber, itemProperties) {
+      allTornItems.items!.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type) ||
-            _quickItemExceptions.contains(itemProperties.name.toLowerCase())) {
+            _quickItemExceptions.contains(itemProperties.name!.toLowerCase())) {
           // If the item was saved as active, mark it as such so that we can
           // filter it in our full list
           var savedActive = false;
@@ -174,17 +174,17 @@ class QuickItemsProviderFaction extends ChangeNotifier {
           );
         }
       });
-      _fullQuickItemsListFaction.sort((a, b) => a.name.compareTo(b.name));
+      _fullQuickItemsListFaction.sort((a, b) => a.name!.compareTo(b.name!));
 
       // Insert energy points
       var savedEnergyActive = false;
       var savedNerveActive = false;
 
       for (var saved in _activeQuickItemsListFaction) {
-        if (saved.isEnergyPoints) {
+        if (saved.isEnergyPoints!) {
           savedEnergyActive = true;
         }
-        if (saved.isNervePoints) {
+        if (saved.isNervePoints!) {
           savedEnergyActive = true;
         }
       }

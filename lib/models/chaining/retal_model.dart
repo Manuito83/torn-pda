@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
 class Retal {
@@ -12,12 +11,12 @@ class Retal {
     int this.factionColeader = 0,
     int this.lifeCurrent = -1,
     int this.lifeMaximum = -1,
-    DateTime this.lastUpdated,
-    bool this.justUpdatedWithSuccess = false,
-    bool this.justUpdatedWithError = false,
-    double this.respectGain = -1,
-    double this.fairFight = -1,
-    bool this.userWonOrDefended = false,
+    DateTime? this.lastUpdated,
+    bool? this.justUpdatedWithSuccess = false,
+    bool? this.justUpdatedWithError = false,
+    double? this.respectGain = -1,
+    double? this.fairFight = -1,
+    bool? this.userWonOrDefended = false,
     String this.personalNote = "",
     String this.personalNoteColor = "",
     String this.statsEstimated = "",
@@ -30,7 +29,7 @@ class Retal {
     int this.statsDef = -1,
     int this.statsDex = -1,
     int this.statsSort = 0, // Mixed estimates and exacts so that retals can be sorted
-    int this.lifeSort = 0,
+    int? this.lifeSort = 0,
     bool this.overrideEasyLife = false,
     // For stats estimates calculation
     bool this.statsComparisonSuccess = false,
@@ -44,62 +43,62 @@ class Retal {
     int this.retalLsd = 0,
     int this.retalCans = 0,
     int this.myCans = 0,
-    String this.name,
-    int this.level,
-    int this.daysInFaction,
-    @required this.lastAction,
-    @required this.status,
-    String this.position,
+    String? this.name,
+    int? this.level,
+    int? this.daysInFaction,
+    required this.lastAction,
+    required this.status,
+    String? this.position,
   });
 
   // State for retals
   int retalExpiry;
-  int retalId;
+  int? retalId;
   bool isUpdating;
-  String factionName;
+  String? factionName;
   int factionLeader;
   int factionColeader;
-  int lifeCurrent;
-  int lifeMaximum;
-  DateTime lastUpdated;
-  bool justUpdatedWithSuccess;
-  bool justUpdatedWithError;
-  double respectGain;
-  double fairFight;
-  bool userWonOrDefended;
+  int? lifeCurrent;
+  int? lifeMaximum;
+  DateTime? lastUpdated;
+  bool? justUpdatedWithSuccess;
+  bool? justUpdatedWithError;
+  double? respectGain;
+  double? fairFight;
+  bool? userWonOrDefended;
   String personalNote;
   String personalNoteColor;
   String statsEstimated;
   String spiesSource;
-  int statsExactTotal;
+  int? statsExactTotal;
   int statsExactTotalKnown;
-  int statsExactUpdated;
-  int statsStr;
-  int statsSpd;
-  int statsDef;
-  int statsDex;
-  int statsSort; // Mixed estimates and exacts so that retals can be sorted
-  int lifeSort;
+  int? statsExactUpdated;
+  int? statsStr;
+  int? statsSpd;
+  int? statsDef;
+  int? statsDex;
+  int? statsSort; // Mixed estimates and exacts so that retals can be sorted
+  int? lifeSort;
   bool overrideEasyLife;
   // For stats estimates calculation
   bool statsComparisonSuccess;
-  int retalXanax;
-  int myXanax;
-  int retalRefill;
-  int myRefill;
-  int retalEnhancement;
-  int myEnhancement;
-  int retalEcstasy;
-  int retalLsd;
-  int retalCans;
-  int myCans;
+  int? retalXanax;
+  int? myXanax;
+  int? retalRefill;
+  int? myRefill;
+  int? retalEnhancement;
+  int? myEnhancement;
+  int? retalEcstasy;
+  int? retalLsd;
+  int? retalCans;
+  int? myCans;
 
-  String name;
-  int level;
-  int daysInFaction;
+  String? name;
+  int? level;
+  int? daysInFaction;
   LastAction lastAction = LastAction();
   Status status = Status();
-  String position;
+  String? position;
 
   factory Retal.fromJson(Map<String, dynamic> json) => Retal(
         retalExpiry: json["retalExpiry"] ?? 0,
@@ -160,7 +159,7 @@ class Retal {
         "factionColeader": factionColeader,
         "lifeCurrent": lifeCurrent,
         "lifeMaximum": lifeMaximum,
-        "lastUpdated": lastUpdated.millisecondsSinceEpoch,
+        "lastUpdated": lastUpdated!.millisecondsSinceEpoch,
         "respectGain": respectGain,
         "fairFight": fairFight,
         "userWonOrDefended": userWonOrDefended,

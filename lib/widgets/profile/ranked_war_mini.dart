@@ -5,15 +5,15 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 
 class RankedWarMini extends StatefulWidget {
-  final RankedWar rankedWar;
-  final String playerFactionName;
-  final String playerFactionTag;
+  final RankedWar? rankedWar;
+  final String? playerFactionName;
+  final String? playerFactionTag;
 
   RankedWarMini({
-    @required this.rankedWar,
-    @required this.playerFactionName,
-    @required this.playerFactionTag,
-    Key key,
+    required this.rankedWar,
+    required this.playerFactionName,
+    required this.playerFactionTag,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -26,13 +26,13 @@ class _RankedWarMiniState extends State<RankedWarMini> {
   WarFaction _playerFaction = WarFaction();
   WarFaction _enemyFaction = WarFaction();
 
-  Timer _tickerCall;
+  Timer? _tickerCall;
 
   @override
   void initState() {
     super.initState();
 
-    widget.rankedWar.factions.forEach((key, value) {
+    widget.rankedWar!.factions!.forEach((key, value) {
       if (value.name == widget.playerFactionName) {
         _playerFaction = value;
       } else {
@@ -40,7 +40,7 @@ class _RankedWarMiniState extends State<RankedWarMini> {
       }
     });
 
-    if (widget.rankedWar.war.start * 1000 > DateTime.now().millisecondsSinceEpoch) {
+    if (widget.rankedWar!.war!.start! * 1000 > DateTime.now().millisecondsSinceEpoch) {
       _tickerCall = new Timer.periodic(Duration(seconds: 1), (Timer t) {
         _updateTimeString();
       });
@@ -56,17 +56,17 @@ class _RankedWarMiniState extends State<RankedWarMini> {
   @override
   Widget build(BuildContext context) {
     int ts = DateTime.now().millisecondsSinceEpoch;
-    bool warInFuture = widget.rankedWar.war.start * 1000 > ts;
-    bool warActive = widget.rankedWar.war.start < ts && widget.rankedWar.war.end == 0;
+    bool warInFuture = widget.rankedWar!.war!.start! * 1000 > ts;
+    bool warActive = widget.rankedWar!.war!.start! < ts && widget.rankedWar!.war!.end == 0;
 
     if (warInFuture) {
-      bool lessThan24h = widget.rankedWar.war.start * 1000 - ts < 86400000;
+      bool lessThan24h = widget.rankedWar!.war!.start! * 1000 - ts < 86400000;
       return Container(
         decoration: lessThan24h
             ? BoxDecoration(
                 border: Border.all(
                   width: 2,
-                  color: Colors.orange[700],
+                  color: Colors.orange[700]!,
                   strokeAlign: BorderSide.strokeAlignOutside,
                 ),
               )
@@ -88,8 +88,8 @@ class _RankedWarMiniState extends State<RankedWarMini> {
         ),
       );
     } else if (warActive) {
-      int progress = (_playerFaction.score - _enemyFaction.score).abs();
-      double percentage = progress * 100 / widget.rankedWar.war.target;
+      int progress = (_playerFaction.score! - _enemyFaction.score!).abs();
+      double percentage = progress * 100 / widget.rankedWar!.war!.target!;
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
         child: Row(
@@ -103,9 +103,9 @@ class _RankedWarMiniState extends State<RankedWarMini> {
                   children: [
                     Column(
                       children: [
-                        if (widget.playerFactionTag.isNotEmpty)
+                        if (widget.playerFactionTag!.isNotEmpty)
                           Text(
-                            "${widget.playerFactionTag.toUpperCase()}",
+                            "${widget.playerFactionTag!.toUpperCase()}",
                             style: TextStyle(
                               fontSize: 8,
                             ),
@@ -115,7 +115,7 @@ class _RankedWarMiniState extends State<RankedWarMini> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: _playerFaction.score >= _enemyFaction.score ? Colors.green : Colors.red,
+                            color: _playerFaction.score! >= _enemyFaction.score! ? Colors.green : Colors.red,
                           ),
                         ),
                       ],
@@ -131,13 +131,13 @@ class _RankedWarMiniState extends State<RankedWarMini> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: _playerFaction.score <= _enemyFaction.score ? Colors.green : Colors.red,
+                        color: _playerFaction.score! <= _enemyFaction.score! ? Colors.green : Colors.red,
                       ),
                     ),
                   ],
                 ),
                 LinearPercentIndicator(
-                  padding: null,
+                  padding: EdgeInsets.all(0),
                   barRadius: Radius.circular(10),
                   alignment: MainAxisAlignment.center,
                   width: 130,
@@ -147,7 +147,7 @@ class _RankedWarMiniState extends State<RankedWarMini> {
                   center: FittedBox(
                     fit: BoxFit.fitWidth,
                     child: Text(
-                      '$progress/${widget.rankedWar.war.target}',
+                      '$progress/${widget.rankedWar!.war!.target}',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -164,7 +164,7 @@ class _RankedWarMiniState extends State<RankedWarMini> {
   }
 
   _updateTimeString() {
-    var dt = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar.war.start * 1000);
+    var dt = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar!.war!.start! * 1000);
     var timeDifference = dt.difference(DateTime.now());
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitHours = twoDigits(timeDifference.inHours.remainder(24));

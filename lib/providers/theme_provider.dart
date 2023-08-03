@@ -12,13 +12,13 @@ enum AppTheme {
 }
 
 class ThemeProvider extends ChangeNotifier {
-  Color canvas;
-  Color secondBackground;
-  Color mainText;
-  Color buttonText;
-  Color navSelected;
-  Color cardColor;
-  Color statusBar;
+  Color? canvas;
+  Color? secondBackground;
+  Color? mainText;
+  Color? buttonText;
+  Color? navSelected;
+  Color? cardColor;
+  Color? statusBar;
 
   ThemeProvider() {
     _restoreSharedPreferences();
@@ -93,7 +93,7 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   void _saveThemeSharedPrefs() {
-    String themeSave;
+    late String themeSave;
     switch (_currentTheme) {
       case AppTheme.light:
         themeSave = 'light';

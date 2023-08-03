@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class AwardCard extends StatefulWidget {
-  AwardCard({@required this.award, @required this.pinConditionChange});
+  AwardCard({required this.award, required this.pinConditionChange});
 
   final Award award;
   final Function pinConditionChange;
@@ -24,8 +24,8 @@ class AwardCard extends StatefulWidget {
 }
 
 class _AwardCardState extends State<AwardCard> {
-  ThemeProvider _themeProvider;
-  AwardsProvider _pinProvider;
+  late ThemeProvider _themeProvider;
+  late AwardsProvider _pinProvider;
 
   bool _pinActive = true;
 
@@ -44,7 +44,7 @@ class _AwardCardState extends State<AwardCard> {
     Row titleRow = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        award.type == "Honor" ? award.image : Text(award.name.trim()),
+        award.type == "Honor" ? award.image! : Text(award.name!.trim()),
         Row(
           children: [
             if (award.doubleMerit != null || award.tripleMerit != null || award.nextCrime != null)
@@ -66,7 +66,7 @@ class _AwardCardState extends State<AwardCard> {
                       fontSize: 13,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.green[800],
+                    contentColor: Colors.green[800]!,
                     duration: Duration(seconds: 6),
                     contentPadding: EdgeInsets.all(10),
                   );
@@ -83,14 +83,14 @@ class _AwardCardState extends State<AwardCard> {
               )
             else
               SizedBox.shrink(),
-            if (award.achieve < 1)
+            if (award.achieve! < 1)
               Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: GestureDetector(
                   onTap: _pinActive
                       ? () async {
                           var resultString = "";
-                          Color resultColor = Colors.transparent;
+                          Color? resultColor = Colors.transparent;
 
                           setState(() {
                             _pinActive = false;
@@ -147,7 +147,7 @@ class _AwardCardState extends State<AwardCard> {
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor: resultColor,
+                            contentColor: resultColor!,
                             duration: Duration(seconds: 6),
                             contentPadding: EdgeInsets.all(10),
                           );
@@ -194,20 +194,20 @@ class _AwardCardState extends State<AwardCard> {
     );
 
     Widget commentIconRow = SizedBox.shrink();
-    if (award.comment != null && award.comment.trim() != "") {
-      award.comment = HtmlParser.fix(award.comment.replaceAll("<br>", "\n").replaceAll("  ", ""));
+    if (award.comment != null && award.comment!.trim() != "") {
+      award.comment = HtmlParser.fix(award.comment!.replaceAll("<br>", "\n").replaceAll("  ", ""));
       commentIconRow = Row(
         children: [
           SizedBox(width: 4),
           GestureDetector(
             onTap: () {
               BotToast.showText(
-                text: award.comment,
+                text: award.comment!,
                 textStyle: TextStyle(
                   fontSize: 13,
                   color: Colors.white,
                 ),
-                contentColor: Colors.grey[700],
+                contentColor: Colors.grey[700]!,
                 duration: Duration(seconds: 6),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -221,7 +221,7 @@ class _AwardCardState extends State<AwardCard> {
       );
     }
 
-    var achievedPercentage = (award.achieve * 100).truncate();
+    var achievedPercentage = (award.achieve! * 100).truncate();
     final decimalFormat = new NumberFormat("#,##0", "en_US");
     final rarityFormat = new NumberFormat("##0.0000", "en_US");
     Widget detailsRow = Row(
@@ -241,14 +241,14 @@ class _AwardCardState extends State<AwardCard> {
                     ),
                   ),
                   Text(
-                    ' - ${decimalFormat.format(award.current.ceil())}'
-                    '/${decimalFormat.format(award.goal.ceil())}',
+                    ' - ${decimalFormat.format(award.current!.ceil())}'
+                    '/${decimalFormat.format(award.goal!.ceil())}',
                     style: TextStyle(fontSize: 12),
                   ),
                   if (award.daysLeft != -99)
-                    award.daysLeft > 0 && award.daysLeft < double.maxFinite
+                    award.daysLeft! > 0 && award.daysLeft! < double.maxFinite
                         ? Text(
-                            " - ${decimalFormat.format(award.daysLeft.round())} "
+                            " - ${decimalFormat.format(award.daysLeft!.round())} "
                             "days",
                             style: TextStyle(fontSize: 12),
                           )
@@ -261,7 +261,7 @@ class _AwardCardState extends State<AwardCard> {
                               )
                             : Text(
                                 " - ${(DateFormat('yyyy-MM-dd').format(
-                                  DateTime.fromMillisecondsSinceEpoch(award.dateAwarded.round() * 1000),
+                                  DateTime.fromMillisecondsSinceEpoch(award.dateAwarded!.round() * 1000),
                                 ))}",
                                 style: TextStyle(
                                   fontSize: 12,
@@ -294,7 +294,7 @@ class _AwardCardState extends State<AwardCard> {
                           fontSize: 13,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.grey[700],
+                        contentColor: Colors.grey[700]!,
                         duration: Duration(seconds: 6),
                         contentPadding: EdgeInsets.all(10),
                       );
@@ -369,7 +369,7 @@ class _AwardCardState extends State<AwardCard> {
             children: [
               category,
               SizedBox(width: 5),
-              award.image,
+              award.image!,
               SizedBox(width: 10),
               Expanded(
                 child: Column(

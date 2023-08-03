@@ -2,9 +2,6 @@
 import 'dart:convert';
 import 'dart:developer';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:http/http.dart' as http;
 
@@ -13,12 +10,12 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/revive_services/hela_revive_model.dart';
 
 class HelaRevive {
-  int tornId;
-  String username;
+  int? tornId;
+  String? username;
 
   HelaRevive({
-    @required this.tornId,
-    @required this.username,
+    required this.tornId,
+    required this.username,
   });
 
   Future<String> callMedic() async {

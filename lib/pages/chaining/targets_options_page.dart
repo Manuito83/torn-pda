@@ -11,8 +11,8 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TargetsOptionsReturn {
-  bool yataEnabled;
-  bool retaliationEnabled;
+  bool? yataEnabled;
+  bool? retaliationEnabled;
   //bool tacEnabled;
 }
 
@@ -36,10 +36,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // TAC
   //bool _tacEnabled = true;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {

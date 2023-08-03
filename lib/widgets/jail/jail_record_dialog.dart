@@ -6,13 +6,13 @@ import 'package:provider/provider.dart';
 
 class JailRecordDialog extends StatelessWidget {
   const JailRecordDialog({
-    @required this.recordCallback,
-    @required this.currentRecord,
-    Key key,
+    required this.recordCallback,
+    required this.currentRecord,
+    Key? key,
   }) : super(key: key);
 
   final Function recordCallback;
-  final int currentRecord;
+  final int? currentRecord;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +89,7 @@ class JailRecordDialog extends StatelessWidget {
                             ),
                             inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Cannot be empty!";
                               }
                               final n = int.tryParse(value);
@@ -116,9 +116,9 @@ class JailRecordDialog extends StatelessWidget {
                         TextButton(
                           child: Text("Set"),
                           onPressed: () {
-                            if (formKey.currentState.validate()) {
+                            if (formKey.currentState!.validate()) {
                               Navigator.of(context).pop();
-                              int input = int.tryParse(textController.text);
+                              int? input = int.tryParse(textController.text);
                               recordCallback(input);
                             }
                           },
