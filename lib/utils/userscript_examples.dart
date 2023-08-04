@@ -3,7 +3,7 @@ import 'package:torn_pda/models/userscript_model.dart';
 
 class ScriptsExamples {
   static List<UserScriptModel> getScriptsExamples() {
-    var exampleList = <UserScriptModel>[];
+    final exampleList = <UserScriptModel>[];
     exampleList.add(_bazaarExample());
     exampleList.add(_racingPresetsExample());
     exampleList.add(_specialGymRatios());
@@ -14,11 +14,11 @@ class ScriptsExamples {
   }
 
   static List<String?> getUrls(String source) {
-    var urls = <String?>[];
+    final urls = <String?>[];
     final regex = RegExp(r'(@match+\s+)(.*)');
-    var matches = regex.allMatches(source);
-    if (matches.length > 0) {
-      for (Match match in matches) {
+    final matches = regex.allMatches(source);
+    if (matches.isNotEmpty) {
+      for (final Match match in matches) {
         try {
           urls.add(match.group(2));
         } catch (e) {
@@ -30,7 +30,8 @@ class ScriptsExamples {
   }
 
   static UserScriptModel _bazaarExample() {
-    var source = r"""// ==UserScript==
+    const source = r"""
+// ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
 // @version      0.8 (updated by Manuito)
@@ -175,7 +176,8 @@ var waitForElementsAndRun = setInterval(() => {
   }
 
   static UserScriptModel _racingPresetsExample() {
-    var source = r"""// ==UserScript==
+    const source = r"""
+// ==UserScript==
 // @name         Torn Custom Race Presets
 // @namespace    https://greasyfork.org/en/scripts/393632-torn-custom-race-presets
 // @version      0.2.1 - Torn PDA adaptation v2 [Manuito]
@@ -296,13 +298,13 @@ function drawPresetBar() {
       name: "Custom Race Presets",
       exampleCode: 3,
       edited: false,
-      time: UserScriptTime.end,
       source: source,
     );
   }
 
   static UserScriptModel _specialGymRatios() {
-    var source = r"""// ==UserScript==
+    const source = r"""
+// ==UserScript==
 // @name         Custom Gym Ratios
 // @version      2.4 (updated by Manuito)
 // @description  Monitors battle stat ratios and provides warnings if they approach levels that would preclude access to special gyms
@@ -644,7 +646,8 @@ let waitForElementsAndRun = setInterval(() => {
   }
 
   static UserScriptModel _companyStocksOrderExample() {
-    var source = r"""// ==UserScript==
+    const source = r"""
+// ==UserScript==
 // @name         Torn company stock order
 // @version      0.2.11
 // @description  Automatically calculate stock percent based on sale and enter the order amount to order up to max capacity.
@@ -766,13 +769,13 @@ if (document.querySelector(".stock-list-wrap")) {
       name: "Company Stocks Order",
       exampleCode: 5,
       edited: false,
-      time: UserScriptTime.end,
       source: source,
     );
   }
 
   static UserScriptModel _companyActivity() {
-    var source = r"""// ==UserScript==
+    const source = r"""
+// ==UserScript==
 // @name         Company Activity for Torn PDA
 // @namespace    TornExtensions
 // @version      1.2 (updated by Manuito)
@@ -853,7 +856,7 @@ if (document.querySelector(".stock-list-wrap")) {
   }
 
   static UserScriptModel _hospitalFilters() {
-    var source = r"""
+    const source = r"""
 // ==UserScript==
 // @name         Hospital filters
 // @namespace    https://www.torn.com/profiles.php?XID=2190604

@@ -1,38 +1,36 @@
 // Dart imports:
 import 'dart:async';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/pages/chaining/target_details_page.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import '../../utils/country_check.dart';
-import '../notes_dialog.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/notes_dialog.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TargetCard extends StatefulWidget {
   final TargetModel targetModel;
 
   // Key is needed to update at least the hospital counter individually
-  TargetCard({required this.targetModel, required Key key}) : super(key: key);
+  const TargetCard({required this.targetModel, required Key key}) : super(key: key);
 
   @override
   _TargetCardState createState() => _TargetCardState();
@@ -58,7 +56,7 @@ class _TargetCardState extends State<TargetCard> {
   void initState() {
     super.initState();
     _webViewProvider = context.read<WebViewProvider>();
-    _updatedTicker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _updatedTicker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _chainProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -76,9 +74,9 @@ class _TargetCardState extends State<TargetCard> {
   Widget build(BuildContext context) {
     _target = widget.targetModel;
     _returnLastUpdated();
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Card(
         shape: RoundedRectangleBorder(
           side: BorderSide(
@@ -98,7 +96,7 @@ class _TargetCardState extends State<TargetCard> {
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: _chainProvider.panicTargets.where((t) => t.name == _target!.name).length > 0
+                  color: _chainProvider.panicTargets.where((t) => t.name == _target!.name).isNotEmpty
                       ? Colors.blue
                       : Colors.transparent,
                   width: 2,
@@ -110,7 +108,7 @@ class _TargetCardState extends State<TargetCard> {
               children: <Widget>[
                 // LINE 1
                 Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
                   child: Row(
                     children: <Widget>[
                       Row(
@@ -124,13 +122,13 @@ class _TargetCardState extends State<TargetCard> {
                                   text: "This player is "
                                       "${_target!.status!.state!.replaceAll("Federal", "in federal jail").toLowerCase()}"
                                       " and cannot be attacked!",
-                                  textStyle: TextStyle(
+                                  textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
                                   contentColor: Colors.red,
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
+                                  duration: const Duration(seconds: 5),
+                                  contentPadding: const EdgeInsets.all(10),
                                 );
                               } else {
                                 _startAttack();
@@ -140,10 +138,10 @@ class _TargetCardState extends State<TargetCard> {
                               children: [
                                 if (_target!.status!.state!.contains("Federal") ||
                                     _target!.status!.state!.contains("Fallen"))
-                                  Icon(MdiIcons.graveStone, size: 18)
+                                  const Icon(MdiIcons.graveStone, size: 18)
                                 else
                                   _attackIcon(),
-                                Padding(
+                                const Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 5),
                                 ),
                                 SizedBox(
@@ -151,7 +149,7 @@ class _TargetCardState extends State<TargetCard> {
                                   child: Text(
                                     '${_target!.name}',
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -164,15 +162,13 @@ class _TargetCardState extends State<TargetCard> {
                       Expanded(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          mainAxisSize: MainAxisSize.max,
                           children: <Widget>[
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(width: 5),
+                                const SizedBox(width: 5),
                                 OpenContainer(
-                                  transitionDuration: Duration(milliseconds: 500),
+                                  transitionDuration: const Duration(milliseconds: 500),
                                   transitionType: ContainerTransitionType.fadeThrough,
                                   openBuilder: (BuildContext context, VoidCallback _) {
                                     return TargetDetailsPage(target: _target);
@@ -186,7 +182,7 @@ class _TargetCardState extends State<TargetCard> {
                                   closedColor: Colors.transparent,
                                   openColor: _themeProvider.canvas!,
                                   closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                                    return SizedBox(
+                                    return const SizedBox(
                                       height: 22,
                                       width: 30,
                                       child: Icon(
@@ -196,7 +192,7 @@ class _TargetCardState extends State<TargetCard> {
                                     );
                                   },
                                 ),
-                                SizedBox(width: 5),
+                                const SizedBox(width: 5),
                                 _factionIcon(),
                               ],
                             ),
@@ -219,10 +215,9 @@ class _TargetCardState extends State<TargetCard> {
                 ),
                 // LINE 2
                 Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(16, 5, 15, 0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 5, 15, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
                       _returnRespectFF(_target!.respectGain, _target!.fairFight),
                       _returnHealth(_target!),
@@ -231,7 +226,7 @@ class _TargetCardState extends State<TargetCard> {
                 ),
                 // LINE 3
                 Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                   child: Row(
                     children: <Widget>[
                       Row(
@@ -259,7 +254,7 @@ class _TargetCardState extends State<TargetCard> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            Icon(Icons.refresh, size: 15),
+                            const Icon(Icons.refresh, size: 15),
                             Text(
                               ' $_lastUpdatedString',
                               style: TextStyle(
@@ -275,7 +270,7 @@ class _TargetCardState extends State<TargetCard> {
                 ),
                 // LINE 4
                 Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -286,7 +281,7 @@ class _TargetCardState extends State<TargetCard> {
                               width: 30,
                               height: 20,
                               child: IconButton(
-                                padding: EdgeInsets.all(0),
+                                padding: const EdgeInsets.all(0),
                                 iconSize: 20,
                                 icon: Icon(
                                   MdiIcons.notebookEditOutline,
@@ -297,8 +292,8 @@ class _TargetCardState extends State<TargetCard> {
                                 },
                               ),
                             ),
-                            SizedBox(width: 4),
-                            Text('Notes: '),
+                            const SizedBox(width: 4),
+                            const Text('Notes: '),
                             Flexible(
                               child: Text(
                                 '${_target!.personalNote}',
@@ -310,7 +305,7 @@ class _TargetCardState extends State<TargetCard> {
                           ],
                         ),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Text(
@@ -325,7 +320,7 @@ class _TargetCardState extends State<TargetCard> {
                     ],
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -348,15 +343,15 @@ class _TargetCardState extends State<TargetCard> {
 
   Widget _refreshIcon() {
     if (_target!.isUpdating) {
-      return Padding(
-        padding: const EdgeInsets.all(4.0),
+      return const Padding(
+        padding: EdgeInsets.all(4.0),
         child: CircularProgressIndicator(),
       );
     } else {
       return IconButton(
-        padding: EdgeInsets.all(0.0),
+        padding: const EdgeInsets.all(0.0),
         iconSize: 22,
-        icon: Icon(Icons.refresh),
+        icon: const Icon(Icons.refresh),
         onPressed: () async {
           _updateThisTarget();
         },
@@ -378,31 +373,31 @@ class _TargetCardState extends State<TargetCard> {
             text: HtmlParser.fix("${_target!.name} belongs to your same faction "
                 "(${_target!.faction!.factionName}) as "
                 "${_target!.faction!.position}"),
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.green,
-            duration: Duration(seconds: 5),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 5),
+            contentPadding: const EdgeInsets.all(10),
           );
         } else {
           BotToast.showText(
             text: HtmlParser.fix("${_target!.name} belongs to faction "
                 "${_target!.faction!.factionName} as "
                 "${_target!.faction!.position}"),
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.grey[600]!,
-            duration: Duration(seconds: 5),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 5),
+            contentPadding: const EdgeInsets.all(10),
           );
         }
       }
 
-      Widget factionIcon = Material(
+      final Widget factionIcon = Material(
         type: MaterialType.transparency,
         child: Ink(
           decoration: BoxDecoration(
@@ -418,9 +413,9 @@ class _TargetCardState extends State<TargetCard> {
               showFactionToast();
             },
             child: Padding(
-              padding: EdgeInsets.all(2),
+              padding: const EdgeInsets.all(2),
               child: ImageIcon(
-                AssetImage('images/icons/faction.png'),
+                const AssetImage('images/icons/faction.png'),
                 size: 12,
                 color: iconColor,
               ),
@@ -430,7 +425,7 @@ class _TargetCardState extends State<TargetCard> {
       );
       return factionIcon;
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -464,7 +459,7 @@ class _TargetCardState extends State<TargetCard> {
           ),
         );
       } else {
-        respectResult = TextSpan(
+        respectResult = const TextSpan(
           text: 'Lost',
           style: TextStyle(
             color: Colors.red,
@@ -524,9 +519,7 @@ class _TargetCardState extends State<TargetCard> {
               ),
             ),
           ),
-          respect == 0
-              ? SizedBox.shrink()
-              : Flexible(
+          if (respect == 0) const SizedBox.shrink() else Flexible(
                   child: RichText(
                     text: TextSpan(
                       children: <TextSpan>[
@@ -548,22 +541,20 @@ class _TargetCardState extends State<TargetCard> {
 
   Widget _returnHealth(TargetModel target) {
     Color? lifeBarColor = Colors.green;
-    Widget hospitalWarning = SizedBox.shrink();
+    Widget hospitalWarning = const SizedBox.shrink();
     String lifeText = _target!.life!.current.toString();
 
     if (target.status!.state == "Hospital") {
       // Handle if target is still in hospital
-      var now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+      final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
 
       if (target.status!.until! > now) {
-        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status!.until! * 1000);
-        if (_lifeTicker == null) {
-          _lifeTicker = Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
-        }
+        final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status!.until! * 1000);
+        _lifeTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         _refreshLifeClock(endTimeStamp);
         lifeText = _currentLifeString;
         lifeBarColor = Colors.red[300];
-        hospitalWarning = Icon(
+        hospitalWarning = const Icon(
           Icons.local_hospital,
           size: 20,
           color: Colors.red,
@@ -571,7 +562,7 @@ class _TargetCardState extends State<TargetCard> {
       } else {
         _lifeTicker?.cancel();
         lifeText = "OUT";
-        hospitalWarning = Icon(
+        hospitalWarning = const Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,
@@ -601,18 +592,18 @@ class _TargetCardState extends State<TargetCard> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Text(
+        const Text(
           'Life ',
         ),
         LinearPercentIndicator(
-          padding: EdgeInsets.all(0),
-          barRadius: Radius.circular(10),
+          padding: const EdgeInsets.all(0),
+          barRadius: const Radius.circular(10),
           width: 100,
           lineHeight: 16,
           progressColor: lifeBarColor,
           center: Text(
             lifeText,
-            style: TextStyle(color: Colors.black, fontSize: 12),
+            style: const TextStyle(color: Colors.black, fontSize: 12),
           ),
           percent: lifePercentage,
         ),
@@ -622,10 +613,10 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(state: _target!.status!.state, description: _target!.status!.description);
+    final country = countryCheck(state: _target!.status!.state, description: _target!.status!.description);
 
     if (_target!.status!.color == "blue" || (country != "Torn" && _target!.status!.color == "red")) {
-      var destination = _target!.status!.color == "blue" ? _target!.status!.description! : country;
+      final destination = _target!.status!.color == "blue" ? _target!.status!.description! : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -658,13 +649,13 @@ class _TargetCardState extends State<TargetCard> {
           onTap: () {
             BotToast.showText(
               text: _target!.status!.description!,
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
               contentColor: Colors.blue,
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 5),
+              contentPadding: const EdgeInsets.all(10),
             );
           },
           child: Row(
@@ -698,7 +689,7 @@ class _TargetCardState extends State<TargetCard> {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -714,7 +705,7 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _returnLastUpdated() {
-    var timeDifference = DateTime.now().difference(_target!.lastUpdated!);
+    final timeDifference = DateTime.now().difference(_target!.lastUpdated!);
     _lastUpdatedMinutes = timeDifference.inMinutes;
     if (timeDifference.inMinutes < 1) {
       _lastUpdatedString = 'now';
@@ -764,11 +755,11 @@ class _TargetCardState extends State<TargetCard> {
               ),
             ),
           );
-        });
+        },);
   }
 
-  void _updateThisTarget() async {
-    bool updateWorked = await _targetsProvider.updateTarget(
+  Future<void> _updateThisTarget() async {
+    final bool updateWorked = await _targetsProvider.updateTarget(
       targetToUpdate: _target!,
       attacks: await _targetsProvider.getAttacks(),
     );
@@ -776,13 +767,13 @@ class _TargetCardState extends State<TargetCard> {
     } else {
       BotToast.showText(
         text: "Error updating ${_target!.name}!",
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.red,
-        duration: Duration(seconds: 3),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 3),
+        contentPadding: const EdgeInsets.all(10),
       );
     }
   }
@@ -795,9 +786,9 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   _refreshLifeClock(DateTime timeEnd) {
-    var diff = timeEnd.difference(DateTime.now());
+    final diff = timeEnd.difference(DateTime.now());
     if (diff.inSeconds > 0) {
-      Duration timeOut = Duration(seconds: diff.inSeconds);
+      final Duration timeOut = Duration(seconds: diff.inSeconds);
 
       String timeOutMin = timeOut.inMinutes.remainder(60).toString();
       if (timeOut.inMinutes.remainder(60) < 10) {
@@ -851,13 +842,13 @@ class _TargetCardState extends State<TargetCard> {
     }
   }
 
-  void _startAttack() async {
-    var browserType = _settingsProvider.currentBrowser;
+  Future<void> _startAttack() async {
+    final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
         // For app browser, we are going to pass a list of attacks
         // so that we can move to the next one
-        var myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
+        final myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
         // First, find out where we are in the list
         for (var i = 0; i < myTargetList.length; i++) {
           if (_target!.playerId == myTargetList[i].playerId) {
@@ -869,22 +860,21 @@ class _TargetCardState extends State<TargetCard> {
         List<String?> attacksNames = <String?>[];
         List<String?> attackNotes = <String?>[];
         List<String?> attacksNotesColor = <String?>[];
-        for (var tar in myTargetList) {
+        for (final tar in myTargetList) {
           attacksIds.add(tar.playerId.toString());
           attacksNames.add(tar.name);
           attackNotes.add(tar.personalNote);
           attacksNotesColor.add(tar.personalNoteColor);
         }
 
-        bool showNotes = await Prefs().getShowTargetsNotes();
-        bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
-        bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+        final bool showNotes = await Prefs().getShowTargetsNotes();
+        final bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
+        final bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
 
         _webViewProvider.openBrowserPreference(
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
           browserTapType: BrowserTapType.chain,
-          recallLastSession: false,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..attackIdList = attacksIds
@@ -896,14 +886,12 @@ class _TargetCardState extends State<TargetCard> {
             ..showOnlineFactionWarning = showOnlineFactionWarning,
         );
 
-        break;
       case BrowserSetting.external:
-        var url = 'https://www.torn.com/loader.php?sid='
+        final url = 'https://www.torn.com/loader.php?sid='
             'attack&user2ID=${_target!.playerId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
-        break;
     }
   }
 }

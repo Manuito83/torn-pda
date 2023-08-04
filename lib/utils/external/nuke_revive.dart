@@ -19,17 +19,17 @@ class NukeRevive {
   });
 
   Future<String> callMedic() async {
-    var modelOut = NukeReviveModel()
+    final modelOut = NukeReviveModel()
       ..uid = playerId
       ..player = "$playerName [$playerId]"
       ..faction = playerFaction
       ..country = playerLocation
       ..appInfo = "Torn PDA v$appVersion";
 
-    var bodyOut = nukeReviveModelToJson(modelOut);
+    final bodyOut = nukeReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         Uri.parse('https://www.nukefamily.org/dev/reviveme.php'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',

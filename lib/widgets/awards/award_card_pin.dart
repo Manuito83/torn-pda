@@ -1,19 +1,17 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-
 // Project imports:
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class AwardCardPin extends StatefulWidget {
-  AwardCardPin({required this.award, required this.pinConditionChange});
+  const AwardCardPin({required this.award, required this.pinConditionChange});
 
   final Award award;
   final Function pinConditionChange;
@@ -29,7 +27,7 @@ class _AwardCardPinState extends State<AwardCardPin> {
 
   @override
   Widget build(BuildContext context) {
-    _pinProvider = Provider.of<AwardsProvider>(context, listen: true);
+    _pinProvider = Provider.of<AwardsProvider>(context);
 
     return Card(
       child: Padding(
@@ -42,21 +40,21 @@ class _AwardCardPinState extends State<AwardCardPin> {
                 Row(
                   children: [
                     Text(widget.award.name!),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () {
                         BotToast.showText(
                           text: widget.award.description!,
-                          textStyle: TextStyle(
+                          textStyle: const TextStyle(
                             fontSize: 13,
                             color: Colors.white,
                           ),
                           contentColor: Colors.grey[700]!,
-                          duration: Duration(seconds: 6),
-                          contentPadding: EdgeInsets.all(10),
+                          duration: const Duration(seconds: 6),
+                          contentPadding: const EdgeInsets.all(10),
                         );
                       },
-                      child: Icon(
+                      child: const Icon(
                         Icons.info_outline,
                         size: 19,
                       ),
@@ -70,7 +68,7 @@ class _AwardCardPinState extends State<AwardCardPin> {
                             _pinActive = false;
                           });
 
-                          var result = await _pinProvider.removePinned(
+                          final result = await _pinProvider.removePinned(
                             widget.award,
                           );
 
@@ -94,23 +92,23 @@ class _AwardCardPinState extends State<AwardCardPin> {
 
                           BotToast.showText(
                             text: resultString,
-                            textStyle: TextStyle(
+                            textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                             ),
                             contentColor: resultColor!,
-                            duration: Duration(seconds: 6),
-                            contentPadding: EdgeInsets.all(10),
+                            duration: const Duration(seconds: 6),
+                            contentPadding: const EdgeInsets.all(10),
                           );
                         }
                       : null,
                   child: _pinActive
-                      ? Icon(
+                      ? const Icon(
                           MdiIcons.pin,
                           color: Colors.green,
                           size: 20,
                         )
-                      : SizedBox(
+                      : const SizedBox(
                           width: 15,
                           height: 15,
                           child: CircularProgressIndicator(),
@@ -126,29 +124,29 @@ class _AwardCardPinState extends State<AwardCardPin> {
   }
 
   Widget pinDetails() {
-    var achievedPercentage = (widget.award.achieve! * 100).truncate();
-    final decimalFormat = new NumberFormat("#,##0", "en_US");
+    final achievedPercentage = (widget.award.achieve! * 100).truncate();
+    final decimalFormat = NumberFormat("#,##0", "en_US");
 
-    Widget commentIconRow = SizedBox.shrink();
+    Widget commentIconRow = const SizedBox.shrink();
     if (widget.award.comment != null && widget.award.comment!.trim() != "") {
       widget.award.comment = HtmlParser.fix(widget.award.comment!.replaceAll("<br>", "\n").replaceAll("  ", ""));
       commentIconRow = Row(
         children: [
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           GestureDetector(
             onTap: () {
               BotToast.showText(
                 text: widget.award.comment!,
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 13,
                   color: Colors.white,
                 ),
                 contentColor: Colors.grey[700]!,
-                duration: Duration(seconds: 6),
-                contentPadding: EdgeInsets.all(10),
+                duration: const Duration(seconds: 6),
+                contentPadding: const EdgeInsets.all(10),
               );
             },
-            child: Icon(
+            child: const Icon(
               Icons.info_outline,
               size: 19,
             ),
@@ -164,41 +162,41 @@ class _AwardCardPinState extends State<AwardCardPin> {
           children: [
             Text(
               "$achievedPercentage%",
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
               ),
             ),
             Text(
               ' - ${decimalFormat.format(widget.award.current!.ceil())}'
               '/${decimalFormat.format(widget.award.goal!.ceil())}',
-              style: TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 12),
             ),
             if (widget.award.daysLeft != -99)
               widget.award.daysLeft! > 0 && widget.award.daysLeft! < double.maxFinite
                   ? Text(
                       " - ${decimalFormat.format(widget.award.daysLeft!.round())} "
                       "days",
-                      style: TextStyle(fontSize: 12),
+                      style: const TextStyle(fontSize: 12),
                     )
                   : widget.award.daysLeft == double.maxFinite
-                      ? Row(
+                      ? const Row(
                           children: [
                             Text(' - '),
                             Icon(Icons.all_inclusive, size: 19),
                           ],
                         )
                       : Text(
-                          " - ${(DateFormat('yyyy-MM-dd').format(
+                          " - ${DateFormat('yyyy-MM-dd').format(
                             DateTime.fromMillisecondsSinceEpoch(widget.award.dateAwarded!.round() * 1000),
-                          ))}",
-                          style: TextStyle(
+                          )}",
+                          style: const TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
                             color: Colors.grey,
                           ),
                         )
             else
-              SizedBox.shrink(),
+              const SizedBox.shrink(),
             commentIconRow,
           ],
         ),

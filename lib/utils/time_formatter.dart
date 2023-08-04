@@ -19,22 +19,18 @@ class TimeFormatter {
       case TimeZoneSetting.localTime:
         timeZonedTime = inputTime!.toLocal();
         zoneId = 'LT';
-        break;
       case TimeZoneSetting.tornTime:
         timeZonedTime = inputTime!.toUtc();
         zoneId = 'TCT';
-        break;
     }
 
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
-        var formatter = DateFormat('HH:mm');
+        final formatter = DateFormat('HH:mm');
         _hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
-        break;
       case TimeFormatSetting.h12:
-        var formatter = DateFormat('hh:mm a');
+        final formatter = DateFormat('hh:mm a');
         _hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
-        break;
     }
 
     return _hourFormatted;
@@ -46,13 +42,11 @@ class TimeFormatter {
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
         timeZonedTime = inputTime!.toLocal();
-        break;
       case TimeZoneSetting.tornTime:
         timeZonedTime = inputTime!.toUtc();
-        break;
     }
 
-    var formatter = DateFormat('EEEE');
+    final formatter = DateFormat('EEEE');
     _dayWeekFormatted = 'on ${formatter.format(timeZonedTime)}';
 
     return _dayWeekFormatted;
@@ -64,14 +58,12 @@ class TimeFormatter {
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
         timeZonedTime = inputTime!.toLocal();
-        break;
       case TimeZoneSetting.tornTime:
         timeZonedTime = inputTime!.toUtc();
-        break;
     }
 
-    var formatter = DateFormat('MMM dd');
-    _monthDayFormatted = '${formatter.format(timeZonedTime)}';
+    final formatter = DateFormat('MMM dd');
+    _monthDayFormatted = formatter.format(timeZonedTime);
 
     return _monthDayFormatted;
   }

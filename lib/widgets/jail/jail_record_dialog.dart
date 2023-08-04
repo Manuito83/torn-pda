@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class JailRecordDialog extends StatelessWidget {
   const JailRecordDialog({
     required this.recordCallback,
     required this.currentRecord,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   final Function recordCallback;
   final int? currentRecord;
@@ -33,22 +33,21 @@ class JailRecordDialog extends StatelessWidget {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
                   color: themeProvider.secondBackground,
-                  shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
@@ -58,7 +57,6 @@ class JailRecordDialog extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Flexible(
                             child: Text(
@@ -75,11 +73,10 @@ class JailRecordDialog extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min, // To make the card compact
                         children: <Widget>[
                           TextFormField(
-                            style: TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14),
                             controller: textController,
                             maxLength: 6,
                             minLines: 1,
-                            maxLines: 1,
                             keyboardType: const TextInputType.numberWithOptions(),
                             decoration: const InputDecoration(
                               isDense: true,
@@ -109,12 +106,12 @@ class JailRecordDialog extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Set"),
+                          child: const Text("Set"),
                           onPressed: () {
                             if (formKey.currentState!.validate()) {
                               Navigator.of(context).pop();
@@ -124,7 +121,7 @@ class JailRecordDialog extends StatelessWidget {
                           },
                         ),
                         TextButton(
-                          child: Text("Cancel"),
+                          child: const Text("Cancel"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -144,7 +141,7 @@ class JailRecordDialog extends StatelessWidget {
                 child: CircleAvatar(
                   backgroundColor: themeProvider.secondBackground,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 34,
                     width: 34,
                     child: Icon(MdiIcons.alarmPanelOutline),

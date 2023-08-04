@@ -15,13 +15,13 @@ class _FirebaseFunctions {
     String drinks = "unk",
     String exactStats = "",
   }) async {
-    HttpsCallable callable = FirebaseFunctions.instanceFor(
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
       region: 'us-east4',
     ).httpsCallable(
       'factionAssist-sendAssistMessage',
     );
 
-    HttpsCallableResult results = await callable.call(<String, dynamic>{
+    final HttpsCallableResult results = await callable.call(<String, dynamic>{
       'attackId': attackId,
       'attackName': attackName,
       'attackLevel': attackLevel,

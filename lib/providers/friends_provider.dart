@@ -46,7 +46,7 @@ class FriendsProvider extends ChangeNotifier {
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
   Future<AddFriendResult> addFriend(String friendId, {String? notes = '', String? notesColor = ''}) async {
-    for (var fri in _friends) {
+    for (final fri in _friends) {
       if (fri.playerId.toString() == friendId) {
         return AddFriendResult(
           success: false,
@@ -55,7 +55,7 @@ class FriendsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewFriendModel = await Get.find<ApiCallerController>().getFriends(playerId: friendId);
+    final dynamic myNewFriendModel = await Get.find<ApiCallerController>().getFriends(playerId: friendId);
 
     if (myNewFriendModel is FriendModel) {
       _getFriendFaction(myNewFriendModel);
@@ -72,7 +72,7 @@ class FriendsProvider extends ChangeNotifier {
       );
     } else {
       // myNewFriendModel is ApiError
-      var myError = myNewFriendModel as ApiError;
+      final myError = myNewFriendModel as ApiError;
       notifyListeners();
       return AddFriendResult(
         success: false,
@@ -99,12 +99,12 @@ class FriendsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedFriendModel =
+      final dynamic myUpdatedFriendModel =
           await Get.find<ApiCallerController>().getFriends(playerId: oldFriend.playerId.toString());
       if (myUpdatedFriendModel is FriendModel) {
         _getFriendFaction(myUpdatedFriendModel);
         _friends[_friends.indexOf(oldFriend)] = myUpdatedFriendModel;
-        var newFriend = _friends[_friends.indexOf(myUpdatedFriendModel)];
+        final newFriend = _friends[_friends.indexOf(myUpdatedFriendModel)];
         _updateResultAnimation(newFriend, true);
         newFriend.personalNote = oldFriend.personalNote;
         newFriend.personalNoteColor = oldFriend.personalNoteColor;
@@ -129,19 +129,19 @@ class FriendsProvider extends ChangeNotifier {
     int numberOfErrors = 0;
     int numberSuccessful = 0;
     // Activate every single update icon
-    for (var fri in _friends) {
+    for (final fri in _friends) {
       fri.isUpdating = true;
     }
     notifyListeners();
     // Then start the real update
     for (var i = 0; i < _friends.length; i++) {
       try {
-        dynamic myUpdatedFriendModel =
+        final dynamic myUpdatedFriendModel =
             await Get.find<ApiCallerController>().getFriends(playerId: _friends[i].playerId.toString());
         if (myUpdatedFriendModel is FriendModel) {
           _getFriendFaction(myUpdatedFriendModel);
-          var notes = _friends[i].personalNote;
-          var notesColor = _friends[i].personalNoteColor;
+          final notes = _friends[i].personalNote;
+          final notesColor = _friends[i].personalNoteColor;
           _friends[i] = myUpdatedFriendModel;
           _updateResultAnimation(_friends[i], true);
           _friends[i].personalNote = notes;
@@ -194,9 +194,9 @@ class FriendsProvider extends ChangeNotifier {
   }
 
   String exportFriends() {
-    var output = <FriendBackup>[];
-    for (var fri in _friends) {
-      var export = FriendBackup();
+    final output = <FriendBackup>[];
+    for (final fri in _friends) {
+      final export = FriendBackup();
       export.id = fri.playerId;
       export.notes = fri.personalNote;
       export.notesColor = fri.personalNoteColor;
@@ -207,7 +207,7 @@ class FriendsProvider extends ChangeNotifier {
 
   void _saveFriendsSharedPrefs() {
     List<String> newPrefs = <String>[];
-    for (var fri in _friends) {
+    for (final fri in _friends) {
       newPrefs.add(friendModelToJson(fri));
     }
     Prefs().setFriendsList(newPrefs);
@@ -244,22 +244,16 @@ class FriendsProvider extends ChangeNotifier {
     switch (sortType) {
       case FriendSortType.levelDes:
         _friends.sort((a, b) => b.level!.compareTo(a.level!));
-        break;
       case FriendSortType.levelAsc:
         _friends.sort((a, b) => a.level!.compareTo(b.level!));
-        break;
       case FriendSortType.factionDes:
         _friends.sort((a, b) => b.faction!.factionName!.compareTo(a.faction!.factionName!));
-        break;
       case FriendSortType.factionAsc:
         _friends.sort((a, b) => a.faction!.factionName!.compareTo(b.faction!.factionName!));
-        break;
       case FriendSortType.nameDes:
         _friends.sort((a, b) => b.name!.toLowerCase().compareTo(a.name!.toLowerCase()));
-        break;
       case FriendSortType.nameAsc:
         _friends.sort((a, b) => a.name!.toLowerCase().compareTo(b.name!.toLowerCase()));
-        break;
     }
     _saveSortSharedPrefs();
     _saveFriendsSharedPrefs();
@@ -271,22 +265,16 @@ class FriendsProvider extends ChangeNotifier {
     switch (_currentSort!) {
       case FriendSortType.levelDes:
         sortToSave = 'levelDes';
-        break;
       case FriendSortType.levelAsc:
         sortToSave = 'levelAsc';
-        break;
       case FriendSortType.nameDes:
         sortToSave = 'nameDes';
-        break;
       case FriendSortType.nameAsc:
         sortToSave = 'nameDes';
-        break;
       case FriendSortType.factionDes:
         sortToSave = 'factionDes';
-        break;
       case FriendSortType.factionAsc:
         sortToSave = 'factionAsc';
-        break;
     }
     Prefs().setFriendsSort(sortToSave);
   }
@@ -295,8 +283,8 @@ class FriendsProvider extends ChangeNotifier {
     // Friends list
     bool needToSave = false;
     List<String> jsonFriends = await Prefs().getFriendsList();
-    for (var jFri in jsonFriends) {
-      var thisFriend = friendModelFromJson(jFri);
+    for (final jFri in jsonFriends) {
+      final thisFriend = friendModelFromJson(jFri);
 
       // In v1.8.5 we change from blue to orange and we need to do the conversion
       // here. This can be later removed safely at some point.
@@ -313,29 +301,22 @@ class FriendsProvider extends ChangeNotifier {
     }
 
     // Friends sort
-    String friendsSort = await Prefs().getFriendsSort();
+    final String friendsSort = await Prefs().getFriendsSort();
     switch (friendsSort) {
       case '':
         _currentSort = FriendSortType.levelDes;
-        break;
       case 'levelDes':
         _currentSort = FriendSortType.levelDes;
-        break;
       case 'levelAsc':
         _currentSort = FriendSortType.levelAsc;
-        break;
       case 'respectDes':
         _currentSort = FriendSortType.factionDes;
-        break;
       case 'respectAsc':
         _currentSort = FriendSortType.factionAsc;
-        break;
       case 'nameDes':
         _currentSort = FriendSortType.nameDes;
-        break;
       case 'nameAsc':
         _currentSort = FriendSortType.nameAsc;
-        break;
     }
 
     _initialized = true;

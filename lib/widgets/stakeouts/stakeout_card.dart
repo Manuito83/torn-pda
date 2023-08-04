@@ -8,29 +8,27 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
-
 // Package imports:
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
+// Project imports:
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// Project imports:
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-
 class StakeoutCard extends StatefulWidget {
   final Stakeout stakeout;
 
   // Key is needed to update at least the hospital counter individually
-  StakeoutCard({
+  const StakeoutCard({
     required this.stakeout,
     required Key key,
   }) : super(key: key);
@@ -47,7 +45,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
   Stakeout? _stakeout;
   final StakeoutsController _s = Get.put(StakeoutsController());
 
-  var _expandableController = ExpandableController();
+  final _expandableController = ExpandableController();
 
   final _lifePercentageTextController = TextEditingController();
   final _lifePercentageFormController = GlobalKey<FormState>();
@@ -79,11 +77,10 @@ class _StakeoutCardState extends State<StakeoutCard> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Slidable(
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
-        extentRatio: 0.5,
         children: [
           SlidableAction(
             label: 'Delete',
@@ -124,7 +121,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
       children: <Widget>[
         // LINE 1
         Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
           child: Row(
             children: <Widget>[
               Row(
@@ -133,8 +130,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
                   GestureDetector(
                     child: Row(
                       children: [
-                        Icon(MdiIcons.cctv),
-                        Padding(
+                        const Icon(MdiIcons.cctv),
+                        const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
                         SizedBox(
@@ -142,7 +139,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           child: Text(
                             '${_stakeout!.name}',
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -159,7 +156,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
               Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
                   children: <Widget>[
                     // If last fetch was more than 10 minutes ago, we don't should Status details
@@ -186,7 +183,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                         ],
                       )
                     else
-                      Text("no recent update", style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                      const Text("no recent update", style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
                   ],
                 ),
               )
@@ -195,7 +192,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
         ),
         // LINE 2
         Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
           child: Row(
             children: <Widget>[
               Flexible(
@@ -210,8 +207,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.okayEnabled)
                       GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 5),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.checkBold,
                             color: Colors.green,
@@ -223,8 +220,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.hospitalEnabled)
                       GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 8),
                           child: Icon(
                             FontAwesome.ambulance,
                             color: Colors.red,
@@ -237,8 +234,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.revivableEnabled)
                       GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 8),
                           child: Icon(
                             Icons.monitor_heart_outlined,
                             color: Colors.green,
@@ -250,8 +247,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.landedEnabled)
                       GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 5),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.airplaneLanding,
                             color: Colors.blue,
@@ -263,8 +260,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.onlineEnabled)
                       GestureDetector(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 5),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.circle,
                             color: Colors.green,
@@ -280,7 +277,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                           padding: const EdgeInsets.only(right: 5),
                           child: Transform.rotate(
                             angle: 90 * math.pi / 180,
-                            child: Icon(MdiIcons.glassStange, color: Colors.red),
+                            child: const Icon(MdiIcons.glassStange, color: Colors.red),
                           ),
                         ),
                         onTap: () {
@@ -305,7 +302,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
         ),
         // LINE 3
         Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -316,9 +313,9 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       width: 30,
                       height: 20,
                       child: IconButton(
-                        padding: EdgeInsets.all(0),
+                        padding: const EdgeInsets.all(0),
                         iconSize: 20,
-                        icon: Icon(
+                        icon: const Icon(
                           MdiIcons.notebookEditOutline,
                           size: 18,
                         ),
@@ -327,14 +324,14 @@ class _StakeoutCardState extends State<StakeoutCard> {
                         },
                       ),
                     ),
-                    SizedBox(width: 5),
-                    Text(
+                    const SizedBox(width: 5),
+                    const Text(
                       'Notes: ',
                       style: TextStyle(fontSize: 12),
                     ),
                     Flexible(
                       child: Text(
-                        '${_stakeout!.personalNote}',
+                        _stakeout!.personalNote,
                         style: TextStyle(fontSize: 12, color: _returnTargetNoteColor()),
                       ),
                     ),
@@ -344,7 +341,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
             ],
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
       ],
     );
   }
@@ -358,7 +355,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -385,7 +382,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -413,7 +410,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -440,7 +437,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -467,7 +464,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -500,11 +497,11 @@ class _StakeoutCardState extends State<StakeoutCard> {
                     width: 25,
                     child: Transform.rotate(
                       angle: 90 * math.pi / 180,
-                      child: Icon(MdiIcons.glassStange, color: Colors.red),
+                      child: const Icon(MdiIcons.glassStange, color: Colors.red),
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Text("Life below %"),
+                  const SizedBox(width: 8),
+                  const Text("Life below %"),
                 ],
               ),
               Switch(
@@ -523,7 +520,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Percentage"),
+                  const Text("Percentage"),
                   GestureDetector(
                     child: Container(
                       decoration: BoxDecoration(border: Border.all()),
@@ -552,8 +549,8 @@ class _StakeoutCardState extends State<StakeoutCard> {
                       color: Colors.orange[800],
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Text("Offline time"),
+                  const SizedBox(width: 8),
+                  const Text("Offline time"),
                 ],
               ),
               Switch(
@@ -572,7 +569,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Hours"),
+                  const Text("Hours"),
                   GestureDetector(
                     child: Container(
                       decoration: BoxDecoration(border: Border.all()),
@@ -588,7 +585,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                 ],
               ),
             ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -629,9 +626,9 @@ class _StakeoutCardState extends State<StakeoutCard> {
     }
   }
 
-  void _openBrowser({required bool shortTap}) async {
-    var browserType = _settingsProvider.currentBrowser;
-    String url = 'https://www.torn.com/profiles.php?XID=${_stakeout!.id}';
+  Future<void> _openBrowser({required bool shortTap}) async {
+    final browserType = _settingsProvider.currentBrowser;
+    final String url = 'https://www.torn.com/profiles.php?XID=${_stakeout!.id}';
     switch (browserType) {
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
@@ -639,12 +636,10 @@ class _StakeoutCardState extends State<StakeoutCard> {
           browserTapType: shortTap ? BrowserTapType.short : BrowserTapType.long,
           url: url,
         );
-        break;
       case BrowserSetting.external:
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
-        break;
     }
   }
 
@@ -656,16 +651,15 @@ class _StakeoutCardState extends State<StakeoutCard> {
         color: Colors.white,
       ),
       contentColor: Colors.blue,
-      duration: const Duration(seconds: 2),
       contentPadding: const EdgeInsets.all(10),
     );
   }
 
   Widget _travelIcon() {
-    var country = countryCheck(state: _stakeout!.status!.state, description: _stakeout!.status!.description);
+    final country = countryCheck(state: _stakeout!.status!.state, description: _stakeout!.status!.description);
 
     if (_stakeout!.status!.color == "blue" || (country != "Torn" && _stakeout!.status!.color == "red")) {
-      var destination = _stakeout!.status!.color == "blue" ? _stakeout!.status!.description! : country;
+      final destination = _stakeout!.status!.color == "blue" ? _stakeout!.status!.description! : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
@@ -698,13 +692,13 @@ class _StakeoutCardState extends State<StakeoutCard> {
           onTap: () {
             BotToast.showText(
               text: _stakeout!.status!.description!,
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
               contentColor: Colors.blue,
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 5),
+              contentPadding: const EdgeInsets.all(10),
             );
           },
           child: Row(
@@ -738,7 +732,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -756,7 +750,6 @@ class _StakeoutCardState extends State<StakeoutCard> {
   Future<void> _showLifePercentageDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -792,20 +785,19 @@ class _StakeoutCardState extends State<StakeoutCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("Life"),
+                            const Text("Life"),
                             Form(
                               key: _lifePercentageFormController,
                               child: SizedBox(
                                 width: 100,
                                 child: TextFormField(
-                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                                   controller: _lifePercentageTextController,
                                   maxLength: 3,
                                   minLines: 1,
-                                  maxLines: 1,
-                                  keyboardType: TextInputType.numberWithOptions(decimal: false),
+                                  keyboardType: const TextInputType.numberWithOptions(),
                                   textAlign: TextAlign.center,
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     counterText: "",
                                     suffixText: "%",
                                     isDense: true,
@@ -823,7 +815,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     if (n == null) {
                                       return 'Not a number!';
                                     }
-                                    int number = n as int;
+                                    final int number = n as int;
                                     if (number > 100) {
                                       return 'Max 100%!';
                                     } else if (number < 1) {
@@ -855,7 +847,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         TextButton(
                           child: const Text("Close"),
                           onPressed: () {
@@ -880,7 +872,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                         width: 28,
                         child: Transform.rotate(
                           angle: 90 * math.pi / 180,
-                          child: Icon(MdiIcons.glassStange, color: Colors.red),
+                          child: const Icon(MdiIcons.glassStange, color: Colors.red),
                         ),
                       ),
                     ),
@@ -897,7 +889,6 @@ class _StakeoutCardState extends State<StakeoutCard> {
   Future<void> _showOfflineTimeLimitDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -933,20 +924,19 @@ class _StakeoutCardState extends State<StakeoutCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("Time"),
+                            const Text("Time"),
                             Form(
                               key: _offlineHoursFormController,
                               child: SizedBox(
                                 width: 100,
                                 child: TextFormField(
-                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                                   controller: _offlineHoursTextController,
                                   maxLength: 4,
                                   minLines: 1,
-                                  maxLines: 1,
-                                  keyboardType: TextInputType.numberWithOptions(decimal: false),
+                                  keyboardType: const TextInputType.numberWithOptions(),
                                   textAlign: TextAlign.center,
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     counterText: "",
                                     suffixText: "h",
                                     isDense: true,
@@ -964,7 +954,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                                     if (n == null) {
                                       return 'Not a number!';
                                     }
-                                    int number = n as int;
+                                    final int number = n as int;
                                     if (number > 1500) {
                                       return 'Max 2 months!';
                                     } else if (number < 1) {
@@ -996,7 +986,7 @@ class _StakeoutCardState extends State<StakeoutCard> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         TextButton(
                           child: const Text("Close"),
                           onPressed: () {

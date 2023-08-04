@@ -16,7 +16,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class WarAheadOptions extends StatefulWidget {
   final Function? callback;
 
-  WarAheadOptions({
+  const WarAheadOptions({
     this.callback,
   });
 
@@ -49,7 +49,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -72,7 +72,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -80,18 +80,18 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(20.0),
+                              const Padding(
+                                padding: EdgeInsets.all(20.0),
                                 child: Text('Here you can specify your preferred notification '
                                     'trigger time before a ranked war starts'),
                               ),
                               _rowsWithTypes(),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -110,9 +110,9 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("War notification"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("War notification"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -128,10 +128,10 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text('Notification'),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -146,10 +146,10 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                const Flexible(
                   child: Text('Alarm'),
                 ),
-                Padding(
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Flexible(
@@ -164,7 +164,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
                           ),
                         ],
                       ),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           Flexible(
@@ -190,10 +190,10 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Flexible(
+                const Flexible(
                   child: Text('Timer'),
                 ),
-                Padding(
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Flexible(
@@ -209,7 +209,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
   DropdownButton _warNotificationAheadDropDown() {
     return DropdownButton<int>(
       value: _warNotificationAheadValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 60,
           child: SizedBox(
@@ -288,7 +288,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
   DropdownButton _warAlarmAheadDropDown() {
     return DropdownButton<int>(
       value: _warAlarmAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 1,
           child: SizedBox(
@@ -367,7 +367,7 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
   DropdownButton _warTimerAheadDropDown() {
     return DropdownButton<int>(
       value: _warTimerAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 60,
           child: SizedBox(
@@ -444,10 +444,10 @@ class _WarAheadOptionsState extends State<WarAheadOptions> {
   }
 
   Future _restorePreferences() async {
-    var warNotificationAhead = await Prefs().getRankedWarNotificationAhead();
+    final warNotificationAhead = await Prefs().getRankedWarNotificationAhead();
     var warAlarmAhead = await Prefs().getRankedWarAlarmAhead();
     if (warAlarmAhead == 0) warAlarmAhead = 1; // Correction from Shared Prefs
-    var warTimerAhead = await Prefs().getRankedWarTimerAhead();
+    final warTimerAhead = await Prefs().getRankedWarTimerAhead();
 
     setState(() {
       _warNotificationAheadValue = warNotificationAhead;

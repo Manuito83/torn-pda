@@ -1,25 +1,26 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:math';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart' as am;
 import 'package:torn_pda/models/chaining/retal_model.dart';
-import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
+import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart' as other;
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
-import '../models/profile/own_profile_basic.dart';
 
 class RetalsCardDetails {
   int? cardPosition;
@@ -30,7 +31,7 @@ class RetalsCardDetails {
 }
 
 class RetalsController extends GetxController {
-  UserController _u = Get.put(UserController());
+  final UserController _u = Get.put(UserController());
 
   List<Retal> retaliationList = <Retal>[];
   List<RetalsCardDetails> orderedCardsDetails = <RetalsCardDetails>[];
@@ -53,14 +54,10 @@ class RetalsController extends GetxController {
     final retal = Retal(lastAction: LastAction(), status: Status());
 
     dynamic allAttacksSuccess = allAttacks;
-    if (allAttacksSuccess == null) {
-      allAttacksSuccess = await getAllAttacks();
-    }
+    allAttacksSuccess ??= await getAllAttacks();
 
     dynamic ownStatsSuccess = ownStats;
-    if (ownStatsSuccess == null) {
-      ownStatsSuccess = await getOwnStats();
-    }
+    ownStatsSuccess ??= await getOwnStats();
 
     dynamic allSpiesSuccess;
     if (_spiesSource == SpiesSource.yata) {
@@ -69,12 +66,12 @@ class RetalsController extends GetxController {
       allSpiesSuccess = await _getTornStatsSpies(_u.apiKey);
     }
 
-    String retalKey = retalId.toString();
+    final String retalKey = retalId;
     bool error = false;
 
     // Perform update
     try {
-      dynamic updatedTarget = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: retalKey);
+      final dynamic updatedTarget = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: retalKey);
       if (updatedTarget is other.OtherProfileModel) {
         retal.name = updatedTarget.name;
         retal.level = updatedTarget.level;
@@ -126,25 +123,18 @@ class RetalsController extends GetxController {
           switch (retal.statsEstimated) {
             case "< 2k":
               retal.statsSort = 2000;
-              break;
             case "2k - 25k":
               retal.statsSort = 25000;
-              break;
             case "20k - 250k":
               retal.statsSort = 250000;
-              break;
             case "200k - 2.5M":
               retal.statsSort = 2500000;
-              break;
             case "2M - 25M":
               retal.statsSort = 25000000;
-              break;
             case "20M - 250M":
               retal.statsSort = 200000000;
-              break;
             case "> 200M":
               retal.statsSort = 250000000;
-              break;
             default:
               retal.statsSort = 0;
               break;
@@ -230,7 +220,7 @@ class RetalsController extends GetxController {
   }
 
   dynamic getAllAttacks() async {
-    var result = await Get.find<ApiCallerController>().getAttacks();
+    final result = await Get.find<ApiCallerController>().getAttacks();
     if (result is am.AttackModel) {
       return result;
     }
@@ -238,7 +228,7 @@ class RetalsController extends GetxController {
   }
 
   dynamic getOwnStats() async {
-    var result = await Get.find<ApiCallerController>().getOwnPersonalStats();
+    final result = await Get.find<ApiCallerController>().getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -254,7 +244,7 @@ class RetalsController extends GetxController {
     update();
 
     try {
-      String error = await _getApiEvaluateRetals(context);
+      final String error = await _getApiEvaluateRetals(context);
       int seconds = 6;
       if (error.isNotEmpty) {
         String message = "There was an issue fetching targets, there might be a connection error with the API."
@@ -270,29 +260,29 @@ class RetalsController extends GetxController {
         BotToast.showText(
           clickClose: true,
           text: message,
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.orange[900]!,
           duration: Duration(seconds: seconds),
-          contentPadding: EdgeInsets.all(10),
+          contentPadding: const EdgeInsets.all(10),
         );
         return;
       }
 
-      String spiesSource = await Prefs().getSpiesSource();
+      final String spiesSource = await Prefs().getSpiesSource();
       spiesSource == "yata" ? _spiesSource = SpiesSource.yata : _spiesSource = SpiesSource.tornStats;
 
       if (_spiesSource == SpiesSource.yata) {
         List<String> savedYataSpies = await Prefs().getYataSpies();
-        for (String spyJson in savedYataSpies) {
-          YataSpyModel spyModel = yataSpyModelFromJson(spyJson);
+        for (final String spyJson in savedYataSpies) {
+          final YataSpyModel spyModel = yataSpyModelFromJson(spyJson);
           _yataSpies!.add(spyModel);
         }
         _lastYataSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getYataSpiesTime());
       } else {
-        String savedTornStatsSpies = await Prefs().getTornStatsSpies();
+        final String savedTornStatsSpies = await Prefs().getTornStatsSpies();
         if (savedTornStatsSpies.isNotEmpty) {
           _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
           _lastTornStatsSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getTornStatsSpiesTime());
@@ -309,10 +299,10 @@ class RetalsController extends GetxController {
   Future<String> _getApiEvaluateRetals(BuildContext context) async {
     List<Retal> newList = <Retal>[];
 
-    var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+    final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
-      dynamic allAttacksSuccess = await getAllAttacks();
-      dynamic ownStatsSuccess = await getOwnStats();
+      final dynamic allAttacksSuccess = await getAllAttacks();
+      final dynamic ownStatsSuccess = await getOwnStats();
 
       final timeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
@@ -342,7 +332,7 @@ class RetalsController extends GetxController {
       });
 
       // From the existing retaliations, see if the faction already retaliated, and discard!
-      for (Attack incomingAttack in validAttacks) {
+      for (final Attack incomingAttack in validAttacks) {
         bool alreadyRetaliated = false;
         attacksResult.attacks!.forEach((key, outgoingAttack) {
           if (outgoingAttack.defenderName == incomingAttack.attackerName &&
@@ -353,7 +343,7 @@ class RetalsController extends GetxController {
         });
 
         if (!alreadyRetaliated) {
-          dynamic infoResult = await getInfoForNewRetal(
+          final dynamic infoResult = await getInfoForNewRetal(
             incomingAttack.attackerId.toString(),
             allAttacks: allAttacksSuccess,
             ownStats: ownStatsSuccess,
@@ -367,13 +357,13 @@ class RetalsController extends GetxController {
       }
 
       // Remove duplicates (just keep the last attack for each attacker)
-      final ids = Set();
+      final ids = <dynamic>{};
       newList.retainWhere((x) => ids.add(x.name));
 
       retaliationList = List<Retal>.from(newList);
       return "";
     } else if (attacksResult is ApiError) {
-      return (attacksResult.errorReason);
+      return attacksResult.errorReason;
     }
     return "error";
   }
@@ -381,8 +371,8 @@ class RetalsController extends GetxController {
   void saveSpies() {
     if (_spiesSource == SpiesSource.yata) {
       List<String> yataSpiesSave = <String>[];
-      for (YataSpyModel spy in _yataSpies!) {
-        String spyJson = yataSpyModelToJson(spy);
+      for (final YataSpyModel spy in _yataSpies!) {
+        final String spyJson = yataSpyModelToJson(spy);
         yataSpiesSave.add(spyJson);
       }
       Prefs().setYataSpies(yataSpiesSave);
@@ -401,15 +391,15 @@ class RetalsController extends GetxController {
 
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
-      String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
-      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
+      final String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
+      final resp = await http.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 15));
       if (resp.statusCode == 200) {
-        dynamic spiesJson = json.decode(resp.body);
+        final dynamic spiesJson = json.decode(resp.body);
         if (spiesJson != null) {
           Map<String, dynamic> mainMap = spiesJson as Map<String, dynamic>;
           Map<String, dynamic> spyList = mainMap.entries.first.value;
           spyList.forEach((key, value) {
-            YataSpyModel spyModel = yataSpyModelFromJson(json.encode(value));
+            final YataSpyModel spyModel = yataSpyModelFromJson(json.encode(value));
             spies.add(spyModel);
           });
         }
@@ -431,10 +421,10 @@ class RetalsController extends GetxController {
     }
 
     try {
-      String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/faction/spies';
-      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 10));
+      final String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/faction/spies';
+      final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 10));
       if (resp.statusCode == 200) {
-        TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
+        final TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
         if (!spyJson.message!.contains("Error")) {
           _lastTornStatsSpiesDownload = DateTime.now();
           _tornStatsSpies = spyJson;
@@ -452,7 +442,7 @@ class RetalsController extends GetxController {
   void _assignSpiedStats(dynamic spies, Retal retal) {
     if (spies != null) {
       if (_spiesSource == SpiesSource.yata) {
-        for (YataSpyModel spy in spies) {
+        for (final YataSpyModel spy in spies) {
           if (spy.targetName == retal.name) {
             retal.spiesSource = "yata";
             retal.statsExactTotal = retal.statsSort = spy.total;
@@ -471,7 +461,7 @@ class RetalsController extends GetxController {
           }
         }
       } else {
-        for (SpyElement spy in spies.spies) {
+        for (final SpyElement spy in spies.spies) {
           if (spy.playerName == retal.name) {
             retal.spiesSource = "tornstats";
             retal.statsExactTotal = retal.statsSort = spy.total;

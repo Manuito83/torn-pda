@@ -1,14 +1,12 @@
 // Flutter imports:
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-
-// Package imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -25,10 +23,10 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
   late ShortcutsProvider _shortcutsProvider;
   late ThemeProvider _themeProvider;
 
-  final _customNameController = new TextEditingController();
-  final _customURLController = new TextEditingController();
-  var _customNameKey = GlobalKey<FormState>();
-  var _customURLKey = GlobalKey<FormState>();
+  final _customNameController = TextEditingController();
+  final _customURLController = TextEditingController();
+  final _customNameKey = GlobalKey<FormState>();
+  final _customURLKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -44,8 +42,8 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: true);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _shortcutsProvider = Provider.of<ShortcutsProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -68,10 +66,10 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  SizedBox(height: 20),
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                  const SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
@@ -83,14 +81,14 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 10),
+                                  padding: EdgeInsets.only(left: 10),
                                   child: Text(
                                     'SWIPE RIGHT TO REMOVE, LEFT TO EDIT',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 10),
+                                  padding: EdgeInsets.only(left: 10),
                                   child: Text(
                                     'LONG-PRESS TO SORT',
                                     style: TextStyle(fontSize: 10),
@@ -103,8 +101,8 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 10),
-                  if (_shortcutsProvider.activeShortcuts.length == 0)
+                  const SizedBox(height: 10),
+                  if (_shortcutsProvider.activeShortcuts.isEmpty)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
                       child: Text(
@@ -118,15 +116,15 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     )
                   else
                     _activeCardsList(),
-                  SizedBox(height: 40),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                  const SizedBox(height: 40),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
                     child: Text("ALL SHORTCUTS"),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _customCard(),
                   _allCardsList(),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -141,8 +139,8 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 25),
       child: Consumer<ShortcutsProvider>(
         builder: (context, shortcutProvider, child) {
-          var activeShortcuts = <Widget>[];
-          for (var short in shortcutProvider.activeShortcuts) {
+          final activeShortcuts = <Widget>[];
+          for (final short in shortcutProvider.activeShortcuts) {
             activeShortcuts.add(
               Scrollable(
                 key: UniqueKey(),
@@ -175,7 +173,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                       ),
                     ],
                   ),
-                  child: Container(
+                  child: SizedBox(
                     height: 50,
                     child: Card(
                       shape: RoundedRectangleBorder(
@@ -183,11 +181,11 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                         borderRadius: BorderRadius.circular(4.0),
                       ),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                         child: Row(
                           children: [
                             Padding(
-                              padding: EdgeInsets.all(2),
+                              padding: const EdgeInsets.all(2),
                               child: Image.asset(
                                 short.iconUrl!,
                                 width: 18,
@@ -195,14 +193,13 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 color: _themeProvider.mainText,
                               ),
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                mainAxisSize: MainAxisSize.max,
                                 children: [
                                   Flexible(child: Text(short.name!)),
-                                  Icon(Icons.reorder),
+                                  const Icon(Icons.reorder),
                                 ],
                               ),
                             ),
@@ -219,7 +216,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
           return Container(
             child: ReorderableListView(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               onReorder: (int oldIndex, int newIndex) {
                 if (oldIndex < newIndex) {
                   // removing the item at oldIndex will shorten the list by 1
@@ -242,7 +239,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
   Padding _customCard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Container(
+      child: SizedBox(
         height: 50,
         child: Card(
           shape: RoundedRectangleBorder(
@@ -250,11 +247,11 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
             borderRadius: BorderRadius.circular(4.0),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Row(
               children: [
                 Padding(
-                  padding: EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(2),
                   child: Image.asset(
                     "images/icons/pda_icon.png",
                     width: 18,
@@ -262,12 +259,12 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     color: _themeProvider.mainText,
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(child: Text('Custom shortcut')),
+                      const Flexible(child: Text('Custom shortcut')),
                       TextButton(
                         onPressed: () {
                           _openCustomDialog();
@@ -293,15 +290,15 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Consumer<ShortcutsProvider>(
         builder: (context, shortcutProvider, child) {
-          var allShortcuts = <Widget>[];
-          for (var short in shortcutProvider.allShortcuts) {
+          final allShortcuts = <Widget>[];
+          for (final short in shortcutProvider.allShortcuts) {
             allShortcuts.add(
               // Don't show those that are active
               !short.active!
                   ? AnimatedOpacity(
                       opacity: short.visible! ? 1 : 0,
-                      duration: Duration(milliseconds: 300),
-                      child: Container(
+                      duration: const Duration(milliseconds: 300),
+                      child: SizedBox(
                         height: 50,
                         child: Card(
                           shape: RoundedRectangleBorder(
@@ -309,11 +306,11 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             borderRadius: BorderRadius.circular(4.0),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             child: Row(
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.all(2),
+                                  padding: const EdgeInsets.all(2),
                                   child: Image.asset(
                                     short.iconUrl!,
                                     width: 18,
@@ -321,7 +318,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                     color: _themeProvider.mainText,
                                   ),
                                 ),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -337,7 +334,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                                   short.visible = false;
                                                 });
 
-                                                await Future.delayed(Duration(milliseconds: 300));
+                                                await Future.delayed(const Duration(milliseconds: 300));
 
                                                 setState(() {
                                                   shortcutProvider.activateShortcut(short);
@@ -360,12 +357,12 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                         ),
                       ),
                     )
-                  : SizedBox(),
+                  : const SizedBox(),
             );
           }
           return ListView(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             children: allShortcuts,
           );
         },
@@ -377,9 +374,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Shortcuts"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Shortcuts"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -391,16 +388,15 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
             color: _themeProvider.buttonText,
           ),
           onPressed: () async {
-            if (_shortcutsProvider.activeShortcuts.length == 0) {
+            if (_shortcutsProvider.activeShortcuts.isEmpty) {
               BotToast.showText(
                 text: 'You have no active shortcuts, activate some!',
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
                 contentColor: Colors.orange[800]!,
-                duration: Duration(seconds: 2),
-                contentPadding: EdgeInsets.all(10),
+                contentPadding: const EdgeInsets.all(10),
               );
             } else {
               _openWipeDialog();
@@ -427,22 +423,21 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -456,19 +451,19 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Reset!"),
+                              child: const Text("Reset!"),
                               onPressed: () {
                                 _shortcutsProvider.wipeAllShortcuts();
                                 Navigator.of(context).pop();
                               },
                             ),
                             TextButton(
-                              child: Text("Oh no!"),
+                              child: const Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -488,7 +483,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(Icons.delete_forever_outlined),
@@ -520,22 +515,21 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -549,7 +543,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Form(
                           key: _customNameKey,
                           child: Column(
@@ -563,8 +557,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 textCapitalization: TextCapitalization.sentences,
                                 controller: _customNameController,
                                 maxLength: 30,
-                                maxLines: 1,
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                   counterText: "",
                                   isDense: true,
                                   border: OutlineInputBorder(),
@@ -580,7 +573,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Row(
                           children: [
                             Flexible(
@@ -596,8 +589,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                       ),
                                       controller: _customURLController,
                                       maxLength: 300,
-                                      maxLines: 1,
-                                      decoration: InputDecoration(
+                                      decoration: const InputDecoration(
                                         counterText: "",
                                         isDense: true,
                                         border: OutlineInputBorder(),
@@ -620,15 +612,15 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.paste),
+                              icon: const Icon(Icons.paste),
                               onPressed: () async {
-                                ClipboardData data = (await Clipboard.getData('text/plain'))!;
+                                final ClipboardData data = (await Clipboard.getData('text/plain'))!;
                                 _customURLController.text = data.text!;
                               },
                             ),
                           ],
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Flexible(
                           child: Text(
                             "Tip: long-press the app bar in the browser to copy the "
@@ -640,12 +632,12 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Add"),
+                              child: const Text("Add"),
                               onPressed: () {
                                 if (!_customNameKey.currentState!.validate()) {
                                   return;
@@ -654,7 +646,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   return;
                                 }
 
-                                var customShortcut = Shortcut()
+                                final customShortcut = Shortcut()
                                   ..name = _customNameController.text
                                   ..nickname = _customNameController.text
                                   ..url = _customURLController.text
@@ -669,7 +661,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                               },
                             ),
                             TextButton(
-                              child: Text("Close"),
+                              child: const Text("Close"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                                 _customNameController.text = '';
@@ -728,22 +720,21 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -757,7 +748,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Form(
                           key: _customNameKey,
                           child: Column(
@@ -771,8 +762,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 textCapitalization: TextCapitalization.sentences,
                                 controller: _customNameController,
                                 maxLength: 20,
-                                maxLines: 1,
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                   counterText: "",
                                   isDense: true,
                                   border: OutlineInputBorder(),
@@ -788,7 +778,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Row(
                           children: [
                             Flexible(
@@ -804,8 +794,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                       ),
                                       controller: _customURLController,
                                       maxLength: 300,
-                                      maxLines: 1,
-                                      decoration: InputDecoration(
+                                      decoration: const InputDecoration(
                                         counterText: "",
                                         isDense: true,
                                         border: OutlineInputBorder(),
@@ -828,15 +817,15 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.paste),
+                              icon: const Icon(Icons.paste),
                               onPressed: () async {
-                                ClipboardData data = (await Clipboard.getData('text/plain'))!;
+                                final ClipboardData data = (await Clipboard.getData('text/plain'))!;
                                 _customURLController.text = data.text!;
                               },
                             ),
                           ],
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Flexible(
                           child: Text(
                             "Tip: long-press the app bar in the browser to copy the "
@@ -848,12 +837,12 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Save"),
+                              child: const Text("Save"),
                               onPressed: () {
                                 if (!_customNameKey.currentState!.validate()) {
                                   return;
@@ -873,7 +862,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                               },
                             ),
                             TextButton(
-                              child: Text("Close"),
+                              child: const Text("Close"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                                 _customNameController.text = '';

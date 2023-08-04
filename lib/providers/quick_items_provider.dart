@@ -16,10 +16,10 @@ class QuickItemsProvider extends ChangeNotifier {
   bool _firstLoad = true;
   bool _itemSuccess = false;
 
-  var _activeQuickItemsList = <QuickItem>[];
+  final _activeQuickItemsList = <QuickItem>[];
   UnmodifiableListView<QuickItem> get activeQuickItems => UnmodifiableListView(_activeQuickItemsList);
 
-  var _fullQuickItemsList = <QuickItem>[];
+  final _fullQuickItemsList = <QuickItem>[];
   UnmodifiableListView<QuickItem> get fullQuickItems => UnmodifiableListView(_fullQuickItemsList);
 
   String _currentSearchFilter = '';
@@ -28,7 +28,7 @@ class QuickItemsProvider extends ChangeNotifier {
   int _numberOfLoadoutsToShow = 3;
   int get numberOfLoadoutsToShow => _numberOfLoadoutsToShow;
 
-  var _quickItemTypes = [
+  final _quickItemTypes = [
     ItemType.ALCOHOL,
     ItemType.BOOSTER,
     ItemType.CANDY,
@@ -37,7 +37,7 @@ class QuickItemsProvider extends ChangeNotifier {
     ItemType.MEDICAL,
   ];
 
-  var _quickItemExceptions = [
+  final _quickItemExceptions = [
     "box of tissues",
   ];
 
@@ -51,7 +51,7 @@ class QuickItemsProvider extends ChangeNotifier {
     } else {
       if (_itemSuccess) {
         // Triggers every time, after the first, we land in Items
-        updateInventoryQuantities(fullUpdate: false);
+        updateInventoryQuantities();
       } else {
         // Trigger with successive calls if the first
         // load was not successful for items
@@ -63,9 +63,9 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   Future _loadSaveActiveItems() async {
-    var savedActives = await Prefs().getQuickItemsList();
-    for (var rawItem in savedActives) {
-      QuickItem activeItem = quickItemFromJson(rawItem);
+    final savedActives = await Prefs().getQuickItemsList();
+    for (final rawItem in savedActives) {
+      final QuickItem activeItem = quickItemFromJson(rawItem);
       _activeQuickItemsList.add(activeItem);
     }
 
@@ -94,7 +94,7 @@ class QuickItemsProvider extends ChangeNotifier {
 
     // Look for the correct item set active false, so that it reappears in the
     // main available items list
-    for (var stock in _fullQuickItemsList) {
+    for (final stock in _fullQuickItemsList) {
       if (stock.name == oldItem.name) {
         stock.active = false;
         break;
@@ -105,10 +105,10 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   void wipeAllQuickItems() {
-    for (var oldItem in _activeQuickItemsList) {
+    for (final oldItem in _activeQuickItemsList) {
       // Look for the correct item set active false, so that it reappears in the
       // main available items list
-      for (var stock in _fullQuickItemsList) {
+      for (final stock in _fullQuickItemsList) {
         if (stock.name == oldItem.name) {
           stock.active = false;
           break;
@@ -133,7 +133,7 @@ class QuickItemsProvider extends ChangeNotifier {
 
   void changeLoadoutName(QuickItem loadout, String name) {
     if (!loadout.isLoadout!) return;
-    for (QuickItem item in _activeQuickItemsList) {
+    for (final QuickItem item in _activeQuickItemsList) {
       if (loadout.loadoutNumber == item.loadoutNumber) {
         item.loadoutName = name;
         break;
@@ -144,10 +144,10 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   void _saveListAfterChanges() {
-    var saveList = <String>[];
+    final saveList = <String>[];
 
-    for (var item in activeQuickItems) {
-      var save = quickItemToJson(item);
+    for (final item in activeQuickItems) {
+      final save = quickItemToJson(item);
       saveList.add(save);
     }
 
@@ -162,7 +162,7 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   Future _getAllTornItems() async {
-    var allTornItems = await Get.find<ApiCallerController>().getItems();
+    final allTornItems = await Get.find<ApiCallerController>().getItems();
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsList.clear();
@@ -174,7 +174,7 @@ class QuickItemsProvider extends ChangeNotifier {
           // If the item was saved as active, mark it as such so that we can
           // filter it in our full list
           var savedActive = false;
-          for (var saved in _activeQuickItemsList) {
+          for (final saved in _activeQuickItemsList) {
             if (saved.name == itemProperties.name) {
               savedActive = true;
               break;
@@ -195,7 +195,7 @@ class QuickItemsProvider extends ChangeNotifier {
       // Insert loadouts at the beginning after sorting
       for (int i = 0; i < 9; i++) {
         var savedActive = false;
-        for (var saved in _activeQuickItemsList) {
+        for (final saved in _activeQuickItemsList) {
           if (saved.isLoadout! && saved.loadoutNumber == i + 1) {
             savedActive = true;
             break;
@@ -223,12 +223,12 @@ class QuickItemsProvider extends ChangeNotifier {
   /// [fullUpdate] is true, it will also update the inactive/stock items, which are not
   /// visible in the widget. Only makes sense if entering the options page
   Future updateInventoryQuantities({bool fullUpdate = false}) async {
-    var inventoryItems = await Get.find<ApiCallerController>().getInventory();
+    final inventoryItems = await Get.find<ApiCallerController>().getInventory();
     if (inventoryItems is InventoryModel) {
       if (fullUpdate) {
-        for (var quickItem in _fullQuickItemsList) {
+        for (final quickItem in _fullQuickItemsList) {
           bool found = false;
-          for (var invItem in inventoryItems.inventory!) {
+          for (final invItem in inventoryItems.inventory!) {
             if (invItem.name == quickItem.name) {
               found = true;
               quickItem.inventory = invItem.quantity;
@@ -241,9 +241,9 @@ class QuickItemsProvider extends ChangeNotifier {
         }
       }
 
-      for (var quickItem in _activeQuickItemsList) {
+      for (final quickItem in _activeQuickItemsList) {
         bool found = false;
-        for (var invItem in inventoryItems.inventory!) {
+        for (final invItem in inventoryItems.inventory!) {
           if (invItem.name == quickItem.name) {
             found = true;
             quickItem.inventory = invItem.quantity;

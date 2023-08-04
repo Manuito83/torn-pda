@@ -2,10 +2,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/multitab_detector.dart';
-import 'circular_menu_item.dart';
+import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
 
 class CircularMenuTabs extends StatefulWidget {
   /// Global key to control animation
+  @override
   final GlobalKey<CircularMenuTabsState>? key;
 
   /// List of CircularMenuItem contains at least two items.
@@ -55,7 +56,7 @@ class CircularMenuTabs extends StatefulWidget {
     this.alignment = Alignment.bottomCenter,
     this.radius = 50,
     this.backgroundWidget,
-    this.animationDuration = const Duration(milliseconds: 0),
+    this.animationDuration = const Duration(),
     this.curve = Curves.decelerate,
     this.reverseCurve = Curves.decelerate,
     this.toggleButtonOnPressed,
@@ -131,7 +132,6 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
       child: Align(
         alignment: Alignment.bottomCenter,
         child: CircularMenuItem(
-          icon: null,
           margin: widget.toggleButtonMargin,
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: 50,

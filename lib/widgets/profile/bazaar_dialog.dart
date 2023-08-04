@@ -20,7 +20,7 @@ class BazaarDialog extends StatelessWidget {
   final double vPad = 20;
   final double frame = 10;
 
-  BazaarDialog({
+  const BazaarDialog({
     required this.bazaarModel,
     required this.openTapCallback,
     required this.openLongPressCallback,
@@ -47,12 +47,12 @@ class BazaarDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(MdiIcons.storefrontOutline, size: 22),
-                  SizedBox(width: 6),
-                  Text("Bazaar open"),
-                  SizedBox(width: 6),
+                  const Icon(MdiIcons.storefrontOutline, size: 22),
+                  const SizedBox(width: 6),
+                  const Text("Bazaar open"),
+                  const SizedBox(width: 6),
                   GestureDetector(
-                    child: Icon(MdiIcons.openInApp, size: 18),
+                    child: const Icon(MdiIcons.openInApp, size: 18),
                     onTap: () {
                       Navigator.of(context).pop();
                       openTapCallback();
@@ -70,21 +70,21 @@ class BazaarDialog extends StatelessWidget {
               children: [
                 Text(
                   "$items ${items > 1 ? 'items' : 'item'}",
-                  style: TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 13),
                 ),
                 Text(
                   bazaarModel!.length == 1 ? "" : " (${bazaarModel!.length} stacks)",
-                  style: TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: 13),
                 ),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Total value \$${formatProfit(inputInt: money)}", style: TextStyle(fontSize: 13)),
+                Text("Total value \$${formatProfit(inputInt: money)}", style: const TextStyle(fontSize: 13)),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Flexible(
               child: ListView(
                 shrinkWrap: true,
@@ -97,7 +97,7 @@ class BazaarDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    child: Text("Close"),
+                    child: const Text("Close"),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -112,13 +112,13 @@ class BazaarDialog extends StatelessWidget {
   }
 
   List<Widget> _bazaarItems() {
-    var items = <Widget>[];
+    final items = <Widget>[];
 
     // Currency configuration
-    final costCurrency = new NumberFormat("#,##0", "en_US");
+    final costCurrency = NumberFormat("#,##0", "en_US");
 
-    bazaarModel!.forEach((element) {
-      var marketDiff = element.marketPrice - element.price;
+    for (final element in bazaarModel!) {
+      final marketDiff = element.marketPrice - element.price;
       Color? marketColor = Colors.green;
       var marketString = "";
       if (marketDiff.isNegative) {
@@ -140,12 +140,12 @@ class BazaarDialog extends StatelessWidget {
                     Image.asset(
                       'images/torn_items/small/${element.id}_small.png',
                       errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                        return SizedBox.shrink();
+                        return const SizedBox.shrink();
                       },
                     ),
                     Text(
                       "${element.name} x${element.quantity}",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                       ),
                     ),
@@ -156,15 +156,15 @@ class BazaarDialog extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Text(
                         "@ \$${costCurrency.format(element.price)}"
                         "${element.quantity! > 1 ? " ea. (\$${costCurrency.format(element.price * element.quantity)})" : ""}",
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         marketString,
                         style: TextStyle(
@@ -180,7 +180,7 @@ class BazaarDialog extends StatelessWidget {
           ),
         ),
       );
-    });
+    }
     return items;
   }
 }

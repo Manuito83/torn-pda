@@ -7,8 +7,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 
 class TctClock extends StatefulWidget {
   const TctClock({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<TctClock> createState() => _TctClockState();
@@ -20,7 +20,7 @@ class _TctClockState extends State<TctClock> {
 
   @override
   void initState() {
-    _oneSecTimer = new Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshTctClock());
+    _oneSecTimer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshTctClock());
     super.initState();
   }
 
@@ -32,16 +32,14 @@ class _TctClockState extends State<TctClock> {
 
   @override
   Widget build(BuildContext context) {
-    var settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    TimeFormatSetting timePrefs = settingsProvider.currentTimeFormat;
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final TimeFormatSetting timePrefs = settingsProvider.currentTimeFormat;
     late DateFormat formatter;
     switch (timePrefs) {
       case TimeFormatSetting.h24:
         formatter = DateFormat(settingsProvider.showSecondsInClock ? 'HH:mm:ss' : 'HH:mm');
-        break;
       case TimeFormatSetting.h12:
         formatter = DateFormat(settingsProvider.showSecondsInClock ? 'HH:mm:ss a' : 'HH:mm a');
-        break;
     }
 
     return Column(
@@ -60,7 +58,7 @@ class _TctClockState extends State<TctClock> {
             settingsProvider.showDateInClock == "dayfirst"
                 ? DateFormat('dd MMM').format(_currentTctTime).toUpperCase()
                 : DateFormat('MMM dd').format(_currentTctTime).toUpperCase(),
-            style: TextStyle(fontSize: 10),
+            style: const TextStyle(fontSize: 10),
           ),
       ],
     );

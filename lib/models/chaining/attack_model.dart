@@ -36,7 +36,7 @@ class Attack {
   late int targetLevel;
   late bool attackWon;
   late bool attackInitiated;
-  var attackSeriesGreen = <bool>[];
+  List<bool> attackSeriesGreen = <bool>[];
 
   // From Torn API
   String? code;
@@ -77,39 +77,39 @@ class Attack {
 
   factory Attack.fromJson(Map<String, dynamic> json) => Attack(
         code: json["code"] == null ? null : json["code"].toString(), // If code is all number, it comes as double
-        timestampStarted: json["timestamp_started"] == null ? null : json["timestamp_started"],
-        timestampEnded: json["timestamp_ended"] == null ? null : json["timestamp_ended"],
+        timestampStarted: json["timestamp_started"],
+        timestampEnded: json["timestamp_ended"],
         attackerId: json["attacker_id"],
-        attackerName: json["attacker_name"] == null ? null : json["attacker_name"],
+        attackerName: json["attacker_name"],
         attackerFaction: json["attacker_faction"],
-        attackerFactionname: json["attacker_factionname"] == null ? null : json["attacker_factionname"],
-        defenderId: json["defender_id"] == null ? null : json["defender_id"],
-        defenderName: json["defender_name"] == null ? null : json["defender_name"],
-        defenderFaction: json["defender_faction"] == null ? null : json["defender_faction"],
-        defenderFactionname: json["defender_factionname"] == null ? null : json["defender_factionname"],
+        attackerFactionname: json["attacker_factionname"],
+        defenderId: json["defender_id"],
+        defenderName: json["defender_name"],
+        defenderFaction: json["defender_faction"],
+        defenderFactionname: json["defender_factionname"],
         result: json["result"] == null ? null : resultValues.map[json["result"]],
-        stealthed: json["stealthed"] == null ? null : json["stealthed"],
+        stealthed: json["stealthed"],
         respectGain: json["respect_gain"],
-        chain: json["chain"] == null ? null : json["chain"],
+        chain: json["chain"],
         modifiers: json["modifiers"] == null ? null : Modifiers.fromJson(json["modifiers"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "code": code == null ? null : code,
-        "timestamp_started": timestampStarted == null ? null : timestampStarted,
-        "timestamp_ended": timestampEnded == null ? null : timestampEnded,
+        "code": code,
+        "timestamp_started": timestampStarted,
+        "timestamp_ended": timestampEnded,
         "attacker_id": attackerId,
-        "attacker_name": attackerName == null ? null : attackerName,
+        "attacker_name": attackerName,
         "attacker_faction": attackerFaction,
-        "attacker_factionname": attackerFactionname == null ? null : attackerFactionname,
-        "defender_id": defenderId == null ? null : defenderId,
-        "defender_name": defenderName == null ? null : defenderName,
-        "defender_faction": defenderFaction == null ? null : defenderFaction,
-        "defender_factionname": defenderFactionname == null ? null : defenderFactionname,
+        "attacker_factionname": attackerFactionname,
+        "defender_id": defenderId,
+        "defender_name": defenderName,
+        "defender_faction": defenderFaction,
+        "defender_factionname": defenderFactionname,
         "result": result == null ? null : resultValues.reverse![result],
-        "stealthed": stealthed == null ? null : stealthed,
+        "stealthed": stealthed,
         "respect_gain": respectGain,
-        "chain": chain == null ? null : chain,
+        "chain": chain,
         "modifiers": modifiers == null ? null : modifiers!.toJson(),
       };
 }
@@ -210,9 +210,7 @@ class EnumValues<T> {
   EnumValues(this.map);
 
   Map<T, String>? get reverse {
-    if (reverseMap == null) {
-      reverseMap = map.map((k, v) => new MapEntry(v, k));
-    }
+    reverseMap ??= map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
 }

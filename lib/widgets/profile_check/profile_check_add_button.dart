@@ -8,13 +8,13 @@ import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
@@ -27,8 +27,8 @@ class ProfileCheckAddButton extends StatefulWidget {
     required this.profileId,
     required this.factionId,
     this.playerName = "Player",
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ProfileCheckAddButton> createState() => _ProfileCheckAddButtonState();
@@ -41,14 +41,14 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
   late ChainStatusProvider _chainStatusProvider;
 
   // Showcases
-  GlobalKey _showcaseButton = GlobalKey();
+  final GlobalKey _showcaseButton = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _targetsProvider = Provider.of<TargetsProvider>(context);
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context);
 
     bool anyExists = _anyExists();
 
@@ -67,14 +67,14 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
                     init: WarController(),
                     builder: (w) {
                       anyExists = _anyExists();
-                      for (Stakeout s in s.stakeouts) {
+                      for (final Stakeout s in s.stakeouts) {
                         if (s.id == widget.profileId.toString()) {
                           anyExists = true;
                           continue;
                         }
                       }
 
-                      for (FactionModel w in w.factions) {
+                      for (final FactionModel w in w.factions) {
                         if (w.id == widget.factionId) {
                           anyExists = true;
                           continue;
@@ -87,15 +87,15 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
                         description:
                             '\nYou can tap this icon to add or remove ${widget.playerName} or any other player '
                             'from several of your lists (including entire factions in War!).\n\nIt will also allow '
-                            'you to quickly copy the player\'s ID and the profile\'s page link.\n\n'
+                            "you to quickly copy the player's ID and the profile's page link.\n\n"
                             'A green icon means the player is not in any or your lists, while an orange icon means '
                             'he/she is at least associated with one of them.\n\nTry it out!',
                         targetPadding: const EdgeInsets.all(10),
                         disableMovingAnimation: true,
                         textColor: _themeProvider.mainText!,
                         tooltipBackgroundColor: _themeProvider.secondBackground!,
-                        descTextStyle: TextStyle(fontSize: 13),
-                        tooltipPadding: EdgeInsets.all(20),
+                        descTextStyle: const TextStyle(fontSize: 13),
+                        tooltipPadding: const EdgeInsets.all(20),
                         child: Icon(
                           Icons.person,
                           color: anyExists ? Colors.orange : Colors.green,
@@ -109,7 +109,6 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
               onTap: () async {
                 return showDialog<void>(
                   context: context,
-                  barrierDismissible: true,
                   builder: (context) {
                     return ProfileCheckAddDialog(
                       profileId: widget.profileId,
@@ -127,12 +126,12 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
   }
 
   void _launchShowCases(BuildContext _) {
-    var webviewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    final webviewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
     if (!webviewProvider.browserShowInForeground) return;
 
-    Future.delayed(Duration(seconds: 1), () async {
-      List showCases = <GlobalKey<State<StatefulWidget>>>[];
+    Future.delayed(const Duration(seconds: 1), () async {
+      final List showCases = <GlobalKey<State<StatefulWidget>>>[];
       if (!_settingsProvider.showCases.contains("profile_check_button")) {
         // Prevent the showcase from activating if we have reset the showcase while a tab with a profile is open
         if (!webviewProvider.currentTabUrl()!.contains('loader.php?sid=attack&user2ID=') &&
@@ -149,13 +148,13 @@ class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
   }
 
   bool _anyExists() {
-    for (TargetModel t in _targetsProvider.allTargets) {
+    for (final TargetModel t in _targetsProvider.allTargets) {
       if (t.playerId == widget.profileId) {
         return true;
       }
     }
 
-    for (PanicTargetModel p in _chainStatusProvider.panicTargets) {
+    for (final PanicTargetModel p in _chainStatusProvider.panicTargets) {
       if (p.id == widget.profileId) {
         return true;
       }
@@ -173,8 +172,8 @@ class ProfileCheckAddDialog extends StatefulWidget {
     required this.profileId,
     required this.factionId,
     this.playerName,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ProfileCheckAddDialog> createState() => _ProfileCheckAddDialogState();
@@ -185,7 +184,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   bool _toggleTargetActive = false;
   bool _isTarget = false;
 
-  StakeoutsController _s = Get.put(StakeoutsController());
+  final StakeoutsController _s = Get.put(StakeoutsController());
   bool _toggleStakeoutActive = false;
   bool _isStakeout = false;
 
@@ -193,7 +192,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   bool _togglePanicActive = false;
   bool _isPanic = false;
 
-  WarController _w = Get.put(WarController(initWithIntegrity: false));
+  final WarController _w = Get.put(WarController(initWithIntegrity: false));
   bool _toggleWarActive = false;
   bool _isWar = false;
   bool _warInit = false;
@@ -213,7 +212,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     return AlertDialog(
       title: Text(
         "${widget.playerName} [${widget.profileId}]",
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 18,
         ),
       ),
@@ -230,7 +229,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
                       Clipboard.setData(ClipboardData(text: widget.profileId.toString()));
                       _showToast(text: 'ID copied!', color: Colors.blue[700]!, seconds: 1);
                     },
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.copy),
@@ -239,15 +238,15 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      String url = "https://www.torn.com/profiles.php?XID=${widget.profileId}";
+                      final String url = "https://www.torn.com/profiles.php?XID=${widget.profileId}";
                       Clipboard.setData(ClipboardData(text: url));
                       _showToast(text: 'Link copied!', color: Colors.blue[700]!, seconds: 1);
                     },
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.copy),
@@ -262,18 +261,16 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _isTarget
-                    ? Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
-                    : Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
-                SizedBox(width: 15),
+                if (_isTarget) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _toggleTargetActive ? null : () => _toggleTarget(),
                     child: _toggleTargetActive
-                        ? SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
+                        ? const SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
                         : _isTarget
-                            ? Text("Remove target")
-                            : Text("Add target"),
+                            ? const Text("Remove target")
+                            : const Text("Add target"),
                   ),
                 ),
               ],
@@ -282,18 +279,16 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _isStakeout
-                    ? Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
-                    : Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
-                SizedBox(width: 15),
+                if (_isStakeout) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _toggleStakeoutActive ? null : () => _toggleStakeout(),
                     child: _toggleStakeoutActive
-                        ? SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
+                        ? const SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
                         : _isStakeout
-                            ? Text("Remove stakeout")
-                            : Text("Add stakeout"),
+                            ? const Text("Remove stakeout")
+                            : const Text("Add stakeout"),
                   ),
                 ),
               ],
@@ -302,18 +297,16 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _isPanic
-                    ? Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
-                    : Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
-                SizedBox(width: 15),
+                if (_isPanic) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _togglePanicActive ? null : () => _togglePanic(),
                     child: _togglePanicActive
-                        ? SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
+                        ? const SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
                         : _isPanic
-                            ? Text("Remove panic target")
-                            : Text("Add panic target"),
+                            ? const Text("Remove panic target")
+                            : const Text("Add panic target"),
                   ),
                 ),
               ],
@@ -329,26 +322,24 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _isWar
-                          ? Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
-                          : Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
-                      SizedBox(width: 15),
+                      if (_isWar) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                      const SizedBox(width: 15),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _toggleWarActive ? null : () => _toggleWar(),
                           child: _toggleWarActive
-                              ? SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
+                              ? const SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
                               : _isWar
-                                  ? Text("Remove war faction")
-                                  : Text("Add war faction"),
+                                  ? const Text("Remove war faction")
+                                  : const Text("Add war faction"),
                         ),
                       ),
                     ],
                   );
                 } else {
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 }
-              }),
+              },),
           ],
         ),
       ),
@@ -364,7 +355,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   }
 
   void _updateTargetCondition() {
-    for (TargetModel t in _targetsProvider.allTargets) {
+    for (final TargetModel t in _targetsProvider.allTargets) {
       if (t.playerId == widget.profileId) {
         _isTarget = true;
         return;
@@ -374,7 +365,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   }
 
   void _updateStakeoutCondition() {
-    for (Stakeout s in _s.stakeouts) {
+    for (final Stakeout s in _s.stakeouts) {
       if (s.id == widget.profileId.toString()) {
         _isStakeout = true;
         return;
@@ -384,7 +375,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   }
 
   void _updatePanicCondition() {
-    for (PanicTargetModel p in _chainStatusProvider.panicTargets) {
+    for (final PanicTargetModel p in _chainStatusProvider.panicTargets) {
       if (p.id == widget.profileId) {
         _isPanic = true;
         return;
@@ -393,8 +384,8 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     _isPanic = false;
   }
 
-  void _updateWarCondition() async {
-    for (FactionModel w in _w.factions) {
+  Future<void> _updateWarCondition() async {
+    for (final FactionModel w in _w.factions) {
       if (w.id == widget.factionId) {
         _isWar = true;
         return;
@@ -403,7 +394,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     _isWar = false;
   }
 
-  void _toggleTarget() async {
+  Future<void> _toggleTarget() async {
     setState(() {
       _toggleTargetActive = true;
     });
@@ -416,8 +407,8 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
         seconds: 3,
       );
     } else {
-      dynamic attacks = await _targetsProvider.getAttacks();
-      AddTargetResult tryAddTarget = await _targetsProvider.addTarget(
+      final dynamic attacks = await _targetsProvider.getAttacks();
+      final AddTargetResult tryAddTarget = await _targetsProvider.addTarget(
         targetId: widget.profileId.toString(),
         attacks: attacks,
       );
@@ -443,7 +434,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     });
   }
 
-  void _toggleStakeout() async {
+  Future<void> _toggleStakeout() async {
     setState(() {
       _toggleStakeoutActive = true;
     });
@@ -456,7 +447,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
         seconds: 3,
       );
     } else {
-      AddStakeoutResult result = await _s.addStakeout(inputId: widget.profileId.toString());
+      final AddStakeoutResult result = await _s.addStakeout(inputId: widget.profileId.toString());
       if (result.success) {
         _showToast(
           text: 'Added ${widget.playerName}, remember to activate the desired options in the Stakeouts section!',
@@ -479,7 +470,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     });
   }
 
-  void _togglePanic() async {
+  Future<void> _togglePanic() async {
     setState(() {
       _togglePanicActive = true;
     });
@@ -492,7 +483,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
         seconds: 3,
       );
     } else {
-      dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: widget.profileId.toString());
+      final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: widget.profileId.toString());
       String message = "";
       Color? messageColor = Colors.green[700];
       if (target is TargetModel) {
@@ -522,7 +513,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     });
   }
 
-  void _toggleWar() async {
+  Future<void> _toggleWar() async {
     setState(() {
       _toggleWarActive = true;
     });
@@ -530,7 +521,7 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     if (_isWar) {
       _w.removeFaction(widget.factionId);
       _showToast(
-        text: 'Removed ${widget.playerName}\'s faction from War!',
+        text: "Removed ${widget.playerName}'s faction from War!",
         color: Colors.orange[900]!,
         seconds: 3,
       );
@@ -563,10 +554,10 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     BotToast.showText(
       clickClose: true,
       text: HtmlParser.fix(text),
-      textStyle: TextStyle(fontSize: 14, color: Colors.white),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: color,
       duration: Duration(seconds: seconds),
-      contentPadding: EdgeInsets.all(10),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 }

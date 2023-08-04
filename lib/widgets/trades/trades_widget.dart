@@ -2,18 +2,16 @@
 import 'dart:convert';
 
 import 'package:animations/animations.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/trades/awh_out.dart';
-
 // Project imports:
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -26,7 +24,7 @@ class TradesWidget extends StatefulWidget {
   final UserDetailsProvider? userProv;
   final InAppWebViewController? webView;
 
-  TradesWidget({
+  const TradesWidget({
     required this.themeProv,
     required this.userProv,
     required this.webView,
@@ -40,8 +38,8 @@ class _TradesWidgetState extends State<TradesWidget> {
   static const ttColor = Color(0xffd186cf);
 
   final _scrollController = ScrollController();
-  final _moneyFormat = new NumberFormat("#,##0", "en_US");
-  final _moneyDecimalFormat = new NumberFormat("#,##0.##", "en_US");
+  final _moneyFormat = NumberFormat("#,##0", "en_US");
+  final _moneyDecimalFormat = NumberFormat("#,##0.##", "en_US");
 
   late TradesProvider _tradesProv;
 
@@ -53,12 +51,12 @@ class _TradesWidgetState extends State<TradesWidget> {
 
   @override
   Widget build(BuildContext context) {
-    _tradesProv = Provider.of<TradesProvider>(context, listen: true);
+    _tradesProv = Provider.of<TradesProvider>(context);
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
         collapsed: Container(),
-        theme: ExpandableThemeData(
+        theme: const ExpandableThemeData(
           hasIcon: false,
           iconColor: Colors.grey,
           tapBodyToExpand: true,
@@ -70,10 +68,10 @@ class _TradesWidgetState extends State<TradesWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 if (!_tradesProv.container.awhActive)
-                  SizedBox(width: 90)
+                  const SizedBox(width: 90)
                 else
                   SizedBox(width: 90, child: _awhContainer()),
-                Column(
+                const Column(
                   children: [
                     Text(
                       'Trade Calculator',
@@ -91,14 +89,14 @@ class _TradesWidgetState extends State<TradesWidget> {
                   ],
                 ),
                 if (!_tradesProv.container.ttActive)
-                  SizedBox(width: 90)
+                  const SizedBox(width: 90)
                 else
                   SizedBox(
                     width: 90,
                     child: Row(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 5),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 10, right: 5),
                           child: Image(
                             image: AssetImage('images/icons/torntrader_logo.png'),
                             width: 16,
@@ -109,7 +107,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                         if (_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
                           Row(
                             children: [
-                              Text(
+                              const Text(
                                 'ERROR',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -121,7 +119,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                                 height: 20,
                                 width: 20,
                                 child: IconButton(
-                                  padding: EdgeInsets.all(0),
+                                  padding: const EdgeInsets.all(0),
                                   iconSize: 20,
                                   onPressed: () {
                                     String errorString = "";
@@ -134,16 +132,16 @@ class _TradesWidgetState extends State<TradesWidget> {
                                     }
                                     BotToast.showText(
                                       text: errorString,
-                                      textStyle: TextStyle(
+                                      textStyle: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
                                       ),
                                       contentColor: Colors.orange[800]!,
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
+                                      duration: const Duration(seconds: 5),
+                                      contentPadding: const EdgeInsets.all(10),
                                     );
                                   },
-                                  icon: Icon(
+                                  icon: const Icon(
                                     Icons.info_outline,
                                     size: 15,
                                     color: Colors.orange,
@@ -153,7 +151,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                             ],
                           )
                         else
-                          Text(
+                          const Text(
                             'SYNC',
                             style: TextStyle(
                               fontSize: 12,
@@ -192,11 +190,11 @@ class _TradesWidgetState extends State<TradesWidget> {
               constraints: _tradesProv.container.ttActive &&
                       (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
                   ? BoxConstraints.loose(Size.fromHeight(
-                          (MediaQuery.of(context).size.height - kToolbarHeight * 3 - AppBar().preferredSize.height)) /
-                      3)
+                          MediaQuery.of(context).size.height - kToolbarHeight * 3 - AppBar().preferredSize.height,) /
+                      3,)
                   : BoxConstraints.loose(Size.fromHeight(
-                          (MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
-                      3),
+                          MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,) /
+                      3,),
               child: Scrollbar(
                 controller: _scrollController,
                 thumbVisibility: true,
@@ -240,13 +238,13 @@ class _TradesWidgetState extends State<TradesWidget> {
     bool hasProperty = false;
     if (side == 'left') {
       total += _tradesProv.container.leftMoney;
-      for (var item in _tradesProv.container.leftItems) {
+      for (final item in _tradesProv.container.leftItems) {
         total += item.totalPrice;
       }
-      for (var share in _tradesProv.container.leftShares) {
+      for (final share in _tradesProv.container.leftShares) {
         total += share.totalPrice;
       }
-      for (var property in _tradesProv.container.leftProperties) {
+      for (final property in _tradesProv.container.leftProperties) {
         if (property.name != 'No properties in trade') {
           hasProperty = true;
           break;
@@ -254,13 +252,13 @@ class _TradesWidgetState extends State<TradesWidget> {
       }
     } else {
       total += _tradesProv.container.rightMoney;
-      for (var item in _tradesProv.container.rightItems) {
+      for (final item in _tradesProv.container.rightItems) {
         total += item.totalPrice;
       }
-      for (var share in _tradesProv.container.rightShares) {
+      for (final share in _tradesProv.container.rightShares) {
         total += share.totalPrice;
       }
-      for (var property in _tradesProv.container.rightProperties) {
+      for (final property in _tradesProv.container.rightProperties) {
         if (property.name != 'No properties in trade') {
           hasProperty = true;
           break;
@@ -270,9 +268,9 @@ class _TradesWidgetState extends State<TradesWidget> {
 
     Widget propertyIcon() {
       if (!hasProperty) {
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
       } else {
-        return Row(
+        return const Row(
           children: [
             SizedBox(width: 5),
             Text('(+', style: TextStyle(color: Colors.white)),
@@ -287,11 +285,11 @@ class _TradesWidgetState extends State<TradesWidget> {
       }
     }
 
-    Widget clipboardIcon = SizedBox(
+    final Widget clipboardIcon = SizedBox(
       height: 23,
       width: 23,
       child: IconButton(
-        padding: EdgeInsets.all(0),
+        padding: const EdgeInsets.all(0),
         iconSize: 23,
         onPressed: () {
           String amountCopied;
@@ -304,7 +302,7 @@ class _TradesWidgetState extends State<TradesWidget> {
             _copyToClipboard(amountCopied, amountCopied);
           }
         },
-        icon: Icon(
+        icon: const Icon(
           Icons.content_copy,
           size: 23,
           color: Colors.grey,
@@ -314,7 +312,7 @@ class _TradesWidgetState extends State<TradesWidget> {
 
     // This prevents showing totals as 0 when the widget is first loaded with existing items
     if (_tradesProv.container.firstLoad) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     if (!_tradesProv.container.ttActive ||
@@ -323,19 +321,19 @@ class _TradesWidgetState extends State<TradesWidget> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          side == 'left' ? Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon) : SizedBox.shrink(),
+          if (side == 'left') Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon) else const SizedBox.shrink(),
           Flexible(
             child: Text(
               '\$${_moneyFormat.format(total)}',
               textAlign: side == 'left' ? TextAlign.start : TextAlign.end,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           propertyIcon(),
-          side == 'right' ? Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon) : SizedBox.shrink(),
+          if (side == 'right') Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon) else const SizedBox.shrink(),
         ],
       );
     } else {
@@ -348,7 +346,7 @@ class _TradesWidgetState extends State<TradesWidget> {
               child: Text(
                 '\$${_moneyFormat.format(total)}',
                 textAlign: side == 'left' ? TextAlign.start : TextAlign.end,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.green,
                   fontWeight: FontWeight.bold,
                 ),
@@ -368,7 +366,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                   child: Text(
                     _tradesProv.container.ttTotalMoney,
                     textAlign: TextAlign.end,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: ttColor,
                       fontWeight: FontWeight.bold,
                     ),
@@ -376,7 +374,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                 ),
               ],
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -384,7 +382,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                   child: Text(
                     '\$${_moneyFormat.format(total)} market',
                     textAlign: TextAlign.end,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
@@ -393,7 +391,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                 ),
               ],
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -401,7 +399,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                   child: Text(
                     '${_tradesProv.container.ttProfit} profit',
                     textAlign: TextAlign.end,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
@@ -410,7 +408,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                 ),
               ],
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -419,29 +417,29 @@ class _TradesWidgetState extends State<TradesWidget> {
                   height: 23,
                   width: 23,
                   child: IconButton(
-                    padding: EdgeInsets.all(0),
+                    padding: const EdgeInsets.all(0),
                     iconSize: 23,
                     onPressed: () {
                       _copyToClipboard(_tradesProv.container.ttUrl!, "Receipt URL");
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.receipt_long_outlined,
                       size: 23,
                       color: ttColor,
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 SizedBox(
                   height: 23,
                   width: 23,
                   child: IconButton(
-                    padding: EdgeInsets.all(0),
+                    padding: const EdgeInsets.all(0),
                     iconSize: 23,
                     onPressed: () {
                       _copyTornTraderMessages();
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.message_outlined,
                       size: 23,
                       color: ttColor,
@@ -457,7 +455,7 @@ class _TradesWidgetState extends State<TradesWidget> {
   }
 
   List<Widget> sideDetailed(String side) {
-    var items = <Widget>[];
+    final items = <Widget>[];
     int sideMoney = 0;
     var sideItems = <TradeItem>[];
     var sideProperties = <TradeItem>[];
@@ -480,9 +478,9 @@ class _TradesWidgetState extends State<TradesWidget> {
     if (_tradesProv.container.ttActive &&
         side == 'right' &&
         (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)) {
-      var ttItems = _tradesProv.container.ttItems!;
+      final ttItems = _tradesProv.container.ttItems!;
 
-      for (var ttProduct in ttItems) {
+      for (final ttProduct in ttItems) {
         if (ttProduct.price == null) {
           continue;
         }
@@ -495,7 +493,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         items.add(
           Text(
             itemName,
-            style: TextStyle(
+            style: const TextStyle(
               color: ttColor,
               fontSize: 13,
             ),
@@ -503,7 +501,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         );
 
         // Item price
-        String itemPriceTotal = '${ttProduct.total!.replaceAll(" ", "")}';
+        final String itemPriceTotal = ttProduct.total!.replaceAll(" ", "");
         String itemPriceIndividual = "";
         if (ttProduct.quantity! > 1) {
           itemPriceIndividual += '(@ ${ttProduct.price!.replaceAll(" ", "")})';
@@ -525,17 +523,17 @@ class _TradesWidgetState extends State<TradesWidget> {
                   Flexible(
                     child: Text(
                       itemPriceTotal,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.green,
                         fontSize: 12,
                       ),
                     ),
                   ),
-                  SizedBox(width: 3),
+                  const SizedBox(width: 3),
                   Flexible(
                     child: Text(
                       itemPriceIndividual,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.green,
                         fontSize: 10,
                       ),
@@ -544,8 +542,8 @@ class _TradesWidgetState extends State<TradesWidget> {
                 ],
               ),
               Text(
-                itemProfit + ' profit',
-                style: TextStyle(
+                '$itemProfit profit',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,
                   fontStyle: FontStyle.italic,
@@ -555,12 +553,12 @@ class _TradesWidgetState extends State<TradesWidget> {
           ),
         );
 
-        items.add(SizedBox(height: 10));
+        items.add(const SizedBox(height: 10));
 
         // We need to remove this product from the ones we have in the normal list,
         // so that only non-TornTrader products remain there
-        var newSideItemList = List<TradeItem>.from(sideItems);
-        for (var standardItem in sideItems) {
+        final newSideItemList = List<TradeItem>.from(sideItems);
+        for (final standardItem in sideItems) {
           if (standardItem.name == ttProduct.name) {
             newSideItemList.remove(standardItem);
           }
@@ -574,10 +572,10 @@ class _TradesWidgetState extends State<TradesWidget> {
 
       // If after comparing there are still items in sideItems, there are items not captured
       // by Torn Trades, so we'll give a warning
-      if (sideItems.length > 0) {
+      if (sideItems.isNotEmpty) {
         items.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 5),
+          const Padding(
+            padding: EdgeInsets.only(top: 5),
             child: SizedBox(
               width: 80,
               child: Divider(color: Colors.orange),
@@ -585,7 +583,7 @@ class _TradesWidgetState extends State<TradesWidget> {
           ),
         );
         items.add(
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Flexible(
@@ -607,10 +605,10 @@ class _TradesWidgetState extends State<TradesWidget> {
         // Recalculate remaining total
         int remainingTotal = 0;
         remainingTotal += _tradesProv.container.rightMoney;
-        for (var rem in sideItems) {
+        for (final rem in sideItems) {
           remainingTotal += rem.totalPrice;
         }
-        for (var sha in sideShares) {
+        for (final sha in sideShares) {
           remainingTotal += sha.totalPrice;
         }
         items.add(
@@ -619,7 +617,7 @@ class _TradesWidgetState extends State<TradesWidget> {
             child: Text(
               '(additional \$${_moneyFormat.format(remainingTotal)} market value)',
               textAlign: TextAlign.end,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.orange,
                 fontSize: 10,
               ),
@@ -635,17 +633,17 @@ class _TradesWidgetState extends State<TradesWidget> {
       items.add(
         Text(
           '\$${_moneyFormat.format(sideMoney)} in cash',
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.green,
             fontSize: 13,
           ),
         ),
       );
-      items.add(SizedBox(height: 10));
+      items.add(const SizedBox(height: 10));
     }
 
     // Item name
-    for (var item in sideItems) {
+    for (final item in sideItems) {
       String? itemName = item.name;
       if (itemName == 'No items in trade') {
         continue;
@@ -660,7 +658,7 @@ class _TradesWidgetState extends State<TradesWidget> {
       items.add(
         Text(
           itemName,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 13,
           ),
@@ -676,18 +674,18 @@ class _TradesWidgetState extends State<TradesWidget> {
       items.add(
         Text(
           itemPrice,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.green,
             fontSize: 12,
           ),
         ),
       );
 
-      items.add(SizedBox(height: 10));
+      items.add(const SizedBox(height: 10));
     }
 
     // PROPERTIES
-    for (var property in sideProperties) {
+    for (final property in sideProperties) {
       String? propertyName = property.name;
       if (propertyName == 'No properties in trade') {
         continue;
@@ -699,11 +697,11 @@ class _TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.home, size: 18, color: Colors.white),
-            SizedBox(width: 5),
+            const Icon(MdiIcons.home, size: 18, color: Colors.white),
+            const SizedBox(width: 5),
             Text(
               propertyName,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.orange,
                 fontSize: 13,
               ),
@@ -715,18 +713,18 @@ class _TradesWidgetState extends State<TradesWidget> {
       items.add(
         Text(
           property.happiness,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.green,
             fontSize: 12,
           ),
         ),
       );
 
-      items.add(SizedBox(height: 10));
+      items.add(const SizedBox(height: 10));
     }
 
     // SHARES
-    for (var share in sideShares) {
+    for (final share in sideShares) {
       String? shareName = share.name;
       if (shareName == 'No shares in trade') {
         continue;
@@ -744,11 +742,11 @@ class _TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
-            SizedBox(width: 5),
+            const Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
+            const SizedBox(width: 5),
             Text(
               shareName,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.pink,
                 fontSize: 13,
               ),
@@ -766,19 +764,19 @@ class _TradesWidgetState extends State<TradesWidget> {
       items.add(
         Text(
           sharePrice,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.green,
             fontSize: 12,
           ),
         ),
       );
 
-      items.add(SizedBox(height: 10));
+      items.add(const SizedBox(height: 10));
     }
 
     if (noItemsFound) {
       items.add(
-        Text(
+        const Text(
           'No items found',
           style: TextStyle(color: Colors.orange, fontSize: 13),
         ),
@@ -792,25 +790,25 @@ class _TradesWidgetState extends State<TradesWidget> {
     if (copy.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: copy));
       BotToast.showText(
-        text: toast + " copied to the clipboard!",
-        textStyle: TextStyle(
+        text: "$toast copied to the clipboard!",
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.green,
-        duration: Duration(seconds: 5),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
       );
     } else {
       BotToast.showText(
-        text: toast + "There was an error, no information copied!",
-        textStyle: TextStyle(
+        text: "${toast}There was an error, no information copied!",
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.red[800]!,
-        duration: Duration(seconds: 5),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
       );
     }
   }
@@ -819,20 +817,20 @@ class _TradesWidgetState extends State<TradesWidget> {
     if (_tradesProv.container.ttMessages!.isEmpty) {
       BotToast.showText(
         text: "You have no predefined messages!",
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.orange[800]!,
-        duration: Duration(seconds: 5),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
       );
     } else if (_tradesProv.container.ttMessages!.length == 1) {
-      String thisMessage = _tradesProv.container.ttMessages![0].message!;
+      final String thisMessage = _tradesProv.container.ttMessages![0].message!;
       _copyToClipboard(thisMessage, 'Message "$thisMessage"');
     } else {
-      var options = <Widget>[];
-      for (var msg in _tradesProv.container.ttMessages!) {
+      final options = <Widget>[];
+      for (final msg in _tradesProv.container.ttMessages!) {
         options.add(
           SimpleDialogOption(
             onPressed: () {
@@ -841,7 +839,7 @@ class _TradesWidgetState extends State<TradesWidget> {
             },
             child: Text(
               msg.message!,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
               ),
             ),
@@ -855,7 +853,7 @@ class _TradesWidgetState extends State<TradesWidget> {
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: ElevatedButton(
-                child: Text(
+                child: const Text(
                   'Cancel',
                   style: TextStyle(
                     fontSize: 13,
@@ -874,7 +872,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: Text(
+            title: const Text(
               'Choose message to copy',
               style: TextStyle(
                 color: ttColor,
@@ -894,23 +892,23 @@ class _TradesWidgetState extends State<TradesWidget> {
       dark = "dark&";
     }
 
-    var awhBaseUrl = "https://arsonwarehouse.com/pda?$dark&trade=";
-    var awhContainer = ArsonWarehouseOut();
+    final awhBaseUrl = "https://arsonwarehouse.com/pda?$dark&trade=";
+    final awhContainer = ArsonWarehouseOut();
 
-    var theirItems = <AwhItem>[];
-    for (var item in _tradesProv.container.rightItems) {
+    final theirItems = <AwhItem>[];
+    for (final item in _tradesProv.container.rightItems) {
       if (!item.name.contains("No items in trade")) {
-        var awhItem = AwhItem()
+        final awhItem = AwhItem()
           ..name = item.name
           ..quantity = item.quantity;
         theirItems.add(awhItem);
       }
     }
 
-    var myItems = <AwhItem>[];
-    for (var item in _tradesProv.container.leftItems) {
+    final myItems = <AwhItem>[];
+    for (final item in _tradesProv.container.leftItems) {
       if (!item.name.contains("No items in trade")) {
-        var awhItem = AwhItem()
+        final awhItem = AwhItem()
           ..name = item.name
           ..quantity = item.quantity;
         myItems.add(awhItem);
@@ -925,13 +923,13 @@ class _TradesWidgetState extends State<TradesWidget> {
       ..theirItems = theirItems
       ..myItems = myItems;
 
-    var awhJson = arsonWarehouseOutToJson(awhContainer);
-    var bytes = utf8.encode(awhJson);
-    var jsonEncoded = base64.encode(bytes);
-    var ticketURL = awhBaseUrl + jsonEncoded;
+    final awhJson = arsonWarehouseOutToJson(awhContainer);
+    final bytes = utf8.encode(awhJson);
+    final jsonEncoded = base64.encode(bytes);
+    final ticketURL = awhBaseUrl + jsonEncoded;
 
     return OpenContainer(
-      transitionDuration: Duration(seconds: 1),
+      transitionDuration: const Duration(seconds: 1),
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
         return WebViewFullAwh(
@@ -960,7 +958,7 @@ class _TradesWidgetState extends State<TradesWidget> {
     );
   }
 
-  void _backFromAwhWithMessage() async {
+  Future<void> _backFromAwhWithMessage() async {
     await widget.webView!.evaluateJavascript(source: "chat.r(${_tradesProv.container.sellerId})");
   }
 }

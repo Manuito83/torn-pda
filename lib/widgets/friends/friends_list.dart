@@ -12,7 +12,7 @@ import 'package:torn_pda/widgets/friends/friend_card.dart';
 class FriendsList extends StatelessWidget {
   final List<FriendModel> friends;
 
-  FriendsList({required this.friends});
+  const FriendsList({required this.friends});
 
   @override
   Widget build(BuildContext context) {
@@ -20,24 +20,24 @@ class FriendsList extends StatelessWidget {
       return ListView(children: getChildrenFriends(context));
     } else {
       return ListView(
-        children: getChildrenFriends(context),
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
+        children: getChildrenFriends(context),
       );
     }
   }
 
   List<Widget> getChildrenFriends(BuildContext _) {
-    var friendsProvider = Provider.of<FriendsProvider>(_, listen: false);
-    String filter = friendsProvider.currentFilter;
+    final friendsProvider = Provider.of<FriendsProvider>(_, listen: false);
+    final String filter = friendsProvider.currentFilter;
     List<Widget> filteredCards = <Widget>[];
-    for (var thisFriend in friends) {
+    for (final thisFriend in friends) {
       if (thisFriend.name!.toUpperCase().contains(filter.toUpperCase())) {
         filteredCards.add(FriendCard(friendModel: thisFriend));
       }
     }
     // Avoid collisions with SnackBar
-    filteredCards.add(SizedBox(height: 50));
+    filteredCards.add(const SizedBox(height: 50));
     return filteredCards;
   }
 }

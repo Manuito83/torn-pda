@@ -19,12 +19,12 @@ class FriendlyFaction {
   int? id;
 
   factory FriendlyFaction.fromJson(Map<String, dynamic> json) => FriendlyFaction(
-    name: json["name"] == null ? null : json["name"],
-    id: json["id"] == null ? null : json["id"],
+    name: json["name"],
+    id: json["id"],
   );
 
   Map<String, dynamic> toJson() => {
-    "name": name == null ? null : name,
-    "id": id == null ? null : id,
+    "name": name,
+    "id": id,
   };
 }

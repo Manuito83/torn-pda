@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+
 // Package imports:
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -8,18 +9,18 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_card.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_options.dart';
 
 class RankedWarsPage extends StatefulWidget {
   final bool calledFromMenu;
 
-  RankedWarsPage({this.calledFromMenu = false});
+  const RankedWarsPage({this.calledFromMenu = false});
 
   @override
   _RankedWarsPageState createState() => _RankedWarsPageState();
@@ -56,7 +57,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
@@ -76,8 +77,8 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                     backgroundColor: _themeProvider!.canvas,
                     appBar: _settingsProvider!.appBarTop
                         ? buildAppBarSuccess(context)
-                        : new PreferredSize(
-                            preferredSize: Size.fromHeight(kToolbarHeight),
+                        : PreferredSize(
+                            preferredSize: const Size.fromHeight(kToolbarHeight),
                             child: Container(
                               color: _themeProvider!.currentTheme == AppTheme.light
                                   ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -86,8 +87,8 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                                   : _themeProvider!.canvas,
                               child: Column(
                                 children: <Widget>[
-                                  Expanded(child: new Container()),
-                                  TabBar(
+                                  Expanded(child: Container()),
+                                  const TabBar(
                                     tabs: [
                                       Tab(text: "Active"),
                                       Tab(text: "Upcoming"),
@@ -139,7 +140,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                 appBar: _settingsProvider!.appBarTop ? buildAppBarError(context) : null,
                 body: Container(
                     color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-                    child: Center(child: CircularProgressIndicator())),
+                    child: const Center(child: CircularProgressIndicator()),),
               ),
             );
           }
@@ -151,15 +152,15 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabActive() {
     List<Widget> activeWarsCards = <Widget>[];
 
-    var sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
-      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)));
+    final sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
+      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),);
 
     sortedByValueMap.forEach((key, value) {
       if (value.war!.start! < _timeNow && value.war!.end == 0 && value.factions!.containsKey(_ownFaction.toString())) {
         activeWarsCards.add(
           Column(
             children: [
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               RankedWarCard(
                 rankedWar: value,
                 status: RankedWarStatus.active,
@@ -167,7 +168,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                 ownFactionId: _ownFaction,
                 key: UniqueKey(),
               ),
-              Divider(),
+              const Divider(),
             ],
           ),
         );
@@ -202,15 +203,15 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabUpcoming() {
     List<Widget> upComingWars = <Widget>[];
 
-    var sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
-      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)));
+    final sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
+      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),);
 
     sortedByValueMap.forEach((key, value) {
       if (value.war!.start! > _timeNow && value.factions!.containsKey(_ownFaction.toString())) {
         upComingWars.add(
           Column(
             children: [
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               RankedWarCard(
                 rankedWar: value,
                 status: RankedWarStatus.upcoming,
@@ -218,7 +219,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                 ownFactionId: _ownFaction,
                 key: UniqueKey(),
               ),
-              Divider(),
+              const Divider(),
             ],
           ),
         );
@@ -253,15 +254,15 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabFinished() {
     List<Widget> finishedWars = <Widget>[];
 
-    var sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
-      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)));
+    final sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
+      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),);
 
     sortedByValueMap.forEach((key, value) {
       if (value.war!.end != 0 && value.war!.end! < _timeNow && value.factions!.containsKey(_ownFaction.toString())) {
         finishedWars.add(
           Column(
             children: [
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               RankedWarCard(
                 rankedWar: value,
                 status: RankedWarStatus.finished,
@@ -269,7 +270,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                 ownFactionId: _ownFaction,
                 key: UniqueKey(),
               ),
-              Divider(),
+              const Divider(),
             ],
           ),
         );
@@ -314,7 +315,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       ),
       toolbarHeight: kMinInteractiveDimension,
       title: const Text("Ranked Wars"),
-      leading: new IconButton(
+      leading: IconButton(
         icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
@@ -322,7 +323,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       ),
       actions: [
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.settings,
           ),
           onPressed: () async {
@@ -341,7 +342,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
         )
       ],
       bottom: _settingsProvider!.appBarTop
-          ? TabBar(
+          ? const TabBar(
               tabs: [
                 Tab(text: "Active"),
                 Tab(text: "Upcoming"),
@@ -375,7 +376,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   }
 
   Future _fetchRankedWards() async {
-    dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
+    final dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
 
     if (apiResponse is RankedWarsModel) {
       if (apiResponse.rankedwars != null) {
@@ -389,7 +390,6 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 50),
         child: Column(
-          mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             if (_rankedWarsModel.rankedwars != null && _rankedWarsModel.rankedwars!.isEmpty)
@@ -398,17 +398,17 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                 style: TextStyle(color: Colors.orange[800], fontSize: 20, fontWeight: FontWeight.bold),
               )
             else
-              Text(
+              const Text(
                 'OOPS!',
                 style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
               ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             if (_rankedWarsModel.rankedwars != null && _rankedWarsModel.rankedwars!.isEmpty)
-              Text(
+              const Text(
                 'The ranked wars list returned from the API is empty, please try again later!',
               )
             else
-              Text(
+              const Text(
                 'There was an error getting data from the API, please try again later!',
               ),
           ],

@@ -1274,7 +1274,7 @@ class Prefs {
   /// ----------------------------
   Future<List<String>> getStockCountryFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1', growable: false);
+    return prefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1');
   }
 
   Future<bool> setStockCountryFilter(List<String> value) async {
@@ -1284,7 +1284,7 @@ class Prefs {
 
   Future<List<String>> getStockTypeFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1', growable: false);
+    return prefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1');
   }
 
   Future<bool> setStockTypeFilter(List<String> value) async {
@@ -2392,7 +2392,7 @@ class Prefs {
 
   Future<String?> getUserScriptsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kUserScriptsList) ?? null;
+    return prefs.getString(_kUserScriptsList);
   }
 
   Future<bool> setUserScriptsList(String value) async {

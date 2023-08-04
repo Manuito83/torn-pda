@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/external/hela_revive.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,8 +23,8 @@ class HelaReviveButton extends StatefulWidget {
     required this.settingsProvider,
     required this.webViewProvider,
     this.user,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _HelaReviveButtonState createState() => _HelaReviveButtonState();
@@ -53,8 +53,8 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
             padding: const EdgeInsets.only(right: 13),
             child: Image.asset('images/icons/hela_revive.png', width: 24),
           ),
-          SizedBox(width: 10),
-          Flexible(child: Text("Request a revive (HeLa)")),
+          const SizedBox(width: 10),
+          const Flexible(child: Text("Request a revive (HeLa)")),
         ],
       ),
     );
@@ -76,22 +76,21 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: widget.themeProvider!.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -127,7 +126,7 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                                   child: GestureDetector(
                                     onTap: () {
                                       Navigator.of(context).pop();
-                                      var url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16233040&b=0&a=0';
+                                      const url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16233040&b=0&a=0';
                                       context.read<WebViewProvider>().openBrowserPreference(
                                             context: context,
                                             url: url,
@@ -136,14 +135,14 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                                     },
                                     onLongPress: () {
                                       Navigator.of(context).pop();
-                                      var url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16233040&b=0&a=0';
+                                      const url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16233040&b=0&a=0';
                                       context.read<WebViewProvider>().openBrowserPreference(
                                             context: context,
                                             url: url,
                                             browserTapType: BrowserTapType.long,
                                           );
                                     },
-                                    child: Text(
+                                    child: const Text(
                                       'forum thread',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -153,39 +152,39 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                                     ),
                                   ),
                                 ),
-                                TextSpan(text: ' and '),
+                                const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Discord server',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blue,
                                     fontSize: 13,
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () async {
-                                      var url = 'https://discord.gg/hWamUgW';
+                                      const url = 'https://discord.gg/hWamUgW';
                                       if (await canLaunchUrl(Uri.parse(url))) {
                                         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                                       }
                                     },
                                 ),
-                                TextSpan(
+                                const TextSpan(
                                     text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
-                                        "Refusal to pay will result in getting blacklisted."),
+                                        "Refusal to pay will result in getting blacklisted.",),
                               ],
                             ),
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Medic!"),
+                              child: const Text("Medic!"),
                               onPressed: () async {
                                 // User can be null if we are not accessing from the Profile page
                                 if (widget.user == null) {
-                                  var apiResponse =
+                                  final apiResponse =
                                       await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
                                   if (apiResponse is OwnProfileExtended) {
                                     _user = apiResponse;
@@ -196,13 +195,13 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                                   BotToast.showText(
                                     text: 'There was an error contacting Torn API to get your current status, '
                                         'please try again after a while!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.red[800]!,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
@@ -212,19 +211,19 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                                   BotToast.showText(
                                     text: 'According to Torn you are not currently hospitalized, please wait a '
                                         'few seconds and try again!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.red[800]!,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
                                 }
 
-                                var hela = HelaRevive(
+                                final hela = HelaRevive(
                                   tornId: _user!.playerId,
                                   username: _user!.name,
                                 );
@@ -238,13 +237,13 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
 
                                   BotToast.showText(
                                     text: value,
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
                                     contentColor: resultColor!,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 });
 
@@ -252,7 +251,7 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                               },
                             ),
                             TextButton(
-                              child: Text("Cancel"),
+                              child: const Text("Cancel"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },

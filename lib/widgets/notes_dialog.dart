@@ -26,7 +26,7 @@ class PersonalNotesDialog extends StatefulWidget {
   final PersonalNoteType noteType;
 
   /// Specify the model type in [noteType] and pass accordingly
-  PersonalNotesDialog({
+  const PersonalNotesDialog({
     required this.noteType,
     this.targetModel,
     this.friendModel,
@@ -51,7 +51,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
 
   String? _myTempChosenColor;
 
-  final _personalNotesController = new TextEditingController();
+  final _personalNotesController = TextEditingController();
 
   bool _targetAndWarTargetExists = false;
 
@@ -92,28 +92,27 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return SingleChildScrollView(
       child: Stack(
         children: <Widget>[
           SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: 45,
                 bottom: 16,
                 left: 16,
                 right: 16,
               ),
-              margin: EdgeInsets.only(top: 30),
-              decoration: new BoxDecoration(
+              margin: const EdgeInsets.only(top: 30),
+              decoration: BoxDecoration(
                 color: _themeProvider.secondBackground,
-                shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
                     blurRadius: 10.0,
-                    offset: const Offset(0.0, 10.0),
+                    offset: Offset(0.0, 10.0),
                   ),
                 ],
               ),
@@ -128,7 +127,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           padding: const EdgeInsets.only(bottom: 10),
                           child: Text(
                             "${widget.targetModel!.name} is also a war target: notes will be updated on both sides!",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                             ),
                           ),
@@ -141,7 +140,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           child: Text(
                             "${widget.memberModel!.name} is also in your standard targets list: notes will be updated "
                             "on both sides!",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                             ),
                           ),
@@ -162,9 +161,8 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         RawChip(
-                          showCheckmark: true,
                           selected: _myTempChosenColor == 'red' ? true : false,
-                          label: Text(''),
+                          label: const Text(''),
                           onSelected: (bool isSelected) {
                             setState(() {
                               if (isSelected) {
@@ -176,20 +174,18 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           },
                           selectedColor: Colors.red,
                           backgroundColor: Colors.red,
-                          shape: StadiumBorder(
+                          shape: const StadiumBorder(
                             side: BorderSide(
-                              width: 1,
-                              color: Colors.black,
+                              
                             ),
                           ),
                         ),
-                        Padding(
+                        const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
                         RawChip(
-                          showCheckmark: true,
                           selected: _myTempChosenColor == 'orange' ? true : false,
-                          label: Text(''),
+                          label: const Text(''),
                           onSelected: (bool isSelected) {
                             setState(() {
                               if (isSelected) {
@@ -201,20 +197,18 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           },
                           selectedColor: Colors.orange[600],
                           backgroundColor: Colors.orange[600],
-                          shape: StadiumBorder(
+                          shape: const StadiumBorder(
                             side: BorderSide(
-                              width: 1,
-                              color: Colors.black,
+                              
                             ),
                           ),
                         ),
-                        Padding(
+                        const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
                         RawChip(
-                          showCheckmark: true,
                           selected: _myTempChosenColor == 'green' ? true : false,
-                          label: Text(''),
+                          label: const Text(''),
                           onSelected: (bool isSelected) {
                             setState(() {
                               if (isSelected) {
@@ -226,16 +220,15 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           },
                           selectedColor: Colors.green,
                           backgroundColor: Colors.green,
-                          shape: StadiumBorder(
+                          shape: const StadiumBorder(
                             side: BorderSide(
-                              width: 1,
-                              color: Colors.black,
+                              
                             ),
                           ),
                         ),
                       ],
                     ),
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
                     ),
                     TextFormField(
@@ -248,18 +241,18 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                       maxLength: 200,
                       minLines: 1,
                       maxLines: 3,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         counterText: "",
                         border: OutlineInputBorder(),
                         labelText: 'Insert note',
                       ),
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Insert"),
+                          child: const Text("Insert"),
                           onPressed: () {
                             // Pop and then perform the work
                             Navigator.of(context).pop();
@@ -272,7 +265,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                               // Update also the war target if it exists
                               if (_targetAndWarTargetExists) {
                                 Member? m;
-                                for (var f in _w.factions) {
+                                for (final f in _w.factions) {
                                   if (f.members!.keys.contains(widget.targetModel!.playerId.toString())) {
                                     m = f.members![widget.targetModel!.playerId.toString()];
                                     _w.setMemberNote(
@@ -306,7 +299,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           },
                         ),
                         TextButton(
-                          child: Text("Cancel"),
+                          child: const Text("Cancel"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -342,14 +335,14 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
 
   void checkIfSameTargetAndWar() {
     if (widget.noteType == PersonalNoteType.target) {
-      for (var f in _w.factions) {
+      for (final f in _w.factions) {
         if (f.members!.keys.contains(widget.targetModel!.playerId.toString())) {
           _targetAndWarTargetExists = true;
           return;
         }
       }
     } else if (widget.noteType == PersonalNoteType.factionMember) {
-      for (var t in _targetsProvider.allTargets) {
+      for (final t in _targetsProvider.allTargets) {
         if (t.playerId == widget.memberModel!.memberId) {
           _targetAndWarTargetExists = true;
           return;

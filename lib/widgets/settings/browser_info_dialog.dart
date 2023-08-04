@@ -15,8 +15,8 @@ class _BrowserInfoDialogState extends State<BrowserInfoDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Browser type"),
-      content: SingleChildScrollView(
+      title: const Text("Browser type"),
+      content: const SingleChildScrollView(
         child: Column(
           children: [
             Text("Choosing the in-app browser "
@@ -33,7 +33,7 @@ class _BrowserInfoDialogState extends State<BrowserInfoDialog> {
       ),
       actions: [
         TextButton(
-          child: Text("Close"),
+          child: const Text("Close"),
           onPressed: () {
             Navigator.of(context).pop();
           },

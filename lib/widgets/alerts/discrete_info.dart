@@ -16,17 +16,17 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Discrete notifications"),
-      content: Scrollbar(
+      content: const Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12),
             child: Column(
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Discrete notifications are designed for environments (work, school...) where the standard "
                       "notification text (i.e.: referencing loot, drugs, etc.) would not be appropriate."
                       "\n\nInstead, you will receive a much shorter text, as explained below."
@@ -34,8 +34,8 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
                       "(e.g.: event or message details). Applies both for manual notifications and automatic alerts.",
                       style: TextStyle(fontSize: 13),
                     ),
-                    const SizedBox(height: 20),
-                    const Text(
+                    SizedBox(height: 20),
+                    Text(
                       "Examples notification titles and bodies if discrete notifications are enabled:",
                       style: TextStyle(fontSize: 13),
                     ),
@@ -43,7 +43,6 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
                 ),
                 SizedBox(height: 20),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Column(
                       children: [
@@ -436,7 +435,7 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
               ],
             ),
           ),
@@ -444,7 +443,7 @@ class _DiscreteInfoState extends State<DiscreteInfo> {
       ),
       actions: [
         TextButton(
-          child: Text("Quiet!"),
+          child: const Text("Quiet!"),
           onPressed: () {
             Navigator.of(context).pop();
           },

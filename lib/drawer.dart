@@ -4,17 +4,18 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
+
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_font_icons/flutter_font_icons.dart';
 // Flutter imports:
 import 'package:flutter/material.dart' hide Intent;
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
@@ -23,6 +24,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'package:receive_intent/receive_intent.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
@@ -43,21 +45,21 @@ import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
-import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
-import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
@@ -65,7 +67,6 @@ import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:uni_links/uni_links.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 bool routeWithDrawer = true;
@@ -110,8 +111,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
   late WebViewProvider _webViewProvider;
-  StakeoutsController _s = Get.put(StakeoutsController(), permanent: true);
-  ApiCallerController _apiController = Get.find<ApiCallerController>();
+  final StakeoutsController _s = Get.put(StakeoutsController(), permanent: true);
+  final ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -122,8 +123,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   // Used to avoid racing condition with browser launch from notifications (not included in the FutureBuilder), as
   // preferences take time to load
-  Completer _preferencesCompleter = Completer();
-  Completer _changelogCompleter = Completer();
+  final Completer _preferencesCompleter = Completer();
+  final Completer _changelogCompleter = Completer();
   // Used for the main UI loading (FutureBuilder)
   Future? _finishedWithPreferences;
   Future? _finishedWithChangelog;
@@ -167,7 +168,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // STARTS QUICK ACTIONS
-      final QuickActions quickActions = QuickActions();
+      const QuickActions quickActions = QuickActions();
 
       quickActions.setShortcutItems(<ShortcutItem>[
         // NOTE: keep the same file name for both platforms
@@ -242,9 +243,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     // See https://firebase.flutter.dev/docs/messaging/notifications/
     if (Platform.isIOS) {
       _messaging.setForegroundNotificationPresentationOptions(
-        alert: false,
-        badge: false,
-        sound: false,
+        
       );
     }
 
@@ -297,7 +296,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         // This will eventually fire a local notification
         showNotification(message.data, notId);
       } else {
-        return null;
+        return;
       }
     });
 
@@ -352,7 +351,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused) {
       // Stop stakeouts
       _s.stopTimer();
@@ -403,7 +402,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       await _assessIntent(intent);
     }, onError: (err) {
       log(err);
-    });
+    },);
   }
 
   Future<void> _assessIntent(Intent intent) async {
@@ -440,7 +439,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       launchBrowser = true;
       browserUrl = "https://www.torn.com/events.php";
     } else if (intent.data!.contains("pdaWidget://shortcut:")) {
-      String shortcutUrl = intent.data!.split("pdaWidget://shortcut:")[1];
+      final String shortcutUrl = intent.data!.split("pdaWidget://shortcut:")[1];
       launchBrowser = true;
       browserUrl = shortcutUrl;
     } else if (intent.data!.contains("pdaWidget://drug-clicked")) {
@@ -505,7 +504,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     }
   }
 
-  void _deepLinkHandle(String? link, {bool error = false}) async {
+  Future<void> _deepLinkHandle(String? link, {bool error = false}) async {
     try {
       bool showError = false;
       String? url = link;
@@ -741,7 +740,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+          final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowser = true;
             browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
@@ -749,7 +748,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
             // If we pass all checks above, redirect to the retals section
             _retalsRedirection = true;
             _callSectionFromOutside(2);
-            Future.delayed(Duration(seconds: 2)).then((value) {
+            Future.delayed(const Duration(seconds: 2)).then((value) {
               _retalsRedirection = false;
             });
           }
@@ -769,14 +768,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+          final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
-            int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
-            int refillsComparison = otherRefills! - own.personalstats!.refills!;
-            int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
+            final int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
+            final int refillsComparison = otherRefills! - own.personalstats!.refills!;
+            final int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
 
-            int otherTotals = otherXanax + otherRefills + otherDrinks;
-            int myTotals =
+            final int otherTotals = otherXanax + otherRefills + otherDrinks;
+            final int myTotals =
                 own.personalstats!.xantaken! + own.personalstats!.refills! + own.personalstats!.energydrinkused!;
 
             if (otherTotals < myTotals - myTotals * 0.1) {
@@ -830,8 +829,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       }
 
       BotToast.showText(
-        align: Alignment(0, 0),
-        crossPage: true,
+        align: const Alignment(0, 0),
         clickClose: true,
         text: message["body"],
         textStyle: const TextStyle(
@@ -843,19 +841,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         contentPadding: const EdgeInsets.all(10),
       );
     } else if (loot) {
-      var incomingIds = assistId!.split(",");
+      final incomingIds = assistId!.split(",");
       if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
         // This is a standard loot alert for a single NPC
         launchBrowser = true;
         browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
       } else if (incomingIds[0].contains("[")) {
         // This is a Loot Rangers alert for one or more NPCs
-        var ids = <String>[];
-        var names = <String>[];
-        var notes = <String>[];
-        var colors = <String>[];
+        final ids = <String>[];
+        final names = <String>[];
+        final notes = <String>[];
+        final colors = <String>[];
         for (var i = 0; i < incomingIds.length; i++) {
-          var parts = incomingIds[i].split("[");
+          final parts = incomingIds[i].split("[");
           names.add(parts[0]);
           ids.add(parts[1].replaceAll("]", ""));
           colors.add("green");
@@ -879,7 +877,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
               ..attackNotesColorList = colors
               ..showNotes = true
               ..showBlankNotes = false
-              ..showOnlineFactionWarning = false);
+              ..showOnlineFactionWarning = false,);
       }
     }
 
@@ -945,8 +943,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         final lootRangersTime = payload.split('-')[3];
         final timeNote = "Attacks due to commence at $lootRangersTime!";
 
-        var notes = <String>[];
-        var colors = <String>[];
+        final notes = <String>[];
+        final colors = <String>[];
         for (var i = 0; i < lootRangersNpcsIds.length; i++) {
           colors.add("green");
           if (i == 0) {
@@ -969,7 +967,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
               ..attackNotesColorList = colors
               ..showNotes = true
               ..showBlankNotes = false
-              ..showOnlineFactionWarning = false);
+              ..showOnlineFactionWarning = false,);
 
         browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$lootRangersNpcsIds';
       } else if (payload.contains('tornMessageId:')) {
@@ -1016,7 +1014,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+          final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowser = true;
             browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
@@ -1024,7 +1022,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
             // If we pass all checks above, redirect to the retals section
             _retalsRedirection = true;
             _callSectionFromOutside(2);
-            Future.delayed(Duration(seconds: 2)).then((value) {
+            Future.delayed(const Duration(seconds: 2)).then((value) {
               _retalsRedirection = false;
             });
           }
@@ -1047,14 +1045,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
             int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+            final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
-              int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
-              int refillsComparison = otherRefills! - own.personalstats!.refills!;
-              int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
+              final int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
+              final int refillsComparison = otherRefills! - own.personalstats!.refills!;
+              final int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
 
-              int otherTotals = otherXanax + otherRefills + otherDrinks;
-              int myTotals =
+              final int otherTotals = otherXanax + otherRefills + otherDrinks;
+              final int myTotals =
                   own.personalstats!.xantaken! + own.personalstats!.refills! + own.personalstats!.energydrinkused!;
 
               if (otherTotals < myTotals - myTotals * 0.1) {
@@ -1093,8 +1091,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
               }
 
               if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
-                int begin = assistBody[1].indexOf("\n- Xanax");
-                int last = assistBody[1].length;
+                final int begin = assistBody[1].indexOf("\n- Xanax");
+                final int last = assistBody[1].length;
                 assistBody[1] = assistBody[1].replaceRange(begin, last, "");
                 assistBody[1] += xanaxString;
                 assistBody[1] += refillsString;
@@ -1107,8 +1105,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         }
 
         BotToast.showText(
-          align: Alignment(0, 0),
-          crossPage: true,
+          align: const Alignment(0, 0),
           clickClose: true,
           text: assistBody[1],
           textStyle: const TextStyle(
@@ -1123,19 +1120,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         final assistSplit = payload.split('###');
         final assistId = assistSplit[0].split(':');
         final bulkDetails = assistSplit[1].split('bulkDetails:');
-        var incomingIds = assistId[1].split(",");
+        final incomingIds = assistId[1].split(",");
         if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
           // This is a standard loot alert for a single NPC
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else if (incomingIds[0].contains("[")) {
           // This is a Loot Rangers alert for one or more NPCs
-          var ids = <String>[];
-          var names = <String>[];
-          var notes = <String>[];
-          var colors = <String>[];
+          final ids = <String>[];
+          final names = <String>[];
+          final notes = <String>[];
+          final colors = <String>[];
           for (var i = 0; i < incomingIds.length; i++) {
-            var parts = incomingIds[i].split("[");
+            final parts = incomingIds[i].split("[");
             names.add(parts[0]);
             ids.add(parts[1].replaceAll("]", ""));
             colors.add("green");
@@ -1159,7 +1156,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                 ..attackNotesColorList = colors
                 ..showNotes = true
                 ..showBlankNotes = false
-                ..showOnlineFactionWarning = false);
+                ..showOnlineFactionWarning = false,);
         }
       }
 
@@ -1176,8 +1173,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     });
   }
 
-  void _openBrowserFromToast(String url) async {
-    var browserType = _settingsProvider.currentBrowser;
+  Future<void> _openBrowserFromToast(String url) async {
+    final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
@@ -1185,20 +1182,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           browserTapType: BrowserTapType.chain,
           url: url,
         );
-        break;
       case BrowserSetting.external:
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
-        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _userProvider = Provider.of<UserDetailsProvider>(context);
     _s.callbackBrowser = _openBrowserFromToast;
     return FutureBuilder(
       future: _finishedWithPreferences,
@@ -1233,8 +1228,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         } else {
           return Container(
             color: _themeProvider!.secondBackground,
-            child: SafeArea(
-              child: const Center(
+            child: const SafeArea(
+              child: Center(
                 child: CircularProgressIndicator(),
               ),
             ),
@@ -1263,14 +1258,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                           stream: _apiController.callCountStream,
                           initialData: 0,
                           builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-                            int callCount = snapshot.data ?? 0;
-                            double progress = math.min(callCount / 100, 1.0);
+                            final int callCount = snapshot.data ?? 0;
+                            final double progress = math.min(callCount / 100, 1.0);
                             return LinearPercentIndicator(
-                              padding: EdgeInsets.all(0),
-                              barRadius: Radius.circular(10),
+                              padding: const EdgeInsets.all(0),
+                              barRadius: const Radius.circular(10),
                               center: Text(
-                                "${callCount}",
-                                style: TextStyle(fontSize: 12),
+                                "$callCount",
+                                style: const TextStyle(fontSize: 12),
                               ),
                               lineHeight: 14.0,
                               percent: progress,
@@ -1280,8 +1275,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                             );
                           },
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, top: 1),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4, top: 1),
                           child: Text(
                             "API CALLS (60s)",
                             style: TextStyle(fontSize: 9),
@@ -1291,7 +1286,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                     ),
                   );
                 } else {
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 }
               },
             ),
@@ -1321,7 +1316,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                       SizedBox(
                         height: 30,
                         child: ToggleSwitch(
-                          customWidths: [35, 35, 35],
+                          customWidths: const [35, 35, 35],
                           iconSize: 15,
                           borderWidth: 1,
                           cornerRadius: 5,
@@ -1347,7 +1342,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                           totalSwitches: 3,
                           animate: true,
                           animationDuration: 500,
-                          icons: [
+                          icons: const [
                             FontAwesome.sun_o,
                             FontAwesome.moon_o,
                             MdiIcons.ghost,
@@ -1374,8 +1369,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
                                   fontSize: 14,
                                   color: Colors.grey,
                                 ),
-                                contentColor: Color(0xFF0C0C0C),
-                                duration: const Duration(seconds: 2),
+                                contentColor: const Color(0xFF0C0C0C),
                                 contentPadding: const EdgeInsets.all(10),
                               );
                             }
@@ -1479,7 +1473,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
         // Adding divider just before SETTINGS
         if (i == _settingsPosition) {
           drawerOptions.add(
-            Divider(),
+            const Divider(),
           );
         }
         drawerOptions.add(
@@ -1515,7 +1509,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
           disableTravelSection: _onChangeDisableTravelSection,
         );
       case 1:
-        return TravelPage();
+        return const TravelPage();
       case 2:
         return ChainingPage(retalsRedirection: _retalsRedirection);
       case 3:
@@ -1523,13 +1517,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       case 4:
         return FriendsPage();
       case 5:
-        return StakeoutsPage();
+        return const StakeoutsPage();
       case 6:
         return AwardsPage();
       case 7:
-        return ItemsPage();
+        return const ItemsPage();
       case 8:
-        return RankedWarsPage(calledFromMenu: true);
+        return const RankedWarsPage(calledFromMenu: true);
       case 9:
         return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
       case 10:
@@ -1651,13 +1645,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
             clickClose: true,
             text: "A problem was found with your user.\n\n"
                 "Please visit the Alerts page and ensure that your alerts are properly setup!",
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.blue,
-            duration: Duration(seconds: 6),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 6),
+            contentPadding: const EdgeInsets.all(10),
           );
         } else {
           final existingUid = user.uid;
@@ -1668,8 +1662,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       });
 
       // Native user status check and auth time check
-      NativeUserProvider nativeUser = context.read<NativeUserProvider>();
-      NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+      final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+      final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
       await nativeUser.loadPreferences();
       await nativeAuth.loadPreferences();
       if (nativeUser.isNativeUserEnabled()) {
@@ -1700,7 +1694,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   Future<void> _updateLastActiveTime() async {
     // Prevents update on first load
-    var api = _userProvider?.basic?.userApiKey;
+    final api = _userProvider?.basic?.userApiKey;
     if (api == null || api.isEmpty) return;
 
     // Calculate difference between last recorded use and current time
@@ -1742,7 +1736,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
   Future<void> _handleChangelog() async {
     final String savedCompilation = await Prefs().getAppCompilation();
-    String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+    final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
 
     if (savedCompilation != currentCompilation) {
       Prefs().setAppCompilation(currentCompilation);
@@ -1771,7 +1765,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       // Appwidget dialog
       if (Platform.isAndroid) {
         if (!await Prefs().getAppwidgetExplanationShown()) {
-          int widgets = (await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
+          final int widgets = (await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
           if (widgets > 0) {
             await _showAppwidgetExplanationDialog(context);
             Prefs().setAppwidgetExplanationShown(true);
@@ -1784,7 +1778,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       // Version hardcoded - only allow users with version 0
       if ((await Prefs().getAppAnnouncementDialogVersion()) <= 0) {
         // For version 1, user needs to have 24 hours of app use
-        int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+        final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
         if (savedSeconds < 86400) return;
 
         // If we are still in an old dialog, get DB to see if we can are free to show it
@@ -1876,7 +1870,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   Future<void> _openBackgroundStockDialog(String update) {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(

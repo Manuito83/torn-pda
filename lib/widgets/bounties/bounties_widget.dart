@@ -13,8 +13,8 @@ class BountiesWidget extends StatefulWidget {
   const BountiesWidget({
     required this.webview,
     required this.fireScriptCallback,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _BountiesWidgetState createState() => _BountiesWidgetState();
@@ -90,10 +90,10 @@ class _BountiesWidgetState extends State<BountiesWidget> {
                         ],
                       ),
                     ),
-                  SizedBox(
+                  const SizedBox(
                     width: 80,
                     child: Column(
-                      children: const [
+                      children: [
                         Text(
                           'BOUNTIES',
                           style: TextStyle(color: Colors.orange, fontSize: 12),
@@ -150,8 +150,8 @@ class _BountiesWidgetState extends State<BountiesWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: const Text(
+        const Flexible(
+          child: Text(
             "Max level",
             style: TextStyle(
               color: Colors.white,
@@ -159,7 +159,7 @@ class _BountiesWidgetState extends State<BountiesWidget> {
             ),
           ),
         ),
-        SizedBox(width: 5),
+        const SizedBox(width: 5),
         Row(
           children: [
             Slider(
@@ -216,8 +216,8 @@ class _BountiesWidgetState extends State<BountiesWidget> {
               },
             ),
             Text(
-              "${_bountiesModel.removeRed ? "Hide" : "Show"}",
-              style: TextStyle(
+              _bountiesModel.removeRed ? "Hide" : "Show",
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
               ),

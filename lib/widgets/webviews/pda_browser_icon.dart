@@ -5,12 +5,12 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 
 class PdaBrowserIcon extends StatelessWidget {
   const PdaBrowserIcon({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    bool automaticLogins = context.read<NativeAuthProvider>().tryAutomaticLogins;
+    final bool automaticLogins = context.read<NativeAuthProvider>().tryAutomaticLogins;
     return GestureDetector(
       child: Image.asset(
         'images/icons/torn_pda_browser.png',

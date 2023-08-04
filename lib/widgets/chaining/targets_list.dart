@@ -17,7 +17,7 @@ import 'package:torn_pda/widgets/chaining/target_card.dart';
 class TargetsList extends StatefulWidget {
   final List<TargetModel> targets;
 
-  TargetsList({required this.targets});
+  const TargetsList({required this.targets});
 
   @override
   State<TargetsList> createState() => _TargetsListState();
@@ -48,7 +48,7 @@ class _TargetsListState extends State<TargetsList> {
       return ListView.builder(
         shrinkWrap: true,
         itemCount: widget.targets.length,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (context, index) {
           return SlidableCard(index, context);
         },
@@ -59,14 +59,13 @@ class _TargetsListState extends State<TargetsList> {
   Widget SlidableCard(int index, BuildContext context) {
     if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
         _targetsProvider.currentColorFilterOut.contains(widget.targets[index].personalNoteColor)) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     return Slidable(
       closeOnScroll: false,
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
-        extentRatio: 0.5,
         children: [
           SlidableAction(
             label: 'Remove',
@@ -75,13 +74,13 @@ class _TargetsListState extends State<TargetsList> {
             onPressed: (context) {
               BotToast.showText(
                 text: 'Deleted ${widget.targets[index].name}!',
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
                 contentColor: Colors.orange[800]!,
-                duration: Duration(seconds: 5),
-                contentPadding: EdgeInsets.all(10),
+                duration: const Duration(seconds: 5),
+                contentPadding: const EdgeInsets.all(10),
               );
               _targetsProvider.deleteTarget(widget.targets[index]);
             },
@@ -90,10 +89,8 @@ class _TargetsListState extends State<TargetsList> {
       ),
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
-        extentRatio: 0.5,
         children: [
-          _chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).length == 0
-              ? SlidableAction(
+          if (_chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).isEmpty) SlidableAction(
                   label: 'Add to panic!',
                   backgroundColor: Colors.blue,
                   icon: MdiIcons.alphaPCircleOutline,
@@ -118,23 +115,22 @@ class _TargetsListState extends State<TargetsList> {
 
                     BotToast.showText(
                       text: message,
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         fontSize: 14,
                         color: Colors.white,
                       ),
                       contentColor: messageColor!,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
+                      duration: const Duration(seconds: 5),
+                      contentPadding: const EdgeInsets.all(10),
                     );
                   },
-                )
-              : SlidableAction(
+                ) else SlidableAction(
                   label: 'PANIC TARGET',
                   backgroundColor: Colors.blue,
                   icon: MdiIcons.alphaPCircleOutline,
                   onPressed: (context) {
-                    String message = "Removed ${widget.targets[index].name} as a Panic Mode target!";
-                    Color messageColor = Colors.green;
+                    final String message = "Removed ${widget.targets[index].name} as a Panic Mode target!";
+                    const Color messageColor = Colors.green;
 
                     setState(() {
                       _chainStatusProvider.removePanicTarget(
@@ -148,13 +144,13 @@ class _TargetsListState extends State<TargetsList> {
 
                     BotToast.showText(
                       text: message,
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         fontSize: 14,
                         color: Colors.white,
                       ),
                       contentColor: messageColor,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
+                      duration: const Duration(seconds: 5),
+                      contentPadding: const EdgeInsets.all(10),
                     );
                   },
                 ),

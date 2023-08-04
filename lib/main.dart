@@ -2,9 +2,9 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-
 // Useful for functions debugging
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -20,13 +20,10 @@ import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:torn_pda/firebase_options.dart';
-import 'package:torn_pda/providers/api_caller.dart';
-import 'package:torn_pda/utils/appwidget/pda_widget.dart';
-import 'package:torn_pda/utils/http_overrides.dart';
-import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/firebase_options.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
@@ -46,7 +43,10 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
+import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.1.4';
@@ -101,7 +101,7 @@ Future<void> main() async {
 
   // Initialise Workmanager for app widget
   // [isInDebugMode] sends notifications each time a task is performed
-  Workmanager().initialize(pdaWidget_backgroundUpdate, isInDebugMode: false);
+  Workmanager().initialize(pdaWidget_backgroundUpdate);
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {
@@ -250,9 +250,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
-    ThemeData theme = ThemeData(
+    final ThemeData theme = ThemeData(
       cardColor: _themeProvider.cardColor,
       appBarTheme: AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.light,
@@ -262,7 +262,7 @@ class _MyAppState extends State<MyApp> {
       brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
     );
 
-    MediaQuery mq = MediaQuery(
+    final MediaQuery mq = MediaQuery(
       data: MediaQueryData.fromView(View.of(context)),
       child: Directionality(
         textDirection: TextDirection.ltr,
@@ -274,7 +274,7 @@ class _MyAppState extends State<MyApp> {
           navigatorObservers: [BotToastNavigatorObserver()],
           home: WillPopScope(
             onWillPop: () async {
-              WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+              final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
 
               if (w.browserShowInForeground) {
                 // Browser is in front, delegate the call
@@ -283,7 +283,7 @@ class _MyAppState extends State<MyApp> {
               } else {
                 // App is in front
                 //_webViewProvider.willPopCallbackStream.add(true);
-                bool shouldPop = await _willPopFromApp();
+                final bool shouldPop = await _willPopFromApp();
                 if (shouldPop) return true;
                 return false;
               }
@@ -312,7 +312,7 @@ class _MyAppState extends State<MyApp> {
       ),
     );
 
-    var orientation = mq.data.orientation;
+    final orientation = mq.data.orientation;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: _themeProvider.statusBar,
@@ -336,7 +336,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<bool> _willPopFromApp() async {
-    SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
+    final SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
     final appExit = s.onAppExit;
     if (appExit == 'exit') {
       return true;
@@ -354,7 +354,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 class AppBorder extends StatefulWidget {
-  const AppBorder({Key? key}) : super(key: key);
+  const AppBorder({super.key});
 
   @override
   _AppBorderState createState() => _AppBorderState();
@@ -363,7 +363,7 @@ class AppBorder extends StatefulWidget {
 class _AppBorderState extends State<AppBorder> {
   @override
   Widget build(BuildContext context) {
-    final _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    final chainStatusProvider = Provider.of<ChainStatusProvider>(context);
     return IgnorePointer(
       child: Column(
         children: [
@@ -371,8 +371,8 @@ class _AppBorderState extends State<AppBorder> {
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  width: _chainStatusProvider.watcherActive ? 3 : 0,
-                  color: _chainStatusProvider.borderColor,
+                  width: chainStatusProvider.watcherActive ? 3 : 0,
+                  color: chainStatusProvider.borderColor,
                 ),
               ),
             ),

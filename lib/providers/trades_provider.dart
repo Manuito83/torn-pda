@@ -44,10 +44,10 @@ class TradesContainer {
 
 class TradesProvider extends ChangeNotifier {
   int? playerId;
-  var container = TradesContainer();
+  TradesContainer container = TradesContainer();
 
-  void updateTrades({
-    required playerId,
+  Future<void> updateTrades({
+    required int playerId,
     required String sellerName,
     required int sellerId,
     required int tradeId,
@@ -62,35 +62,35 @@ class TradesProvider extends ChangeNotifier {
   }) async {
     this.playerId = playerId;
 
-    var newModel = TradesContainer()
+    final newModel = TradesContainer()
       ..tradeId = tradeId
       ..sellerName = sellerName
       ..sellerId = sellerId;
 
     // Color 1 is money
     int colors1(List<dom.Element> sideMoneyElement) {
-      var row = sideMoneyElement[0];
-      RegExp regExp = new RegExp(r"([0-9][,]{0,3})+");
+      final row = sideMoneyElement[0];
+      final RegExp regExp = RegExp("([0-9][,]{0,3})+");
       try {
-        var match = regExp.stringMatch(row.innerHtml)!;
+        final match = regExp.stringMatch(row.innerHtml)!;
         return int.parse(match.replaceAll(",", ""));
       } catch (e) {
         return 0;
       }
     }
 
-    if (leftMoneyElements.length > 0) {
+    if (leftMoneyElements.isNotEmpty) {
       newModel.leftMoney = colors1(leftMoneyElements);
     }
 
-    if (rightMoneyElements.length > 0) {
+    if (rightMoneyElements.isNotEmpty) {
       newModel.rightMoney = colors1(rightMoneyElements);
     }
 
     // Color 2 is general items
     void addColor2Items(dom.Element itemLine, ItemsModel allTornItems, List<TradeItem> sideItems) {
-      var thisItem = TradeItem();
-      var row = pdaParser.HtmlParser.fix(itemLine.innerHtml.trim());
+      final thisItem = TradeItem();
+      final row = pdaParser.HtmlParser.fix(itemLine.innerHtml.trim());
       thisItem.name = row.split(" x")[0].trim();
       row.split(" x").length > 1 ? thisItem.quantity = int.parse(row.split(" x")[1]) : thisItem.quantity = 1;
       allTornItems.items!.forEach((key, value) {
@@ -103,7 +103,7 @@ class TradesProvider extends ChangeNotifier {
       sideItems.add(thisItem);
     }
 
-    if (leftItemsElements.length > 0 || rightItemsElements.length > 0) {
+    if (leftItemsElements.isNotEmpty || rightItemsElements.isNotEmpty) {
       var allTornItems;
       try {
         allTornItems = await Get.find<ApiCallerController>().getItems();
@@ -115,16 +115,16 @@ class TradesProvider extends ChangeNotifier {
         return;
       } else if (allTornItems is ItemsModel) {
         // Loop left
-        for (var itemLine in leftItemsElements) {
+        for (final itemLine in leftItemsElements) {
           addColor2Items(itemLine, allTornItems, newModel.leftItems);
         }
         // Loop right
-        for (var itemLine in rightItemsElements) {
+        for (final itemLine in rightItemsElements) {
           addColor2Items(itemLine, allTornItems, newModel.rightItems);
         }
 
         // Initialize Arson Warehouse
-        newModel..awhActive = await Prefs().getAWHEnabled();
+        newModel.awhActive = await Prefs().getAWHEnabled();
 
         // TORN TRADER init here (it only takes into account elements sold to us,
         // so we'll only pass this information
@@ -159,12 +159,12 @@ class TradesProvider extends ChangeNotifier {
 
     // Color 3 is properties
     void addColor3Items(dom.Element propertyLine, List<TradeItem> sideProperty) {
-      var thisProperty = TradeItem();
-      var row = pdaParser.HtmlParser.fix(propertyLine.innerHtml.trim());
+      final thisProperty = TradeItem();
+      final row = pdaParser.HtmlParser.fix(propertyLine.innerHtml.trim());
       thisProperty.name = row.split(" (")[0].trim();
-      RegExp regExp = new RegExp(r"[0-9]+ happiness");
+      final RegExp regExp = RegExp("[0-9]+ happiness");
       try {
-        var match = regExp.stringMatch(propertyLine.innerHtml)!;
+        final match = regExp.stringMatch(propertyLine.innerHtml)!;
         thisProperty.happiness = match.substring(0);
       } catch (e) {
         thisProperty.happiness = '';
@@ -172,28 +172,28 @@ class TradesProvider extends ChangeNotifier {
       sideProperty.add(thisProperty);
     }
 
-    if (leftPropertyElements.length > 0 || rightPropertyElements.length > 0) {
-      for (var propertyLine in leftPropertyElements) {
+    if (leftPropertyElements.isNotEmpty || rightPropertyElements.isNotEmpty) {
+      for (final propertyLine in leftPropertyElements) {
         addColor3Items(propertyLine, newModel.leftProperties);
       }
-      for (var propertyLine in rightPropertyElements) {
+      for (final propertyLine in rightPropertyElements) {
         addColor3Items(propertyLine, newModel.rightProperties);
       }
     }
 
     // Color 4 is general items
     void addColor4Items(dom.Element shareLine, List<TradeItem> sideShares) {
-      var thisShare = TradeItem();
-      var row = pdaParser.HtmlParser.fix(shareLine.innerHtml.trim());
+      final thisShare = TradeItem();
+      final row = pdaParser.HtmlParser.fix(shareLine.innerHtml.trim());
       thisShare.name = row.split(" x")[0].trim();
 
       try {
-        RegExp regQuantity =
-            new RegExp(r"([A-Z]{3}) (?:x)([0-9]+) (?:at) (?:\$)((?:[0-9]|[.]|[,])+) (?:\()(?:\$)((?:[0-9]|[,])+)");
-        var matches = regQuantity.allMatches(shareLine.innerHtml);
+        final RegExp regQuantity =
+            RegExp(r"([A-Z]{3}) (?:x)([0-9]+) (?:at) (?:\$)((?:[0-9]|[.]|[,])+) (?:\()(?:\$)((?:[0-9]|[,])+)");
+        final matches = regQuantity.allMatches(shareLine.innerHtml);
         thisShare.name = matches.elementAt(0).group(1) ?? "?";
         thisShare.quantity = int.parse(matches.elementAt(0).group(2)!);
-        var singlePriceSplit = matches.elementAt(0).group(3)!.split('.');
+        final singlePriceSplit = matches.elementAt(0).group(3)!.split('.');
         thisShare.shareUnit =
             double.parse(singlePriceSplit[0].replaceAll(',', '')) + double.parse('0.${singlePriceSplit[1]}');
         thisShare.totalPrice = int.parse(matches.elementAt(0).group(4)!.replaceAll(',', ''));
@@ -203,11 +203,11 @@ class TradesProvider extends ChangeNotifier {
       sideShares.add(thisShare);
     }
 
-    if (leftSharesElements.length > 0 || rightSharesElements.length > 0) {
-      for (var shareLine in leftSharesElements) {
+    if (leftSharesElements.isNotEmpty || rightSharesElements.isNotEmpty) {
+      for (final shareLine in leftSharesElements) {
         addColor4Items(shareLine, newModel.leftShares);
       }
-      for (var shareLine in rightSharesElements) {
+      for (final shareLine in rightSharesElements) {
         addColor4Items(shareLine, newModel.rightShares);
       }
     }

@@ -5,7 +5,7 @@
 // Dart imports:
 import 'dart:convert';
 
-import '../profile/own_profile_basic.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
@@ -191,11 +191,11 @@ class Member {
         lifeMaximum: json["lifeMaximum"] ?? -1,
         lastUpdated:
             json["lastUpdated"] == null ? DateTime.now() : DateTime.fromMillisecondsSinceEpoch(json["lastUpdated"]),
-        justUpdatedWithSuccess: json["justUpdatedWithSuccess"] == null ? false : json["justUpdatedWithSuccess"],
-        justUpdatedWithError: json["justUpdatedWithSuccess"] == null ? false : json["justUpdatedWithSuccess"],
-        respectGain: json["respectGain"] == null ? -1 : json["respectGain"],
-        fairFight: json["fairFight"] == null ? -1 : json["fairFight"],
-        userWonOrDefended: json["userWonOrDefended"] == null ? false : json["userWonOrDefended"],
+        justUpdatedWithSuccess: json["justUpdatedWithSuccess"] ?? false,
+        justUpdatedWithError: json["justUpdatedWithSuccess"] ?? false,
+        respectGain: json["respectGain"] ?? -1,
+        fairFight: json["fairFight"] ?? -1,
+        userWonOrDefended: json["userWonOrDefended"] ?? false,
         personalNote: json["personalNotes"] ?? "",
         personalNoteColor: json["personalNoteColor"] ?? "",
         hidden: json["hidden"] ?? false,
@@ -209,7 +209,7 @@ class Member {
         statsDef: json["statsDef"] ?? -1,
         statsDex: json["statsDex"] ?? -1,
         statsSort: json["statsSort"] ?? 0,
-        lifeSort: json["lifeSort"] == null ? json["lifeCurrent"] ?? 0 : json["lifeSort"],
+        lifeSort: json["lifeSort"] ?? json["lifeCurrent"] ?? 0,
         overrideEasyLife: json["overrideEasyLife"] ?? false,
         statsComparisonSuccess: json["statsComparisonSuccess"] ?? false,
         memberXanax: json["memberXanax"] ?? 0,
@@ -224,7 +224,7 @@ class Member {
         myCans: json["myCans"] ?? 0,
         //
         name: json["name"],
-        level: json["level"] == null ? null : json["level"],
+        level: json["level"],
         daysInFaction: json["days_in_faction"],
         lastAction: LastAction.fromJson(json["last_action"]),
         status: Status.fromJson(json["status"]),
@@ -271,7 +271,7 @@ class Member {
         "myCans": myCans,
         //
         "name": name,
-        "level": level == null ? null : level,
+        "level": level,
         "days_in_faction": daysInFaction,
         "last_action": lastAction!.toJson(),
         "status": status!.toJson(),

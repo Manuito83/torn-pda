@@ -16,25 +16,23 @@ class TravelModel {
     this.departed,
     this.moneyOnhand,
   }) {
-    if (timeArrival == null) {
-      this.timeArrival = DateTime.now();
-    }
+    timeArrival ??= DateTime.now();
   }
 
   factory TravelModel.fromJson(Map<String, dynamic> json) {
-    var destination = json['travel']['destination'];
-    var timeLeft = json['travel']['time_left'];
-    var timestamp = json['travel']['timestamp'];
-    var departed = json['travel']['departed'];
-    var moneyOnHand = json["money_onhand"];
+    final destination = json['travel']['destination'];
+    final timeLeft = json['travel']['time_left'];
+    final timestamp = json['travel']['timestamp'];
+    final departed = json['travel']['departed'];
+    final moneyOnHand = json["money_onhand"];
 
     bool active = false;
     if (destination != 'Torn' || timeLeft > 0) {
       active = true;
     }
 
-    var timeArrival =
-        new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+    final timeArrival =
+        DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
 
     return TravelModel(
       abroad: active,

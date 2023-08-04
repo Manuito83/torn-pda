@@ -12,9 +12,9 @@ class SteadfastDetails {
 }
 
 class GymWidget extends StatefulWidget {
-  GymWidget({
-    Key? key,
-  }) : super(key: key);
+  const GymWidget({
+    super.key,
+  });
 
   @override
   _GymWidgetState createState() => _GymWidgetState();
@@ -37,7 +37,7 @@ class _GymWidgetState extends State<GymWidget> {
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (_steadfastDetails == null) {
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
 
           return Padding(
@@ -45,15 +45,15 @@ class _GymWidgetState extends State<GymWidget> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Steadfast: ", style: TextStyle(color: Colors.orange, fontSize: 11)),
+                const Text("Steadfast: ", style: TextStyle(color: Colors.orange, fontSize: 11)),
                 Flexible(
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     children: [
-                      Text("STR ${_steadfastDetails!.strength}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("DEF ${_steadfastDetails!.defense}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("SPD ${_steadfastDetails!.speed}%, ", style: TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("DEX ${_steadfastDetails!.dexterity}%", style: TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("STR ${_steadfastDetails!.strength}%, ", style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("DEF ${_steadfastDetails!.defense}%, ", style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("SPD ${_steadfastDetails!.speed}%, ", style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("DEX ${_steadfastDetails!.dexterity}%", style: const TextStyle(color: Colors.white, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -61,20 +61,20 @@ class _GymWidgetState extends State<GymWidget> {
             ),
           );
         } else {
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
       },
     );
   }
 
   Future<void> _fetchSteadFast() async {
-    dynamic perksResponse = await Get.find<ApiCallerController>().getUserPerks();
+    final dynamic perksResponse = await Get.find<ApiCallerController>().getUserPerks();
 
     if (perksResponse is ApiError) {
       return;
     }
 
-    UserPerksModel perks = perksResponse as UserPerksModel;
+    final UserPerksModel perks = perksResponse as UserPerksModel;
 
     int? strength = 0;
     int? speed = 0;
@@ -82,19 +82,19 @@ class _GymWidgetState extends State<GymWidget> {
     int? dexterity = 0;
 
     try {
-      RegExp reg = RegExp(r"([0-9]+)%");
-      for (String perk in perks.factionPerks!) {
+      final RegExp reg = RegExp("([0-9]+)%");
+      for (final String perk in perks.factionPerks!) {
         if (perk.contains("strength gym gains")) {
-          var matches = reg.firstMatch(perk)!;
+          final matches = reg.firstMatch(perk)!;
           strength = int.tryParse(matches.group(1)!);
         } else if (perk.contains("speed gym gains")) {
-          var matches = reg.firstMatch(perk)!;
+          final matches = reg.firstMatch(perk)!;
           speed = int.tryParse(matches.group(1)!);
         } else if (perk.contains("defense gym gains")) {
-          var matches = reg.firstMatch(perk)!;
+          final matches = reg.firstMatch(perk)!;
           defense = int.tryParse(matches.group(1)!);
         } else if (perk.contains("dexterity gym gains")) {
-          var matches = reg.firstMatch(perk)!;
+          final matches = reg.firstMatch(perk)!;
           dexterity = int.tryParse(matches.group(1)!);
         }
       }

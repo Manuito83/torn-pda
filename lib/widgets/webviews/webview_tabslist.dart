@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
+import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart';
 
 class TabsList extends StatefulWidget {
-  const TabsList({Key? key}) : super(key: key);
+  const TabsList({super.key});
 
   @override
   State<TabsList> createState() => _TabsListState();
@@ -39,10 +38,10 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
-    var tabs = <Widget>[];
+    final tabs = <Widget>[];
 
     // Assign GlobalKeys as long as the tab number does not change so that state is kept when using setState
     if (_circularMenuKeys.isEmpty || _circularMenuKeys.length != _webViewProvider!.tabList.length) {
@@ -55,7 +54,7 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
     for (var i = 0; i < _webViewProvider!.tabList.length; i++) {
       _animationController.forward();
 
-      bool isManuito = _webViewProvider!.tabList[i].currentUrl!.contains("sid=attack&user2ID=2225097") ||
+      final bool isManuito = _webViewProvider!.tabList[i].currentUrl!.contains("sid=attack&user2ID=2225097") ||
           _webViewProvider!.tabList[i].currentUrl!.contains("profiles.php?XID=2225097") ||
           _webViewProvider!.tabList[i].currentUrl!.contains("https://www.torn.com/forums.php#/"
               "p=threads&f=67&t=16163503&b=0&a=0");
@@ -79,7 +78,6 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
               },
               backgroundWidget: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.max,
                 children: [
                   Container(
                     color: _webViewProvider!.currentTab == i
@@ -97,7 +95,6 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               ? SizedBox(width: 26, height: 20, child: _webViewProvider!.getIcon(i, context))
                               : Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.max,
                                   children: [
                                     Container(
                                       constraints: const BoxConstraints(
@@ -185,7 +182,7 @@ class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
       onReorder: (start, end) {
         if (start == 0 || end == 0) return;
         // Save where the current active tab is
-        var activeKey = _webViewProvider!.tabList[_webViewProvider!.currentTab].webView!.key;
+        final activeKey = _webViewProvider!.tabList[_webViewProvider!.currentTab].webView!.key;
         // Removing the item at oldIndex will shorten the list by 1
         if (start < end) end -= 1;
         // Do the move

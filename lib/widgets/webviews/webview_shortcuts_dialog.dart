@@ -19,7 +19,7 @@ class WebviewShortcutsDialog extends StatefulWidget {
   final WebViewController? stockWebview;
   final bool? fromShortcut;
 
-  WebviewShortcutsDialog({
+  const WebviewShortcutsDialog({
     this.inAppWebView,
     this.stockWebview,
     this.fromShortcut,
@@ -95,7 +95,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
                         setState(() {
                           // Update shortcuts
                         });
-                      }),
+                      },),
                 ),
               ],
             )
@@ -103,8 +103,8 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 5.0),
+                const Padding(
+                  padding: EdgeInsets.only(left: 5.0),
                   child: Text(
                     "TAP: load in current tab\nLONG PRESS: open a new tab",
                     style: TextStyle(
@@ -112,7 +112,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Flexible(
                   child: SingleChildScrollView(
                     child: Column(
@@ -129,7 +129,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
             ),
       actions: [
         TextButton(
-          child: Text("Close"),
+          child: const Text("Close"),
           onPressed: () {
             Navigator.of(context).pop();
           },

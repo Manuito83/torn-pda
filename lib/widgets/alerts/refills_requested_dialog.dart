@@ -8,7 +8,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 class RefillsRequestedDialog extends StatefulWidget {
   final FirebaseUserModel? userModel;
 
-  RefillsRequestedDialog({required this.userModel});
+  const RefillsRequestedDialog({required this.userModel});
 
   @override
   _RefillsRequestedDialogState createState() => _RefillsRequestedDialogState();
@@ -26,11 +26,11 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Choose refills"),
+      title: const Text("Choose refills"),
       content: SingleChildScrollView(
         child: Column(
           children: [
-            Text(
+            const Text(
               "Choose which unused refills types you'd "
               "like to be alerted about a couple of hours before the "
               "end of day in Torn",
@@ -43,7 +43,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Energy"),
+                  const Text("Energy"),
                   Switch(
                     value: _firebaseUserModel!.refillsRequested.contains('energy'),
                     onChanged: (value) {
@@ -66,7 +66,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Nerve"),
+                  const Text("Nerve"),
                   Switch(
                     value: _firebaseUserModel!.refillsRequested.contains('nerve'),
                     onChanged: (value) {
@@ -89,7 +89,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Casino tokens"),
+                  const Text("Casino tokens"),
                   Switch(
                     value: _firebaseUserModel!.refillsRequested.contains('token'),
                     onChanged: (value) {
@@ -114,7 +114,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
         Padding(
           padding: const EdgeInsets.only(right: 15),
           child: TextButton(
-            child: Text("Close"),
+            child: const Text("Close"),
             onPressed: () {
               Navigator.of(context).pop();
             },

@@ -1,13 +1,11 @@
 // Flutter imports:
 import 'package:animations/animations.dart';
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:expandable/expandable.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as dom;
+import 'package:intl/intl.dart';
 import 'package:torn_pda/models/vault/vault_status_model.dart';
-
 // Project imports:
 import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 import 'package:torn_pda/pages/vault/vault_configuration_page.dart';
@@ -19,12 +17,12 @@ class VaultWidget extends StatefulWidget {
   final int? playerId;
   final UserDetailsProvider? userProvider;
 
-  VaultWidget({
-    Key? key,
+  const VaultWidget({
+    super.key,
     required this.vaultHtml,
     required this.playerId,
     required this.userProvider,
-  }) : super(key: key);
+  });
 
   @override
   _VaultWidgetState createState() => _VaultWidgetState();
@@ -36,7 +34,7 @@ class _VaultWidgetState extends State<VaultWidget> {
   bool _firstUse = false;
 
   final _scrollController = ScrollController();
-  final _moneyFormat = new NumberFormat("#,##0", "en_US");
+  final _moneyFormat = NumberFormat("#,##0", "en_US");
 
   var _lastTransaction = VaultTransactionModel();
 
@@ -57,7 +55,7 @@ class _VaultWidgetState extends State<VaultWidget> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
-        theme: ExpandableThemeData(
+        theme: const ExpandableThemeData(
           hasIcon: false,
           iconColor: Colors.grey,
           tapBodyToExpand: false,
@@ -66,14 +64,13 @@ class _VaultWidgetState extends State<VaultWidget> {
         ),
         header: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
           children: [
-            Text(
+            const Text(
               'VAULT SHARE',
               style: TextStyle(color: Colors.orange, fontSize: 12),
             ),
             if (_firstUse)
-              SizedBox.shrink()
+              const SizedBox.shrink()
             else if (!_firstUse && !_vaultStatus.error!)
               Padding(
                 padding: const EdgeInsets.only(left: 5),
@@ -97,17 +94,16 @@ class _VaultWidgetState extends State<VaultWidget> {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_vaultStatus.error!) {
               return Row(
-                mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Flexible(
+                  const Flexible(
                     child: Text(
                       "There was an error identifying your last saved transaction, please reenter "
                       "the current vault distribution again",
                       style: TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),
-                  SizedBox(width: 6),
+                  const SizedBox(width: 6),
                   _vaultConfigurationIcon(),
                 ],
               );
@@ -117,21 +113,19 @@ class _VaultWidgetState extends State<VaultWidget> {
               return Column(
                 children: [
                   Row(
-                    mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "Initialise vault values",
                           style: TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       _vaultConfigurationIcon(),
                     ],
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Flexible(
@@ -157,23 +151,23 @@ class _VaultWidgetState extends State<VaultWidget> {
                       children: [
                         Text(
                           widget.userProvider!.basic!.name!,
-                          style: TextStyle(color: Colors.orange, fontSize: 12),
+                          style: const TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                         Text(
                           "\$${_moneyFormat.format(_vaultStatus.player)}",
-                          style: TextStyle(color: Colors.green, fontSize: 12),
+                          style: const TextStyle(color: Colors.green, fontSize: 12),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Flexible(
                     child: Text(
                       "\$${_moneyFormat.format(_vaultStatus.total)}",
-                      style: TextStyle(color: Colors.white, fontSize: 12),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Flexible(
                     child: Column(
                       children: [
@@ -181,11 +175,11 @@ class _VaultWidgetState extends State<VaultWidget> {
                           widget.userProvider!.basic!.married?.spouseId == 0
                               ? "Spouse"
                               : widget.userProvider!.basic!.married!.spouseName!,
-                          style: TextStyle(color: Colors.orange, fontSize: 12),
+                          style: const TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                         Text(
                           "\$${_moneyFormat.format(_vaultStatus.spouse)}",
-                          style: TextStyle(color: Colors.green, fontSize: 12),
+                          style: const TextStyle(color: Colors.green, fontSize: 12),
                         ),
                       ],
                     ),
@@ -194,8 +188,7 @@ class _VaultWidgetState extends State<VaultWidget> {
               );
             }
           } else {
-            return Row(
-              mainAxisSize: MainAxisSize.max,
+            return const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
@@ -206,22 +199,22 @@ class _VaultWidgetState extends State<VaultWidget> {
               ],
             );
           }
-        });
+        },);
   }
 
   Future _buildVault() async {
     // Get the last vault values we saved (if any)
-    var savedVault = await Prefs().getVaultShareCurrent();
+    final savedVault = await Prefs().getVaultShareCurrent();
     if (savedVault.isNotEmpty) {
       _vaultStatus = vaultStatusModelFromJson(savedVault);
     }
 
     // Transactions list just obtained from the webView
-    var transactions = await _getTransactions();
+    final transactions = await _getTransactions();
 
-    if (transactions.length > 0) {
+    if (transactions.isNotEmpty) {
       if (savedVault.isNotEmpty) {
-        var foundSaved = await _findSavedTransactionAndUpdate(transactions);
+        final foundSaved = await _findSavedTransactionAndUpdate(transactions);
         if (!foundSaved) {
           setState(() {
             _vaultStatus.error = true;
@@ -246,22 +239,22 @@ class _VaultWidgetState extends State<VaultWidget> {
   }
 
   Future<List<VaultTransactionModel>> _getTransactions() {
-    var transactionList = <VaultTransactionModel>[];
+    final transactionList = <VaultTransactionModel>[];
     try {
-      for (var trans in widget.vaultHtml!) {
-        String day = trans.querySelector(".date .transaction-date")?.text.trim() ?? "";
-        String hour = trans.querySelector(".date .transaction-time")?.text.trim() ?? "";
-        var format = DateFormat("dd/MM/yy HH:mm:ss");
-        var date = format.parse(day + " " + hour, true);
+      for (final trans in widget.vaultHtml!) {
+        final String day = trans.querySelector(".date .transaction-date")?.text.trim() ?? "";
+        final String hour = trans.querySelector(".date .transaction-time")?.text.trim() ?? "";
+        final format = DateFormat("dd/MM/yy HH:mm:ss");
+        final date = format.parse("$day $hour", true);
 
         var playerTransaction = false;
-        String name = trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"] ?? "";
+        final String name = trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"] ?? "";
         if (name.contains("[${widget.playerId}]")) {
           playerTransaction = true;
         }
 
         var isDeposit = false;
-        String type = trans.querySelector(".type")?.text.trim() ?? "";
+        final String type = trans.querySelector(".type")?.text.trim() ?? "";
         if (type.contains("Deposit")) {
           isDeposit = true;
         }
@@ -273,7 +266,7 @@ class _VaultWidgetState extends State<VaultWidget> {
             .replaceAll("+", "")
             .replaceAll("-", "")
             .replaceAll(",", "");
-        var amount = int.tryParse(amountString);
+        final amount = int.tryParse(amountString);
 
         String balanceString = trans.querySelector("li.balance")?.text ?? "";
         balanceString = balanceString
@@ -282,9 +275,9 @@ class _VaultWidgetState extends State<VaultWidget> {
             .replaceAll("+", "")
             .replaceAll("-", "")
             .replaceAll(",", "");
-        var balance = int.tryParse(balanceString);
+        final balance = int.tryParse(balanceString);
 
-        var thisTransaction = VaultTransactionModel()
+        final thisTransaction = VaultTransactionModel()
           ..date = date.millisecondsSinceEpoch
           ..playerTransaction = playerTransaction
           ..amount = amount
@@ -321,7 +314,7 @@ class _VaultWidgetState extends State<VaultWidget> {
       var newPlayerAmount = _vaultStatus.player!;
       var newSpouseAmount = _vaultStatus.spouse!;
       for (var i = 0; i < indexFound; i++) {
-        var pendingTrans = transactions[i];
+        final pendingTrans = transactions[i];
         if (pendingTrans.playerTransaction!) {
           if (pendingTrans.isDeposit!) {
             newPlayerAmount += pendingTrans.amount!;
@@ -337,7 +330,7 @@ class _VaultWidgetState extends State<VaultWidget> {
         }
       }
       // Once all transaction have been applied, confirm we are correct
-      var newTotal = newPlayerAmount + newSpouseAmount;
+      final newTotal = newPlayerAmount + newSpouseAmount;
       if (_lastTransaction.balance == newTotal) {
         setState(() {
           _vaultStatus.player = newPlayerAmount;
@@ -368,7 +361,7 @@ class _VaultWidgetState extends State<VaultWidget> {
     }
 
     return OpenContainer(
-      transitionDuration: Duration(milliseconds: 500),
+      transitionDuration: const Duration(milliseconds: 500),
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
         return VaultConfigurationPage(
@@ -386,8 +379,8 @@ class _VaultWidgetState extends State<VaultWidget> {
       ),
       closedColor: Colors.transparent,
       closedBuilder: (BuildContext context, VoidCallback openContainer) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 5),
+        return const Padding(
+          padding: EdgeInsets.only(right: 5),
           child: SizedBox(
             height: 20,
             width: 20,

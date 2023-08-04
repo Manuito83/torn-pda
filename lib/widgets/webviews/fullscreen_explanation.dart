@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import '../../providers/theme_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class FullScreenExplanationDialog extends StatelessWidget {
-  const FullScreenExplanationDialog({Key? key}) : super(key: key);
+  const FullScreenExplanationDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,10 +14,8 @@ class FullScreenExplanationDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       elevation: 0.0,
-      contentPadding: EdgeInsets.only(
-        left: 0.0,
+      contentPadding: const EdgeInsets.only(
         top: 2.0,
-        right: 0.0,
         bottom: 2.0,
       ),
       backgroundColor: Colors.transparent,

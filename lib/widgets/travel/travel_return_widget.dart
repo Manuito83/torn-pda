@@ -5,11 +5,11 @@ import 'package:torn_pda/utils/travel/travel_times.dart';
 
 class TravelReturnWidget extends StatelessWidget {
   const TravelReturnWidget({
-    Key? key,
+    super.key,
     required this.destination,
     required this.settingsProvider,
     required this.dateTimeArrival,
-  }) : super(key: key);
+  });
 
   final String? destination;
   final SettingsProvider? settingsProvider;
@@ -19,13 +19,13 @@ class TravelReturnWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     // Return time line
     String? formattedReturn = "";
-    Widget returnWidget = SizedBox.shrink();
+    Widget returnWidget = const SizedBox.shrink();
     if (destination != "Torn") {
-      int tornBackMinutes = TravelTimes.travelTimeMinutesOneWay(
+      final int tornBackMinutes = TravelTimes.travelTimeMinutesOneWay(
         countryName: destination!,
         ticket: settingsProvider!.travelTicket,
       );
-      DateTime returnTime = dateTimeArrival!.add(Duration(minutes: tornBackMinutes));
+      final DateTime returnTime = dateTimeArrival!.add(Duration(minutes: tornBackMinutes));
       formattedReturn = TimeFormatter(
         inputTime: returnTime,
         timeFormatSetting: settingsProvider!.currentTimeFormat,
@@ -33,7 +33,7 @@ class TravelReturnWidget extends StatelessWidget {
       ).formatHour;
       returnWidget = Text(
         '(earliest return ~$formattedReturn)',
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11.5,
         ),
       );

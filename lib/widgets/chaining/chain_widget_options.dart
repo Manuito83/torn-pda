@@ -4,22 +4,20 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-
+import 'package:torn_pda/providers/api_caller.dart';
 // Project imports:
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 
 class ChainWidgetOptions extends StatefulWidget {
   final Function? callBackOptions;
 
-  ChainWidgetOptions({this.callBackOptions});
+  const ChainWidgetOptions({this.callBackOptions});
 
   @override
   _ChainWidgetOptionsState createState() => _ChainWidgetOptionsState();
@@ -30,12 +28,12 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   ThemeProvider? _themeProvider;
   late SettingsProvider _settingsProvider;
 
-  AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     return WillPopScope(
@@ -58,45 +56,44 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 : null,
             body: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      SizedBox(height: 15),
-                      Text("GENERAL SETTINGS", style: TextStyle(fontSize: 11)),
+                      const SizedBox(height: 15),
+                      const Text("GENERAL SETTINGS", style: TextStyle(fontSize: 11)),
                       _generalSettings(),
-                      Divider(),
-                      SizedBox(height: 5),
-                      Text("PANIC MODE", style: TextStyle(fontSize: 11)),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      const Text("PANIC MODE", style: TextStyle(fontSize: 11)),
                       _panicMode(),
-                      Divider(),
-                      SizedBox(height: 5),
-                      Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      const Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
                       _greenLevel2(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _orangeLevel1(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _orangeLevel2(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _redLevel1(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _redLevel2(),
-                      SizedBox(height: 50),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
@@ -112,16 +109,16 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Chain Watcher"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Chain Watcher"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _willPopCallback();
         },
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.restore),
+          icon: const Icon(Icons.restore),
           onPressed: () {
             _openRestoreDialog();
           },
@@ -136,7 +133,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Sound alerts"),
+            const Text("Sound alerts"),
             Switch(
               value: _chainStatusProvider.soundEnabled,
               onChanged: (value) {
@@ -150,7 +147,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Vibration"),
+            const Text("Vibration"),
             Switch(
               value: _chainStatusProvider.vibrationEnabled,
               onChanged: (value) {
@@ -164,7 +161,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Notification"),
+            const Text("Notification"),
             Switch(
               value: _chainStatusProvider.notificationsEnabled,
               onChanged: (value) {
@@ -187,9 +184,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Enable Panic Mode"),
+                const Text("Enable Panic Mode"),
                 IconButton(
-                  icon: Icon(Icons.info_outline, size: 20),
+                  icon: const Icon(Icons.info_outline, size: 20),
                   onPressed: () {
                     _openPanicModeInfoDialog();
                   },
@@ -213,12 +210,12 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             children: [
               Row(
                 children: <Widget>[
-                  Icon(
+                  const Icon(
                     Icons.alarm,
                     size: 18,
                   ),
-                  SizedBox(width: 10),
-                  Text(
+                  const SizedBox(width: 10),
+                  const Text(
                     "00:00",
                     style: TextStyle(
                       fontSize: 12,
@@ -236,8 +233,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                   ),
                   Text(
-                    "${_printDuration(Duration(seconds: _chainStatusProvider.panicValue.toInt()))}",
-                    style: TextStyle(
+                    _printDuration(Duration(seconds: _chainStatusProvider.panicValue.toInt())),
+                    style: const TextStyle(
                       fontSize: 12,
                     ),
                   ),
@@ -253,18 +250,17 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         height: 15,
                         color: _themeProvider!.mainText,
                       ),
-                      SizedBox(width: 10),
-                      Text(
+                      const SizedBox(width: 10),
+                      const Text(
                         "Targets",
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: Icon(Icons.keyboard_arrow_right_outlined),
+                    icon: const Icon(Icons.keyboard_arrow_right_outlined),
                     onPressed: () {
                       showDialog<void>(
                         context: context,
-                        barrierDismissible: true,
                         builder: (BuildContext context) {
                           return AddChainTargetDialog(
                             themeProvider: _themeProvider,
@@ -332,14 +328,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.green2Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.green2Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -360,8 +356,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.green2Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.green2Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -452,14 +448,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange1Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange1Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -480,8 +476,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange1Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange1Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -567,14 +563,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange2Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange2Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -595,8 +591,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange2Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange2Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -682,14 +678,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red1Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red1Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -710,8 +706,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red1Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red1Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -797,14 +793,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red2Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red2Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -825,8 +821,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red2Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red2Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -839,8 +835,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
 
   String _printDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    final String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    final String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
     return "$twoDigitMinutes:$twoDigitSeconds";
   }
 
@@ -867,7 +863,6 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   Future<void> _openRestoreDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -965,7 +960,6 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   Future<void> _openPanicModeInfoDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -1064,10 +1058,10 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
 }
 
 class AddChainTargetDialog extends StatefulWidget {
-  AddChainTargetDialog({
-    Key? key,
+  const AddChainTargetDialog({
+    super.key,
     required this.themeProvider,
-  }) : super(key: key);
+  });
 
   final ThemeProvider? themeProvider;
 
@@ -1088,7 +1082,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _chainProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    _chainProvider = Provider.of<ChainStatusProvider>(context);
 
     return AlertDialog(
         shape: RoundedRectangleBorder(
@@ -1121,11 +1115,11 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min, // To make the card compact
               children: <Widget>[
-                Text(
+                const Text(
                   "Panic Mode Targets",
-                  style: const TextStyle(fontSize: 15),
+                  style: TextStyle(fontSize: 15),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Row(
                   children: [
                     Flexible(
@@ -1136,7 +1130,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                         minLines: 1,
                         maxLines: 2,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           isDense: true,
                           counterText: "",
                           border: OutlineInputBorder(),
@@ -1151,7 +1145,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                           }
 
                           final n = num.tryParse(value);
-                          if (_chainProvider.panicTargets.where((t) => t.id.toString() == value).length > 0) {
+                          if (_chainProvider.panicTargets.where((t) => t.id.toString() == value).isNotEmpty) {
                             return "Already in the list!";
                           }
                           if (n == null) {
@@ -1174,7 +1168,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                       child: const Text("Add"),
                       onPressed: () async {
                         if (_addFormKey.currentState!.validate()) {
-                          FocusScopeNode currentFocus = FocusScope.of(context);
+                          final FocusScopeNode currentFocus = FocusScope.of(context);
                           if (!currentFocus.hasPrimaryFocus) {
                             currentFocus.unfocus();
                           }
@@ -1184,7 +1178,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                           String inputId = _addIdController.text;
                           _addIdController.text = '';
 
-                          dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+                          final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
                           String message = "";
                           Color? messageColor = Colors.green[700];
                           if (target is TargetModel) {
@@ -1228,19 +1222,18 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
               ],
             ),
           ),
-        ));
+        ),);
   }
 
   Widget panicCards() {
     List<Widget> panicCards = <Widget>[];
-    for (PanicTargetModel target in _chainProvider.panicTargets) {
+    for (final PanicTargetModel target in _chainProvider.panicTargets) {
       panicCards.add(
         Row(
           key: UniqueKey(),
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 30,
               child: Icon(
                 Icons.menu,
@@ -1255,13 +1248,13 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                     children: [
                       Text(
                         "${target.name} [${target.id}]",
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                       Text(
                         "${target.factionName != "None" ? '(${target.factionName}) - ' : ''}L${target.level}",
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 10),
+                        style: const TextStyle(fontSize: 10),
                       ),
                     ],
                   ),
@@ -1274,7 +1267,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                 onTap: () {
                   _chainProvider.removePanicTarget(target);
                 },
-                child: Icon(Icons.delete_forever_outlined),
+                child: const Icon(Icons.delete_forever_outlined),
               ),
             ),
           ],

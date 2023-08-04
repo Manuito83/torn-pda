@@ -4,19 +4,19 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
+import 'package:bot_toast/bot_toast.dart';
 // Package imports:
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:rxdart/rxdart.dart';
 import 'package:torn_pda/firebase_options.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
@@ -46,8 +46,6 @@ import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/isolates.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-
-import '../main.dart';
 
 /*
 enum ApiType {
@@ -100,68 +98,48 @@ class ApiError {
       // Torn PDA codes
       case 100:
         errorReason = 'connection timed out';
-        break;
       // Torn PDA codes
       case 101:
         errorReason = 'issue with data model';
         pdaErrorDetails = pdaErrorDetails;
-        break;
       // Torn codes
       case 0:
         errorReason = 'no connection';
         pdaErrorDetails = pdaErrorDetails;
-        break;
       case 1:
         errorReason = 'key is empty';
-        break;
       case 2:
         errorReason = 'incorrect Key';
-        break;
       case 3:
         errorReason = 'wrong type';
-        break;
       case 4:
         errorReason = 'wrong fields';
-        break;
       case 5:
         errorReason = 'too many requests per user (max 100 per minute)';
-        break;
       case 6:
         errorReason = 'incorrect ID';
-        break;
       case 7:
         errorReason = 'incorrect ID-entity relation';
-        break;
       case 8:
         errorReason = 'current IP is banned for a small period of time because of abuse';
-        break;
       case 9:
-        errorReason = 'API disabled (probably under maintenance by Torn\'s developers)!';
-        break;
+        errorReason = "API disabled (probably under maintenance by Torn's developers)!";
       case 10:
         errorReason = 'key owner is in federal jail';
-        break;
       case 11:
         errorReason = 'key change error: You can only change your API key once every 60 seconds';
-        break;
       case 12:
         errorReason = 'key read error: Error reading key from Database';
-        break;
       case 13:
-        errorReason = 'key is temporary disabled due to inactivity (owner hasn\'t been online for more than 7 days).';
-        break;
+        errorReason = "key is temporary disabled due to inactivity (owner hasn't been online for more than 7 days).";
       case 14:
         errorReason = 'daily read limit reached.';
-        break;
       case 15:
         errorReason = 'an error code specifically for testing purposes that has no dedicated meaning.';
-        break;
       case 16:
         errorReason = 'access level of this key is not high enough: Torn PDA request at least a Limited key.';
-        break;
       case 17:
         errorReason = 'backend error occurred, please try again.';
-        break;
     }
   }
 }
@@ -187,12 +165,12 @@ class _ApiCallRequest {
 }
 
 class ApiCallerController extends GetxController {
-  bool _delayCalls = false;
+  final bool _delayCalls = false;
   int maxCallsAllowed = 95;
 
   final _callQueue = Queue<_ApiCallRequest>();
   final _callCount = 0.obs;
-  List<DateTime> _callTimestamps = [];
+  final List<DateTime> _callTimestamps = [];
   Timer? _timer;
 
   final _callCountStream = BehaviorSubject<int>.seeded(0);
@@ -216,10 +194,10 @@ class ApiCallerController extends GetxController {
   }
 
   @override
-  void onInit() async {
+  Future<void> onInit() async {
     super.onInit();
     // Set up the timer to check the queue for API call requests every second
-    _timer = Timer.periodic(Duration(seconds: 1), _checkQueue);
+    _timer = Timer.periodic(const Duration(seconds: 1), _checkQueue);
     _showApiRateInDrawer = (await Prefs().getShowApiRateInDrawer()) ? RxBool(true) : RxBool(false);
     _showApiMaxCallWarning = await Prefs().getShowApiMaxCallWarning();
   }
@@ -312,9 +290,9 @@ class ApiCallerController extends GetxController {
   }
 
   void _logQueueMessage(_ApiCallRequest request) {
-    int queuedCalls = _callQueue.length; // Get the number of API calls in the queue
-    int delaySum = _callQueue.fold(0, (sum, req) => sum + DateTime.now().difference(req.timestamp).inSeconds);
-    double averageDelay = queuedCalls > 0 ? delaySum / queuedCalls : 0;
+    final int queuedCalls = _callQueue.length; // Get the number of API calls in the queue
+    final int delaySum = _callQueue.fold(0, (sum, req) => sum + DateTime.now().difference(req.timestamp).inSeconds);
+    final double averageDelay = queuedCalls > 0 ? delaySum / queuedCalls : 0;
     debugPrint("$queuedCalls queued calls! Average delay is $averageDelay seconds");
   }
 
@@ -322,12 +300,11 @@ class ApiCallerController extends GetxController {
     final countInLast60Seconds = _callTimestamps.length;
     //debugPrint('Number of calls in the last 60 seconds: $countInLast60Seconds');
     if (showApiMaxCallWarning && countInLast60Seconds >= 95) {
-      int ts = DateTime.now().millisecondsSinceEpoch;
+      final int ts = DateTime.now().millisecondsSinceEpoch;
       // Don't show the message again in 30 seconds
       if (ts - _lastMaxCallWarningTs > 30000) {
         _lastMaxCallWarningTs = ts;
         BotToast.showText(
-          onlyOne: true,
           clickClose: true,
           text: "API rate ($countInLast60Seconds calls)!",
           textStyle: const TextStyle(
@@ -335,7 +312,6 @@ class ApiCallerController extends GetxController {
             color: Colors.white,
           ),
           contentColor: Colors.orange[700]!,
-          duration: const Duration(seconds: 2),
           contentPadding: const EdgeInsets.all(10),
         );
       }
@@ -349,7 +325,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return AppWidgetApiModel.fromJson(apiResult);
+        return AppWidgetApiModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         // Need to initialize Firebase in the isolate for Crashlytics (Api Caller) to work in this isolate
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -369,7 +345,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return TravelModel.fromJson(apiResult);
+        return TravelModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -386,7 +362,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return OwnProfileBasic.fromJson(apiResult);
+        return OwnProfileBasic.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -404,7 +380,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return OwnProfileExtended.fromJson(apiResult);
+        return OwnProfileExtended.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -423,7 +399,7 @@ class ApiCallerController extends GetxController {
       try {
         List<Event> eventsList = <Event>[];
         if (apiResult['events'].length > 0) {
-          for (Map<String, dynamic> eventData in apiResult['events'].values) {
+          for (final Map<String, dynamic> eventData in apiResult['events'].values) {
             eventsList.add(Event.fromJson(eventData));
           }
         }
@@ -444,7 +420,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return OwnPersonalStatsModel.fromJson(apiResult);
+        return OwnPersonalStatsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -461,7 +437,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return OwnProfileMisc.fromJson(apiResult);
+        return OwnProfileMisc.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -478,7 +454,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return OtherProfileModel.fromJson(apiResult);
+        return OtherProfileModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -495,7 +471,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return BasicProfileModel.fromJson(apiResult);
+        return BasicProfileModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -512,7 +488,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return TargetModel.fromJson(apiResult);
+        return TargetModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -529,7 +505,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return AttackModel.fromJson(apiResult);
+        return AttackModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -546,7 +522,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return AttackFullModel.fromJson(apiResult);
+        return AttackFullModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -563,7 +539,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return FactionAttacksModel.fromJson(apiResult);
+        return FactionAttacksModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -580,7 +556,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return ChainModel.fromJson(apiResult);
+        return ChainModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -597,7 +573,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return BarsModel.fromJson(apiResult);
+        return BarsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -614,7 +590,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return ItemsModel.fromJson(apiResult);
+        return ItemsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -631,7 +607,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return InventoryModel.fromJson(apiResult);
+        return InventoryModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -648,7 +624,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return TornEducationModel.fromJson(apiResult);
+        return TornEducationModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -665,7 +641,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return FactionModel.fromJson(apiResult);
+        return FactionModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -687,7 +663,7 @@ class ApiCallerController extends GetxController {
         final isolateArgs = <dynamic>[];
         isolateArgs.add(playerId);
         isolateArgs.add(apiResult);
-        var processedModel = await compute(isolateDecodeFactionCrimes, isolateArgs);
+        final processedModel = await compute(isolateDecodeFactionCrimes, isolateArgs);
         //log('isolateDecodeFactionCrimes executed in ${stopwatch.elapsed}');
         return processedModel;
       } catch (e, trace) {
@@ -706,7 +682,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return FriendModel.fromJson(apiResult);
+        return FriendModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -723,7 +699,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return PropertyModel.fromJson(apiResult);
+        return PropertyModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -740,7 +716,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return StockMarketModel.fromJson(apiResult);
+        return StockMarketModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -757,7 +733,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return StockMarketUserModel.fromJson(apiResult);
+        return StockMarketUserModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -774,7 +750,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return MarketItemModel.fromJson(apiResult);
+        return MarketItemModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -791,7 +767,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return UserPerksModel.fromJson(apiResult);
+        return UserPerksModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -808,7 +784,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return RankedWarsModel.fromJson(apiResult);
+        return RankedWarsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -825,7 +801,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return CompanyEmployees.fromJson(apiResult);
+        return CompanyEmployees.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -846,7 +822,7 @@ class ApiCallerController extends GetxController {
     if (forcedApiKey != "") {
       apiKey = forcedApiKey;
     } else {
-      UserController user = Get.put(UserController());
+      final UserController user = Get.put(UserController());
       apiKey = user.apiKey;
     }
 
@@ -855,92 +831,63 @@ class ApiCallerController extends GetxController {
     switch (apiSelection) {
       case ApiSelection.appWidget:
         url += 'user/?selections=profile,icons,bars,cooldowns,newevents,newmessages,travel,money';
-        break;
       case ApiSelection.travel:
         url += 'user/?selections=money,travel';
-        break;
       case ApiSelection.ownBasic:
         url += 'user/?selections=profile,battlestats';
-        break;
       case ApiSelection.ownExtended:
         url += 'user/?selections=profile,bars,networth,cooldowns,notifications,'
             'travel,icons,money,education,messages';
-        break;
       case ApiSelection.events:
         url += 'user/?selections=events';
-        break;
       case ApiSelection.ownPersonalStats:
         url += 'user/?selections=personalstats';
-        break;
       case ApiSelection.ownMisc:
         url += 'user/?selections=money,education,workstats,battlestats,jobpoints,properties,skills,bazaar';
-        break;
       case ApiSelection.bazaar:
         url += 'user/?selections=bazaar';
-        break;
       case ApiSelection.otherProfile:
         url += 'user/$prefix?selections=profile,crimes,personalstats,bazaar';
-        break;
       case ApiSelection.basicProfile:
         url += 'user/$prefix?selections=profile';
-        break;
       case ApiSelection.target:
         url += 'user/$prefix?selections=profile,discord';
-        break;
       case ApiSelection.attacks:
         url += 'user/$prefix?selections=attacks';
-        break;
       case ApiSelection.attacksFull:
         url += 'user/$prefix?selections=attacksfull';
-        break;
       case ApiSelection.chainStatus:
         url += 'faction/?selections=chain';
-        break;
       case ApiSelection.bars:
         url += 'user/?selections=bars';
-        break;
       case ApiSelection.items:
         url += 'torn/?selections=items';
-        break;
       case ApiSelection.inventory:
         url += 'user/?selections=inventory,display';
-        break;
       case ApiSelection.education:
         url += 'torn/?selections=education';
-        break;
       case ApiSelection.faction:
         url += 'faction/$prefix?selections=';
-        break;
       case ApiSelection.factionCrimes:
         url += 'faction/?selections=crimes';
-        break;
       case ApiSelection.factionAttacks:
         url += 'faction/?selections=attacks';
-        break;
       case ApiSelection.friends:
         url += 'user/$prefix?selections=profile,discord';
-        break;
       case ApiSelection.property:
         url += 'property/$prefix?selections=property';
-        break;
       case ApiSelection.userStocks:
         url += 'user/?selections=stocks';
-        break;
       case ApiSelection.tornStocks:
         url += 'torn/?selections=stocks';
-        break;
       case ApiSelection.marketItem:
         url += 'market/$prefix?selections=bazaar,itemmarket';
-        break;
       case ApiSelection.perks:
         url += 'user/$prefix?selections=perks';
-        break;
       case ApiSelection.rankedWars:
         url += 'torn/?selections=rankedwars';
-        break;
       case ApiSelection.companyEmployees:
         url += 'company/?selections=employees';
-        break;
     }
     url += '&key=${apiKey!.trim()}&comment=PDA-App&limit=$limit${from != null ? "&from=$from" : ""}';
 
@@ -957,8 +904,8 @@ class ApiCallerController extends GetxController {
       } catch (e) {
         log("API REPLY ERROR [$e]");
         // Analytics limits at 100 chars
-        String platform = Platform.isAndroid ? "a" : "i";
-        String versionError = "$appVersion$platform $e";
+        final String platform = Platform.isAndroid ? "a" : "i";
+        final String versionError = "$appVersion$platform $e";
         analytics.logEvent(
           name: 'api_reply_error',
           parameters: {
@@ -966,22 +913,22 @@ class ApiCallerController extends GetxController {
           },
         );
         // We limit to a bit more here (it will be shown to the user)
-        String error = response.body.toString();
+        String error = response.body;
         if (error.isEmpty) {
           error = "Torn API is returning an empty string, please try again in a while. You can check "
               "if there are issues with the API directly in Torn, by visiting https://api.torn.com and trying "
               "a request with your API key";
         }
         return ApiError(
-            errorId: 0,
-            // We limit to a bit more here (it might get shown to the user)
-            pdaErrorDetails: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]");
+          // We limit to a bit more here (it might get shown to the user)
+          pdaErrorDetails: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]",
+        );
       }
 
       // ERROR HANDLING 2: JSON is correct, but the API is reporting an error from JSON
       if (jsonResponse.isNotEmpty && response.statusCode == 200) {
         if (jsonResponse['error'] != null) {
-          var code = jsonResponse['error']['code'];
+          final code = jsonResponse['error']['code'];
           return ApiError(errorId: code);
         }
         // Otherwise, return a good json response
@@ -997,7 +944,7 @@ class ApiCallerController extends GetxController {
           },
         );
 
-        String e = response.body.toString();
+        final String e = response.body;
         int? errorParsed = 0;
         if (response.body.contains('"code":')) {
           errorParsed = int.tryParse(response.body.split('"code":')[1].split(",")[0]);
@@ -1015,8 +962,8 @@ class ApiCallerController extends GetxController {
 
       log("API CALL ERROR: [$e]");
       // Analytics limits at 100 chars
-      String platform = Platform.isAndroid ? "a" : "i";
-      String versionError = "$appVersion$platform: $e";
+      final String platform = Platform.isAndroid ? "a" : "i";
+      final String versionError = "$appVersion$platform: $e";
       analytics.logEvent(
         name: 'api_call_error',
         parameters: {
@@ -1024,9 +971,8 @@ class ApiCallerController extends GetxController {
         },
       );
 
-      String error = e.toString();
+      final String error = e.toString();
       return ApiError(
-        errorId: 0,
         // We limit to a bit more here (it might get shown to the user)
         pdaErrorDetails: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : error}]",
       );

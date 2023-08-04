@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -11,12 +10,11 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
-
+import 'package:torn_pda/providers/api_caller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
@@ -28,7 +26,7 @@ class StockMarketAlertsPage extends StatefulWidget {
   final bool calledFromMenu;
   final Function stockMarketInMenuCallback;
 
-  StockMarketAlertsPage({this.fbUser, required this.calledFromMenu, required this.stockMarketInMenuCallback});
+  const StockMarketAlertsPage({this.fbUser, required this.calledFromMenu, required this.stockMarketInMenuCallback});
 
   @override
   _StockMarketAlertsPageState createState() => _StockMarketAlertsPageState();
@@ -73,7 +71,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -96,7 +94,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _stocksInitialised,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -106,22 +104,22 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                             child: Column(
                               children: <Widget>[
                                 _alertActivator(),
-                                Divider(),
-                                Text("Traded Companies"),
+                                const Divider(),
+                                const Text("Traded Companies"),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
+                                    const Text(
                                       "Value: ",
                                       style: TextStyle(fontSize: 10),
                                     ),
                                     Text(
                                       formatProfit(inputDouble: _totalValue),
-                                      style: TextStyle(fontSize: 10),
+                                      style: const TextStyle(fontSize: 10),
                                     ),
                                     Text(
                                       " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
-                                      style: TextStyle(fontSize: 10),
+                                      style: const TextStyle(fontSize: 10),
                                     ),
                                     Text(
                                       formatProfit(inputDouble: _totalProfit),
@@ -132,14 +130,14 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 _allStocksList(),
-                                SizedBox(height: 50),
+                                const SizedBox(height: 50),
                               ],
                             ),
                           );
                         } else {
-                          return Center(
+                          return const Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
@@ -148,7 +146,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                                   style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
                                   child: Column(
                                     children: [
                                       Text(
@@ -164,7 +162,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                           );
                         }
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -184,8 +182,8 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsP!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      title: Text("Stock market alerts"),
-      leading: new IconButton(
+      title: const Text("Stock market alerts"),
+      leading: IconButton(
         icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
         onPressed: () {
           if (widget.calledFromMenu) {
@@ -201,7 +199,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       ),
       actions: [
         GestureDetector(
-          child: Icon(
+          child: const Icon(
             MdiIcons.openInApp,
           ),
           onTap: () {
@@ -211,9 +209,9 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
             _launchBrowser(shortTap: false);
           },
         ),
-        SizedBox(width: 5),
+        const SizedBox(width: 5),
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.settings,
           ),
           onPressed: () async {
@@ -231,18 +229,18 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     );
   }
 
-  _alertActivator() {
+  Padding _alertActivator() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
       child: CheckboxListTile(
         checkColor: Colors.white,
         activeColor: Colors.blueGrey,
         value: _fbUser!.stockMarketNotification ?? false,
-        title: Text(
+        title: const Text(
           "Stock Market notification",
           style: TextStyle(fontSize: 14),
         ),
-        subtitle: Text(
+        subtitle: const Text(
           "Main toggle for the custom price alerts you set up below",
           style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
         ),
@@ -257,13 +255,13 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   }
 
   ListView _allStocksList() {
-    var stockCards = <Widget>[];
+    final stockCards = <Widget>[];
     bool insideUserStocks = false;
 
-    for (var stock in _stockList) {
+    for (final stock in _stockList) {
       if (stock.owned == 0 && insideUserStocks == true) {
         stockCards.add(
-          Column(
+          const Column(
             children: [
               SizedBox(height: 5),
               SizedBox(width: 150, child: Divider()),
@@ -290,11 +288,11 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
     // the alerts pages, like in other cases
     if (widget.calledFromMenu) {
-      _fbUser = await firestore.getUserProfile(force: false); // We are NOT getting updated stocks every time
+      _fbUser = await firestore.getUserProfile(); // We are NOT getting updated stocks every time
     }
 
-    var allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
-    var userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
+    final allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
+    final userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
 
     if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
       _errorInitializing = true;
@@ -302,19 +300,19 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     }
 
     // Convert all stocks to list
-    var allStocks = allStocksReply;
+    final allStocks = allStocksReply;
     _stockList = allStocks.stocks!.entries.map((e) => e.value).toList();
 
     // Convert user stocks to list
-    var userStocks = userStocksReply;
+    final userStocks = userStocksReply;
     var ownedStocks = [];
     if (userStocks.stocks != null) {
       ownedStocks = userStocks.stocks!.entries.map((e) => e.value).toList();
     }
 
     // Get owned stocks
-    for (var stockOwned in ownedStocks) {
-      for (var listedStock in _stockList) {
+    for (final stockOwned in ownedStocks) {
+      for (final listedStock in _stockList) {
         if (stockOwned.stockId == listedStock.stockId) {
           listedStock.owned = 1;
 
@@ -324,13 +322,13 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           double totalMoneySpent = 0;
           stockOwned.transactions.forEach((key, transaction) {
             totalShares += int.parse(transaction.shares);
-            var singleGain = listedStock.currentPrice! - transaction.boughtPrice;
+            final singleGain = listedStock.currentPrice! - transaction.boughtPrice;
             totalMoneyGain += singleGain * transaction.shares;
             totalMoneySpent += transaction.boughtPrice * transaction.shares;
           });
 
-          var averageGain = totalMoneyGain / totalShares;
-          var averageBought = totalMoneySpent / totalShares;
+          final averageGain = totalMoneyGain / totalShares;
+          final averageBought = totalMoneySpent / totalShares;
           listedStock.gain = totalMoneyGain;
           listedStock.percentageGain = averageGain * 100 / averageBought;
           listedStock.sharesOwned = totalShares;
@@ -342,13 +340,13 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     }
 
     // Complete details based on what's saved in Firebase
-    for (var fbAlert in _fbUser!.stockMarketShares) {
-      var acronym = fbAlert.toString().substring(0, 3);
-      var regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
-      var match = regex.firstMatch(fbAlert.toString())!;
-      var fbGain = match.group(1);
-      var fbLoss = match.group(2);
-      for (var listedStock in _stockList) {
+    for (final fbAlert in _fbUser!.stockMarketShares) {
+      final acronym = fbAlert.toString().substring(0, 3);
+      final regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
+      final match = regex.firstMatch(fbAlert.toString())!;
+      final fbGain = match.group(1);
+      final fbLoss = match.group(2);
+      for (final listedStock in _stockList) {
         if (listedStock.acronym == acronym) {
           if (fbGain != "n") {
             listedStock.alertGain = double.tryParse(fbGain!);
@@ -366,7 +364,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   }
 
   void _launchBrowser({required shortTap}) {
-    String url = "https://www.torn.com/page.php?sid=stocks";
+    const String url = "https://www.torn.com/page.php?sid=stocks";
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,

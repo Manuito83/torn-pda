@@ -8,19 +8,19 @@ class LoadoutsNameDialog extends StatefulWidget {
   final QuickItemsProvider? quickItemsProvider;
   final QuickItem loadout;
 
-  LoadoutsNameDialog({
+  const LoadoutsNameDialog({
     required this.themeProvider,
     required this.quickItemsProvider,
     required this.loadout,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _LoadoutsNameDialogState createState() => _LoadoutsNameDialogState();
 }
 
 class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
-  TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
@@ -41,22 +41,21 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
                   color: widget.themeProvider!.secondBackground,
-                  shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
@@ -69,7 +68,7 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
                         style: TextStyle(fontSize: 12, color: widget.themeProvider!.mainText),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: 150,
                       child: TextFormField(
@@ -78,23 +77,23 @@ class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
                           border: UnderlineInputBorder(),
                           isDense: true,
                         ),
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                         maxLength: 15,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Save"),
+                          child: const Text("Save"),
                           onPressed: () {
                             widget.quickItemsProvider!.changeLoadoutName(widget.loadout, _nameController.text);
                             Navigator.of(context).pop();
                           },
                         ),
                         TextButton(
-                          child: Text("Forget it"),
+                          child: const Text("Forget it"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },

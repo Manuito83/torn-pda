@@ -1,15 +1,13 @@
 // Dart imports:
 import 'dart:async';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
@@ -20,7 +18,7 @@ class ChainWidget extends StatefulWidget {
   final bool alwaysDarkBackground;
   final Function? callBackOptions;
 
-  ChainWidget({
+  const ChainWidget({
     required Key key,
     required this.alwaysDarkBackground,
     this.callBackOptions,
@@ -51,8 +49,8 @@ class _ChainWidgetState extends State<ChainWidget> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context);
     initialise();
     _chainStatusProvider.widgetVisible = true;
 
@@ -79,7 +77,7 @@ class _ChainWidgetState extends State<ChainWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (!_chainStatusProvider.panicModeEnabled) SizedBox(width: 35), // Centers the widget without P icon
+              if (!_chainStatusProvider.panicModeEnabled) const SizedBox(width: 35), // Centers the widget without P icon
               SizedBox(
                 width: 30,
                 child: !_chainStatusProvider.modelError
@@ -104,7 +102,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                           });
                         },
                       )
-                    : SizedBox.shrink(),
+                    : const SizedBox.shrink(),
               ),
               if (_chainStatusProvider.panicModeEnabled)
                 SizedBox(
@@ -129,9 +127,9 @@ class _ChainWidgetState extends State<ChainWidget> {
                             }
                           },
                         )
-                      : SizedBox.shrink(),
+                      : const SizedBox.shrink(),
                 ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Column(
                 children: <Widget>[
                   FutureBuilder(
@@ -142,7 +140,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                           return Column(
                             children: <Widget>[
                               Padding(
-                                padding: EdgeInsets.only(bottom: 4),
+                                padding: const EdgeInsets.only(bottom: 4),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
@@ -165,8 +163,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 ),
                               ),
                               LinearPercentIndicator(
-                                padding: EdgeInsets.all(0),
-                                barRadius: Radius.circular(10),
+                                padding: const EdgeInsets.all(0),
+                                barRadius: const Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
@@ -178,7 +176,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                                   _chainStatusProvider.chainModel!.chain!.cooldown! > 0
                                       ? '${_chainStatusProvider.chainModel!.chain!.current} hits'
                                       : '${_chainStatusProvider.chainModel!.chain!.current}/${_chainStatusProvider.chainModel!.chain!.max}',
-                                  style: TextStyle(color: Colors.black),
+                                  style: const TextStyle(color: Colors.black),
                                 ),
                                 percent: _chainStatusProvider.chainModel!.chain!.cooldown! > 0
                                     ? 1.0
@@ -194,11 +192,11 @@ class _ChainWidgetState extends State<ChainWidget> {
                           );
                         }
                       } else {
-                        return SizedBox(height: 30);
+                        return const SizedBox(height: 30);
                       }
                     },
                   ),
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.symmetric(vertical: 2),
                   ),
                   FutureBuilder(
@@ -210,8 +208,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                           return Column(
                             children: <Widget>[
                               LinearPercentIndicator(
-                                padding: EdgeInsets.all(0),
-                                barRadius: Radius.circular(10),
+                                padding: const EdgeInsets.all(0),
+                                barRadius: const Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
@@ -219,19 +217,19 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 progressColor: Colors.green,
                                 center: Text(
                                   'E: ${bars.energy.current}/${bars.energy.maximum}',
-                                  style: TextStyle(color: Colors.black),
+                                  style: const TextStyle(color: Colors.black),
                                 ),
                                 // Take drugs into account
                                 percent: (bars.energy.current / bars.energy.maximum) > 1.0
                                     ? 1.0
                                     : bars.energy.current / bars.energy.maximum,
                               ),
-                              Padding(
+                              const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 2),
                               ),
                               LinearPercentIndicator(
-                                padding: EdgeInsets.all(0),
-                                barRadius: Radius.circular(10),
+                                padding: const EdgeInsets.all(0),
+                                barRadius: const Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 3,
@@ -242,16 +240,16 @@ class _ChainWidgetState extends State<ChainWidget> {
                             ],
                           );
                         } else {
-                          return SizedBox.shrink();
+                          return const SizedBox.shrink();
                         }
                       } else {
-                        return SizedBox.shrink();
+                        return const SizedBox.shrink();
                       }
                     },
                   ),
                 ],
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               SizedBox(
                 width: 30,
                 child: GestureDetector(
@@ -270,7 +268,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                   },
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 35,
               ),
             ],
@@ -288,8 +286,8 @@ class _ChainWidgetState extends State<ChainWidget> {
     }
   }
 
-  var lastReported = WatchDefcon.red1;
-  _assessChainBorderWidth() {
+  WatchDefcon lastReported = WatchDefcon.red1;
+  double _assessChainBorderWidth() {
     switch (_chainStatusProvider.chainWatcherDefcon) {
       case WatchDefcon.cooldown:
         return 20.0;
@@ -322,13 +320,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: message,
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.green[700]!,
-      duration: Duration(seconds: 7),
-      contentPadding: EdgeInsets.all(10),
+      duration: const Duration(seconds: 7),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 
@@ -341,13 +339,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: 'Chain watcher deactivated!',
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.orange[700]!,
-      duration: Duration(seconds: 5),
-      contentPadding: EdgeInsets.all(10),
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 
@@ -363,13 +361,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: message,
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.green[700]!,
-      duration: Duration(seconds: 7),
-      contentPadding: EdgeInsets.all(10),
+      duration: const Duration(seconds: 7),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 
@@ -378,13 +376,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: 'Panic mode deactivated!',
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.orange[700]!,
-      duration: Duration(seconds: 5),
-      contentPadding: EdgeInsets.all(10),
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 

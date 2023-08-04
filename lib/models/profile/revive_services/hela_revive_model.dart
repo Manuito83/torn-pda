@@ -25,18 +25,18 @@ class HelaReviveModel {
   });
 
   factory HelaReviveModel.fromJson(Map<String, dynamic> json) => HelaReviveModel(
-        vendor: json["vendor"] == null ? null : json["vendor"],
-        tornId: json["tornid"] == null ? null : json["tornid"],
-        username: json["username"] == null ? null : json["username"],
-        source: json["source"] == null ? null : json["source"],
-        type: json["type"] == null ? null : json["type"],
+        vendor: json["vendor"],
+        tornId: json["tornid"],
+        username: json["username"],
+        source: json["source"],
+        type: json["type"],
       );
 
   Map<String, dynamic> toJson() => {
-        "vendor": vendor == null ? null : vendor,
-        "tornid": tornId == null ? null : tornId,
-        "username": username == null ? null : username,
-        "source": source == null ? null : source,
-        "type": type == null ? null : type,
+        "vendor": vendor,
+        "tornid": tornId,
+        "username": username,
+        "source": source,
+        "type": type,
       };
 }

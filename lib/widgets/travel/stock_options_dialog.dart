@@ -19,7 +19,7 @@ class StocksOptionsDialog extends StatefulWidget {
   final bool showBarsCooldownAnalysis;
   final SettingsProvider? settingsProvider;
 
-  StocksOptionsDialog({
+  const StocksOptionsDialog({
     required this.capacity,
     required this.callBack,
     required this.inventoryEnabled,
@@ -51,28 +51,27 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return SingleChildScrollView(
       child: Stack(
         children: <Widget>[
           SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: 45,
                 bottom: 16,
                 left: 25,
                 right: 25,
               ),
-              margin: EdgeInsets.only(top: 30),
-              decoration: new BoxDecoration(
+              margin: const EdgeInsets.only(top: 30),
+              decoration: BoxDecoration(
                 color: _themeProvider.secondBackground,
-                shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
                     blurRadius: 10.0,
-                    offset: const Offset(0.0, 10.0),
+                    offset: Offset(0.0, 10.0),
                   ),
                 ],
               ),
@@ -82,7 +81,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "Show inventory quantities",
                           style: TextStyle(
@@ -106,7 +105,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "Show arrival time",
                           style: TextStyle(
@@ -130,7 +129,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "Bars/cooldown analysis",
                           style: TextStyle(
@@ -151,13 +150,13 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Capacity: ${_capacity.round().toString()}",
-                        style: TextStyle(
+                        "Capacity: $_capacity",
+                        style: const TextStyle(
                           fontSize: 13,
                         ),
                       ),
@@ -165,7 +164,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                         value: _capacity.toDouble(),
                         min: 1,
                         max: 44,
-                        label: _capacity.round().toString(),
+                        label: _capacity.toString(),
                         divisions: 44,
                         onChanged: (double newCapacity) {
                           setState(() {
@@ -186,9 +185,9 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                                 _callBackValues();
                               }
                             },
-                            child: Icon(MdiIcons.minus),
+                            child: const Icon(MdiIcons.minus),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           OutlinedButton(
                             onPressed: () {
                               if (_capacity < 44) {
@@ -198,13 +197,13 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                                 _callBackValues();
                               }
                             },
-                            child: Icon(MdiIcons.plus),
+                            child: const Icon(MdiIcons.plus),
                           ),
                         ],
                       )
                     ],
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     'Affects profit per hour calculation',
                     style: TextStyle(
@@ -213,11 +212,11 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       fontStyle: FontStyle.italic,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         "Ticket",
                         style: TextStyle(
                           fontSize: 13,
@@ -241,7 +240,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Close"),
+                          child: const Text("Close"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -281,7 +280,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   DropdownButton _timeFormatDropdown() {
     return DropdownButton<TravelTicket>(
       value: widget.settingsProvider!.travelTicket,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: TravelTicket.standard,
           child: SizedBox(

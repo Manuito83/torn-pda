@@ -16,7 +16,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class JailAheadOptions extends StatefulWidget {
   final Function? callback;
 
-  JailAheadOptions({
+  const JailAheadOptions({
     this.callback,
   });
 
@@ -49,7 +49,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -72,7 +72,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -80,18 +80,18 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(20.0),
+                              const Padding(
+                                padding: EdgeInsets.all(20.0),
                                 child: Text('Here you can specify your preferred notification '
                                     'trigger time before jail release'),
                               ),
                               _rowsWithTypes(),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -110,9 +110,9 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Jail notification"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Jail notification"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -128,10 +128,10 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text('Notification'),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -146,10 +146,10 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                const Flexible(
                   child: Text('Alarm'),
                 ),
-                Padding(
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Flexible(
@@ -164,7 +164,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
                           ),
                         ],
                       ),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           Flexible(
@@ -190,10 +190,10 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Flexible(
+                const Flexible(
                   child: Text('Timer'),
                 ),
-                Padding(
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Flexible(
@@ -209,7 +209,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
   DropdownButton _jailNotificationAheadDropDown() {
     return DropdownButton<int>(
       value: _jailNotificationAheadValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 20,
           child: SizedBox(
@@ -288,7 +288,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
   DropdownButton _jailAlarmAheadDropDown() {
     return DropdownButton<int>(
       value: _jailAlarmAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 0,
           child: SizedBox(
@@ -354,7 +354,7 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
   DropdownButton _jailTimerAheadDropDown() {
     return DropdownButton<int>(
       value: _jailTimerAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 20,
           child: SizedBox(
@@ -431,9 +431,9 @@ class _JailAheadOptionsState extends State<JailAheadOptions> {
   }
 
   Future _restorePreferences() async {
-    var jailNotificationAhead = await Prefs().getJailNotificationAhead();
-    var jailAlarmAhead = await Prefs().getJailAlarmAhead();
-    var jailTimerAhead = await Prefs().getJailTimerAhead();
+    final jailNotificationAhead = await Prefs().getJailNotificationAhead();
+    final jailAlarmAhead = await Prefs().getJailAlarmAhead();
+    final jailTimerAhead = await Prefs().getJailTimerAhead();
 
     setState(() {
       _jailNotificationAheadValue = jailNotificationAhead;

@@ -64,32 +64,32 @@ class Item {
   });
 
   factory Item.fromJson(Map<String, dynamic> json) => Item(
-        name: json["name"] == null ? null : json["name"],
-        description: json["description"] == null ? null : json["description"],
-        effect: json["effect"] == null ? null : json["effect"],
-        requirement: json["requirement"] == null ? null : json["requirement"],
+        name: json["name"],
+        description: json["description"],
+        effect: json["effect"],
+        requirement: json["requirement"],
         type: json["type"] == null ? null : typeValues.map[json["type"]],
-        weaponType: json["weapon_type"] == null ? null : json["weapon_type"],
-        buyPrice: json["buy_price"] == null ? null : json["buy_price"],
-        sellPrice: json["sell_price"] == null ? null : json["sell_price"],
-        marketValue: json["market_value"] == null ? null : json["market_value"],
-        circulation: json["circulation"] == null ? null : json["circulation"],
-        image: json["image"] == null ? null : json["image"],
+        weaponType: json["weapon_type"],
+        buyPrice: json["buy_price"],
+        sellPrice: json["sell_price"],
+        marketValue: json["market_value"],
+        circulation: json["circulation"],
+        image: json["image"],
         coverage: json["coverage"] == null ? null : Coverage.fromJson(json["coverage"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "name": name == null ? null : name,
-        "description": description == null ? null : description,
-        "effect": effect == null ? null : effect,
-        "requirement": requirement == null ? null : requirement,
+        "name": name,
+        "description": description,
+        "effect": effect,
+        "requirement": requirement,
         "type": type == null ? null : typeValues.reverse![type],
-        "weapon_type": weaponType == null ? null : weaponType,
-        "buy_price": buyPrice == null ? null : buyPrice,
-        "sell_price": sellPrice == null ? null : sellPrice,
-        "market_value": marketValue == null ? null : marketValue,
-        "circulation": circulation == null ? null : circulation,
-        "image": image == null ? null : image,
+        "weapon_type": weaponType,
+        "buy_price": buyPrice,
+        "sell_price": sellPrice,
+        "market_value": marketValue,
+        "circulation": circulation,
+        "image": image,
         "coverage": coverage == null ? null : coverage!.toJson(),
       };
 }
@@ -215,9 +215,7 @@ class EnumValues<T> {
   EnumValues(this.map);
 
   Map<T, String>? get reverse {
-    if (reverseMap == null) {
-      reverseMap = map.map((k, v) => new MapEntry(v, k));
-    }
+    reverseMap ??= map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
 }

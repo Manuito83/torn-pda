@@ -19,7 +19,7 @@ enum AttackTypeFilter {
 }
 
 class AttacksProvider extends ChangeNotifier {
-  List<Attack> _attacks = [];
+  final List<Attack> _attacks = [];
   UnmodifiableListView<Attack> get allAttacks => UnmodifiableListView(_attacks);
 
   bool _apiError = false;
@@ -38,11 +38,11 @@ class AttacksProvider extends ChangeNotifier {
 
   String _ownId = '';
 
-  UserController _u = Get.put(UserController());
+  final UserController _u = Get.put(UserController());
 
   Future initializeAttacks() async {
     await restoreSharedPreferences();
-    dynamic attacksResult = await Get.find<ApiCallerController>().getAttacks();
+    final dynamic attacksResult = await Get.find<ApiCallerController>().getAttacks();
     if (attacksResult is AttackModel) {
       _apiError = false;
       _attacks.clear();
@@ -77,7 +77,7 @@ class AttacksProvider extends ChangeNotifier {
       green = true;
     }
 
-    if (_attacks.length == 0) {
+    if (_attacks.isEmpty) {
       // At the beginning the list is empty, so we just add a new target
       thisAttack.attackSeriesGreen.add(green);
       _attacks.add(thisAttack);
@@ -128,10 +128,10 @@ class AttacksProvider extends ChangeNotifier {
       if (thisAttack.result == Result.MUGGED) {
         modifiers *= 0.75;
       }
-      double baseRespect = respectGain / modifiers;
+      final double baseRespect = respectGain / modifiers;
       // Base respect = (Ln(level) + 1.0)/4.0
       // From the second formula: Level = e^(Base Respect / 4 - 1)
-      double levelD = exp(4 * baseRespect - 1);
+      final double levelD = exp(4 * baseRespect - 1);
       thisAttack.targetLevel = levelD.round();
     } else {
       thisAttack.respectGain = 0;
@@ -166,22 +166,16 @@ class AttacksProvider extends ChangeNotifier {
     switch (sortType) {
       case AttackSortType.levelDes:
         _attacks.sort((a, b) => b.targetLevel.compareTo(a.targetLevel));
-        break;
       case AttackSortType.levelAsc:
         _attacks.sort((a, b) => a.targetLevel.compareTo(b.targetLevel));
-        break;
       case AttackSortType.respectDes:
         _attacks.sort((a, b) => b.respectGain.compareTo(a.respectGain));
-        break;
       case AttackSortType.respectAsc:
         _attacks.sort((a, b) => a.respectGain.compareTo(b.respectGain));
-        break;
       case AttackSortType.dateDes:
         _attacks.sort((a, b) => b.timestampEnded!.compareTo(a.timestampEnded!));
-        break;
       case AttackSortType.dateAsc:
         _attacks.sort((a, b) => a.timestampEnded!.compareTo(b.timestampEnded!));
-        break;
       default:
         _attacks.sort((a, b) => b.timestampEnded!.compareTo(a.timestampEnded!));
         break;
@@ -195,22 +189,16 @@ class AttacksProvider extends ChangeNotifier {
     switch (_currentSort) {
       case AttackSortType.levelDes:
         sortToSave = 'levelDes';
-        break;
       case AttackSortType.levelAsc:
         sortToSave = 'levelAsc';
-        break;
       case AttackSortType.respectDes:
         sortToSave = 'respectDes';
-        break;
       case AttackSortType.respectAsc:
         sortToSave = 'respectDes';
-        break;
       case AttackSortType.dateAsc:
         sortToSave = 'dateAsc';
-        break;
       case AttackSortType.dateDes:
         sortToSave = 'dateDes';
-        break;
       default:
         sortToSave = 'dateDes';
         break;
@@ -223,29 +211,22 @@ class AttacksProvider extends ChangeNotifier {
     _ownId = _u.apiKey!;
 
     // Attack sort
-    String attackSort = await Prefs().getAttackSort();
+    final String attackSort = await Prefs().getAttackSort();
     switch (attackSort) {
       case '':
         _currentSort = AttackSortType.dateDes;
-        break;
       case 'levelDes':
         _currentSort = AttackSortType.levelDes;
-        break;
       case 'levelAsc':
         _currentSort = AttackSortType.levelAsc;
-        break;
       case 'respectDes':
         _currentSort = AttackSortType.respectDes;
-        break;
       case 'respectAsc':
         _currentSort = AttackSortType.respectAsc;
-        break;
       case 'dateDes':
         _currentSort = AttackSortType.dateDes;
-        break;
       case 'dateAsc':
         _currentSort = AttackSortType.dateAsc;
-        break;
     }
   }
 }

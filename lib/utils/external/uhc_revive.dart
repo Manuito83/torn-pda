@@ -22,17 +22,17 @@ class UhcRevive {
   });
 
   Future<String?> callMedic() async {
-    var modelOut = UhcReviveModel()
+    final modelOut = UhcReviveModel()
       ..userID = playerId
       ..userName = "$playerName"
       ..factionName = playerFaction
       ..factionID = playerFactionId
       ..source = "Torn PDA v$appVersion";
 
-    var bodyOut = uhcReviveModelToJson(modelOut);
+    final bodyOut = uhcReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         Uri.parse('https://elimination.me/api/request'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -43,7 +43,7 @@ class UhcRevive {
       if (response.statusCode == 200) {
         return "200";
       } else {
-        var details = json.decode(response.body);
+        final details = json.decode(response.body);
         return details["reason"];
       }
     } catch (e) {

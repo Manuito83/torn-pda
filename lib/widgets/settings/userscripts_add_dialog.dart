@@ -14,7 +14,7 @@ class UserScriptsAddDialog extends StatefulWidget {
   final bool editExisting;
   final UserScriptModel? editScript;
 
-  UserScriptsAddDialog({required this.editExisting, this.editScript});
+  const UserScriptsAddDialog({required this.editExisting, this.editScript});
 
   @override
   _UserScriptsAddDialogState createState() => _UserScriptsAddDialogState();
@@ -25,10 +25,10 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
   double vPad = 20;
   double frame = 10;
 
-  final _addNameController = new TextEditingController();
-  final _addSourceController = new TextEditingController();
-  var _nameFormKey = GlobalKey<FormState>();
-  var _sourceFormKey = GlobalKey<FormState>();
+  final _addNameController = TextEditingController();
+  final _addSourceController = TextEditingController();
+  final _nameFormKey = GlobalKey<FormState>();
+  final _sourceFormKey = GlobalKey<FormState>();
 
   late UserScriptsProvider _userScriptsProvider;
   late ThemeProvider _themeProvider;
@@ -45,7 +45,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     if (widget.editExisting) {
-      for (var script in _userScriptsProvider.userScriptList) {
+      for (final script in _userScriptsProvider.userScriptList) {
         if (script.name == widget.editScript!.name) {
           _addNameController.text = script.name!;
           _addSourceController.text = script.source!;
@@ -82,8 +82,8 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.code),
-                  SizedBox(width: 6),
+                  const Icon(Icons.code),
+                  const SizedBox(width: 6),
                   Text(widget.editExisting ? "Edit existing script" : "Add new script"),
                 ],
               ),
@@ -93,12 +93,12 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
               child: Form(
                 key: _nameFormKey,
                 child: TextFormField(
-                  style: TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 12),
                   controller: _addNameController,
                   maxLength: 100,
                   minLines: 1,
                   maxLines: 2,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     isDense: true,
                     counterText: "",
                     border: OutlineInputBorder(),
@@ -108,7 +108,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                     if (value!.isEmpty) {
                       return "Enter a valid name!";
                     }
-                    for (var script in _userScriptsProvider.userScriptList) {
+                    for (final script in _userScriptsProvider.userScriptList) {
                       if (script.name!.toLowerCase() == value.toLowerCase()) {
                         if (!widget.editExisting) {
                           return "Script name already taken!";
@@ -132,10 +132,10 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Injection time"),
+                    const Text("Injection time"),
                     ToggleSwitch(
                       minHeight: 28,
-                      customHeights: [30, 30],
+                      customHeights: const [30, 30],
                       borderColor:
                           _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
                       initialLabelIndex: _originalTime == UserScriptTime.start ? 0 : 1,
@@ -156,27 +156,26 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                       totalSwitches: 2,
                       animate: true,
                       animationDuration: 500,
-                      labels: ["START", "END"],
+                      labels: const ["START", "END"],
                       onToggle: (index) {
                         index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
                       },
                     )
                   ],
-                )),
+                ),),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                 child: Form(
                   key: _sourceFormKey,
                   child: TextFormField(
-                    minLines: null,
                     maxLines: null,
                     expands: true,
                     autocorrect: false,
-                    style: TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 12),
                     controller: _addSourceController,
                     keyboardType: TextInputType.multiline,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       isDense: true,
                       counterText: "",
                       border: OutlineInputBorder(),
@@ -205,7 +204,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                     },
                   ),
                   TextButton(
-                    child: Text("Cancel"),
+                    child: const Text("Cancel"),
                     onPressed: () {
                       Navigator.of(context).pop();
                       _addNameController.text = '';
@@ -229,9 +228,9 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
       // Copy controller's text ot local variable
       // early and delete the global, so that text
       // does not appear again in case of failure
-      var inputName = _addNameController.text;
-      var inputTime = _originalTime;
-      var inputSource = _addSourceController.text;
+      final inputName = _addNameController.text;
+      final inputTime = _originalTime;
+      final inputSource = _addSourceController.text;
       _addNameController.text = _addSourceController.text = '';
 
       if (!widget.editExisting) {

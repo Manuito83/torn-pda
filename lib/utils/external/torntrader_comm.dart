@@ -12,8 +12,8 @@ class TornTraderComm {
   static Future<TornTraderAuthModel> checkIfUserExists(int? user) async {
     var authModel = TornTraderAuthModel();
     try {
-      var response =
-          await http.post(Uri.parse('https://torntrader.com/api/v1/users?user=$user')).timeout(Duration(seconds: 5));
+      final response =
+          await http.post(Uri.parse('https://torntrader.com/api/v1/users?user=$user')).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         authModel = tornTraderAuthModelFromJson(response.body);
         authModel.error = false;
@@ -29,7 +29,7 @@ class TornTraderComm {
   static Future<TornTraderInModel> submitItems(List<TradeItem> sellerItems, sellerName, tradeId, buyerId) async {
     var inModel = TornTraderInModel();
 
-    var authModel = await checkIfUserExists(buyerId);
+    final authModel = await checkIfUserExists(buyerId);
     if (authModel.error!) {
       inModel.serverError = true;
       return inModel;
@@ -40,7 +40,7 @@ class TornTraderComm {
       return inModel;
     }
 
-    var outModel = TornTraderOutModel();
+    final outModel = TornTraderOutModel();
     outModel
       ..appVersion = appVersion
       ..tradeId = tradeId
@@ -48,8 +48,8 @@ class TornTraderComm {
       ..buyer = buyerId
       ..items = <TtOutItem>[];
 
-    for (var product in sellerItems) {
-      var item = TtOutItem(
+    for (final product in sellerItems) {
+      final item = TtOutItem(
         name: product.name,
         quantity: product.quantity,
         id: product.id,
@@ -58,7 +58,7 @@ class TornTraderComm {
     }
 
     try {
-      var response = await http
+      final response = await http
           .post(
             Uri.parse('https://torntrader.com/api/v1/trades'),
             headers: <String, String>{
@@ -67,7 +67,7 @@ class TornTraderComm {
             },
             body: tornTraderOutToJson(outModel),
           )
-          .timeout(Duration(seconds: 5));
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         inModel = tornTraderInModelFromJson(response.body);

@@ -60,12 +60,12 @@ final allowedIcons = <String, Map<String, String>>{
 };
 
 class StatusIconsWrap extends StatefulWidget {
-  StatusIconsWrap({
-    Key? key,
+  const StatusIconsWrap({
+    super.key,
     required this.user,
     required this.openBrowser,
     required this.settingsProvider,
-  }) : super(key: key);
+  });
 
   final OwnProfileExtended? user;
   final Function openBrowser;
@@ -116,7 +116,7 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
                 onTap: () {
                   BotToast.showText(
                     text: details.replaceAll(" 0 days, 0 hours, ", " ").replaceAll(" 0 days, ", " "),
-                    textStyle: TextStyle(
+                    textStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),

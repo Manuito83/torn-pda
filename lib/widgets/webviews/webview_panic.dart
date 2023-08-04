@@ -2,31 +2,29 @@
 import 'dart:async';
 import 'dart:io';
 
-// Flutter imports:
-import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
+import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewPanic extends StatefulWidget {
   final List<String> attackIdList;
@@ -42,7 +40,7 @@ class WebViewPanic extends StatefulWidget {
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
-  WebViewPanic({
+  const WebViewPanic({
     required this.attackIdList,
     required this.attackNameList,
     required this.attackNotesList,
@@ -76,7 +74,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
   var _chatRemovalActive = false;
 
   int _attackNumber = 0;
-  List<String> _attackedIds = [];
+  final List<String> _attackedIds = [];
 
   String? _factionName = "";
   int? _lastOnline = 0;
@@ -84,7 +82,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
   bool _backButtonPopsContext = true;
   String _goBackTitle = '';
 
-  var _chainWidgetController = ExpandableController();
+  final _chainWidgetController = ExpandableController();
 
   bool _nextButtonPressed = false;
 
@@ -93,7 +91,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
     HealingPages(description: "Faction"),
   ];
 
-  Widget _profileAttackWidget = SizedBox.shrink();
+  Widget _profileAttackWidget = const SizedBox.shrink();
   var _lastProfileVisited = "";
 
   @override
@@ -127,7 +125,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
@@ -154,14 +152,14 @@ class _WebViewPanicState extends State<WebViewPanic> {
                   child: Column(
                     children: [
                       ExpandablePanel(
-                        theme: ExpandableThemeData(
+                        theme: const ExpandableThemeData(
                           hasIcon: false,
                           tapBodyToCollapse: false,
                           tapHeaderToExpand: false,
                         ),
-                        collapsed: SizedBox.shrink(),
+                        collapsed: const SizedBox.shrink(),
                         controller: _chainWidgetController,
-                        header: SizedBox.shrink(),
+                        header: const SizedBox.shrink(),
                         expanded: ChainWidget(
                           key: _chainWidgetKey,
                           alwaysDarkBackground: true,
@@ -172,7 +170,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
                         child: WebView(
                           initialUrl: _initialUrl,
                           javascriptMode: JavascriptMode.unrestricted,
-                          javascriptChannels: Set.from([
+                          javascriptChannels: {
                             JavascriptChannel(
                               name: 'loadoutChangeHandler',
                               onMessageReceived: (JavascriptMessage message) async {
@@ -183,29 +181,28 @@ class _WebViewPanicState extends State<WebViewPanic> {
                                   _webViewController!.reload();
                                   BotToast.showText(
                                     text: "Loadout $loadout activated!",
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.blue[600]!,
-                                    duration: Duration(seconds: 1),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 1),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 } else {
                                   BotToast.showText(
                                     text: "There was a problem activating the loadout, are you already using it?",
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.red[600]!,
-                                    duration: Duration(seconds: 2),
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 }
                               },
                             )
-                          ]),
+                          },
                           onWebViewCreated: (WebViewController c) {
                             _webViewController = c;
                           },
@@ -234,10 +231,10 @@ class _WebViewPanicState extends State<WebViewPanic> {
   void _highlightChat(String page) {
     if (!page.contains('torn.com')) return;
 
-    var intColor = Color(_settingsProvider.highlightColor);
-    var background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
-    var senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
-    String hlMap = '[ { name: "${_userProv!.basic!.name}", highlight: "$background", sender: "$senderColor" } ]';
+    final intColor = Color(_settingsProvider.highlightColor);
+    final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
+    final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    final String hlMap = '[ { name: "${_userProv!.basic!.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
       _webViewController!.runJavascript(
@@ -260,7 +257,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
       genericAppBar: AppBar(
         //brightness: Brightness.dark,
         leading: IconButton(
-          icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
+          icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
           onPressed: () async {
             // Normal behavior is just to pop and go to previous page
             if (_backButtonPopsContext) {
@@ -272,7 +269,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
               // But we can change and go back to previous page in certain
               // situations (e.g. when going for medical items during an
               // attack), in which case we need to return to previous target
-              var backPossible = await _webViewController!.canGoBack();
+              final backPossible = await _webViewController!.canGoBack();
               if (backPossible) {
                 _webViewController!.goBack();
                 setState(() {
@@ -290,19 +287,18 @@ class _WebViewPanicState extends State<WebViewPanic> {
             _openUrlDialog();
           },
           child: DottedBorder(
-            borderType: BorderType.Rect,
-            padding: EdgeInsets.all(6),
-            dashPattern: [1, 4],
+            padding: const EdgeInsets.all(6),
+            dashPattern: const [1, 4],
             color: Colors.white70,
             child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               child: Row(
                 children: [
                   Flexible(
                       child: Text(
                     _currentPageTitle,
                     overflow: TextOverflow.fade,
-                  )),
+                  ),),
                 ],
               ),
             ),
@@ -322,66 +318,65 @@ class _WebViewPanicState extends State<WebViewPanic> {
   }
 
   Future _tryGoForward() async {
-    var canForward = await _webViewController!.canGoForward();
+    final canForward = await _webViewController!.canGoForward();
     if (canForward) {
       await _webViewController!.goForward();
       BotToast.showText(
         text: "Forward",
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600]!,
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     } else {
       BotToast.showText(
-        text: "Can\'t go forward!",
-        textStyle: TextStyle(
+        text: "Can't go forward!",
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600]!,
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     }
   }
 
   Future _tryGoBack() async {
-    var canBack = await _webViewController!.canGoBack();
+    final canBack = await _webViewController!.canGoBack();
     if (canBack) {
       await _webViewController!.goBack();
       BotToast.showText(
         text: "Back",
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600]!,
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     } else {
       BotToast.showText(
-        text: "Can\'t go back!",
-        textStyle: TextStyle(
+        text: "Can't go back!",
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600]!,
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     }
   }
 
   Future<void> _openUrlDialog() async {
-    var url = await _webViewController!.currentUrl();
+    final url = await _webViewController!.currentUrl();
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _currentPageTitle,
@@ -396,12 +391,12 @@ class _WebViewPanicState extends State<WebViewPanic> {
   List<Widget> _actionButtons() {
     List<Widget> myButtons = [];
 
-    Widget hideChatIcon = SizedBox.shrink();
+    Widget hideChatIcon = const SizedBox.shrink();
     if (!_chatRemovalActive && _chatRemovalEnabled) {
       hideChatIcon = Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.chatOutline),
+          child: const Icon(MdiIcons.chatOutline),
           onTap: () async {
             _webViewController!.runJavascript(removeChatJS());
             Prefs().setChatRemovalActive(true);
@@ -435,19 +430,19 @@ class _WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.refresh),
+          child: const Icon(MdiIcons.refresh),
           onTap: () async {
             await _webViewController!.reload();
 
             BotToast.showText(
               text: "Reloading...",
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
               contentColor: Colors.grey[600]!,
-              duration: Duration(seconds: 1),
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 1),
+              contentPadding: const EdgeInsets.all(10),
             );
           },
         ),
@@ -458,7 +453,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.linkVariant),
+          child: const Icon(MdiIcons.linkVariant),
           onTap: () {
             _chainWidgetController.expanded
                 ? _chainWidgetController.expanded = false
@@ -473,7 +468,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
     if (_attackNumber < widget.attackIdList.length - 1) {
       myButtons.add(_nextAttackActionButton());
     } else {
-      myButtons.add(SizedBox.shrink());
+      myButtons.add(const SizedBox.shrink());
     }
 
     return myButtons;
@@ -481,23 +476,23 @@ class _WebViewPanicState extends State<WebViewPanic> {
 
   Widget _nextAttackActionButton() {
     return IconButton(
-      icon: Icon(Icons.skip_next),
+      icon: const Icon(Icons.skip_next),
       onPressed: _nextButtonPressed ? null : () => _launchNextAttack(),
     );
   }
 
-  void _assessFirstTargetsOnLaunch() async {
+  Future<void> _assessFirstTargetsOnLaunch() async {
     if (widget.panic || (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
       // Counters for target skipping
       int targetsSkipped = 0;
-      var originalPosition = _attackNumber;
+      final originalPosition = _attackNumber;
       bool reachedEnd = false;
-      var skippedNames = [];
+      final skippedNames = [];
 
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[i]);
+        final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -509,7 +504,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            var user = await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user = await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -547,16 +542,16 @@ class _WebViewPanicState extends State<WebViewPanic> {
         BotToast.showText(
           text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
               "country",
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.grey[600]!,
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
         );
 
-        var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+        const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
         if (!mounted) return;
         await _webViewController!.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
         _attackedIds.add(widget.attackIdList[_attackNumber]);
@@ -576,13 +571,13 @@ class _WebViewPanicState extends State<WebViewPanic> {
         BotToast.showText(
           text: "No more targets, all remaining are either in jail, hospital or in a different "
               "country (${skippedNames.join(", ")})",
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.grey[600]!,
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
         );
 
         return;
@@ -592,7 +587,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
     // This will show the note of the first target, if applicable
     if (widget.showNotes) {
       if (widget.showOnlineFactionWarning) {
-        var nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[0]);
+        final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[0]);
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction!.factionName;
           _lastOnline = nextTarget.lastAction!.timestamp;
@@ -603,8 +598,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
   }
 
   /// Not to be used right after launch
-  void _launchNextAttack() async {
-    var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+  Future<void> _launchNextAttack() async {
+    const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
     // Turn button grey
     setState(() {
       _nextButtonPressed = true;
@@ -613,14 +608,14 @@ class _WebViewPanicState extends State<WebViewPanic> {
     if (widget.panic || _settingsProvider.targetSkippingAll) {
       // Counters for target skipping
       int targetsSkipped = 0;
-      var originalPosition = _attackNumber;
+      final originalPosition = _attackNumber;
       bool reachedEnd = false;
-      var skippedNames = [];
+      final skippedNames = [];
 
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget =
+        final nextTarget =
             await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
@@ -633,7 +628,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            var user = await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user = await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -671,13 +666,13 @@ class _WebViewPanicState extends State<WebViewPanic> {
         BotToast.showText(
           text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
               "country",
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.grey[600]!,
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
         );
       }
 
@@ -685,13 +680,13 @@ class _WebViewPanicState extends State<WebViewPanic> {
         BotToast.showText(
           text: "No more targets, all remaining are either in jail, hospital or in a different "
               "country (${skippedNames.join(", ")})",
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.grey[600]!,
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
         );
 
         setState(() {
@@ -704,7 +699,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
     // from the API
     else {
       if (widget.showOnlineFactionWarning) {
-        var nextTarget =
+        final nextTarget =
             await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
@@ -741,7 +736,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
     return Padding(
       padding: const EdgeInsets.only(left: 8),
       child: PopupMenuButton<HealingPages>(
-        icon: Icon(Icons.healing),
+        icon: const Icon(Icons.healing),
         onSelected: _openHealingPage,
         itemBuilder: (BuildContext context) {
           return _popupChoices.map((HealingPages choice) {
@@ -755,7 +750,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
     );
   }
 
-  void _openHealingPage(HealingPages choice) async {
+  Future<void> _openHealingPage(HealingPages choice) async {
     _goBackTitle = _currentPageTitle;
     // Check if the proper page loads (e.g. if we have started an attack,
     // it won't let us change to another page!). Note: this is something
@@ -763,7 +758,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
     // different sections (not sure why).
     await _webViewController!.loadUrl('${choice.url}');
     await Future.delayed(const Duration(seconds: 1), () {});
-    var newUrl = await _webViewController!.currentUrl();
+    final newUrl = await _webViewController!.currentUrl();
     if (newUrl == '${choice.url}') {
       setState(() {
         _currentPageTitle = 'Items';
@@ -779,24 +774,20 @@ class _WebViewPanicState extends State<WebViewPanic> {
     switch (widget.attackNotesColorList[_attackNumber]) {
       case 'z':
         cardColor = Colors.grey[700];
-        break;
       case 'green':
         cardColor = Colors.green[900];
-        break;
       case 'orange':
         cardColor = Colors.orange[900];
-        break;
       case 'red':
         cardColor = Colors.red[900];
-        break;
       default:
         cardColor = Colors.grey[700];
     }
 
     String extraInfo = "";
     if (_lastOnline! > 0 && !widget.war) {
-      var now = DateTime.now();
-      var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline! * 1000));
+      final now = DateTime.now();
+      final lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline! * 1000));
       if (lastOnlineDiff.inDays < 7) {
         if (widget.attackNotesList[_attackNumber].isNotEmpty) {
           extraInfo += "\n\n";
@@ -824,12 +815,10 @@ class _WebViewPanicState extends State<WebViewPanic> {
     }
 
     BotToast.showCustomText(
-      onlyOne: false,
       clickClose: true,
       ignoreContentClick: true,
-      duration: Duration(seconds: 5),
+      duration: const Duration(seconds: 5),
       toastBuilder: (textCancel) => Align(
-        alignment: Alignment(0, 0),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Card(
@@ -838,26 +827,25 @@ class _WebViewPanicState extends State<WebViewPanic> {
               padding: const EdgeInsets.all(15),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   if (widget.attackNotesList[_attackNumber].isNotEmpty)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           MdiIcons.notebookOutline,
                           color: Colors.white,
                           size: 16,
                         ),
-                        SizedBox(width: 5),
+                        const SizedBox(width: 5),
                         Text(
                           'Note for ${widget.attackNameList[_attackNumber]}',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
-                  if (widget.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
+                  if (widget.attackNotesList[_attackNumber].isNotEmpty) const SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
@@ -865,7 +853,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
                         child: Text(
                           '${widget.attackNotesList[_attackNumber]}$extraInfo',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
@@ -885,7 +873,7 @@ class _WebViewPanicState extends State<WebViewPanic> {
       if (!page.contains('loader.php?sid=attack&user2ID=') &&
           !page.contains('loader2.php?sid=getInAttack&user2ID=') &&
           !page.contains('torn.com/profiles.php?XID=')) {
-        _profileAttackWidget = SizedBox.shrink();
+        _profileAttackWidget = const SizedBox.shrink();
         _lastProfileVisited = "";
         return;
       }
@@ -899,8 +887,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
         _lastProfileVisited = page;
 
         try {
-          RegExp regId = new RegExp(r"php\?XID=([0-9]+)");
-          var matches = regId.allMatches(page);
+          final RegExp regId = RegExp(r"php\?XID=([0-9]+)");
+          final matches = regId.allMatches(page);
           userId = int.parse(matches.elementAt(0).group(1)!);
           setState(() {
             _profileAttackWidget = ProfileAttackCheckWidget(
@@ -922,8 +910,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
         _lastProfileVisited = page;
 
         try {
-          RegExp regId = new RegExp(r"&user2ID=([0-9]+)");
-          var matches = regId.allMatches(page);
+          final RegExp regId = RegExp("&user2ID=([0-9]+)");
+          final matches = regId.allMatches(page);
           userId = int.parse(matches.elementAt(0).group(1)!);
           setState(() {
             _profileAttackWidget = ProfileAttackCheckWidget(
@@ -942,8 +930,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
   }
 
   Future _loadPreferences() async {
-    var removalEnabled = await Prefs().getChatRemovalEnabled();
-    var removalActive = await Prefs().getChatRemovalActive();
+    final removalEnabled = await Prefs().getChatRemovalEnabled();
+    final removalActive = await Prefs().getChatRemovalActive();
 
     setState(() {
       _chatRemovalEnabled = removalEnabled;
@@ -965,10 +953,8 @@ class HealingPages {
     switch (description) {
       case "Personal":
         url = 'https://www.torn.com/item.php#medical-items';
-        break;
       case "Faction":
         url = 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
-        break;
     }
   }
 }

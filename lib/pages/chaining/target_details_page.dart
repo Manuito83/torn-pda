@@ -1,13 +1,11 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -18,7 +16,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 class TargetDetailsPage extends StatefulWidget {
   final TargetModel? target;
 
-  TargetDetailsPage({required this.target});
+  const TargetDetailsPage({required this.target});
 
   @override
   _TargetDetailsPageState createState() => _TargetDetailsPageState();
@@ -44,7 +42,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -56,7 +54,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          drawer: Drawer(),
+          drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -77,7 +75,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                         children: [
                           Text(
                             '${widget.target!.name} [${widget.target!.playerId}]',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -88,20 +86,20 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                               width: 30,
                               height: 30,
                               child: IconButton(
-                                icon: Icon(Icons.content_copy),
+                                icon: const Icon(Icons.content_copy),
                                 iconSize: 20,
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: widget.target!.playerId.toString()));
                                   BotToast.showText(
                                     text: "Your target's ID [${widget.target!.playerId}] has been "
                                         "copied to the clipboard!",
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.green,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 },
                               ),
@@ -110,29 +108,29 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                         ],
                       ),
                       Text('${widget.target!.rank}'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text('Level: ${widget.target!.level}'),
                       Text('Gender: ${widget.target!.gender}'),
                       Text('Age: ${widget.target!.age} days'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       _returnLife(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       _returnLastAction(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       _returnStatus(),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text('Awards: ${widget.target!.awards} '
                           '(you have ${_userDetails.basic!.awards})'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text('Donator: ${widget.target!.donator == 0 ? 'NO' : 'YES'}'),
                       Text('Friends/Enemies: ${widget.target!.friends}'
                           '/${widget.target!.enemies}'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       _returnFaction(),
                       _returnJob(),
                       _returnDiscord(),
                       _returnCompetition(),
-                      SizedBox(height: 50),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
@@ -149,7 +147,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -161,32 +159,30 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        SizedBox(
+        const SizedBox(
           width: 35,
           child: Text('Life'),
         ),
         LinearPercentIndicator(
-          padding: EdgeInsets.all(0),
-          barRadius: Radius.circular(10),
+          padding: const EdgeInsets.all(0),
+          barRadius: const Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,
           backgroundColor: Colors.grey,
           center: Text(
             '${widget.target!.life!.current}',
-            style: TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black),
           ),
           percent: widget.target!.life!.current! / widget.target!.life!.maximum! > 1.0
               ? 1.0
               : widget.target!.life!.current! / widget.target!.life!.maximum!,
         ),
-        widget.target!.status!.state == "Hospital"
-            ? Icon(
+        if (widget.target!.status!.state == "Hospital") const Icon(
                 Icons.local_hospital,
                 size: 20,
                 color: Colors.red,
-              )
-            : SizedBox.shrink(),
+              ) else const SizedBox.shrink(),
       ],
     );
   }
@@ -195,7 +191,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text(
+        const Text(
           'Last action: ',
         ),
         Text(
@@ -209,7 +205,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
             decoration: BoxDecoration(
               color: _returnLastActionColor(widget.target!.lastAction!.status),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.black),
+              border: Border.all(),
             ),
           ),
         ),
@@ -238,12 +234,12 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       stateColor = Colors.blue;
     }
 
-    Widget stateBall = Padding(
-      padding: EdgeInsets.only(left: 5, right: 3, top: 1),
+    final Widget stateBall = Padding(
+      padding: const EdgeInsets.only(left: 5, right: 3, top: 1),
       child: Container(
         width: 13,
         height: 13,
-        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all()),
       ),
     );
 
@@ -269,7 +265,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -285,7 +281,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -293,11 +289,11 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
     // Discord was introduced in v1.7.1 for targets, reason why we
     // perform a null check
     if (widget.target!.discord == null) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     if (widget.target!.discord!.discordId == "") {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     return Padding(
@@ -305,27 +301,27 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text('Discord ID'),
+          const Text('Discord ID'),
           Padding(
             padding: const EdgeInsets.only(bottom: 5),
             child: SizedBox(
               width: 30,
               height: 30,
               child: IconButton(
-                icon: Icon(Icons.content_copy),
+                icon: const Icon(Icons.content_copy),
                 iconSize: 20,
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: widget.target!.discord!.discordId!));
                   BotToast.showText(
                     text: "Your target's Discord ID (${widget.target!.discord!.discordId}) has been "
                         "copied to the clipboard!",
-                    textStyle: TextStyle(
+                    textStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
                     contentColor: Colors.green,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
                   );
                 },
               ),
@@ -338,7 +334,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   Widget _returnCompetition() {
     if (widget.target!.competition == null) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     return Padding(
@@ -346,7 +342,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text(
+          const Text(
             'COMPETITION',
             style: TextStyle(
               fontWeight: FontWeight.bold,

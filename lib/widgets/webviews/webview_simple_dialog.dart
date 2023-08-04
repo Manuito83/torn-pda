@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
-import '../../utils/shared_prefs.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 Future<void> openWebViewSimpleDialog({
   BuildContext? context,
@@ -25,7 +25,7 @@ Future<void> openWebViewSimpleDialog({
     return;
   }
 
-  double width = MediaQuery.of(context!).size.width;
+  final double width = MediaQuery.of(context!).size.width;
   double hPad = 15;
   double frame = 6;
 
@@ -34,7 +34,7 @@ Future<void> openWebViewSimpleDialog({
     frame = 2;
   }
 
-  String restoredTheme = await Prefs().getAppTheme();
+  final String restoredTheme = await Prefs().getAppTheme();
 
   return showDialog(
     useRootNavigator: false,
@@ -71,8 +71,8 @@ class WebViewSimpleDialog extends StatefulWidget {
     this.customUrl,
     this.captchaWorkflow,
     this.callback,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   WebViewSimpleDialogState createState() => WebViewSimpleDialogState();
@@ -107,8 +107,6 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
               "Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36 com.manuito.tornlite"
           : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
               "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 com.manuito.tornlite",
-
-      useHybridComposition: true,
       //supportMultipleWindows: true,
       initialScale: _settingsProvider.androidBrowserScale,
       useWideViewPort: false,
@@ -142,8 +140,6 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
           top: false,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
-            appBar: null,
-            bottomNavigationBar: null,
             body: Container(
               // Background color for all browser widgets
               color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : _themeProvider.canvas,
@@ -214,7 +210,7 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
     );
   }
 
-  _mainWebView() {
+  InAppWebView _mainWebView() {
     return InAppWebView(
       initialUrlRequest: _initialUrl,
       initialSettings: _initialWebViewSettings,

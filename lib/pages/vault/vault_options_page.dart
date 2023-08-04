@@ -13,7 +13,7 @@ class VaultOptionsPage extends StatefulWidget {
   final bool vaultDetected;
   final Function callback;
 
-  VaultOptionsPage({required this.vaultDetected, required this.callback});
+  const VaultOptionsPage({required this.vaultDetected, required this.callback});
 
   @override
   _VaultOptionsPageState createState() => _VaultOptionsPageState();
@@ -35,7 +35,7 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
@@ -54,7 +54,7 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -64,27 +64,27 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               if (!widget.vaultDetected)
-                                Column(
+                                const Column(
                                   children: [
                                     SizedBox(height: 20),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      padding: EdgeInsets.symmetric(horizontal: 15),
                                       child: Text(
                                         "NOTE: Torn PDA did not detect a vault in your property, either "
-                                        "because there is none, you don\'t have access to it or there "
+                                        "because there is none, you don't have access to it or there "
                                         "no transactions listed.",
                                         style: TextStyle(color: Colors.orange),
                                       ),
                                     ),
                                   ],
                                 ),
-                              SizedBox(height: 10),
+                              const SizedBox(height: 10),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Use vault share"),
+                                    const Text("Use vault share"),
                                     Switch(
                                       value: _vaultEnabled,
                                       onChanged: (value) {
@@ -99,12 +99,12 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -123,9 +123,9 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Vault options"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Vault options"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           widget.callback();
           Navigator.of(context).pop();
@@ -135,7 +135,7 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
   }
 
   Future _restorePreferences() async {
-    var vaultEnabled = await Prefs().getVaultEnabled();
+    final vaultEnabled = await Prefs().getVaultEnabled();
     setState(() {
       _vaultEnabled = vaultEnabled;
     });

@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AlternativeKeysPage extends StatefulWidget {
-  const AlternativeKeysPage({Key? key}) : super(key: key);
+  const AlternativeKeysPage({super.key});
 
   @override
   _AlternativeKeysPageState createState() => _AlternativeKeysPageState();
@@ -24,10 +24,10 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
 
-  TextEditingController _yataKeyController = TextEditingController();
-  TextEditingController _tornStatsKeyController = TextEditingController();
+  final TextEditingController _yataKeyController = TextEditingController();
+  final TextEditingController _tornStatsKeyController = TextEditingController();
 
-  UserController _u = Get.put(UserController());
+  final UserController _u = Get.put(UserController());
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -66,18 +66,18 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
             color: _themeProvider.canvas,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
               child: SingleChildScrollView(
                 child: Column(
                   children: <Widget>[
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     _yataKey(),
-                    SizedBox(height: 15),
-                    Divider(),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
+                    const Divider(),
+                    const SizedBox(height: 15),
                     _tornStatsKey(),
-                    SizedBox(height: 15),
-                    SizedBox(height: 40),
+                    const SizedBox(height: 15),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -93,7 +93,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
       builder: (w) {
         return Column(
           children: [
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
@@ -107,7 +107,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Alternative key enabled"),
+                  const Text("Alternative key enabled"),
                   Switch(
                     value: w.alternativeYataKeyEnabled,
                     onChanged: (enabled) {
@@ -129,7 +129,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text("Key"),
+                    const Text("Key"),
                     SizedBox(
                       width: 150,
                       child: TextFormField(
@@ -138,7 +138,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           border: UnderlineInputBorder(),
                           isDense: true,
                         ),
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                         maxLength: 16,
                         onChanged: (key) {
                           if (key.isEmpty) {
@@ -163,7 +163,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
       builder: (w) {
         return Column(
           children: [
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
@@ -177,7 +177,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Alternative key enabled"),
+                  const Text("Alternative key enabled"),
                   Switch(
                     value: w.alternativeTornStatsKeyEnabled,
                     onChanged: (enabled) {
@@ -199,7 +199,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text("Key"),
+                    const Text("Key"),
                     SizedBox(
                       width: 150,
                       child: TextFormField(
@@ -208,7 +208,7 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           border: UnderlineInputBorder(),
                           isDense: true,
                         ),
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                         maxLength: 16,
                         onChanged: (key) {
                           if (key.isEmpty) {
@@ -234,9 +234,9 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
-      title: Text('Alternative API keys'),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text('Alternative API keys'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },

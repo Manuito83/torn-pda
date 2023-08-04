@@ -13,18 +13,18 @@ import 'package:torn_pda/widgets/chaining/attack_card.dart';
 class AttacksList extends StatelessWidget {
   final List<Attack> attacks;
 
-  AttacksList({required this.attacks});
+  const AttacksList({required this.attacks});
 
   @override
   Widget build(BuildContext context) {
     if (attacks.isEmpty) {
       return Column(
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(top: 80.0, bottom: 20),
+          const Padding(
+            padding: EdgeInsets.only(top: 80.0, bottom: 20),
             child: CircularProgressIndicator(),
           ),
-          Text('Getting last attacks...'),
+          const Text('Getting last attacks...'),
           _apiErrorWarning(context),
         ],
       );
@@ -38,25 +38,25 @@ class AttacksList extends StatelessWidget {
 
   List<Widget> getChildrenTargets(BuildContext _) {
     // We'll use attack provider to get all the attacks
-    var attacksProvider = Provider.of<AttacksProvider>(_, listen: false);
+    final attacksProvider = Provider.of<AttacksProvider>(_, listen: false);
     // Also filtering words and type (all attacks or only those not added)
-    var wordFilter = attacksProvider.currentFilter;
-    var typeFilter = attacksProvider.currentTypeFilter;
+    final wordFilter = attacksProvider.currentFilter;
+    final typeFilter = attacksProvider.currentTypeFilter;
 
     // Target provider is use to compare with the actual targets added to the
     // targets page, in case we want to filter them out
-    var targetsProvider = Provider.of<TargetsProvider>(_, listen: false);
-    var targetList = targetsProvider.allTargets;
+    final targetsProvider = Provider.of<TargetsProvider>(_, listen: false);
+    final targetList = targetsProvider.allTargets;
 
     // Final list we'll show
     List<Widget> filteredCards = <Widget>[];
 
-    for (var thisAttack in attacks) {
+    for (final thisAttack in attacks) {
       bool addThisAttack = true;
       // If we are applying a filter to show only new targets, we loop
       // all the targets and discard if they have been added already
       if (typeFilter == AttackTypeFilter.unknownTargets) {
-        for (var tar in targetList) {
+        for (final tar in targetList) {
           if (tar.playerId.toString() == thisAttack.targetId) {
             addThisAttack = false;
           }
@@ -72,12 +72,12 @@ class AttacksList extends StatelessWidget {
       }
     }
     // Avoid collisions with SnackBar
-    filteredCards.add(SizedBox(height: 50));
+    filteredCards.add(const SizedBox(height: 50));
     return filteredCards;
   }
 
   Widget _apiErrorWarning(BuildContext _) {
-    var attacksProvider = Provider.of<AttacksProvider>(_, listen: false);
+    final attacksProvider = Provider.of<AttacksProvider>(_, listen: false);
     if (attacksProvider.getApiError) {
       return Padding(
         padding: const EdgeInsets.all(20.0),
@@ -87,7 +87,7 @@ class AttacksList extends StatelessWidget {
             Flexible(
               child: Column(
                 children: [
-                  Text(
+                  const Text(
                     'API ERROR',
                     style: TextStyle(
                       color: Colors.red,
@@ -97,7 +97,7 @@ class AttacksList extends StatelessWidget {
                   Text(
                     attacksProvider.getApiErrorMessage,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.red,
                     ),
                   ),
@@ -108,7 +108,7 @@ class AttacksList extends StatelessWidget {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 }

@@ -49,19 +49,19 @@ class Trade {
   String? totalProfit;
 
   factory Trade.fromJson(Map<String, dynamic> json) => Trade(
-    tradeUrl: json["trade_url"] == null ? null : json["trade_url"],
-    tradeTotal: json["trade_total"] == null ? null : json["trade_total"],
+    tradeUrl: json["trade_url"],
+    tradeTotal: json["trade_total"],
     items: json["items"] == null ? null : List<TtInItem>.from(json["items"].map((x) => TtInItem.fromJson(x))),
     tradeMessages: json["trade_messages"] == null ? null : List<TradeMessage>.from(json["trade_messages"].map((x) => TradeMessage.fromJson(x))),
-    totalProfit: json["total_profit"] == null ? null : json["total_profit"],
+    totalProfit: json["total_profit"],
   );
 
   Map<String, dynamic> toJson() => {
-    "trade_url": tradeUrl == null ? null : tradeUrl,
-    "trade_total": tradeTotal == null ? null : tradeTotal,
+    "trade_url": tradeUrl,
+    "trade_total": tradeTotal,
     "items": items == null ? null : List<dynamic>.from(items!.map((x) => x.toJson())),
     "trade_messages": tradeMessages == null ? null : List<dynamic>.from(tradeMessages!.map((x) => x.toJson())),
-    "total_profit": totalProfit == null ? null : totalProfit,
+    "total_profit": totalProfit,
   };
 }
 
@@ -83,21 +83,21 @@ class TtInItem {
   int? profit;
 
   factory TtInItem.fromJson(Map<String, dynamic> json) => TtInItem(
-    name: json["name"] == null ? null : json["name"],
-    id: json["id"] == null ? null : json["id"],
-    price: json["price"] == null ? null : json["price"],
-    quantity: json["quantity"] == null ? null : json["quantity"],
-    total: json["total"] == null ? null : json["total"],
-    profit: json["profit"] == null ? null : json["profit"],
+    name: json["name"],
+    id: json["id"],
+    price: json["price"],
+    quantity: json["quantity"],
+    total: json["total"],
+    profit: json["profit"],
   );
 
   Map<String, dynamic> toJson() => {
-    "name": name == null ? null : name,
-    "id": id == null ? null : id,
-    "price": price == null ? null : price,
-    "quantity": quantity == null ? null : quantity,
-    "total": total == null ? null : total,
-    "profit": profit == null ? null : profit,
+    "name": name,
+    "id": id,
+    "price": price,
+    "quantity": quantity,
+    "total": total,
+    "profit": profit,
   };
 }
 
@@ -111,12 +111,12 @@ class TradeMessage {
   String? message;
 
   factory TradeMessage.fromJson(Map<String, dynamic> json) => TradeMessage(
-    name: json["name"] == null ? null : json["name"],
-    message: json["message"] == null ? null : json["message"],
+    name: json["name"],
+    message: json["message"],
   );
 
   Map<String, dynamic> toJson() => {
-    "name": name == null ? null : name,
-    "message": message == null ? null : message,
+    "name": name,
+    "message": message,
   };
 }

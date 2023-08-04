@@ -9,7 +9,7 @@ class LootFilterDialog extends StatefulWidget {
   final Map<String, LootModel> allNpcs;
   final List<String> filteredNpcs;
 
-  LootFilterDialog({required this.allNpcs, required this.filteredNpcs});
+  const LootFilterDialog({required this.allNpcs, required this.filteredNpcs});
 
   @override
   _LootFilterDialogState createState() => _LootFilterDialogState();
@@ -24,11 +24,11 @@ class _LootFilterDialogState extends State<LootFilterDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Filter out NPCs"),
+      title: const Text("Filter out NPCs"),
       content: SingleChildScrollView(
         child: Column(
           children: [
-            Text(
+            const Text(
               "Choose if you would like to filter OUT NPCs (only currently active NPCs are shown)",
               style: TextStyle(
                 fontSize: 13,
@@ -45,7 +45,7 @@ class _LootFilterDialogState extends State<LootFilterDialog> {
         Padding(
           padding: const EdgeInsets.only(right: 15),
           child: TextButton(
-            child: Text("Close"),
+            child: const Text("Close"),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -56,7 +56,7 @@ class _LootFilterDialogState extends State<LootFilterDialog> {
   }
 
   Column _npcs() {
-    var npcRows = <Widget>[];
+    final npcRows = <Widget>[];
 
     widget.allNpcs.forEach((key, value) {
       npcRows.add(

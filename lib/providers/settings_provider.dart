@@ -48,10 +48,8 @@ class SettingsProvider extends ChangeNotifier {
     switch (_currentBrowser) {
       case BrowserSetting.app:
         browserSave = 'app';
-        break;
       case BrowserSetting.external:
         browserSave = 'external';
-        break;
     }
     Prefs().setDefaultBrowser(browserSave);
 
@@ -123,10 +121,8 @@ class SettingsProvider extends ChangeNotifier {
     switch (_currentTimeFormat) {
       case TimeFormatSetting.h24:
         timeFormatSave = '24';
-        break;
       case TimeFormatSetting.h12:
         timeFormatSave = '12';
-        break;
     }
     Prefs().setDefaultTimeFormat(timeFormatSave);
 
@@ -142,10 +138,8 @@ class SettingsProvider extends ChangeNotifier {
     switch (_currentTimeZone) {
       case TimeZoneSetting.localTime:
         timeZoneSave = 'local';
-        break;
       case TimeZoneSetting.tornTime:
         timeZoneSave = 'torn';
-        break;
     }
     Prefs().setDefaultTimeZone(timeZoneSave);
     notifyListeners();
@@ -216,13 +210,10 @@ class SettingsProvider extends ChangeNotifier {
     switch (value) {
       case BrowserRefreshSetting.icon:
         Prefs().setBrowserRefreshMethod("icon");
-        break;
       case BrowserRefreshSetting.pull:
         Prefs().setBrowserRefreshMethod("pull");
-        break;
       case BrowserRefreshSetting.both:
         Prefs().setBrowserRefreshMethod("both");
-        break;
     }
     notifyListeners();
   }
@@ -587,16 +578,12 @@ class SettingsProvider extends ChangeNotifier {
     switch (ticket) {
       case TravelTicket.standard:
         ticketString = "standard";
-        break;
       case TravelTicket.private:
         ticketString = "private";
-        break;
       case TravelTicket.wlt:
         ticketString = "wlt";
-        break;
       case TravelTicket.business:
         ticketString = "business";
-        break;
     }
     Prefs().setTravelTicket(ticketString);
     notifyListeners();
@@ -717,14 +704,12 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
-    String restoredBrowser = await Prefs().getDefaultBrowser();
+    final String restoredBrowser = await Prefs().getDefaultBrowser();
     switch (restoredBrowser) {
       case 'app':
         _currentBrowser = BrowserSetting.app;
-        break;
       case 'external':
         _currentBrowser = BrowserSetting.external;
-        break;
     }
 
     _disableTravelSection = await Prefs().getDisableTravelSection();
@@ -757,17 +742,14 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
-    var refresh = await Prefs().getBrowserRefreshMethod();
+    final refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
       case "icon":
         _browserRefreshMethod = BrowserRefreshSetting.icon;
-        break;
       case "pull":
         _browserRefreshMethod = BrowserRefreshSetting.pull;
-        break;
       case "both":
         _browserRefreshMethod = BrowserRefreshSetting.both;
-        break;
     }
 
     _onAppExit = await Prefs().getOnAppExit();
@@ -783,10 +765,10 @@ class SettingsProvider extends ChangeNotifier {
 
     _profileStatsEnabled = await Prefs().getProfileStatsEnabled();
 
-    var savedFriendlyFactions = await Prefs().getFriendlyFactions();
+    final savedFriendlyFactions = await Prefs().getFriendlyFactions();
     if (savedFriendlyFactions.isNotEmpty) {
-      var decoded = json.decode(savedFriendlyFactions);
-      for (var dec in decoded) {
+      final decoded = json.decode(savedFriendlyFactions);
+      for (final dec in decoded) {
         _friendlyFactions.add(FriendlyFaction.fromJson(dec));
       }
     }
@@ -795,34 +777,30 @@ class SettingsProvider extends ChangeNotifier {
 
     _removeNotificationsOnLaunch = await Prefs().getRemoveNotificationsOnLaunch();
 
-    String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
+    final String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
     switch (restoredTimeFormat) {
       case '24':
         _currentTimeFormat = TimeFormatSetting.h24;
-        break;
       case '12':
         _currentTimeFormat = TimeFormatSetting.h12;
-        break;
     }
 
-    String restoredTimeZone = await Prefs().getDefaultTimeZone();
+    final String restoredTimeZone = await Prefs().getDefaultTimeZone();
     switch (restoredTimeZone) {
       case 'local':
         _currentTimeZone = TimeZoneSetting.localTime;
-        break;
       case 'torn':
         _currentTimeZone = TimeZoneSetting.tornTime;
-        break;
     }
 
-    String spiesSourceSaved = await Prefs().getSpiesSource();
+    final String spiesSourceSaved = await Prefs().getSpiesSource();
     if (spiesSourceSaved == "yata") {
       _spiesSource = SpiesSource.yata;
     } else {
       _spiesSource = SpiesSource.tornStats;
     }
 
-    String naturalNerveBarSource = await Prefs().getNaturalNerveBarSource();
+    final String naturalNerveBarSource = await Prefs().getNaturalNerveBarSource();
     if (naturalNerveBarSource == "yata") {
       _naturalNerveBarSource = NaturalNerveBarSource.yata;
     } else if (naturalNerveBarSource == "tornstats") {
@@ -836,7 +814,7 @@ class SettingsProvider extends ChangeNotifier {
     _showDateInClock = await Prefs().getShowDateInClock();
     _showSecondsInClock = await Prefs().getShowSecondsInClock();
 
-    String restoredAppBar = await Prefs().getAppBarPosition();
+    final String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
 
     _oCrimesEnabled = await Prefs().getOCrimesEnabled();
@@ -864,20 +842,16 @@ class SettingsProvider extends ChangeNotifier {
 
     _showCases = await Prefs().getShowCases();
 
-    String ticket = await Prefs().getTravelTicket();
+    final String ticket = await Prefs().getTravelTicket();
     switch (ticket) {
       case "standard":
         _travelTicket = TravelTicket.standard;
-        break;
       case "private":
         _travelTicket = TravelTicket.private;
-        break;
       case "wlt":
         _travelTicket = TravelTicket.wlt;
-        break;
       case "business":
         _travelTicket = TravelTicket.business;
-        break;
     }
 
     _targetSkippingAll = await Prefs().getTargetSkippingAll();

@@ -7,10 +7,8 @@ import 'dart:math';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 // Package imports:
 import 'package:http/http.dart' as http;
-
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
@@ -19,8 +17,8 @@ import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AddTargetResult {
@@ -46,7 +44,7 @@ class TargetsProvider extends ChangeNotifier {
 
   List<TargetModel> _oldTargetsList = [];
 
-  UserController _u = Get.put(UserController());
+  final UserController _u = Get.put(UserController());
 
   String _currentWordFilter = '';
   String get currentWordFilter => _currentWordFilter;
@@ -68,7 +66,7 @@ class TargetsProvider extends ChangeNotifier {
     String? notes = '',
     String? notesColor = '',
   }) async {
-    for (var tar in _targets) {
+    for (final tar in _targets) {
       if (tar.playerId.toString() == targetId) {
         return AddTargetResult(
           success: false,
@@ -77,7 +75,7 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: targetId);
+    final dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: targetId);
 
     if (myNewTargetModel is TargetModel) {
       _getRespectFF(attacks, myNewTargetModel);
@@ -96,7 +94,7 @@ class TargetsProvider extends ChangeNotifier {
       );
     } else {
       // myNewTargetModel is ApiError
-      var myError = myNewTargetModel as ApiError;
+      final myError = myNewTargetModel as ApiError;
       notifyListeners();
       return AddTargetResult(
         success: false,
@@ -190,7 +188,7 @@ class TargetsProvider extends ChangeNotifier {
     // after an attack the targets get updated several times: if the user wants to change the note
     // right after the attack, the good target might have been replaced and the note does not get
     // updated. Therefore, we just loop whenever the user submits the new text.
-    for (var tar in _targets) {
+    for (final tar in _targets) {
       if (tar.playerId == changedTarget!.playerId) {
         tar.personalNote = note;
         tar.personalNoteColor = color;
@@ -209,7 +207,7 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedTargetModel =
+      final dynamic myUpdatedTargetModel =
           await Get.find<ApiCallerController>().getTarget(playerId: targetToUpdate.playerId.toString());
       if (myUpdatedTargetModel is TargetModel) {
         _getRespectFF(
@@ -220,7 +218,7 @@ class TargetsProvider extends ChangeNotifier {
         );
         _getTargetFaction(myUpdatedTargetModel);
         _targets[_targets.indexOf(targetToUpdate)] = myUpdatedTargetModel;
-        var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
+        final newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
         _updateResultAnimation(newTarget, true);
         newTarget.personalNote = targetToUpdate.personalNote;
         newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
@@ -246,15 +244,15 @@ class TargetsProvider extends ChangeNotifier {
     int numberOfErrors = 0;
     int numberSuccessful = 0;
     // Activate every single update icon
-    for (var tar in _targets) {
+    for (final tar in _targets) {
       tar.isUpdating = true;
     }
     notifyListeners();
     // Then start the real update
-    dynamic attacks = await getAttacks();
+    final dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel =
+        final dynamic myUpdatedTargetModel =
             await Get.find<ApiCallerController>().getTarget(playerId: _targets[i].playerId.toString());
         if (myUpdatedTargetModel is TargetModel) {
           _getRespectFF(
@@ -264,8 +262,8 @@ class TargetsProvider extends ChangeNotifier {
             oldFF: _targets[i].fairFight,
           );
           _getTargetFaction(myUpdatedTargetModel);
-          var notes = _targets[i].personalNote;
-          var notesColor = _targets[i].personalNoteColor;
+          final notes = _targets[i].personalNote;
+          final notesColor = _targets[i].personalNoteColor;
           _targets[i] = myUpdatedTargetModel;
           _updateResultAnimation(_targets[i], true);
           _targets[i].personalNote = notes;
@@ -303,19 +301,19 @@ class TargetsProvider extends ChangeNotifier {
     // Copies the list locally, as it will be erased by the webview after it has been sent
     // so that other attacks are possible
     List<String> lastAttackedCopy = List<String>.from(lastAttackedTargets);
-    await Future.delayed(Duration(seconds: 15));
+    await Future.delayed(const Duration(seconds: 15));
 
     // Get attacks full to use later
-    dynamic attacks = await getAttacks();
+    final dynamic attacks = await getAttacks();
 
     // Local function for the update of several targets after attacking
-    for (var tar in _targets) {
+    for (final tar in _targets) {
       for (var i = 0; i < lastAttackedCopy.length; i++) {
         if (tar.playerId.toString() == lastAttackedCopy[i]) {
           tar.isUpdating = true;
           notifyListeners();
           try {
-            dynamic myUpdatedTargetModel =
+            final dynamic myUpdatedTargetModel =
                 await Get.find<ApiCallerController>().getTarget(playerId: tar.playerId.toString());
             if (myUpdatedTargetModel is TargetModel) {
               _getRespectFF(
@@ -326,7 +324,7 @@ class TargetsProvider extends ChangeNotifier {
               );
               _getTargetFaction(myUpdatedTargetModel);
               _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
-              var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
+              final newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
               _updateResultAnimation(newTarget, true);
               newTarget.personalNote = tar.personalNote;
               newTarget.personalNoteColor = tar.personalNoteColor;
@@ -374,7 +372,7 @@ class TargetsProvider extends ChangeNotifier {
 
   void deleteTargetById(String? removedId) {
     _oldTargetsList = List<TargetModel>.from(_targets);
-    for (var tar in _targets) {
+    for (final tar in _targets) {
       if (tar.playerId.toString() == removedId) {
         _targets.remove(tar);
         break;
@@ -413,49 +411,34 @@ class TargetsProvider extends ChangeNotifier {
     switch (sortType!) {
       case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level!.compareTo(a.level!));
-        break;
       case TargetSortType.levelAsc:
         _targets.sort((a, b) => a.level!.compareTo(b.level!));
-        break;
       case TargetSortType.respectDes:
         _targets.sort((a, b) => b.respectGain!.compareTo(a.respectGain!));
-        break;
       case TargetSortType.respectAsc:
         _targets.sort((a, b) => a.respectGain!.compareTo(b.respectGain!));
-        break;
       case TargetSortType.ffDes:
         _targets.sort((a, b) => b.fairFight!.compareTo(a.fairFight!));
-        break;
       case TargetSortType.ffAsc:
         _targets.sort((a, b) => a.fairFight!.compareTo(b.fairFight!));
-        break;
       case TargetSortType.nameDes:
         _targets.sort((a, b) => b.name!.toLowerCase().compareTo(a.name!.toLowerCase()));
-        break;
       case TargetSortType.nameAsc:
         _targets.sort((a, b) => a.name!.toLowerCase().compareTo(b.name!.toLowerCase()));
-        break;
       case TargetSortType.lifeDes:
         _targets.sort((a, b) => b.lifeSort!.compareTo(a.lifeSort!));
-        break;
       case TargetSortType.lifeAsc:
         _targets.sort((a, b) => a.lifeSort!.compareTo(b.lifeSort!));
-        break;
       case TargetSortType.colorDes:
         _targets.sort((a, b) => b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase()));
-        break;
       case TargetSortType.colorAsc:
         _targets.sort((a, b) => a.personalNoteColor!.toLowerCase().compareTo(b.personalNoteColor!.toLowerCase()));
-        break;
       case TargetSortType.onlineDes:
         _targets.sort((a, b) => b.lastAction!.timestamp!.compareTo(a.lastAction!.timestamp!));
-        break;
       case TargetSortType.onlineAsc:
         _targets.sort((a, b) => a.lastAction!.timestamp!.compareTo(b.lastAction!.timestamp!));
-        break;
       case TargetSortType.notesDes:
         _targets.sort((a, b) => b.personalNote!.toLowerCase().compareTo(a.personalNote!.toLowerCase()));
-        break;
       case TargetSortType.notesAsc:
         _targets.sort((a, b) {
           if (a.personalNote!.isEmpty && b.personalNote!.isNotEmpty) {
@@ -468,7 +451,6 @@ class TargetsProvider extends ChangeNotifier {
             return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
           }
         });
-        break;
     }
     _saveSortSharedPrefs();
     _saveTargetsSharedPrefs();
@@ -480,9 +462,9 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   String exportTargets() {
-    var output = <TargetBackup>[];
-    for (var tar in _targets) {
-      var export = TargetBackup();
+    final output = <TargetBackup>[];
+    for (final tar in _targets) {
+      final export = TargetBackup();
       export.id = tar.playerId;
       export.notes = tar.personalNote;
       export.notesColor = tar.personalNoteColor;
@@ -493,7 +475,7 @@ class TargetsProvider extends ChangeNotifier {
 
   void _saveTargetsSharedPrefs() {
     List<String> newPrefs = <String>[];
-    for (var tar in _targets) {
+    for (final tar in _targets) {
       newPrefs.add(targetModelToJson(tar));
     }
     Prefs().setTargetsList(newPrefs);
@@ -504,52 +486,36 @@ class TargetsProvider extends ChangeNotifier {
     switch (_currentSort!) {
       case TargetSortType.levelDes:
         sortToSave = 'levelDes';
-        break;
       case TargetSortType.levelAsc:
         sortToSave = 'levelAsc';
-        break;
       case TargetSortType.respectDes:
         sortToSave = 'respectDes';
-        break;
       case TargetSortType.respectAsc:
         sortToSave = 'respectDes';
-        break;
       case TargetSortType.ffDes:
         sortToSave = 'ffDes';
-        break;
       case TargetSortType.ffAsc:
         sortToSave = 'ffDes';
-        break;
       case TargetSortType.nameDes:
         sortToSave = 'nameDes';
-        break;
       case TargetSortType.nameAsc:
         sortToSave = 'nameDes';
-        break;
       case TargetSortType.lifeDes:
         sortToSave = 'nameDes';
-        break;
       case TargetSortType.lifeAsc:
         sortToSave = 'nameDes';
-        break;
       case TargetSortType.colorDes:
         sortToSave = 'colorDes';
-        break;
       case TargetSortType.colorAsc:
         sortToSave = 'colorAsc';
-        break;
       case TargetSortType.onlineDes:
         sortToSave = 'onlineDes';
-        break;
       case TargetSortType.onlineAsc:
         sortToSave = 'onlineAsc';
-        break;
       case TargetSortType.notesDes:
         sortToSave = 'notesDes';
-        break;
       case TargetSortType.notesAsc:
         sortToSave = 'notesAsc';
-        break;
     }
     Prefs().setTargetsSort(sortToSave);
   }
@@ -558,8 +524,8 @@ class TargetsProvider extends ChangeNotifier {
     // Target list
     bool needToSave = false;
     List<String> jsonTargets = await Prefs().getTargetsList();
-    for (var jTar in jsonTargets) {
-      var thisTarget = targetModelFromJson(jTar);
+    for (final jTar in jsonTargets) {
+      final thisTarget = targetModelFromJson(jTar);
 
       // In v1.8.5 we change from blue to orange and we need to do the conversion
       // here. This can be later removed safely at some point.
@@ -583,47 +549,34 @@ class TargetsProvider extends ChangeNotifier {
     }
 
     // Target sort
-    String targetSort = await Prefs().getTargetsSort();
+    final String targetSort = await Prefs().getTargetsSort();
     switch (targetSort) {
       case '':
         _currentSort = TargetSortType.levelDes;
-        break;
       case 'levelDes':
         _currentSort = TargetSortType.levelDes;
-        break;
       case 'levelAsc':
         _currentSort = TargetSortType.levelAsc;
-        break;
       case 'respectDes':
         _currentSort = TargetSortType.respectDes;
-        break;
       case 'respectAsc':
         _currentSort = TargetSortType.respectAsc;
-        break;
       case 'ffDes':
         _currentSort = TargetSortType.ffDes;
-        break;
       case 'ffAsc':
         _currentSort = TargetSortType.ffAsc;
-        break;
       case 'nameDes':
         _currentSort = TargetSortType.nameDes;
-        break;
       case 'nameAsc':
         _currentSort = TargetSortType.nameAsc;
-        break;
       case 'colorAsc':
         _currentSort = TargetSortType.colorDes;
-        break;
       case 'colorDes':
         _currentSort = TargetSortType.colorAsc;
-        break;
       case 'onlineDes':
         _currentSort = TargetSortType.onlineDes;
-        break;
       case 'onlineAsc':
         _currentSort = TargetSortType.onlineAsc;
-        break;
     }
 
     // Targets color filter
@@ -636,12 +589,12 @@ class TargetsProvider extends ChangeNotifier {
   // YATA SYNC
   Future<YataTargetsImportModel> getTargetsFromYata() async {
     try {
-      var response = await http.get(
+      final response = await http.get(
         Uri.parse('https://yata.yt/api/v1/targets/export/?key=${_u.alternativeYataKey}'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-      ).timeout(Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         return yataTargetsImportModelFromJson(response.body);
@@ -661,37 +614,37 @@ class TargetsProvider extends ChangeNotifier {
     required List<TargetsOnlyLocal> onlyLocal,
     required List<TargetsBothSides> bothSides,
   }) async {
-    var modelOut = YataTargetsExportModel();
+    final modelOut = YataTargetsExportModel();
     modelOut.key = _u.alternativeYataKey;
     //modelOut.user = "Torn PDA $appVersion";
 
-    var targets = Map<String?, YataExportTarget>();
-    for (var localTarget in onlyLocal) {
+    final targets = <String?, YataExportTarget>{};
+    for (final localTarget in onlyLocal) {
       // Max chars in Yata notes is 128
       if (localTarget.noteLocal!.length > 128) {
         localTarget.noteLocal = localTarget.noteLocal!.substring(0, 127);
       }
-      var exportDetails = YataExportTarget()
+      final exportDetails = YataExportTarget()
         ..note = localTarget.noteLocal
         ..color = localTarget.colorLocal;
       targets.addAll({localTarget.id: exportDetails});
     }
-    for (var bothSidesTarget in bothSides) {
+    for (final bothSidesTarget in bothSides) {
       // Max chars in Yata notes is 128
       if (bothSidesTarget.noteLocal!.length > 128) {
         bothSidesTarget.noteLocal = bothSidesTarget.noteLocal!.substring(0, 127);
       }
-      var exportDetails = YataExportTarget()
+      final exportDetails = YataExportTarget()
         ..note = bothSidesTarget.noteLocal
         ..color = bothSidesTarget.colorLocal;
       targets.addAll({bothSidesTarget.id: exportDetails});
     }
     modelOut.targets = targets;
 
-    var bodyOut = yataTargetsExportModelToJson(modelOut);
+    final bodyOut = yataTargetsExportModelToJson(modelOut);
 
     try {
-      var response = await http
+      final response = await http
           .post(
             Uri.parse('https://yata.yt/api/v1/targets/import/'),
             headers: <String, String>{
@@ -699,7 +652,7 @@ class TargetsProvider extends ChangeNotifier {
             },
             body: bodyOut,
           )
-          .timeout(Duration(seconds: 15));
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         Map<String, dynamic> result = json.decode(response.body);

@@ -10,14 +10,14 @@ class BounceTabBar extends StatefulWidget {
   final bool locationTop;
 
   const BounceTabBar({
-    Key? key,
+    super.key,
     this.themeProvider,
     required this.items,
     required this.onTabChanged,
     this.initialIndex = 0,
     this.movement = 150,
     required this.locationTop,
-  }) : super(key: key);
+  });
 
   @override
   _BounceTabBarState createState() => _BounceTabBarState();
@@ -43,7 +43,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
     );
 
     _animTabBarIn = CurveTween(
-      curve: Interval(
+      curve: const Interval(
         0.1,
         0.6,
         curve: Curves.decelerate,
@@ -51,7 +51,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
     ).animate(_controller);
 
     _animTabBarOut = CurveTween(
-      curve: Interval(
+      curve: const Interval(
         0.6,
         1.0,
         curve: Curves.bounceOut,
@@ -59,14 +59,14 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
     ).animate(_controller);
 
     _animCircleItem = CurveTween(
-      curve: Interval(
+      curve: const Interval(
         0.0,
         0.5,
       ),
     ).animate(_controller);
 
     _animElevationIn = CurveTween(
-      curve: Interval(
+      curve: const Interval(
         0.3,
         0.5,
         curve: Curves.decelerate,
@@ -74,7 +74,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
     ).animate(_controller);
 
     _animElevationOut = CurveTween(
-      curve: Interval(
+      curve: const Interval(
         0.55,
         1.0,
         curve: Curves.bounceOut,
@@ -85,10 +85,6 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
     _controller.forward(from: 1.0);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +108,8 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
               decoration: BoxDecoration(
                 color: widget.themeProvider!.statusBar,
                 borderRadius: BorderRadius.vertical(
-                  top: widget.locationTop ? Radius.zero : Radius.circular(20),
-                  bottom: widget.locationTop ? Radius.circular(20) : Radius.zero,
+                  top: widget.locationTop ? Radius.zero : const Radius.circular(20),
+                  bottom: widget.locationTop ? const Radius.circular(20) : Radius.zero,
                 ),
               ),
               child: Row(
@@ -171,7 +167,7 @@ class _CircleItemPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = 20.0 * progress;
-    final strokeWidth = 10.0;
+    const strokeWidth = 10.0;
     final currentStrokeWidth = strokeWidth * (1 - progress);
     if (progress < 1.0) {
       canvas.drawCircle(

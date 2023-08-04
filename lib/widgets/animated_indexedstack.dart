@@ -8,12 +8,12 @@ class AnimatedIndexedStack extends StatefulWidget {
   final Function errorCallback;
 
   const AnimatedIndexedStack({
-    Key? key,
+    super.key,
     required this.index,
     required this.children,
     required this.duration,
     required this.errorCallback,
-  }) : super(key: key);
+  });
 
   @override
   _AnimatedIndexedStackState createState() => _AnimatedIndexedStackState();
@@ -63,7 +63,7 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
     try {
       if (_index == null) {
         // Throw
-        throw ("Forced IndexedStack throw!");
+        throw "Forced IndexedStack throw!";
       }
 
       if (_index! < 0) {
@@ -87,10 +87,10 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
       );
     } catch (e) {
       FirebaseCrashlytics.instance.log("PDA Crash at AnimatedIndexedStack. Children number: ${widget.children.length}. "
-          "Index number: $_index. Error: ${e.toString()}");
+          "Index number: $_index. Error: $e");
       FirebaseCrashlytics.instance.recordError(e.toString(), null);
       widget.errorCallback();
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 }

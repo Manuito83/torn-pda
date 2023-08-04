@@ -558,7 +558,7 @@ String restoreChatJS() {
 }
 
 String quickItemsJS({required String item, bool faction = false, bool? eRefill = false, bool? nRefill = false}) {
-  String timeRegex =
+  const String timeRegex =
       r'/<span class="counter-wrap[\s=\-"a-zA-Z0-9]*data-time="[0-9]+"[\s=\-"a-zA-Z0-9]*>[0-9:]*<\/span>/g';
 
   return '''
@@ -766,13 +766,13 @@ String quickItemsJS({required String item, bool faction = false, bool? eRefill =
 
 String changeLoadOutJS({required String item, required bool attackWebview}) {
   return '''
-    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=${item}';
+    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=$item';
     
     ajaxWrapper({
       url: action,
       type: 'GET',
       oncomplete: function(resp) {
-        if (${attackWebview}) {
+        if ($attackWebview) {
           window.loadoutChangeHandler.postMessage(resp.responseText);
         } else {
           window.flutter_inappwebview.callHandler('loadoutChangeHandler', resp.responseText);

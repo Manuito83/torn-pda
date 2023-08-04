@@ -3,10 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
-import 'circular_menu_item.dart';
+import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
 
 class CircularMenuFixed extends StatefulWidget {
   /// use global key to control animation anywhere in the code
+  @override
   final GlobalKey<CircularMenuFixedState>? key;
 
   /// list of CircularMenuItem contains at least two items.
@@ -51,7 +52,7 @@ class CircularMenuFixed extends StatefulWidget {
     this.alignment = Alignment.bottomCenter,
     this.radius = 50,
     this.backgroundWidget,
-    this.animationDuration = const Duration(milliseconds: 0),
+    this.animationDuration = const Duration(),
     this.curve = Curves.decelerate,
     this.reverseCurve = Curves.decelerate,
     this.toggleButtonColor,
@@ -123,7 +124,6 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
       child: Align(
         alignment: Alignment.bottomCenter,
         child: CircularMenuItem(
-          icon: null,
           margin: widget.toggleButtonMargin,
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: 50,

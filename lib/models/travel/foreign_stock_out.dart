@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 // Project imports:
-import '../../main.dart';
+import 'package:torn_pda/main.dart';
 
 ForeignStockOutModel foreignStockOutModelFromJson(String str) =>
     ForeignStockOutModel.fromJson(json.decode(str));
@@ -49,7 +49,7 @@ class ForeignStockOutModel {
       this.authorName,
       this.authorId,
       this.country,
-      this.items}) {
+      this.items,}) {
     client = "Torn PDA";
     version = appVersion;
     items = <ForeignStockOutItem>[];
@@ -63,7 +63,7 @@ class ForeignStockOutModel {
         authorId: json["author_id"],
         country: json["country"],
         items: List<ForeignStockOutItem>.from(
-            json["items"].map((x) => ForeignStockOutItem.fromJson(x))),
+            json["items"].map((x) => ForeignStockOutItem.fromJson(x)),),
       );
 
   Map<String, dynamic> toJson() => {

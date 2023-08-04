@@ -1,17 +1,16 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 // Project imports:
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class UserDetailsProvider extends ChangeNotifier {
   OwnProfileBasic? basic;
 
-  UserController _u = Get.put(UserController());
+  final UserController _u = Get.put(UserController());
 
   void setUserDetails({required OwnProfileBasic userDetails}) {
     basic = userDetails;
@@ -40,7 +39,7 @@ class UserDetailsProvider extends ChangeNotifier {
     // Initialize [myUser]. We will configure it in the next few lines.
     basic = OwnProfileBasic();
 
-    var savedUser = await Prefs().getOwnDetails();
+    final savedUser = await Prefs().getOwnDetails();
     // Check if we have an user at all (json is not empty)
     if (savedUser != '') {
       basic = ownProfileBasicFromJson(savedUser);
@@ -48,7 +47,7 @@ class UserDetailsProvider extends ChangeNotifier {
       // Set API key in the controller, in case API is down
       _u.apiKey = basic!.userApiKey;
 
-      bool alternativeYataKey = await Prefs().getAlternativeYataKeyEnabled();
+      final bool alternativeYataKey = await Prefs().getAlternativeYataKeyEnabled();
       if (alternativeYataKey) {
         _u.alternativeYataKeyEnabled = true;
         _u.alternativeYataKey = await Prefs().getAlternativeYataKey();
@@ -56,7 +55,7 @@ class UserDetailsProvider extends ChangeNotifier {
         _u.alternativeYataKey = basic!.userApiKey!;
       }
 
-      bool alternativeTornStatsKey = await Prefs().getAlternativeTornStatsKeyEnabled();
+      final bool alternativeTornStatsKey = await Prefs().getAlternativeTornStatsKeyEnabled();
       if (alternativeTornStatsKey) {
         _u.alternativeTornStatsKeyEnabled = true;
         _u.alternativeTornStatsKey = await Prefs().getAlternativeTornStatsKey();
@@ -71,7 +70,7 @@ class UserDetailsProvider extends ChangeNotifier {
         // NOTE: calling basic to make things faster
         // Basic includes:
         // + Battle stats for TAC
-        var apiVerify = await Get.find<ApiCallerController>().getOwnProfileBasic();
+        final apiVerify = await Get.find<ApiCallerController>().getOwnProfileBasic();
 
         if (apiVerify is OwnProfileBasic) {
           // Reassign from saved user, as these don't come with the API

@@ -19,8 +19,8 @@ class JailWidget extends StatefulWidget {
     required this.webview,
     required this.fireScriptCallback,
     required this.playerName,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _JailWidgetState createState() => _JailWidgetState();
@@ -118,10 +118,10 @@ class _JailWidgetState extends State<JailWidget> {
                         ],
                       ),
                     ),
-                  SizedBox(
+                  const SizedBox(
                     width: 80,
                     child: Column(
-                      children: const [
+                      children: [
                         Text(
                           'JAIL',
                           style: TextStyle(color: Colors.orange, fontSize: 12),
@@ -288,8 +288,8 @@ class _JailWidgetState extends State<JailWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: const Text(
+        const Flexible(
+          child: Text(
             "Time (h)",
             style: TextStyle(
               color: Colors.white,
@@ -297,7 +297,7 @@ class _JailWidgetState extends State<JailWidget> {
             ),
           ),
         ),
-        SizedBox(width: 5),
+        const SizedBox(width: 5),
         Row(
           children: [
             Text(
@@ -340,8 +340,8 @@ class _JailWidgetState extends State<JailWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: const Text(
+        const Flexible(
+          child: Text(
             "Level",
             style: TextStyle(
               color: Colors.white,
@@ -349,7 +349,7 @@ class _JailWidgetState extends State<JailWidget> {
             ),
           ),
         ),
-        SizedBox(width: 5),
+        const SizedBox(width: 5),
         Row(
           children: [
             Text(
@@ -420,14 +420,14 @@ class _JailWidgetState extends State<JailWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Score Min ${_jailModel.scoreMin.toString()}",
+              "Score Min ${_jailModel.scoreMin}",
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
               ),
             ),
             Text(
-              "Score Max ${_jailModel.scoreMax.toString()}",
+              "Score Max ${_jailModel.scoreMax}",
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
@@ -444,15 +444,15 @@ class _JailWidgetState extends State<JailWidget> {
                 child: FlutterSlider(
                   min: 0,
                   max: 1,
-                  step: FlutterSliderStep(step: 0.01),
+                  step: const FlutterSliderStep(step: 0.01),
                   values: [
                     customScoreReverseMapping(_jailModel.scoreMin.toDouble()),
                     customScoreReverseMapping(_jailModel.scoreMax.toDouble()),
                   ],
                   rangeSlider: true,
                   onDragging: (handlerIndex, lower, upper) {
-                    double lowerActualValue = customScoreMapping(lower);
-                    double upperActualValue = customScoreMapping(upper);
+                    final double lowerActualValue = customScoreMapping(lower);
+                    final double upperActualValue = customScoreMapping(upper);
                     setState(() {
                       _jailModel.scoreMin = lowerActualValue.toInt();
                       _jailModel.scoreMax = upperActualValue.toInt();
@@ -463,7 +463,7 @@ class _JailWidgetState extends State<JailWidget> {
                     _saveModel();
                   },
                   handler: FlutterSliderHandler(
-                    decoration: BoxDecoration(),
+                    decoration: const BoxDecoration(),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
@@ -474,7 +474,7 @@ class _JailWidgetState extends State<JailWidget> {
                     ),
                   ),
                   rightHandler: FlutterSliderHandler(
-                    decoration: BoxDecoration(),
+                    decoration: const BoxDecoration(),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
@@ -501,16 +501,16 @@ class _JailWidgetState extends State<JailWidget> {
                   tooltip: FlutterSliderTooltip(
                     disabled: false,
                     custom: (value) {
-                      double actualValue = customScoreMapping(value);
+                      final double actualValue = customScoreMapping(value);
                       return Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(5),
                           color: Colors.black,
                         ),
                         child: Text(
                           actualValue.toStringAsFixed(0),
-                          style: TextStyle(fontSize: 12, color: Colors.white),
+                          style: const TextStyle(fontSize: 12, color: Colors.white),
                         ),
                       );
                     },
@@ -523,7 +523,6 @@ class _JailWidgetState extends State<JailWidget> {
               onTap: () {
                 showDialog<void>(
                   context: context,
-                  barrierDismissible: true,
                   builder: (BuildContext context) {
                     return JailRecordDialog(
                       currentRecord: _jailModel.scoreMax,

@@ -8,11 +8,11 @@ class _AuthService {
 
   Future signInAnon() async {
     try {
-      UserCredential credential = await _firebaseAuth.signInAnonymously();
+      final UserCredential credential = await _firebaseAuth.signInAnonymously();
       User? user = credential.user;
       return user;
     } catch (e) {
-      print(e.toString());
+      print(e);
       return null;
     }
   }
@@ -23,10 +23,10 @@ class _AuthService {
 
   Future getUID() async {
     try {
-      var user = _firebaseAuth.currentUser!;
+      final user = _firebaseAuth.currentUser!;
       return user.uid;
     } catch (e) {
-      print(e.toString());
+      print(e);
       return null;
     }
   }

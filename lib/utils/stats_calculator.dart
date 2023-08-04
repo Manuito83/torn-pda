@@ -48,9 +48,9 @@ class StatsCalculator {
     required int? networth,
     required String? rank,
   }) {
-    var levelIndex = statsLevelTriggers.lastIndexWhere((x) => x <= level!) + 1;
-    var crimeIndex = statsCrimesTriggers.lastIndexWhere((x) => x <= criminalRecordTotal!) + 1;
-    var networthIndex = statsNetworthTriggers.lastIndexWhere((x) => x <= networth!) + 1;
+    final levelIndex = statsLevelTriggers.lastIndexWhere((x) => x <= level!) + 1;
+    final crimeIndex = statsCrimesTriggers.lastIndexWhere((x) => x <= criminalRecordTotal!) + 1;
+    final networthIndex = statsNetworthTriggers.lastIndexWhere((x) => x <= networth!) + 1;
     var rankIndex = 0;
     statsRanksTriggers.forEach((tornRank, index) {
       if (rank!.contains(tornRank)) {
@@ -58,7 +58,7 @@ class StatsCalculator {
       }
     });
 
-    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
+    final finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
     if (finalIndex >= 0 && finalIndex <= 6) {
       return statsResults[finalIndex];
     }

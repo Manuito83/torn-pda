@@ -19,14 +19,14 @@ class _FlippingYataState extends State<FlippingYata>
     super.initState();
 
     _controller = AnimationController(
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
 
     _flipAnim = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(0.0, 1, curve: Curves.linear),
+        curve: const Interval(0.0, 1),
       ),
     );
 

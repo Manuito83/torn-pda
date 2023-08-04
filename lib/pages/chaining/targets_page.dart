@@ -1,17 +1,15 @@
 // Dart imports:
 import 'dart:async';
 
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-
-// Package imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
@@ -36,16 +34,12 @@ class TargetsOptions {
     switch (description) {
       case "Options":
         iconData = Icons.settings;
-        break;
       case "Filter Color":
         iconData = Icons.filter_list;
-        break;
       case "Backup":
         iconData = Icons.save;
-        break;
       case "Wipe":
         iconData = Icons.delete_forever_outlined;
-        break;
     }
   }
 }
@@ -55,10 +49,10 @@ class TargetsPage extends StatefulWidget {
   //final Function tabCallback;
 
   const TargetsPage({
-    Key? key,
+    super.key,
     required this.retaliationCallback,
     //@required this.tabCallback,
-  }) : super(key: key);
+  });
 
   @override
   _TargetsPageState createState() => _TargetsPageState();
@@ -133,8 +127,8 @@ class _TargetsPageState extends State<TargetsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _targetsProvider = Provider.of<TargetsProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
@@ -274,7 +268,7 @@ class _TargetsPageState extends State<TargetsPage> {
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
@@ -282,7 +276,7 @@ class _TargetsPageState extends State<TargetsPage> {
               }
             },
           ),
-          PdaBrowserIcon(),
+          const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -593,52 +587,36 @@ class _TargetsPageState extends State<TargetsPage> {
     switch (choice.type) {
       case TargetSortType.levelDes:
         _targetsProvider.sortTargets(TargetSortType.levelDes);
-        break;
       case TargetSortType.levelAsc:
         _targetsProvider.sortTargets(TargetSortType.levelAsc);
-        break;
       case TargetSortType.respectDes:
         _targetsProvider.sortTargets(TargetSortType.respectDes);
-        break;
       case TargetSortType.respectAsc:
         _targetsProvider.sortTargets(TargetSortType.respectAsc);
-        break;
       case TargetSortType.ffDes:
         _targetsProvider.sortTargets(TargetSortType.ffDes);
-        break;
       case TargetSortType.ffAsc:
         _targetsProvider.sortTargets(TargetSortType.ffAsc);
-        break;
       case TargetSortType.nameDes:
         _targetsProvider.sortTargets(TargetSortType.nameDes);
-        break;
       case TargetSortType.nameAsc:
         _targetsProvider.sortTargets(TargetSortType.nameAsc);
-        break;
       case TargetSortType.lifeDes:
         _targetsProvider.sortTargets(TargetSortType.lifeDes);
-        break;
       case TargetSortType.lifeAsc:
         _targetsProvider.sortTargets(TargetSortType.lifeAsc);
-        break;
       case TargetSortType.colorDes:
         _targetsProvider.sortTargets(TargetSortType.colorDes);
-        break;
       case TargetSortType.colorAsc:
         _targetsProvider.sortTargets(TargetSortType.colorAsc);
-        break;
       case TargetSortType.onlineDes:
         _targetsProvider.sortTargets(TargetSortType.onlineDes);
-        break;
       case TargetSortType.onlineAsc:
         _targetsProvider.sortTargets(TargetSortType.onlineAsc);
-        break;
       case TargetSortType.notesDes:
         _targetsProvider.sortTargets(TargetSortType.notesDes);
-        break;
       case TargetSortType.notesAsc:
         _targetsProvider.sortTargets(TargetSortType.notesAsc);
-        break;
       default:
         _targetsProvider.sortTargets(TargetSortType.ffAsc);
         break;
@@ -680,7 +658,6 @@ class _TargetsPageState extends State<TargetsPage> {
         });
         widget.retaliationCallback(newOptions.retaliationEnabled);
         //widget.tabCallback(newOptions.tacEnabled);
-        break;
       case "Filter Color":
         showDialog(
           useRootNavigator: false,
@@ -689,7 +666,6 @@ class _TargetsPageState extends State<TargetsPage> {
             return ColorFilterDialog();
           },
         );
-        break;
       case "Backup":
         Navigator.push(
           context,
@@ -697,10 +673,8 @@ class _TargetsPageState extends State<TargetsPage> {
             builder: (context) => TargetsBackupPage(),
           ),
         );
-        break;
       case "Wipe":
         _openWipeDialog();
-        break;
     }
   }
 

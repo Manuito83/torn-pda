@@ -47,8 +47,8 @@ class WebViewStackView extends StatefulWidget {
     // Chaining
     this.isChainingBrowser = false,
     this.chainingPayload,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _WebViewStackViewState createState() => _WebViewStackViewState();
@@ -70,10 +70,10 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
   // Showcases
   DateTime? _lastShowCasesCheck;
-  GlobalKey _showcaseTabsGeneral = GlobalKey();
-  GlobalKey _showQuickMenuButton = GlobalKey();
-  GlobalKey _showCaseNewTabButton = GlobalKey();
-  GlobalKey<CircularMenuFixedState> _circularMenuKey = GlobalKey();
+  final GlobalKey _showcaseTabsGeneral = GlobalKey();
+  final GlobalKey _showQuickMenuButton = GlobalKey();
+  final GlobalKey _showCaseNewTabButton = GlobalKey();
+  final GlobalKey<CircularMenuFixedState> _circularMenuKey = GlobalKey();
 
   late Animation<double> _menuTabOpacity;
   late AnimationController _menuTabAnimationController;
@@ -117,8 +117,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
     if (_webViewProvider!.bottomBarStyleEnabled && _webViewProvider!.bottomBarStyleType == 2) {
       return Dialog(
@@ -136,7 +136,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
           borderRadius: BorderRadius.circular(5),
         ),
         child: Container(
-          color: _themeProvider!.currentTheme == AppTheme.extraDark ? Color(0xFF131313) : Colors.transparent,
+          color: _themeProvider!.currentTheme == AppTheme.extraDark ? const Color(0xFF131313) : Colors.transparent,
           child: Padding(
             padding: EdgeInsets.only(
               top: _webViewProvider!.currentUiMode == UiMode.window ? 6 : 0,
@@ -158,7 +158,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
   }
 
   Widget stackView() {
-    bool dialog = _webViewProvider!.bottomBarStyleEnabled && _webViewProvider!.bottomBarStyleType == 2;
+    final bool dialog = _webViewProvider!.bottomBarStyleEnabled && _webViewProvider!.bottomBarStyleType == 2;
 
     return MediaQuery.removePadding(
       context: context,
@@ -201,10 +201,10 @@ class _WebViewStackViewState extends State<WebViewStackView>
                       future: providerInitialised,
                       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                         if (snapshot.connectionState == ConnectionState.done) {
-                          var allWebViews = <Widget>[];
-                          for (var tab in _webViewProvider!.tabList) {
+                          final allWebViews = <Widget>[];
+                          for (final tab in _webViewProvider!.tabList) {
                             if (tab.webView == null) {
-                              allWebViews.add(SizedBox.shrink());
+                              allWebViews.add(const SizedBox.shrink());
                             } else {
                               allWebViews.add(tab.webView!);
                             }
@@ -221,9 +221,9 @@ class _WebViewStackViewState extends State<WebViewStackView>
                             try {
                               return AnimatedIndexedStack(
                                 index: _webViewProvider!.currentTab,
-                                children: allWebViews,
                                 duration: 100,
                                 errorCallback: _closeWithError,
+                                children: allWebViews,
                               );
                             } catch (e) {
                               FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
@@ -234,11 +234,11 @@ class _WebViewStackViewState extends State<WebViewStackView>
                             try {
                               return AnimatedIndexedStack(
                                 index: 0,
+                                duration: 100,
+                                errorCallback: _closeWithError,
                                 children: [
                                   allWebViews[0],
                                 ],
-                                duration: 100,
-                                errorCallback: _closeWithError,
                               );
                             } catch (e) {
                               FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
@@ -247,9 +247,9 @@ class _WebViewStackViewState extends State<WebViewStackView>
                             }
                           }
                         } else {
-                          return Center(child: CircularProgressIndicator());
+                          return const Center(child: CircularProgressIndicator());
                         }
-                        return SizedBox.shrink();
+                        return const SizedBox.shrink();
                       },
                     ),
                     Padding(
@@ -275,7 +275,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               return _bottomNavBar(_);
                             }
                           } else {
-                            return SizedBox.shrink();
+                            return const SizedBox.shrink();
                           }
                         },
                       ),
@@ -283,7 +283,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                   ],
                 ),
               );
-            }),
+            },),
           ),
         ),
       ),
@@ -294,16 +294,16 @@ class _WebViewStackViewState extends State<WebViewStackView>
     if (!_webViewProvider!.browserShowInForeground) return;
 
     // Ensure only one execution per minute, so that showcases wait even if the first mandatory ones are shown
-    DateTime now = DateTime.now();
+    final DateTime now = DateTime.now();
     if (_lastShowCasesCheck != null && now.difference(_lastShowCasesCheck!).inSeconds < 60) {
       return;
     }
     _lastShowCasesCheck = now;
 
-    Future.delayed(Duration(seconds: 1), () async {
+    Future.delayed(const Duration(seconds: 1), () async {
       bool showCasesNeedToWait = false;
 
-      List showCases = <GlobalKey<State<StatefulWidget>>>[];
+      final List showCases = <GlobalKey<State<StatefulWidget>>>[];
       // Check that there is no pending showcases to show by the browser
       // If there is, wait until we open the browser for the next time
       if ((_webViewProvider!.bottomBarStyleEnabled && !_settingsProvider.showCases.contains("webview_closeButton")) ||
@@ -335,23 +335,22 @@ class _WebViewStackViewState extends State<WebViewStackView>
   void _closeWithError() {
     BotToast.showText(
       clickClose: true,
-      crossPage: true,
       text: "Something went wrong, please try again. "
           "If tabs are stuck, consider resetting the browser cache in Settings.",
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.deepOrangeAccent,
-      duration: Duration(seconds: 4),
-      contentPadding: EdgeInsets.all(10),
+      duration: const Duration(seconds: 4),
+      contentPadding: const EdgeInsets.all(10),
     );
 
     Get.back();
   }
 
-  void _initialiseSecondary() async {
-    await Future.delayed(Duration(milliseconds: 1000));
+  Future<void> _initialiseSecondary() async {
+    await Future.delayed(const Duration(milliseconds: 1000));
     if (!mounted) return;
     Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
       useTabs: _settingsProvider.useTabsFullBrowser,
@@ -368,12 +367,12 @@ class _WebViewStackViewState extends State<WebViewStackView>
   }
 
   Widget _bottomNavBar(BuildContext _) {
-    bool isManuito = _webViewProvider!.tabList[0].currentUrl!.contains("sid=attack&user2ID=2225097") ||
+    final bool isManuito = _webViewProvider!.tabList[0].currentUrl!.contains("sid=attack&user2ID=2225097") ||
         _webViewProvider!.tabList[0].currentUrl!.contains("profiles.php?XID=2225097") ||
         _webViewProvider!.tabList[0].currentUrl!.contains("https://www.torn.com/forums.php#/"
             "p=threads&f=67&t=16163503&b=0&a=0");
 
-    var mainTab = FadeTransition(
+    final mainTab = FadeTransition(
       key: UniqueKey(),
       opacity: _menuTabOpacity,
       child: CircularMenuTabs(
@@ -388,7 +387,6 @@ class _WebViewStackViewState extends State<WebViewStackView>
         },
         backgroundWidget: Column(
           mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.max,
           children: [
             Container(
               color: _webViewProvider!.currentTab == 0
@@ -406,7 +404,6 @@ class _WebViewStackViewState extends State<WebViewStackView>
                         ? SizedBox(width: 26, height: 20, child: _webViewProvider!.getIcon(0, context))
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.max,
                             children: [
                               Container(
                                 constraints: const BoxConstraints(
@@ -498,8 +495,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
           "open a menu with a few options (including navigation arrows which might be useful in full screen "
           "mode!), and a TRIPLE TAP will instantly remove a tab (except for the first one, which is persistent)."
           "\n\nVisit the Tips section for more information!\n",
-      descTextStyle: TextStyle(fontSize: 13),
-      tooltipPadding: EdgeInsets.all(20),
+      descTextStyle: const TextStyle(fontSize: 13),
+      tooltipPadding: const EdgeInsets.all(20),
       child: GestureDetector(
         onTap: () => _webViewProvider!.verticalMenuClose(),
         child: Container(
@@ -529,10 +526,10 @@ class _WebViewStackViewState extends State<WebViewStackView>
                           ),
                         ),
                         // Main tabs widget
-                        Flexible(
+                        const Flexible(
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            children: const [
+                            children: [
                               Flexible(
                                 child: TabsList(),
                               ),
@@ -553,8 +550,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
                     disableMovingAnimation: true,
                     textColor: _themeProvider!.mainText!,
                     tooltipBackgroundColor: _themeProvider!.secondBackground!,
-                    descTextStyle: TextStyle(fontSize: 13),
-                    tooltipPadding: EdgeInsets.all(20),
+                    descTextStyle: const TextStyle(fontSize: 13),
+                    tooltipPadding: const EdgeInsets.all(20),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -590,15 +587,13 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               _webViewProvider!.verticalMenuClose();
                               showDialog<void>(
                                 context: context,
-                                barrierDismissible: true,
                                 builder: (BuildContext context) {
-                                  return WebviewShortcutsDialog(fromShortcut: true);
+                                  return const WebviewShortcutsDialog(fromShortcut: true);
                                 },
                               );
                             },
                             backgroundWidget: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.max,
                               children: [
                                 Container(
                                   color: _themeProvider!.navSelected,
@@ -607,7 +602,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                       Padding(
                                         padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
                                         child: _webViewProvider!.currentUiMode == UiMode.window
-                                            ? Icon(MdiIcons.dotsHorizontal)
+                                            ? const Icon(MdiIcons.dotsHorizontal)
                                             : Icon(
                                                 MdiIcons.dotsHorizontalCircleOutline,
                                                 color: Colors.orange[800],
@@ -633,9 +628,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                   _webViewProvider!.verticalMenuClose();
                                   showDialog<void>(
                                     context: context,
-                                    barrierDismissible: true,
                                     builder: (BuildContext context) {
-                                      return WebviewShortcutsDialog(fromShortcut: true);
+                                      return const WebviewShortcutsDialog(fromShortcut: true);
                                     },
                                   );
                                 },
@@ -664,7 +658,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                 color: _webViewProvider!.currentUiMode == UiMode.window ? null : Colors.orange,
                                 onTap: () async {
                                   _webViewProvider!.verticalMenuClose();
-                                  await Future.delayed(Duration(milliseconds: 150));
+                                  await Future.delayed(const Duration(milliseconds: 150));
                                   if (_webViewProvider!.currentUiMode == UiMode.window) {
                                     _webViewProvider!.setCurrentUiMode(UiMode.fullScreen, context);
                                     if (_settingsProvider.fullScreenRemovesChat) {
@@ -814,8 +808,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
                     disableMovingAnimation: true,
                     textColor: _themeProvider!.mainText!,
                     tooltipBackgroundColor: _themeProvider!.secondBackground!,
-                    descTextStyle: TextStyle(fontSize: 13),
-                    tooltipPadding: EdgeInsets.all(20),
+                    descTextStyle: const TextStyle(fontSize: 13),
+                    tooltipPadding: const EdgeInsets.all(20),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [

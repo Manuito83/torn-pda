@@ -6,11 +6,11 @@ class Countdown extends StatefulWidget {
   final int seconds;
   final Function? callback;
 
-  Countdown({
+  const Countdown({
     required this.seconds,
     this.callback,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<Countdown> createState() => _CurrentRetalExpiryWidgetState();
@@ -26,7 +26,7 @@ class _CurrentRetalExpiryWidgetState extends State<Countdown> {
   @override
   void initState() {
     super.initState();
-    _expiryTicker = new Timer.periodic(Duration(seconds: 1), (Timer t) => _timerExpiry());
+    _expiryTicker = Timer.periodic(const Duration(seconds: 1), (Timer t) => _timerExpiry());
     _currentSeconds = widget.seconds;
     _currentExpiryWidget = Text(
       _currentSeconds.toString(),

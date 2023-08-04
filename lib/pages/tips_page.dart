@@ -49,7 +49,7 @@ abstract class TipTextBuilder {
   Text buildHeaderText() {
     return Text(
       headerValue!,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 15,
       ),
     );
@@ -57,8 +57,7 @@ abstract class TipTextBuilder {
 }
 
 class ExpandableTip extends TipTextBuilder {
-  ExpandableTip({this.expandedValue, String? headerValue, bool isExpanded = false})
-      : super(headerValue: headerValue, isExpanded: isExpanded);
+  ExpandableTip({this.expandedValue, super.headerValue, bool super.isExpanded = false});
 
   String? expandedValue;
 
@@ -66,7 +65,7 @@ class ExpandableTip extends TipTextBuilder {
   Text buildExpandedText() {
     return Text(
       expandedValue!,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 13,
       ),
     );
@@ -74,16 +73,15 @@ class ExpandableTip extends TipTextBuilder {
 }
 
 class ComplexExpandableTip extends TipTextBuilder {
-  ComplexExpandableTip({Text buildExpandedText()?, String? headerValue, bool isExpanded = false})
-      : super(headerValue: headerValue, isExpanded: isExpanded) {
-    this._buildExpandedTextFn = buildExpandedText;
+  ComplexExpandableTip({Text Function()? buildExpandedText, super.headerValue, bool super.isExpanded = false}) {
+    _buildExpandedTextFn = buildExpandedText;
   }
 
   Function? _buildExpandedTextFn;
 
   @override
   Text? buildExpandedText() {
-    return this._buildExpandedTextFn!();
+    return _buildExpandedTextFn!();
   }
 }
 
@@ -134,11 +132,11 @@ class _TipsPageState extends State<TipsPage> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
-      drawer: Drawer(),
+      drawer: const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -154,68 +152,68 @@ class _TipsPageState extends State<TipsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
+                const Text(
                   "Frequently asked questions and tips",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 25),
-                Text("GENERAL"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("GENERAL"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.general),
-                SizedBox(height: 25),
-                Text("BROWSER - GENERAL"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("BROWSER - GENERAL"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.browserGeneral),
-                SizedBox(height: 25),
-                Text("BROWSER - TABS"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("BROWSER - TABS"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.browserTabs),
-                SizedBox(height: 25),
+                const SizedBox(height: 25),
                 if (Platform.isAndroid)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("HOME SCREEN WIDGET"),
-                      SizedBox(height: 10),
+                      const Text("HOME SCREEN WIDGET"),
+                      const SizedBox(height: 10),
                       tipsPanels(TipClass.appwidget),
                     ],
                   ),
-                SizedBox(height: 25),
-                Text("TRAVEL SECTION"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("TRAVEL SECTION"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.travel),
-                SizedBox(height: 25),
-                Text("PROFILE SECTION"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("PROFILE SECTION"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.profile),
-                SizedBox(height: 25),
-                Text("FACTION COMMUNICATION"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("FACTION COMMUNICATION"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.factionCommunication),
-                SizedBox(height: 25),
-                Text("CHAINING - GENERAL"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("CHAINING - GENERAL"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.chaining),
-                SizedBox(height: 25),
-                Text("CHAINING - WAR"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("CHAINING - WAR"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.chainingWar),
-                SizedBox(height: 25),
-                Text("TRADING"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("TRADING"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.trading),
-                SizedBox(height: 25),
-                Text("APP LINKS"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("APP LINKS"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.deepLinks),
-                SizedBox(height: 25),
-                Text("USERSCRIPTS"),
-                SizedBox(height: 10),
+                const SizedBox(height: 25),
+                const Text("USERSCRIPTS"),
+                const SizedBox(height: 10),
                 tipsPanels(TipClass.userScripts),
-                SizedBox(height: 60),
+                const SizedBox(height: 60),
               ],
             ),
           ),
@@ -233,7 +231,7 @@ class _TipsPageState extends State<TipsPage> {
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
@@ -241,10 +239,10 @@ class _TipsPageState extends State<TipsPage> {
               }
             },
           ),
-          PdaBrowserIcon(),
+          const PdaBrowserIcon(),
         ],
       ),
-      title: Text('Torn PDA - Tips'),
+      title: const Text('Torn PDA - Tips'),
     );
   }
 
@@ -253,40 +251,28 @@ class _TipsPageState extends State<TipsPage> {
     switch (tipClass) {
       case TipClass.general:
         listToShow = _generalTipList;
-        break;
       case TipClass.browserGeneral:
         listToShow = _browserGeneralTipList;
-        break;
       case TipClass.browserTabs:
         listToShow = _browserTabsTipList;
-        break;
       case TipClass.appwidget:
         listToShow = _appwidgetTipsList;
-        break;
       case TipClass.travel:
         listToShow = _travelTipsList;
-        break;
       case TipClass.profile:
         listToShow = _profileTipsList;
-        break;
       case TipClass.factionCommunication:
         listToShow = _factionCommunicationTipsList;
-        break;
       case TipClass.chaining:
         listToShow = _chainingTipsList;
-        break;
       case TipClass.chainingWar:
         listToShow = _chainingWarTipsList;
-        break;
       case TipClass.trading:
         listToShow = _tradingTipsList;
-        break;
       case TipClass.deepLinks:
         listToShow = _deepLinksTipsList;
-        break;
       case TipClass.userScripts:
         listToShow = _userScriptsTipsList;
-        break;
     }
 
     return ExpansionPanelList(
@@ -313,7 +299,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ExpandableTip> buildGeneralTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
 
     tips.add(
       ExpandableTip(
@@ -352,12 +338,12 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ComplexExpandableTip> buildBrowserGeneralTips() {
-    var tips = <ComplexExpandableTip>[];
+    final tips = <ComplexExpandableTip>[];
     tips.add(
       ComplexExpandableTip(
         headerValue: "What browser should I use?",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "You can choose between 'external' and 'in-app' browser. "
                   "This is accomplished in the Settings section.\n\n"
@@ -376,7 +362,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "How do I access the browser?",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "There are several ways:\n\n"
                   "If you would like to browse to a specific section in Torn, you can tap or long-press most of "
@@ -397,7 +383,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "Short tap vs. long-press",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "The browser will open both after a short tap or a long-press in any of the widgets that redirect "
                   "to Torn, as explained in the previous Tip. By default, a short-tap will open the browser in a windowed "
@@ -417,7 +403,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "Browser styles",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "There are three different browser styles in Torn PDA: the 'default', the 'bottom bar' "
                   "and the 'dialog' styles. "
@@ -447,7 +433,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "Chaining tab",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text:
                   "Whenever you access the browser from a target attack request (in the Chaining section), your first "
@@ -471,7 +457,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "How can I browse back or forward?",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "There are several ways: you can either swipe your finger right or left across the title bar "
                   "or double-tap any tab (while selected) and use the arrows in the vertical menu that appears.",
@@ -488,7 +474,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "How do I browse to a custom URL?",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "Default style browser: short tap the title bar to open a small dialog with several options.\n\n"
                   "'Bottom-bar' or 'dialog' styles: long-press the CLOSE button to open a small dialog with several options.",
@@ -505,7 +491,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "How do I copy the current URL?",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "Full browser: short tap the title bar to open a small dialog with several options.\n\n",
               style: TextStyle(
@@ -521,7 +507,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "Save the current URL as a shortcut or navigate to an existing one",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "If you are using tabs, a quick menu icon (three dots) will appear to the right. "
                   "Tapping it will a vertical menu, with several shortcut options (heart icons).\n\n"
@@ -540,7 +526,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "Ellipsis (...) button",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "This '...' button appears in your tab bar and is relevant to access several functions. If used "
                   "correctly, it can also speed up several tasks.\n\n"
@@ -562,7 +548,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "Pull to refresh",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
                   "There are certain (short) pages in Torn, with no scroll, that might not activate this feature; "
@@ -585,16 +571,16 @@ class _TipsPageState extends State<TipsPage> {
               text: "The browser supports full screen, which can be activated from the quick menu tab in the "
                   "tab bar. \n\nTo access this feature, you need to have 'tabs' enabled in the "
                   "Advanced Browser Settings section (in the app's Settings menu).",
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
               ),
               children: [
-                TextSpan(
+                const TextSpan(
                   text: "\n\nFor more information, please ",
                 ),
                 TextSpan(
                   text: "tab here",
-                  style: TextStyle(
+                  style: const TextStyle(
                     decoration: TextDecoration.underline,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue,
@@ -611,7 +597,7 @@ class _TipsPageState extends State<TipsPage> {
                       );
                     },
                 ),
-                TextSpan(
+                const TextSpan(
                   text: "!",
                 ),
               ],
@@ -625,7 +611,7 @@ class _TipsPageState extends State<TipsPage> {
       ComplexExpandableTip(
         headerValue: "Use terminal (developers only)",
         buildExpandedText: () {
-          return Text.rich(
+          return const Text.rich(
             TextSpan(
               text: "There is a Terminal window (read only) available for development use (so that you can see "
                   "scripts or section outputs). To activate it, short tap the title bar to open a small dialog "
@@ -643,7 +629,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ExpandableTip> buildBrowserTabsTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "Close tab",
@@ -693,7 +679,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ComplexExpandableTip> buildAppwidgetSectionTips() {
-    var tips = <ComplexExpandableTip>[];
+    final tips = <ComplexExpandableTip>[];
     tips.add(ComplexExpandableTip(
       headerValue: "Battery restrictions",
       buildExpandedText: () {
@@ -707,13 +693,13 @@ class _TipsPageState extends State<TipsPage> {
                 "This is also the case for widget initialization after the device is rebooted, which is restricted by "
                 "some launchers.\n\n"
                 "Check your ",
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
             ),
             children: [
               TextSpan(
                 text: "Android's app settings",
-                style: TextStyle(
+                style: const TextStyle(
                   decoration: TextDecoration.underline,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
@@ -724,19 +710,19 @@ class _TipsPageState extends State<TipsPage> {
                     AppSettings.openAppSettings();
                   },
               ),
-              TextSpan(
+              const TextSpan(
                 text: ".",
               ),
             ],
           ),
         );
       },
-    ));
+    ),);
 
     tips.add(ComplexExpandableTip(
       headerValue: "Widget interaction",
       buildExpandedText: () {
-        return Text.rich(
+        return const Text.rich(
           TextSpan(
             text: "As in the app, you can interact with almost every item in the widget (e.g.: tap the energy "
                 "bar to launch the app and access the gym).\n\n"
@@ -749,12 +735,12 @@ class _TipsPageState extends State<TipsPage> {
           ),
         );
       },
-    ));
+    ),);
 
     tips.add(ComplexExpandableTip(
       headerValue: "Widget theme",
       buildExpandedText: () {
-        return Text.rich(
+        return const Text.rich(
           TextSpan(
             text: "You can change the home widget theme in the Settings menu in Torn PDA!",
             style: TextStyle(
@@ -763,13 +749,13 @@ class _TipsPageState extends State<TipsPage> {
           ),
         );
       },
-    ));
+    ),);
 
     return tips;
   }
 
   List<ExpandableTip> buildTravelSectionTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "Tap on flag icons",
@@ -789,7 +775,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ExpandableTip> buildProfileSectionTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "Tap on bars",
@@ -833,7 +819,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ExpandableTip> buildFactionCommunicationTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "Request attack assistance from your faction mates",
@@ -855,7 +841,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ExpandableTip> buildChainingTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "Panic Mode (chain watcher)",
@@ -907,7 +893,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ExpandableTip> buildChainingWarTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "What is this section for?",
@@ -991,7 +977,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<ExpandableTip> buildTradingTips() {
-    var tips = <ExpandableTip>[];
+    final tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "Trading calculator",
@@ -1029,7 +1015,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<TipTextBuilder> buildDeepLinksTips() {
-    var tips = <TipTextBuilder>[];
+    final tips = <TipTextBuilder>[];
     tips.add(
       ComplexExpandableTip(
         headerValue: "Deep/custom app links",
@@ -1042,18 +1028,18 @@ class _TipsPageState extends State<TipsPage> {
                   "a browser pointing to the gym."
                   "\n\nIn order for this to work in some browser (e.g.: Chrome), you'll need to adapt "
                   "your link to be similar to this example:\n\n",
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
               ),
               children: [
-                TextSpan(
+                const TextSpan(
                   text:
                       '<a href="intent://tornpda://www.cnn.com#Intent;package=com.manuito.tornpda;scheme=tornpda;end">click</a>',
                   style: TextStyle(
                     fontStyle: FontStyle.italic,
                   ),
                 ),
-                TextSpan(
+                const TextSpan(
                   text: "\n\nYou can find more information about this scheme in Chrome's ",
                 ),
                 WidgetSpan(
@@ -1074,7 +1060,7 @@ class _TipsPageState extends State<TipsPage> {
                             browserTapType: BrowserTapType.long,
                           );
                     },
-                    child: Text(
+                    child: const Text(
                       'official documentation',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -1084,7 +1070,7 @@ class _TipsPageState extends State<TipsPage> {
                     ),
                   ),
                 ),
-                TextSpan(
+                const TextSpan(
                   text: ".",
                 ),
               ],
@@ -1097,7 +1083,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   List<TipTextBuilder> buildUserScriptsTipsList() {
-    var tips = <TipTextBuilder>[];
+    final tips = <TipTextBuilder>[];
     tips.add(
       ComplexExpandableTip(
         headerValue: "Userscripts development",
@@ -1109,14 +1095,14 @@ class _TipsPageState extends State<TipsPage> {
                   "Make sure to read carefully the disclaimer, instructions and limitations in case you would "
                   "like to install new userscripts.\n\n"
                   "There is a list of several userscripts examples at ",
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
               ),
               children: [
                 WidgetSpan(
                   child: GestureDetector(
                     onTap: () {
-                      var url = 'https://github.com/Manuito83/torn-pda';
+                      const url = 'https://github.com/Manuito83/torn-pda';
                       context.read<WebViewProvider>().openBrowserPreference(
                             context: context,
                             url: url,
@@ -1124,14 +1110,14 @@ class _TipsPageState extends State<TipsPage> {
                           );
                     },
                     onLongPress: () {
-                      var url = 'https://github.com/Manuito83/torn-pda';
+                      const url = 'https://github.com/Manuito83/torn-pda';
                       context.read<WebViewProvider>().openBrowserPreference(
                             context: context,
                             url: url,
                             browserTapType: BrowserTapType.long,
                           );
                     },
-                    child: Text(
+                    child: const Text(
                       'our Github repository',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -1141,7 +1127,7 @@ class _TipsPageState extends State<TipsPage> {
                     ),
                   ),
                 ),
-                TextSpan(
+                const TextSpan(
                   text: ".",
                 ),
               ],

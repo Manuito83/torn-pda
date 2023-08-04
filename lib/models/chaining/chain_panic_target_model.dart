@@ -22,16 +22,16 @@ class PanicTargetModel {
   String? factionName;
 
   factory PanicTargetModel.fromJson(Map<String, dynamic> json) => PanicTargetModel(
-        name: json["name"] == null ? null : json["name"],
-        id: json["id"] == null ? null : json["id"],
-        level: json["level"] == null ? null : json["level"],
-        factionName: json["factionName"] == null ? null : json["factionName"],
+        name: json["name"],
+        id: json["id"],
+        level: json["level"],
+        factionName: json["factionName"],
       );
 
   Map<String, dynamic> toJson() => {
-        "name": name == null ? null : name,
-        "id": id == null ? null : id,
-        "level": level == null ? null : level,
-        "factionName": factionName == null ? null : factionName,
+        "name": name,
+        "id": id,
+        "level": level,
+        "factionName": factionName,
       };
 }

@@ -5,7 +5,7 @@
 // Dart imports:
 import 'dart:convert';
 
-import 'own_profile_basic.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
 OwnProfileExtended ownProfileExtendedFromJson(String str) => OwnProfileExtended.fromJson(json.decode(str));
 String ownProfileExtendedToJson(OwnProfileExtended data) => json.encode(data.toJson());
@@ -92,24 +92,24 @@ class OwnProfileExtended {
 
   factory OwnProfileExtended.fromJson(Map<String, dynamic> json) {
     return OwnProfileExtended(
-      rank: json["rank"] == null ? null : json["rank"],
-      level: json["level"] == null ? null : json["level"],
-      gender: json["gender"] == null ? null : json["gender"],
-      property: json["property"] == null ? null : json["property"],
+      rank: json["rank"],
+      level: json["level"],
+      gender: json["gender"],
+      property: json["property"],
       signup: json["signup"] == null ? null : DateTime.parse(json["signup"]),
-      awards: json["awards"] == null ? null : json["awards"],
-      friends: json["friends"] == null ? null : json["friends"],
-      enemies: json["enemies"] == null ? null : json["enemies"],
-      forumPosts: json["forum_posts"] == null ? null : json["forum_posts"],
-      karma: json["karma"] == null ? null : json["karma"],
-      age: json["age"] == null ? null : json["age"],
-      role: json["role"] == null ? null : json["role"],
-      donator: json["donator"] == null ? null : json["donator"],
-      playerId: json["player_id"] == null ? null : json["player_id"],
-      name: json["name"] == null ? null : json["name"],
-      propertyId: json["property_id"] == null ? null : json["property_id"],
-      serverTime: json["server_time"] == null ? null : json["server_time"],
-      moneyOnHand: json["money_onhand"] == null ? 0 : json["money_onhand"],
+      awards: json["awards"],
+      friends: json["friends"],
+      enemies: json["enemies"],
+      forumPosts: json["forum_posts"],
+      karma: json["karma"],
+      age: json["age"],
+      role: json["role"],
+      donator: json["donator"],
+      playerId: json["player_id"],
+      name: json["name"],
+      propertyId: json["property_id"],
+      serverTime: json["server_time"],
+      moneyOnHand: json["money_onhand"] ?? 0,
       life: json["life"] == null ? null : Life.fromJson(json["life"]),
       status: json["status"] == null ? null : Status.fromJson(json["status"]),
       job: json["job"] == null ? null : Job.fromJson(json["job"]),
@@ -141,24 +141,24 @@ class OwnProfileExtended {
   }
 
   Map<String, dynamic> toJson() => {
-        "rank": rank == null ? null : rank,
-        "level": level == null ? null : level,
-        "gender": gender == null ? null : gender,
-        "property": property == null ? null : property,
+        "rank": rank,
+        "level": level,
+        "gender": gender,
+        "property": property,
         "signup": signup == null ? null : signup!.toIso8601String(),
-        "awards": awards == null ? null : awards,
-        "friends": friends == null ? null : friends,
-        "enemies": enemies == null ? null : enemies,
-        "forum_posts": forumPosts == null ? null : forumPosts,
-        "karma": karma == null ? null : karma,
-        "age": age == null ? null : age,
-        "role": role == null ? null : role,
-        "donator": donator == null ? null : donator,
-        "player_id": playerId == null ? null : playerId,
-        "name": name == null ? null : name,
-        "property_id": propertyId == null ? null : propertyId,
-        "server_time": serverTime == null ? null : serverTime,
-        "money_onhand": moneyOnHand == null ? null : moneyOnHand,
+        "awards": awards,
+        "friends": friends,
+        "enemies": enemies,
+        "forum_posts": forumPosts,
+        "karma": karma,
+        "age": age,
+        "role": role,
+        "donator": donator,
+        "player_id": playerId,
+        "name": name,
+        "property_id": propertyId,
+        "server_time": serverTime,
+        "money_onhand": moneyOnHand,
         "life": life == null ? null : life!.toJson(),
         "status": status == null ? null : status!.toJson(),
         "job": job == null ? null : job!.toJson(),
@@ -196,19 +196,19 @@ class Chain {
   int? cooldown;
 
   factory Chain.fromJson(Map<String, dynamic> json) => Chain(
-        current: json["current"] == null ? null : json["current"],
-        maximum: json["maximum"] == null ? null : json["maximum"],
-        timeout: json["timeout"] == null ? null : json["timeout"],
+        current: json["current"],
+        maximum: json["maximum"],
+        timeout: json["timeout"],
         modifier: json["modifier"] == null ? null : json["modifier"].toDouble(),
-        cooldown: json["cooldown"] == null ? null : json["cooldown"],
+        cooldown: json["cooldown"],
       );
 
   Map<String, dynamic> toJson() => {
-        "current": current == null ? null : current,
-        "maximum": maximum == null ? null : maximum,
-        "timeout": timeout == null ? null : timeout,
-        "modifier": modifier == null ? null : modifier,
-        "cooldown": cooldown == null ? null : cooldown,
+        "current": current,
+        "maximum": maximum,
+        "timeout": timeout,
+        "modifier": modifier,
+        "cooldown": cooldown,
       };
 }
 
@@ -224,15 +224,15 @@ class Cooldowns {
   int? booster;
 
   factory Cooldowns.fromJson(Map<String, dynamic> json) => Cooldowns(
-        drug: json["drug"] == null ? null : json["drug"],
-        medical: json["medical"] == null ? null : json["medical"],
-        booster: json["booster"] == null ? null : json["booster"],
+        drug: json["drug"],
+        medical: json["medical"],
+        booster: json["booster"],
       );
 
   Map<String, dynamic> toJson() => {
-        "drug": drug == null ? null : drug,
-        "medical": medical == null ? null : medical,
-        "booster": booster == null ? null : booster,
+        "drug": drug,
+        "medical": medical,
+        "booster": booster,
       };
 }
 
@@ -254,21 +254,21 @@ class Energy {
   int? fulltime;
 
   factory Energy.fromJson(Map<String, dynamic> json) => Energy(
-        current: json["current"] == null ? null : json["current"],
-        maximum: json["maximum"] == null ? null : json["maximum"],
-        increment: json["increment"] == null ? null : json["increment"],
-        interval: json["interval"] == null ? null : json["interval"],
-        ticktime: json["ticktime"] == null ? null : json["ticktime"],
-        fulltime: json["fulltime"] == null ? null : json["fulltime"],
+        current: json["current"],
+        maximum: json["maximum"],
+        increment: json["increment"],
+        interval: json["interval"],
+        ticktime: json["ticktime"],
+        fulltime: json["fulltime"],
       );
 
   Map<String, dynamic> toJson() => {
-        "current": current == null ? null : current,
-        "maximum": maximum == null ? null : maximum,
-        "increment": increment == null ? null : increment,
-        "interval": interval == null ? null : interval,
-        "ticktime": ticktime == null ? null : ticktime,
-        "fulltime": fulltime == null ? null : fulltime,
+        "current": current,
+        "maximum": maximum,
+        "increment": increment,
+        "interval": interval,
+        "ticktime": ticktime,
+        "fulltime": fulltime,
       };
 }
 
@@ -290,21 +290,21 @@ class Nerve {
   int? fulltime;
 
   factory Nerve.fromJson(Map<String, dynamic> json) => Nerve(
-        current: json["current"] == null ? null : json["current"],
-        maximum: json["maximum"] == null ? null : json["maximum"],
-        increment: json["increment"] == null ? null : json["increment"],
-        interval: json["interval"] == null ? null : json["interval"],
-        ticktime: json["ticktime"] == null ? null : json["ticktime"],
-        fulltime: json["fulltime"] == null ? null : json["fulltime"],
+        current: json["current"],
+        maximum: json["maximum"],
+        increment: json["increment"],
+        interval: json["interval"],
+        ticktime: json["ticktime"],
+        fulltime: json["fulltime"],
       );
 
   Map<String, dynamic> toJson() => {
-        "current": current == null ? null : current,
-        "maximum": maximum == null ? null : maximum,
-        "increment": increment == null ? null : increment,
-        "interval": interval == null ? null : interval,
-        "ticktime": ticktime == null ? null : ticktime,
-        "fulltime": fulltime == null ? null : fulltime,
+        "current": current,
+        "maximum": maximum,
+        "increment": increment,
+        "interval": interval,
+        "ticktime": ticktime,
+        "fulltime": fulltime,
       };
 }
 
@@ -326,21 +326,21 @@ class Happy {
   int? fulltime;
 
   factory Happy.fromJson(Map<String, dynamic> json) => Happy(
-        current: json["current"] == null ? null : json["current"],
-        maximum: json["maximum"] == null ? null : json["maximum"],
-        increment: json["increment"] == null ? null : json["increment"],
-        interval: json["interval"] == null ? null : json["interval"],
-        ticktime: json["ticktime"] == null ? null : json["ticktime"],
-        fulltime: json["fulltime"] == null ? null : json["fulltime"],
+        current: json["current"],
+        maximum: json["maximum"],
+        increment: json["increment"],
+        interval: json["interval"],
+        ticktime: json["ticktime"],
+        fulltime: json["fulltime"],
       );
 
   Map<String, dynamic> toJson() => {
-        "current": current == null ? null : current,
-        "maximum": maximum == null ? null : maximum,
-        "increment": increment == null ? null : increment,
-        "interval": interval == null ? null : interval,
-        "ticktime": ticktime == null ? null : ticktime,
-        "fulltime": fulltime == null ? null : fulltime,
+        "current": current,
+        "maximum": maximum,
+        "increment": increment,
+        "interval": interval,
+        "ticktime": ticktime,
+        "fulltime": fulltime,
       };
 }
 
@@ -362,21 +362,21 @@ class Life {
   int? fulltime;
 
   factory Life.fromJson(Map<String, dynamic> json) => Life(
-        current: json["current"] == null ? null : json["current"],
-        maximum: json["maximum"] == null ? null : json["maximum"],
-        increment: json["increment"] == null ? null : json["increment"],
-        interval: json["interval"] == null ? null : json["interval"],
-        ticktime: json["ticktime"] == null ? null : json["ticktime"],
-        fulltime: json["fulltime"] == null ? null : json["fulltime"],
+        current: json["current"],
+        maximum: json["maximum"],
+        increment: json["increment"],
+        interval: json["interval"],
+        ticktime: json["ticktime"],
+        fulltime: json["fulltime"],
       );
 
   Map<String, dynamic> toJson() => {
-        "current": current == null ? null : current,
-        "maximum": maximum == null ? null : maximum,
-        "increment": increment == null ? null : increment,
-        "interval": interval == null ? null : interval,
-        "ticktime": ticktime == null ? null : ticktime,
-        "fulltime": fulltime == null ? null : fulltime,
+        "current": current,
+        "maximum": maximum,
+        "increment": increment,
+        "interval": interval,
+        "ticktime": ticktime,
+        "fulltime": fulltime,
       };
 }
 
@@ -390,13 +390,13 @@ class Event {
   String? event;
 
   factory Event.fromJson(Map<String, dynamic> json) => Event(
-        timestamp: json["timestamp"] == null ? null : json["timestamp"],
-        event: json["event"] == null ? null : json["event"],
+        timestamp: json["timestamp"],
+        event: json["event"],
       );
 
   Map<String, dynamic> toJson() => {
-        "timestamp": timestamp == null ? null : timestamp,
-        "event": event == null ? null : event,
+        "timestamp": timestamp,
+        "event": event,
       };
 }
 
@@ -420,23 +420,23 @@ class TornMessage {
   int? read;
 
   factory TornMessage.fromJson(Map<String, dynamic> json) => TornMessage(
-        timestamp: json["timestamp"] == null ? null : json["timestamp"],
-        id: json["ID"] == null ? null : json["ID"],
-        name: json["name"] == null ? null : json["name"],
-        type: json["type"] == null ? null : json["type"],
+        timestamp: json["timestamp"],
+        id: json["ID"],
+        name: json["name"],
+        type: json["type"],
         title: json["title"],
-        seen: json["seen"] == null ? null : json["seen"],
-        read: json["read"] == null ? null : json["read"],
+        seen: json["seen"],
+        read: json["read"],
       );
 
   Map<String, dynamic> toJson() => {
-        "timestamp": timestamp == null ? null : timestamp,
-        "ID": id == null ? null : id,
-        "name": name == null ? null : name,
-        "type": type == null ? null : type,
+        "timestamp": timestamp,
+        "ID": id,
+        "name": name,
+        "type": type,
         "title": title,
-        "seen": seen == null ? null : seen,
-        "read": read == null ? null : read,
+        "seen": seen,
+        "read": read,
       };
 }
 
@@ -484,18 +484,18 @@ class Faction {
   String? factionTag;
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
-        position: json["position"] == null ? null : json["position"],
-        factionId: json["faction_id"] == null ? null : json["faction_id"],
-        daysInFaction: json["days_in_faction"] == null ? null : json["days_in_faction"],
-        factionName: json["faction_name"] == null ? null : json["faction_name"],
+        position: json["position"],
+        factionId: json["faction_id"],
+        daysInFaction: json["days_in_faction"],
+        factionName: json["faction_name"],
         factionTag: json["faction_tag"] ?? "",
       );
 
   Map<String, dynamic> toJson() => {
-        "position": position == null ? null : position,
-        "faction_id": factionId == null ? null : factionId,
-        "days_in_faction": daysInFaction == null ? null : daysInFaction,
-        "faction_name": factionName == null ? null : factionName,
+        "position": position,
+        "faction_id": factionId,
+        "days_in_faction": daysInFaction,
+        "faction_name": factionName,
         "faction_tag": factionTag ?? "",
       };
 }
@@ -516,19 +516,19 @@ class Job {
   int? companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
-        job: json["job"] == null ? null : json["job"],
-        position: json["position"] == null ? null : json["position"],
-        companyId: json["company_id"] == null ? null : json["company_id"],
+        job: json["job"],
+        position: json["position"],
+        companyId: json["company_id"],
         companyName: json["company_name"] == null ? null : json["company_name"].toString(),
-        companyType: json["company_type"] == null ? null : json["company_type"],
+        companyType: json["company_type"],
       );
 
   Map<String, dynamic> toJson() => {
-        "job": job == null ? null : job,
-        "position": position == null ? null : position,
-        "company_id": companyId == null ? null : companyId,
-        "company_name": companyName == null ? null : companyName,
-        "company_type": companyType == null ? null : companyType,
+        "job": job,
+        "position": position,
+        "company_id": companyId,
+        "company_name": companyName,
+        "company_type": companyType,
       };
 }
 
@@ -544,15 +544,15 @@ class LastAction {
   String? relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
-        status: json["status"] == null ? null : json["status"],
-        timestamp: json["timestamp"] == null ? null : json["timestamp"],
-        relative: json["relative"] == null ? null : json["relative"],
+        status: json["status"],
+        timestamp: json["timestamp"],
+        relative: json["relative"],
       );
 
   Map<String, dynamic> toJson() => {
-        "status": status == null ? null : status,
-        "timestamp": timestamp == null ? null : timestamp,
-        "relative": relative == null ? null : relative,
+        "status": status,
+        "timestamp": timestamp,
+        "relative": relative,
       };
 }
 
@@ -568,15 +568,15 @@ class Married {
   int? duration;
 
   factory Married.fromJson(Map<String, dynamic> json) => Married(
-        spouseId: json["spouse_id"] == null ? null : json["spouse_id"],
-        spouseName: json["spouse_name"] == null ? null : json["spouse_name"],
-        duration: json["duration"] == null ? null : json["duration"],
+        spouseId: json["spouse_id"],
+        spouseName: json["spouse_name"],
+        duration: json["duration"],
       );
 
   Map<String, dynamic> toJson() => {
-        "spouse_id": spouseId == null ? null : spouseId,
-        "spouse_name": spouseName == null ? null : spouseName,
-        "duration": duration == null ? null : duration,
+        "spouse_id": spouseId,
+        "spouse_name": spouseName,
+        "duration": duration,
       };
 }
 
@@ -590,13 +590,13 @@ class States {
   int? jailTimestamp;
 
   factory States.fromJson(Map<String, dynamic> json) => States(
-        hospitalTimestamp: json["hospital_timestamp"] == null ? null : json["hospital_timestamp"],
-        jailTimestamp: json["jail_timestamp"] == null ? null : json["jail_timestamp"],
+        hospitalTimestamp: json["hospital_timestamp"],
+        jailTimestamp: json["jail_timestamp"],
       );
 
   Map<String, dynamic> toJson() => {
-        "hospital_timestamp": hospitalTimestamp == null ? null : hospitalTimestamp,
-        "jail_timestamp": jailTimestamp == null ? null : jailTimestamp,
+        "hospital_timestamp": hospitalTimestamp,
+        "jail_timestamp": jailTimestamp,
       };
 }
 
@@ -614,17 +614,17 @@ class Travel {
   int? timeLeft;
 
   factory Travel.fromJson(Map<String, dynamic> json) => Travel(
-        destination: json["destination"] == null ? null : json["destination"],
-        timestamp: json["timestamp"] == null ? null : json["timestamp"],
-        departed: json["departed"] == null ? null : json["departed"],
-        timeLeft: json["time_left"] == null ? null : json["time_left"],
+        destination: json["destination"],
+        timestamp: json["timestamp"],
+        departed: json["departed"],
+        timeLeft: json["time_left"],
       );
 
   Map<String, dynamic> toJson() => {
-        "destination": destination == null ? null : destination,
-        "timestamp": timestamp == null ? null : timestamp,
-        "departed": departed == null ? null : departed,
-        "time_left": timeLeft == null ? null : timeLeft,
+        "destination": destination,
+        "timestamp": timestamp,
+        "departed": departed,
+        "time_left": timeLeft,
       };
 }
 
@@ -736,110 +736,110 @@ class TornIcons {
   String? icon86;
 
   factory TornIcons.fromJson(Map<String, dynamic> json) => TornIcons(
-        icon3: json["icon3"] == null ? null : json["icon3"],
-        icon4: json["icon4"] == null ? null : json["icon4"],
-        icon12: json["icon12"] == null ? null : json["icon12"],
-        icon13: json["icon13"] == null ? null : json["icon13"],
-        icon15: json["icon15"] == null ? null : json["icon15"],
-        icon16: json["icon16"] == null ? null : json["icon16"],
-        icon17: json["icon17"] == null ? null : json["icon17"],
-        icon18: json["icon18"] == null ? null : json["icon18"],
-        icon20: json["icon20"] == null ? null : json["icon20"],
-        icon29: json["icon29"] == null ? null : json["icon29"],
-        icon30: json["icon30"] == null ? null : json["icon30"],
-        icon31: json["icon31"] == null ? null : json["icon31"],
-        icon32: json["icon32"] == null ? null : json["icon32"],
-        icon33: json["icon33"] == null ? null : json["icon33"],
-        icon37: json["icon37"] == null ? null : json["icon37"],
-        icon39: json["icon39"] == null ? null : json["icon39"],
-        icon40: json["icon40"] == null ? null : json["icon40"],
-        icon41: json["icon41"] == null ? null : json["icon41"],
-        icon42: json["icon42"] == null ? null : json["icon42"],
-        icon43: json["icon43"] == null ? null : json["icon43"],
-        icon44: json["icon44"] == null ? null : json["icon44"],
-        icon45: json["icon45"] == null ? null : json["icon45"],
-        icon46: json["icon46"] == null ? null : json["icon46"],
-        icon47: json["icon47"] == null ? null : json["icon47"],
-        icon48: json["icon48"] == null ? null : json["icon48"],
-        icon49: json["icon49"] == null ? null : json["icon49"],
-        icon50: json["icon50"] == null ? null : json["icon50"],
-        icon51: json["icon51"] == null ? null : json["icon51"],
-        icon52: json["icon52"] == null ? null : json["icon52"],
-        icon53: json["icon53"] == null ? null : json["icon53"],
-        icon57: json["icon57"] == null ? null : json["icon57"],
-        icon58: json["icon58"] == null ? null : json["icon58"],
-        icon59: json["icon59"] == null ? null : json["icon59"],
-        icon60: json["icon60"] == null ? null : json["icon60"],
-        icon61: json["icon61"] == null ? null : json["icon61"],
-        icon63: json["icon63"] == null ? null : json["icon63"],
-        icon64: json["icon64"] == null ? null : json["icon64"],
-        icon65: json["icon65"] == null ? null : json["icon65"],
-        icon66: json["icon66"] == null ? null : json["icon66"],
-        icon67: json["icon67"] == null ? null : json["icon67"],
-        icon68: json["icon68"] == null ? null : json["icon68"],
-        icon75: json["icon75"] == null ? null : json["icon75"],
-        icon76: json["icon76"] == null ? null : json["icon76"],
-        icon78: json["icon78"] == null ? null : json["icon78"],
-        icon79: json["icon79"] == null ? null : json["icon79"],
-        icon80: json["icon80"] == null ? null : json["icon80"],
-        icon81: json["icon81"] == null ? null : json["icon81"],
-        icon83: json["icon83"] == null ? null : json["icon83"],
-        icon84: json["icon84"] == null ? null : json["icon84"],
-        icon85: json["icon85"] == null ? null : json["icon85"],
-        icon86: json["icon86"] == null ? null : json["icon86"],
+        icon3: json["icon3"],
+        icon4: json["icon4"],
+        icon12: json["icon12"],
+        icon13: json["icon13"],
+        icon15: json["icon15"],
+        icon16: json["icon16"],
+        icon17: json["icon17"],
+        icon18: json["icon18"],
+        icon20: json["icon20"],
+        icon29: json["icon29"],
+        icon30: json["icon30"],
+        icon31: json["icon31"],
+        icon32: json["icon32"],
+        icon33: json["icon33"],
+        icon37: json["icon37"],
+        icon39: json["icon39"],
+        icon40: json["icon40"],
+        icon41: json["icon41"],
+        icon42: json["icon42"],
+        icon43: json["icon43"],
+        icon44: json["icon44"],
+        icon45: json["icon45"],
+        icon46: json["icon46"],
+        icon47: json["icon47"],
+        icon48: json["icon48"],
+        icon49: json["icon49"],
+        icon50: json["icon50"],
+        icon51: json["icon51"],
+        icon52: json["icon52"],
+        icon53: json["icon53"],
+        icon57: json["icon57"],
+        icon58: json["icon58"],
+        icon59: json["icon59"],
+        icon60: json["icon60"],
+        icon61: json["icon61"],
+        icon63: json["icon63"],
+        icon64: json["icon64"],
+        icon65: json["icon65"],
+        icon66: json["icon66"],
+        icon67: json["icon67"],
+        icon68: json["icon68"],
+        icon75: json["icon75"],
+        icon76: json["icon76"],
+        icon78: json["icon78"],
+        icon79: json["icon79"],
+        icon80: json["icon80"],
+        icon81: json["icon81"],
+        icon83: json["icon83"],
+        icon84: json["icon84"],
+        icon85: json["icon85"],
+        icon86: json["icon86"],
       );
 
   Map<String, dynamic> toJson() => {
-        "icon3": icon3 == null ? null : icon3,
-        "icon4": icon4 == null ? null : icon4,
-        "icon12": icon12 == null ? null : icon12,
-        "icon13": icon13 == null ? null : icon13,
-        "icon15": icon15 == null ? null : icon15,
-        "icon16": icon16 == null ? null : icon16,
-        "icon17": icon17 == null ? null : icon17,
-        "icon18": icon18 == null ? null : icon18,
-        "icon20": icon20 == null ? null : icon20,
-        "icon29": icon29 == null ? null : icon29,
-        "icon30": icon30 == null ? null : icon30,
-        "icon31": icon31 == null ? null : icon31,
-        "icon32": icon32 == null ? null : icon32,
-        "icon33": icon33 == null ? null : icon33,
-        "icon37": icon37 == null ? null : icon37,
-        "icon39": icon39 == null ? null : icon39,
-        "icon40": icon40 == null ? null : icon40,
-        "icon41": icon41 == null ? null : icon41,
-        "icon42": icon42 == null ? null : icon42,
-        "icon43": icon43 == null ? null : icon43,
-        "icon44": icon44 == null ? null : icon44,
-        "icon45": icon45 == null ? null : icon45,
-        "icon46": icon46 == null ? null : icon46,
-        "icon47": icon47 == null ? null : icon47,
-        "icon48": icon48 == null ? null : icon48,
-        "icon49": icon49 == null ? null : icon49,
-        "icon50": icon50 == null ? null : icon50,
-        "icon51": icon51 == null ? null : icon51,
-        "icon52": icon52 == null ? null : icon52,
-        "icon53": icon53 == null ? null : icon53,
-        "icon57": icon57 == null ? null : icon57,
-        "icon58": icon58 == null ? null : icon58,
-        "icon59": icon59 == null ? null : icon59,
-        "icon60": icon60 == null ? null : icon60,
-        "icon61": icon61 == null ? null : icon61,
-        "icon63": icon63 == null ? null : icon63,
-        "icon64": icon64 == null ? null : icon64,
-        "icon65": icon65 == null ? null : icon65,
-        "icon66": icon66 == null ? null : icon66,
-        "icon67": icon67 == null ? null : icon67,
-        "icon68": icon68 == null ? null : icon68,
-        "icon75": icon75 == null ? null : icon75,
-        "icon76": icon76 == null ? null : icon76,
-        "icon78": icon78 == null ? null : icon78,
-        "icon79": icon79 == null ? null : icon79,
-        "icon80": icon80 == null ? null : icon80,
-        "icon81": icon81 == null ? null : icon81,
-        "icon83": icon83 == null ? null : icon83,
+        "icon3": icon3,
+        "icon4": icon4,
+        "icon12": icon12,
+        "icon13": icon13,
+        "icon15": icon15,
+        "icon16": icon16,
+        "icon17": icon17,
+        "icon18": icon18,
+        "icon20": icon20,
+        "icon29": icon29,
+        "icon30": icon30,
+        "icon31": icon31,
+        "icon32": icon32,
+        "icon33": icon33,
+        "icon37": icon37,
+        "icon39": icon39,
+        "icon40": icon40,
+        "icon41": icon41,
+        "icon42": icon42,
+        "icon43": icon43,
+        "icon44": icon44,
+        "icon45": icon45,
+        "icon46": icon46,
+        "icon47": icon47,
+        "icon48": icon48,
+        "icon49": icon49,
+        "icon50": icon50,
+        "icon51": icon51,
+        "icon52": icon52,
+        "icon53": icon53,
+        "icon57": icon57,
+        "icon58": icon58,
+        "icon59": icon59,
+        "icon60": icon60,
+        "icon61": icon61,
+        "icon63": icon63,
+        "icon64": icon64,
+        "icon65": icon65,
+        "icon66": icon66,
+        "icon67": icon67,
+        "icon68": icon68,
+        "icon75": icon75,
+        "icon76": icon76,
+        "icon78": icon78,
+        "icon79": icon79,
+        "icon80": icon80,
+        "icon81": icon81,
+        "icon83": icon83,
         "icon84": icon85 == null ? null : icon84,
-        "icon85": icon85 == null ? null : icon85,
-        "icon86": icon86 == null ? null : icon86,
+        "icon85": icon85,
+        "icon86": icon86,
       };
 }

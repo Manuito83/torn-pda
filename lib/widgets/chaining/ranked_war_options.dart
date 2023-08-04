@@ -9,7 +9,7 @@ class RankedWarOptions extends StatefulWidget {
   final ThemeProvider? themeProvider;
   final SettingsProvider? settingsProvider;
 
-  RankedWarOptions(
+  const RankedWarOptions(
     this.themeProvider,
     this.settingsProvider,
   );
@@ -32,40 +32,38 @@ class _RankedWarOptionsState extends State<RankedWarOptions> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
                   color: widget.themeProvider!.secondBackground,
-                  shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Text(
+                      const Text(
                         'OPTIONS',
                         style: TextStyle(
                           fontSize: 12,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Row(
                         children: [
-                          Flexible(
+                          const Flexible(
                             child: Text(
                               "Add ranked wars to main app menu",
                               style: TextStyle(fontSize: 12),
@@ -81,9 +79,9 @@ class _RankedWarOptionsState extends State<RankedWarOptions> {
                           ),
                         ],
                       ),
-                      Divider(),
+                      const Divider(),
                       TextButton(
-                        child: Text(
+                        child: const Text(
                           "Close",
                           style: TextStyle(
                             fontSize: 13,
@@ -107,7 +105,7 @@ class _RankedWarOptionsState extends State<RankedWarOptions> {
                 child: CircleAvatar(
                   backgroundColor: widget.themeProvider!.secondBackground,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 34,
                     width: 34,
                     child: Icon(Icons.settings),

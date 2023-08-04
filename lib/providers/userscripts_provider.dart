@@ -39,7 +39,7 @@ class UserScriptsProvider extends ChangeNotifier {
   UnmodifiableListView<UserScript> getHandlerSources({
     required String apiKey,
   }) {
-    var scriptList = <UserScript>[];
+    final scriptList = <UserScript>[];
     if (_userScriptsEnabled) {
       // Add the main event to let other handlers that the platform is ready
       scriptList.add(
@@ -76,9 +76,9 @@ class UserScriptsProvider extends ChangeNotifier {
     required String apiKey,
     required UserScriptTime time,
   }) {
-    var scriptListToAdd = <UserScript>[];
+    final scriptListToAdd = <UserScript>[];
     if (_userScriptsEnabled) {
-      for (var script in _userScriptList) {
+      for (final script in _userScriptList) {
         if (script.enabled!) {
           if (time != script.time) continue;
 
@@ -87,7 +87,7 @@ class UserScriptsProvider extends ChangeNotifier {
             // Add the continuous scripts
             add = true;
           } else {
-            for (String? u in script.urls as Iterable<String?>) {
+            for (final String? u in script.urls as Iterable<String?>) {
               // Add the ones that match this URL
               if (url.contains(u!.replaceAll("*", ""))) {
                 add = true;
@@ -114,13 +114,13 @@ class UserScriptsProvider extends ChangeNotifier {
   List<String?> getScriptsToRemove({
     required String url,
   }) {
-    var scriptListToRemove = <String?>[];
+    final scriptListToRemove = <String?>[];
     if (_userScriptsEnabled) {
-      for (var script in _userScriptList) {
+      for (final script in _userScriptList) {
         //if (script.enabled) {
         if (script.urls!.isNotEmpty) {
           var found = false;
-          for (String? u in script.urls as Iterable<String?>) {
+          for (final String? u in script.urls as Iterable<String?>) {
             if (script.enabled! && url.contains(u!.replaceAll("*", ""))) {
               found = true;
               break;
@@ -137,7 +137,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   String adaptSource(String source, String apiKey) {
-    String withApiKey = source.replaceAll("###PDA-APIKEY###", apiKey);
+    final String withApiKey = source.replaceAll("###PDA-APIKEY###", apiKey);
     String anonFunction = "(function() {$withApiKey}());";
     anonFunction = anonFunction.replaceAll('“', '"');
     anonFunction = anonFunction.replaceAll('”', '"');
@@ -154,7 +154,7 @@ class UserScriptsProvider extends ChangeNotifier {
     edited = false,
     allScriptFirstLoad = false,
   }) {
-    var newScript = UserScriptModel(
+    final newScript = UserScriptModel(
       name: name,
       time: time,
       source: source,
@@ -181,7 +181,7 @@ class UserScriptsProvider extends ChangeNotifier {
     String source,
     bool changedSource,
   ) {
-    for (var script in userScriptList) {
+    for (final script in userScriptList) {
       if (script == editedModel) {
         script.name = name;
         script.urls = getUrls(source);
@@ -202,7 +202,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void changeUserScriptEnabled(UserScriptModel changedModel, bool enabled) {
-    for (var script in userScriptList) {
+    for (final script in userScriptList) {
       if (script == changedModel) {
         script.enabled = enabled;
         break;
@@ -214,25 +214,25 @@ class UserScriptsProvider extends ChangeNotifier {
 
   Future restoreExamples(bool onlyRestoreNew) async {
     log("Restoring userscript examples!");
-    var newList = <UserScriptModel>[];
+    final newList = <UserScriptModel>[];
 
     // Add the ones that are not examples
-    for (var existing in _userScriptList) {
+    for (final existing in _userScriptList) {
       if (existing.exampleCode == 0) {
         newList.add(existing);
       }
     }
 
     // Then add the examples ones
-    var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+    final exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
 
     // But before, ensure that we don't add an example script with an already taken name
     // in a user-inserted script (with exampleCode == 0)
     for (var s = 0; s < exampleScripts.length; s++) {
-      for (var existingScript in _userScriptList) {
+      for (final existingScript in _userScriptList) {
         if (existingScript.name!.toLowerCase() == exampleScripts[s].name!.toLowerCase() &&
             existingScript.exampleCode == 0) {
-          exampleScripts[s].name = exampleScripts[s].name! + " (example)";
+          exampleScripts[s].name = "${exampleScripts[s].name!} (example)";
           break;
         }
       }
@@ -241,7 +241,7 @@ class UserScriptsProvider extends ChangeNotifier {
     if (onlyRestoreNew) {
       for (var i = 0; i < exampleScripts.length; i++) {
         var newExample = true;
-        var currentExampleCode = exampleScripts[i].exampleCode;
+        final currentExampleCode = exampleScripts[i].exampleCode;
         for (var j = 0; j < _userScriptList.length; j++) {
           if (currentExampleCode == _userScriptList[j].exampleCode) {
             newExample = false;
@@ -272,18 +272,18 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void _saveUserScriptsListSharedPrefs() {
-    var saveString = json.encode(_userScriptList);
+    final saveString = json.encode(_userScriptList);
     Prefs().setUserScriptsList(saveString);
   }
 
   List<String> getUrls(String source) {
-    var urls = <String>[];
+    final urls = <String>[];
     final regex = RegExp(r'(@match+\s+)(.*)');
-    var matches = regex.allMatches(source);
-    if (matches.length > 0) {
-      for (Match match in matches) {
+    final matches = regex.allMatches(source);
+    if (matches.isNotEmpty) {
+      for (final Match match in matches) {
         try {
-          var noWildcard = match.group(2)!.replaceAll("*", "");
+          final noWildcard = match.group(2)!.replaceAll("*", "");
           urls.add(noWildcard);
         } catch (e) {
           //
@@ -314,12 +314,12 @@ class UserScriptsProvider extends ChangeNotifier {
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
       newFeatInjectionTimeShown = await Prefs().getUserScriptsFeatInjectionTimeShown();
 
-      var savedScripts = await Prefs().getUserScriptsList();
-      exampleScripts = await List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+      final savedScripts = await Prefs().getUserScriptsList();
+      exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
 
       // NULL returned if we installed the app, so we add all the example scripts
       if (savedScripts == null) {
-        for (var example in exampleScripts) {
+        for (final example in exampleScripts) {
           addUserScript(
             example.name,
             example.time,
@@ -332,14 +332,14 @@ class UserScriptsProvider extends ChangeNotifier {
         _saveUserScriptsListSharedPrefs();
       } else {
         if (savedScripts.isNotEmpty) {
-          var decoded = json.decode(savedScripts);
-          for (var dec in decoded) {
+          final decoded = json.decode(savedScripts);
+          for (final dec in decoded) {
             try {
-              var decodedModel = UserScriptModel.fromJson(dec);
+              final decodedModel = UserScriptModel.fromJson(dec);
 
               // Check if the script with the same name already exists in the list
               // (user-reported bug)
-              bool scriptExists = _userScriptList.any((script) {
+              final bool scriptExists = _userScriptList.any((script) {
                 return script.name!.toLowerCase() == decodedModel.name!.toLowerCase();
               });
 
@@ -363,13 +363,13 @@ class UserScriptsProvider extends ChangeNotifier {
         }
 
         // Update example scripts to latest versions
-        for (var script in _userScriptList) {
+        for (final script in _userScriptList) {
           // Look for saved scripts than come from examples
           if (script.exampleCode! > 0) {
             if (script.edited == null) continue;
             if (!script.edited!) {
               // If the script has not been edited, find the example script and see if we need to update the source
-              for (var example in exampleScripts) {
+              for (final example in exampleScripts) {
                 if (script.exampleCode == example.exampleCode &&
                     script.version != null &&
                     script.version! < example.version!) {

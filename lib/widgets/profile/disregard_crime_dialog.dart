@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class DisregardCrimeDialog extends StatefulWidget {
   final Function disregardCallback;
 
-  DisregardCrimeDialog({required this.disregardCallback});
+  const DisregardCrimeDialog({required this.disregardCallback});
 
   @override
   _DisregardCrimeDialogState createState() => _DisregardCrimeDialogState();
@@ -14,8 +14,8 @@ class _DisregardCrimeDialogState extends State<DisregardCrimeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Disregard crime"),
-      content: SingleChildScrollView(
+      title: const Text("Disregard crime"),
+      content: const SingleChildScrollView(
         child: Column(
           children: [
             Text(
@@ -33,14 +33,14 @@ class _DisregardCrimeDialogState extends State<DisregardCrimeDialog> {
       ),
       actions: [
         TextButton(
-          child: Text("Disregard crime"),
+          child: const Text("Disregard crime"),
           onPressed: () {
             widget.disregardCallback();
             Navigator.of(context).pop();
           },
         ),
         TextButton(
-          child: Text("Close"),
+          child: const Text("Close"),
           onPressed: () {
             Navigator.of(context).pop();
           },

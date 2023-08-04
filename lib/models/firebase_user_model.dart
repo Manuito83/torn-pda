@@ -43,7 +43,7 @@ class FirebaseUserModel extends OwnProfileExtended {
     life = model.life;
   }
 
-  toMap() {
+  Map<String, Object?> toMap() {
     return {
       "uid": uid,
       "name": name,

@@ -7,8 +7,7 @@ class CustomOffsetAnimation extends StatefulWidget {
   final AnimationController? controller;
   final Widget? child;
 
-  const CustomOffsetAnimation({Key? key, this.controller, this.child})
-      : super(key: key);
+  const CustomOffsetAnimation({super.key, this.controller, this.child});
 
   @override
   _CustomOffsetAnimationState createState() => _CustomOffsetAnimationState();
@@ -35,7 +34,6 @@ class _CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      child: widget.child,
       animation: widget.controller!,
       builder: (BuildContext context, Widget? child) {
         return FractionalTranslation(
@@ -44,13 +42,14 @@ class _CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
             child: Transform.scale(
               scale: tweenScale.evaluate(animation),
               child: Opacity(
-                child: child,
                 opacity: animation.value,
+                child: child,
               ),
             ),
           ),
         );
       },
+      child: widget.child,
     );
   }
 }

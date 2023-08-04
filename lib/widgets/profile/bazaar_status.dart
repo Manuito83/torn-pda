@@ -8,24 +8,24 @@ class BazaarStatusCard extends StatelessWidget {
   final List<Bazaar>? bazaarModel;
   final Function launchBrowser;
 
-  const BazaarStatusCard({required this.bazaarModel, required this.launchBrowser, Key? key}) : super(key: key);
+  const BazaarStatusCard({required this.bazaarModel, required this.launchBrowser, super.key});
 
   @override
   Widget build(BuildContext context) {
     // Check null as it loads after a while, then empty to see if bazaar is open
-    if (bazaarModel == null || bazaarModel!.isEmpty) return SizedBox.shrink();
+    if (bazaarModel == null || bazaarModel!.isEmpty) return const SizedBox.shrink();
 
     int totalItems = 0;
     int totalMoney = 0;
 
-    bazaarModel!.forEach((element) {
+    for (final element in bazaarModel!) {
       if (element.price is double) {
         element.price = element.price.round();
       }
 
       totalItems += element.quantity!;
       totalMoney += element.quantity! * element.price.round() as int;
-    });
+    }
 
     var bazaarNumber = "";
     bazaarModel!.length == 1 ? bazaarNumber = "1 item" : bazaarNumber = "$totalItems items";
@@ -42,18 +42,18 @@ class BazaarStatusCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          SizedBox(
+          const SizedBox(
             width: 60,
             child: Text("Bazaar:"),
           ),
           Text(bazaarNumber),
           Text(" ($bazaarPendingString)"),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           GestureDetector(
-            child: Icon(
+            child: const Icon(
               MdiIcons.storefrontOutline,
               size: 20,
             ),

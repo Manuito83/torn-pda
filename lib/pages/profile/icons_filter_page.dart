@@ -7,7 +7,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 
 class IconsFilterPage extends StatefulWidget {
-  const IconsFilterPage({required this.settingsProvider, Key? key}) : super(key: key);
+  const IconsFilterPage({required this.settingsProvider, super.key});
 
   final SettingsProvider? settingsProvider;
 
@@ -24,7 +24,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
     super.initState();
     filteredIcons = widget.settingsProvider!.iconsFiltered;
 
-    var s = Provider.of<SettingsProvider>(context, listen: false);
+    final s = Provider.of<SettingsProvider>(context, listen: false);
     routeWithDrawer = false;
     routeName = "icons_filter_page";
     s.willPopShouldGoBack.stream.listen((event) {
@@ -34,7 +34,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -57,18 +57,18 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
                     child: Text("Select which icons you would like to include as part of the Profile section's header"),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 50),
                     child: ListView.builder(
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: allowedIcons.length,
                       itemBuilder: (context, i) {
-                        String key = allowedIcons.keys.elementAt(i);
+                        final String key = allowedIcons.keys.elementAt(i);
                         return _iconFilterCard(key, allowedIcons[key]!);
                       },
                     ),
@@ -86,9 +86,9 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: widget.settingsProvider!.appBarTop ? 2 : 0,
-      title: Text("Filter icons"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Filter icons"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -108,8 +108,8 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
               Flexible(
                 child: Row(
                   children: [
-                    Image.asset('images/icons/status/${key}.png', width: 24),
-                    SizedBox(width: 10),
+                    Image.asset('images/icons/status/$key.png', width: 24),
+                    const SizedBox(width: 10),
                     Flexible(
                       child: Text(values["name"]!),
                     ),
@@ -118,17 +118,17 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
               ),
               if (values["url"]!.isNotEmpty)
                 IconButton(
-                  icon: Icon(Icons.link),
+                  icon: const Icon(Icons.link),
                   onPressed: () {
                     BotToast.showText(
                       text: "This icon will open a browser (on double or long tap) to the appropriate section in game",
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         fontSize: 14,
                         color: Colors.white,
                       ),
                       contentColor: Colors.blue[700]!,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
+                      duration: const Duration(seconds: 5),
+                      contentPadding: const EdgeInsets.all(10),
                     );
                   },
                 ),

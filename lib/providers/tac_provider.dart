@@ -15,14 +15,14 @@ class UpdateTargetsResult {
   int numberSuccessful;
 
   UpdateTargetsResult(
-      {required this.success, required this.numberErrors, required this.numberSuccessful});
+      {required this.success, required this.numberErrors, required this.numberSuccessful,});
 }
 
 class TacProvider extends ChangeNotifier {
-  var targetsList = <TacTarget>[];
+  List<TacTarget> targetsList = <TacTarget>[];
 
   getSingleStatus(int index, TargetModel model) async {
-    var tac = targetsList.elementAt(index);
+    final tac = targetsList.elementAt(index);
     tac.currentLife = model.life!.current;
     tac.maxLife = model.life!.maximum;
     if (model.status!.state == "Hospital") {

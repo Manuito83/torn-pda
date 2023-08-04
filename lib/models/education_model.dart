@@ -45,21 +45,21 @@ class Education {
   List<int>? prerequisites;
 
   factory Education.fromJson(Map<String, dynamic> json) => Education(
-    name: json["name"] == null ? null : json["name"],
-    description: json["description"] == null ? null : json["description"],
-    moneyCost: json["money_cost"] == null ? null : json["money_cost"],
-    tier: json["tier"] == null ? null : json["tier"],
-    duration: json["duration"] == null ? null : json["duration"],
+    name: json["name"],
+    description: json["description"],
+    moneyCost: json["money_cost"],
+    tier: json["tier"],
+    duration: json["duration"],
     results: json["results"] == null ? null : Results.fromJson(json["results"]),
     prerequisites: json["prerequisites"] == null ? null : List<int>.from(json["prerequisites"].map((x) => x)),
   );
 
   Map<String, dynamic> toJson() => {
-    "name": name == null ? null : name,
-    "description": description == null ? null : description,
-    "money_cost": moneyCost == null ? null : moneyCost,
-    "tier": tier == null ? null : tier,
-    "duration": duration == null ? null : duration,
+    "name": name,
+    "description": description,
+    "money_cost": moneyCost,
+    "tier": tier,
+    "duration": duration,
     "results": results == null ? null : results!.toJson(),
     "prerequisites": prerequisites == null ? null : List<dynamic>.from(prerequisites!.map((x) => x)),
   };

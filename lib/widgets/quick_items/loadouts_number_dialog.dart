@@ -6,7 +6,7 @@ class LoadoutsNumberDialog extends StatefulWidget {
   final ThemeProvider? themeProvider;
   final QuickItemsProvider? itemsProvider;
 
-  LoadoutsNumberDialog({required this.themeProvider, required this.itemsProvider, Key? key}) : super(key: key);
+  const LoadoutsNumberDialog({required this.themeProvider, required this.itemsProvider, super.key});
 
   @override
   _LoadoutsNumberDialogState createState() => _LoadoutsNumberDialogState();
@@ -26,22 +26,21 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
                   color: widget.themeProvider!.secondBackground,
-                  shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
@@ -54,7 +53,7 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
                         style: TextStyle(fontSize: 12, color: widget.themeProvider!.mainText),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(widget.itemsProvider!.numberOfLoadoutsToShow.toString()),
                     Slider(
                       value: widget.itemsProvider!.numberOfLoadoutsToShow.toDouble(),
@@ -67,7 +66,7 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
                         });
                       },
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
@@ -80,12 +79,12 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Close"),
+                          child: const Text("Close"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },

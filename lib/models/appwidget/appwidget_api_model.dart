@@ -312,7 +312,7 @@ class Energy {
 class Events {
   Events();
 
-  factory Events.fromJson(Map<String, dynamic> json) => Events();
+  factory Events.fromJson() => Events();
 
   Map<String, dynamic> toJson() => {};
 }

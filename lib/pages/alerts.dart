@@ -1,22 +1,24 @@
 // Dart imports:
 import 'dart:io';
+
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -24,9 +26,6 @@ import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
-
-import '../main.dart';
-import 'alerts/stockmarket_alerts_page.dart';
 
 class AlertsSettings extends StatefulWidget {
   final Function stockMarketInMenuCallback;
@@ -81,10 +80,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.data[0] is FirebaseUserModel) {
-                if (_firebaseUserModel == null) {
-                  // We don't use the snapshot data any longer if we have updated the model after a reset
-                  _firebaseUserModel = snapshot.data[0] as FirebaseUserModel?;
-                }
+                _firebaseUserModel ??= snapshot.data[0] as FirebaseUserModel?;
                 return SingleChildScrollView(
                   child: Column(
                     children: [
@@ -320,7 +316,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           title: Row(
                             children: [
                               const Text("Loot Rangers attack"),
-                              SizedBox(width: 5),
+                              const SizedBox(width: 5),
                               GestureDetector(
                                 onTap: () async {
                                   await showDialog(
@@ -331,14 +327,14 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                     },
                                   );
                                 },
-                                child: Icon(
+                                child: const Icon(
                                   Icons.info_outline,
                                   size: 20,
                                 ),
                               )
                             ],
                           ),
-                          subtitle: Text(
+                          subtitle: const Text(
                             "Get notified shortly before a Loot Ranger attack is about to take place "
                             ", including attack order",
                             style: TextStyle(
@@ -493,7 +489,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               ),
                               DropdownButton<int>(
                                 value: _firebaseUserModel?.refillsTime,
-                                items: [
+                                items: const [
                                   DropdownMenuItem(
                                     value: 16,
                                     child: SizedBox(
@@ -706,7 +702,6 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel!.retalsNotification ?? false,
                           title: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               const Padding(
                                 padding: EdgeInsets.only(right: 5),
@@ -781,13 +776,13 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               BotToast.showText(
                                 clickClose: true,
                                 text: message,
-                                textStyle: TextStyle(
+                                textStyle: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
                                 contentColor: Colors.orange[900]!,
                                 duration: Duration(seconds: seconds),
-                                contentPadding: EdgeInsets.all(10),
+                                contentPadding: const EdgeInsets.all(10),
                               );
                             }
                           },
@@ -801,10 +796,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                             children: <Widget>[
                               Flexible(
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Flexible(
-                                      child: const Padding(
+                                    const Flexible(
+                                      child: Padding(
                                         padding: EdgeInsets.only(left: 10, right: 5),
                                         child: Text(
                                           "Single target opens browser",
@@ -818,7 +812,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                     Padding(
                                       padding: const EdgeInsets.only(right: 10),
                                       child: GestureDetector(
-                                        child: Icon(Icons.info_outline_rounded),
+                                        child: const Icon(Icons.info_outline_rounded),
                                         // Quick update
                                         onTap: () async {
                                           await showDialog(
@@ -909,12 +903,12 @@ class _AlertsSettingsState extends State<AlertsSettings> {
   }
 
   Widget _connectError() {
-    return Padding(
-      padding: const EdgeInsets.all(30),
+    return const Padding(
+      padding: EdgeInsets.all(30),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const <Widget>[
+        children: <Widget>[
           Text(
             'There was an error contacting the server!',
             style: TextStyle(
@@ -947,9 +941,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           fontSize: 18,
         ),
       ),
-      content: SingleChildScrollView(
+      content: const SingleChildScrollView(
         child: Column(
-          children: const [
+          children: [
             Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
@@ -983,9 +977,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           fontSize: 18,
         ),
       ),
-      content: SingleChildScrollView(
+      content: const SingleChildScrollView(
         child: Column(
-          children: const [
+          children: [
             Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
@@ -1007,10 +1001,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             Navigator.of(context).pop();
 
             try {
-              final _userProv = context.read<UserDetailsProvider>();
+              final userProv = context.read<UserDetailsProvider>();
 
               // We save the key because the API call will reset it
-              final savedKey = _userProv.basic!.userApiKey;
+              final savedKey = userProv.basic!.userApiKey;
 
               final dynamic myProfile = await Get.find<ApiCallerController>().getOwnProfileBasic();
 
@@ -1072,9 +1066,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
     );
   }
 
-  _retalsGeneralExplanation() {
+  AlertDialog _retalsGeneralExplanation() {
     return AlertDialog(
-      title: Text("Retaliation alerts"),
+      title: const Text("Retaliation alerts"),
       content: Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
@@ -1083,7 +1077,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "NOTE: you will not receive retaliation alerts when traveling, nor when the attack took place abroad "
                   "and you are in Torn, nor if the attack took place in Torn and you are abroad.\n\nHowever, due to API limits, "
                   "you might receive spurious notifications when you are abroad but in a different country from the attack.\n\n"
@@ -1092,41 +1086,41 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                   style: TextStyle(fontSize: 13),
                 ),
                 if (!_factionApiAccess)
-                  Text(
+                  const Text(
                     "You DO NOT HAVE Faction API access\n\n",
                     style: TextStyle(fontSize: 13, color: Colors.red, fontWeight: FontWeight.bold),
                   )
                 else
-                  Text(
+                  const Text(
                     "You HAVE Faction API access\n\n",
                     style: TextStyle(fontSize: 13, color: Colors.green, fontWeight: FontWeight.bold),
                   ),
                 if (!_factionApiAccess)
-                  Text(
+                  const Text(
                     "For retaliation notifications to work, at least one member of your faction with API access "
                     " privileges must have this alert active in Torn PDA. If this condition is not met at some point, "
                     "Torn PDA will notify you about it so that you can discuss this internally.\n\n",
                     style: TextStyle(fontSize: 13),
                   )
                 else
-                  Text(
+                  const Text(
                     "For retaliation notifications to work, at least one member of your faction with API access "
                     " privileges must have this alert active in Torn PDA. This can be you or any other member.\n\n",
                     style: TextStyle(fontSize: 13),
                   ),
                 if (!_factionApiAccess)
-                  Text(
+                  const Text(
                     "As you have no Faction API access, but the above criteria is met, you will be able to receive "
                     "notifications, but you won't be able to access the Retaliation target list (in Chaining).",
                     style: TextStyle(fontSize: 13),
                   )
                 else
-                  Text(
+                  const Text(
                     "Members of your faction with no Faction API access will be able to receive "
                     "notifications, but they won't be able to access the Retaliation target list (in Chaining).",
                     style: TextStyle(fontSize: 13),
                   ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -1136,7 +1130,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Understood"),
+            child: const Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },
@@ -1146,14 +1140,14 @@ class _AlertsSettingsState extends State<AlertsSettings> {
     );
   }
 
-  _retalsNotificationExplanation() {
+  AlertDialog _retalsNotificationExplanation() {
     return AlertDialog(
-      title: Text("Retaliation notification"),
-      content: Scrollbar(
+      title: const Text("Retaliation notification"),
+      content: const Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1177,7 +1171,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Understood"),
+            child: const Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },
@@ -1189,7 +1183,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
   Future _getFactionApiAccess() async {
     // Assess whether we have permits
-    var attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+    final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       _factionApiAccess = true;
     } else if (attacksResult is ApiError) {

@@ -1,13 +1,11 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -18,7 +16,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 class FriendDetailsPage extends StatefulWidget {
   final FriendModel? friend;
 
-  FriendDetailsPage({required this.friend});
+  const FriendDetailsPage({required this.friend});
 
   @override
   _FriendDetailsPageState createState() => _FriendDetailsPageState();
@@ -44,7 +42,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -56,7 +54,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          drawer: Drawer(),
+          drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -77,7 +75,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                         children: [
                           Text(
                             '${widget.friend!.name} [${widget.friend!.playerId}]',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -88,20 +86,20 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                               width: 30,
                               height: 30,
                               child: IconButton(
-                                icon: Icon(Icons.content_copy),
+                                icon: const Icon(Icons.content_copy),
                                 iconSize: 20,
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: widget.friend!.playerId.toString()));
                                   BotToast.showText(
                                     text: "Your friend's ID [${widget.friend!.playerId}] has been "
                                         "copied to the clipboard!",
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.green,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 },
                               ),
@@ -110,29 +108,29 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                         ],
                       ),
                       Text('${widget.friend!.rank}'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text('Level: ${widget.friend!.level}'),
                       Text('Gender: ${widget.friend!.gender}'),
                       Text('Age: ${widget.friend!.age} days'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       _returnLife(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       _returnLastAction(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       _returnStatus(),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text('Awards: ${widget.friend!.awards} '
                           '(you have ${_userDetails.basic!.awards})'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text('Donator: ${widget.friend!.donator == 0 ? 'NO' : 'YES'}'),
                       Text('Friends/Enemies: ${widget.friend!.friends}'
                           '/${widget.friend!.enemies}'),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       _returnFaction(),
                       _returnJob(),
                       _returnDiscord(),
                       _returnCompetition(),
-                      SizedBox(height: 50),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
@@ -150,7 +148,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('${widget.friend!.name}'),
       leading: IconButton(
-        icon: Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -162,32 +160,30 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        SizedBox(
+        const SizedBox(
           width: 35,
           child: Text('Life'),
         ),
         LinearPercentIndicator(
-          padding: EdgeInsets.all(0),
-          barRadius: Radius.circular(10),
+          padding: const EdgeInsets.all(0),
+          barRadius: const Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,
           backgroundColor: Colors.grey,
           center: Text(
             '${widget.friend!.life!.current}',
-            style: TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black),
           ),
           percent: widget.friend!.life!.current! / widget.friend!.life!.maximum! > 1.0
               ? 1.0
               : widget.friend!.life!.current! / widget.friend!.life!.maximum!,
         ),
-        widget.friend!.status!.state == "Hospital"
-            ? Icon(
+        if (widget.friend!.status!.state == "Hospital") const Icon(
                 Icons.local_hospital,
                 size: 20,
                 color: Colors.red,
-              )
-            : SizedBox.shrink(),
+              ) else const SizedBox.shrink(),
       ],
     );
   }
@@ -196,7 +192,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text(
+        const Text(
           'Last action: ',
         ),
         Text(
@@ -210,7 +206,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
             decoration: BoxDecoration(
               color: _returnLastActionColor(widget.friend!.lastAction!.status),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.black),
+              border: Border.all(),
             ),
           ),
         ),
@@ -239,12 +235,12 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       stateColor = Colors.blue;
     }
 
-    Widget stateBall = Padding(
-      padding: EdgeInsets.only(left: 5, right: 3, top: 1),
+    final Widget stateBall = Padding(
+      padding: const EdgeInsets.only(left: 5, right: 3, top: 1),
       child: Container(
         width: 13,
         height: 13,
-        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all()),
       ),
     );
 
@@ -270,7 +266,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -286,7 +282,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -297,27 +293,27 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('Discord ID'),
+            const Text('Discord ID'),
             Padding(
               padding: const EdgeInsets.only(bottom: 5),
               child: SizedBox(
                 width: 30,
                 height: 30,
                 child: IconButton(
-                  icon: Icon(Icons.content_copy),
+                  icon: const Icon(Icons.content_copy),
                   iconSize: 20,
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: widget.friend!.discord!.discordId!));
                     BotToast.showText(
                       text: "Your friend's Discord ID (${widget.friend!.discord!.discordId}) has been "
                           "copied to the clipboard!",
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         fontSize: 14,
                         color: Colors.white,
                       ),
                       contentColor: Colors.green,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
+                      duration: const Duration(seconds: 5),
+                      contentPadding: const EdgeInsets.all(10),
                     );
                   },
                 ),
@@ -327,13 +323,13 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   Widget _returnCompetition() {
     if (widget.friend!.competition == null) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     return Padding(
@@ -341,7 +337,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text(
+          const Text(
             'COMPETITION',
             style: TextStyle(
               fontWeight: FontWeight.bold,

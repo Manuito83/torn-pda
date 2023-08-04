@@ -51,7 +51,7 @@ class TravelTimes {
       code = getCountry(plainName: countryName);
     }
 
-    var travelTicket = ticket;
+    final travelTicket = ticket;
 
     int tripJapan = 0;
     int tripHawaii = 0;
@@ -78,7 +78,6 @@ class TravelTimes {
         tripMexico = 26;
         tripUAE = 271;
         tripCanada = 41;
-        break;
       case TravelTicket.private:
         tripJapan = 158;
         tripHawaii = 94;
@@ -91,7 +90,6 @@ class TravelTimes {
         tripMexico = 18;
         tripUAE = 190;
         tripCanada = 29;
-        break;
       case TravelTicket.wlt:
         tripJapan = 113;
         tripHawaii = 67;
@@ -104,7 +102,6 @@ class TravelTimes {
         tripMexico = 13;
         tripUAE = 135;
         tripCanada = 20;
-        break;
       case TravelTicket.business:
         tripJapan = 68;
         tripHawaii = 40;
@@ -117,7 +114,6 @@ class TravelTimes {
         tripMexico = 8;
         tripUAE = 81;
         tripCanada = 12;
-        break;
     }
 
     switch (code!) {

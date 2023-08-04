@@ -16,13 +16,13 @@ class ForeignStockButton extends StatelessWidget {
     required this.settingsProv,
     required this.launchBrowser({required String? url, required bool? shortTap}),
     required this.updateCallback,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return OpenContainer(
-      transitionDuration: Duration(seconds: 1),
+      transitionDuration: const Duration(seconds: 1),
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
         return ForeignStockPage(apiKey: userProv!.basic!.userApiKey);
@@ -36,7 +36,7 @@ class ForeignStockButton extends StatelessWidget {
       onClosed: (ReturnFlagPressed? returnFlag) async {
         if (returnFlag == null) return;
         if (returnFlag.flagPressed) {
-          var url = 'https://www.torn.com/travelagency.php';
+          const url = 'https://www.torn.com/travelagency.php';
           if (settingsProv!.currentBrowser == BrowserSetting.external) {
             if (await canLaunchUrl(Uri.parse(url))) {
               await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);

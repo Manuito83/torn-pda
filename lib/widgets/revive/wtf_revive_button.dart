@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/external/wtf_revive.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -24,8 +24,8 @@ class WtfReviveButton extends StatefulWidget {
     required this.settingsProvider,
     required this.webViewProvider,
     this.user,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _WtfReviveButtonState createState() => _WtfReviveButtonState();
@@ -54,8 +54,8 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
             padding: const EdgeInsets.only(right: 13),
             child: Image.asset('images/icons/wtf_revive.png', width: 24),
           ),
-          SizedBox(width: 10),
-          Flexible(child: Text("Request a revive (WTF)")),
+          const SizedBox(width: 10),
+          const Flexible(child: Text("Request a revive (WTF)")),
         ],
       ),
     );
@@ -77,22 +77,21 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: widget.themeProvider!.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -143,7 +142,7 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                                             browserTapType: BrowserTapType.long,
                                           );
                                     },
-                                    child: Text(
+                                    child: const Text(
                                       'forum thread',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -153,40 +152,40 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                                     ),
                                   ),
                                 ),
-                                TextSpan(text: ' and '),
+                                const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Discord server',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blue,
                                     fontSize: 13,
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () async {
-                                      var url = 'https://discord.gg/S5Qp6aZd';
+                                      const url = 'https://discord.gg/S5Qp6aZd';
                                       if (await canLaunchUrl(Uri.parse(url))) {
                                         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                                       }
                                     },
                                 ),
-                                TextSpan(text: ' for more information.'),
-                                TextSpan(
+                                const TextSpan(text: ' for more information.'),
+                                const TextSpan(
                                     text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
-                                        "Refusal to pay will result in getting blacklisted."),
+                                        "Refusal to pay will result in getting blacklisted.",),
                               ],
                             ),
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Medic!"),
+                              child: const Text("Medic!"),
                               onPressed: () async {
                                 // User can be null if we are not accessing from the Profile page
                                 if (widget.user == null) {
-                                  var apiResponse =
+                                  final apiResponse =
                                       await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
                                   if (apiResponse is OwnProfileExtended) {
                                     _user = apiResponse;
@@ -197,13 +196,13 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                                   BotToast.showText(
                                     text: 'There was an error contacting Torn API to get your current status, '
                                         'please try again after a while!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.red[800]!,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
@@ -213,30 +212,30 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                                   BotToast.showText(
                                     text: 'According to Torn you are not currently hospitalized, please wait a '
                                         'few seconds and try again!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.red[800]!,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
                                 }
 
-                                var wtf = WtfRevive(
+                                final wtf = WtfRevive(
                                     tornId: _user!.playerId,
                                     username: _user!.name,
                                     faction: _user!.faction!.factionName,
                                     country: countryCheck(
                                       state: _user!.status!.state,
                                       description: _user!.status!.description,
-                                    ));
+                                    ),);
 
                                 wtf.callMedic().then((args) {
                                   var resultColor = Colors.green[800];
-                                  String message = args[1]!;
+                                  final String message = args[1]!;
 
                                   int? code = int.tryParse(args[0]!);
                                   if (code == null) {
@@ -247,13 +246,13 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
 
                                   BotToast.showText(
                                     text: message,
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
                                     contentColor: resultColor!,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 });
 
@@ -261,7 +260,7 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                               },
                             ),
                             TextButton(
-                              child: Text("Cancel"),
+                              child: const Text("Cancel"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },

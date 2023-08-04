@@ -1,21 +1,19 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-
 // Project imports:
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
@@ -41,7 +39,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -62,10 +60,10 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
             color: _themeProvider!.canvas,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
               child: Column(
                 children: <Widget>[
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
@@ -77,7 +75,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(width: 2, color: Colors.blueGrey),
+                                side: const BorderSide(width: 2, color: Colors.blueGrey),
                               ),
                             ),
                           ),
@@ -91,7 +89,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                           },
                         ),
                       ),
-                      SizedBox(width: 15),
+                      const SizedBox(width: 15),
                       ButtonTheme(
                         minWidth: 1.0,
                         child: ElevatedButton(
@@ -100,7 +98,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
+                                side: const BorderSide(
                                   width: 2,
                                   color: Colors.blueGrey,
                                 ),
@@ -119,11 +117,11 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
-                      'Use the \'+\' button to add new friendly factions to the list. '
+                      "Use the '+' button to add new friendly factions to the list. "
                       'Players in said factions will be flagged as allied when you visit their '
                       'profiles or try to attack them.',
                       style: TextStyle(
@@ -133,7 +131,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Flexible(
                     child: Consumer<SettingsProvider>(
                       builder: (context, settingsProvider, child) => factions(),
@@ -149,8 +147,8 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   }
 
   ListView factions() {
-    var factionList = <Widget>[];
-    for (var fact in _settingsProvider!.friendlyFactions) {
+    final factionList = <Widget>[];
+    for (final fact in _settingsProvider!.friendlyFactions) {
       factionList.add(
         Card(
           key: UniqueKey(),
@@ -165,7 +163,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                     Text(HtmlParser.fix(fact.name)),
                     Text(
                       "[${fact.id}]",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                       ),
                     ),
@@ -179,19 +177,19 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         color: Colors.red[300],
                       ),
                       onPressed: () {
-                        var currentFactions = _settingsProvider!.friendlyFactions;
+                        final currentFactions = _settingsProvider!.friendlyFactions;
                         currentFactions.removeWhere((element) => element.id == fact.id);
                         _settingsProvider!.setFriendlyFactions = currentFactions;
 
                         BotToast.showText(
                           text: 'Removed ${fact.name}!',
-                          textStyle: TextStyle(
+                          textStyle: const TextStyle(
                             fontSize: 14,
                             color: Colors.white,
                           ),
                           contentColor: Colors.green,
-                          duration: Duration(seconds: 3),
-                          contentPadding: EdgeInsets.all(10),
+                          duration: const Duration(seconds: 3),
+                          contentPadding: const EdgeInsets.all(10),
                         );
                       },
                     ),
@@ -214,9 +212,9 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      title: Text('Friendly factions'),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text('Friendly factions'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -227,13 +225,12 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   Future<void> _showAddDialog(BuildContext _) {
     return showDialog<void>(
         context: _,
-        barrierDismissible: true, // user must tap button!
         builder: (BuildContext context) {
           return AddFriendlyFactionDialog(
             themeProvider: _themeProvider,
             settingsProvider: _settingsProvider,
           );
-        });
+        },);
   }
 
   Future<void> _openWipeDialog() {
@@ -252,61 +249,60 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider!.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
-                        Flexible(
+                        const Flexible(
                           child: Text(
                             "CAUTION",
                             style: TextStyle(fontSize: 13, color: Colors.red),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "This will remove all friendly factions!",
                             style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
                             style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Do it!"),
+                              child: const Text("Do it!"),
                               onPressed: () {
                                 _settingsProvider!.setFriendlyFactions = <FriendlyFaction>[];
                                 Navigator.of(context).pop();
                               },
                             ),
                             TextButton(
-                              child: Text("Oh no!"),
+                              child: const Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -326,7 +322,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(Icons.delete_forever_outlined),
@@ -353,11 +349,11 @@ class AddFriendlyFactionDialog extends StatefulWidget {
   final ThemeProvider? themeProvider;
   final SettingsProvider? settingsProvider;
 
-  AddFriendlyFactionDialog({
+  const AddFriendlyFactionDialog({
     required this.themeProvider,
     required this.settingsProvider,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _AddFriendlyFactionDialogState createState() => _AddFriendlyFactionDialogState();
@@ -365,8 +361,8 @@ class AddFriendlyFactionDialog extends StatefulWidget {
 
 class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
   bool _addFromUserId = false;
-  final _addIdController = new TextEditingController();
-  var _addFormKey = GlobalKey<FormState>();
+  final _addIdController = TextEditingController();
+  final _addFormKey = GlobalKey<FormState>();
 
   @override
   Future dispose() async {
@@ -387,28 +383,27 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 30),
-                decoration: new BoxDecoration(
+                margin: const EdgeInsets.only(top: 30),
+                decoration: BoxDecoration(
                   color: widget.themeProvider!.secondBackground,
-                  shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Text(
                       'You can find the faction ID in the browser address bar when visiting '
                       'another faction. If in doubt, press the icon to the right to switch between faction ID '
@@ -419,7 +414,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                         color: Colors.grey[600],
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     Form(
                       key: _addFormKey,
                       child: Column(
@@ -429,16 +424,15 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                             children: [
                               Flexible(
                                 child: TextFormField(
-                                  style: TextStyle(fontSize: 14),
+                                  style: const TextStyle(fontSize: 14),
                                   controller: _addIdController,
                                   maxLength: 8,
                                   minLines: 1,
-                                  maxLines: 1,
                                   keyboardType: TextInputType.number,
                                   inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                                   decoration: InputDecoration(
                                     counterText: "",
-                                    border: OutlineInputBorder(),
+                                    border: const OutlineInputBorder(),
                                     labelText: !_addFromUserId ? 'Insert faction ID' : 'Insert user ID',
                                   ),
                                   validator: (value) {
@@ -457,7 +451,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                                         color: widget.themeProvider!.mainText,
                                         width: 16,
                                       )
-                                    : Icon(Icons.person),
+                                    : const Icon(Icons.person),
                                 onPressed: () {
                                   setState(() {
                                     _addFromUserId = !_addFromUserId;
@@ -466,18 +460,18 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 16.0),
+                          const SizedBox(height: 16.0),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
                               TextButton(
-                                child: Text("Add"),
+                                child: const Text("Add"),
                                 onPressed: () async {
                                   await _addPressed(context);
                                 },
                               ),
                               TextButton(
-                                child: Text("Cancel"),
+                                child: const Text("Cancel"),
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                   _addIdController.text = '';
@@ -529,11 +523,11 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
       var inputId = _addIdController.text;
       _addIdController.text = '';
 
-      var userProv = context.read<UserDetailsProvider>();
+      final userProv = context.read<UserDetailsProvider>();
 
       // If an user ID was inserted, we need to transform it first
       if (_addFromUserId) {
-        dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+        final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
         String convertError = "";
         if (target is TargetModel) {
           inputId = target.faction!.factionId.toString();
@@ -563,41 +557,41 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         BotToast.showText(
           text: 'There is no need to add your own faction, you will be '
               'alerted about it by default!',
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.orange[700]!,
-          duration: Duration(seconds: 4),
-          contentPadding: EdgeInsets.all(10),
+          duration: const Duration(seconds: 4),
+          contentPadding: const EdgeInsets.all(10),
         );
         return;
       }
 
-      for (var faction in widget.settingsProvider!.friendlyFactions) {
+      for (final faction in widget.settingsProvider!.friendlyFactions) {
         if (faction.id.toString() == inputId) {
           BotToast.showText(
             text: 'This faction is already in the list!',
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.orange[700]!,
-            duration: Duration(seconds: 4),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
           );
           return;
         }
       }
 
-      var retrievedFaction = await Get.find<ApiCallerController>().getFaction(factionId: inputId);
+      final retrievedFaction = await Get.find<ApiCallerController>().getFaction(factionId: inputId);
 
       if (retrievedFaction is FactionModel) {
         if (retrievedFaction.name!.isNotEmpty) {
-          var currentFactions = widget.settingsProvider!.friendlyFactions;
+          final currentFactions = widget.settingsProvider!.friendlyFactions;
           currentFactions.add(FriendlyFaction()
             ..name = retrievedFaction.name
-            ..id = retrievedFaction.id);
+            ..id = retrievedFaction.id,);
 
           currentFactions.sort((a, b) => a.name!.compareTo(b.name!));
 
@@ -605,36 +599,36 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
 
           BotToast.showText(
             text: 'Added ${retrievedFaction.name}!',
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.green,
-            duration: Duration(seconds: 3),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
           );
         } else {
           BotToast.showText(
             text: 'Could not retrieved any faction matching id $inputId!',
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.green,
-            duration: Duration(seconds: 3),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
           );
         }
       } else {
         BotToast.showText(
           text: 'Error contacting API, please try again later!',
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.red[700]!,
-          duration: Duration(seconds: 3),
-          contentPadding: EdgeInsets.all(10),
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(10),
         );
       }
     }

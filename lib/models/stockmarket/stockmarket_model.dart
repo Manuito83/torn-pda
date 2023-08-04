@@ -52,22 +52,22 @@ class StockMarketStock {
   Benefit? benefit;
 
   factory StockMarketStock.fromJson(Map<String, dynamic> json) => StockMarketStock(
-    stockId: json["stock_id"] == null ? null : json["stock_id"],
-    name: json["name"] == null ? null : json["name"],
-    acronym: json["acronym"] == null ? null : json["acronym"],
+    stockId: json["stock_id"],
+    name: json["name"],
+    acronym: json["acronym"],
     currentPrice: json["current_price"] == null ? null : json["current_price"].toDouble(),
-    marketCap: json["market_cap"] == null ? null : json["market_cap"],
-    totalShares: json["total_shares"] == null ? null : json["total_shares"],
+    marketCap: json["market_cap"],
+    totalShares: json["total_shares"],
     benefit: json["benefit"] == null ? null : Benefit.fromJson(json["benefit"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "stock_id": stockId == null ? null : stockId,
-    "name": name == null ? null : name,
-    "acronym": acronym == null ? null : acronym,
-    "current_price": currentPrice == null ? null : currentPrice,
-    "market_cap": marketCap == null ? null : marketCap,
-    "total_shares": totalShares == null ? null : totalShares,
+    "stock_id": stockId,
+    "name": name,
+    "acronym": acronym,
+    "current_price": currentPrice,
+    "market_cap": marketCap,
+    "total_shares": totalShares,
     "benefit": benefit == null ? null : benefit!.toJson(),
   };
 }
@@ -84,14 +84,14 @@ class Benefit {
   String? description;
 
   factory Benefit.fromJson(Map<String, dynamic> json) => Benefit(
-    frequency: json["frequency"] == null ? null : json["frequency"],
-    requirement: json["requirement"] == null ? null : json["requirement"],
-    description: json["description"] == null ? null : json["description"],
+    frequency: json["frequency"],
+    requirement: json["requirement"],
+    description: json["description"],
   );
 
   Map<String, dynamic> toJson() => {
-    "frequency": frequency == null ? null : frequency,
-    "requirement": requirement == null ? null : requirement,
-    "description": description == null ? null : description,
+    "frequency": frequency,
+    "requirement": requirement,
+    "description": description,
   };
 }

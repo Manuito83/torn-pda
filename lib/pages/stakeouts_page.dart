@@ -21,8 +21,8 @@ import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class StakeoutsPage extends StatefulWidget {
   const StakeoutsPage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _StakeoutsPageState createState() => _StakeoutsPageState();
@@ -32,12 +32,12 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   final _addIdController = TextEditingController();
   final _addFormKey = GlobalKey<FormState>();
 
-  StakeoutsController _s = Get.find();
+  final StakeoutsController _s = Get.find();
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
 
   // Showcases
-  GlobalKey _showcaseInfo = GlobalKey();
+  final GlobalKey _showcaseInfo = GlobalKey();
 
   @override
   void initState() {
@@ -57,7 +57,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
     return ShowCaseWidget(
       builder: Builder(builder: (_) {
@@ -85,12 +85,12 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
             ),
           ),
         );
-      }),
+      },),
     );
   }
 
   void _launchShowCases(BuildContext _) {
-    Future.delayed(Duration(seconds: 1), () async {
+    Future.delayed(const Duration(seconds: 1), () async {
       /*
       List showCases = <GlobalKey<State<StatefulWidget>>>[];
       if (!_settingsProvider.showCases.contains("stakeouts_info")) {
@@ -106,7 +106,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
 
   Widget _mainColumn() {
     return GetBuilder<StakeoutsController>(builder: (s) {
-      int sleepTime = s.timeUntilStakeoutsSlept();
+      final int sleepTime = s.timeUntilStakeoutsSlept();
       String? sleepString = "";
       if (sleepTime > 0) {
         sleepString = TimeFormatter(
@@ -126,13 +126,13 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                 children: [
                   Column(
                     children: [
-                      Text("Alerts silenced until"),
+                      const Text("Alerts silenced until"),
                       Text(sleepString!),
                     ],
                   ),
                   ElevatedButton(
                     onPressed: () => s.disableSleepStakeouts(),
-                    child: Text("Deactivate"),
+                    child: const Text("Deactivate"),
                   ),
                 ],
               ),
@@ -142,19 +142,19 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
               padding: const EdgeInsets.fromLTRB(20, 100, 20, 0),
               child: Column(
                 children: [
-                  Text(
+                  const Text(
                     "No stakeout targets!",
                     textAlign: TextAlign.center,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         "Add your first one:",
                         textAlign: TextAlign.center,
                       ),
                       IconButton(
-                        icon: Icon(
+                        icon: const Icon(
                           MdiIcons.cameraPlusOutline,
                           size: 30,
                         ),
@@ -173,7 +173,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
             StakeoutTargetsList(stakeoutsController: s),
         ],
       );
-    });
+    },);
   }
 
   AppBar buildAppBar(BuildContext _) {
@@ -186,7 +186,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
@@ -194,12 +194,12 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
               }
             },
           ),
-          PdaBrowserIcon(),
+          const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
         IconButton(
-          icon: Icon(MdiIcons.cameraPlusOutline),
+          icon: const Icon(MdiIcons.cameraPlusOutline),
           color: _s.stakeouts.length >= 15 ? Colors.grey : Colors.white,
           onPressed: () {
             if (_s.stakeouts.length >= 15) {
@@ -226,8 +226,8 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
           disableMovingAnimation: true,
           textColor: _themeProvider.mainText!,
           tooltipBackgroundColor: _themeProvider.secondBackground!,
-          descTextStyle: TextStyle(fontSize: 13),
-          tooltipPadding: EdgeInsets.all(20),
+          descTextStyle: const TextStyle(fontSize: 13),
+          tooltipPadding: const EdgeInsets.all(20),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: GestureDetector(
@@ -241,7 +241,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                   context: context,
                   barrierDismissible: false, // user must tap button!
                   builder: (BuildContext context) {
-                    return StakeoutsInfoDialog();
+                    return const StakeoutsInfoDialog();
                   },
                 );
               },
@@ -258,7 +258,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
             activeTrackColor: Colors.lightGreenAccent,
             activeColor: Colors.green,
           );
-        }),
+        },),
       ],
     );
   }
@@ -380,7 +380,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.mainText,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 28,
                         width: 28,
                         child: Icon(MdiIcons.cctv),
@@ -398,7 +398,7 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
 }
 
 class StakeoutTargetsList extends StatelessWidget {
-  StakeoutTargetsList({
+  const StakeoutTargetsList({
     required this.stakeoutsController,
   });
 
@@ -413,9 +413,9 @@ class StakeoutTargetsList extends StatelessWidget {
       );
     } else {
       return ListView(
-        children: getCards(),
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
+        children: getCards(),
       );
     }
   }
@@ -423,18 +423,18 @@ class StakeoutTargetsList extends StatelessWidget {
   List<Widget> getCards() {
     List<StakeoutCard> stakeoutCards = <StakeoutCard>[];
 
-    stakeoutsController.stakeouts.forEach((stakeout) {
+    for (final stakeout in stakeoutsController.stakeouts) {
       stakeoutCards.add(
         StakeoutCard(
           key: UniqueKey(),
           stakeout: stakeout,
         ),
       );
-    });
+    }
 
     stakeoutsController.orderedCardsDetails.clear();
     for (int i = 0; i < stakeoutCards.length; i++) {
-      StakeoutCardDetails details = StakeoutCardDetails()..cardPosition = i + 1;
+      final StakeoutCardDetails details = StakeoutCardDetails()..cardPosition = i + 1;
       stakeoutsController.orderedCardsDetails.add(details);
     }
 

@@ -24,7 +24,7 @@ class ProfileNotificationsAndroid extends StatefulWidget {
   final int? energyMax;
   final int? nerveMax;
 
-  ProfileNotificationsAndroid({
+  const ProfileNotificationsAndroid({
     required this.callback,
     required this.energyMax,
     required this.nerveMax,
@@ -74,7 +74,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -97,7 +97,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -105,18 +105,18 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(20.0),
+                              const Padding(
+                                padding: EdgeInsets.all(20.0),
                                 child: Text('Here you can specify your preferred alerting '
                                     'method for each type of event.'),
                               ),
                               _rowsWithTypes(),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -135,9 +135,9 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Notification options"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Notification options"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -146,51 +146,41 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   }
 
   Widget _rowsWithTypes() {
-    var types = <Widget>[];
+    final types = <Widget>[];
     late String typeString;
     ProfileNotification profileType;
-    ProfileNotification.values.forEach((element) {
+    for (final element in ProfileNotification.values) {
       switch (element) {
         case ProfileNotification.travel:
           typeString = 'Travel';
           profileType = ProfileNotification.travel;
-          break;
         case ProfileNotification.energy:
           typeString = 'Energy';
           profileType = ProfileNotification.energy;
-          break;
         case ProfileNotification.nerve:
           typeString = 'Nerve';
           profileType = ProfileNotification.nerve;
-          break;
         case ProfileNotification.life:
           typeString = 'Life';
           profileType = ProfileNotification.life;
-          break;
         case ProfileNotification.drugs:
           typeString = 'Drugs';
           profileType = ProfileNotification.drugs;
-          break;
         case ProfileNotification.medical:
           typeString = 'Medical';
           profileType = ProfileNotification.medical;
-          break;
         case ProfileNotification.booster:
           typeString = 'Booster';
           profileType = ProfileNotification.booster;
-          break;
         case ProfileNotification.hospital:
           typeString = 'Hospital';
           profileType = ProfileNotification.hospital;
-          break;
         case ProfileNotification.jail:
           typeString = 'Jail';
           profileType = ProfileNotification.jail;
-          break;
         case ProfileNotification.rankedWar:
           typeString = 'Ranked War';
           profileType = ProfileNotification.rankedWar;
-          break;
       }
 
       types.add(
@@ -202,7 +192,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
               Flexible(
                 child: Text(typeString),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -219,7 +209,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Text(
               'This option does not apply if you are using the dedicated card for Travel in the '
-              'Profile section (in that case you\'ll have direct access to all types of notification methods)',
+              "Profile section (in that case you'll have direct access to all types of notification methods)",
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 12,
@@ -234,16 +224,16 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Travel timings & text"),
+                const Text("Travel timings & text"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     if (Platform.isAndroid) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return TravelOptionsAndroid();
+                            return const TravelOptionsAndroid();
                           },
                         ),
                       );
@@ -252,7 +242,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return TravelOptionsIOS();
+                            return const TravelOptionsIOS();
                           },
                         ),
                       );
@@ -263,7 +253,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
 
       if (element == ProfileNotification.energy) {
@@ -273,15 +263,15 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Trigger'),
-                Padding(
+                const Text('Trigger'),
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
                     Text('E${_energyTrigger.floor()}'),
                     Slider(
-                      value: _energyTrigger.toDouble(),
+                      value: _energyTrigger,
                       min: _energyMin,
                       max: widget.energyMax!.toDouble(),
                       divisions: _energyDivisions,
@@ -309,15 +299,15 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Trigger'),
-                Padding(
+                const Text('Trigger'),
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
                     Text('N${_nerveTrigger.floor()}'),
                     Slider(
-                      value: _nerveTrigger.toDouble(),
+                      value: _nerveTrigger,
                       min: _nerveMin,
                       max: widget.nerveMax!.toDouble(),
                       onChanged: (double newValue) {
@@ -344,15 +334,15 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Hospital notification timings"),
+                const Text("Hospital notification timings"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return HospitalAheadOptions();
+                          return const HospitalAheadOptions();
                         },
                       ),
                     );
@@ -362,7 +352,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
 
       if (element == ProfileNotification.jail) {
@@ -372,15 +362,15 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Jail notification timings"),
+                const Text("Jail notification timings"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return JailAheadOptions();
+                          return const JailAheadOptions();
                         },
                       ),
                     );
@@ -390,7 +380,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
 
       if (element == ProfileNotification.rankedWar) {
@@ -400,15 +390,15 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Ranked War notification timings"),
+                const Text("Ranked War notification timings"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return WarAheadOptions();
+                          return const WarAheadOptions();
                         },
                       ),
                     );
@@ -418,9 +408,9 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
-    });
+    }
 
     return Column(
       children: types,
@@ -432,39 +422,29 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
     switch (notificationType) {
       case ProfileNotification.travel:
         value = _travelDropDownValue;
-        break;
       case ProfileNotification.energy:
         value = _energyDropDownValue;
-        break;
       case ProfileNotification.nerve:
         value = _nerveDropDownValue;
-        break;
       case ProfileNotification.life:
         value = _lifeDropDownValue;
-        break;
       case ProfileNotification.drugs:
         value = _drugDropDownValue;
-        break;
       case ProfileNotification.medical:
         value = _medicalDropDownValue;
-        break;
       case ProfileNotification.booster:
         value = _boosterDropDownValue;
-        break;
       case ProfileNotification.hospital:
         value = _hospitalDropDownValue;
-        break;
       case ProfileNotification.jail:
         value = _jailDropDownValue;
-        break;
       case ProfileNotification.rankedWar:
         value = _rankedWarDropDownValue;
-        break;
     }
 
     return DropdownButton<String>(
       value: value,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -512,90 +492,80 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
             setState(() {
               _travelDropDownValue = value;
             });
-            break;
           case ProfileNotification.energy:
             Prefs().setEnergyNotificationType(value!);
             setState(() {
               _energyDropDownValue = value;
             });
-            break;
           case ProfileNotification.nerve:
             Prefs().setNerveNotificationType(value!);
             setState(() {
               _nerveDropDownValue = value;
             });
-            break;
           case ProfileNotification.life:
             Prefs().setLifeNotificationType(value!);
             setState(() {
               _lifeDropDownValue = value;
             });
-            break;
           case ProfileNotification.drugs:
             Prefs().setDrugNotificationType(value!);
             setState(() {
               _drugDropDownValue = value;
             });
-            break;
           case ProfileNotification.medical:
             Prefs().setMedicalNotificationType(value!);
             setState(() {
               _medicalDropDownValue = value;
             });
-            break;
           case ProfileNotification.booster:
             Prefs().setBoosterNotificationType(value!);
             setState(() {
               _boosterDropDownValue = value;
             });
-            break;
           case ProfileNotification.hospital:
             Prefs().setHospitalNotificationType(value!);
             setState(() {
               _hospitalDropDownValue = value;
             });
-            break;
           case ProfileNotification.jail:
             Prefs().setJailNotificationType(value!);
             setState(() {
               _jailDropDownValue = value;
             });
-            break;
           case ProfileNotification.rankedWar:
             Prefs().setRankedWarNotificationType(value!);
             setState(() {
               _rankedWarDropDownValue = value;
             });
-            break;
         }
       },
     );
   }
 
   Future _restorePreferences() async {
-    var travelType = await Prefs().getTravelNotificationType();
+    final travelType = await Prefs().getTravelNotificationType();
 
-    var energyType = await Prefs().getEnergyNotificationType();
+    final energyType = await Prefs().getEnergyNotificationType();
     var energyTrigger = await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (energyTrigger < _energyMin || energyTrigger > widget.energyMax!) {
       energyTrigger = widget.energyMax!;
     }
 
-    var nerveType = await Prefs().getNerveNotificationType();
+    final nerveType = await Prefs().getNerveNotificationType();
     var nerveTrigger = await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax!) {
       nerveTrigger = widget.nerveMax!;
     }
 
-    var lifeType = await Prefs().getLifeNotificationType();
-    var drugsType = await Prefs().getDrugNotificationType();
-    var medicalType = await Prefs().getMedicalNotificationType();
-    var hospitalType = await Prefs().getHospitalNotificationType();
-    var jailType = await Prefs().getJailNotificationType();
-    var rankedWarType = await Prefs().getRankedWarNotificationType();
-    var boosterType = await Prefs().getBoosterNotificationType();
+    final lifeType = await Prefs().getLifeNotificationType();
+    final drugsType = await Prefs().getDrugNotificationType();
+    final medicalType = await Prefs().getMedicalNotificationType();
+    final hospitalType = await Prefs().getHospitalNotificationType();
+    final jailType = await Prefs().getJailNotificationType();
+    final rankedWarType = await Prefs().getRankedWarNotificationType();
+    final boosterType = await Prefs().getBoosterNotificationType();
 
     setState(() {
       _travelDropDownValue = travelType;

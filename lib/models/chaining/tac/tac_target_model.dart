@@ -44,26 +44,26 @@ class TacTarget {
   double? respect;
 
   factory TacTarget.fromJson(Map<String, dynamic> json) => TacTarget(
-    battleStats: json["battleStats"] == null ? null : json["battleStats"],
-    estimatedStats: json["estimatedStats"] == null ? null : json["estimatedStats"],
-    rank: json["rank"] == null ? null : json["rank"],
-    userLevel: json["userLevel"] == null ? null : json["userLevel"],
-    username: json["username"] == null ? null : json["username"],
-    id: json["id"] == null ? null : json["id"],
-    optimal: json["optimal"] == null ? null : json["optimal"],
+    battleStats: json["battleStats"],
+    estimatedStats: json["estimatedStats"],
+    rank: json["rank"],
+    userLevel: json["userLevel"],
+    username: json["username"],
+    id: json["id"],
+    optimal: json["optimal"],
     fairfight: json["fairfight"] == null ? null : json["fairfight"].toDouble(),
     respect: json["respect"] == null ? null : json["respect"].toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
-    "battleStats": battleStats == null ? null : battleStats,
-    "estimatedStats": estimatedStats == null ? null : estimatedStats,
-    "rank": rank == null ? null : rank,
-    "userLevel": userLevel == null ? null : userLevel,
-    "username": username == null ? null : username,
-    "id": id == null ? null : id,
-    "optimal": optimal == null ? null : optimal,
-    "fairfight": fairfight == null ? null : fairfight,
-    "respect": respect == null ? null : respect,
+    "battleStats": battleStats,
+    "estimatedStats": estimatedStats,
+    "rank": rank,
+    "userLevel": userLevel,
+    "username": username,
+    "id": id,
+    "optimal": optimal,
+    "fairfight": fairfight,
+    "respect": respect,
   };
 }

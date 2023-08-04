@@ -19,17 +19,17 @@ class HelaRevive {
   });
 
   Future<String> callMedic() async {
-    var modelOut = HelaReviveModel()
+    final modelOut = HelaReviveModel()
       ..vendor = "HeLa"
       ..tornId = tornId
       ..source = "Torn PDA v$appVersion"
       ..username = username
       ..type = "revive";
 
-    var bodyOut = helaReviveModelToJson(modelOut);
+    final bodyOut = helaReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         Uri.parse('https://api.no1irishstig.co.uk/request'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -38,7 +38,7 @@ class HelaRevive {
       );
 
       if (response.statusCode == 200) {
-        var details = json.decode(response.body);
+        final details = json.decode(response.body);
         if (details["contract"]) {
           return "Contract request has been sent to HeLa. Thank you!";
         } else {

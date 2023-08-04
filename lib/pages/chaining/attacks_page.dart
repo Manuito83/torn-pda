@@ -1,14 +1,12 @@
 // Dart imports:
 import 'dart:async';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_sort.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
@@ -18,21 +16,21 @@ import 'package:torn_pda/widgets/chaining/attacks_list.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class AttacksPage extends StatefulWidget {
-  const AttacksPage({Key? key}) : super(key: key);
+  const AttacksPage({super.key});
 
   @override
   _AttacksPageState createState() => _AttacksPageState();
 }
 
 class _AttacksPageState extends State<AttacksPage> {
-  final _searchController = new TextEditingController();
+  final _searchController = TextEditingController();
 
   late AttacksProvider _attacksProvider;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
 
   Color? _filterTypeColor;
-  Text _filterText = Text('');
+  Text _filterText = const Text('');
 
   final _popupChoices = <AttackSort>[
     AttackSort(type: AttackSortType.levelDes),
@@ -56,11 +54,11 @@ class _AttacksPageState extends State<AttacksPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
-      drawer: Drawer(),
+      drawer: const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -76,7 +74,7 @@ class _AttacksPageState extends State<AttacksPage> {
               color: _themeProvider.canvas,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                 child: Column(
                   children: <Widget>[
                     Form(
@@ -84,7 +82,7 @@ class _AttacksPageState extends State<AttacksPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
                           Padding(
-                            padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                            padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
                             child: Row(
                               children: <Widget>[
                                 Flexible(
@@ -92,7 +90,7 @@ class _AttacksPageState extends State<AttacksPage> {
                                     padding: const EdgeInsets.all(8.0),
                                     child: TextField(
                                       controller: _searchController,
-                                      decoration: InputDecoration(
+                                      decoration: const InputDecoration(
                                         isDense: true,
                                         labelText: "Search",
                                         prefixIcon: Icon(Icons.search),
@@ -112,7 +110,7 @@ class _AttacksPageState extends State<AttacksPage> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       child: _filterText,
                     ),
                     Flexible(
@@ -127,7 +125,7 @@ class _AttacksPageState extends State<AttacksPage> {
               ),
             );
           } else {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(),
             );
           }
@@ -140,12 +138,12 @@ class _AttacksPageState extends State<AttacksPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text('Attacks'),
+      title: const Text('Attacks'),
       leadingWidth: 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
@@ -153,7 +151,7 @@ class _AttacksPageState extends State<AttacksPage> {
               }
             },
           ),
-          PdaBrowserIcon(),
+          const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -167,21 +165,21 @@ class _AttacksPageState extends State<AttacksPage> {
 
             BotToast.showText(
               text: 'Updated with latest attacks!',
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
               contentColor: Colors.green,
-              duration: Duration(seconds: 3),
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 3),
+              contentPadding: const EdgeInsets.all(10),
             );
           },
         ),
         IconButton(
-          icon: Icon(Icons.accessibility),
+          icon: const Icon(Icons.accessibility),
           color: _filterTypeColor,
           onPressed: () {
-            var filterType = _attacksProvider.currentTypeFilter;
+            final filterType = _attacksProvider.currentTypeFilter;
             if (filterType == AttackTypeFilter.all) {
               _attacksProvider.setFilterType(AttackTypeFilter.unknownTargets);
               setState(() {
@@ -190,13 +188,13 @@ class _AttacksPageState extends State<AttacksPage> {
 
               BotToast.showText(
                 text: 'Hiding people already added to the target list!',
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
                 contentColor: Colors.green,
-                duration: Duration(seconds: 3),
-                contentPadding: EdgeInsets.all(10),
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
               );
             } else {
               _attacksProvider.setFilterType(AttackTypeFilter.all);
@@ -206,19 +204,19 @@ class _AttacksPageState extends State<AttacksPage> {
 
               BotToast.showText(
                 text: 'Showing all recent attacks!',
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
                 contentColor: Colors.green,
-                duration: Duration(seconds: 3),
-                contentPadding: EdgeInsets.all(10),
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
               );
             }
           },
         ),
         PopupMenuButton<AttackSort>(
-          icon: Icon(
+          icon: const Icon(
             Icons.sort,
           ),
           onSelected: _selectSortPopup,
@@ -252,22 +250,16 @@ class _AttacksPageState extends State<AttacksPage> {
     switch (choice.type) {
       case AttackSortType.levelDes:
         _attacksProvider.sortAttacks(AttackSortType.levelDes);
-        break;
       case AttackSortType.levelAsc:
         _attacksProvider.sortAttacks(AttackSortType.levelAsc);
-        break;
       case AttackSortType.respectDes:
         _attacksProvider.sortAttacks(AttackSortType.respectDes);
-        break;
       case AttackSortType.respectAsc:
         _attacksProvider.sortAttacks(AttackSortType.respectAsc);
-        break;
       case AttackSortType.dateDes:
         _attacksProvider.sortAttacks(AttackSortType.dateDes);
-        break;
       case AttackSortType.dateAsc:
         _attacksProvider.sortAttacks(AttackSortType.dateAsc);
-        break;
       default:
         _attacksProvider.sortAttacks(AttackSortType.dateDes);
     }
@@ -276,7 +268,7 @@ class _AttacksPageState extends State<AttacksPage> {
   void _changeFilterColorAndText() {
     if (_attacksProvider.currentTypeFilter == AttackTypeFilter.all) {
       _filterTypeColor = Colors.white;
-      _filterText = Text('Showing all recent attacks and targets');
+      _filterText = const Text('Showing all recent attacks and targets');
     } else {
       _filterTypeColor = Colors.orange[200];
       _filterText = Text(

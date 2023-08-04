@@ -14,10 +14,10 @@ import 'package:torn_pda/utils/js_snippets.dart';
 class CrimesWidget extends StatefulWidget {
   final InAppWebViewController? controller;
 
-  CrimesWidget({
-    Key? key,
+  const CrimesWidget({
+    super.key,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   _CrimesWidgetState createState() => _CrimesWidgetState();
@@ -33,7 +33,7 @@ class _CrimesWidgetState extends State<CrimesWidget> {
 
   @override
   Widget build(BuildContext context) {
-    _crimesProvider = Provider.of<CrimesProvider>(context, listen: true);
+    _crimesProvider = Provider.of<CrimesProvider>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Row(
@@ -43,8 +43,8 @@ class _CrimesWidgetState extends State<CrimesWidget> {
           Expanded(
             child: ConstrainedBox(
               constraints: BoxConstraints.loose(Size.fromHeight(
-                      (MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
-                  3),
+                      MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,) /
+                  3,),
               child: Scrollbar(
                 child: SingleChildScrollView(
                   child: Wrap(
@@ -63,8 +63,8 @@ class _CrimesWidgetState extends State<CrimesWidget> {
   }
 
   List<Widget> _crimeButtons() {
-    var myList = <Widget>[];
-    for (var crime in _crimesProvider.activeCrimesList) {
+    final myList = <Widget>[];
+    for (final crime in _crimesProvider.activeCrimesList) {
       String doCrime;
       if (crime.nerve! <= 3) {
         doCrime = '2';
@@ -83,9 +83,9 @@ class _CrimesWidgetState extends State<CrimesWidget> {
       myList.add(
         Tooltip(
           message: '${crimesCategories[crime.nerve]}: ${crime.fullName}',
-          textStyle: TextStyle(color: Colors.white),
-          padding: EdgeInsets.all(20),
-          margin: EdgeInsets.all(20),
+          textStyle: const TextStyle(color: Colors.white),
+          padding: const EdgeInsets.all(20),
+          margin: const EdgeInsets.all(20),
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
@@ -100,10 +100,10 @@ class _CrimesWidgetState extends State<CrimesWidget> {
             ),
             label: Text(
               crime.shortName!,
-              style: TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 12),
             ),
             onPressed: () async {
-              var myCrime = easyCrimesJS(
+              final myCrime = easyCrimesJS(
                 nerve: crime.nerve.toString(),
                 crime: crime.action,
                 doCrime: doCrime,
@@ -122,7 +122,7 @@ class _CrimesWidgetState extends State<CrimesWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 "Configure your preferred quick crimes",
                 style: TextStyle(
                   color: Colors.orangeAccent,
@@ -143,7 +143,7 @@ class _CrimesWidgetState extends State<CrimesWidget> {
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: OpenContainer(
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return CrimesOptions();
@@ -156,8 +156,8 @@ class _CrimesWidgetState extends State<CrimesWidget> {
         ),
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 5),
+          return const Padding(
+            padding: EdgeInsets.only(right: 5),
             child: SizedBox(
               height: 20,
               width: 20,

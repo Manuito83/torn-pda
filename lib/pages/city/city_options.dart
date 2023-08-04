@@ -13,7 +13,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class CityOptions extends StatefulWidget {
   final Function callback;
 
-  CityOptions({
+  const CityOptions({
     required this.callback,
   });
 
@@ -41,7 +41,7 @@ class _CityOptionsState extends State<CityOptions> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
@@ -60,7 +60,7 @@ class _CityOptionsState extends State<CityOptions> {
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -69,13 +69,13 @@ class _CityOptionsState extends State<CityOptions> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              SizedBox(height: 10),
+                              const SizedBox(height: 10),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Use city finder"),
+                                    const Text("Use city finder"),
                                     Switch(
                                       value: _cityEnabled,
                                       onChanged: (value) {
@@ -102,12 +102,12 @@ class _CityOptionsState extends State<CityOptions> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -126,9 +126,9 @@ class _CityOptionsState extends State<CityOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("City Finder"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("City Finder"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           widget.callback();
           Navigator.of(context).pop();
@@ -138,7 +138,7 @@ class _CityOptionsState extends State<CityOptions> {
   }
 
   Future _restorePreferences() async {
-    var cityEnabled = await Prefs().getCityEnabled();
+    final cityEnabled = await Prefs().getCityEnabled();
 
     setState(() {
       _cityEnabled = cityEnabled;

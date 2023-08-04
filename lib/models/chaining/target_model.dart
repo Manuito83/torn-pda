@@ -7,7 +7,7 @@ import 'dart:convert';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
-import '../profile/own_profile_basic.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
 TargetModel targetModelFromJson(String str) => TargetModel.fromJson(json.decode(str));
 
@@ -99,31 +99,31 @@ class TargetModel {
   factory TargetModel.fromJson(Map<String, dynamic> json) => TargetModel(
         // respectGain can't be null to allow sorting targets, so if it stays
         // at -1, it's because the target has unknown respect (new target)
-        respectGain: json["respectGain"] == null ? -1 : json["respectGain"],
-        fairFight: json["fairFight"] == null ? -1 : json["fairFight"],
-        userWonOrDefended: json["userWonOrDefended"] == null ? false : json["userWonOrDefended"],
-        personalNote: json["personalNote"] == null ? '' : json["personalNote"],
-        personalNoteColor: json["personalNoteColor"] == null ? '' : json["personalNoteColor"],
+        respectGain: json["respectGain"] ?? -1,
+        fairFight: json["fairFight"] ?? -1,
+        userWonOrDefended: json["userWonOrDefended"] ?? false,
+        personalNote: json["personalNote"] ?? '',
+        personalNoteColor: json["personalNoteColor"] ?? '',
         lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
-        hasFaction: json["hasFaction"] == null ? false : json["hasFaction"],
-        lifeSort: json["lifeSort"] == null ? Life.fromJson(json["life"]).current : json["lifeSort"],
+        hasFaction: json["hasFaction"] ?? false,
+        lifeSort: json["lifeSort"] ?? Life.fromJson(json["life"]).current,
 
-        rank: json["rank"] == null ? null : json["rank"],
-        level: json["level"] == null ? null : json["level"],
-        gender: json["gender"] == null ? null : json["gender"],
-        property: json["property"] == null ? null : json["property"],
+        rank: json["rank"],
+        level: json["level"],
+        gender: json["gender"],
+        property: json["property"],
         signup: json["signup"] == null ? null : DateTime.parse(json["signup"]),
-        awards: json["awards"] == null ? null : json["awards"],
-        friends: json["friends"] == null ? null : json["friends"],
-        enemies: json["enemies"] == null ? null : json["enemies"],
-        forumPosts: json["forum_posts"] == null ? null : json["forum_posts"],
-        karma: json["karma"] == null ? null : json["karma"],
-        age: json["age"] == null ? null : json["age"],
-        role: json["role"] == null ? null : json["role"],
-        donator: json["donator"] == null ? null : json["donator"],
-        playerId: json["player_id"] == null ? null : json["player_id"],
-        name: json["name"] == null ? null : json["name"],
-        propertyId: json["property_id"] == null ? null : json["property_id"],
+        awards: json["awards"],
+        friends: json["friends"],
+        enemies: json["enemies"],
+        forumPosts: json["forum_posts"],
+        karma: json["karma"],
+        age: json["age"],
+        role: json["role"],
+        donator: json["donator"],
+        playerId: json["player_id"],
+        name: json["name"],
+        propertyId: json["property_id"],
         life: json["life"] == null ? null : Life.fromJson(json["life"]),
         status: json["status"] == null ? null : Status.fromJson(json["status"]),
         job: json["job"] == null ? null : Job.fromJson(json["job"]),
@@ -182,13 +182,13 @@ class Discord {
   String? discordId;
 
   factory Discord.fromJson(Map<String, dynamic> json) => Discord(
-        userId: json["userID"] == null ? null : json["userID"],
-        discordId: json["discordID"] == null ? null : json["discordID"],
+        userId: json["userID"],
+        discordId: json["discordID"],
       );
 
   Map<String, dynamic> toJson() => {
-        "userID": userId == null ? null : userId,
-        "discordID": discordId == null ? null : discordId,
+        "userID": userId,
+        "discordID": discordId,
       };
 }
 
@@ -384,15 +384,15 @@ class Competition {
   factory Competition.fromJson(Map<String, dynamic> json) {
     try {
       return Competition(
-        attacks: json["attacks"] == null ? null : json["attacks"],
-        image: json["image"] == null ? null : json["image"],
-        name: json["name"] == null ? null : json["name"],
+        attacks: json["attacks"],
+        image: json["image"],
+        name: json["name"],
         score: json["score"] == null ? null : json["score"].toDouble(),
-        team: json["team"] == null ? null : json["team"],
-        text: json["text"] == null ? null : json["text"],
-        total: json["total"] == null ? null : json["total"],
-        treatsCollectedTotal: json["treats_collected_total"] == null ? null : json["treats_collected_total"],
-        votes: json["votes"] == null ? null : json["votes"],
+        team: json["team"],
+        text: json["text"],
+        total: json["total"],
+        treatsCollectedTotal: json["treats_collected_total"],
+        votes: json["votes"],
         position: json["position"] == null ? null : json["position"].toString(),
       );
     } catch (e, trace) {
@@ -403,15 +403,15 @@ class Competition {
   }
 
   Map<String, dynamic> toJson() => {
-        "attacks": attacks == null ? null : attacks,
-        "image": image == null ? null : image,
-        "name": name == null ? null : name,
-        "score": score == null ? null : score,
-        "team": team == null ? null : team,
-        "text": text == null ? null : text,
-        "total": total == null ? null : total,
-        "treats_collected_total": treatsCollectedTotal == null ? null : treatsCollectedTotal,
-        "votes": votes == null ? null : votes,
-        "position": position == null ? null : position,
+        "attacks": attacks,
+        "image": image,
+        "name": name,
+        "score": score,
+        "team": team,
+        "text": text,
+        "total": total,
+        "treats_collected_total": treatsCollectedTotal,
+        "votes": votes,
+        "position": position,
       };
 }

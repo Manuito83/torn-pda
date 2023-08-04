@@ -1,11 +1,12 @@
 import 'dart:developer';
+
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -36,25 +37,25 @@ void pdaWidget_backgroundUpdate() {
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_3',
         'wm_backgroundUpdate_3',
-        initialDelay: Duration(minutes: 3),
+        initialDelay: const Duration(minutes: 3),
       );
 
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_6',
         'wm_backgroundUpdate_6',
-        initialDelay: Duration(minutes: 6),
+        initialDelay: const Duration(minutes: 6),
       );
 
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_9',
         'wm_backgroundUpdate_9',
-        initialDelay: Duration(minutes: 9),
+        initialDelay: const Duration(minutes: 9),
       );
 
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_12',
         'wm_backgroundUpdate_12',
-        initialDelay: Duration(minutes: 12),
+        initialDelay: const Duration(minutes: 12),
       );
     } else if (taskName.contains("wm_backgroundUpdate_")) {
       // If it is a one-off task, only update
@@ -67,7 +68,7 @@ void pdaWidget_backgroundUpdate() {
 
 /// Called when Doing Background Work initiated from Widget
 @pragma("vm:entry-point")
-void pdaWidget_callback(Uri? data) async {
+Future<void> pdaWidget_callback(Uri? data) async {
   log(data.toString());
   if (data!.host == 'reload-clicked') {
     HomeWidget.saveWidgetData<bool>('reloading', true);
@@ -82,20 +83,20 @@ Future<void> pdaWidget_fetchData() async {
   try {
     await Prefs().reload();
     String? apiKey = "";
-    var savedUser = await Prefs().getOwnDetails();
+    final savedUser = await Prefs().getOwnDetails();
     if (savedUser != '') {
       apiKey = ownProfileBasicFromJson(savedUser).userApiKey;
     }
 
     if (apiKey!.isNotEmpty) {
       // NOTE: we don't use the ApiCallerController with Getx here, but instead call directly
-      var user = await ApiCallerController().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
+      final user = await ApiCallerController().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
 
       if (user is ApiError) {
         if (user.errorId == 100) {
           // Retry in case of timeout
           log("Widget timed out, retrying once after 5 seconds");
-          await Future.delayed(Duration(seconds: 5));
+          await Future.delayed(const Duration(seconds: 5));
         }
       }
 
@@ -105,17 +106,17 @@ Future<void> pdaWidget_fetchData() async {
 
         String? statusDescription = user.status!.description;
         String? state = user.status!.state;
-        String country = countryCheck(state: state, description: statusDescription);
+        final String country = countryCheck(state: state, description: statusDescription);
 
         if (!country.contains("Torn")) {
           // We are flying abroad or in another country
 
           // And not in a (foreign hospital)
           if (state != "Hospital") {
-            var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel!.timestamp! * 1000);
-            var timeDifference = dateTimeArrival.difference(DateTime.now());
+            final dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel!.timestamp! * 1000);
+            final timeDifference = dateTimeArrival.difference(DateTime.now());
             String twoDigits(int n) => n.toString().padLeft(2, "0");
-            String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+            final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
             if (statusDescription!.contains("Traveling to")) {
               statusDescription = statusDescription.replaceAll("Traveling to ", "");
               statusDescription += ' in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
@@ -127,10 +128,10 @@ Future<void> pdaWidget_fetchData() async {
             }
           } else {
             // Special case for when we are hospitalized abroad
-            var hospitalRelease = DateTime.fromMillisecondsSinceEpoch(user.status!.until! * 1000);
-            var timeDifference = hospitalRelease.difference(DateTime.now());
+            final hospitalRelease = DateTime.fromMillisecondsSinceEpoch(user.status!.until! * 1000);
+            final timeDifference = hospitalRelease.difference(DateTime.now());
             String twoDigits(int n) => n.toString().padLeft(2, "0");
-            String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+            final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
             statusDescription = "Hospital in $country: ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m";
             statusDescription = statusDescription.replaceAll("00h ", "");
           }
@@ -139,10 +140,10 @@ Future<void> pdaWidget_fetchData() async {
 
           if (statusDescription!.contains("Returning to")) {
             // Are we flying back?
-            var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel!.timestamp! * 1000);
-            var timeDifference = dateTimeArrival.difference(DateTime.now());
+            final dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel!.timestamp! * 1000);
+            final timeDifference = dateTimeArrival.difference(DateTime.now());
             String twoDigits(int n) => n.toString().padLeft(2, "0");
-            String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+            final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
             statusDescription = "Torn in";
             statusDescription += ' ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
             statusDescription = statusDescription.replaceAll("00h ", "");
@@ -157,20 +158,20 @@ Future<void> pdaWidget_fetchData() async {
               if (user.travel!.timeLeft! > 0) {
                 // Repatriated
                 repatriated = true;
-                var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel!.timestamp! * 1000);
-                var timeDifference = dateTimeArrival.difference(DateTime.now());
+                final dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel!.timestamp! * 1000);
+                final timeDifference = dateTimeArrival.difference(DateTime.now());
                 String twoDigits(int n) => n.toString().padLeft(2, "0");
-                String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+                final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
                 statusDescription = "Repatriated in";
                 statusDescription += ' ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
                 statusDescription = statusDescription.replaceAll("00h ", "");
                 HomeWidget.saveWidgetData<String>("travel", "left");
               }
 
-              var redEnd = DateTime.fromMillisecondsSinceEpoch(user.status!.until! * 1000);
-              var timeDifference = redEnd.difference(DateTime.now());
+              final redEnd = DateTime.fromMillisecondsSinceEpoch(user.status!.until! * 1000);
+              final timeDifference = redEnd.difference(DateTime.now());
               String twoDigits(int n) => n.toString().padLeft(2, "0");
-              String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+              final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
               if (state == "Hospital" && !repatriated) {
                 statusDescription = 'Hospital for ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               } else if (state == "Jail") {
@@ -220,7 +221,7 @@ Future<void> pdaWidget_fetchData() async {
         HomeWidget.saveWidgetData<String>('life_text', "$currentLife");
 
         // Chain
-        int currentChain = user.chain!.current!;
+        final int currentChain = user.chain!.current!;
 
         // We do it manually to avoid an extra API call to Faction/Chain
         // (in User/Bars the chain max is the one achieved by the user)
@@ -261,7 +262,7 @@ Future<void> pdaWidget_fetchData() async {
 
         // Money
         String money = "0";
-        int onHand = user.moneyOnhand!;
+        final int onHand = user.moneyOnhand!;
         if (onHand >= 1000000000000) {
           money = "\$${(onHand / 1000000000000).toStringAsFixed(1)}T";
         } else if (onHand >= 1000000000) {
@@ -280,31 +281,29 @@ Future<void> pdaWidget_fetchData() async {
         HomeWidget.saveWidgetData<String>('money', money);
 
         // Last Updated
-        String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
-        TimeFormatSetting timePrefs = restoredTimeFormat == '24' ? TimeFormatSetting.h24 : TimeFormatSetting.h12;
+        final String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
+        final TimeFormatSetting timePrefs = restoredTimeFormat == '24' ? TimeFormatSetting.h24 : TimeFormatSetting.h12;
         late DateFormat formatter;
         switch (timePrefs) {
           case TimeFormatSetting.h24:
             formatter = DateFormat('HH:mm');
-            break;
           case TimeFormatSetting.h12:
             formatter = DateFormat('HH:mm a');
-            break;
         }
         HomeWidget.saveWidgetData<String>('last_updated', "${formatter.format(DateTime.now())} LT");
 
         // COOLDOWNS HELPER FUNCTIONS
         String timeFormatted(DateTime timeEnd) {
-          var timeDifference = timeEnd.difference(DateTime.now());
+          final timeDifference = timeEnd.difference(DateTime.now());
           String twoDigits(int n) => n.toString().padLeft(2, "0");
-          String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+          final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
           String diff = '';
           if (timeDifference.inMinutes < 1) {
             diff = ', in a few seconds';
           } else if (timeDifference.inMinutes >= 1 && timeDifference.inHours < 24) {
             diff = ', in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
           } else {
-            var dayWeek = TimeFormatter(
+            final dayWeek = TimeFormatter(
               inputTime: timeEnd,
               timeFormatSetting: TimeFormatSetting.h24,
               timeZoneSetting: TimeZoneSetting.localTime,
@@ -316,7 +315,7 @@ Future<void> pdaWidget_fetchData() async {
         }
 
         String formattedTime(DateTime dateTime) {
-          var formatted = TimeFormatter(
+          final formatted = TimeFormatter(
             inputTime: dateTime,
             timeFormatSetting: timePrefs,
             timeZoneSetting: TimeZoneSetting.localTime,
@@ -339,8 +338,8 @@ Future<void> pdaWidget_fetchData() async {
           drugLevel = 5;
         }
 
-        var drugEnd = DateTime.now().add(Duration(seconds: user.cooldowns!.drug!));
-        var formattedDrugEnd = formattedTime(drugEnd);
+        final drugEnd = DateTime.now().add(Duration(seconds: user.cooldowns!.drug!));
+        final formattedDrugEnd = formattedTime(drugEnd);
         drugString += formattedDrugEnd;
 
         HomeWidget.saveWidgetData<int>('drug_level', drugLevel);
@@ -361,8 +360,8 @@ Future<void> pdaWidget_fetchData() async {
           medicalLevel = 5;
         }
 
-        var medicalEnd = DateTime.now().add(Duration(seconds: user.cooldowns!.medical!));
-        var formattedMedicalEnd = formattedTime(medicalEnd);
+        final medicalEnd = DateTime.now().add(Duration(seconds: user.cooldowns!.medical!));
+        final formattedMedicalEnd = formattedTime(medicalEnd);
         medicalString += formattedMedicalEnd;
 
         HomeWidget.saveWidgetData<int>('medical_level', medicalLevel);
@@ -383,17 +382,17 @@ Future<void> pdaWidget_fetchData() async {
           boosterLevel = 5;
         }
 
-        var boosterEnd = DateTime.now().add(Duration(seconds: user.cooldowns!.booster!));
-        var formattedBoosterEnd = formattedTime(boosterEnd);
+        final boosterEnd = DateTime.now().add(Duration(seconds: user.cooldowns!.booster!));
+        final formattedBoosterEnd = formattedTime(boosterEnd);
         boosterString += formattedBoosterEnd;
 
         HomeWidget.saveWidgetData<int>('booster_level', boosterLevel);
         HomeWidget.saveWidgetData<String>('booster_string', boosterString);
 
         // SHORTCUTS
-        var savedShortcuts = await Prefs().getActiveShortcutsList();
+        final savedShortcuts = await Prefs().getActiveShortcutsList();
         List<Shortcut> shortcuts = <Shortcut>[];
-        for (var savedShortRaw in savedShortcuts) {
+        for (final savedShortRaw in savedShortcuts) {
           shortcuts.add(shortcutFromJson(savedShortRaw));
         }
         // Send total number of shortcuts to determine whether the section is present
@@ -425,7 +424,7 @@ Future<void> pdaWidget_fetchData() async {
         }
       } else {
         // In case of API error
-        var error = user as ApiError;
+        final error = user as ApiError;
         HomeWidget.saveWidgetData<bool>('main_layout_visibility', false);
         HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
         HomeWidget.saveWidgetData<String>('error_message', "API error: ${error.errorReason}");
@@ -446,12 +445,12 @@ Future<void> pdaWidget_fetchData() async {
 }
 
 /// Start the main background task
-void pdaWidget_startBackgroundUpdate() async {
+Future<void> pdaWidget_startBackgroundUpdate() async {
   await Workmanager().cancelAll();
   Workmanager().registerPeriodicTask('pdaWidget_background', 'wm_backgroundUpdate');
 }
 
-void pdaWidget_handleBackgroundUpdateStatus() async {
+Future<void> pdaWidget_handleBackgroundUpdateStatus() async {
   log("Handling appWidget background status!");
 
   if ((await pdaWidget_numberInstalled())! > 0) {
@@ -459,7 +458,7 @@ void pdaWidget_handleBackgroundUpdateStatus() async {
     HomeWidget.saveWidgetData<bool>('background_active', true);
     pdaWidget_startBackgroundUpdate();
   } else {
-    bool backgroundActive = (await HomeWidget.getWidgetData<bool>('background_active', defaultValue: false))!;
+    final bool backgroundActive = (await HomeWidget.getWidgetData<bool>('background_active', defaultValue: false))!;
     if (backgroundActive) {
       log("Widget not present and service running: disabling appWidget background task");
       await Workmanager().cancelAll();

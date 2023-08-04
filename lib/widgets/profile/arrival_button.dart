@@ -4,7 +4,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 
-import 'foreign_stock_button.dart';
+import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 
 class ArrivalButton extends StatefulWidget {
   final OwnProfileExtended? user;
@@ -21,8 +21,8 @@ class ArrivalButton extends StatefulWidget {
     required this.settingsProv,
     required this.launchBrowser({required String? url, required bool? shortTap}),
     required this.updateCallback,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _ArrivalButtonState createState() => _ArrivalButtonState();
@@ -33,9 +33,9 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
 
   @override
   void initState() {
-    _resizableController = new AnimationController(
+    _resizableController = AnimationController(
       vsync: this,
-      duration: new Duration(
+      duration: const Duration(
         milliseconds: 1000,
       ),
     );
@@ -43,10 +43,8 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
       switch (animationStatus) {
         case AnimationStatus.completed:
           _resizableController.reverse();
-          break;
         case AnimationStatus.dismissed:
           _resizableController.forward();
-          break;
         case AnimationStatus.forward:
           break;
         case AnimationStatus.reverse:
@@ -86,7 +84,7 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
                       size: 22,
                       color: widget.themeProvider!.mainText,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Column(
                       children: [
                         Text(
@@ -114,8 +112,8 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
                   widget.launchBrowser(url: 'https://www.torn.com', shortTap: false);
                 },
               );
-            }),
-        SizedBox(width: 20),
+            },),
+        const SizedBox(width: 20),
         ForeignStockButton(
           userProv: widget.userProv,
           settingsProv: widget.settingsProv,

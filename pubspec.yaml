@@ -69,7 +69,7 @@ dependencies:
       ref: main
   html: 0.15.0
   http: 0.13.6
-  lint: 1.8.1
+  lints: 2.1.1
   ## flutter pub run import_sorter:main
   import_sorter: 4.6.0
   intl: 0.17.0

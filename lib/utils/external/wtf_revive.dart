@@ -23,17 +23,17 @@ class WtfRevive {
   });
 
   Future<List<String?>> callMedic() async {
-    var modelOut = WtfReviveModel()
+    final modelOut = WtfReviveModel()
       ..userId = tornId.toString()
       ..userName = username
       ..faction = faction
       ..country = country
       ..requestChannel = "Torn PDA v$appVersion";
 
-    var bodyOut = wtfReviveModelToJson(modelOut);
+    final bodyOut = wtfReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         Uri.parse('https://what-the-f.de/wtfapi/revive'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -41,7 +41,7 @@ class WtfRevive {
         body: bodyOut,
       );
 
-      String code = response.statusCode.toString();
+      final String code = response.statusCode.toString();
       String? message = json.decode(response.body)["message"];
 
       if (code == "500") {

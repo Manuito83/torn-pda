@@ -1,13 +1,11 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
-
 // Project imports:
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
@@ -16,7 +14,7 @@ class SharePriceDialog extends StatefulWidget {
   final StockMarketStock stock;
   final Function callbackPrices;
 
-  SharePriceDialog({
+  const SharePriceDialog({
     required this.stock,
     required this.callbackPrices,
   });
@@ -31,9 +29,9 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
   bool _inputCashGain = true;
   bool _inputCashLoss = true;
 
-  final _gainController = new TextEditingController();
-  final _lossController = new TextEditingController();
-  var _formKey = GlobalKey<FormState>();
+  final _gainController = TextEditingController();
+  final _lossController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   final _gainFocus = FocusNode();
   final _lossFocus = FocusNode();
@@ -48,12 +46,12 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     super.initState();
 
     if (widget.stock.alertGain == null) {
-      double initCash = widget.stock.currentPrice! + 10;
-      double initPercent = (widget.stock.currentPrice! + 10) * 100 / widget.stock.currentPrice! - 100;
+      final double initCash = widget.stock.currentPrice! + 10;
+      final double initPercent = (widget.stock.currentPrice! + 10) * 100 / widget.stock.currentPrice! - 100;
       _gainHintCash = "\$${removeZeroDecimals(initCash)}";
       _gainHintPercent = "+${initPercent.toStringAsFixed(2)}%";
     } else {
-      String gainExisting = "${(removeZeroDecimals(widget.stock.alertGain))}";
+      final String gainExisting = removeZeroDecimals(widget.stock.alertGain);
       _gainController.value = TextEditingValue(
         text: gainExisting,
         selection: TextSelection.collapsed(offset: gainExisting.length),
@@ -63,12 +61,12 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     }
 
     if (widget.stock.alertLoss == null) {
-      double initCash = widget.stock.currentPrice! - 10;
-      double initPercent = (widget.stock.currentPrice! - 10) * 100 / widget.stock.currentPrice! - 100;
+      final double initCash = widget.stock.currentPrice! - 10;
+      final double initPercent = (widget.stock.currentPrice! - 10) * 100 / widget.stock.currentPrice! - 100;
       _lossHintCash = "\$${removeZeroDecimals(initCash)}";
       _lossHintPercent = "${initPercent.toStringAsFixed(2)}%";
     } else {
-      String lossExisting = "${(removeZeroDecimals(widget.stock.alertLoss))}";
+      final String lossExisting = removeZeroDecimals(widget.stock.alertLoss);
       _lossController.value = TextEditingValue(
         text: lossExisting,
         selection: TextSelection.collapsed(offset: lossExisting.length),
@@ -87,28 +85,27 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return SingleChildScrollView(
       child: Stack(
         children: <Widget>[
           SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: 45,
                 bottom: 16,
                 left: 16,
                 right: 16,
               ),
-              margin: EdgeInsets.only(top: 30),
-              decoration: new BoxDecoration(
+              margin: const EdgeInsets.only(top: 30),
+              decoration: BoxDecoration(
                 color: _themeProvider.secondBackground,
-                shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
                     blurRadius: 10.0,
-                    offset: const Offset(0.0, 10.0),
+                    offset: Offset(0.0, 10.0),
                   ),
                 ],
               ),
@@ -125,11 +122,11 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         "Use the red bin icon to the right to remove the current alert."
                         "\n\n"
                         "${widget.stock.acronym}'s price: \$${widget.stock.currentPrice}",
-                        style: TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 3),
                       child: Text(
                         "Gain alert price",
                         style: TextStyle(fontSize: 13),
@@ -138,8 +135,8 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                     Padding(
                       padding: const EdgeInsets.only(left: 3),
                       child: Text(
-                        '${_inputCashGain ? _gainHintPercent.isEmpty ? "" : "($_gainHintPercent)" : _gainHintCash.isEmpty ? "" : "($_gainHintCash)"}',
-                        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                        _inputCashGain ? _gainHintPercent.isEmpty ? "" : "($_gainHintPercent)" : _gainHintCash.isEmpty ? "" : "($_gainHintCash)",
+                        style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
                       ),
                     ),
                     Row(
@@ -155,18 +152,17 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               controller: _gainController,
                               maxLength: 7,
                               minLines: 1,
-                              maxLines: 1,
                               decoration: InputDecoration(
                                 floatingLabelBehavior: FloatingLabelBehavior.never,
-                                prefixText: _inputCashGain ? "\$ " : "\% ",
+                                prefixText: _inputCashGain ? "\$ " : "% ",
                                 labelText: _inputCashGain ? _gainHintCash : _gainHintPercent,
-                                labelStyle: TextStyle(fontStyle: FontStyle.italic),
+                                labelStyle: const TextStyle(fontStyle: FontStyle.italic),
                                 //hintText: _gainHint,
                                 counterText: "",
                                 isDense: true,
-                                border: OutlineInputBorder(),
+                                border: const OutlineInputBorder(),
                               ),
-                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                   RegExp(r'^\+?\d+(\.)?(\d{1,2})?'),
@@ -174,7 +170,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               ],
                               onChanged: (gainString) {
                                 if (gainString.isNotEmpty) {
-                                  var gainInput = _cleanNumberAbs(gainString);
+                                  final gainInput = _cleanNumberAbs(gainString);
 
                                   // We update the hints independently of if we are inputting cash or percentage,
                                   // so that we keep both always up to date
@@ -183,7 +179,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                   if (gainInput > widget.stock.currentPrice!) {
                                     sign = "+";
                                   }
-                                  var percentage = (gainInput * 100 / widget.stock.currentPrice!) - 100;
+                                  final percentage = (gainInput * 100 / widget.stock.currentPrice!) - 100;
 
                                   // Cash hint
                                   double cash = 0;
@@ -201,7 +197,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                     // If we are inserting percentage, make sure there is a "+" sign in the
                                     // actual text field (automatically, as we don't allow the user to input "+")
                                     if (!_inputCashGain && !_gainController.text.contains("+")) {
-                                      String addSign = "\+${_gainController.text}";
+                                      final String addSign = "+${_gainController.text}";
                                       _gainController.value = TextEditingValue(
                                         text: addSign,
                                         selection: TextSelection.collapsed(offset: addSign.length),
@@ -230,7 +226,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: _inputCashGain ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
+                          icon: _inputCashGain ? const Icon(MdiIcons.percent) : const Icon(MdiIcons.cash),
                           onPressed: () {
                             setState(() {
                               _inputCashGain = !_inputCashGain;
@@ -241,7 +237,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 if (_inputCashGain) {
                                   // Change from percentage to cash
                                   _gainHintPercent = "${_gainController.text}%";
-                                  var newText = _gainHintCash.replaceAll("\$", "").replaceAll("%", "");
+                                  final newText = _gainHintCash.replaceAll("\$", "").replaceAll("%", "");
                                   _gainController.value = TextEditingValue(
                                     text: newText,
                                     selection: TextSelection.collapsed(offset: newText.length),
@@ -249,7 +245,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 } else {
                                   // Change from cash to percentage
                                   _gainHintCash = "\$${_gainController.text}";
-                                  var newText = _gainHintPercent.replaceAll("\$", "").replaceAll("%", "");
+                                  final newText = _gainHintPercent.replaceAll("\$", "").replaceAll("%", "");
                                   _gainController.value = TextEditingValue(
                                     text: newText,
                                     selection: TextSelection.collapsed(offset: newText.length),
@@ -262,8 +258,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         IconButton(
                           icon: Icon(Icons.delete_outline, color: Colors.red[700]),
                           onPressed: () {
-                            _gainController.value = TextEditingValue(
-                              text: "",
+                            _gainController.value = const TextEditingValue(
                               selection: TextSelection.collapsed(offset: 0),
                             );
                             setState(() {
@@ -275,9 +270,9 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 16.0),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
+                    const SizedBox(height: 16.0),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 3),
                       child: Text(
                         "Loss price alert",
                         style: TextStyle(fontSize: 13),
@@ -286,8 +281,8 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                     Padding(
                       padding: const EdgeInsets.only(left: 3),
                       child: Text(
-                        '${_inputCashLoss ? _lossHintPercent.isEmpty ? "" : "($_lossHintPercent)" : _lossHintCash.isEmpty ? "" : "($_lossHintCash)"}',
-                        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                        _inputCashLoss ? _lossHintPercent.isEmpty ? "" : "($_lossHintPercent)" : _lossHintCash.isEmpty ? "" : "($_lossHintCash)",
+                        style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
                       ),
                     ),
                     Row(
@@ -306,15 +301,15 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               maxLines: 2,
                               decoration: InputDecoration(
                                 floatingLabelBehavior: FloatingLabelBehavior.never,
-                                prefixText: _inputCashLoss ? "\$ " : "\% ",
+                                prefixText: _inputCashLoss ? "\$ " : "% ",
                                 labelText: _inputCashLoss ? _lossHintCash : _lossHintPercent,
-                                labelStyle: TextStyle(fontStyle: FontStyle.italic),
+                                labelStyle: const TextStyle(fontStyle: FontStyle.italic),
                                 //hintText: _lossHint,
                                 counterText: "",
                                 isDense: true,
-                                border: OutlineInputBorder(),
+                                border: const OutlineInputBorder(),
                               ),
-                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                   RegExp(r'^\-?\d+(\.)?(\d{1,2})?'),
@@ -322,7 +317,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               ],
                               onChanged: (lossString) {
                                 if (lossString.isNotEmpty) {
-                                  var lossInput = _cleanNumberAbs(lossString);
+                                  final lossInput = _cleanNumberAbs(lossString);
 
                                   // We update the hints independently of if we are inputting cash or percentage,
                                   // so that we keep both always up to date
@@ -331,7 +326,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                   if (lossInput > widget.stock.currentPrice!) {
                                     sign = "+";
                                   }
-                                  var percentage = (lossInput * 100 / widget.stock.currentPrice!) - 100;
+                                  final percentage = (lossInput * 100 / widget.stock.currentPrice!) - 100;
 
                                   // Cash hint
                                   double cash = 0;
@@ -349,7 +344,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                     // If we are inserting percentage, make sure there is a "+" sign in the
                                     // actual text field (automatically, as we don't allow the user to input "+")
                                     if (!_inputCashLoss && !_lossController.text.contains("-")) {
-                                      String addSign = "\-${_lossController.text}";
+                                      final String addSign = "-${_lossController.text}";
                                       _lossController.value = TextEditingValue(
                                         text: addSign,
                                         selection: TextSelection.collapsed(offset: addSign.length),
@@ -381,7 +376,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: _inputCashLoss ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
+                          icon: _inputCashLoss ? const Icon(MdiIcons.percent) : const Icon(MdiIcons.cash),
                           onPressed: () {
                             setState(() {
                               _inputCashLoss = !_inputCashLoss;
@@ -392,7 +387,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 if (_inputCashLoss) {
                                   // Change from percentage to cash
                                   _lossHintPercent = "${_lossController.text}%";
-                                  var newText = _lossHintCash.replaceAll("\$", "").replaceAll("%", "");
+                                  final newText = _lossHintCash.replaceAll("\$", "").replaceAll("%", "");
                                   _lossController.value = TextEditingValue(
                                     text: newText,
                                     selection: TextSelection.collapsed(offset: newText.length),
@@ -400,7 +395,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 } else {
                                   // Change from cash to percentage
                                   _lossHintCash = "\$${_lossController.text}";
-                                  var newText = _lossHintPercent.replaceAll("\$", "").replaceAll("%", "");
+                                  final newText = _lossHintPercent.replaceAll("\$", "").replaceAll("%", "");
                                   _lossController.value = TextEditingValue(
                                     text: newText,
                                     selection: TextSelection.collapsed(offset: newText.length),
@@ -413,8 +408,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         IconButton(
                           icon: Icon(Icons.delete_outline, color: Colors.red[700]),
                           onPressed: () {
-                            _lossController.value = TextEditingValue(
-                              text: "",
+                            _lossController.value = const TextEditingValue(
                               selection: TextSelection.collapsed(offset: 0),
                             );
                             setState(() {
@@ -426,12 +420,12 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Set"),
+                          child: const Text("Set"),
                           onPressed: () async {
                             bool success = false;
 
@@ -485,32 +479,32 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
 
                               BotToast.showText(
                                 text: "Saved ${widget.stock.acronym}!",
-                                textStyle: TextStyle(
+                                textStyle: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
                                 contentColor: Colors.green,
-                                duration: Duration(seconds: 3),
-                                contentPadding: EdgeInsets.all(10),
+                                duration: const Duration(seconds: 3),
+                                contentPadding: const EdgeInsets.all(10),
                               );
                             } else {
                               BotToast.showText(
                                 text: "There was an error saving ${widget.stock.acronym}, "
                                     "please try again later!",
-                                textStyle: TextStyle(
+                                textStyle: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
                                 contentColor: Colors.red[800]!,
-                                duration: Duration(seconds: 3),
-                                contentPadding: EdgeInsets.all(10),
+                                duration: const Duration(seconds: 3),
+                                contentPadding: const EdgeInsets.all(10),
                               );
                             }
                           },
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         TextButton(
-                          child: Text("Cancel"),
+                          child: const Text("Cancel"),
                           onPressed: () {
                             Navigator.of(context).pop();
                             _gainController.text = '';
@@ -568,7 +562,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
         return Colors.orange[800];
       }
     } else if (!fromGain) {
-      double lossCheck = _cleanNumber(_lossHintCash.replaceAll("\$", ""));
+      final double lossCheck = _cleanNumber(_lossHintCash.replaceAll("\$", ""));
       if (lossCheck > widget.stock.currentPrice! || lossCheck <= 0) {
         return Colors.orange[800];
       }

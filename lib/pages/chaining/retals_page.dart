@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,10 +9,10 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/retal_model.dart';
+import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/retals_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
@@ -25,10 +26,8 @@ class WarOptions {
     switch (description) {
       case "Toggle chain widget":
         iconData = MdiIcons.linkVariant;
-        break;
       case "Hidden targets":
         iconData = Icons.undo_outlined;
-        break;
       case "Nuke revive":
         // Own icon in widget
         break;
@@ -43,9 +42,9 @@ class RetalsPage extends StatefulWidget {
   //final Function tabCallback;
 
   const RetalsPage({
-    Key? key,
+    super.key,
     //@required this.tabCallback,
-  }) : super(key: key);
+  });
 
   @override
   _RetalsPageState createState() => _RetalsPageState();
@@ -75,11 +74,9 @@ class _RetalsPageState extends State<RetalsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_r == null) {
-      _r = Get.put(RetalsController());
-    }
+    _r ??= Get.put(RetalsController());
 
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
@@ -132,19 +129,17 @@ class _RetalsPageState extends State<RetalsPage> {
           alwaysDarkBackground: false,
           callBackOptions: _callBackChainOptions,
         ),
-        r.updating
-            ? CircularProgressIndicator()
-            : Padding(
+        if (r.updating) const CircularProgressIndicator() else Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Next update in "),
+                    const Text("Next update in "),
                     Countdown(
                       seconds: 20,
                       callback: _updateRetal,
                     ),
-                    Text(" seconds"),
+                    const Text(" seconds"),
                   ],
                 ),
               ),
@@ -156,19 +151,17 @@ class _RetalsPageState extends State<RetalsPage> {
     return Column(
       children: <Widget>[
         const SizedBox(height: 5),
-        r.retaliationList.isEmpty
-            ? Flexible(
+        if (r.retaliationList.isEmpty) const Flexible(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 100),
+                      padding: EdgeInsets.only(bottom: 100),
                       child: Text("No retaliation targets found!"),
                     ),
                   ],
                 ),
-              )
-            : context.orientation == Orientation.portrait
+              ) else context.orientation == Orientation.portrait
                 ? Flexible(
                     child: RetalsTargetsList(
                       retalsController: r,
@@ -177,7 +170,7 @@ class _RetalsPageState extends State<RetalsPage> {
                 : RetalsTargetsList(
                     retalsController: r,
                   ),
-        if (_settingsProvider.appBarTop) SizedBox(height: 50),
+        if (_settingsProvider.appBarTop) const SizedBox(height: 50),
       ],
     );
   }
@@ -192,7 +185,7 @@ class _RetalsPageState extends State<RetalsPage> {
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
@@ -200,7 +193,7 @@ class _RetalsPageState extends State<RetalsPage> {
               }
             },
           ),
-          PdaBrowserIcon(),
+          const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -211,7 +204,7 @@ class _RetalsPageState extends State<RetalsPage> {
               return Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: GestureDetector(
-                  child: Icon(Icons.info_outline_rounded),
+                  child: const Icon(Icons.info_outline_rounded),
                   // Quick update
                   onTap: () async {
                     await showDialog(
@@ -234,12 +227,12 @@ class _RetalsPageState extends State<RetalsPage> {
               return Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: GestureDetector(
-                  child: Icon(Icons.refresh),
                   onTap: r.updating
                       ? null
                       : () {
                           r.retrieveRetals(context);
                         },
+                  child: const Icon(Icons.refresh),
                 ),
               );
             },
@@ -255,19 +248,19 @@ class _RetalsPageState extends State<RetalsPage> {
     });
   }
 
-  _updateRetal() {
+  void _updateRetal() {
     if (_r!.browserIsOpen) return;
     _r!.retrieveRetals(context);
   }
 
-  _disclaimerDialog() {
+  AlertDialog _disclaimerDialog() {
     return AlertDialog(
-      title: Text("Retaliation"),
-      content: Scrollbar(
+      title: const Text("Retaliation"),
+      content: const Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -283,21 +276,21 @@ class _RetalsPageState extends State<RetalsPage> {
                   style: TextStyle(fontSize: 13),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.only(left: 8),
                   child: Text(
                     "- Attacked your faction in the last 5 minutes",
                     style: TextStyle(fontSize: 13),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.only(left: 8),
                   child: Text(
                     "- Won the attack",
                     style: TextStyle(fontSize: 13),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.only(left: 8),
                   child: Text(
                     "- Have not been retaliated yet",
                     style: TextStyle(fontSize: 13),
@@ -325,7 +318,7 @@ class _RetalsPageState extends State<RetalsPage> {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Understood"),
+            child: const Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },
@@ -337,7 +330,7 @@ class _RetalsPageState extends State<RetalsPage> {
 }
 
 class RetalsTargetsList extends StatelessWidget {
-  RetalsTargetsList({
+  const RetalsTargetsList({
     required this.retalsController,
   });
 
@@ -352,9 +345,9 @@ class RetalsTargetsList extends StatelessWidget {
       );
     } else {
       return ListView(
-        children: getChildrenTargets(),
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
+        children: getChildrenTargets(),
       );
     }
   }
@@ -362,7 +355,7 @@ class RetalsTargetsList extends StatelessWidget {
   List<Widget> getChildrenTargets() {
     List<RetalCard> filteredCards = <RetalCard>[];
 
-    for (Retal thisRetal in retalsController.retaliationList) {
+    for (final Retal thisRetal in retalsController.retaliationList) {
       filteredCards.add(
         RetalCard(
           key: UniqueKey(),
@@ -376,7 +369,7 @@ class RetalsTargetsList extends StatelessWidget {
 
     retalsController.orderedCardsDetails.clear();
     for (int i = 0; i < filteredCards.length; i++) {
-      RetalsCardDetails details = RetalsCardDetails()
+      final RetalsCardDetails details = RetalsCardDetails()
         ..cardPosition = i + 1
         ..retalId = filteredCards[i].retalModel.retalId
         ..name = filteredCards[i].retalModel.name

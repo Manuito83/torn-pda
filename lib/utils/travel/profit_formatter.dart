@@ -6,7 +6,7 @@ String formatProfit({int? inputInt, double? inputDouble}) {
     moneyInput = inputDouble;
   }
 
-  double moneyAbs = moneyInput!.abs();
+  final double moneyAbs = moneyInput!.abs();
   if (moneyAbs >= 999 && moneyAbs < 99999) {
     return "${(moneyInput / 1000).toStringAsFixed(1)}K".replaceAll(".0K", "K");
   } else if (moneyAbs >= 99999 && moneyAbs < 999999) {

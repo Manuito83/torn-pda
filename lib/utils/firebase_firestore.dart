@@ -39,7 +39,7 @@ class _FirestoreHelper {
     // Generate or replace token if it already exists
     // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
     String? token = "";
-    String currentToken = (await _messaging.getToken())!;
+    final String currentToken = (await _messaging.getToken())!;
     if (currentToken.isNotEmpty) {
       await FirebaseMessaging.instance.deleteToken();
     }
@@ -103,7 +103,7 @@ class _FirestoreHelper {
     // If we had already foreign stocks chosen as alerts, we need to update them to the
     // current timestamp, so that alerts are not sent on first pass (if restocks alerts were off)
     Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
-    var now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now().millisecondsSinceEpoch;
     previous.forEach((key, value) {
       previous[key] = now;
     });
@@ -185,7 +185,7 @@ class _FirestoreHelper {
   }
 
   Future<void> addToEventsFilter(String filter) async {
-    List currentFilter = _firebaseUserModel!.eventsFilter;
+    final List currentFilter = _firebaseUserModel!.eventsFilter;
     currentFilter.add(filter);
     await _firestore.collection("players").doc(_uid).update({
       "eventsFilter": currentFilter,
@@ -193,7 +193,7 @@ class _FirestoreHelper {
   }
 
   Future<void> removeFromEventsFilter(String filter) async {
-    List currentFilter = _firebaseUserModel!.eventsFilter;
+    final List currentFilter = _firebaseUserModel!.eventsFilter;
     // Avoid duplicities by removing more than one item if they exist
     currentFilter.removeWhere((element) => element == filter);
     await _firestore.collection("players").doc(_uid).update({
@@ -216,7 +216,7 @@ class _FirestoreHelper {
   }
 
   Future<void> addToRefillsRequested(String request) async {
-    List currentRequests = _firebaseUserModel!.refillsRequested;
+    final List currentRequests = _firebaseUserModel!.refillsRequested;
     if (!currentRequests.contains(request)) {
       currentRequests.add(request);
     }
@@ -226,7 +226,7 @@ class _FirestoreHelper {
   }
 
   Future<void> removeFromRefillsRequested(String request) async {
-    List currentRequests = _firebaseUserModel!.refillsRequested;
+    final List currentRequests = _firebaseUserModel!.refillsRequested;
     // Avoid duplicities by removing more than one item if they exist
     currentRequests.removeWhere((element) => element == request);
     await _firestore.collection("players").doc(_uid).update({
@@ -255,7 +255,7 @@ class _FirestoreHelper {
   // Init State in alerts
   Future<FirebaseUserModel?> getUserProfile({bool force = false}) async {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
-    var userReceived = await _firestore.collection("players").doc(_uid).get();
+    final userReceived = await _firestore.collection("players").doc(_uid).get();
     if (userReceived.data() == null) {
       // New user does not return anything, so we use default fields in the model
       return FirebaseUserModel();
@@ -281,7 +281,7 @@ class _FirestoreHelper {
   }
 
   Future<bool> addStockMarketShare(String? ticker, String action) async {
-    List currentStocks = _firebaseUserModel!.stockMarketShares;
+    final List currentStocks = _firebaseUserModel!.stockMarketShares;
     // Code is ticker-gain-price-loss-price. 'n' for empty.
     // Example: YAZ-G-840-L-n
     // Example to delete: YAZ-remove

@@ -54,28 +54,28 @@ class AttackFull {
   });
 
   factory AttackFull.fromJson(Map<String, dynamic> json) => AttackFull(
-    code: json["code"] == null ? null : json["code"],
-    timestampStarted: json["timestamp_started"] == null ? null : json["timestamp_started"],
-    timestampEnded: json["timestamp_ended"] == null ? null : json["timestamp_ended"],
+    code: json["code"],
+    timestampStarted: json["timestamp_started"],
+    timestampEnded: json["timestamp_ended"],
     attackerId: json["attacker_id"],
     attackerFaction: json["attacker_faction"],
-    defenderId: json["defender_id"] == null ? null : json["defender_id"],
-    defenderFaction: json["defender_faction"] == null ? null : json["defender_faction"],
+    defenderId: json["defender_id"],
+    defenderFaction: json["defender_faction"],
     result: json["result"] == null ? null : resultValues.map[json["result"]],
-    stealthed: json["stealthed"] == null ? null : json["stealthed"],
+    stealthed: json["stealthed"],
     respect: json["respect"],
   );
 
   Map<String, dynamic> toJson() => {
-    "code": code == null ? null : code,
-    "timestamp_started": timestampStarted == null ? null : timestampStarted,
-    "timestamp_ended": timestampEnded == null ? null : timestampEnded,
+    "code": code,
+    "timestamp_started": timestampStarted,
+    "timestamp_ended": timestampEnded,
     "attacker_id": attackerId,
     "attacker_faction": attackerFaction,
-    "defender_id": defenderId == null ? null : defenderId,
-    "defender_faction": defenderFaction == null ? null : defenderFaction,
+    "defender_id": defenderId,
+    "defender_faction": defenderFaction,
     "result": result == null ? null : resultValues.reverse![result],
-    "stealthed": stealthed == null ? null : stealthed,
+    "stealthed": stealthed,
     "respect": respect,
   };
 }
@@ -101,9 +101,7 @@ class EnumValues<T> {
   EnumValues(this.map);
 
   Map<T, String>? get reverse {
-    if (reverseMap == null) {
-      reverseMap = map.map((k, v) => new MapEntry(v, k));
-    }
+    reverseMap ??= map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
 }

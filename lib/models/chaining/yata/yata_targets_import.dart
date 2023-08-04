@@ -41,14 +41,14 @@ class YataImportTarget {
   int? color;
 
   factory YataImportTarget.fromJson(Map<String, dynamic> json) => YataImportTarget(
-    name: json["name"] == null ? null : json["name"],
-    note: json["note"] == null ? null : json["note"],
-    color: json["color"] == null ? null : json["color"],
+    name: json["name"],
+    note: json["note"],
+    color: json["color"],
   );
 
   Map<String, dynamic> toJson() => {
-    "name": name == null ? null : name,
-    "note": note == null ? null : note,
-    "color": color == null ? null : color,
+    "name": name,
+    "note": note,
+    "color": color,
   };
 }

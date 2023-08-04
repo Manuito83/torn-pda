@@ -22,7 +22,7 @@ class WebViewFullAwh extends StatefulWidget {
   final int sellerId;
   final Function awhMessageCallback;
 
-  WebViewFullAwh({
+  const WebViewFullAwh({
     required this.customUrl,
     required this.customTitle,
     required this.sellerName,
@@ -53,7 +53,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
     _pageTitle = widget.customTitle;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _initialWebViewSettings = InAppWebViewSettings(
-      useHybridComposition: true,
+      
     );
   }
 
@@ -106,8 +106,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
   Column mainWebViewColumn() {
     return Column(
       children: [
-        _settingsProvider.loadBarBrowser
-            ? Container(
+        if (_settingsProvider.loadBarBrowser) SizedBox(
                 height: 2,
                 child: progress < 1.0
                     ? LinearProgressIndicator(
@@ -116,8 +115,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
                         valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
                       )
                     : Container(height: 2),
-              )
-            : SizedBox.shrink(),
+              ) else const SizedBox.shrink(),
         Expanded(
           child: InAppWebView(
             initialUrlRequest: _initialUrl,
@@ -128,7 +126,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
               webView!.addJavaScriptHandler(
                   handlerName: 'copyToClipboard',
                   callback: (args) {
-                    if (args.length > 0) {
+                    if (args.isNotEmpty) {
                       // Copy custom message or total
                       String toastMessage = "";
                       if (args[1] == "total") {
@@ -147,16 +145,15 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
 
                       BotToast.showText(
                         text: toastMessage,
-                        textStyle: TextStyle(
+                        textStyle: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
                         ),
                         contentColor: Colors.green[800]!,
-                        duration: Duration(seconds: 2),
-                        contentPadding: EdgeInsets.all(10),
+                        contentPadding: const EdgeInsets.all(10),
                       );
                     }
-                  });
+                  },);
             },
             onCreateWindow: (c, request) {
               // Allows IOS to open links with target=_blank
@@ -184,12 +181,12 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         leading: IconButton(
-            icon: Icon(Icons.close),
+            icon: const Icon(Icons.close),
             onPressed: () async {
               Navigator.pop(context);
-            }),
+            },),
         title: Text(_pageTitle),
-        actions: <Widget>[],
+        actions: const <Widget>[],
       ),
     );
   }
