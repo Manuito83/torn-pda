@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui' as ui;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 
@@ -264,7 +263,7 @@ class _MyAppState extends State<MyApp> {
     );
 
     MediaQuery mq = MediaQuery(
-      data: MediaQueryData.fromWindow(ui.window),
+      data: MediaQueryData.fromView(View.of(context)),
       child: Directionality(
         textDirection: TextDirection.ltr,
         child: MaterialApp(
