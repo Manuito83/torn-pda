@@ -343,18 +343,15 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           ],
                         ),
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(text: _currentUrl));
+                          String input = _currentUrl ?? "null";
+                          Clipboard.setData(ClipboardData(text: input));
 
-                          // Avoid copying _currentUrl directly unless we await,
-                          // otherwise we can change _currentUrl while the copy
-                          // is being performed and hang the app
-                          var copied = _currentUrl;
-                          if (_currentUrl!.length > 60) {
-                            copied = _currentUrl!.substring(0, 60) + "...";
+                          if (input.length > 60) {
+                            input = input.substring(0, 60) + "...";
                           }
 
                           BotToast.showText(
-                            text: "Link copied! [$copied]",
+                            text: "Link copied! [$input]",
                             textStyle: TextStyle(
                               fontSize: 14,
                               color: Colors.white,

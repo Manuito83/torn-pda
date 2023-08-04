@@ -315,7 +315,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                 icon: Icon(Icons.content_copy),
                 iconSize: 20,
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: widget.target!.discord!.discordId));
+                  Clipboard.setData(ClipboardData(text: widget.target!.discord!.discordId!));
                   BotToast.showText(
                     text: "Your target's Discord ID (${widget.target!.discord!.discordId}) has been "
                         "copied to the clipboard!",

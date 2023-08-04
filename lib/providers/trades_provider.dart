@@ -10,7 +10,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
-import 'package:torn_pda/utils/external/torntrader_comm.dart';
+//import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -128,6 +128,7 @@ class TradesProvider extends ChangeNotifier {
 
         // TORN TRADER init here (it only takes into account elements sold to us,
         // so we'll only pass this information
+        /*
         var tornTraderActive = false; //await Prefs().getTornTraderEnabled();
         if (rightItemsElements.isNotEmpty && tornTraderActive) {
           TornTraderInModel tornTraderIn = await TornTraderComm.submitItems(
@@ -152,6 +153,7 @@ class TradesProvider extends ChangeNotifier {
               ..ttMessages = tornTraderIn.trade!.tradeMessages;
           }
         }
+        */
       }
     }
 

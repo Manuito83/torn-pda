@@ -307,7 +307,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                   icon: Icon(Icons.content_copy),
                   iconSize: 20,
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: widget.friend!.discord!.discordId));
+                    Clipboard.setData(ClipboardData(text: widget.friend!.discord!.discordId!));
                     BotToast.showText(
                       text: "Your friend's Discord ID (${widget.friend!.discord!.discordId}) has been "
                           "copied to the clipboard!",

@@ -14,7 +14,7 @@ description: Torn City personal assistant
 #version: 1.0.0
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: ">=3.0.0"
   #flutter: ">=2.0.0"
 
 dependencies:
@@ -51,7 +51,7 @@ dependencies:
   flutter_colorpicker: 1.0.3
   flutter_font_icons: ^2.2.5
   #flutter_inappwebview: 6.0.0-beta.22
-  flutter_inappwebview: 
+  flutter_inappwebview:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
       ref: manuito-beta22
@@ -73,7 +73,7 @@ dependencies:
   ## flutter pub run import_sorter:main
   import_sorter: 4.6.0
   intl: 0.17.0
-  material_design_icons_flutter: 5.0.5955-rc.1  ## Breaking changes in minor versions
+  material_design_icons_flutter: 5.0.5955-rc.1 ## Breaking changes in minor versions
   percent_indicator: 4.2.2
   provider: 6.0.2
   pull_to_refresh: 2.0.0

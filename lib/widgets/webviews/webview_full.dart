@@ -3928,6 +3928,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ),
                         onTap: () {
                           var open = url?.toString() ?? src;
+                          if (open == null) return;
                           Clipboard.setData(ClipboardData(text: open));
                           BotToast.showText(
                             text: "Link copied to the clipboard: ${open}",
