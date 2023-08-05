@@ -41,10 +41,10 @@ class ForeignStockPage extends StatefulWidget {
   const ForeignStockPage({required this.apiKey});
 
   @override
-  _ForeignStockPageState createState() => _ForeignStockPageState();
+  ForeignStockPageState createState() => ForeignStockPageState();
 }
 
-class _ForeignStockPageState extends State<ForeignStockPage> {
+class ForeignStockPageState extends State<ForeignStockPage> {
   final PanelController _pc = PanelController();
 
   final double _initFabHeight = 25.0;
@@ -124,7 +124,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     'Others',
   ];
 
-  var _currentSort;
+  StockSort? _currentSort;
   final _popupChoices = <StockSort>[
     StockSort(type: StockSortType.country),
     StockSort(type: StockSortType.name),
@@ -360,8 +360,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                   choice.description!,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: choice.description == _currentSort.description ? FontWeight.bold : FontWeight.normal,
-                    fontStyle: choice.description == _currentSort.description ? FontStyle.italic : FontStyle.normal,
+                    fontWeight: choice.description == _currentSort!.description ? FontWeight.bold : FontWeight.normal,
+                    fontStyle: choice.description == _currentSort!.description ? FontStyle.italic : FontStyle.normal,
                   ),
                 ),
               );
@@ -398,14 +398,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
-          color: _themeProvider!.secondBackground,
-          borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 2.0,
-              color: Colors.orange[800]!,
-            ),
-          ],),
+        color: _themeProvider!.secondBackground,
+        borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 2.0,
+            color: Colors.orange[800]!,
+          ),
+        ],
+      ),
       margin: const EdgeInsets.all(22.0),
       child: Column(
         children: <Widget>[
@@ -567,113 +568,115 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     return GridView.count(
-        shrinkWrap: true,
-        crossAxisCount: 6,
-        mainAxisSpacing: 2.0,
-        crossAxisSpacing: 2.0,
-        children: flags.asMap().entries.map((widget) {
-          return ToggleButtons(
-            constraints: const BoxConstraints(minWidth: 30.0),
-            highlightColor: Colors.orange,
-            selectedBorderColor: Colors.green,
-            isSelected: [_filteredFlags[widget.key]],
-            children: [widget.value],
-            onPressed: (_) {
-              setState(() {
-                // Item 11 is the icon for selecting/deselecting all
-                if (widget.key == 11) {
-                  if (_filteredFlags[widget.key]) {
-                    for (int i = 0; i < _filteredFlags.length; i++) {
-                      _filteredFlags[i] = false;
-                    }
-                  } else {
-                    for (int i = 0; i < _filteredFlags.length; i++) {
-                      _filteredFlags[i] = true;
-                    }
+      shrinkWrap: true,
+      crossAxisCount: 6,
+      mainAxisSpacing: 2.0,
+      crossAxisSpacing: 2.0,
+      children: flags.asMap().entries.map((widget) {
+        return ToggleButtons(
+          constraints: const BoxConstraints(minWidth: 30.0),
+          highlightColor: Colors.orange,
+          selectedBorderColor: Colors.green,
+          isSelected: [_filteredFlags[widget.key]],
+          children: [widget.value],
+          onPressed: (_) {
+            setState(() {
+              // Item 11 is the icon for selecting/deselecting all
+              if (widget.key == 11) {
+                if (_filteredFlags[widget.key]) {
+                  for (int i = 0; i < _filteredFlags.length; i++) {
+                    _filteredFlags[i] = false;
                   }
                 } else {
-                  // Any country flag state change is handled here
-                  _filteredFlags[widget.key] = !_filteredFlags[widget.key];
-                  // Then, we check if we need to select Item 11
-                  bool allFlagsSelected = true;
-                  for (int i = 0; i < _filteredFlags.length - 1; i++) {
-                    if (_filteredFlags[i] == false) {
-                      allFlagsSelected = false;
-                    }
-                  }
-                  if (allFlagsSelected) {
-                    _filteredFlags[11] = true;
-                  } else {
-                    _filteredFlags[11] = false;
+                  for (int i = 0; i < _filteredFlags.length; i++) {
+                    _filteredFlags[i] = true;
                   }
                 }
-              });
+              } else {
+                // Any country flag state change is handled here
+                _filteredFlags[widget.key] = !_filteredFlags[widget.key];
+                // Then, we check if we need to select Item 11
+                bool allFlagsSelected = true;
+                for (int i = 0; i < _filteredFlags.length - 1; i++) {
+                  if (_filteredFlags[i] == false) {
+                    allFlagsSelected = false;
+                  }
+                }
+                if (allFlagsSelected) {
+                  _filteredFlags[11] = true;
+                } else {
+                  _filteredFlags[11] = false;
+                }
+              }
+            });
 
-              // Saving to shared preferences
-              _saveFilteredFlags();
+            // Saving to shared preferences
+            _saveFilteredFlags();
 
-              // Applying filter
-              _filterAndSortTopLists();
-            },
-          );
-        }).toList(),);
+            // Applying filter
+            _filterAndSortTopLists();
+          },
+        );
+      }).toList(),
+    );
   }
 
   Widget _toggleTypeFilter() {
     return GridView.count(
-        shrinkWrap: true,
-        crossAxisCount: 1,
-        scrollDirection: Axis.horizontal,
-        mainAxisSpacing: 2.0,
-        crossAxisSpacing: 2.0,
-        children: [
-          Image.asset(
-            'images/icons/ic_flower_black_48dp.png',
-            width: 25,
-            height: 25,
-            color: _themeProvider!.mainText,
-          ),
-          Image.asset(
-            'images/icons/ic_dog_black_48dp.png',
-            width: 25,
-            height: 25,
-            color: _themeProvider!.mainText,
-          ),
-          Image.asset(
-            'images/icons/ic_pill_black_48dp.png',
-            width: 25,
-            height: 25,
-            color: _themeProvider!.mainText,
-          ),
-          Icon(
-            Icons.add_to_photos,
-            color: _themeProvider!.mainText,
-          ),
-        ].asMap().entries.map((widget) {
-          return ToggleButtons(
-            constraints: const BoxConstraints(minWidth: 30.0),
-            highlightColor: Colors.orange,
-            selectedBorderColor: Colors.green,
-            isSelected: [_filteredTypes[widget.key]],
-            onPressed: (_) {
-              setState(() {
-                // Any item type state change is handled here
-                _filteredTypes[widget.key] = !_filteredTypes[widget.key];
-              });
+      shrinkWrap: true,
+      crossAxisCount: 1,
+      scrollDirection: Axis.horizontal,
+      mainAxisSpacing: 2.0,
+      crossAxisSpacing: 2.0,
+      children: [
+        Image.asset(
+          'images/icons/ic_flower_black_48dp.png',
+          width: 25,
+          height: 25,
+          color: _themeProvider!.mainText,
+        ),
+        Image.asset(
+          'images/icons/ic_dog_black_48dp.png',
+          width: 25,
+          height: 25,
+          color: _themeProvider!.mainText,
+        ),
+        Image.asset(
+          'images/icons/ic_pill_black_48dp.png',
+          width: 25,
+          height: 25,
+          color: _themeProvider!.mainText,
+        ),
+        Icon(
+          Icons.add_to_photos,
+          color: _themeProvider!.mainText,
+        ),
+      ].asMap().entries.map((widget) {
+        return ToggleButtons(
+          constraints: const BoxConstraints(minWidth: 30.0),
+          highlightColor: Colors.orange,
+          selectedBorderColor: Colors.green,
+          isSelected: [_filteredTypes[widget.key]],
+          onPressed: (_) {
+            setState(() {
+              // Any item type state change is handled here
+              _filteredTypes[widget.key] = !_filteredTypes[widget.key];
+            });
 
-              // Saving to shared preferences
-              final saveList = <String>[];
-              for (final b in _filteredTypes) {
-                b ? saveList.add('1') : saveList.add('0');
-              }
-              Prefs().setStockTypeFilter(saveList);
+            // Saving to shared preferences
+            final saveList = <String>[];
+            for (final b in _filteredTypes) {
+              b ? saveList.add('1') : saveList.add('0');
+            }
+            Prefs().setStockTypeFilter(saveList);
 
-              // Applying filter
-              _filterAndSortTopLists();
-            },
-            children: [widget.value],
-          );
-        }).toList(),);
+            // Applying filter
+            _filterAndSortTopLists();
+          },
+          children: [widget.value],
+        );
+      }).toList(),
+    );
   }
 
   List<Widget> _stockItems() {
@@ -793,9 +796,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       displayShowcase = false;
     }
 
-    thisStockList.add(const SizedBox(
-      height: 100,
-    ),);
+    thisStockList.add(
+      const SizedBox(
+        height: 100,
+      ),
+    );
     return thisStockList;
   }
 
@@ -993,7 +998,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         contentPadding: const EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      itemsResponse = await (Get.find<ApiCallerController>().getItems() as FutureOr<ApiError>);
+      itemsResponse = await (Get.find<ApiCallerController>().getItems());
     }
 
     if (itemsResponse is ApiError) {
@@ -1036,7 +1041,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         contentPadding: const EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      inventoryResponse = await (Get.find<ApiCallerController>().getInventory() as FutureOr<ApiError>);
+      inventoryResponse = await (Get.find<ApiCallerController>().getInventory());
     }
 
     if (inventoryResponse is ApiError) {
@@ -1079,7 +1084,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         contentPadding: const EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      profileResponse = await (Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3) as FutureOr<ApiError>);
+      profileResponse = await (Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3));
     }
 
     if (profileResponse is ApiError) {
@@ -1366,7 +1371,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   void _onStocksOptionsChanged(
-      int newCapacity, bool inventoryEnabled, bool showArrivalTime, bool showBarsCooldownAnalysis,) {
+    int newCapacity,
+    bool inventoryEnabled,
+    bool showArrivalTime,
+    bool showBarsCooldownAnalysis,
+  ) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;

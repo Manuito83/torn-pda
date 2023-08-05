@@ -242,9 +242,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
     // notification no matter what Notification Channel has been set
     // See https://firebase.flutter.dev/docs/messaging/notifications/
     if (Platform.isIOS) {
-      _messaging.setForegroundNotificationPresentationOptions(
-        
-      );
+      _messaging.setForegroundNotificationPresentationOptions();
     }
 
     _lastMessageReceived = DateTime.now();
@@ -397,12 +395,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
   }
 
   Future<void> _initIntentListenerSubscription() async {
-    _intentListenerSub = ReceiveIntent.receivedIntentStream.listen((Intent? intent) async {
-      if (!mounted || intent!.data == null) return;
-      await _assessIntent(intent);
-    }, onError: (err) {
-      log(err);
-    },);
+    _intentListenerSub = ReceiveIntent.receivedIntentStream.listen(
+      (Intent? intent) async {
+        if (!mounted || intent!.data == null) return;
+        await _assessIntent(intent);
+      },
+      onError: (err) {
+        log(err);
+      },
+    );
   }
 
   Future<void> _assessIntent(Intent intent) async {
@@ -866,18 +867,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
         // Open chaining browser for Loot Rangers
         _webViewProvider.openBrowserPreference(
-            context: context,
-            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-            browserTapType: BrowserTapType.chain,
-            isChainingBrowser: true,
-            chainingPayload: ChainingPayload()
-              ..attackIdList = ids
-              ..attackNameList = names
-              ..attackNotesList = notes
-              ..attackNotesColorList = colors
-              ..showNotes = true
-              ..showBlankNotes = false
-              ..showOnlineFactionWarning = false,);
+          context: context,
+          url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+          browserTapType: BrowserTapType.chain,
+          isChainingBrowser: true,
+          chainingPayload: ChainingPayload()
+            ..attackIdList = ids
+            ..attackNameList = names
+            ..attackNotesList = notes
+            ..attackNotesColorList = colors
+            ..showNotes = true
+            ..showBlankNotes = false
+            ..showOnlineFactionWarning = false,
+        );
       }
     }
 
@@ -956,18 +958,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
         // Open chaining browser for Loot Rangers
         _webViewProvider.openBrowserPreference(
-            context: context,
-            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
-            browserTapType: BrowserTapType.chain,
-            isChainingBrowser: true,
-            chainingPayload: ChainingPayload()
-              ..attackIdList = lootRangersNpcsIds
-              ..attackNameList = lootRangersNpcsNames
-              ..attackNotesList = notes
-              ..attackNotesColorList = colors
-              ..showNotes = true
-              ..showBlankNotes = false
-              ..showOnlineFactionWarning = false,);
+          context: context,
+          url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
+          browserTapType: BrowserTapType.chain,
+          isChainingBrowser: true,
+          chainingPayload: ChainingPayload()
+            ..attackIdList = lootRangersNpcsIds
+            ..attackNameList = lootRangersNpcsNames
+            ..attackNotesList = notes
+            ..attackNotesColorList = colors
+            ..showNotes = true
+            ..showBlankNotes = false
+            ..showOnlineFactionWarning = false,
+        );
 
         browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$lootRangersNpcsIds';
       } else if (payload.contains('tornMessageId:')) {
@@ -1145,18 +1148,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
 
           // Open chaining browser for Loot Rangers
           _webViewProvider.openBrowserPreference(
-              context: context,
-              url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-              browserTapType: BrowserTapType.chain,
-              isChainingBrowser: true,
-              chainingPayload: ChainingPayload()
-                ..attackIdList = ids
-                ..attackNameList = names
-                ..attackNotesList = notes
-                ..attackNotesColorList = colors
-                ..showNotes = true
-                ..showBlankNotes = false
-                ..showOnlineFactionWarning = false,);
+            context: context,
+            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+            browserTapType: BrowserTapType.chain,
+            isChainingBrowser: true,
+            chainingPayload: ChainingPayload()
+              ..attackIdList = ids
+              ..attackNameList = names
+              ..attackNotesList = notes
+              ..attackNotesColorList = colors
+              ..showNotes = true
+              ..showBlankNotes = false
+              ..showOnlineFactionWarning = false,
+          );
         }
       }
 
@@ -1765,7 +1769,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Au
       // Appwidget dialog
       if (Platform.isAndroid) {
         if (!await Prefs().getAppwidgetExplanationShown()) {
-          final int widgets = (await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
+          final int widgets =
+              (await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
           if (widgets > 0) {
             await _showAppwidgetExplanationDialog(context);
             Prefs().setAppwidgetExplanationShown(true);

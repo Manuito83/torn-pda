@@ -357,10 +357,10 @@ class AppBorder extends StatefulWidget {
   const AppBorder({super.key});
 
   @override
-  _AppBorderState createState() => _AppBorderState();
+  AppBorderState createState() => AppBorderState();
 }
 
-class _AppBorderState extends State<AppBorder> {
+class AppBorderState extends State<AppBorder> {
   @override
   Widget build(BuildContext context) {
     final chainStatusProvider = Provider.of<ChainStatusProvider>(context);

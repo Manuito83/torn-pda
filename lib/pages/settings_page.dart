@@ -273,14 +273,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   "Advanced browser settings",
                 ),
                 IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (BuildContext context) => const SettingsBrowserPage(),
-                        ),
-                      );
-                    },),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => const SettingsBrowserPage(),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -763,14 +764,15 @@ class _SettingsPageState extends State<SettingsPage> {
                 "Alternative API keys",
               ),
               IconButton(
-                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => const AlternativeKeysPage(),
-                      ),
-                    );
-                  },),
+                icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => const AlternativeKeysPage(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -2511,7 +2513,7 @@ class _SettingsPageState extends State<SettingsPage> {
           final user = await firebaseAuth.getUID();
           // Only sign in if there is currently no user registered (to avoid duplicates)
           if (user == null || (user is User && user.uid.isEmpty)) {
-            final User mFirebaseUser = await (firebaseAuth.signInAnon() as FutureOr<User>);
+            final User mFirebaseUser = await (firebaseAuth.signInAnon());
             firestore.setUID(mFirebaseUser.uid);
             // Returns UID to Drawer so that it can be passed to settings
             widget.changeUID(mFirebaseUser.uid);

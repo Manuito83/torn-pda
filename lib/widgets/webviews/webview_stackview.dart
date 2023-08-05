@@ -51,16 +51,16 @@ class WebViewStackView extends StatefulWidget {
   });
 
   @override
-  _WebViewStackViewState createState() => _WebViewStackViewState();
+  WebViewStackViewState createState() => WebViewStackViewState();
 }
 
-class _WebViewStackViewState extends State<WebViewStackView>
+class WebViewStackViewState extends State<WebViewStackView>
     with WidgetsBindingObserver, TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
-  ThemeProvider? _themeProvider;
-  WebViewProvider? _webViewProvider;
+  late ThemeProvider _themeProvider;
+  late WebViewProvider _webViewProvider;
   late SettingsProvider _settingsProvider;
 
   //bool _useTabs = false;
@@ -73,7 +73,6 @@ class _WebViewStackViewState extends State<WebViewStackView>
   final GlobalKey _showcaseTabsGeneral = GlobalKey();
   final GlobalKey _showQuickMenuButton = GlobalKey();
   final GlobalKey _showCaseNewTabButton = GlobalKey();
-  final GlobalKey<CircularMenuFixedState> _circularMenuKey = GlobalKey();
 
   late Animation<double> _menuTabOpacity;
   late AnimationController _menuTabAnimationController;
@@ -111,7 +110,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    _keyboardVisible = WidgetsBinding.instance.window.viewInsets.bottom > 0;
+    _keyboardVisible = View.of(context).viewInsets.bottom > 0;
   }
 
   @override
@@ -120,33 +119,33 @@ class _WebViewStackViewState extends State<WebViewStackView>
     _webViewProvider = Provider.of<WebViewProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
 
-    if (_webViewProvider!.bottomBarStyleEnabled && _webViewProvider!.bottomBarStyleType == 2) {
+    if (_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2) {
       return Dialog(
         insetPadding: EdgeInsets.only(
-          top: _webViewProvider!.currentUiMode == UiMode.window ? 45 : 0,
-          bottom: _webViewProvider!.currentUiMode == UiMode.window
+          top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
+          bottom: _webViewProvider.currentUiMode == UiMode.window
               ? _keyboardVisible
                   ? 0
                   : 45
               : 0,
-          left: _webViewProvider!.currentUiMode == UiMode.window ? 8 : 0,
-          right: _webViewProvider!.currentUiMode == UiMode.window ? 8 : 0,
+          left: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
+          right: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
         ),
         child: Container(
-          color: _themeProvider!.currentTheme == AppTheme.extraDark ? const Color(0xFF131313) : Colors.transparent,
+          color: _themeProvider.currentTheme == AppTheme.extraDark ? const Color(0xFF131313) : Colors.transparent,
           child: Padding(
             padding: EdgeInsets.only(
-              top: _webViewProvider!.currentUiMode == UiMode.window ? 6 : 0,
-              bottom: _webViewProvider!.currentUiMode == UiMode.window
-                  ? _themeProvider!.currentTheme == AppTheme.extraDark
+              top: _webViewProvider.currentUiMode == UiMode.window ? 6 : 0,
+              bottom: _webViewProvider.currentUiMode == UiMode.window
+                  ? _themeProvider.currentTheme == AppTheme.extraDark
                       ? 6
                       : 4
                   : 0,
-              left: _webViewProvider!.currentUiMode == UiMode.window ? 5 : 0,
-              right: _webViewProvider!.currentUiMode == UiMode.window ? 5 : 0,
+              left: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
+              right: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
             ),
             child: stackView(),
           ),
@@ -158,7 +157,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
   }
 
   Widget stackView() {
-    final bool dialog = _webViewProvider!.bottomBarStyleEnabled && _webViewProvider!.bottomBarStyleType == 2;
+    final bool dialog = _webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2;
 
     return MediaQuery.removePadding(
       context: context,
@@ -166,124 +165,126 @@ class _WebViewStackViewState extends State<WebViewStackView>
       // Also, iOS needs extra padding removal according to:
       // https://github.com/flutter/flutter/issues/51345
       removeTop:
-          dialog || (_settingsProvider.fullScreenOverNotch && _webViewProvider!.currentUiMode == UiMode.fullScreen),
+          dialog || (_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
       child: Container(
-        color: _themeProvider!.currentTheme == AppTheme.light
+        color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
                 : Colors.grey[900]
-            : _themeProvider!.currentTheme == AppTheme.dark
+            : _themeProvider.currentTheme == AppTheme.dark
                 ? Colors.grey[900]
                 : Colors.black,
         child: SafeArea(
           top: !dialog &&
-              !(_settingsProvider.fullScreenOverNotch && _webViewProvider!.currentUiMode == UiMode.fullScreen),
+              !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
           bottom: !dialog &&
-              !(_settingsProvider.fullScreenOverBottom && _webViewProvider!.currentUiMode == UiMode.fullScreen),
+              !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
           left: !dialog &&
-              !(_settingsProvider.fullScreenOverSides && _webViewProvider!.currentUiMode == UiMode.fullScreen),
+              !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
           right: !dialog &&
-              !(_settingsProvider.fullScreenOverSides && _webViewProvider!.currentUiMode == UiMode.fullScreen),
+              !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
           child: ShowCaseWidget(
-            builder: Builder(builder: (_) {
-              if (_webViewProvider!.browserShowInForeground) {
-                _launchShowCases(_);
-              }
-              return Scaffold(
-                // Dialog displaces the webview up by default
-                resizeToAvoidBottomInset:
-                    !(_webViewProvider!.bottomBarStyleEnabled && _webViewProvider!.bottomBarStyleType == 2),
-                backgroundColor: _themeProvider!.statusBar,
-                body: Stack(
-                  alignment: Alignment.bottomCenter,
-                  children: [
-                    FutureBuilder(
-                      future: providerInitialised,
-                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          final allWebViews = <Widget>[];
-                          for (final tab in _webViewProvider!.tabList) {
-                            if (tab.webView == null) {
-                              allWebViews.add(const SizedBox.shrink());
-                            } else {
-                              allWebViews.add(tab.webView!);
-                            }
-                          }
-
-                          if (allWebViews.isEmpty) _closeWithError();
-
-                          if (!secondaryInitialised) {
-                            secondaryInitialised = true;
-                            _initialiseSecondary();
-                          }
-
-                          if (_settingsProvider.useTabsFullBrowser) {
-                            try {
-                              return AnimatedIndexedStack(
-                                index: _webViewProvider!.currentTab,
-                                duration: 100,
-                                errorCallback: _closeWithError,
-                                children: allWebViews,
-                              );
-                            } catch (e) {
-                              FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
-                              FirebaseCrashlytics.instance.recordError(e.toString(), null);
-                              _closeWithError();
-                            }
-                          } else {
-                            try {
-                              return AnimatedIndexedStack(
-                                index: 0,
-                                duration: 100,
-                                errorCallback: _closeWithError,
-                                children: [
-                                  allWebViews[0],
-                                ],
-                              );
-                            } catch (e) {
-                              FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
-                              FirebaseCrashlytics.instance.recordError(e.toString(), null);
-                              _closeWithError();
-                            }
-                          }
-                        } else {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(
-                        bottom:
-                            _webViewProvider!.bottomBarStyleEnabled && _webViewProvider!.currentUiMode == UiMode.window
-                                ? 38
-                                : 0,
-                      ),
-                      child: FutureBuilder(
+            builder: Builder(
+              builder: (_) {
+                if (_webViewProvider.browserShowInForeground) {
+                  _launchShowCases(_);
+                }
+                return Scaffold(
+                  // Dialog displaces the webview up by default
+                  resizeToAvoidBottomInset:
+                      !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+                  backgroundColor: _themeProvider.statusBar,
+                  body: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      FutureBuilder(
                         future: providerInitialised,
                         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done &&
-                              _settingsProvider.useTabsFullBrowser) {
-                            // Don't hide to hide tabs on fullscreen, or we might not be able to return to the app!
-                            if (_webViewProvider!.hideTabs && _webViewProvider!.currentUiMode == UiMode.window) {
-                              return Divider(
-                                color: Color(_settingsProvider.tabsHideBarColor),
-                                thickness: 4,
-                                height: 4,
-                              );
+                          if (snapshot.connectionState == ConnectionState.done) {
+                            final allWebViews = <Widget>[];
+                            for (final tab in _webViewProvider.tabList) {
+                              if (tab.webView == null) {
+                                allWebViews.add(const SizedBox.shrink());
+                              } else {
+                                allWebViews.add(tab.webView!);
+                              }
+                            }
+
+                            if (allWebViews.isEmpty) _closeWithError();
+
+                            if (!secondaryInitialised) {
+                              secondaryInitialised = true;
+                              _initialiseSecondary();
+                            }
+
+                            if (_settingsProvider.useTabsFullBrowser) {
+                              try {
+                                return AnimatedIndexedStack(
+                                  index: _webViewProvider.currentTab,
+                                  duration: 100,
+                                  errorCallback: _closeWithError,
+                                  children: allWebViews,
+                                );
+                              } catch (e) {
+                                FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
+                                FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                                _closeWithError();
+                              }
                             } else {
-                              return _bottomNavBar(_);
+                              try {
+                                return AnimatedIndexedStack(
+                                  index: 0,
+                                  duration: 100,
+                                  errorCallback: _closeWithError,
+                                  children: [
+                                    allWebViews[0],
+                                  ],
+                                );
+                              } catch (e) {
+                                FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
+                                FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                                _closeWithError();
+                              }
                             }
                           } else {
-                            return const SizedBox.shrink();
+                            return const Center(child: CircularProgressIndicator());
                           }
+                          return const SizedBox.shrink();
                         },
                       ),
-                    )
-                  ],
-                ),
-              );
-            },),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom:
+                              _webViewProvider.bottomBarStyleEnabled && _webViewProvider.currentUiMode == UiMode.window
+                                  ? 38
+                                  : 0,
+                        ),
+                        child: FutureBuilder(
+                          future: providerInitialised,
+                          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                            if (snapshot.connectionState == ConnectionState.done &&
+                                _settingsProvider.useTabsFullBrowser) {
+                              // Don't hide to hide tabs on fullscreen, or we might not be able to return to the app!
+                              if (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window) {
+                                return Divider(
+                                  color: Color(_settingsProvider.tabsHideBarColor),
+                                  thickness: 4,
+                                  height: 4,
+                                );
+                              } else {
+                                return _bottomNavBar(_);
+                              }
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -291,7 +292,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
   }
 
   void _launchShowCases(BuildContext _) {
-    if (!_webViewProvider!.browserShowInForeground) return;
+    if (!_webViewProvider.browserShowInForeground) return;
 
     // Ensure only one execution per minute, so that showcases wait even if the first mandatory ones are shown
     final DateTime now = DateTime.now();
@@ -306,10 +307,10 @@ class _WebViewStackViewState extends State<WebViewStackView>
       final List showCases = <GlobalKey<State<StatefulWidget>>>[];
       // Check that there is no pending showcases to show by the browser
       // If there is, wait until we open the browser for the next time
-      if ((_webViewProvider!.bottomBarStyleEnabled && !_settingsProvider.showCases.contains("webview_closeButton")) ||
-          (!_webViewProvider!.bottomBarStyleEnabled && !_settingsProvider.showCases.contains("webview_titleBar")) ||
-          (_webViewProvider!.tabList[0].isChainingBrowser &&
-              _webViewProvider!.currentTab == 0 &&
+      if ((_webViewProvider.bottomBarStyleEnabled && !_settingsProvider.showCases.contains("webview_closeButton")) ||
+          (!_webViewProvider.bottomBarStyleEnabled && !_settingsProvider.showCases.contains("webview_titleBar")) ||
+          (_webViewProvider.tabList[0].isChainingBrowser &&
+              _webViewProvider.currentTab == 0 &&
               !_settingsProvider.showCases.contains("webview_playPauseChain"))) {
         showCasesNeedToWait = true;
       }
@@ -360,16 +361,16 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
   @override
   Future dispose() async {
-    _webViewProvider!.clearOnDispose();
-    _webViewProvider!.verticalMenuIsOpen = false;
+    _webViewProvider.clearOnDispose();
+    _webViewProvider.verticalMenuIsOpen = false;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   Widget _bottomNavBar(BuildContext _) {
-    final bool isManuito = _webViewProvider!.tabList[0].currentUrl!.contains("sid=attack&user2ID=2225097") ||
-        _webViewProvider!.tabList[0].currentUrl!.contains("profiles.php?XID=2225097") ||
-        _webViewProvider!.tabList[0].currentUrl!.contains("https://www.torn.com/forums.php#/"
+    final bool isManuito = _webViewProvider.tabList[0].currentUrl!.contains("sid=attack&user2ID=2225097") ||
+        _webViewProvider.tabList[0].currentUrl!.contains("profiles.php?XID=2225097") ||
+        _webViewProvider.tabList[0].currentUrl!.contains("https://www.torn.com/forums.php#/"
             "p=threads&f=67&t=16163503&b=0&a=0");
 
     final mainTab = FadeTransition(
@@ -382,26 +383,26 @@ class _WebViewStackViewState extends State<WebViewStackView>
         toggleButtonColor: Colors.transparent,
         toggleButtonIconColor: Colors.transparent,
         toggleButtonOnPressed: () {
-          _webViewProvider!.verticalMenuClose();
-          _webViewProvider!.activateTab(0);
+          _webViewProvider.verticalMenuClose();
+          _webViewProvider.activateTab(0);
         },
         backgroundWidget: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Container(
-              color: _webViewProvider!.currentTab == 0
-                  ? _themeProvider!.navSelected
-                  : _themeProvider!.currentTheme == AppTheme.extraDark
+              color: _webViewProvider.currentTab == 0
+                  ? _themeProvider.navSelected
+                  : _themeProvider.currentTheme == AppTheme.extraDark
                       ? Colors.black
-                      : _themeProvider!.canvas,
+                      : _themeProvider.canvas,
               child: Row(
                 children: [
                   Padding(
-                    padding: _webViewProvider!.useTabIcons
+                    padding: _webViewProvider.useTabIcons
                         ? const EdgeInsets.all(10.0)
                         : const EdgeInsets.symmetric(horizontal: 5),
-                    child: _webViewProvider!.useTabIcons
-                        ? SizedBox(width: 26, height: 20, child: _webViewProvider!.getIcon(0, context))
+                    child: _webViewProvider.useTabIcons
+                        ? SizedBox(width: 26, height: 20, child: _webViewProvider.getIcon(0, context))
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -412,7 +413,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                 ),
                                 child: Column(
                                   children: [
-                                    if (_webViewProvider!.tabList[0].isChainingBrowser)
+                                    if (_webViewProvider.tabList[0].isChainingBrowser)
                                       Text(
                                         "CHAIN",
                                         textAlign: TextAlign.center,
@@ -422,13 +423,13 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                         ),
                                       ),
                                     Text(
-                                      _webViewProvider!.tabList[0].pageTitle!,
+                                      _webViewProvider.tabList[0].pageTitle!,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 2,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: isManuito ? Colors.pink : _themeProvider!.mainText,
+                                        color: isManuito ? Colors.pink : _themeProvider.mainText,
                                       ),
                                     ),
                                   ],
@@ -454,31 +455,31 @@ class _WebViewStackViewState extends State<WebViewStackView>
           CircularMenuItem(
             icon: Icons.copy_all_outlined,
             onTap: () {
-              _webViewProvider!.duplicateTab(0);
+              _webViewProvider.duplicateTab(0);
             },
           ),
-          if (_webViewProvider!.currentTab == 0)
+          if (_webViewProvider.currentTab == 0)
             CircularMenuItem(
               icon: Icons.arrow_forward,
               onTap: () {
-                _webViewProvider!.tryGoForward();
-                _webViewProvider!.verticalMenuClose();
+                _webViewProvider.tryGoForward();
+                _webViewProvider.verticalMenuClose();
               },
             ),
-          if (_webViewProvider!.currentTab == 0)
+          if (_webViewProvider.currentTab == 0)
             CircularMenuItem(
               icon: Icons.arrow_back,
               onTap: () {
-                _webViewProvider!.tryGoBack();
-                _webViewProvider!.verticalMenuClose();
+                _webViewProvider.tryGoBack();
+                _webViewProvider.verticalMenuClose();
               },
             ),
-          if (_webViewProvider!.currentTab == 0)
+          if (_webViewProvider.currentTab == 0)
             CircularMenuItem(
               icon: Icons.home_outlined,
               onTap: () {
-                _webViewProvider!.verticalMenuClose();
-                _webViewProvider!.loadCurrentTabUrl("https://www.torn.com");
+                _webViewProvider.verticalMenuClose();
+                _webViewProvider.loadCurrentTabUrl("https://www.torn.com");
               },
             ),
         ],
@@ -487,8 +488,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
 
     return Showcase(
       disableMovingAnimation: true,
-      textColor: _themeProvider!.mainText!,
-      tooltipBackgroundColor: _themeProvider!.secondBackground!,
+      textColor: _themeProvider.mainText!,
+      tooltipBackgroundColor: _themeProvider.secondBackground!,
       key: _showcaseTabsGeneral,
       title: 'New tab...!',
       description: "\nYou've opened a new tab!\n\nThere are two important things to remember: a DOUBLE TAP will "
@@ -498,16 +499,16 @@ class _WebViewStackViewState extends State<WebViewStackView>
       descTextStyle: const TextStyle(fontSize: 13),
       tooltipPadding: const EdgeInsets.all(20),
       child: GestureDetector(
-        onTap: () => _webViewProvider!.verticalMenuClose(),
+        onTap: () => _webViewProvider.verticalMenuClose(),
         child: Container(
           color: Colors.transparent,
-          height: _webViewProvider!.verticalMenuIsOpen ? 350 : 40,
+          height: _webViewProvider.verticalMenuIsOpen ? 350 : 40,
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: [
               Container(
                 height: 40,
-                color: _themeProvider!.canvas,
+                color: _themeProvider.canvas,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -522,7 +523,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                           child: VerticalDivider(
                             width: 2,
                             thickness: 2,
-                            color: _themeProvider!.mainText,
+                            color: _themeProvider.mainText,
                           ),
                         ),
                         // Main tabs widget
@@ -548,8 +549,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
                         'When in full screen mode, long-press to revert to windowed mode immediately',
                     targetPadding: const EdgeInsets.all(10),
                     disableMovingAnimation: true,
-                    textColor: _themeProvider!.mainText!,
-                    tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                    textColor: _themeProvider.mainText!,
+                    tooltipBackgroundColor: _themeProvider.secondBackground!,
                     descTextStyle: const TextStyle(fontSize: 13),
                     tooltipPadding: const EdgeInsets.all(20),
                     child: Row(
@@ -560,31 +561,30 @@ class _WebViewStackViewState extends State<WebViewStackView>
                           child: VerticalDivider(
                             width: 2,
                             thickness: 2,
-                            color: _themeProvider!.mainText,
+                            color: _themeProvider.mainText,
                           ),
                         ),
                         FadeTransition(
                           key: UniqueKey(),
                           opacity: _menuTabOpacity,
                           child: CircularMenuFixed(
-                            key: _circularMenuKey,
                             webViewProvider: _webViewProvider,
                             alignment: Alignment.centerLeft,
                             toggleButtonColor: Colors.transparent,
                             toggleButtonIconColor: Colors.transparent,
                             // Adds a return to windowed mode if we are in fullscreen with a double tap
                             // Otherwise, the default double tap behavior applies
-                            longPressed: _webViewProvider!.currentUiMode == UiMode.window
+                            longPressed: _webViewProvider.currentUiMode == UiMode.window
                                 ? null
                                 : () {
-                                    _webViewProvider!.verticalMenuClose();
-                                    _webViewProvider!.setCurrentUiMode(UiMode.window, context);
+                                    _webViewProvider.verticalMenuClose();
+                                    _webViewProvider.setCurrentUiMode(UiMode.window, context);
                                     if (_settingsProvider.fullScreenRemovesChat) {
-                                      _webViewProvider!.showAllChatsFullScreen();
+                                      _webViewProvider.showAllChatsFullScreen();
                                     }
                                   },
                             doubleTapped: () {
-                              _webViewProvider!.verticalMenuClose();
+                              _webViewProvider.verticalMenuClose();
                               showDialog<void>(
                                 context: context,
                                 builder: (BuildContext context) {
@@ -596,12 +596,12 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Container(
-                                  color: _themeProvider!.navSelected,
+                                  color: _themeProvider.navSelected,
                                   child: Row(
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                                        child: _webViewProvider!.currentUiMode == UiMode.window
+                                        child: _webViewProvider.currentUiMode == UiMode.window
                                             ? const Icon(MdiIcons.dotsHorizontal)
                                             : Icon(
                                                 MdiIcons.dotsHorizontalCircleOutline,
@@ -625,7 +625,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               CircularMenuItem(
                                 icon: MdiIcons.heartOutline,
                                 onTap: () {
-                                  _webViewProvider!.verticalMenuClose();
+                                  _webViewProvider.verticalMenuClose();
                                   showDialog<void>(
                                     context: context,
                                     builder: (BuildContext context) {
@@ -637,32 +637,32 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               CircularMenuItem(
                                 icon: MdiIcons.heartPlusOutline,
                                 onTap: () {
-                                  _webViewProvider!.verticalMenuClose();
+                                  _webViewProvider.verticalMenuClose();
                                   showDialog<void>(
                                     context: context,
                                     barrierDismissible: false,
                                     builder: (BuildContext context) {
                                       return CustomShortcutDialog(
                                         themeProvider: _themeProvider,
-                                        title: _webViewProvider!.currentTabTitle(),
-                                        url: _webViewProvider!.currentTabUrl(),
+                                        title: _webViewProvider.currentTabTitle(),
+                                        url: _webViewProvider.currentTabUrl(),
                                       );
                                     },
                                   );
                                 },
                               ),
                               CircularMenuItem(
-                                icon: _webViewProvider!.currentUiMode == UiMode.window
+                                icon: _webViewProvider.currentUiMode == UiMode.window
                                     ? MdiIcons.fullscreen
                                     : MdiIcons.fullscreenExit,
-                                color: _webViewProvider!.currentUiMode == UiMode.window ? null : Colors.orange,
+                                color: _webViewProvider.currentUiMode == UiMode.window ? null : Colors.orange,
                                 onTap: () async {
-                                  _webViewProvider!.verticalMenuClose();
+                                  _webViewProvider.verticalMenuClose();
                                   await Future.delayed(const Duration(milliseconds: 150));
-                                  if (_webViewProvider!.currentUiMode == UiMode.window) {
-                                    _webViewProvider!.setCurrentUiMode(UiMode.fullScreen, context);
+                                  if (_webViewProvider.currentUiMode == UiMode.window) {
+                                    _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
                                     if (_settingsProvider.fullScreenRemovesChat) {
-                                      _webViewProvider!.removeAllChatsFullScreen();
+                                      _webViewProvider.removeAllChatsFullScreen();
                                     }
 
                                     if (!await Prefs().getFullScreenExplanationShown()) {
@@ -676,38 +676,38 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                       );
                                     }
                                   } else {
-                                    _webViewProvider!.setCurrentUiMode(UiMode.window, context);
+                                    _webViewProvider.setCurrentUiMode(UiMode.window, context);
                                     if (_settingsProvider.fullScreenRemovesChat) {
-                                      _webViewProvider!.showAllChatsFullScreen();
+                                      _webViewProvider.showAllChatsFullScreen();
                                     }
                                   }
                                 },
                               ),
-                              if (_webViewProvider!.currentUiMode == UiMode.fullScreen &&
+                              if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
                                   !_settingsProvider.fullScreenExtraCloseButton)
                                 CircularMenuItem(
                                   icon: Icons.close,
                                   color: Colors.orange[900],
                                   onTap: () {
-                                    _webViewProvider!.verticalMenuClose();
-                                    _webViewProvider!.closeWebViewFromOutside();
+                                    _webViewProvider.verticalMenuClose();
+                                    _webViewProvider.closeWebViewFromOutside();
                                   },
                                 ),
-                              if (_webViewProvider!.currentUiMode == UiMode.fullScreen)
+                              if (_webViewProvider.currentUiMode == UiMode.fullScreen)
                                 CircularMenuItem(
                                   icon: Icons.settings,
                                   color: Colors.blue,
                                   onTap: () {
-                                    _webViewProvider!.verticalMenuClose();
-                                    _webViewProvider!.openUrlDialog();
+                                    _webViewProvider.verticalMenuClose();
+                                    _webViewProvider.openUrlDialog();
                                   },
                                 ),
-                              if (_webViewProvider!.tabList.length > 1)
+                              if (_webViewProvider.tabList.length > 1)
                                 CircularMenuItem(
                                   icon: Icons.delete_forever_outlined,
                                   color: Colors.red[800],
                                   onTap: () {
-                                    _webViewProvider!.verticalMenuClose();
+                                    _webViewProvider.verticalMenuClose();
                                     showDialog<void>(
                                       context: _,
                                       barrierDismissible: false,
@@ -723,7 +723,7 @@ class _WebViewStackViewState extends State<WebViewStackView>
                       ],
                     ),
                   ),
-                  if (_webViewProvider!.currentUiMode == UiMode.fullScreen &&
+                  if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
                       _settingsProvider.fullScreenExtraReloadButton)
                     Column(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -735,33 +735,33 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               child: VerticalDivider(
                                 width: 1,
                                 thickness: 1,
-                                color: _themeProvider!.mainText,
+                                color: _themeProvider.mainText,
                               ),
                             ),
                             GestureDetector(
                               child: Container(
-                                color: _themeProvider!.navSelected,
+                                color: _themeProvider.navSelected,
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
                                     width: 24,
                                     child: Icon(
                                       Icons.refresh,
-                                      color: _themeProvider!.mainText,
+                                      color: _themeProvider.mainText,
                                     ),
                                   ),
                                 ),
                               ),
                               onTap: () async {
-                                _webViewProvider!.reloadFromOutside();
-                                _webViewProvider!.verticalMenuClose();
+                                _webViewProvider.reloadFromOutside();
+                                _webViewProvider.verticalMenuClose();
                               },
                             ),
                           ],
                         ),
                       ],
                     ),
-                  if (_webViewProvider!.currentUiMode == UiMode.fullScreen &&
+                  if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
                       _settingsProvider.fullScreenExtraCloseButton)
                     Column(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -773,12 +773,12 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               child: VerticalDivider(
                                 width: 1,
                                 thickness: 1,
-                                color: _themeProvider!.mainText,
+                                color: _themeProvider.mainText,
                               ),
                             ),
                             GestureDetector(
                               child: Container(
-                                color: _themeProvider!.navSelected,
+                                color: _themeProvider.navSelected,
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
@@ -791,8 +791,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                 ),
                               ),
                               onTap: () async {
-                                _webViewProvider!.closeWebViewFromOutside();
-                                _webViewProvider!.verticalMenuClose();
+                                _webViewProvider.closeWebViewFromOutside();
+                                _webViewProvider.verticalMenuClose();
                               },
                             ),
                           ],
@@ -806,8 +806,8 @@ class _WebViewStackViewState extends State<WebViewStackView>
                         '\n\nLong-press to change between icons and page titles in your tabs.',
                     targetPadding: const EdgeInsets.all(10),
                     disableMovingAnimation: true,
-                    textColor: _themeProvider!.mainText!,
-                    tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                    textColor: _themeProvider.mainText!,
+                    tooltipBackgroundColor: _themeProvider.secondBackground!,
                     descTextStyle: const TextStyle(fontSize: 13),
                     tooltipPadding: const EdgeInsets.all(20),
                     child: Column(
@@ -820,32 +820,32 @@ class _WebViewStackViewState extends State<WebViewStackView>
                               child: VerticalDivider(
                                 width: 1,
                                 thickness: 1,
-                                color: _themeProvider!.mainText,
+                                color: _themeProvider.mainText,
                               ),
                             ),
                             GestureDetector(
                               child: Container(
-                                color: _themeProvider!.navSelected,
+                                color: _themeProvider.navSelected,
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
                                     width: 24,
                                     child: Icon(
                                       Icons.add_circle_outline,
-                                      color: _themeProvider!.mainText,
+                                      color: _themeProvider.mainText,
                                     ),
                                   ),
                                 ),
                               ),
                               onTap: () async {
-                                _webViewProvider!.addTab();
-                                _webViewProvider!.activateTab(_webViewProvider!.tabList.length - 1);
+                                _webViewProvider.addTab();
+                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
                                 if (_settingsProvider.showCases.contains("tabs_general2")) {
                                   ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
                                   //_settingsProvider.addShowCase = "tabs_general2";
                                 }
 
-                                if (_webViewProvider!.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
+                                if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
                                   Prefs().setExcessTabsAlerted(true);
                                   return showDialog<void>(
                                     context: _,
@@ -855,13 +855,13 @@ class _WebViewStackViewState extends State<WebViewStackView>
                                     },
                                   );
                                 }
-                                _webViewProvider!.verticalMenuClose();
+                                _webViewProvider.verticalMenuClose();
                               },
                               onLongPress: () {
-                                _webViewProvider!.useTabIcons
-                                    ? _webViewProvider!.changeUseTabIcons(false)
-                                    : _webViewProvider!.changeUseTabIcons(true);
-                                _webViewProvider!.verticalMenuClose();
+                                _webViewProvider.useTabIcons
+                                    ? _webViewProvider.changeUseTabIcons(false)
+                                    : _webViewProvider.changeUseTabIcons(true);
+                                _webViewProvider.verticalMenuClose();
                               },
                             ),
                           ],

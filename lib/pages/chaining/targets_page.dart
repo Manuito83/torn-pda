@@ -652,12 +652,12 @@ class _TargetsPageState extends State<TargetsPage> {
           MaterialPageRoute(
             builder: (context) => TargetsOptionsPage(),
           ),
-        ) as FutureOr<TargetsOptionsReturn>);
+        ));
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
         widget.retaliationCallback(newOptions.retaliationEnabled);
-        //widget.tabCallback(newOptions.tacEnabled);
+      //widget.tabCallback(newOptions.tacEnabled);
       case "Filter Color":
         showDialog(
           useRootNavigator: false,

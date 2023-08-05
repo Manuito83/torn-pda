@@ -6,10 +6,6 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
 
 class CircularMenuFixed extends StatefulWidget {
-  /// use global key to control animation anywhere in the code
-  @override
-  final GlobalKey<CircularMenuFixedState>? key;
-
   /// list of CircularMenuItem contains at least two items.
   final List<CircularMenuItem> items;
 
@@ -62,9 +58,7 @@ class CircularMenuFixed extends StatefulWidget {
     this.toggleButtonSize = 40,
     this.toggleButtonIconColor,
     this.toggleButtonAnimatedIconData = AnimatedIcons.menu_close,
-    this.key,
-  })  : assert(items.isNotEmpty, 'items can not be empty list'),
-        super(key: key);
+  }) : assert(items.isNotEmpty, 'items can not be empty list');
 
   @override
   CircularMenuFixedState createState() => CircularMenuFixedState();
