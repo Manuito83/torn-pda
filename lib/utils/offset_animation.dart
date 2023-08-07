@@ -1,5 +1,3 @@
-
-
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -10,10 +8,10 @@ class CustomOffsetAnimation extends StatefulWidget {
   const CustomOffsetAnimation({super.key, this.controller, this.child});
 
   @override
-  _CustomOffsetAnimationState createState() => _CustomOffsetAnimationState();
+  CustomOffsetAnimationState createState() => CustomOffsetAnimationState();
 }
 
-class _CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
+class CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
   late Tween<Offset> tweenOffset;
   late Tween<double> tweenScale;
 
@@ -26,8 +24,7 @@ class _CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
       end: Offset.zero,
     );
     tweenScale = Tween<double>(begin: 0.3, end: 1.0);
-    animation =
-        CurvedAnimation(parent: widget.controller!, curve: Curves.decelerate);
+    animation = CurvedAnimation(parent: widget.controller!, curve: Curves.decelerate);
     super.initState();
   }
 

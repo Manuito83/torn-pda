@@ -18,10 +18,10 @@ import 'package:torn_pda/providers/theme_provider.dart';
 
 class TargetsBackupPage extends StatefulWidget {
   @override
-  _TargetsBackupPageState createState() => _TargetsBackupPageState();
+  TargetsBackupPageState createState() => TargetsBackupPageState();
 }
 
-class _TargetsBackupPageState extends State<TargetsBackupPage> {
+class TargetsBackupPageState extends State<TargetsBackupPage> {
   late TargetsProvider _targetsProvider;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
@@ -76,15 +76,16 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
               : Colors.black,
       child: SafeArea(
         child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Builder(builder: (BuildContext context) {
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
               return Container(
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
                 child: GestureDetector(
@@ -113,28 +114,29 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                           alignment: WrapAlignment.center,
                           children: <Widget>[
                             Padding(
-                                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.share),
-                                  label: const Text("Export"),
-                                  onPressed: () async {
-                                    final export = _targetsProvider.exportTargets();
-                                    if (export == '') {
-                                      BotToast.showText(
-                                        text: "No targets to export!",
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                        contentColor: Colors.red,
-                                        duration: const Duration(seconds: 3),
-                                        contentPadding: const EdgeInsets.all(10),
-                                      );
-                                    } else {
-                                      Share.share(export);
-                                    }
-                                  },
-                                ),),
+                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.share),
+                                label: const Text("Export"),
+                                onPressed: () async {
+                                  final export = _targetsProvider.exportTargets();
+                                  if (export == '') {
+                                    BotToast.showText(
+                                      text: "No targets to export!",
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.red,
+                                      duration: const Duration(seconds: 3),
+                                      contentPadding: const EdgeInsets.all(10),
+                                    );
+                                  } else {
+                                    Share.share(export);
+                                  }
+                                },
+                              ),
+                            ),
                             Padding(
                               padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
                               child: ElevatedButton.icon(
@@ -257,7 +259,9 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                   ),
                 ),
               );
-            },),),
+            },
+          ),
+        ),
       ),
     );
   }

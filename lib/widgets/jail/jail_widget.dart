@@ -23,10 +23,10 @@ class JailWidget extends StatefulWidget {
   });
 
   @override
-  _JailWidgetState createState() => _JailWidgetState();
+  JailWidgetState createState() => JailWidgetState();
 }
 
-class _JailWidgetState extends State<JailWidget> {
+class JailWidgetState extends State<JailWidget> {
   // Log scale setup
   // Position will be between 0 and 1000
   final _minp = 0;

@@ -54,10 +54,10 @@ class WebViewPanic extends StatefulWidget {
   });
 
   @override
-  _WebViewPanicState createState() => _WebViewPanicState();
+  WebViewPanicState createState() => WebViewPanicState();
 }
 
-class _WebViewPanicState extends State<WebViewPanic> {
+class WebViewPanicState extends State<WebViewPanic> {
   WebViewController? _webViewController;
 
   UserDetailsProvider? _userProv;
@@ -295,10 +295,11 @@ class _WebViewPanicState extends State<WebViewPanic> {
               child: Row(
                 children: [
                   Flexible(
-                      child: Text(
-                    _currentPageTitle,
-                    overflow: TextOverflow.fade,
-                  ),),
+                    child: Text(
+                      _currentPageTitle,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -504,7 +505,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user =
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -628,7 +630,8 @@ class _WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user =
+                await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;

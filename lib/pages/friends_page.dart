@@ -17,10 +17,10 @@ import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class FriendsPage extends StatefulWidget {
   @override
-  _FriendsPageState createState() => _FriendsPageState();
+  FriendsPageState createState() => FriendsPageState();
 }
 
-class _FriendsPageState extends State<FriendsPage> {
+class FriendsPageState extends State<FriendsPage> {
   late ThemeProvider _themeProvider;
   late FriendsProvider _friendsProvider;
   late SettingsProvider _settingsProvider;

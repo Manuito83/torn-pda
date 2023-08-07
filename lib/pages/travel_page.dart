@@ -37,10 +37,10 @@ class TravelPage extends StatefulWidget {
   const TravelPage({super.key});
 
   @override
-  _TravelPageState createState() => _TravelPageState();
+  TravelPageState createState() => TravelPageState();
 }
 
-class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
+class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   TravelModel _travelModel = TravelModel();
   Timer? _ticker;
 
@@ -870,7 +870,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    final scheduledNotificationDateTime = _travelModel.timeArrival!.subtract(Duration(seconds: _travelNotificationAhead));
+    final scheduledNotificationDateTime =
+        _travelModel.timeArrival!.subtract(Duration(seconds: _travelNotificationAhead));
 
     final modifier = await getNotificationChannelsModifiers();
     final androidPlatformChannelSpecifics = AndroidNotificationDetails(

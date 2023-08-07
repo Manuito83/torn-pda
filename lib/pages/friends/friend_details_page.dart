@@ -19,10 +19,10 @@ class FriendDetailsPage extends StatefulWidget {
   const FriendDetailsPage({required this.friend});
 
   @override
-  _FriendDetailsPageState createState() => _FriendDetailsPageState();
+  FriendDetailsPageState createState() => FriendDetailsPageState();
 }
 
-class _FriendDetailsPageState extends State<FriendDetailsPage> {
+class FriendDetailsPageState extends State<FriendDetailsPage> {
   late UserDetailsProvider _userDetails;
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
@@ -179,11 +179,14 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
               ? 1.0
               : widget.friend!.life!.current! / widget.friend!.life!.maximum!,
         ),
-        if (widget.friend!.status!.state == "Hospital") const Icon(
-                Icons.local_hospital,
-                size: 20,
-                color: Colors.red,
-              ) else const SizedBox.shrink(),
+        if (widget.friend!.status!.state == "Hospital")
+          const Icon(
+            Icons.local_hospital,
+            size: 20,
+            color: Colors.red,
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }

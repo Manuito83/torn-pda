@@ -26,10 +26,10 @@ class VaultConfigurationDialog extends StatefulWidget {
   });
 
   @override
-  _VaultConfigurationDialogState createState() => _VaultConfigurationDialogState();
+  VaultConfigurationDialogState createState() => VaultConfigurationDialogState();
 }
 
-class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
+class VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
   late ThemeProvider _themeProvider;
 
   final _ownAmountController = TextEditingController();

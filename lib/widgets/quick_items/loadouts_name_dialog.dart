@@ -16,10 +16,10 @@ class LoadoutsNameDialog extends StatefulWidget {
   });
 
   @override
-  _LoadoutsNameDialogState createState() => _LoadoutsNameDialogState();
+  LoadoutsNameDialogState createState() => LoadoutsNameDialogState();
 }
 
-class _LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
+class LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
   final TextEditingController _nameController = TextEditingController();
 
   @override

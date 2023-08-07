@@ -18,10 +18,10 @@ class CityOptions extends StatefulWidget {
   });
 
   @override
-  _CityOptionsState createState() => _CityOptionsState();
+  CityOptionsState createState() => CityOptionsState();
 }
 
-class _CityOptionsState extends State<CityOptions> {
+class CityOptionsState extends State<CityOptions> {
   bool _cityEnabled = true;
 
   late SettingsProvider _settingsProvider;

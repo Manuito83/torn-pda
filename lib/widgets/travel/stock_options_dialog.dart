@@ -29,10 +29,10 @@ class StocksOptionsDialog extends StatefulWidget {
   });
 
   @override
-  _StocksOptionsDialogState createState() => _StocksOptionsDialogState();
+  StocksOptionsDialogState createState() => StocksOptionsDialogState();
 }
 
-class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
+class StocksOptionsDialogState extends State<StocksOptionsDialog> {
   late ThemeProvider _themeProvider;
 
   late int _capacity;

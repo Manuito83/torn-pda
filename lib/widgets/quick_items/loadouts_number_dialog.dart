@@ -9,10 +9,10 @@ class LoadoutsNumberDialog extends StatefulWidget {
   const LoadoutsNumberDialog({required this.themeProvider, required this.itemsProvider, super.key});
 
   @override
-  _LoadoutsNumberDialogState createState() => _LoadoutsNumberDialogState();
+  LoadoutsNumberDialogState createState() => LoadoutsNumberDialogState();
 }
 
-class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
+class LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

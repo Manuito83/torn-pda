@@ -6,10 +6,10 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class RevivingServicesDialog extends StatefulWidget {
   @override
-  _RevivingServicesDialogState createState() => _RevivingServicesDialogState();
+  RevivingServicesDialogState createState() => RevivingServicesDialogState();
 }
 
-class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
+class RevivingServicesDialogState extends State<RevivingServicesDialog> {
   Future? _preferencesLoaded;
   bool _nukeReviveEnabled = true;
   bool _uhcReviveEnabled = true;

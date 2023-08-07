@@ -22,10 +22,10 @@ class AboutPage extends StatefulWidget {
   const AboutPage({required this.uid});
 
   @override
-  _AboutPageState createState() => _AboutPageState();
+  AboutPageState createState() => AboutPageState();
 }
 
-class _AboutPageState extends State<AboutPage> {
+class AboutPageState extends State<AboutPage> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
@@ -109,28 +109,30 @@ class _AboutPageState extends State<AboutPage> {
                       ),
                     ),
                     Flexible(
-                        child: RichText(
-                      text: TextSpan(
-                        text: 'Join our ',
-                        style: DefaultTextStyle.of(context).style,
-                        children: <TextSpan>[
-                          TextSpan(
-                            text: 'Discord channel',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () async {
-                                const url = 'https://discord.gg/vyP23kJ';
-                                if (await canLaunchUrl(Uri.parse(url))) {
-                                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                                }
-                              },
-                          ),
-                          const TextSpan(
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Join our ',
+                          style: DefaultTextStyle.of(context).style,
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Discord channel',
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () async {
+                                  const url = 'https://discord.gg/vyP23kJ';
+                                  if (await canLaunchUrl(Uri.parse(url))) {
+                                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                            ),
+                            const TextSpan(
                               text: ' and offer suggestions for new '
-                                  'features or report bugs you find!',),
-                        ],
+                                  'features or report bugs you find!',
+                            ),
+                          ],
+                        ),
                       ),
-                    ),),
+                    ),
                   ],
                 ),
               ),
@@ -173,8 +175,9 @@ class _AboutPageState extends State<AboutPage> {
                               ),
                             ),
                             const TextSpan(
-                                text: ' and stay updated about the app or '
-                                    'suggest new features.',),
+                              text: ' and stay updated about the app or '
+                                  'suggest new features.',
+                            ),
                           ],
                         ),
                       ),
@@ -228,8 +231,9 @@ class _AboutPageState extends State<AboutPage> {
                               ),
                             ),
                             const TextSpan(
-                                text: '. It is a nice way to practice your '
-                                    'coding skills in Flutter!',),
+                              text: '. It is a nice way to practice your '
+                                  'coding skills in Flutter!',
+                            ),
                           ],
                         ),
                       ),
@@ -623,11 +627,12 @@ class _AboutPageState extends State<AboutPage> {
 
   void _showChangeLogDialog() {
     showDialog(
-        useRootNavigator: false,
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (context) {
-          return ChangeLog();
-        },);
+      useRootNavigator: false,
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (context) {
+        return ChangeLog();
+      },
+    );
   }
 }

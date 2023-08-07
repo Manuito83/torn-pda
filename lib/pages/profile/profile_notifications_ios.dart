@@ -30,10 +30,10 @@ class ProfileNotificationsIOS extends StatefulWidget {
   });
 
   @override
-  _ProfileNotificationsIOSState createState() => _ProfileNotificationsIOSState();
+  ProfileNotificationsIOSState createState() => ProfileNotificationsIOSState();
 }
 
-class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
+class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 

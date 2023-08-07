@@ -20,10 +20,10 @@ class LootNotificationsIOS extends StatefulWidget {
   });
 
   @override
-  _LootNotificationsIOSState createState() => _LootNotificationsIOSState();
+  LootNotificationsIOSState createState() => LootNotificationsIOSState();
 }
 
-class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
+class LootNotificationsIOSState extends State<LootNotificationsIOS> {
   String? _lootNotificationAheadDropDownValue;
 
   Future? _preferencesLoaded;

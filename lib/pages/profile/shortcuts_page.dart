@@ -15,10 +15,10 @@ import 'package:torn_pda/providers/theme_provider.dart';
 
 class ShortcutsPage extends StatefulWidget {
   @override
-  _ShortcutsPageState createState() => _ShortcutsPageState();
+  ShortcutsPageState createState() => ShortcutsPageState();
 }
 
-class _ShortcutsPageState extends State<ShortcutsPage> {
+class ShortcutsPageState extends State<ShortcutsPage> {
   late SettingsProvider _settingsProvider;
   late ShortcutsProvider _shortcutsProvider;
   late ThemeProvider _themeProvider;

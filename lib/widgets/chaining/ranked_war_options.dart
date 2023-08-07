@@ -15,10 +15,10 @@ class RankedWarOptions extends StatefulWidget {
   );
 
   @override
-  _RankedWarOptionsState createState() => _RankedWarOptionsState();
+  RankedWarOptionsState createState() => RankedWarOptionsState();
 }
 
-class _RankedWarOptionsState extends State<RankedWarOptions> {
+class RankedWarOptionsState extends State<RankedWarOptions> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

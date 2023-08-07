@@ -19,10 +19,10 @@ class TargetDetailsPage extends StatefulWidget {
   const TargetDetailsPage({required this.target});
 
   @override
-  _TargetDetailsPageState createState() => _TargetDetailsPageState();
+  TargetDetailsPageState createState() => TargetDetailsPageState();
 }
 
-class _TargetDetailsPageState extends State<TargetDetailsPage> {
+class TargetDetailsPageState extends State<TargetDetailsPage> {
   late UserDetailsProvider _userDetails;
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
@@ -178,11 +178,14 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
               ? 1.0
               : widget.target!.life!.current! / widget.target!.life!.maximum!,
         ),
-        if (widget.target!.status!.state == "Hospital") const Icon(
-                Icons.local_hospital,
-                size: 20,
-                color: Colors.red,
-              ) else const SizedBox.shrink(),
+        if (widget.target!.status!.state == "Hospital")
+          const Icon(
+            Icons.local_hospital,
+            size: 20,
+            color: Colors.red,
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }

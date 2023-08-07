@@ -13,10 +13,10 @@ class Countdown extends StatefulWidget {
   });
 
   @override
-  State<Countdown> createState() => _CurrentRetalExpiryWidgetState();
+  State<Countdown> createState() => CurrentRetalExpiryWidgetState();
 }
 
-class _CurrentRetalExpiryWidgetState extends State<Countdown> {
+class CurrentRetalExpiryWidgetState extends State<Countdown> {
   Timer? _expiryTicker;
 
   late Widget _currentExpiryWidget;

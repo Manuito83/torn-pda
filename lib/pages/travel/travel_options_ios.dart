@@ -20,10 +20,10 @@ class TravelOptionsIOS extends StatefulWidget {
   });
 
   @override
-  _TravelOptionsIOSState createState() => _TravelOptionsIOSState();
+  TravelOptionsIOSState createState() => TravelOptionsIOSState();
 }
 
-class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
+class TravelOptionsIOSState extends State<TravelOptionsIOS> {
   String? _travelNotificationAheadDropDownValue;
 
   Future? _preferencesLoaded;

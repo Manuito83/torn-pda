@@ -21,10 +21,10 @@ class HospitalAheadOptions extends StatefulWidget {
   });
 
   @override
-  _HospitalAheadOptionsState createState() => _HospitalAheadOptionsState();
+  HospitalAheadOptionsState createState() => HospitalAheadOptionsState();
 }
 
-class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
+class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   int? _hospitalNotificationAheadValue;
   int? _hospitalAlarmAheadDropDownValue;
   int? _hospitalTimerAheadDropDownValue;

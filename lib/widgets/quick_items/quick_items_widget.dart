@@ -28,10 +28,10 @@ class QuickItemsWidget extends StatefulWidget {
   });
 
   @override
-  _QuickItemsWidgetState createState() => _QuickItemsWidgetState();
+  QuickItemsWidgetState createState() => QuickItemsWidgetState();
 }
 
-class _QuickItemsWidgetState extends State<QuickItemsWidget> {
+class QuickItemsWidgetState extends State<QuickItemsWidget> {
   late QuickItemsProvider _itemsProvider;
   late QuickItemsProviderFaction _itemsProviderFaction;
 
@@ -61,9 +61,12 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         children: [
           Expanded(
             child: ConstrainedBox(
-              constraints: BoxConstraints.loose(Size.fromHeight(
-                      MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,) /
-                  3,),
+              constraints: BoxConstraints.loose(
+                Size.fromHeight(
+                      MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,
+                    ) /
+                    3,
+              ),
               child: Scrollbar(
                 child: SingleChildScrollView(
                   child: Wrap(
@@ -121,7 +124,9 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
-            side: item.isLoadout! || item.isEnergyPoints! || item.isNervePoints! ? const BorderSide(color: Colors.blue) : null,
+            side: item.isLoadout! || item.isEnergyPoints! || item.isNervePoints!
+                ? const BorderSide(color: Colors.blue)
+                : null,
             avatar: item.isLoadout!
                 ? null
                 : widget.faction

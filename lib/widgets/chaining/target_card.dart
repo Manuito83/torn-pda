@@ -33,10 +33,10 @@ class TargetCard extends StatefulWidget {
   const TargetCard({required this.targetModel, required Key key}) : super(key: key);
 
   @override
-  _TargetCardState createState() => _TargetCardState();
+  TargetCardState createState() => TargetCardState();
 }
 
-class _TargetCardState extends State<TargetCard> {
+class TargetCardState extends State<TargetCard> {
   TargetModel? _target;
   late TargetsProvider _targetsProvider;
   late ThemeProvider _themeProvider;
@@ -519,21 +519,24 @@ class _TargetCardState extends State<TargetCard> {
               ),
             ),
           ),
-          if (respect == 0) const SizedBox.shrink() else Flexible(
-                  child: RichText(
-                    text: TextSpan(
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: ' / FF: ',
-                          style: TextStyle(
-                            color: _themeProvider.mainText,
-                          ),
-                        ),
-                        fairFightResult,
-                      ],
+          if (respect == 0)
+            const SizedBox.shrink()
+          else
+            Flexible(
+              child: RichText(
+                text: TextSpan(
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: ' / FF: ',
+                      style: TextStyle(
+                        color: _themeProvider.mainText,
+                      ),
                     ),
-                  ),
+                    fairFightResult,
+                  ],
                 ),
+              ),
+            ),
         ],
       ),
     );
@@ -739,23 +742,24 @@ class _TargetCardState extends State<TargetCard> {
 
   Future<void> _showNotesDialog() {
     return showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: PersonalNotesDialog(
+              targetModel: _target,
+              noteType: PersonalNoteType.target,
             ),
-            elevation: 0.0,
-            backgroundColor: Colors.transparent,
-            content: SingleChildScrollView(
-              child: PersonalNotesDialog(
-                targetModel: _target,
-                noteType: PersonalNoteType.target,
-              ),
-            ),
-          );
-        },);
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _updateThisTarget() async {

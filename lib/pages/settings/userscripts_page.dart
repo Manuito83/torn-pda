@@ -24,10 +24,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 class UserScriptsPage extends StatefulWidget {
   @override
-  _UserScriptsPageState createState() => _UserScriptsPageState();
+  UserScriptsPageState createState() => UserScriptsPageState();
 }
 
-class _UserScriptsPageState extends State<UserScriptsPage> {
+class UserScriptsPageState extends State<UserScriptsPage> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
@@ -237,66 +237,69 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 Row(
                   children: [
-                    if (custom) GestureDetector(
-                            child: const Icon(
-                              MdiIcons.alphaC,
-                              color: Colors.grey,
-                              size: 20,
+                    if (custom)
+                      GestureDetector(
+                        child: const Icon(
+                          MdiIcons.alphaC,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
+                        onTap: () async {
+                          BotToast.showText(
+                            text: 'This is a custom script',
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
                             ),
-                            onTap: () async {
-                              BotToast.showText(
-                                text: 'This is a custom script',
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.grey[800]!,
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            },
-                          ) else exampleUpdatable
-                            ? GestureDetector(
-                                child: const Icon(
-                                  Icons.update,
-                                  color: Colors.green,
-                                  size: 20,
-                                ),
-                                onTap: () async {
-                                  BotToast.showText(
-                                    text: 'This is an example script that has not been edited and will be updated '
-                                        'automatically with each release of Torn PDA!',
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.green[800]!,
-                                    duration: const Duration(seconds: 4),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                },
-                              )
-                            : GestureDetector(
-                                child: const Icon(
-                                  Icons.update,
-                                  color: Colors.grey,
-                                  size: 20,
-                                ),
-                                onTap: () async {
-                                  BotToast.showText(
-                                    text: 'This is an example script that has been edited in the past and will not be '
-                                        'automatically updated.'
-                                        '\n\nIf you wish to activate auto updates, remove it and then '
-                                        'load the missing example scripts again!',
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.grey[800]!,
-                                    duration: const Duration(seconds: 7),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                },
+                            contentColor: Colors.grey[800]!,
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                        },
+                      )
+                    else
+                      exampleUpdatable
+                          ? GestureDetector(
+                              child: const Icon(
+                                Icons.update,
+                                color: Colors.green,
+                                size: 20,
                               ),
+                              onTap: () async {
+                                BotToast.showText(
+                                  text: 'This is an example script that has not been edited and will be updated '
+                                      'automatically with each release of Torn PDA!',
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.green[800]!,
+                                  duration: const Duration(seconds: 4),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              },
+                            )
+                          : GestureDetector(
+                              child: const Icon(
+                                Icons.update,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
+                              onTap: () async {
+                                BotToast.showText(
+                                  text: 'This is an example script that has been edited in the past and will not be '
+                                      'automatically updated.'
+                                      '\n\nIf you wish to activate auto updates, remove it and then '
+                                      'load the missing example scripts again!',
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.grey[800]!,
+                                  duration: const Duration(seconds: 7),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              },
+                            ),
                     const SizedBox(width: 12),
                     GestureDetector(
                       child: const Icon(Icons.edit, size: 20),
@@ -647,20 +650,21 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         },
                     ),
                     EasyRichTextPattern(
-                        targetString: 'list of tested userscripts',
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          color: Colors.blue[400],
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
-                            await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  browserTapType: BrowserTapType.short,
-                                );
-                          },),
+                      targetString: 'list of tested userscripts',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Colors.blue[400],
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          const url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
+                          await context.read<WebViewProvider>().openBrowserPreference(
+                                context: context,
+                                url: url,
+                                browserTapType: BrowserTapType.short,
+                              );
+                        },
+                    ),
                   ],
                   defaultStyle: TextStyle(
                     fontSize: 13,

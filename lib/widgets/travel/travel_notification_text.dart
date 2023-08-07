@@ -17,10 +17,10 @@ class TravelNotificationTextDialog extends StatefulWidget {
   });
 
   @override
-  _TravelNotificationTextDialogState createState() => _TravelNotificationTextDialogState();
+  TravelNotificationTextDialogState createState() => TravelNotificationTextDialogState();
 }
 
-class _TravelNotificationTextDialogState extends State<TravelNotificationTextDialog> {
+class TravelNotificationTextDialogState extends State<TravelNotificationTextDialog> {
   late ThemeProvider _themeProvider;
 
   final _notificationTitleController = TextEditingController();

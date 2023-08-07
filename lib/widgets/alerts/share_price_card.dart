@@ -11,10 +11,10 @@ class SharePriceCard extends StatefulWidget {
   const SharePriceCard({required this.stock});
 
   @override
-  _SharePriceCardState createState() => _SharePriceCardState();
+  SharePriceCardState createState() => SharePriceCardState();
 }
 
-class _SharePriceCardState extends State<SharePriceCard> {
+class SharePriceCardState extends State<SharePriceCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -45,11 +45,11 @@ class _SharePriceCardState extends State<SharePriceCard> {
   Widget header() {
     Widget gain = const SizedBox.shrink();
     if (widget.stock.owned == 1) {
-      final priceGain = widget.stock.gain.toInt();
+      final priceGain = widget.stock.gain!.toInt();
       gain = Padding(
         padding: const EdgeInsets.only(left: 10),
         child: Text(
-          "[\$${formatProfit(inputInt: priceGain.abs())}, ${widget.stock.percentageGain.toStringAsFixed(2)}%]",
+          "[\$${formatProfit(inputInt: priceGain.abs())}, ${widget.stock.percentageGain!.toStringAsFixed(2)}%]",
           style: TextStyle(
             color: priceGain >= 0 ? Colors.green : Colors.red,
             fontSize: 12,

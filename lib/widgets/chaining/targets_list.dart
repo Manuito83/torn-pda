@@ -20,10 +20,10 @@ class TargetsList extends StatefulWidget {
   const TargetsList({required this.targets});
 
   @override
-  State<TargetsList> createState() => _TargetsListState();
+  State<TargetsList> createState() => TargetsListState();
 }
 
-class _TargetsListState extends State<TargetsList> {
+class TargetsListState extends State<TargetsList> {
   late TargetsProvider _targetsProvider;
   late ChainStatusProvider _chainStatusProvider;
 
@@ -90,70 +90,73 @@ class _TargetsListState extends State<TargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
-          if (_chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).isEmpty) SlidableAction(
-                  label: 'Add to panic!',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    String message = "Added ${widget.targets[index].name} as a Panic Mode target!";
-                    Color? messageColor = Colors.green;
+          if (_chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).isEmpty)
+            SlidableAction(
+              label: 'Add to panic!',
+              backgroundColor: Colors.blue,
+              icon: MdiIcons.alphaPCircleOutline,
+              onPressed: (context) {
+                String message = "Added ${widget.targets[index].name} as a Panic Mode target!";
+                Color? messageColor = Colors.green;
 
-                    if (_chainStatusProvider.panicTargets.length < 10) {
-                      setState(() {
-                        _chainStatusProvider.addPanicTarget(
-                          PanicTargetModel()
-                            ..name = widget.targets[index].name
-                            ..level = widget.targets[index].level
-                            ..id = widget.targets[index].playerId
-                            ..factionName = widget.targets[index].faction!.factionName,
-                        );
-                      });
-                    } else {
-                      message = "There are already 10 targets in the Panic Mode list, remove some!";
-                      messageColor = Colors.orange[700];
-                    }
-
-                    BotToast.showText(
-                      text: message,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor!,
-                      duration: const Duration(seconds: 5),
-                      contentPadding: const EdgeInsets.all(10),
+                if (_chainStatusProvider.panicTargets.length < 10) {
+                  setState(() {
+                    _chainStatusProvider.addPanicTarget(
+                      PanicTargetModel()
+                        ..name = widget.targets[index].name
+                        ..level = widget.targets[index].level
+                        ..id = widget.targets[index].playerId
+                        ..factionName = widget.targets[index].faction!.factionName,
                     );
-                  },
-                ) else SlidableAction(
-                  label: 'PANIC TARGET',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    final String message = "Removed ${widget.targets[index].name} as a Panic Mode target!";
-                    const Color messageColor = Colors.green;
+                  });
+                } else {
+                  message = "There are already 10 targets in the Panic Mode list, remove some!";
+                  messageColor = Colors.orange[700];
+                }
 
-                    setState(() {
-                      _chainStatusProvider.removePanicTarget(
-                        PanicTargetModel()
-                          ..name = widget.targets[index].name
-                          ..level = widget.targets[index].level
-                          ..id = widget.targets[index].playerId
-                          ..factionName = widget.targets[index].faction!.factionName,
-                      );
-                    });
+                BotToast.showText(
+                  text: message,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: messageColor!,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            )
+          else
+            SlidableAction(
+              label: 'PANIC TARGET',
+              backgroundColor: Colors.blue,
+              icon: MdiIcons.alphaPCircleOutline,
+              onPressed: (context) {
+                final String message = "Removed ${widget.targets[index].name} as a Panic Mode target!";
+                const Color messageColor = Colors.green;
 
-                    BotToast.showText(
-                      text: message,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor,
-                      duration: const Duration(seconds: 5),
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  },
-                ),
+                setState(() {
+                  _chainStatusProvider.removePanicTarget(
+                    PanicTargetModel()
+                      ..name = widget.targets[index].name
+                      ..level = widget.targets[index].level
+                      ..id = widget.targets[index].playerId
+                      ..factionName = widget.targets[index].faction!.factionName,
+                  );
+                });
+
+                BotToast.showText(
+                  text: message,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: messageColor,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            ),
         ],
       ),
       child: TargetCard(

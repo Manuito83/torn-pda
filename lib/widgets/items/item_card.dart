@@ -31,10 +31,10 @@ class ItemCard extends StatefulWidget {
   });
 
   @override
-  _ItemCardState createState() => _ItemCardState();
+  ItemCardState createState() => ItemCardState();
 }
 
-class _ItemCardState extends State<ItemCard> {
+class ItemCardState extends State<ItemCard> {
   final _expandableController = ExpandableController();
 
   Future? _footerInformationRetrieved;
@@ -284,28 +284,50 @@ class _ItemCardState extends State<ItemCard> {
         padding: const EdgeInsetsDirectional.only(top: 15),
         child: Column(
           children: [
-            Text("Full body coverage: ${widget.item.coverage!.fullBodyCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Head coverage: ${widget.item.coverage!.headCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Throat coverage: ${widget.item.coverage!.throatCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Foot coverage: ${widget.item.coverage!.footCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Leg coverage: ${widget.item.coverage!.legCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Hand coverage: ${widget.item.coverage!.handCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Arm coverage: ${widget.item.coverage!.armCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Heart coverage: ${widget.item.coverage!.heartCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Stomach coverage: ${widget.item.coverage!.stomachCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Chest coverage: ${widget.item.coverage!.chestCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
-            Text("Groin coverage: ${widget.item.coverage!.groinCoverage}",
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),),
+            Text(
+              "Full body coverage: ${widget.item.coverage!.fullBodyCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Head coverage: ${widget.item.coverage!.headCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Throat coverage: ${widget.item.coverage!.throatCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Foot coverage: ${widget.item.coverage!.footCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Leg coverage: ${widget.item.coverage!.legCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Hand coverage: ${widget.item.coverage!.handCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Arm coverage: ${widget.item.coverage!.armCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Heart coverage: ${widget.item.coverage!.heartCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Stomach coverage: ${widget.item.coverage!.stomachCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Chest coverage: ${widget.item.coverage!.chestCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
+            Text(
+              "Groin coverage: ${widget.item.coverage!.groinCoverage}",
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 10),
+            ),
           ],
         ),
       );

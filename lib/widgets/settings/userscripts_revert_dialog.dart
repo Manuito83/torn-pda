@@ -13,10 +13,10 @@ import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptsRevertDialog extends StatefulWidget {
   @override
-  _UserScriptsRevertDialogState createState() => _UserScriptsRevertDialogState();
+  UserScriptsRevertDialogState createState() => UserScriptsRevertDialogState();
 }
 
-class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
+class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
   late ThemeProvider _themeProvider;
   late UserScriptsProvider _userScriptsProvider;
 

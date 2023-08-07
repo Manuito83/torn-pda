@@ -27,10 +27,10 @@ class UhcReviveButton extends StatefulWidget {
   });
 
   @override
-  _UhcReviveButtonState createState() => _UhcReviveButtonState();
+  UhcReviveButtonState createState() => UhcReviveButtonState();
 }
 
-class _UhcReviveButtonState extends State<UhcReviveButton> {
+class UhcReviveButtonState extends State<UhcReviveButton> {
   OwnProfileExtended? _user;
 
   @override
@@ -166,12 +166,14 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                     },
                                 ),
                                 const TextSpan(
-                                    text: "\n\nEach revive must be paid directly to the reviver and costs "
-                                        "\$1 million or 1 Xanax. There are special prices for faction contracts "
-                                        "(more information in the forums).",),
+                                  text: "\n\nEach revive must be paid directly to the reviver and costs "
+                                      "\$1 million or 1 Xanax. There are special prices for faction contracts "
+                                      "(more information in the forums).",
+                                ),
                                 const TextSpan(
-                                    text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
-                                        "you risk getting blocked from UHC!",),
+                                  text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
+                                      "you risk getting blocked from UHC!",
+                                ),
                               ],
                             ),
                           ),

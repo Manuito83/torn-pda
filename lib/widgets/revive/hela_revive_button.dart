@@ -27,10 +27,10 @@ class HelaReviveButton extends StatefulWidget {
   });
 
   @override
-  _HelaReviveButtonState createState() => _HelaReviveButtonState();
+  HelaReviveButtonState createState() => HelaReviveButtonState();
 }
 
-class _HelaReviveButtonState extends State<HelaReviveButton> {
+class HelaReviveButtonState extends State<HelaReviveButton> {
   OwnProfileExtended? _user;
 
   @override
@@ -169,8 +169,9 @@ class _HelaReviveButtonState extends State<HelaReviveButton> {
                                     },
                                 ),
                                 const TextSpan(
-                                    text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
-                                        "Refusal to pay will result in getting blacklisted.",),
+                                  text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
+                                      "Refusal to pay will result in getting blacklisted.",
+                                ),
                               ],
                             ),
                           ),

@@ -18,10 +18,10 @@ import 'package:torn_pda/providers/theme_provider.dart';
 
 class FriendsBackupPage extends StatefulWidget {
   @override
-  _FriendsBackupPageState createState() => _FriendsBackupPageState();
+  FriendsBackupPageState createState() => FriendsBackupPageState();
 }
 
-class _FriendsBackupPageState extends State<FriendsBackupPage> {
+class FriendsBackupPageState extends State<FriendsBackupPage> {
   late FriendsProvider _friendsProvider;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
@@ -74,15 +74,16 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
           : _themeProvider.canvas,
       child: SafeArea(
         child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Builder(builder: (BuildContext context) {
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
               return Container(
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
                 child: GestureDetector(
@@ -111,28 +112,29 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                           alignment: WrapAlignment.center,
                           children: <Widget>[
                             Padding(
-                                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.share),
-                                  label: const Text("Export"),
-                                  onPressed: () async {
-                                    final export = _friendsProvider.exportFriends();
-                                    if (export == '') {
-                                      BotToast.showText(
-                                        text: 'No friends to export!',
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                        contentColor: Colors.red,
-                                        duration: const Duration(seconds: 3),
-                                        contentPadding: const EdgeInsets.all(10),
-                                      );
-                                    } else {
-                                      Share.share(export);
-                                    }
-                                  },
-                                ),),
+                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.share),
+                                label: const Text("Export"),
+                                onPressed: () async {
+                                  final export = _friendsProvider.exportFriends();
+                                  if (export == '') {
+                                    BotToast.showText(
+                                      text: 'No friends to export!',
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.red,
+                                      duration: const Duration(seconds: 3),
+                                      contentPadding: const EdgeInsets.all(10),
+                                    );
+                                  } else {
+                                    Share.share(export);
+                                  }
+                                },
+                              ),
+                            ),
                             Padding(
                               padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
                               child: ElevatedButton.icon(
@@ -255,7 +257,9 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                   ),
                 ),
               );
-            },),),
+            },
+          ),
+        ),
       ),
     );
   }

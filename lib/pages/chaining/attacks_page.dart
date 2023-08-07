@@ -19,10 +19,10 @@ class AttacksPage extends StatefulWidget {
   const AttacksPage({super.key});
 
   @override
-  _AttacksPageState createState() => _AttacksPageState();
+  AttacksPageState createState() => AttacksPageState();
 }
 
-class _AttacksPageState extends State<AttacksPage> {
+class AttacksPageState extends State<AttacksPage> {
   final _searchController = TextEditingController();
 
   late AttacksProvider _attacksProvider;

@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -29,10 +31,10 @@ class StockMarketAlertsPage extends StatefulWidget {
   const StockMarketAlertsPage({this.fbUser, required this.calledFromMenu, required this.stockMarketInMenuCallback});
 
   @override
-  _StockMarketAlertsPageState createState() => _StockMarketAlertsPageState();
+  StockMarketAlertsPageState createState() => StockMarketAlertsPageState();
 }
 
-class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
+class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   FirebaseUserModel? _fbUser;
 
   var _stockList = <StockMarketStock>[];
@@ -285,82 +287,87 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   }
 
   Future _initialiseStocks() async {
-    // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
-    // the alerts pages, like in other cases
-    if (widget.calledFromMenu) {
-      _fbUser = await firestore.getUserProfile(); // We are NOT getting updated stocks every time
-    }
-
-    final allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
-    final userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
-
-    if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
-      _errorInitializing = true;
-      return;
-    }
-
-    // Convert all stocks to list
-    final allStocks = allStocksReply;
-    _stockList = allStocks.stocks!.entries.map((e) => e.value).toList();
-
-    // Convert user stocks to list
-    final userStocks = userStocksReply;
-    var ownedStocks = [];
-    if (userStocks.stocks != null) {
-      ownedStocks = userStocks.stocks!.entries.map((e) => e.value).toList();
-    }
-
-    // Get owned stocks
-    for (final stockOwned in ownedStocks) {
-      for (final listedStock in _stockList) {
-        if (stockOwned.stockId == listedStock.stockId) {
-          listedStock.owned = 1;
-
-          // Calculate gains
-          int totalShares = 0;
-          double totalMoneyGain = 0;
-          double totalMoneySpent = 0;
-          stockOwned.transactions.forEach((key, transaction) {
-            totalShares += int.parse(transaction.shares);
-            final singleGain = listedStock.currentPrice! - transaction.boughtPrice;
-            totalMoneyGain += singleGain * transaction.shares;
-            totalMoneySpent += transaction.boughtPrice * transaction.shares;
-          });
-
-          final averageGain = totalMoneyGain / totalShares;
-          final averageBought = totalMoneySpent / totalShares;
-          listedStock.gain = totalMoneyGain;
-          listedStock.percentageGain = averageGain * 100 / averageBought;
-          listedStock.sharesOwned = totalShares;
-
-          _totalValue += totalShares * listedStock.currentPrice!;
-          _totalProfit += totalMoneyGain;
-        }
+    try {
+      // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
+      // the alerts pages, like in other cases
+      if (widget.calledFromMenu) {
+        _fbUser = await firestore.getUserProfile(); // We are NOT getting updated stocks every time
       }
-    }
 
-    // Complete details based on what's saved in Firebase
-    for (final fbAlert in _fbUser!.stockMarketShares) {
-      final acronym = fbAlert.toString().substring(0, 3);
-      final regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
-      final match = regex.firstMatch(fbAlert.toString())!;
-      final fbGain = match.group(1);
-      final fbLoss = match.group(2);
-      for (final listedStock in _stockList) {
-        if (listedStock.acronym == acronym) {
-          if (fbGain != "n") {
-            listedStock.alertGain = double.tryParse(fbGain!);
-          }
-          if (fbLoss != "n") {
-            listedStock.alertLoss = double.tryParse(fbLoss!);
+      final allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
+      final userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
+
+      if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
+        _errorInitializing = true;
+        return;
+      }
+
+      // Convert all stocks to list
+      final allStocks = allStocksReply;
+      _stockList = allStocks.stocks!.entries.map((e) => e.value).toList();
+
+      // Convert user stocks to list
+      final userStocks = userStocksReply;
+      var ownedStocks = [];
+      if (userStocks.stocks != null) {
+        ownedStocks = userStocks.stocks!.entries.map((e) => e.value).toList();
+      }
+
+      // Get owned stocks
+
+      for (final stockOwned in ownedStocks) {
+        for (final listedStock in _stockList) {
+          if (stockOwned.stockId == listedStock.stockId) {
+            listedStock.owned = 1;
+
+            // Calculate gains
+            int totalShares = 0;
+            double totalMoneyGain = 0;
+            double totalMoneySpent = 0;
+            stockOwned.transactions.forEach((key, transaction) {
+              totalShares += transaction.shares is String ? int.parse(transaction.shares) : transaction.shares as int;
+              final singleGain = listedStock.currentPrice! - transaction.boughtPrice;
+              totalMoneyGain += singleGain * transaction.shares;
+              totalMoneySpent += transaction.boughtPrice * transaction.shares;
+            });
+
+            final averageGain = totalMoneyGain / totalShares;
+            final averageBought = totalMoneySpent / totalShares;
+            listedStock.gain = totalMoneyGain;
+            listedStock.percentageGain = averageGain * 100 / averageBought;
+            listedStock.sharesOwned = totalShares;
+
+            _totalValue += totalShares * listedStock.currentPrice!;
+            _totalProfit += totalMoneyGain;
           }
         }
       }
-    }
 
-    // Sort by acronym, then by owned status
-    _stockList.sort((a, b) => a.acronym!.compareTo(b.acronym!));
-    _stockList.sort((a, b) => b.owned.compareTo(a.owned));
+      // Complete details based on what's saved in Firebase
+      for (final fbAlert in _fbUser!.stockMarketShares) {
+        final acronym = fbAlert.toString().substring(0, 3);
+        final regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
+        final match = regex.firstMatch(fbAlert.toString())!;
+        final fbGain = match.group(1);
+        final fbLoss = match.group(2);
+        for (final listedStock in _stockList) {
+          if (listedStock.acronym == acronym) {
+            if (fbGain != "n") {
+              listedStock.alertGain = double.tryParse(fbGain!);
+            }
+            if (fbLoss != "n") {
+              listedStock.alertLoss = double.tryParse(fbLoss!);
+            }
+          }
+        }
+      }
+
+      // Sort by acronym, then by owned status
+      _stockList.sort((a, b) => a.acronym!.compareTo(b.acronym!));
+      _stockList.sort((a, b) => b.owned.compareTo(a.owned));
+    } catch (e, t) {
+      log("Error parsing stocks: $e\n$t");
+    }
   }
 
   void _launchBrowser({required shortTap}) {

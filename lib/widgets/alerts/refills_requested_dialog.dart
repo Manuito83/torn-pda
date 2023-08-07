@@ -11,10 +11,10 @@ class RefillsRequestedDialog extends StatefulWidget {
   const RefillsRequestedDialog({required this.userModel});
 
   @override
-  _RefillsRequestedDialogState createState() => _RefillsRequestedDialogState();
+  RefillsRequestedDialogState createState() => RefillsRequestedDialogState();
 }
 
-class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
+class RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
   FirebaseUserModel? _firebaseUserModel;
 
   @override

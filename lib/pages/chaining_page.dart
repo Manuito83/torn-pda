@@ -31,10 +31,10 @@ class ChainingPage extends StatefulWidget {
   const ChainingPage({required this.retalsRedirection});
 
   @override
-  _ChainingPageState createState() => _ChainingPageState();
+  ChainingPageState createState() => ChainingPageState();
 }
 
-class _ChainingPageState extends State<ChainingPage> {
+class ChainingPageState extends State<ChainingPage> {
   ThemeProvider? _themeProvider;
   late ChainStatusProvider _chainStatusProvider;
   Future? _preferencesLoaded;

@@ -120,10 +120,10 @@ class ProfilePage extends StatefulWidget {
   });
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
+class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future? _apiFetched;
   bool _apiGoodData = false;
   ApiError? _apiError = ApiError();
@@ -376,156 +376,158 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _shortcutsProv = Provider.of<ShortcutsProvider>(context);
     return ShowCaseWidget(
-      builder: Builder(builder: (_) {
-        _launchShowCases(_);
-        return Scaffold(
-          backgroundColor: _themeProvider!.canvas,
-          drawer: const Drawer(),
-          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          floatingActionButton: Stack(
-            children: [
-              buildSpeedDial(),
-            ],
-          ),
-          body: Container(
-            color: _themeProvider!.canvas,
-            child: FutureBuilder(
-              future: _apiFetched,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (_apiGoodData) {
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        _resetApiTimer(initCall: true);
-                        await Future.delayed(const Duration(seconds: 1));
-                      },
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: <Widget>[
-                            _headerIcons(),
-                            Column(
-                              children: _returnSections(),
-                            ),
-                            const SizedBox(height: 70),
-                          ],
-                        ),
-                      ),
-                    );
-                  } else {
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        _fetchApi();
-                        await Future.delayed(const Duration(seconds: 1));
-                      },
-                      child: SingleChildScrollView(
-                        // Physics so that page can be refreshed even with no scroll
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            const SizedBox(height: 50),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              child: _shortcutsCarrousel(),
-                            ),
-                            const SizedBox(height: 50),
-                            const Text(
-                              'OOPS!',
-                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'There was an error: ${_apiError!.errorReason}',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  if (_apiError!.pdaErrorDetails.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 20),
-                                      child: Column(
-                                        children: [
-                                          if (_apiError!.errorId != 9)
-                                            Column(
-                                              children: [
-                                                const Text(
-                                                  'Error details:',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                const SizedBox(height: 5),
-                                                Text(
-                                                  _apiError!.pdaErrorDetails,
-                                                  style: const TextStyle(
-                                                    fontStyle: FontStyle.italic,
-                                                    fontSize: 10,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
-                                            ),
-                                          if (_apiError!.errorId == 9)
-                                            Text(
-                                              "The API has been manually disabled by the developers. "
-                                              "This normally lasts just a few minutes\n\n"
-                                              "Otherwise, you can head to the forums of Discord to see if there "
-                                              "is any more information available.",
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(color: Colors.red[700]),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    'Torn PDA is retrying automatically. '
-                                    "If you have good Internet connectivity, it might be an issue with Torn's API.",
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    'You can still try to access Torn through shortcuts or the main '
-                                    'menu icon below.',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
+      builder: Builder(
+        builder: (_) {
+          _launchShowCases(_);
+          return Scaffold(
+            backgroundColor: _themeProvider!.canvas,
+            drawer: const Drawer(),
+            appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !_settingsProvider!.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
+                : null,
+            floatingActionButton: Stack(
+              children: [
+                buildSpeedDial(),
+              ],
+            ),
+            body: Container(
+              color: _themeProvider!.canvas,
+              child: FutureBuilder(
+                future: _apiFetched,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (_apiGoodData) {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          _resetApiTimer(initCall: true);
+                          await Future.delayed(const Duration(seconds: 1));
+                        },
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: <Widget>[
+                              _headerIcons(),
+                              Column(
+                                children: _returnSections(),
                               ),
-                            ),
-                            const SizedBox(height: 50),
-                          ],
+                              const SizedBox(height: 70),
+                            ],
+                          ),
                         ),
+                      );
+                    } else {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          _fetchApi();
+                          await Future.delayed(const Duration(seconds: 1));
+                        },
+                        child: SingleChildScrollView(
+                          // Physics so that page can be refreshed even with no scroll
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              const SizedBox(height: 50),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: _shortcutsCarrousel(),
+                              ),
+                              const SizedBox(height: 50),
+                              const Text(
+                                'OOPS!',
+                                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'There was an error: ${_apiError!.errorReason}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    if (_apiError!.pdaErrorDetails.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 20),
+                                        child: Column(
+                                          children: [
+                                            if (_apiError!.errorId != 9)
+                                              Column(
+                                                children: [
+                                                  const Text(
+                                                    'Error details:',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                  const SizedBox(height: 5),
+                                                  Text(
+                                                    _apiError!.pdaErrorDetails,
+                                                    style: const TextStyle(
+                                                      fontStyle: FontStyle.italic,
+                                                      fontSize: 10,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ],
+                                              ),
+                                            if (_apiError!.errorId == 9)
+                                              Text(
+                                                "The API has been manually disabled by the developers. "
+                                                "This normally lasts just a few minutes\n\n"
+                                                "Otherwise, you can head to the forums of Discord to see if there "
+                                                "is any more information available.",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(color: Colors.red[700]),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    const SizedBox(height: 20),
+                                    const Text(
+                                      'Torn PDA is retrying automatically. '
+                                      "If you have good Internet connectivity, it might be an issue with Torn's API.",
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    const Text(
+                                      'You can still try to access Torn through shortcuts or the main '
+                                      'menu icon below.',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 50),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  } else {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Text('Fetching data...'),
+                          SizedBox(height: 30),
+                          Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ],
                       ),
                     );
                   }
-                } else {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Text('Fetching data...'),
-                        SizedBox(height: 30),
-                        Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
+                },
+              ),
             ),
-          ),
-        );
-      },),
+          );
+        },
+      ),
     );
   }
 
@@ -602,9 +604,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.only(right: 5),
                           child: Text(_user!.name!),
                         ),
-                        if (_user!.lastAction!.status == "Offline") const Icon(Icons.remove_circle, size: 14, color: Colors.grey) else _user!.lastAction!.status == "Idle"
-                                ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
-                                : Icon(Icons.circle, size: 14, color: Colors.green[400]),
+                        if (_user!.lastAction!.status == "Offline")
+                          const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
+                        else
+                          _user!.lastAction!.status == "Idle"
+                              ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
+                              : Icon(Icons.circle, size: 14, color: Colors.green[400]),
                       ],
                     ),
                   ),
@@ -652,31 +657,34 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       ),
       actions: <Widget>[
-        if (_apiGoodData) Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: true);
-                  },
-                  onLongPress: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: false);
-                  },
-                  child: Showcase(
-                    key: _showcaseProfileClock,
-                    title: 'There is a lot to explore!',
-                    description: '\nAlmost anything in Torn PDA can be interacted with!\n\n'
-                        "Try for yourself, and don't forget to visit the Tips section for more "
-                        'information!',
-                    showArrow: false,
-                    disableMovingAnimation: true,
-                    textColor: _themeProvider!.mainText!,
-                    tooltipBackgroundColor: _themeProvider!.secondBackground!,
-                    descTextStyle: const TextStyle(fontSize: 13),
-                    tooltipPadding: const EdgeInsets.all(20),
-                    child: const TctClock(),
-                  ),
-                ),
-              ) else const SizedBox.shrink(),
+        if (_apiGoodData)
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () {
+                _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: true);
+              },
+              onLongPress: () {
+                _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: false);
+              },
+              child: Showcase(
+                key: _showcaseProfileClock,
+                title: 'There is a lot to explore!',
+                description: '\nAlmost anything in Torn PDA can be interacted with!\n\n'
+                    "Try for yourself, and don't forget to visit the Tips section for more "
+                    'information!',
+                showArrow: false,
+                disableMovingAnimation: true,
+                textColor: _themeProvider!.mainText!,
+                tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                descTextStyle: const TextStyle(fontSize: 13),
+                tooltipPadding: const EdgeInsets.all(20),
+                child: const TctClock(),
+              ),
+            ),
+          )
+        else
+          const SizedBox.shrink(),
         IconButton(
           icon: Icon(
             Icons.settings,
@@ -934,15 +942,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
                 GestureDetector(
                   child: IconButton(
-                      icon: const Icon(Icons.switch_access_shortcut_outlined),
-                      color: Colors.orange[900],
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => ShortcutsPage(),
-                          ),
-                        );
-                      },),
+                    icon: const Icon(Icons.switch_access_shortcut_outlined),
+                    color: Colors.orange[900],
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => ShortcutsPage(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             )
@@ -1002,15 +1011,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               onTap: () {
                 _launchBrowser(
-                    url: 'https://www.torn.com/profiles.php?'
-                        'XID=$causingId',
-                    shortTap: true,);
+                  url: 'https://www.torn.com/profiles.php?'
+                      'XID=$causingId',
+                  shortTap: true,
+                );
               },
               onLongPress: () {
                 _launchBrowser(
-                    url: 'https://www.torn.com/profiles.php?'
-                        'XID=$causingId',
-                    shortTap: false,);
+                  url: 'https://www.torn.com/profiles.php?'
+                      'XID=$causingId',
+                  shortTap: false,
+                );
               },
             );
           } else {
@@ -1966,11 +1977,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   : _user!.life!.current! / _user!.life!.maximum!,
                             ),
                           ),
-                          if (_user!.status!.state == "Hospital") const Icon(
-                                  Icons.local_hospital,
-                                  size: 20,
-                                  color: Colors.red,
-                                ) else const SizedBox.shrink(),
+                          if (_user!.status!.state == "Hospital")
+                            const Icon(
+                              Icons.local_hospital,
+                              size: 20,
+                              color: Colors.red,
+                            )
+                          else
+                            const SizedBox.shrink(),
                         ],
                       ),
                       _notificationIcon(ProfileNotification.life),
@@ -2123,7 +2137,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               notificationIcon = Icons.timer;
           }
         }
-
 
       case ProfileNotification.energy:
         if (_user!.energy!.current! < _user!.energy!.maximum!) {
@@ -2483,81 +2496,90 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         padding: const EdgeInsets.only(left: 8),
         child: Column(
           children: <Widget>[
-            if (_user!.cooldowns!.drug! > 0) Column(
+            if (_user!.cooldowns!.drug! > 0)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _drugIcon(),
+                            const SizedBox(width: 10),
+                            _drugCounter(),
+                          ],
+                        ),
+                      ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _drugIcon(),
-                                const SizedBox(width: 10),
-                                _drugCounter(),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _notificationIcon(ProfileNotification.drugs),
-                            ],
-                          ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.drugs),
                         ],
                       ),
-                      const SizedBox(height: 10),
                     ],
-                  ) else const SizedBox.shrink(),
-            if (_user!.cooldowns!.medical! > 0) Column(
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
+            if (_user!.cooldowns!.medical! > 0)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _medicalIcon(),
+                            const SizedBox(width: 10),
+                            _medicalCounter(),
+                          ],
+                        ),
+                      ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _medicalIcon(),
-                                const SizedBox(width: 10),
-                                _medicalCounter(),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _notificationIcon(ProfileNotification.medical),
-                            ],
-                          ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.medical),
                         ],
                       ),
-                      const SizedBox(height: 10),
                     ],
-                  ) else const SizedBox.shrink(),
-            if (_user!.cooldowns!.booster! > 0) Column(
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
+            if (_user!.cooldowns!.booster! > 0)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _boosterIcon(),
+                            const SizedBox(width: 10),
+                            _boosterCounter(),
+                          ],
+                        ),
+                      ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _boosterIcon(),
-                                const SizedBox(width: 10),
-                                _boosterCounter(),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _notificationIcon(ProfileNotification.booster),
-                            ],
-                          ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.booster),
                         ],
                       ),
-                      const SizedBox(height: 10),
                     ],
-                  ) else const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
           ],
         ),
       );
@@ -2662,10 +2684,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     ).formatHour;
     final String diff = _timeFormatted(timeEnd);
     return Flexible(
-        child: Padding(
-      padding: const EdgeInsets.only(right: 5),
-      child: Text('@ $formattedTime$diff'),
-    ),);
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
   }
 
   Widget _medicalCounter() {
@@ -2677,10 +2700,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     ).formatHour;
     final String diff = _timeFormatted(timeEnd);
     return Flexible(
-        child: Padding(
-      padding: const EdgeInsets.only(right: 5),
-      child: Text('@ $formattedTime$diff'),
-    ),);
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
   }
 
   Widget _boosterCounter() {
@@ -2692,10 +2716,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     ).formatHour;
     final String diff = _timeFormatted(timeEnd);
     return Flexible(
-        child: Padding(
-      padding: const EdgeInsets.only(right: 5),
-      child: Text('@ $formattedTime$diff'),
-    ),);
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
   }
 
   String _timeFormatted(DateTime timeEnd) {
@@ -3051,35 +3076,42 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(width: 10),
-                if (msg.read == 0) GestureDetector(
-                        child: Icon(Icons.markunread, color: Colors.green[600]),
-                        onLongPress: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: false,);
-                        },
-                        onTap: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: true,);
-                        },
-                      ) else GestureDetector(
-                        child: const Icon(Icons.mark_as_unread),
-                        onLongPress: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: false,);
-                        },
-                        onTap: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: true,);
-                        },
-                      ),
+                if (msg.read == 0)
+                  GestureDetector(
+                    child: Icon(Icons.markunread, color: Colors.green[600]),
+                    onLongPress: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: false,
+                      );
+                    },
+                    onTap: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: true,
+                      );
+                    },
+                  )
+                else
+                  GestureDetector(
+                    child: const Icon(Icons.mark_as_unread),
+                    onLongPress: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: false,
+                      );
+                    },
+                    onTap: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: true,
+                      );
+                    },
+                  ),
               ],
             ),
           ),
@@ -3735,10 +3767,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Text('Strength: '),
                         ),
                         SelectableText(decimalFormat.format(strengthModifiedTotal)),
-                        if (strengthModified) Text(
-                                " $strengthString",
-                                style: TextStyle(color: strengthColor, fontSize: 12),
-                              ) else const SizedBox.shrink(),
+                        if (strengthModified)
+                          Text(
+                            " $strengthString",
+                            style: TextStyle(color: strengthColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     Row(
@@ -3748,10 +3783,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Text('Defense: '),
                         ),
                         SelectableText(decimalFormat.format(defenseModifiedTotal)),
-                        if (defenseModified) Text(
-                                " $defenseString",
-                                style: TextStyle(color: defenseColor, fontSize: 12),
-                              ) else const SizedBox.shrink(),
+                        if (defenseModified)
+                          Text(
+                            " $defenseString",
+                            style: TextStyle(color: defenseColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     Row(
@@ -3761,10 +3799,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Text('Speed: '),
                         ),
                         SelectableText(decimalFormat.format(speedModifiedTotal)),
-                        if (speedModified) Text(
-                                " $speedString",
-                                style: TextStyle(color: speedColor, fontSize: 12),
-                              ) else const SizedBox.shrink(),
+                        if (speedModified)
+                          Text(
+                            " $speedString",
+                            style: TextStyle(color: speedColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     Row(
@@ -3774,10 +3815,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Text('Dexterity: '),
                         ),
                         SelectableText(decimalFormat.format(dexModifiedTotal)),
-                        if (dexModified) Text(
-                                " $dexString",
-                                style: TextStyle(color: dexColor, fontSize: 12),
-                              ) else const SizedBox.shrink(),
+                        if (dexModified)
+                          Text(
+                            " $dexString",
+                            style: TextStyle(color: dexColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     SizedBox(
@@ -4838,7 +4882,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _getFactionCrimes() async {
     try {
       if (_user == null) return;
-      final factionCrimes = await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user!.playerId.toString());
+      final factionCrimes =
+          await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user!.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
@@ -5360,9 +5405,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = const DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
+    var iOSPlatformChannelSpecifics =
+        const DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
     if (notificationId == 201) {
-      iOSPlatformChannelSpecifics = const DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
+      iOSPlatformChannelSpecifics =
+          const DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
     }
 
     final platformChannelSpecifics = NotificationDetails(
@@ -5764,19 +5811,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case "battle":
         final battle = playerString += getBattle();
         Share.share(battle);
-        //print(battle);
+      //print(battle);
       case "effective":
         final effective = playerString += getEffective();
         Share.share(effective);
-        //print(effective);
+      //print(effective);
       case "work":
         final work = playerString += getWork();
         Share.share(work);
-        //print(work);
+      //print(work);
       case "skills":
         final skills = playerString += getSkills();
         Share.share(skills);
-        //print(skills);
+      //print(skills);
       default:
         var all = playerString;
         all += "\n\nCash: ${decimalFormat.format(_user!.networth!["wallet"])}";
@@ -6189,116 +6236,117 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                      padding: const EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: const EdgeInsets.only(top: 15),
-                      decoration: BoxDecoration(
-                        color: _themeProvider!.secondBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: Offset(0.0, 10.0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/home/vault.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  const Text("Personal vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: true);
-                              },
-                              onLongPress: () async {
-                                const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: false);
-                              },
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider!.secondBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/home/vault.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Personal vault"),
+                              ],
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/faction.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  const Text("Faction vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: true);
-                              },
-                              onLongPress: () async {
-                                const url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: false);
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/home/job.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  const Text("Company vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url = 'https://www.torn.com/companies.php#/option=funds';
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: true);
-                              },
-                              onLongPress: () async {
-                                const url = "https://www.torn.com/companies.php#/option=funds";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: false);
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            child: const Text("Cancel"),
-                            onPressed: () {
+                            onPressed: () async {
+                              const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                               Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: true);
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: false);
                             },
                           ),
-                        ],
-                      ),),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/faction.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Faction vault"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: true);
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: false);
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/home/job.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Company vault"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url = 'https://www.torn.com/companies.php#/option=funds';
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: true);
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/companies.php#/option=funds";
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: false);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextButton(
+                          child: const Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: 16,
@@ -6343,85 +6391,86 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                      padding: const EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: const EdgeInsets.only(top: 15),
-                      decoration: BoxDecoration(
-                        color: _themeProvider!.secondBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: Offset(0.0, 10.0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.person),
-                                  SizedBox(width: 15),
-                                  Text("Inventory"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url = "https://www.torn.com/item.php#medical-items";
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: false);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: true);
-                                }
-                              },
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider!.secondBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: const Row(
+                              children: [
+                                Icon(Icons.person),
+                                SizedBox(width: 15),
+                                Text("Inventory"),
+                              ],
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/faction.png',
-                                    width: 25,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  const Text("Faction"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url =
-                                    'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: false);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: true);
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            child: const Text("Cancel"),
-                            onPressed: () {
-                              Navigator.of(context).pop();
+                            onPressed: () async {
+                              const url = "https://www.torn.com/item.php#medical-items";
+                              if (longPress) {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: false);
+                              } else {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: true);
+                              }
                             },
                           ),
-                        ],
-                      ),),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/faction.png',
+                                  width: 25,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Faction"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url =
+                                  'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
+                              if (longPress) {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: false);
+                              } else {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: true);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextButton(
+                          child: const Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: 16,
@@ -6785,16 +6834,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 const Icon(Icons.house_outlined),
                 const SizedBox(width: 10),
                 Flexible(
-                    child: Text(
-                  value["text"]!,
-                  style: TextStyle(
-                    color: numberDays <= 5
-                        ? numberDays <= 2
-                            ? Colors.red[500]
-                            : Colors.orange[800]
-                        : _themeProvider!.mainText,
+                  child: Text(
+                    value["text"]!,
+                    style: TextStyle(
+                      color: numberDays <= 5
+                          ? numberDays <= 2
+                              ? Colors.red[500]
+                              : Colors.orange[800]
+                          : _themeProvider!.mainText,
+                    ),
                   ),
-                ),),
+                ),
               ],
             ),
           ),
@@ -6802,11 +6852,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: false,);
+                url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize',
+                shortTap: false,
+              );
             },
             onTap: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: true,);
+                url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize',
+                shortTap: true,
+              );
             },
             child: const Padding(
               padding: EdgeInsets.only(left: 5),

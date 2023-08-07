@@ -40,10 +40,10 @@ class AwardsHeaderInfo {
 
 class AwardsPage extends StatefulWidget {
   @override
-  _AwardsPageState createState() => _AwardsPageState();
+  AwardsPageState createState() => AwardsPageState();
 }
 
-class _AwardsPageState extends State<AwardsPage> {
+class AwardsPageState extends State<AwardsPage> {
   // Main list with all awards
   final _allAwards = <Award>[];
   var _allAwardsCards = <Widget>[];
@@ -319,14 +319,15 @@ class _AwardsPageState extends State<AwardsPage> {
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
-          color: _themeProvider.secondBackground,
-          borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 2.0,
-              color: Colors.orange[800]!,
-            ),
-          ],),
+        color: _themeProvider.secondBackground,
+        borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 2.0,
+            color: Colors.orange[800]!,
+          ),
+        ],
+      ),
       margin: const EdgeInsets.all(24.0),
       child: Column(
         children: <Widget>[
@@ -418,20 +419,21 @@ class _AwardsPageState extends State<AwardsPage> {
           const Text('Awards'),
           const SizedBox(width: 8),
           GestureDetector(
-              onTap: () {
-                BotToast.showText(
-                  text: "This section is part of YATA's mobile interface, all details "
-                      "information and actions are directly linked to your YATA account.",
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green[800]!,
-                  duration: const Duration(seconds: 6),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-              child: Image.asset('images/icons/yata_logo.png', height: 28),),
+            onTap: () {
+              BotToast.showText(
+                text: "This section is part of YATA's mobile interface, all details "
+                    "information and actions are directly linked to your YATA account.",
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green[800]!,
+                duration: const Duration(seconds: 6),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            },
+            child: Image.asset('images/icons/yata_logo.png', height: 28),
+          ),
         ],
       ),
       leadingWidth: 80,
@@ -450,53 +452,59 @@ class _AwardsPageState extends State<AwardsPage> {
         ],
       ),
       actions: [
-        if (_apiSuccess) IconButton(
-                icon: Icon(
-                  Icons.bar_chart_outlined,
-                  color: _themeProvider.buttonText,
-                ),
-                onPressed: () async {
-                  // Only pass awards that are being shown in the active list
-                  final graphsToPass = <dynamic>[];
-                  for (final awardGraph in _allAwardsGraphs!) {
-                    for (final award in _allAwards) {
-                      if (awardGraph[0] == award.name) {
-                        if (!_hiddenCategories.contains(award.category)) {
-                          graphsToPass.add(awardGraph);
-                        }
-                      }
+        if (_apiSuccess)
+          IconButton(
+            icon: Icon(
+              Icons.bar_chart_outlined,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () async {
+              // Only pass awards that are being shown in the active list
+              final graphsToPass = <dynamic>[];
+              for (final awardGraph in _allAwardsGraphs!) {
+                for (final award in _allAwards) {
+                  if (awardGraph[0] == award.name) {
+                    if (!_hiddenCategories.contains(award.category)) {
+                      graphsToPass.add(awardGraph);
                     }
                   }
+                }
+              }
 
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AwardsGraphs(
-                        graphInfo: graphsToPass,
-                      ),
-                    ),
-                  );
-                },
-              ) else const SizedBox.shrink(),
-        if (_apiSuccess) PopupMenuButton<AwardsSort>(
-                icon: const Icon(
-                  Icons.sort,
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AwardsGraphs(
+                    graphInfo: graphsToPass,
+                  ),
                 ),
-                onSelected: _sortAwards,
-                itemBuilder: (BuildContext context) {
-                  return _popupSortChoices.map((AwardsSort choice) {
-                    return PopupMenuItem<AwardsSort>(
-                      value: choice,
-                      child: Text(
-                        choice.description,
-                        style: const TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                    );
-                  }).toList();
-                },
-              ) else const SizedBox.shrink(),
+              );
+            },
+          )
+        else
+          const SizedBox.shrink(),
+        if (_apiSuccess)
+          PopupMenuButton<AwardsSort>(
+            icon: const Icon(
+              Icons.sort,
+            ),
+            onSelected: _sortAwards,
+            itemBuilder: (BuildContext context) {
+              return _popupSortChoices.map((AwardsSort choice) {
+                return PopupMenuItem<AwardsSort>(
+                  value: choice,
+                  child: Text(
+                    choice.description,
+                    style: const TextStyle(
+                      fontSize: 13,
+                    ),
+                  ),
+                );
+              }).toList();
+            },
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }

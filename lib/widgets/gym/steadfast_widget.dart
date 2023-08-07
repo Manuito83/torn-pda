@@ -17,10 +17,10 @@ class GymWidget extends StatefulWidget {
   });
 
   @override
-  _GymWidgetState createState() => _GymWidgetState();
+  GymWidgetState createState() => GymWidgetState();
 }
 
-class _GymWidgetState extends State<GymWidget> {
+class GymWidgetState extends State<GymWidget> {
   Future? _steadFastFetched;
   SteadfastDetails? _steadfastDetails;
 
@@ -50,10 +50,14 @@ class _GymWidgetState extends State<GymWidget> {
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     children: [
-                      Text("STR ${_steadfastDetails!.strength}%, ", style: const TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("DEF ${_steadfastDetails!.defense}%, ", style: const TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("SPD ${_steadfastDetails!.speed}%, ", style: const TextStyle(color: Colors.white, fontSize: 11)),
-                      Text("DEX ${_steadfastDetails!.dexterity}%", style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("STR ${_steadfastDetails!.strength}%, ",
+                          style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("DEF ${_steadfastDetails!.defense}%, ",
+                          style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("SPD ${_steadfastDetails!.speed}%, ",
+                          style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      Text("DEX ${_steadfastDetails!.dexterity}%",
+                          style: const TextStyle(color: Colors.white, fontSize: 11)),
                     ],
                   ),
                 ),

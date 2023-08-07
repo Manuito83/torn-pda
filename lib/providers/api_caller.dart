@@ -144,7 +144,7 @@ class ApiError {
   }
 }
 
-class _ApiCallRequest {
+class ApiCallRequest {
   final Completer<dynamic> completer;
   final ApiSelection apiSelection;
   final String? prefix;
@@ -153,7 +153,7 @@ class _ApiCallRequest {
   final String? forcedApiKey;
   final DateTime timestamp;
 
-  _ApiCallRequest({
+  ApiCallRequest({
     required this.completer,
     required this.timestamp,
     required this.apiSelection,
@@ -168,7 +168,7 @@ class ApiCallerController extends GetxController {
   final bool _delayCalls = false;
   int maxCallsAllowed = 95;
 
-  final _callQueue = Queue<_ApiCallRequest>();
+  final _callQueue = Queue<ApiCallRequest>();
   final _callCount = 0.obs;
   final List<DateTime> _callTimestamps = [];
   Timer? _timer;
@@ -234,7 +234,7 @@ class ApiCallerController extends GetxController {
         now.difference(_callTimestamps.first).inSeconds < 60) {
       // Queue the request
       final completer = Completer<dynamic>();
-      final apiCallRequest = _ApiCallRequest(
+      final apiCallRequest = ApiCallRequest(
         completer: completer,
         timestamp: DateTime.now(),
         apiSelection: apiSelection,
@@ -289,7 +289,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  void _logQueueMessage(_ApiCallRequest request) {
+  void _logQueueMessage(ApiCallRequest request) {
     final int queuedCalls = _callQueue.length; // Get the number of API calls in the queue
     final int delaySum = _callQueue.fold(0, (sum, req) => sum + DateTime.now().difference(req.timestamp).inSeconds);
     final double averageDelay = queuedCalls > 0 ? delaySum / queuedCalls : 0;

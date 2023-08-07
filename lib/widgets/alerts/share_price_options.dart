@@ -13,10 +13,10 @@ class SharePriceOptions extends StatefulWidget {
   const SharePriceOptions(this.themeProvider, this.settingsProvider, this.stockMarketInMenuCallback);
 
   @override
-  _SharePriceOptionsState createState() => _SharePriceOptionsState();
+  SharePriceOptionsState createState() => SharePriceOptionsState();
 }
 
-class _SharePriceOptionsState extends State<SharePriceOptions> {
+class SharePriceOptionsState extends State<SharePriceOptions> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

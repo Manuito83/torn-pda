@@ -21,10 +21,10 @@ class MemberDetailsPage extends StatefulWidget {
   const MemberDetailsPage({required this.memberId});
 
   @override
-  _MemberDetailsPageState createState() => _MemberDetailsPageState();
+  MemberDetailsPageState createState() => MemberDetailsPageState();
 }
 
-class _MemberDetailsPageState extends State<MemberDetailsPage> {
+class MemberDetailsPageState extends State<MemberDetailsPage> {
   late UserDetailsProvider _userDetails;
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
@@ -218,11 +218,14 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
               ? 1.0
               : _member!.life!.current! / _member!.life!.maximum!,
         ),
-        if (_member!.status!.state == "Hospital") const Icon(
-                Icons.local_hospital,
-                size: 20,
-                color: Colors.red,
-              ) else const SizedBox.shrink(),
+        if (_member!.status!.state == "Hospital")
+          const Icon(
+            Icons.local_hospital,
+            size: 20,
+            color: Colors.red,
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }

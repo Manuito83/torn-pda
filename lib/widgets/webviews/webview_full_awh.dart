@@ -31,10 +31,10 @@ class WebViewFullAwh extends StatefulWidget {
   });
 
   @override
-  _WebViewFullAwhState createState() => _WebViewFullAwhState();
+  WebViewFullAwhState createState() => WebViewFullAwhState();
 }
 
-class _WebViewFullAwhState extends State<WebViewFullAwh> {
+class WebViewFullAwhState extends State<WebViewFullAwh> {
   InAppWebViewController? webView;
   var _initialWebViewSettings = InAppWebViewSettings();
   URLRequest? _initialUrl;
@@ -52,9 +52,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
     _initialUrl = URLRequest(url: WebUri(widget.customUrl));
     _pageTitle = widget.customTitle;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    _initialWebViewSettings = InAppWebViewSettings(
-      
-    );
+    _initialWebViewSettings = InAppWebViewSettings();
   }
 
   @override
@@ -106,16 +104,19 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
   Column mainWebViewColumn() {
     return Column(
       children: [
-        if (_settingsProvider.loadBarBrowser) SizedBox(
-                height: 2,
-                child: progress < 1.0
-                    ? LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.blueGrey[100],
-                        valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
-                      )
-                    : Container(height: 2),
-              ) else const SizedBox.shrink(),
+        if (_settingsProvider.loadBarBrowser)
+          SizedBox(
+            height: 2,
+            child: progress < 1.0
+                ? LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.blueGrey[100],
+                    valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
+                  )
+                : Container(height: 2),
+          )
+        else
+          const SizedBox.shrink(),
         Expanded(
           child: InAppWebView(
             initialUrlRequest: _initialUrl,
@@ -124,36 +125,37 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
               webView = c;
               // For Arson Warehouse
               webView!.addJavaScriptHandler(
-                  handlerName: 'copyToClipboard',
-                  callback: (args) {
-                    if (args.isNotEmpty) {
-                      // Copy custom message or total
-                      String toastMessage = "";
-                      if (args[1] == "total") {
-                        toastMessage = "Total of \$${args[0]} copied to the clipboard!";
+                handlerName: 'copyToClipboard',
+                callback: (args) {
+                  if (args.isNotEmpty) {
+                    // Copy custom message or total
+                    String toastMessage = "";
+                    if (args[1] == "total") {
+                      toastMessage = "Total of \$${args[0]} copied to the clipboard!";
+                      Clipboard.setData(ClipboardData(text: args[0]));
+                    } else if (args[1] == "message") {
+                      if (widget.sellerId > 0) {
+                        toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
                         Clipboard.setData(ClipboardData(text: args[0]));
-                      } else if (args[1] == "message") {
-                        if (widget.sellerId > 0) {
-                          toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
-                          Clipboard.setData(ClipboardData(text: args[0]));
-                          widget.awhMessageCallback();
-                        } else {
-                          toastMessage = "Message copied to the clipboard!";
-                          Clipboard.setData(ClipboardData(text: args[0]));
-                        }
+                        widget.awhMessageCallback();
+                      } else {
+                        toastMessage = "Message copied to the clipboard!";
+                        Clipboard.setData(ClipboardData(text: args[0]));
                       }
-
-                      BotToast.showText(
-                        text: toastMessage,
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.green[800]!,
-                        contentPadding: const EdgeInsets.all(10),
-                      );
                     }
-                  },);
+
+                    BotToast.showText(
+                      text: toastMessage,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.green[800]!,
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  }
+                },
+              );
             },
             onCreateWindow: (c, request) {
               // Allows IOS to open links with target=_blank
@@ -181,10 +183,11 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () async {
-              Navigator.pop(context);
-            },),
+          icon: const Icon(Icons.close),
+          onPressed: () async {
+            Navigator.pop(context);
+          },
+        ),
         title: Text(_pageTitle),
         actions: const <Widget>[],
       ),

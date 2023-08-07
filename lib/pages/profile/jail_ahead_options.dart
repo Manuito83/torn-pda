@@ -21,10 +21,10 @@ class JailAheadOptions extends StatefulWidget {
   });
 
   @override
-  _JailAheadOptionsState createState() => _JailAheadOptionsState();
+  JailAheadOptionsState createState() => JailAheadOptionsState();
 }
 
-class _JailAheadOptionsState extends State<JailAheadOptions> {
+class JailAheadOptionsState extends State<JailAheadOptions> {
   int? _jailNotificationAheadValue;
   int? _jailAlarmAheadDropDownValue;
   int? _jailTimerAheadDropDownValue;

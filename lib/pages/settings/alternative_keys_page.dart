@@ -17,10 +17,10 @@ class AlternativeKeysPage extends StatefulWidget {
   const AlternativeKeysPage({super.key});
 
   @override
-  _AlternativeKeysPageState createState() => _AlternativeKeysPageState();
+  AlternativeKeysPageState createState() => AlternativeKeysPageState();
 }
 
-class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
+class AlternativeKeysPageState extends State<AlternativeKeysPage> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
 

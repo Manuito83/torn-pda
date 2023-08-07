@@ -20,10 +20,10 @@ class SharePriceDialog extends StatefulWidget {
   });
 
   @override
-  _SharePriceDialogState createState() => _SharePriceDialogState();
+  SharePriceDialogState createState() => SharePriceDialogState();
 }
 
-class _SharePriceDialogState extends State<SharePriceDialog> {
+class SharePriceDialogState extends State<SharePriceDialog> {
   late ThemeProvider _themeProvider;
 
   bool _inputCashGain = true;
@@ -135,7 +135,13 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                     Padding(
                       padding: const EdgeInsets.only(left: 3),
                       child: Text(
-                        _inputCashGain ? _gainHintPercent.isEmpty ? "" : "($_gainHintPercent)" : _gainHintCash.isEmpty ? "" : "($_gainHintCash)",
+                        _inputCashGain
+                            ? _gainHintPercent.isEmpty
+                                ? ""
+                                : "($_gainHintPercent)"
+                            : _gainHintCash.isEmpty
+                                ? ""
+                                : "($_gainHintCash)",
                         style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
                       ),
                     ),
@@ -281,7 +287,13 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                     Padding(
                       padding: const EdgeInsets.only(left: 3),
                       child: Text(
-                        _inputCashLoss ? _lossHintPercent.isEmpty ? "" : "($_lossHintPercent)" : _lossHintCash.isEmpty ? "" : "($_lossHintCash)",
+                        _inputCashLoss
+                            ? _lossHintPercent.isEmpty
+                                ? ""
+                                : "($_lossHintPercent)"
+                            : _lossHintCash.isEmpty
+                                ? ""
+                                : "($_lossHintCash)",
                         style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
                       ),
                     ),

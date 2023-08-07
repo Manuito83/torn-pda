@@ -20,10 +20,10 @@ class LootNotificationsAndroid extends StatefulWidget {
   });
 
   @override
-  _LootNotificationsAndroidState createState() => _LootNotificationsAndroidState();
+  LootNotificationsAndroidState createState() => LootNotificationsAndroidState();
 }
 
-class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
+class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   String? _lootTypeDropDownValue;
   String? _lootNotificationAheadDropDownValue;
   String? _lootAlarmAheadDropDownValue;

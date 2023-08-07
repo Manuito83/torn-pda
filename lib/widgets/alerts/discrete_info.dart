@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 class DiscreteInfo extends StatefulWidget {
   @override
-  _DiscreteInfoState createState() => _DiscreteInfoState();
+  DiscreteInfoState createState() => DiscreteInfoState();
 }
 
-class _DiscreteInfoState extends State<DiscreteInfo> {
+class DiscreteInfoState extends State<DiscreteInfo> {
   @override
   void initState() {
     super.initState();

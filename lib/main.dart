@@ -49,9 +49,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.1.4';
-const String androidCompilation = '331';
-const String iosCompilation = '331';
+const String appVersion = '3.1.5';
+const String androidCompilation = '332';
+const String iosCompilation = '332';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -221,10 +221,10 @@ Future<void> main() async {
 
 class MyApp extends StatefulWidget {
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<MyApp> createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class MyAppState extends State<MyApp> {
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
 
@@ -251,6 +251,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+
+    // https://github.com/flutter/flutter/issues/126585
+    MediaQuery.viewInsetsOf(context).bottom;
 
     final ThemeData theme = ThemeData(
       cardColor: _themeProvider.cardColor,

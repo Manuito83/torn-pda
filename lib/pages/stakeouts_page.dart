@@ -25,10 +25,10 @@ class StakeoutsPage extends StatefulWidget {
   });
 
   @override
-  _StakeoutsPageState createState() => _StakeoutsPageState();
+  StakeoutsPageState createState() => StakeoutsPageState();
 }
 
-class _StakeoutsPageState extends State<StakeoutsPage> {
+class StakeoutsPageState extends State<StakeoutsPage> {
   final _addIdController = TextEditingController();
   final _addFormKey = GlobalKey<FormState>();
 
@@ -60,32 +60,34 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     return ShowCaseWidget(
-      builder: Builder(builder: (_) {
-        _launchShowCases(_);
-        return Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          drawer: const Drawer(),
-          appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(_),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: MediaQuery.of(context).orientation == Orientation.portrait
-                  ? _mainColumn()
-                  : SingleChildScrollView(
-                      child: _mainColumn(),
-                    ),
+      builder: Builder(
+        builder: (_) {
+          _launchShowCases(_);
+          return Scaffold(
+            backgroundColor: _themeProvider.canvas,
+            drawer: const Drawer(),
+            appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
+            bottomNavigationBar: !_settingsProvider.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(_),
+                  )
+                : null,
+            body: Container(
+              color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+                child: MediaQuery.of(context).orientation == Orientation.portrait
+                    ? _mainColumn()
+                    : SingleChildScrollView(
+                        child: _mainColumn(),
+                      ),
+              ),
             ),
-          ),
-        );
-      },),
+          );
+        },
+      ),
     );
   }
 
@@ -105,75 +107,77 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
   }
 
   Widget _mainColumn() {
-    return GetBuilder<StakeoutsController>(builder: (s) {
-      final int sleepTime = s.timeUntilStakeoutsSlept();
-      String? sleepString = "";
-      if (sleepTime > 0) {
-        sleepString = TimeFormatter(
-          inputTime: DateTime.fromMillisecondsSinceEpoch(sleepTime),
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).formatHour;
-      }
+    return GetBuilder<StakeoutsController>(
+      builder: (s) {
+        final int sleepTime = s.timeUntilStakeoutsSlept();
+        String? sleepString = "";
+        if (sleepTime > 0) {
+          sleepString = TimeFormatter(
+            inputTime: DateTime.fromMillisecondsSinceEpoch(sleepTime),
+            timeFormatSetting: _settingsProvider.currentTimeFormat,
+            timeZoneSetting: _settingsProvider.currentTimeZone,
+          ).formatHour;
+        }
 
-      return Column(
-        children: <Widget>[
-          if (sleepTime > 0)
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    children: [
-                      const Text("Alerts silenced until"),
-                      Text(sleepString!),
-                    ],
-                  ),
-                  ElevatedButton(
-                    onPressed: () => s.disableSleepStakeouts(),
-                    child: const Text("Deactivate"),
-                  ),
-                ],
+        return Column(
+          children: <Widget>[
+            if (sleepTime > 0)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      children: [
+                        const Text("Alerts silenced until"),
+                        Text(sleepString!),
+                      ],
+                    ),
+                    ElevatedButton(
+                      onPressed: () => s.disableSleepStakeouts(),
+                      child: const Text("Deactivate"),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          if (_s.stakeouts.isEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 100, 20, 0),
-              child: Column(
-                children: [
-                  const Text(
-                    "No stakeout targets!",
-                    textAlign: TextAlign.center,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Add your first one:",
-                        textAlign: TextAlign.center,
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          MdiIcons.cameraPlusOutline,
-                          size: 30,
+            if (_s.stakeouts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 100, 20, 0),
+                child: Column(
+                  children: [
+                    const Text(
+                      "No stakeout targets!",
+                      textAlign: TextAlign.center,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Add your first one:",
+                          textAlign: TextAlign.center,
                         ),
-                        onPressed: () {
-                          _showAddDialog();
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                        IconButton(
+                          icon: const Icon(
+                            MdiIcons.cameraPlusOutline,
+                            size: 30,
+                          ),
+                          onPressed: () {
+                            _showAddDialog();
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          if (context.orientation == Orientation.portrait)
-            Flexible(child: StakeoutTargetsList(stakeoutsController: s))
-          else
-            StakeoutTargetsList(stakeoutsController: s),
-        ],
-      );
-    },);
+            if (context.orientation == Orientation.portrait)
+              Flexible(child: StakeoutTargetsList(stakeoutsController: s))
+            else
+              StakeoutTargetsList(stakeoutsController: s),
+          ],
+        );
+      },
+    );
   }
 
   AppBar buildAppBar(BuildContext _) {
@@ -248,17 +252,19 @@ class _StakeoutsPageState extends State<StakeoutsPage> {
             ),
           ),
         ),
-        GetBuilder<StakeoutsController>(builder: (s) {
-          return Switch(
-            value: s.stakeoutsEnabled!,
-            onChanged: (value) {
-              value ? s.enableStakeOuts() : s.disableStakeouts();
-              BotToast.showText(text: "Stakeouts ${value ? 'enabled' : 'disabled'}!");
-            },
-            activeTrackColor: Colors.lightGreenAccent,
-            activeColor: Colors.green,
-          );
-        },),
+        GetBuilder<StakeoutsController>(
+          builder: (s) {
+            return Switch(
+              value: s.stakeoutsEnabled!,
+              onChanged: (value) {
+                value ? s.enableStakeOuts() : s.disableStakeouts();
+                BotToast.showText(text: "Stakeouts ${value ? 'enabled' : 'disabled'}!");
+              },
+              activeTrackColor: Colors.lightGreenAccent,
+              activeColor: Colors.green,
+            );
+          },
+        ),
       ],
     );
   }

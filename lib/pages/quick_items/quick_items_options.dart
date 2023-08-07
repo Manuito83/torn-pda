@@ -22,10 +22,10 @@ class QuickItemsOptions extends StatefulWidget {
   const QuickItemsOptions({required this.isFaction});
 
   @override
-  _QuickItemsOptionsState createState() => _QuickItemsOptionsState();
+  QuickItemsOptionsState createState() => QuickItemsOptionsState();
 }
 
-class _QuickItemsOptionsState extends State<QuickItemsOptions> {
+class QuickItemsOptionsState extends State<QuickItemsOptions> {
   late SettingsProvider _settingsProvider;
   QuickItemsProvider? _itemsProvider;
   late QuickItemsProviderFaction _itemsProviderFaction;
@@ -643,7 +643,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                 final allQuickItems = <Widget>[];
                 for (final item in itemsProvider.fullQuickItems) {
                   if (item.name!.toLowerCase().contains(_itemsProvider!.searchFilter.toLowerCase())) {
-                    if (item.active! || (item.isLoadout! && item.loadoutNumber! > itemsProvider.numberOfLoadoutsToShow)) {
+                    if (item.active! ||
+                        (item.isLoadout! && item.loadoutNumber! > itemsProvider.numberOfLoadoutsToShow)) {
                       continue;
                     }
 

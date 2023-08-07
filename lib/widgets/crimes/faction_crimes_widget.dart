@@ -10,10 +10,10 @@ class FactionCrimesWidget extends StatefulWidget {
   });
 
   @override
-  _FactionCrimesWidgetState createState() => _FactionCrimesWidgetState();
+  FactionCrimesWidgetState createState() => FactionCrimesWidgetState();
 }
 
-class _FactionCrimesWidgetState extends State<FactionCrimesWidget> {
+class FactionCrimesWidgetState extends State<FactionCrimesWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(

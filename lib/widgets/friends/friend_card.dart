@@ -26,10 +26,10 @@ class FriendCard extends StatefulWidget {
   const FriendCard({required this.friendModel});
 
   @override
-  _FriendCardState createState() => _FriendCardState();
+  FriendCardState createState() => FriendCardState();
 }
 
-class _FriendCardState extends State<FriendCard> {
+class FriendCardState extends State<FriendCard> {
   FriendModel? _friend;
   late FriendsProvider _friendsProvider;
   late ThemeProvider _themeProvider;
@@ -87,7 +87,9 @@ class _FriendCardState extends State<FriendCard> {
         padding: const EdgeInsets.symmetric(horizontal: 5),
         child: Card(
           shape: RoundedRectangleBorder(
-              side: BorderSide(color: _cardBorderColor(), width: 1.5), borderRadius: BorderRadius.circular(4.0),),
+            side: BorderSide(color: _cardBorderColor(), width: 1.5),
+            borderRadius: BorderRadius.circular(4.0),
+          ),
           elevation: 2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,23 +591,24 @@ class _FriendCardState extends State<FriendCard> {
 
   Future<void> _showNotesDialog() {
     return showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: PersonalNotesDialog(
+              noteType: PersonalNoteType.friend,
+              friendModel: _friend,
             ),
-            elevation: 0.0,
-            backgroundColor: Colors.transparent,
-            content: SingleChildScrollView(
-              child: PersonalNotesDialog(
-                noteType: PersonalNoteType.friend,
-                friendModel: _friend,
-              ),
-            ),
-          );
-        },);
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _updateThisFriend() async {

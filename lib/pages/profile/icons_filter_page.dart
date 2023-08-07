@@ -12,10 +12,10 @@ class IconsFilterPage extends StatefulWidget {
   final SettingsProvider? settingsProvider;
 
   @override
-  _IconsFilterPageState createState() => _IconsFilterPageState();
+  IconsFilterPageState createState() => IconsFilterPageState();
 }
 
-class _IconsFilterPageState extends State<IconsFilterPage> {
+class IconsFilterPageState extends State<IconsFilterPage> {
   List<String> filteredIcons = <String>[];
   late ThemeProvider _themeProvider;
 

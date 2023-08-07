@@ -9,10 +9,10 @@ class TabsList extends StatefulWidget {
   const TabsList({super.key});
 
   @override
-  State<TabsList> createState() => _TabsListState();
+  State<TabsList> createState() => TabsListState();
 }
 
-class _TabsListState extends State<TabsList> with TickerProviderStateMixin {
+class TabsListState extends State<TabsList> with TickerProviderStateMixin {
   late ThemeProvider _themeProvider;
   WebViewProvider? _webViewProvider;
 

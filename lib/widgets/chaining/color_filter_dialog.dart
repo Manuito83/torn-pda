@@ -9,10 +9,10 @@ import 'package:torn_pda/providers/targets_provider.dart';
 
 class ColorFilterDialog extends StatefulWidget {
   @override
-  _ColorFilterDialogState createState() => _ColorFilterDialogState();
+  ColorFilterDialogState createState() => ColorFilterDialogState();
 }
 
-class _ColorFilterDialogState extends State<ColorFilterDialog> {
+class ColorFilterDialogState extends State<ColorFilterDialog> {
   late TargetsProvider _targetsProvider;
 
   @override

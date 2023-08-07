@@ -7,10 +7,10 @@ class DisregardCrimeDialog extends StatefulWidget {
   const DisregardCrimeDialog({required this.disregardCallback});
 
   @override
-  _DisregardCrimeDialogState createState() => _DisregardCrimeDialogState();
+  DisregardCrimeDialogState createState() => DisregardCrimeDialogState();
 }
 
-class _DisregardCrimeDialogState extends State<DisregardCrimeDialog> {
+class DisregardCrimeDialogState extends State<DisregardCrimeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

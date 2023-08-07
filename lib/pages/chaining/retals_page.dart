@@ -47,10 +47,10 @@ class RetalsPage extends StatefulWidget {
   });
 
   @override
-  _RetalsPageState createState() => _RetalsPageState();
+  RetalsPageState createState() => RetalsPageState();
 }
 
-class _RetalsPageState extends State<RetalsPage> {
+class RetalsPageState extends State<RetalsPage> {
   final _chainWidgetKey = GlobalKey();
 
   RetalsController? _r;
@@ -129,20 +129,23 @@ class _RetalsPageState extends State<RetalsPage> {
           alwaysDarkBackground: false,
           callBackOptions: _callBackChainOptions,
         ),
-        if (r.updating) const CircularProgressIndicator() else Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Next update in "),
-                    Countdown(
-                      seconds: 20,
-                      callback: _updateRetal,
-                    ),
-                    const Text(" seconds"),
-                  ],
+        if (r.updating)
+          const CircularProgressIndicator()
+        else
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Next update in "),
+                Countdown(
+                  seconds: 20,
+                  callback: _updateRetal,
                 ),
-              ),
+                const Text(" seconds"),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -151,25 +154,28 @@ class _RetalsPageState extends State<RetalsPage> {
     return Column(
       children: <Widget>[
         const SizedBox(height: 5),
-        if (r.retaliationList.isEmpty) const Flexible(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 100),
-                      child: Text("No retaliation targets found!"),
-                    ),
-                  ],
+        if (r.retaliationList.isEmpty)
+          const Flexible(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 100),
+                  child: Text("No retaliation targets found!"),
                 ),
-              ) else context.orientation == Orientation.portrait
-                ? Flexible(
-                    child: RetalsTargetsList(
-                      retalsController: r,
-                    ),
-                  )
-                : RetalsTargetsList(
+              ],
+            ),
+          )
+        else
+          context.orientation == Orientation.portrait
+              ? Flexible(
+                  child: RetalsTargetsList(
                     retalsController: r,
                   ),
+                )
+              : RetalsTargetsList(
+                  retalsController: r,
+                ),
         if (_settingsProvider.appBarTop) const SizedBox(height: 50),
       ],
     );

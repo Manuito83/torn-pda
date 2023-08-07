@@ -31,10 +31,10 @@ class ProfileCheckAddButton extends StatefulWidget {
   });
 
   @override
-  State<ProfileCheckAddButton> createState() => _ProfileCheckAddButtonState();
+  State<ProfileCheckAddButton> createState() => ProfileCheckAddButtonState();
 }
 
-class _ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
+class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late TargetsProvider _targetsProvider;
@@ -176,10 +176,10 @@ class ProfileCheckAddDialog extends StatefulWidget {
   });
 
   @override
-  State<ProfileCheckAddDialog> createState() => _ProfileCheckAddDialogState();
+  State<ProfileCheckAddDialog> createState() => ProfileCheckAddDialogState();
 }
 
-class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
+class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   late TargetsProvider _targetsProvider;
   bool _toggleTargetActive = false;
   bool _isTarget = false;
@@ -261,7 +261,10 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_isTarget) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                if (_isTarget)
+                  const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
+                else
+                  const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
                 const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
@@ -279,7 +282,10 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_isStakeout) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                if (_isStakeout)
+                  const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
+                else
+                  const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
                 const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
@@ -297,7 +303,10 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_isPanic) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                if (_isPanic)
+                  const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
+                else
+                  const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
                 const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
@@ -313,33 +322,38 @@ class _ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
             ),
             // FACTION
             if (widget.factionId != 0)
-              GetBuilder<WarController>(builder: (w) {
-                if (w.initialised) {
-                  if (!_warInit) {
-                    _updateWarCondition();
-                    _warInit = true;
-                  }
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isWar) const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18) else const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _toggleWarActive ? null : () => _toggleWar(),
-                          child: _toggleWarActive
-                              ? const SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
-                              : _isWar
-                                  ? const Text("Remove war faction")
-                                  : const Text("Add war faction"),
+              GetBuilder<WarController>(
+                builder: (w) {
+                  if (w.initialised) {
+                    if (!_warInit) {
+                      _updateWarCondition();
+                      _warInit = true;
+                    }
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isWar)
+                          const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18)
+                        else
+                          const Icon(Icons.add_circle_outline, color: Colors.green, size: 18),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _toggleWarActive ? null : () => _toggleWar(),
+                            child: _toggleWarActive
+                                ? const SizedBox(height: 12, width: 12, child: CircularProgressIndicator())
+                                : _isWar
+                                    ? const Text("Remove war faction")
+                                    : const Text("Add war faction"),
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },),
+                      ],
+                    );
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
+              ),
           ],
         ),
       ),

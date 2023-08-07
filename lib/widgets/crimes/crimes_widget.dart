@@ -20,10 +20,10 @@ class CrimesWidget extends StatefulWidget {
   });
 
   @override
-  _CrimesWidgetState createState() => _CrimesWidgetState();
+  CrimesWidgetState createState() => CrimesWidgetState();
 }
 
-class _CrimesWidgetState extends State<CrimesWidget> {
+class CrimesWidgetState extends State<CrimesWidget> {
   late CrimesProvider _crimesProvider;
 
   @override
@@ -42,9 +42,12 @@ class _CrimesWidgetState extends State<CrimesWidget> {
         children: [
           Expanded(
             child: ConstrainedBox(
-              constraints: BoxConstraints.loose(Size.fromHeight(
-                      MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,) /
-                  3,),
+              constraints: BoxConstraints.loose(
+                Size.fromHeight(
+                      MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,
+                    ) /
+                    3,
+              ),
               child: Scrollbar(
                 child: SingleChildScrollView(
                   child: Wrap(

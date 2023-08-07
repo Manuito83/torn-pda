@@ -35,10 +35,10 @@ class DelayedTravelDialog extends StatefulWidget {
   });
 
   @override
-  _DelayedTravelDialogState createState() => _DelayedTravelDialogState();
+  DelayedTravelDialogState createState() => DelayedTravelDialogState();
 }
 
-class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
+class DelayedTravelDialogState extends State<DelayedTravelDialog> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
 
@@ -355,15 +355,16 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-        notificationId,
-        notificationTitle,
-        notificationSubtitle,
-        //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-        tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes!)),
-        platformChannelSpecifics,
-        payload: '211',
-        androidAllowWhileIdle: true, // Deliver at exact time
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,);
+      notificationId,
+      notificationTitle,
+      notificationSubtitle,
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes!)),
+      platformChannelSpecifics,
+      payload: '211',
+      androidAllowWhileIdle: true, // Deliver at exact time
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
   }
 
   Future _retrievePendingNotifications() async {

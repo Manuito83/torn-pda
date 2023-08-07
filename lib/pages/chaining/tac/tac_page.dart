@@ -39,10 +39,10 @@ class TacPage extends StatefulWidget {
   const TacPage({Key key, @required this.userKey}) : super(key: key);
 
   @override
-  _TacPageState createState() => _TacPageState();
+TacPageState createState() => TacPageState();
 }
 
-class _TacPageState extends State<TacPage> {
+class TacPageState extends State<TacPage> {
   var _targetCards = <TacCard>[];
 
   Future _preferencesLoaded;

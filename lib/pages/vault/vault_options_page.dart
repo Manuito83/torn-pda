@@ -16,10 +16,10 @@ class VaultOptionsPage extends StatefulWidget {
   const VaultOptionsPage({required this.vaultDetected, required this.callback});
 
   @override
-  _VaultOptionsPageState createState() => _VaultOptionsPageState();
+  VaultOptionsPageState createState() => VaultOptionsPageState();
 }
 
-class _VaultOptionsPageState extends State<VaultOptionsPage> {
+class VaultOptionsPageState extends State<VaultOptionsPage> {
   bool _vaultEnabled = true;
 
   late SettingsProvider _settingsProvider;

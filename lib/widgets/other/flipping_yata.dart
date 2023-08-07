@@ -6,11 +6,10 @@ import 'package:flutter/material.dart';
 
 class FlippingYata extends StatefulWidget {
   @override
-  _FlippingYataState createState() => _FlippingYataState();
+  FlippingYataState createState() => FlippingYataState();
 }
 
-class _FlippingYataState extends State<FlippingYata>
-    with SingleTickerProviderStateMixin {
+class FlippingYataState extends State<FlippingYata> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation _flipAnim;
 

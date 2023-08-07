@@ -33,10 +33,10 @@ class AlertsSettings extends StatefulWidget {
   const AlertsSettings(this.stockMarketInMenuCallback);
 
   @override
-  _AlertsSettingsState createState() => _AlertsSettingsState();
+  AlertsSettingsState createState() => AlertsSettingsState();
 }
 
-class _AlertsSettingsState extends State<AlertsSettings> {
+class AlertsSettingsState extends State<AlertsSettings> {
   FirebaseUserModel? _firebaseUserModel;
 
   Future? _getFirebaseAndTornDetails;

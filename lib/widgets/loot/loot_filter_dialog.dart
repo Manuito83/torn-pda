@@ -12,10 +12,10 @@ class LootFilterDialog extends StatefulWidget {
   const LootFilterDialog({required this.allNpcs, required this.filteredNpcs});
 
   @override
-  _LootFilterDialogState createState() => _LootFilterDialogState();
+  LootFilterDialogState createState() => LootFilterDialogState();
 }
 
-class _LootFilterDialogState extends State<LootFilterDialog> {
+class LootFilterDialogState extends State<LootFilterDialog> {
   @override
   void initState() {
     super.initState();

@@ -24,10 +24,10 @@ class TacCard extends StatefulWidget {
   TacCard({@required this.target, @required this.tacProvider, @required Key key}) : super(key: key);
 
   @override
-  _TacCardState createState() => _TacCardState();
+TacCardState createState() => TacCardState();
 }
 
-class _TacCardState extends State<TacCard> {
+class TacCardState extends State<TacCard> {
   TacTarget _target;
 
   SettingsProvider _settingsProvider;

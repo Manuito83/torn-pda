@@ -23,10 +23,10 @@ class YataTargetsDialog extends StatefulWidget {
   });
 
   @override
-  _YataTargetsDialogState createState() => _YataTargetsDialogState();
+  YataTargetsDialogState createState() => YataTargetsDialogState();
 }
 
-class _YataTargetsDialogState extends State<YataTargetsDialog> {
+class YataTargetsDialogState extends State<YataTargetsDialog> {
   late TargetsProvider _targetsProvider;
   late ThemeProvider _themeProvider;
 
@@ -50,25 +50,26 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                  padding: const EdgeInsets.only(
-                    top: 45,
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                  ),
-                  margin: const EdgeInsets.only(top: 15),
-                  decoration: BoxDecoration(
-                    color: _themeProvider.secondBackground,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10.0,
-                        offset: Offset(0.0, 10.0),
-                      ),
-                    ],
-                  ),
-                  child: _dialogInit ? _dialogDistributionPhase() : _dialogImportingPhase(),),
+                padding: const EdgeInsets.only(
+                  top: 45,
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                ),
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
+                  color: _themeProvider.secondBackground,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10.0,
+                      offset: Offset(0.0, 10.0),
+                    ),
+                  ],
+                ),
+                child: _dialogInit ? _dialogDistributionPhase() : _dialogImportingPhase(),
+              ),
             ),
             Positioned(
               left: 16,
@@ -196,50 +197,51 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         ),
         const SizedBox(height: 10),
         ElevatedButton(
-            onPressed: somethingToExportToYata
-                ? () async {
-                    Navigator.of(context).pop();
-                    final exportResult = await _targetsProvider.postTargetsToYata(
-                      onlyLocal: widget.onlyLocal,
-                      bothSides: widget.bothSides,
+          onPressed: somethingToExportToYata
+              ? () async {
+                  Navigator.of(context).pop();
+                  final exportResult = await _targetsProvider.postTargetsToYata(
+                    onlyLocal: widget.onlyLocal,
+                    bothSides: widget.bothSides,
+                  );
+                  if (exportResult == "") {
+                    BotToast.showText(
+                      text: "There was an error exporting!",
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.red[800]!,
+                      duration: const Duration(seconds: 5),
+                      contentPadding: const EdgeInsets.all(10),
                     );
-                    if (exportResult == "") {
-                      BotToast.showText(
-                        text: "There was an error exporting!",
-                        textStyle: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.red[800]!,
-                        duration: const Duration(seconds: 5),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    } else {
-                      BotToast.showText(
-                        text: exportResult,
-                        textStyle: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.green[800]!,
-                        duration: const Duration(seconds: 5),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    }
+                  } else {
+                    BotToast.showText(
+                      text: exportResult,
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.green[800]!,
+                      duration: const Duration(seconds: 5),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
                   }
-                : null,
-            child: const Column(
-              children: [
-                Text(
-                  "EXPORT",
-                  style: TextStyle(fontSize: 11),
-                ),
-                Text(
-                  "TO YATA",
-                  style: TextStyle(fontSize: 11),
-                ),
-              ],
-            ),),
+                }
+              : null,
+          child: const Column(
+            children: [
+              Text(
+                "EXPORT",
+                style: TextStyle(fontSize: 11),
+              ),
+              Text(
+                "TO YATA",
+                style: TextStyle(fontSize: 11),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,

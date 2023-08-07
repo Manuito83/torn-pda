@@ -55,10 +55,10 @@ class TargetsPage extends StatefulWidget {
   });
 
   @override
-  _TargetsPageState createState() => _TargetsPageState();
+  TargetsPageState createState() => TargetsPageState();
 }
 
-class _TargetsPageState extends State<TargetsPage> {
+class TargetsPageState extends State<TargetsPage> {
   final _searchController = TextEditingController();
   final _addIdController = TextEditingController();
 

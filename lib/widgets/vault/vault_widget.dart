@@ -25,10 +25,10 @@ class VaultWidget extends StatefulWidget {
   });
 
   @override
-  _VaultWidgetState createState() => _VaultWidgetState();
+  VaultWidgetState createState() => VaultWidgetState();
 }
 
-class _VaultWidgetState extends State<VaultWidget> {
+class VaultWidgetState extends State<VaultWidget> {
   Future? _vaultAssessed;
   var _vaultStatus = VaultStatusModel();
   bool _firstUse = false;
@@ -89,117 +89,118 @@ class _VaultWidgetState extends State<VaultWidget> {
 
   Widget _vaultMain() {
     return FutureBuilder(
-        future: _vaultAssessed,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (_vaultStatus.error!) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Flexible(
-                    child: Text(
-                      "There was an error identifying your last saved transaction, please reenter "
-                      "the current vault distribution again",
-                      style: TextStyle(color: Colors.red, fontSize: 12),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  _vaultConfigurationIcon(),
-                ],
-              );
-            }
-
-            if (_firstUse) {
-              return Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Flexible(
-                        child: Text(
-                          "Initialise vault values",
-                          style: TextStyle(color: Colors.orange, fontSize: 12),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      _vaultConfigurationIcon(),
-                    ],
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          "(alternatively, deactivate the widget through the appbar icon)",
-                          style: TextStyle(
-                            color: Colors.orange,
-                            fontSize: 11,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              );
-            } else {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Column(
-                      children: [
-                        Text(
-                          widget.userProvider!.basic!.name!,
-                          style: const TextStyle(color: Colors.orange, fontSize: 12),
-                        ),
-                        Text(
-                          "\$${_moneyFormat.format(_vaultStatus.player)}",
-                          style: const TextStyle(color: Colors.green, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      "\$${_moneyFormat.format(_vaultStatus.total)}",
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Column(
-                      children: [
-                        Text(
-                          widget.userProvider!.basic!.married?.spouseId == 0
-                              ? "Spouse"
-                              : widget.userProvider!.basic!.married!.spouseName!,
-                          style: const TextStyle(color: Colors.orange, fontSize: 12),
-                        ),
-                        Text(
-                          "\$${_moneyFormat.format(_vaultStatus.spouse)}",
-                          style: const TextStyle(color: Colors.green, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }
-          } else {
-            return const Row(
+      future: _vaultAssessed,
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (_vaultStatus.error!) {
+            return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  height: 12,
-                  width: 12,
-                  child: CircularProgressIndicator(color: Colors.grey),
+                const Flexible(
+                  child: Text(
+                    "There was an error identifying your last saved transaction, please reenter "
+                    "the current vault distribution again",
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _vaultConfigurationIcon(),
+              ],
+            );
+          }
+
+          if (_firstUse) {
+            return Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Initialise vault values",
+                        style: TextStyle(color: Colors.orange, fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    _vaultConfigurationIcon(),
+                  ],
+                ),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        "(alternatively, deactivate the widget through the appbar icon)",
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            );
+          } else {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Column(
+                    children: [
+                      Text(
+                        widget.userProvider!.basic!.name!,
+                        style: const TextStyle(color: Colors.orange, fontSize: 12),
+                      ),
+                      Text(
+                        "\$${_moneyFormat.format(_vaultStatus.player)}",
+                        style: const TextStyle(color: Colors.green, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    "\$${_moneyFormat.format(_vaultStatus.total)}",
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Column(
+                    children: [
+                      Text(
+                        widget.userProvider!.basic!.married?.spouseId == 0
+                            ? "Spouse"
+                            : widget.userProvider!.basic!.married!.spouseName!,
+                        style: const TextStyle(color: Colors.orange, fontSize: 12),
+                      ),
+                      Text(
+                        "\$${_moneyFormat.format(_vaultStatus.spouse)}",
+                        style: const TextStyle(color: Colors.green, fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             );
           }
-        },);
+        } else {
+          return const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 12,
+                width: 12,
+                child: CircularProgressIndicator(color: Colors.grey),
+              ),
+            ],
+          );
+        }
+      },
+    );
   }
 
   Future _buildVault() async {
@@ -248,7 +249,8 @@ class _VaultWidgetState extends State<VaultWidget> {
         final date = format.parse("$day $hour", true);
 
         var playerTransaction = false;
-        final String name = trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"] ?? "";
+        final String name =
+            trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"] ?? "";
         if (name.contains("[${widget.playerId}]")) {
           playerTransaction = true;
         }

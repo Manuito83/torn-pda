@@ -28,10 +28,10 @@ class ItemsPage extends StatefulWidget {
   const ItemsPage({super.key});
 
   @override
-  _ItemsPageState createState() => _ItemsPageState();
+  ItemsPageState createState() => ItemsPageState();
 }
 
-class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
+class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   List<Widget> _allItemsCards = <Widget>[];
   final List<Item> _allItems = <Item>[];
 
@@ -144,29 +144,30 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                 if (snapshot.connectionState == ConnectionState.done) {
                   if (_itemsSuccess) {
                     return SlidingUpPanel(
-                        controller: _pc,
-                        maxHeight: _panelHeightOpen,
-                        minHeight: _panelHeightClosed,
-                        renderPanelSheet: false,
-                        backdropEnabled: true,
-                        isDraggable: false,
-                        parallaxOffset: .0,
-                        panelBuilder: (sc) => _bottomPanel(sc),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(18.0),
-                          topRight: Radius.circular(18.0),
-                        ),
-                        onPanelClosed: () {
-                          _filterPhysics = const NeverScrollableScrollPhysics();
-                        },
-                        onPanelOpened: () {
-                          _filterPhysics = const AlwaysScrollableScrollPhysics();
-                        },
-                        onPanelSlide: (double pos) {
-                          setState(() {
-                            _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                          });
-                        },);
+                      controller: _pc,
+                      maxHeight: _panelHeightOpen,
+                      minHeight: _panelHeightClosed,
+                      renderPanelSheet: false,
+                      backdropEnabled: true,
+                      isDraggable: false,
+                      parallaxOffset: .0,
+                      panelBuilder: (sc) => _bottomPanel(sc),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(18.0),
+                        topRight: Radius.circular(18.0),
+                      ),
+                      onPanelClosed: () {
+                        _filterPhysics = const NeverScrollableScrollPhysics();
+                      },
+                      onPanelOpened: () {
+                        _filterPhysics = const AlwaysScrollableScrollPhysics();
+                      },
+                      onPanelSlide: (double pos) {
+                        setState(() {
+                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                        });
+                      },
+                    );
                   } else {
                     return const SizedBox.shrink();
                   }
@@ -235,25 +236,28 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       ),
       title: const Text('Items'),
       actions: [
-        if (_itemsSuccess) PopupMenuButton<ItemsSort>(
-                icon: const Icon(
-                  Icons.sort,
-                ),
-                onSelected: _sortAndRebuildItemsCards,
-                itemBuilder: (BuildContext context) {
-                  return _popupSortChoices.map((ItemsSort choice) {
-                    return PopupMenuItem<ItemsSort>(
-                      value: choice,
-                      child: Text(
-                        choice.description,
-                        style: const TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                    );
-                  }).toList();
-                },
-              ) else const SizedBox.shrink(),
+        if (_itemsSuccess)
+          PopupMenuButton<ItemsSort>(
+            icon: const Icon(
+              Icons.sort,
+            ),
+            onSelected: _sortAndRebuildItemsCards,
+            itemBuilder: (BuildContext context) {
+              return _popupSortChoices.map((ItemsSort choice) {
+                return PopupMenuItem<ItemsSort>(
+                  value: choice,
+                  child: Text(
+                    choice.description,
+                    style: const TextStyle(
+                      fontSize: 13,
+                    ),
+                  ),
+                );
+              }).toList();
+            },
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }
@@ -313,14 +317,15 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       physics: _filterPhysics,
       child: Container(
         decoration: BoxDecoration(
-            color: _themeProvider!.secondBackground,
-            borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 2.0,
-                color: Colors.orange[800]!,
-              ),
-            ],),
+          color: _themeProvider!.secondBackground,
+          borderRadius: const BorderRadius.all(Radius.circular(20.0)),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 2.0,
+              color: Colors.orange[800]!,
+            ),
+          ],
+        ),
         margin: const EdgeInsets.all(24.0),
         child: Column(
           children: <Widget>[

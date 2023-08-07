@@ -21,10 +21,10 @@ class WarAheadOptions extends StatefulWidget {
   });
 
   @override
-  _WarAheadOptionsState createState() => _WarAheadOptionsState();
+  WarAheadOptionsState createState() => WarAheadOptionsState();
 }
 
-class _WarAheadOptionsState extends State<WarAheadOptions> {
+class WarAheadOptionsState extends State<WarAheadOptions> {
   int? _warNotificationAheadValue;
   int? _warAlarmAheadDropDownValue;
   int? _warTimerAheadDropDownValue;

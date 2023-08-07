@@ -22,10 +22,10 @@ class LootAlertsDialog extends StatefulWidget {
   const LootAlertsDialog({required this.userModel});
 
   @override
-  _LootAlertsDialogState createState() => _LootAlertsDialogState();
+  LootAlertsDialogState createState() => LootAlertsDialogState();
 }
 
-class _LootAlertsDialogState extends State<LootAlertsDialog> {
+class LootAlertsDialogState extends State<LootAlertsDialog> {
   FirebaseUserModel? _firebaseUserModel;
 
   final List<NpcAlertModel> _npcAlertModelList = <NpcAlertModel>[];
@@ -120,7 +120,8 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
 
   Future _initialiseNpcs() async {
     // Get current NPCs
-    final String dbNpcsResult = (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
+    final String dbNpcsResult =
+        (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
     final List npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
     // Get npc names. First with the known ones, then calling the API as last resort
@@ -180,10 +181,10 @@ class NpcAlertConfigLine extends StatefulWidget {
   });
 
   @override
-  State<NpcAlertConfigLine> createState() => _NpcAlertConfigLineState();
+  State<NpcAlertConfigLine> createState() => NpcAlertConfigLineState();
 }
 
-class _NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
+class NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
   @override
   Widget build(BuildContext context) {
     return Padding(

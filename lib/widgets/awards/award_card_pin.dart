@@ -17,10 +17,10 @@ class AwardCardPin extends StatefulWidget {
   final Function pinConditionChange;
 
   @override
-  _AwardCardPinState createState() => _AwardCardPinState();
+  AwardCardPinState createState() => AwardCardPinState();
 }
 
-class _AwardCardPinState extends State<AwardCardPin> {
+class AwardCardPinState extends State<AwardCardPin> {
   late AwardsProvider _pinProvider;
 
   bool _pinActive = true;

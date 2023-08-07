@@ -20,10 +20,10 @@ class BounceTabBar extends StatefulWidget {
   });
 
   @override
-  _BounceTabBarState createState() => _BounceTabBarState();
+  BounceTabBarState createState() => BounceTabBarState();
 }
 
-class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderStateMixin {
+class BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation _animTabBarIn;
   late Animation _animTabBarOut;
@@ -85,7 +85,6 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
     _controller.forward(from: 1.0);
   }
 
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -126,7 +125,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
                     if (index == _currentIndex) {
                       return Expanded(
                         child: CustomPaint(
-                          foregroundPainter: _CircleItemPainter(_animCircleItem.value),
+                          foregroundPainter: CircleItemPainter(_animCircleItem.value),
                           child: Transform.translate(
                             offset: widget.locationTop ? Offset(0.0, -currentElevation) : Offset(0.0, currentElevation),
                             child: innerWidget,
@@ -158,10 +157,10 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
   }
 }
 
-class _CircleItemPainter extends CustomPainter {
+class CircleItemPainter extends CustomPainter {
   final double progress;
 
-  _CircleItemPainter(this.progress);
+  CircleItemPainter(this.progress);
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -25,10 +25,10 @@ class ChainWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ChainWidgetState createState() => _ChainWidgetState();
+  ChainWidgetState createState() => ChainWidgetState();
 }
 
-class _ChainWidgetState extends State<ChainWidget> {
+class ChainWidgetState extends State<ChainWidget> {
   late ThemeProvider _themeProvider;
 
   Future? _finishedLoadingChain;
@@ -77,7 +77,8 @@ class _ChainWidgetState extends State<ChainWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (!_chainStatusProvider.panicModeEnabled) const SizedBox(width: 35), // Centers the widget without P icon
+              if (!_chainStatusProvider.panicModeEnabled)
+                const SizedBox(width: 35), // Centers the widget without P icon
               SizedBox(
                 width: 30,
                 child: !_chainStatusProvider.modelError

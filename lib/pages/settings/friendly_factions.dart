@@ -18,10 +18,10 @@ import 'package:torn_pda/utils/html_parser.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override
-  _FriendlyFactionsPageState createState() => _FriendlyFactionsPageState();
+  FriendlyFactionsPageState createState() => FriendlyFactionsPageState();
 }
 
-class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
+class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
 
@@ -224,13 +224,14 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
   Future<void> _showAddDialog(BuildContext _) {
     return showDialog<void>(
-        context: _,
-        builder: (BuildContext context) {
-          return AddFriendlyFactionDialog(
-            themeProvider: _themeProvider,
-            settingsProvider: _settingsProvider,
-          );
-        },);
+      context: _,
+      builder: (BuildContext context) {
+        return AddFriendlyFactionDialog(
+          themeProvider: _themeProvider,
+          settingsProvider: _settingsProvider,
+        );
+      },
+    );
   }
 
   Future<void> _openWipeDialog() {
@@ -356,10 +357,10 @@ class AddFriendlyFactionDialog extends StatefulWidget {
   });
 
   @override
-  _AddFriendlyFactionDialogState createState() => _AddFriendlyFactionDialogState();
+  AddFriendlyFactionDialogState createState() => AddFriendlyFactionDialogState();
 }
 
-class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
+class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
   bool _addFromUserId = false;
   final _addIdController = TextEditingController();
   final _addFormKey = GlobalKey<FormState>();
@@ -589,9 +590,11 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
       if (retrievedFaction is FactionModel) {
         if (retrievedFaction.name!.isNotEmpty) {
           final currentFactions = widget.settingsProvider!.friendlyFactions;
-          currentFactions.add(FriendlyFaction()
-            ..name = retrievedFaction.name
-            ..id = retrievedFaction.id,);
+          currentFactions.add(
+            FriendlyFaction()
+              ..name = retrievedFaction.name
+              ..id = retrievedFaction.id,
+          );
 
           currentFactions.sort((a, b) => a.name!.compareTo(b.name!));
 

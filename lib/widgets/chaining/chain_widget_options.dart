@@ -20,10 +20,10 @@ class ChainWidgetOptions extends StatefulWidget {
   const ChainWidgetOptions({this.callBackOptions});
 
   @override
-  _ChainWidgetOptionsState createState() => _ChainWidgetOptionsState();
+  ChainWidgetOptionsState createState() => ChainWidgetOptionsState();
 }
 
-class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
+class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   late ChainStatusProvider _chainStatusProvider;
   ThemeProvider? _themeProvider;
   late SettingsProvider _settingsProvider;
@@ -1066,10 +1066,10 @@ class AddChainTargetDialog extends StatefulWidget {
   final ThemeProvider? themeProvider;
 
   @override
-  _AddChainTargetDialogState createState() => _AddChainTargetDialogState();
+  AddChainTargetDialogState createState() => AddChainTargetDialogState();
 }
 
-class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
+class AddChainTargetDialogState extends State<AddChainTargetDialog> {
   late ChainStatusProvider _chainProvider;
   final _addIdController = TextEditingController();
   final _addFormKey = GlobalKey<FormState>();
@@ -1085,144 +1085,145 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
     _chainProvider = Provider.of<ChainStatusProvider>(context);
 
     return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 0.0,
+      backgroundColor: Colors.transparent,
+      content: Container(
+        width: double.maxFinite,
+        padding: const EdgeInsets.only(
+          top: 45,
+          bottom: 16,
+          left: 16,
+          right: 16,
         ),
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        content: Container(
-          width: double.maxFinite,
-          padding: const EdgeInsets.only(
-            top: 45,
-            bottom: 16,
-            left: 16,
-            right: 16,
-          ),
-          margin: const EdgeInsets.only(top: 30),
-          decoration: BoxDecoration(
-            color: widget.themeProvider!.secondBackground,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10.0,
-                offset: Offset(0.0, 10.0),
+        margin: const EdgeInsets.only(top: 30),
+        decoration: BoxDecoration(
+          color: widget.themeProvider!.secondBackground,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10.0,
+              offset: Offset(0.0, 10.0),
+            ),
+          ],
+        ),
+        child: Form(
+          key: _addFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // To make the card compact
+            children: <Widget>[
+              const Text(
+                "Panic Mode Targets",
+                style: TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Flexible(
+                    child: TextFormField(
+                      style: const TextStyle(fontSize: 14),
+                      controller: _addIdController,
+                      maxLength: 10,
+                      minLines: 1,
+                      maxLines: 2,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        counterText: "",
+                        border: OutlineInputBorder(),
+                        labelText: 'Insert user ID',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Cannot be empty!";
+                        }
+                        if (_chainProvider.panicTargets.length >= 10) {
+                          return "Maximum 10 targets!";
+                        }
+
+                        final n = num.tryParse(value);
+                        if (_chainProvider.panicTargets.where((t) => t.id.toString() == value).isNotEmpty) {
+                          return "Already in the list!";
+                        }
+                        if (n == null) {
+                          return '$value is not a valid ID!';
+                        }
+                        _addIdController.text = value.trim();
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+              Expanded(child: panicCards()),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  TextButton(
+                    child: const Text("Add"),
+                    onPressed: () async {
+                      if (_addFormKey.currentState!.validate()) {
+                        final FocusScopeNode currentFocus = FocusScope.of(context);
+                        if (!currentFocus.hasPrimaryFocus) {
+                          currentFocus.unfocus();
+                        }
+                        // Copy controller's text ot local variable
+                        // early and delete the global, so that text
+                        // does not appear again in case of failure
+                        String inputId = _addIdController.text;
+                        _addIdController.text = '';
+
+                        final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+                        String message = "";
+                        Color? messageColor = Colors.green[700];
+                        if (target is TargetModel) {
+                          inputId = target.faction!.factionId.toString();
+                          _chainProvider.addPanicTarget(
+                            PanicTargetModel()
+                              ..name = target.name
+                              ..level = target.level
+                              ..id = target.playerId
+                              ..factionName = target.faction!.factionName,
+                          );
+                          message = "Added ${target.name}!";
+                        } else {
+                          message = "Can't locate the given target!";
+                          messageColor = Colors.orange[700];
+                        }
+
+                        BotToast.showText(
+                          text: message,
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: messageColor!,
+                          duration: const Duration(seconds: 3),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                        return;
+                      }
+                    },
+                  ),
+                  TextButton(
+                    child: const Text("Close"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _addIdController.text = '';
+                    },
+                  ),
+                ],
               ),
             ],
           ),
-          child: Form(
-            key: _addFormKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // To make the card compact
-              children: <Widget>[
-                const Text(
-                  "Panic Mode Targets",
-                  style: TextStyle(fontSize: 15),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Flexible(
-                      child: TextFormField(
-                        style: const TextStyle(fontSize: 14),
-                        controller: _addIdController,
-                        maxLength: 10,
-                        minLines: 1,
-                        maxLines: 2,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          counterText: "",
-                          border: OutlineInputBorder(),
-                          labelText: 'Insert user ID',
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Cannot be empty!";
-                          }
-                          if (_chainProvider.panicTargets.length >= 10) {
-                            return "Maximum 10 targets!";
-                          }
-
-                          final n = num.tryParse(value);
-                          if (_chainProvider.panicTargets.where((t) => t.id.toString() == value).isNotEmpty) {
-                            return "Already in the list!";
-                          }
-                          if (n == null) {
-                            return '$value is not a valid ID!';
-                          }
-                          _addIdController.text = value.trim();
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Expanded(child: panicCards()),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
-                      child: const Text("Add"),
-                      onPressed: () async {
-                        if (_addFormKey.currentState!.validate()) {
-                          final FocusScopeNode currentFocus = FocusScope.of(context);
-                          if (!currentFocus.hasPrimaryFocus) {
-                            currentFocus.unfocus();
-                          }
-                          // Copy controller's text ot local variable
-                          // early and delete the global, so that text
-                          // does not appear again in case of failure
-                          String inputId = _addIdController.text;
-                          _addIdController.text = '';
-
-                          final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
-                          String message = "";
-                          Color? messageColor = Colors.green[700];
-                          if (target is TargetModel) {
-                            inputId = target.faction!.factionId.toString();
-                            _chainProvider.addPanicTarget(
-                              PanicTargetModel()
-                                ..name = target.name
-                                ..level = target.level
-                                ..id = target.playerId
-                                ..factionName = target.faction!.factionName,
-                            );
-                            message = "Added ${target.name}!";
-                          } else {
-                            message = "Can't locate the given target!";
-                            messageColor = Colors.orange[700];
-                          }
-
-                          BotToast.showText(
-                            text: message,
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: messageColor!,
-                            duration: const Duration(seconds: 3),
-                            contentPadding: const EdgeInsets.all(10),
-                          );
-                          return;
-                        }
-                      },
-                    ),
-                    TextButton(
-                      child: const Text("Close"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _addIdController.text = '';
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),);
+        ),
+      ),
+    );
   }
 
   Widget panicCards() {

@@ -11,10 +11,10 @@ class EventsFilterDialog extends StatefulWidget {
   const EventsFilterDialog({required this.userModel});
 
   @override
-  _EventsFilterDialogState createState() => _EventsFilterDialogState();
+  EventsFilterDialogState createState() => EventsFilterDialogState();
 }
 
-class _EventsFilterDialogState extends State<EventsFilterDialog> {
+class EventsFilterDialogState extends State<EventsFilterDialog> {
   FirebaseUserModel? _firebaseUserModel;
 
   @override

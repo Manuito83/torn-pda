@@ -40,10 +40,10 @@ class RankedWarCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _RankedWarCardState createState() => _RankedWarCardState();
+  RankedWarCardState createState() => RankedWarCardState();
 }
 
-class _RankedWarCardState extends State<RankedWarCard> {
+class RankedWarCardState extends State<RankedWarCard> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late WebViewProvider _webViewProvider;
@@ -219,17 +219,20 @@ class _RankedWarCardState extends State<RankedWarCard> {
               )
             else if (widget.status == RankedWarStatus.finished)
               Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      _winner(),
-                      Text(_finishedString,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.brown[300],
-                          ),),
-                    ],
-                  ),)
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    _winner(),
+                    Text(
+                      _finishedString,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.brown[300],
+                      ),
+                    ),
+                  ],
+                ),
+              )
             else
               const SizedBox(height: 5),
           ],

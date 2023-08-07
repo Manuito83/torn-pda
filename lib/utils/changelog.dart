@@ -17,10 +17,10 @@ class ChangeLogTitleDate {}
 
 class ChangeLog extends StatefulWidget {
   @override
-  _ChangeLogState createState() => _ChangeLogState();
+  ChangeLogState createState() => ChangeLogState();
 }
 
-class _ChangeLogState extends State<ChangeLog> {
+class ChangeLogState extends State<ChangeLog> {
   final _changeLogItems = <ChangeLogItem, List<String>>{};
   final _scrollController = ScrollController();
 
@@ -39,7 +39,16 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 331 - 25/06/2023
+    // Build 332 - 06/08/2023
+
+    // VERSION 3.1.5
+    final v3_1_5 = ChangeLogItem();
+    v3_1_5.version = 'Torn PDA v3.1.5';
+    v3_1_5.date = '30 AUG 2023';
+    const String feat3_1_5_1 = "Fixed JS handlers (get, post, inject) for scripts";
+    const String feat3_1_5_2 = "Update packages";
+    v3_1_5.features.add(feat3_1_5_1);
+    v3_1_5.features.add(feat3_1_5_2);
 
     // VERSION 3.1.4
     final v3_1_4 = ChangeLogItem();
@@ -305,7 +314,8 @@ class _ChangeLogState extends State<ChangeLog> {
     final v2_8_9 = ChangeLogItem();
     v2_8_9.version = 'Torn PDA v2.8.9';
     v2_8_9.date = '07 AUG 2022';
-    const String feat2_8_9_1 = "Browser tabs now only initialise on first use (performance improvement, can be disabled)";
+    const String feat2_8_9_1 =
+        "Browser tabs now only initialise on first use (performance improvement, can be disabled)";
     const String feat2_8_9_2 = "Improved browser stability when using tabs in some devices";
     const String feat2_8_9_3 = "Added Hospital Filters example userscripts (by Kwack_Kwack)";
     const String feat2_8_9_4 = "Fixed targets export to YATA when using an alternative API key";
@@ -371,7 +381,8 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_8_0.date = '22 MAY 2022';
     const String feat2_8_0_1 = "Added NPC Loot automatic alerts";
     const String feat2_8_0_2 = "Quick items: divided faction refills in energy and nerve (need to be re-added)";
-    const String feat2_8_0_3 = "Browser: Player Profile now includes Bazaar information (if net worth checks are enabled)";
+    const String feat2_8_0_3 =
+        "Browser: Player Profile now includes Bazaar information (if net worth checks are enabled)";
     const String feat2_8_0_4 = "Userscripts: added handler to evaluate javascript code passed to the app "
         "(advanced - more details in the userscripts section)";
     const String feat2_8_0_5 = "Removed TornCAT Player Filter from default userscripts (discontinued by its developer)";
@@ -497,7 +508,8 @@ class _ChangeLogState extends State<ChangeLog> {
     const String feat2_6_3_1 = "Added Ranked Wars section (Chaining - Wars)";
     const String feat2_6_3_2 = "Added steadfast information to the gym";
     const String feat2_6_3_3 = "Added status icons for banks, vault and loan (filter icons in Profile options)";
-    const String feat2_6_3_4 = "You can now switch between YATA and Torn Stats as your source of spied stats (Settings)";
+    const String feat2_6_3_4 =
+        "You can now switch between YATA and Torn Stats as your source of spied stats (Settings)";
     const String feat2_6_3_5 = "Quick items and crimes can now also be configured from the quick browser";
     const String feat2_6_3_6 = "Fixed several reported issues";
     v2_6_3.features.add(feat2_6_3_1);
@@ -522,11 +534,13 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_1.date = '04 DEC 2021';
     const String feat2_6_1_1 =
         "Estimated stats now include xanax, refill, enhancer and SSL details (profiles and war targets)";
-    const String feat2_6_1_2 = "Chaining: you can now optionally show empty notes (color reminder) when attacking a target "
+    const String feat2_6_1_2 =
+        "Chaining: you can now optionally show empty notes (color reminder) when attacking a target "
         "(disabled by default)";
     const String feat2_6_1_3 = "Chaining: the faction assist requests now also sends extended information and stats";
     const String feat2_6_1_4 = "Browser: long-pressing a link in Torn will open a contextual menu with options";
-    const String feat2_6_1_5 = "Browser: long-pressing a link in Torn will open a contextual menu with options (interferes "
+    const String feat2_6_1_5 =
+        "Browser: long-pressing a link in Torn will open a contextual menu with options (interferes "
         "with link preview, consider disabling it)";
     const String feat2_6_1_6 = "Browser: restore the previous browsing session, including browser type and active tab, "
         "by long-pressing the T menu floating icon in the Profile section";
@@ -564,7 +578,8 @@ class _ChangeLogState extends State<ChangeLog> {
         "Torn PDA (see Tips section - Faction Communication)";
     const String feat2_6_0_3 = "Chaining: you can now sort targets by life";
     const String feat2_6_0_4 = "Chaining: added option to skip first target as well (disabled by default)";
-    const String feat2_6_0_5 = "Chaining: the tap area in cards to start an attack has been reduced to the gun sight icon "
+    const String feat2_6_0_5 =
+        "Chaining: the tap area in cards to start an attack has been reduced to the gun sight icon "
         "and target name, to avoid conflicts with other icons";
     const String feat2_6_0_6 = "Chain widget: added Panic Mode";
     const String feat2_6_0_7 = "Chain widget: you can now choose the alert activation triggers";
@@ -691,7 +706,8 @@ class _ChangeLogState extends State<ChangeLog> {
     const String feat2_4_2_7 = "Browser: added terminal window for developers";
     const String feat2_4_2_8 = "Fixed an issue preventing some userscripts from working if using wildcards in the URL";
     const String feat2_4_2_9 = "Fixed other reported UI issues";
-    const String feat2_4_2_10 = "Note: TAC is now deactivated by default and will be removed soon, save any pending target!";
+    const String feat2_4_2_10 =
+        "Note: TAC is now deactivated by default and will be removed soon, save any pending target!";
     v2_4_2.features.add(feat2_4_2_1);
     v2_4_2.features.add(feat2_4_2_2);
     v2_4_2.features.add(feat2_4_2_3);
@@ -821,12 +837,14 @@ class _ChangeLogState extends State<ChangeLog> {
         "Userscripts: added another few example scripts and corrected issues with the existing ones (you can import the new ones from the userscripts settings).";
     const String feat2_3_2_3 =
         "Userscripts: created a list of tested scripts in the GitHub repository, also added a reference in Torn PDA and in the official forums.";
-    const String feat2_3_2_4 = "Userscripts: script execution is now isolated and no interference should occur between them.";
+    const String feat2_3_2_4 =
+        "Userscripts: script execution is now isolated and no interference should occur between them.";
     const String feat2_3_2_5 = "Loot: NPCs can now be filtered out.";
     const String feat2_3_2_6 = "Shortcuts: Stock Market URL has been corrected and Portfolio has been removed.";
     const String feat2_3_2_7 = "Profile: added racing, reviving and hunting skills to the basic info card.";
     const String feat2_3_2_8 = "Travel: flag filters can now be sorted alphabetically and by flight time.";
-    const String feat2_3_2_9 = "Travel: the quick return icon now needs to be pressed twice to avoid erroneous activations.";
+    const String feat2_3_2_9 =
+        "Travel: the quick return icon now needs to be pressed twice to avoid erroneous activations.";
     const String feat2_3_2_10 = "Travel: increased width of the capacity slider to make selection easier.";
     const String feat2_3_2_11 =
         "Travel: the custom text notification dialog has been moved to the travel notification options page.";
@@ -837,7 +855,8 @@ class _ChangeLogState extends State<ChangeLog> {
     const String feat2_3_2_15 = "Fixed URL copying issues in certain devices.";
     const String feat2_3_2_16 = "Fixed Trade widget not activating in certain devices.";
     const String feat2_3_2_17 = "Fixed crash when clearing browser cache in certain devices.";
-    const String feat2_3_2_18 = "Fixed scrolling issues causing the browser to freeze in certain sections of the website.";
+    const String feat2_3_2_18 =
+        "Fixed scrolling issues causing the browser to freeze in certain sections of the website.";
     v2_3_2.features.add(feat2_3_2_1);
     v2_3_2.features.add(feat2_3_2_2);
     v2_3_2.features.add(feat2_3_2_3);
@@ -893,8 +912,10 @@ class _ChangeLogState extends State<ChangeLog> {
     const String feat2_3_0_10 =
         "Chaining: notes color now sync with YATA even if the note is empty. The notebook icon is now also colored accordingly";
     const String feat2_3_0_11 = "Chaining: target cards now show flat respect. Added fair fight.";
-    const String feat2_3_0_12 = "Friends: the notebook icon is now colored according to the note's color, even if empty.";
-    const String feat2_3_0_13 = "Profile: added a check for property rental expiry (< 7 days) in the miscellaneous card";
+    const String feat2_3_0_12 =
+        "Friends: the notebook icon is now colored according to the note's color, even if empty.";
+    const String feat2_3_0_13 =
+        "Profile: added a check for property rental expiry (< 7 days) in the miscellaneous card";
     const String feat2_3_0_14 =
         "Profile: the manual hospital release notification can now be configured to trigger several minutes in advance (similar to travel notifications).";
     const String feat2_3_0_15 = "Profile: fixed company name when working for a public company.";
@@ -1119,7 +1140,8 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_9_4.date = '28 NOV 2020';
     const String feat1_9_4_1 = "Alerts: added drugs cooldown automatic alert";
     const String feat1_9_4_2 = "Alerts: added racing automatic alert";
-    const String feat1_9_4_3 = "Profile: you can now choose between an horizontal slidable list or a grid view for shortcuts";
+    const String feat1_9_4_3 =
+        "Profile: you can now choose between an horizontal slidable list or a grid view for shortcuts";
     const String feat1_9_4_4 = "Browser: added quick controls (back, forward and refresh) for the quick browser";
     const String feat1_9_4_5 =
         "Browser: improved speed and corrected several reported issues (i.e.: hospital timer and other sections not showing)";
@@ -1170,9 +1192,11 @@ class _ChangeLogState extends State<ChangeLog> {
         "Profile: added chain information and warning (in case you are heading to the gym and unaware of the chain)";
     const String feat1_9_1_5 = "Chaining: added flags and travel direction for your targets";
     const String feat1_9_1_6 = "Settings: you can now place the application bar at the bottom of the screen";
-    const String feat1_9_1_7 = "Fixed screen issues in several devices (wrong tap location, zoomed-in screen, loading times)";
+    const String feat1_9_1_7 =
+        "Fixed screen issues in several devices (wrong tap location, zoomed-in screen, loading times)";
     const String feat1_9_1_8 = "Fixed scroll not returning to the correct place after refreshing a page in the browser";
-    const String feat1_9_1_9 = "Fixed issues with some devices and keyboards (special chars and autocorrect not displaying)";
+    const String feat1_9_1_9 =
+        "Fixed issues with some devices and keyboards (special chars and autocorrect not displaying)";
     const String feat1_9_1_10 = "Fixed dropdown menus not opening in some tablets";
     const String feat1_9_1_11 = "Fixed empty notes being shown when attacking";
     const String feat1_9_1_12 = "Fixed capitalization when adding notes";
@@ -1254,7 +1278,8 @@ class _ChangeLogState extends State<ChangeLog> {
     const String feat1_8_4_3 = "Profile: you can now schedule travel notifications directly from the profile section";
     const String feat1_8_4_4 =
         "Browser: swipe left/right in the top bar to browse forward/back. Also fixed an error that prevented some links (forum/profiles) from working properly.";
-    const String feat1_8_4_5 = "Travel: while checking foreign stock, press any flag to access the travel agency directly";
+    const String feat1_8_4_5 =
+        "Travel: while checking foreign stock, press any flag to access the travel agency directly";
     const String feat1_8_4_6 = "Visual enhancements to travel bar and chaining target's cards";
     const String feat1_8_4_7 = "Corrected several other issues";
     v1_8_4.features.add(feat1_8_4_1);
@@ -1459,6 +1484,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_1_5);
     itemList.add(v3_1_4);
     itemList.add(v3_1_3);
     itemList.add(v3_1_2);

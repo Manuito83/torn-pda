@@ -13,9 +13,9 @@ import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-final firestore = _FirestoreHelper();
+final firestore = FirestoreHelper();
 
-class _FirestoreHelper {
+class FirestoreHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;

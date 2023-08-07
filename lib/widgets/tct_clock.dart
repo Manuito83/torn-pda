@@ -11,10 +11,10 @@ class TctClock extends StatefulWidget {
   });
 
   @override
-  State<TctClock> createState() => _TctClockState();
+  State<TctClock> createState() => TctClockState();
 }
 
-class _TctClockState extends State<TctClock> {
+class TctClockState extends State<TctClock> {
   late Timer _oneSecTimer;
   DateTime _currentTctTime = DateTime.now().toUtc();
 

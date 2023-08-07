@@ -18,10 +18,10 @@ class TargetsOptionsReturn {
 
 class TargetsOptionsPage extends StatefulWidget {
   @override
-  _TargetsOptionsPageState createState() => _TargetsOptionsPageState();
+  TargetsOptionsPageState createState() => TargetsOptionsPageState();
 }
 
-class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
+class TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // Targets notes while chaining
   bool _showTargetsNotes = true;
   bool _showBlankTargetsNotes = true;

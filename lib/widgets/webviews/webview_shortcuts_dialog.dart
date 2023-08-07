@@ -26,10 +26,10 @@ class WebviewShortcutsDialog extends StatefulWidget {
   });
 
   @override
-  _WebviewShortcutsDialogState createState() => _WebviewShortcutsDialogState();
+  WebviewShortcutsDialogState createState() => WebviewShortcutsDialogState();
 }
 
-class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
+class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
   late ThemeProvider _themeProvider;
   late ShortcutsProvider _shortcutsProvider;
   late UserDetailsProvider _userProv;
@@ -84,18 +84,19 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
                 ),
                 GestureDetector(
                   child: IconButton(
-                      icon: const Icon(Icons.switch_access_shortcut_outlined),
-                      color: Colors.orange[900],
-                      onPressed: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => ShortcutsPage(),
-                          ),
-                        );
-                        setState(() {
-                          // Update shortcuts
-                        });
-                      },),
+                    icon: const Icon(Icons.switch_access_shortcut_outlined),
+                    color: Colors.orange[900],
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => ShortcutsPage(),
+                        ),
+                      );
+                      setState(() {
+                        // Update shortcuts
+                      });
+                    },
+                  ),
                 ),
               ],
             )

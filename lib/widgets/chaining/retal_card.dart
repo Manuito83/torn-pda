@@ -43,10 +43,10 @@ class RetalCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _RetalCardState createState() => _RetalCardState();
+  RetalCardState createState() => RetalCardState();
 }
 
-class _RetalCardState extends State<RetalCard> {
+class RetalCardState extends State<RetalCard> {
   Retal? _retal;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
@@ -477,22 +477,25 @@ class _RetalCardState extends State<RetalCard> {
               ),
             ),
           ),
-          if (respect == 0) const SizedBox.shrink() else Flexible(
-                  child: RichText(
-                    text: TextSpan(
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: ' / FF: ',
-                          style: TextStyle(
-                            color: _themeProvider.mainText,
-                            fontSize: 12,
-                          ),
-                        ),
-                        fairFightResult,
-                      ],
+          if (respect == 0)
+            const SizedBox.shrink()
+          else
+            Flexible(
+              child: RichText(
+                text: TextSpan(
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: ' / FF: ',
+                      style: TextStyle(
+                        color: _themeProvider.mainText,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
+                    fairFightResult,
+                  ],
                 ),
+              ),
+            ),
         ],
       ),
     );
@@ -1337,9 +1340,12 @@ class _RetalCardState extends State<RetalCard> {
   Widget _lastOnlineWidget() {
     return Row(
       children: [
-        if (_retal!.lastAction.status == "Offline") const Icon(Icons.remove_circle, size: 12, color: Colors.grey) else _retal!.lastAction.status == "Idle"
-                ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
-                : const Icon(Icons.circle, size: 12, color: Colors.green),
+        if (_retal!.lastAction.status == "Offline")
+          const Icon(Icons.remove_circle, size: 12, color: Colors.grey)
+        else
+          _retal!.lastAction.status == "Idle"
+              ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
+              : const Icon(Icons.circle, size: 12, color: Colors.green),
         if (_retal!.lastAction.status == "Offline" || _retal!.lastAction.status == "Idle")
           Padding(
             padding: const EdgeInsets.only(left: 2),
@@ -1488,7 +1494,13 @@ class _RetalCardState extends State<RetalCard> {
               style: TextStyle(fontSize: 14),
             ),
             Text(
-              !sslProb ? "none" : sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high",
+              !sslProb
+                  ? "none"
+                  : sslColor == Colors.green
+                      ? "low"
+                      : sslColor == Colors.orange
+                          ? "med"
+                          : "high",
               style: TextStyle(
                 color: sslColor,
                 fontSize: 14,
@@ -1622,10 +1634,10 @@ class CurrentRetalExpiryWidget extends StatefulWidget {
   });
 
   @override
-  State<CurrentRetalExpiryWidget> createState() => _CurrentRetalExpiryWidgetState();
+  State<CurrentRetalExpiryWidget> createState() => CurrentRetalExpiryWidgetState();
 }
 
-class _CurrentRetalExpiryWidgetState extends State<CurrentRetalExpiryWidget> {
+class CurrentRetalExpiryWidgetState extends State<CurrentRetalExpiryWidget> {
   Timer? _expiryTicker;
   Widget _currentExpiryWidget = const SizedBox.shrink();
 

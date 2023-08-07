@@ -19,10 +19,10 @@ class CityWidget extends StatefulWidget {
   });
 
   @override
-  _CityWidgetState createState() => _CityWidgetState();
+  CityWidgetState createState() => CityWidgetState();
 }
 
-class _CityWidgetState extends State<CityWidget> {
+class CityWidgetState extends State<CityWidget> {
   final _scrollController = ScrollController();
   final _moneyFormat = NumberFormat("#,##0", "en_US");
 
@@ -76,8 +76,8 @@ class _CityWidgetState extends State<CityWidget> {
         ),
         expanded: ConstrainedBox(
           constraints: BoxConstraints.loose(
-              Size.fromHeight(MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height) /
-                  3,),
+            Size.fromHeight(MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height) / 3,
+          ),
           child: Scrollbar(
             controller: _scrollController,
             thumbVisibility: true,

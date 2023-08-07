@@ -74,10 +74,10 @@ String routeName = "drawer";
 
 class DrawerPage extends StatefulWidget {
   @override
-  _DrawerPageState createState() => _DrawerPageState();
+  DrawerPageState createState() => DrawerPageState();
 }
 
-class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 

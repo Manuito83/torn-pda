@@ -51,10 +51,10 @@ class ProfileAttackCheckWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ProfileAttackCheckWidgetState createState() => _ProfileAttackCheckWidgetState();
+  ProfileAttackCheckWidgetState createState() => ProfileAttackCheckWidgetState();
 }
 
-class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
+class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   final navigatorKey = GlobalKey<NavigatorState>();
 
   Future? _checkedPerson;
@@ -749,9 +749,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
         final Widget onlineStatus = Row(
           children: [
-            if (otherProfile.lastAction!.status == "Offline") const Icon(Icons.remove_circle, size: 10, color: Colors.grey) else otherProfile.lastAction!.status == "Idle"
-                    ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
-                    : const Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction!.status == "Offline")
+              const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+            else
+              otherProfile.lastAction!.status == "Idle"
+                  ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
+                  : const Icon(Icons.circle, size: 12, color: Colors.green),
             if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
               Padding(
                 padding: const EdgeInsets.only(left: 2),
@@ -789,8 +792,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             child: Row(
               children: [
                 Image.asset(
-                    spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
-                    height: 18,),
+                  spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                  height: 18,
+                ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Row(
@@ -970,9 +974,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // ONLINE STATUS
         final Widget onlineStatus = Row(
           children: [
-            if (otherProfile.lastAction!.status == "Offline") const Icon(Icons.remove_circle, size: 10, color: Colors.grey) else otherProfile.lastAction!.status == "Idle"
-                    ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
-                    : const Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction!.status == "Offline")
+              const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+            else
+              otherProfile.lastAction!.status == "Idle"
+                  ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
+                  : const Icon(Icons.circle, size: 12, color: Colors.green),
             if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
               Padding(
                 padding: const EdgeInsets.only(left: 2),
@@ -1468,7 +1475,13 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               style: TextStyle(fontSize: 14),
             ),
             Text(
-              !sslProb ? "none" : sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high",
+              !sslProb
+                  ? "none"
+                  : sslColor == Colors.green
+                      ? "low"
+                      : sslColor == Colors.orange
+                          ? "med"
+                          : "high",
               style: TextStyle(
                 color: sslColor,
                 fontSize: 14,

@@ -21,10 +21,10 @@ class AwardsGraphs extends StatefulWidget {
   final List<dynamic> graphInfo;
 
   @override
-  _AwardsGraphsState createState() => _AwardsGraphsState();
+  AwardsGraphsState createState() => AwardsGraphsState();
 }
 
-class _AwardsGraphsState extends State<AwardsGraphs> {
+class AwardsGraphsState extends State<AwardsGraphs> {
   final Color barBackgroundColor = const Color(0xff72d8bf);
 
   int? _touchedIndex;
@@ -115,20 +115,21 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           const Text('Awards graph'),
           const SizedBox(width: 8),
           GestureDetector(
-              onTap: () {
-                BotToast.showText(
-                  text: "This section is part of YATA's mobile interface, all details "
-                      "information and actions are directly linked to your YATA account.",
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green[800]!,
-                  duration: const Duration(seconds: 6),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-              child: Image.asset('images/icons/yata_logo.png', height: 28),),
+            onTap: () {
+              BotToast.showText(
+                text: "This section is part of YATA's mobile interface, all details "
+                    "information and actions are directly linked to your YATA account.",
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green[800]!,
+                duration: const Duration(seconds: 6),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            },
+            child: Image.asset('images/icons/yata_logo.png', height: 28),
+          ),
         ],
       ),
       leading: IconButton(
@@ -168,20 +169,21 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
     return BarChartData(
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-            tooltipBgColor: Colors.blueGrey,
-            fitInsideVertically: true,
-            fitInsideHorizontally: true,
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final decimalFormat = NumberFormat("#,##0", "en_US");
-              final achieved = widget.graphInfo[group.x][2] == 0 ? "NOT ACHIEVED" : "ACHIEVED";
-              return BarTooltipItem(
-                "${widget.graphInfo[group.x][0]}\n"
-                "Circulation ${decimalFormat.format(widget.graphInfo[group.x][1])}\n"
-                "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}\n\n"
-                "$achieved",
-                const TextStyle(color: Colors.yellow, fontSize: 12),
-              );
-            },),
+          tooltipBgColor: Colors.blueGrey,
+          fitInsideVertically: true,
+          fitInsideHorizontally: true,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            final decimalFormat = NumberFormat("#,##0", "en_US");
+            final achieved = widget.graphInfo[group.x][2] == 0 ? "NOT ACHIEVED" : "ACHIEVED";
+            return BarTooltipItem(
+              "${widget.graphInfo[group.x][0]}\n"
+              "Circulation ${decimalFormat.format(widget.graphInfo[group.x][1])}\n"
+              "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}\n\n"
+              "$achieved",
+              const TextStyle(color: Colors.yellow, fontSize: 12),
+            );
+          },
+        ),
         // Threshold so that the smallest bars can be selected as well
         touchExtraThreshold: const EdgeInsets.only(top: 30),
         touchCallback: (flTouchEvent, barTouchResponse) {

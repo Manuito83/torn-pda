@@ -64,10 +64,10 @@ class WarPage extends StatefulWidget {
   });
 
   @override
-  _WarPageState createState() => _WarPageState();
+  WarPageState createState() => WarPageState();
 }
 
-class _WarPageState extends State<WarPage> {
+class WarPageState extends State<WarPage> {
   final GlobalKey _showCaseAddFaction = GlobalKey();
   final GlobalKey _showCaseUpdate = GlobalKey();
 
@@ -136,38 +136,40 @@ class _WarPageState extends State<WarPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
     return ShowCaseWidget(
-      builder: Builder(builder: (_) {
-        if (_w.showCaseStart) {
-          // Delaying also (even Duration.zero works) to avoid state conflicts with build
-          Future.delayed(const Duration(seconds: 1), () async {
-            ShowCaseWidget.of(_).startShowCase([_showCaseAddFaction, _showCaseUpdate]);
-            _w.showCaseStart = false;
-          });
-        }
-        return Scaffold(
-          backgroundColor: _themeProvider!.canvas,
-          drawer: const Drawer(),
-          appBar: _settingsProvider!.appBarTop ? buildAppBar(_) : null,
-          bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(_),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: MediaQuery.of(context).orientation == Orientation.portrait
-                  ? _mainColumn()
-                  : SingleChildScrollView(
-                      child: _mainColumn(),
-                    ),
+      builder: Builder(
+        builder: (_) {
+          if (_w.showCaseStart) {
+            // Delaying also (even Duration.zero works) to avoid state conflicts with build
+            Future.delayed(const Duration(seconds: 1), () async {
+              ShowCaseWidget.of(_).startShowCase([_showCaseAddFaction, _showCaseUpdate]);
+              _w.showCaseStart = false;
+            });
+          }
+          return Scaffold(
+            backgroundColor: _themeProvider!.canvas,
+            drawer: const Drawer(),
+            appBar: _settingsProvider!.appBarTop ? buildAppBar(_) : null,
+            bottomNavigationBar: !_settingsProvider!.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(_),
+                  )
+                : null,
+            body: Container(
+              color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+                child: MediaQuery.of(context).orientation == Orientation.portrait
+                    ? _mainColumn()
+                    : SingleChildScrollView(
+                        child: _mainColumn(),
+                      ),
+              ),
             ),
-          ),
-        );
-      },),
+          );
+        },
+      ),
     );
   }
 
@@ -1345,10 +1347,10 @@ class WarTargetsList extends StatefulWidget {
   final bool travelingFilterActive;
 
   @override
-  State<WarTargetsList> createState() => _WarTargetsListState();
+  State<WarTargetsList> createState() => WarTargetsListState();
 }
 
-class _WarTargetsListState extends State<WarTargetsList> {
+class WarTargetsListState extends State<WarTargetsList> {
   late ChainStatusProvider _chainStatusProvider;
 
   @override
@@ -1458,14 +1460,21 @@ class _WarTargetsListState extends State<WarTargetsList> {
         filteredCards
             .sort((a, b) => a.memberModel!.lastAction!.timestamp!.compareTo(b.memberModel!.lastAction!.timestamp!));
       case WarSortType.colorDes:
-        filteredCards.sort((a, b) =>
-            b.memberModel!.personalNoteColor!.toLowerCase().compareTo(a.memberModel!.personalNoteColor!.toLowerCase()),);
+        filteredCards.sort(
+          (a, b) => b.memberModel!.personalNoteColor!
+              .toLowerCase()
+              .compareTo(a.memberModel!.personalNoteColor!.toLowerCase()),
+        );
       case WarSortType.colorAsc:
-        filteredCards.sort((a, b) =>
-            a.memberModel!.personalNoteColor!.toLowerCase().compareTo(b.memberModel!.personalNoteColor!.toLowerCase()),);
+        filteredCards.sort(
+          (a, b) => a.memberModel!.personalNoteColor!
+              .toLowerCase()
+              .compareTo(b.memberModel!.personalNoteColor!.toLowerCase()),
+        );
       case WarSortType.notesDes:
         filteredCards.sort(
-            (a, b) => b.memberModel!.personalNote!.toLowerCase().compareTo(a.memberModel!.personalNote!.toLowerCase()),);
+          (a, b) => b.memberModel!.personalNote!.toLowerCase().compareTo(a.memberModel!.personalNote!.toLowerCase()),
+        );
       case WarSortType.notesAsc:
         filteredCards.sort((a, b) {
           if (a.memberModel!.personalNote!.isEmpty && b.memberModel!.personalNote!.isNotEmpty) {
@@ -1517,73 +1526,76 @@ class _WarTargetsListState extends State<WarTargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
-          if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel!.name).isEmpty) SlidableAction(
-                  label: 'Add to panic!',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    String message = "Added ${filteredCard.memberModel!.name} as a Panic Mode target!";
-                    Color? messageColor = Colors.green;
+          if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel!.name).isEmpty)
+            SlidableAction(
+              label: 'Add to panic!',
+              backgroundColor: Colors.blue,
+              icon: MdiIcons.alphaPCircleOutline,
+              onPressed: (context) {
+                String message = "Added ${filteredCard.memberModel!.name} as a Panic Mode target!";
+                Color? messageColor = Colors.green;
 
-                    if (_chainStatusProvider.panicTargets.length < 10) {
-                      setState(() {
-                        _chainStatusProvider.addPanicTarget(
-                          PanicTargetModel()
-                            ..name = filteredCard.memberModel!.name
-                            ..level = filteredCard.memberModel!.level
-                            ..id = filteredCard.memberModel!.memberId
-                            ..factionName = filteredCard.memberModel!.factionName,
-                        );
-                        // Convert to target with the needed fields
-                      });
-                    } else {
-                      message = "There are already 10 targets in the Panic Mode list, remove some!";
-                      messageColor = Colors.orange[700];
-                    }
-
-                    BotToast.showText(
-                      clickClose: true,
-                      text: message,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor!,
-                      duration: const Duration(seconds: 5),
-                      contentPadding: const EdgeInsets.all(10),
+                if (_chainStatusProvider.panicTargets.length < 10) {
+                  setState(() {
+                    _chainStatusProvider.addPanicTarget(
+                      PanicTargetModel()
+                        ..name = filteredCard.memberModel!.name
+                        ..level = filteredCard.memberModel!.level
+                        ..id = filteredCard.memberModel!.memberId
+                        ..factionName = filteredCard.memberModel!.factionName,
                     );
-                  },
-                ) else SlidableAction(
-                  label: 'PANIC TARGET',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    final String message = "Removed ${filteredCard.memberModel!.name} as a Panic Mode target!";
-                    const Color messageColor = Colors.green;
+                    // Convert to target with the needed fields
+                  });
+                } else {
+                  message = "There are already 10 targets in the Panic Mode list, remove some!";
+                  messageColor = Colors.orange[700];
+                }
 
-                    setState(() {
-                      _chainStatusProvider.removePanicTarget(
-                        PanicTargetModel()
-                          ..name = filteredCard.memberModel!.name
-                          ..level = filteredCard.memberModel!.level
-                          ..id = filteredCard.memberModel!.memberId
-                          ..factionName = filteredCard.memberModel!.factionName,
-                      );
-                    });
+                BotToast.showText(
+                  clickClose: true,
+                  text: message,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: messageColor!,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            )
+          else
+            SlidableAction(
+              label: 'PANIC TARGET',
+              backgroundColor: Colors.blue,
+              icon: MdiIcons.alphaPCircleOutline,
+              onPressed: (context) {
+                final String message = "Removed ${filteredCard.memberModel!.name} as a Panic Mode target!";
+                const Color messageColor = Colors.green;
 
-                    BotToast.showText(
-                      clickClose: true,
-                      text: message,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor,
-                      duration: const Duration(seconds: 5),
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  },
-                ),
+                setState(() {
+                  _chainStatusProvider.removePanicTarget(
+                    PanicTargetModel()
+                      ..name = filteredCard.memberModel!.name
+                      ..level = filteredCard.memberModel!.level
+                      ..id = filteredCard.memberModel!.memberId
+                      ..factionName = filteredCard.memberModel!.factionName,
+                  );
+                });
+
+                BotToast.showText(
+                  clickClose: true,
+                  text: message,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: messageColor,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            ),
         ],
       ),
       child: filteredCard,

@@ -18,10 +18,10 @@ class AwardCard extends StatefulWidget {
   final Function pinConditionChange;
 
   @override
-  _AwardCardState createState() => _AwardCardState();
+  AwardCardState createState() => AwardCardState();
 }
 
-class _AwardCardState extends State<AwardCard> {
+class AwardCardState extends State<AwardCard> {
   late ThemeProvider _themeProvider;
   late AwardsProvider _pinProvider;
 

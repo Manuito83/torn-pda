@@ -34,10 +34,10 @@ class StakeoutCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _StakeoutCardState createState() => _StakeoutCardState();
+  StakeoutCardState createState() => StakeoutCardState();
 }
 
-class _StakeoutCardState extends State<StakeoutCard> {
+class StakeoutCardState extends State<StakeoutCard> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late WebViewProvider _webViewProvider;

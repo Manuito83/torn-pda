@@ -17,10 +17,10 @@ class BountiesWidget extends StatefulWidget {
   });
 
   @override
-  _BountiesWidgetState createState() => _BountiesWidgetState();
+  BountiesWidgetState createState() => BountiesWidgetState();
 }
 
-class _BountiesWidgetState extends State<BountiesWidget> {
+class BountiesWidgetState extends State<BountiesWidget> {
   final _scrollController = ScrollController();
   final _expandableController = ExpandableController();
 

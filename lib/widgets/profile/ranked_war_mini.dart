@@ -17,10 +17,10 @@ class RankedWarMini extends StatefulWidget {
   });
 
   @override
-  State<RankedWarMini> createState() => _RankedWarMiniState();
+  State<RankedWarMini> createState() => RankedWarMiniState();
 }
 
-class _RankedWarMiniState extends State<RankedWarMini> {
+class RankedWarMiniState extends State<RankedWarMini> {
   String _timeString = "";
 
   WarFaction _playerFaction = WarFaction();

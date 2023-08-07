@@ -43,10 +43,10 @@ class WarCard extends StatefulWidget {
   });
 
   @override
-  _WarCardState createState() => _WarCardState();
+  WarCardState createState() => WarCardState();
 }
 
-class _WarCardState extends State<WarCard> {
+class WarCardState extends State<WarCard> {
   Member? _member;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
@@ -587,22 +587,25 @@ class _WarCardState extends State<WarCard> {
               ),
             ),
           ),
-          if (respect == 0) const SizedBox.shrink() else Flexible(
-                  child: RichText(
-                    text: TextSpan(
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: ' / FF: ',
-                          style: TextStyle(
-                            color: _themeProvider.mainText,
-                            fontSize: 12,
-                          ),
-                        ),
-                        fairFightResult,
-                      ],
+          if (respect == 0)
+            const SizedBox.shrink()
+          else
+            Flexible(
+              child: RichText(
+                text: TextSpan(
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: ' / FF: ',
+                      style: TextStyle(
+                        color: _themeProvider.mainText,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
+                    fairFightResult,
+                  ],
                 ),
+              ),
+            ),
         ],
       ),
     );
@@ -1529,9 +1532,12 @@ class _WarCardState extends State<WarCard> {
   Widget _lastOnlineWidget() {
     return Row(
       children: [
-        if (_member!.lastAction!.status == "Offline") const Icon(Icons.remove_circle, size: 12, color: Colors.grey) else _member!.lastAction!.status == "Idle"
-                ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
-                : const Icon(Icons.circle, size: 12, color: Colors.green),
+        if (_member!.lastAction!.status == "Offline")
+          const Icon(Icons.remove_circle, size: 12, color: Colors.grey)
+        else
+          _member!.lastAction!.status == "Idle"
+              ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
+              : const Icon(Icons.circle, size: 12, color: Colors.green),
         if (_member!.lastAction!.status == "Offline" || _member!.lastAction!.status == "Idle")
           Padding(
             padding: const EdgeInsets.only(left: 2),
@@ -1669,7 +1675,13 @@ class _WarCardState extends State<WarCard> {
               style: TextStyle(fontSize: 14),
             ),
             Text(
-              !sslProb ? "none" : sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high",
+              !sslProb
+                  ? "none"
+                  : sslColor == Colors.green
+                      ? "low"
+                      : sslColor == Colors.orange
+                          ? "med"
+                          : "high",
               style: TextStyle(
                 color: sslColor,
                 fontSize: 14,

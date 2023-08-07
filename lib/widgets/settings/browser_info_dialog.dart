@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 class BrowserInfoDialog extends StatefulWidget {
   @override
-  _BrowserInfoDialogState createState() => _BrowserInfoDialogState();
+  BrowserInfoDialogState createState() => BrowserInfoDialogState();
 }
 
-class _BrowserInfoDialogState extends State<BrowserInfoDialog> {
+class BrowserInfoDialogState extends State<BrowserInfoDialog> {
   @override
   void initState() {
     super.initState();

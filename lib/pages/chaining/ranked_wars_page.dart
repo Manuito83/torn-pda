@@ -23,10 +23,10 @@ class RankedWarsPage extends StatefulWidget {
   const RankedWarsPage({this.calledFromMenu = false});
 
   @override
-  _RankedWarsPageState createState() => _RankedWarsPageState();
+  RankedWarsPageState createState() => RankedWarsPageState();
 }
 
-class _RankedWarsPageState extends State<RankedWarsPage> {
+class RankedWarsPageState extends State<RankedWarsPage> {
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
   late UserDetailsProvider _userProvider;
@@ -139,8 +139,9 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                 backgroundColor: _themeProvider!.canvas,
                 appBar: _settingsProvider!.appBarTop ? buildAppBarError(context) : null,
                 body: Container(
-                    color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-                    child: const Center(child: CircularProgressIndicator()),),
+                  color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
               ),
             );
           }
@@ -152,8 +153,10 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabActive() {
     List<Widget> activeWarsCards = <Widget>[];
 
-    final sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
-      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),);
+    final sortedByValueMap = Map.fromEntries(
+      _rankedWarsModel.rankedwars!.entries.toList()
+        ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),
+    );
 
     sortedByValueMap.forEach((key, value) {
       if (value.war!.start! < _timeNow && value.war!.end == 0 && value.factions!.containsKey(_ownFaction.toString())) {
@@ -203,8 +206,10 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabUpcoming() {
     List<Widget> upComingWars = <Widget>[];
 
-    final sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
-      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),);
+    final sortedByValueMap = Map.fromEntries(
+      _rankedWarsModel.rankedwars!.entries.toList()
+        ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),
+    );
 
     sortedByValueMap.forEach((key, value) {
       if (value.war!.start! > _timeNow && value.factions!.containsKey(_ownFaction.toString())) {
@@ -254,8 +259,10 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
   Widget _tabFinished() {
     List<Widget> finishedWars = <Widget>[];
 
-    final sortedByValueMap = Map.fromEntries(_rankedWarsModel.rankedwars!.entries.toList()
-      ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),);
+    final sortedByValueMap = Map.fromEntries(
+      _rankedWarsModel.rankedwars!.entries.toList()
+        ..sort((e1, e2) => e1.value.war!.start!.compareTo(e2.value.war!.start!)),
+    );
 
     sortedByValueMap.forEach((key, value) {
       if (value.war!.end != 0 && value.war!.end! < _timeNow && value.factions!.containsKey(_ownFaction.toString())) {

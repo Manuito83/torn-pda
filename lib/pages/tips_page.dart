@@ -87,10 +87,10 @@ class ComplexExpandableTip extends TipTextBuilder {
 
 class TipsPage extends StatefulWidget {
   @override
-  _TipsPageState createState() => _TipsPageState();
+  TipsPageState createState() => TipsPageState();
 }
 
-class _TipsPageState extends State<TipsPage> {
+class TipsPageState extends State<TipsPage> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
@@ -680,76 +680,82 @@ class _TipsPageState extends State<TipsPage> {
 
   List<ComplexExpandableTip> buildAppwidgetSectionTips() {
     final tips = <ComplexExpandableTip>[];
-    tips.add(ComplexExpandableTip(
-      headerValue: "Battery restrictions",
-      buildExpandedText: () {
-        return Text.rich(
-          TextSpan(
-            text: "Please be aware that the home screen widget has been built taking battery consumption into "
-                "consideration. It fetches the API and updates the layout once every few minutes, trying to minimize the "
-                "use of background tasks.\n\n"
-                "However, depending on your device model or launcher selection, further restrictions might be applied; if "
-                "that is the case, the widget might not update as much as expected.\n\n"
-                "This is also the case for widget initialization after the device is rebooted, which is restricted by "
-                "some launchers.\n\n"
-                "Check your ",
-            style: const TextStyle(
-              fontSize: 13,
-            ),
-            children: [
-              TextSpan(
-                text: "Android's app settings",
-                style: const TextStyle(
-                  decoration: TextDecoration.underline,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                  fontSize: 13,
+    tips.add(
+      ComplexExpandableTip(
+        headerValue: "Battery restrictions",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "Please be aware that the home screen widget has been built taking battery consumption into "
+                  "consideration. It fetches the API and updates the layout once every few minutes, trying to minimize the "
+                  "use of background tasks.\n\n"
+                  "However, depending on your device model or launcher selection, further restrictions might be applied; if "
+                  "that is the case, the widget might not update as much as expected.\n\n"
+                  "This is also the case for widget initialization after the device is rebooted, which is restricted by "
+                  "some launchers.\n\n"
+                  "Check your ",
+              style: const TextStyle(
+                fontSize: 13,
+              ),
+              children: [
+                TextSpan(
+                  text: "Android's app settings",
+                  style: const TextStyle(
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                    fontSize: 13,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      AppSettings.openAppSettings();
+                    },
                 ),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () async {
-                    AppSettings.openAppSettings();
-                  },
-              ),
-              const TextSpan(
-                text: ".",
-              ),
-            ],
-          ),
-        );
-      },
-    ),);
-
-    tips.add(ComplexExpandableTip(
-      headerValue: "Widget interaction",
-      buildExpandedText: () {
-        return const Text.rich(
-          TextSpan(
-            text: "As in the app, you can interact with almost every item in the widget (e.g.: tap the energy "
-                "bar to launch the app and access the gym).\n\n"
-                "Also, your 9 top shortcuts in the main shortcuts list (which you can configure in Settings) will "
-                "be shown in the widget. If you can't see the shortcuts in the widget, "
-                "ensure you expand it vertically!",
-            style: TextStyle(
-              fontSize: 13,
+                const TextSpan(
+                  text: ".",
+                ),
+              ],
             ),
-          ),
-        );
-      },
-    ),);
+          );
+        },
+      ),
+    );
 
-    tips.add(ComplexExpandableTip(
-      headerValue: "Widget theme",
-      buildExpandedText: () {
-        return const Text.rich(
-          TextSpan(
-            text: "You can change the home widget theme in the Settings menu in Torn PDA!",
-            style: TextStyle(
-              fontSize: 13,
+    tips.add(
+      ComplexExpandableTip(
+        headerValue: "Widget interaction",
+        buildExpandedText: () {
+          return const Text.rich(
+            TextSpan(
+              text: "As in the app, you can interact with almost every item in the widget (e.g.: tap the energy "
+                  "bar to launch the app and access the gym).\n\n"
+                  "Also, your 9 top shortcuts in the main shortcuts list (which you can configure in Settings) will "
+                  "be shown in the widget. If you can't see the shortcuts in the widget, "
+                  "ensure you expand it vertically!",
+              style: TextStyle(
+                fontSize: 13,
+              ),
             ),
-          ),
-        );
-      },
-    ),);
+          );
+        },
+      ),
+    );
+
+    tips.add(
+      ComplexExpandableTip(
+        headerValue: "Widget theme",
+        buildExpandedText: () {
+          return const Text.rich(
+            TextSpan(
+              text: "You can change the home widget theme in the Settings menu in Torn PDA!",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
+      ),
+    );
 
     return tips;
   }

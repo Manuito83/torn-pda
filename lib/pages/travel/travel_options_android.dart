@@ -20,10 +20,10 @@ class TravelOptionsAndroid extends StatefulWidget {
   });
 
   @override
-  _TravelOptionsAndroidState createState() => _TravelOptionsAndroidState();
+  TravelOptionsAndroidState createState() => TravelOptionsAndroidState();
 }
 
-class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
+class TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   String? _travelNotificationAheadDropDownValue;
   String? _travelAlarmAheadDropDownValue;
   String? _travelTimerAheadDropDownValue;

@@ -19,10 +19,10 @@ class AttackCard extends StatefulWidget {
   const AttackCard({required this.attackModel});
 
   @override
-  _AttackCardState createState() => _AttackCardState();
+  AttackCardState createState() => AttackCardState();
 }
 
-class _AttackCardState extends State<AttackCard> {
+class AttackCardState extends State<AttackCard> {
   late Attack _attack;
   late ThemeProvider _themeProvider;
   late UserDetailsProvider _userProvider;
@@ -122,7 +122,8 @@ class _AttackCardState extends State<AttackCard> {
                             SizedBox(
                               height: 20,
                               width: 20,
-                              child: _attack.targetName!.isNotEmpty ? _returnAddTargetButton() : const SizedBox.shrink(),
+                              child:
+                                  _attack.targetName!.isNotEmpty ? _returnAddTargetButton() : const SizedBox.shrink(),
                             ),
                           ],
                         ),
@@ -263,19 +264,23 @@ class _AttackCardState extends State<AttackCard> {
       if (_attack.attackWon) {
         return Text('Level ${_attack.targetLevel}');
       } else {
-        return const Text('[lost]',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.red,
-            ),);
+        return const Text(
+          '[lost]',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.red,
+          ),
+        );
       }
     } else {
       if (_attack.attackWon) {
-        return const Text('[lost]',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.red,
-            ),);
+        return const Text(
+          '[lost]',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.red,
+          ),
+        );
       } else {
         return const Text(
           '[defended]',
@@ -389,9 +394,10 @@ class _AttackCardState extends State<AttackCard> {
         width: 13,
         height: 13,
         decoration: BoxDecoration(
-            color: _attack.attackSeriesGreen[0] ? Colors.green : Colors.red,
-            shape: BoxShape.circle,
-            border: Border.all(),),
+          color: _attack.attackSeriesGreen[0] ? Colors.green : Colors.red,
+          shape: BoxShape.circle,
+          border: Border.all(),
+        ),
       ),
     );
 
@@ -409,9 +415,10 @@ class _AttackCardState extends State<AttackCard> {
             width: 11,
             height: 11,
             decoration: BoxDecoration(
-                color: _attack.attackSeriesGreen[i] ? Colors.green : Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(),),
+              color: _attack.attackSeriesGreen[i] ? Colors.green : Colors.red,
+              shape: BoxShape.circle,
+              border: Border.all(),
+            ),
           ),
         );
 

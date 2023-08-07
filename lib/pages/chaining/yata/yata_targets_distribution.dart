@@ -22,10 +22,10 @@ class YataTargetsDistribution extends StatefulWidget {
   });
 
   @override
-  _YataTargetsDistributionState createState() => _YataTargetsDistributionState();
+  YataTargetsDistributionState createState() => YataTargetsDistributionState();
 }
 
-class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
+class YataTargetsDistributionState extends State<YataTargetsDistribution> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 

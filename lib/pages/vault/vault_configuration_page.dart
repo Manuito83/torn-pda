@@ -29,10 +29,10 @@ class VaultConfigurationPage extends StatefulWidget {
   });
 
   @override
-  _VaultConfigurationPageState createState() => _VaultConfigurationPageState();
+  VaultConfigurationPageState createState() => VaultConfigurationPageState();
 }
 
-class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
+class VaultConfigurationPageState extends State<VaultConfigurationPage> {
   final _moneyFormat = NumberFormat("#,##0", "en_US");
 
   late SettingsProvider _settingsProvider;
@@ -142,9 +142,10 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
       var firstButtonText = "Change";
       final time = DateTime.fromMillisecondsSinceEpoch(widget.vaultStatus.timestamp!);
       final formatter = TimeFormatter(
-          inputTime: time,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,);
+        inputTime: time,
+        timeFormatSetting: _settingsProvider.currentTimeFormat,
+        timeZoneSetting: _settingsProvider.currentTimeZone,
+      );
 
       if (!widget.vaultStatus.error!) {
         top = Text("Last transaction on ${formatter.formatMonthDay} @${formatter.formatHour}");

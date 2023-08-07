@@ -42,10 +42,10 @@ class ProfileOptionsPage extends StatefulWidget {
   final Function callBackTimings;
 
   @override
-  _ProfileOptionsPageState createState() => _ProfileOptionsPageState();
+  ProfileOptionsPageState createState() => ProfileOptionsPageState();
 }
 
-class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
+class ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _warnAboutChainsEnabled = true;
   bool _showHeaderWallet = true;
   bool _showHeaderIcons = true;
@@ -251,18 +251,19 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         children: <Widget>[
                                           const Text("Filter icons"),
                                           IconButton(
-                                              icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                                              onPressed: () {
-                                                showDialog(
-                                                  useRootNavigator: false,
-                                                  context: context,
-                                                  builder: (BuildContext context) {
-                                                    return IconsFilterPage(
-                                                      settingsProvider: _settingsProvider,
-                                                    );
-                                                  },
-                                                );
-                                              },),
+                                            icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                                            onPressed: () {
+                                              showDialog(
+                                                useRootNavigator: false,
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return IconsFilterPage(
+                                                    settingsProvider: _settingsProvider,
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          ),
                                         ],
                                       ),
                                     ),

@@ -1501,10 +1501,10 @@ class HiddenForeignStockDialog extends StatefulWidget {
   });
 
   @override
-  State<HiddenForeignStockDialog> createState() => _HiddenForeignStockDialogState();
+  State<HiddenForeignStockDialog> createState() => HiddenForeignStockDialogState();
 }
 
-class _HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
+class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
   @override
   Widget build(BuildContext context) {
     List<Widget> hiddenCards = buildCards(widget.hiddenStocks, context);

@@ -72,10 +72,10 @@ class StatusIconsWrap extends StatefulWidget {
   final SettingsProvider? settingsProvider;
 
   @override
-  _StatusIconsWrapState createState() => _StatusIconsWrapState();
+  StatusIconsWrapState createState() => StatusIconsWrapState();
 }
 
-class _StatusIconsWrapState extends State<StatusIconsWrap> {
+class StatusIconsWrapState extends State<StatusIconsWrap> {
   @override
   Widget build(BuildContext context) {
     List<Widget> iconList = <Widget>[];

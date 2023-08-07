@@ -31,10 +31,10 @@ class ProfileNotificationsAndroid extends StatefulWidget {
   });
 
   @override
-  _ProfileNotificationsAndroidState createState() => _ProfileNotificationsAndroidState();
+  ProfileNotificationsAndroidState createState() => ProfileNotificationsAndroidState();
 }
 
-class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid> {
+class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 

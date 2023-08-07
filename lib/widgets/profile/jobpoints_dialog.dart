@@ -26,10 +26,10 @@ class JobPointsDialog extends StatefulWidget {
   });
 
   @override
-  _JobPointsDialogState createState() => _JobPointsDialogState();
+  JobPointsDialogState createState() => JobPointsDialogState();
 }
 
-class _JobPointsDialogState extends State<JobPointsDialog> {
+class JobPointsDialogState extends State<JobPointsDialog> {
   late ThemeProvider _themeProvider;
 
   @override

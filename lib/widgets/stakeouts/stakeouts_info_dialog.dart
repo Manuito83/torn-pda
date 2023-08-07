@@ -10,10 +10,10 @@ class StakeoutsInfoDialog extends StatefulWidget {
   });
 
   @override
-  State<StakeoutsInfoDialog> createState() => _StakeoutsInfoDialogState();
+  State<StakeoutsInfoDialog> createState() => StakeoutsInfoDialogState();
 }
 
-class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
+class StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
   final _maxDelayController = TextEditingController();
   final _maxDelayFormState = GlobalKey<FormState>();
 

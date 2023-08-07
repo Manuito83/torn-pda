@@ -69,10 +69,10 @@ class ForeignStockCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ForeignStockCardState createState() => _ForeignStockCardState();
+  ForeignStockCardState createState() => ForeignStockCardState();
 }
 
-class _ForeignStockCardState extends State<ForeignStockCard> {
+class ForeignStockCardState extends State<ForeignStockCard> {
   final _expandableController = ExpandableController();
 
   Future? _footerInformationRetrieved;
@@ -375,182 +375,183 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     }
 
     return FutureBuilder(
-        future: _footerInformationRetrieved,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (_footerSuccessful) {
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    if (_flyingElsewhere || _flyingToThisCountry)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  _tripExplanatory,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                  ),
+      future: _footerInformationRetrieved,
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (_footerSuccessful) {
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  if (_flyingElsewhere || _flyingToThisCountry)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _tripExplanatory,
+                                style: const TextStyle(
+                                  fontSize: 12,
                                 ),
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        if (depletesTime.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              depletesTime,
+                              style: const TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                          if (depletesTime.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 10),
-                              child: Text(
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        if (delayDeparture)
+                          IconButton(
+                            iconSize: 22,
+                            icon: const Icon(Icons.notifications_none),
+                            onPressed: () {
+                              _showDelayedTravelDialog();
+                            },
+                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              whenToTravel,
+                              style: TextStyle(fontSize: 12, color: whenToTravelColor),
+                            ),
+                            if (depletesTime.isNotEmpty)
+                              Text(
                                 depletesTime,
                                 style: const TextStyle(
                                   fontSize: 12,
                                 ),
                               ),
-                            ),
-                        ],
-                      )
-                    else
-                      Row(
-                        children: [
-                          if (delayDeparture)
-                            IconButton(
-                              iconSize: 22,
-                              icon: const Icon(Icons.notifications_none),
-                              onPressed: () {
-                                _showDelayedTravelDialog();
-                              },
-                            ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                whenToTravel,
-                                style: TextStyle(fontSize: 12, color: whenToTravelColor),
+                            Text(
+                              arrivalTime,
+                              style: const TextStyle(
+                                fontSize: 12,
                               ),
-                              if (depletesTime.isNotEmpty)
-                                Text(
-                                  depletesTime,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              Text(
-                                arrivalTime,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: 15),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Average restock time: $average",
-                          style: const TextStyle(
-                            fontSize: 12,
-                          ),
+                            ),
+                          ],
                         ),
-                        if (reliability.isNotEmpty)
-                          Row(
-                            children: [
-                              const Text(
-                                "Reliability: ",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Text(
-                                reliability,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: reliabilityColor,
-                                ),
-                              ),
-                            ],
-                          ),
                       ],
                     ),
-                    if (widget.showBarsCooldownAnalysis) _affectedBars(),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 200,
-                      width: 600,
-                      child: LineChart(_mainChartData()),
-                    ),
-                    SizedBox(height: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 60 : 40),
-                    Text(
-                      // Only include more than 0 per hour and
-                      (_depletionTrendPerSecond * 3600).floor() > 0 && _depletionTrendPerSecond < 86400
-                          ? "Depletion rate: ${(_depletionTrendPerSecond * 3600).floor()}/hour"
-                          : "Depletion rate: unknown",
-                      style: const TextStyle(
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blue,
-                        value: widget.activeRestocks!.keys.contains(_codeName) ? true : false,
-                        title: const Text(
-                          "Restock alert (auto)",
-                          style: TextStyle(
-                            fontSize: 12,
-                          ),
+                  const SizedBox(height: 15),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Average restock time: $average",
+                        style: const TextStyle(
+                          fontSize: 12,
                         ),
-                        subtitle: Text(
-                          "Get notified whenever ${widget.foreignStock.name} is restocked in "
-                          "${widget.foreignStock.countryFullName}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (ticked) async {
-                          if (ticked!) {
-                            await _addToActiveRestockAlerts();
-                          } else {
-                            await _removeToActiveRestockAlerts();
-                          }
-                        },
                       ),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return const Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                  "There is an issue contacting the server, "
-                  "please try again later",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
+                      if (reliability.isNotEmpty)
+                        Row(
+                          children: [
+                            const Text(
+                              "Reliability: ",
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              reliability,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: reliabilityColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
-                ),
-              );
-            }
+                  if (widget.showBarsCooldownAnalysis) _affectedBars(),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 200,
+                    width: 600,
+                    child: LineChart(_mainChartData()),
+                  ),
+                  SizedBox(height: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 60 : 40),
+                  Text(
+                    // Only include more than 0 per hour and
+                    (_depletionTrendPerSecond * 3600).floor() > 0 && _depletionTrendPerSecond < 86400
+                        ? "Depletion rate: ${(_depletionTrendPerSecond * 3600).floor()}/hour"
+                        : "Depletion rate: unknown",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                    child: CheckboxListTile(
+                      checkColor: Colors.white,
+                      activeColor: Colors.blue,
+                      value: widget.activeRestocks!.keys.contains(_codeName) ? true : false,
+                      title: const Text(
+                        "Restock alert (auto)",
+                        style: TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "Get notified whenever ${widget.foreignStock.name} is restocked in "
+                        "${widget.foreignStock.countryFullName}",
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      onChanged: (ticked) async {
+                        if (ticked!) {
+                          await _addToActiveRestockAlerts();
+                        } else {
+                          await _removeToActiveRestockAlerts();
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
           } else {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(8, 20, 8, 8),
-                child: CircularProgressIndicator(),
+            return const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                "There is an issue contacting the server, "
+                "please try again later",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             );
           }
-        },);
+        } else {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(8, 20, 8, 8),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+      },
+    );
   }
 
   Future _addToActiveRestockAlerts() async {
@@ -1446,37 +1447,38 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     return LineChartData(
       lineTouchData: LineTouchData(
         touchTooltipData: LineTouchTooltipData(
-            fitInsideHorizontally: true,
-            fitInsideVertically: false,
-            tooltipBgColor: Colors.blueGrey.withOpacity(1),
-            getTooltipItems: (value) {
-              final tooltips = <LineTooltipItem>[];
-              for (final spot in value) {
-                // Get time
-                var ts = 0;
-                final timesList = [];
-                for (final e in _periodicMap.entries) {
-                  timesList.add("${e.key}");
-                }
-                var x = spot.x.toInt();
-                if (x > timesList.length) {
-                  x = timesList.length;
-                }
-                ts = int.parse(timesList[x]);
-                final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-
-                final LineTooltipItem thisItem = LineTooltipItem(
-                  "${spot.y.toInt()} items"
-                  "\nat ${_timeFormatter(date)}",
-                  const TextStyle(
-                    fontSize: 12,
-                  ),
-                );
-                tooltips.add(thisItem);
+          fitInsideHorizontally: true,
+          fitInsideVertically: false,
+          tooltipBgColor: Colors.blueGrey.withOpacity(1),
+          getTooltipItems: (value) {
+            final tooltips = <LineTooltipItem>[];
+            for (final spot in value) {
+              // Get time
+              var ts = 0;
+              final timesList = [];
+              for (final e in _periodicMap.entries) {
+                timesList.add("${e.key}");
               }
+              var x = spot.x.toInt();
+              if (x > timesList.length) {
+                x = timesList.length;
+              }
+              ts = int.parse(timesList[x]);
+              final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
 
-              return tooltips;
-            },),
+              final LineTooltipItem thisItem = LineTooltipItem(
+                "${spot.y.toInt()} items"
+                "\nat ${_timeFormatter(date)}",
+                const TextStyle(
+                  fontSize: 12,
+                ),
+              );
+              tooltips.add(thisItem);
+            }
+
+            return tooltips;
+          },
+        ),
       ),
       gridData: FlGridData(
         show: true,
@@ -1836,146 +1838,147 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                      padding: const EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: const EdgeInsets.only(top: 15),
-                      decoration: BoxDecoration(
-                        color: _themeProvider.secondBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: Offset(0.0, 10.0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/home/vault.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  const Text("Personal vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                Navigator.of(context).pop();
-                                _cashCheckPressed = true;
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.short,
-                                    );
-                              },
-                              onLongPress: () async {
-                                const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                Navigator.of(context).pop();
-                                _cashCheckPressed = true;
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.long,
-                                    );
-                              },
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider.secondBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/home/vault.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Personal vault"),
+                              ],
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/faction.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  const Text("Faction vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
-                                Navigator.of(context).pop();
-                                _cashCheckPressed = true;
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.short,
-                                    );
-                              },
-                              onLongPress: () async {
-                                const url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
-                                Navigator.of(context).pop();
-                                _cashCheckPressed = true;
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.long,
-                                    );
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/home/job.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  const Text("Company vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                const url = 'https://www.torn.com/companies.php#/option=funds';
-                                Navigator.of(context).pop();
-                                _cashCheckPressed = true;
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.short,
-                                    );
-                              },
-                              onLongPress: () async {
-                                const url = "https://www.torn.com/companies.php#/option=funds";
-                                Navigator.of(context).pop();
-                                _cashCheckPressed = true;
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.long,
-                                    );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextButton(
-                            child: const Text("Cancel"),
-                            onPressed: () {
+                            onPressed: () async {
+                              const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                               Navigator.of(context).pop();
+                              _cashCheckPressed = true;
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    browserTapType: BrowserTapType.short,
+                                  );
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                              Navigator.of(context).pop();
+                              _cashCheckPressed = true;
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    browserTapType: BrowserTapType.long,
+                                  );
                             },
                           ),
-                        ],
-                      ),),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/faction.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Faction vault"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                              Navigator.of(context).pop();
+                              _cashCheckPressed = true;
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    browserTapType: BrowserTapType.short,
+                                  );
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
+                              Navigator.of(context).pop();
+                              _cashCheckPressed = true;
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    browserTapType: BrowserTapType.long,
+                                  );
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/home/job.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Company vault"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url = 'https://www.torn.com/companies.php#/option=funds';
+                              Navigator.of(context).pop();
+                              _cashCheckPressed = true;
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    browserTapType: BrowserTapType.short,
+                                  );
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/companies.php#/option=funds";
+                              Navigator.of(context).pop();
+                              _cashCheckPressed = true;
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    browserTapType: BrowserTapType.long,
+                                  );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextButton(
+                          child: const Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: 16,

@@ -17,10 +17,10 @@ class UserScriptsAddDialog extends StatefulWidget {
   const UserScriptsAddDialog({required this.editExisting, this.editScript});
 
   @override
-  _UserScriptsAddDialogState createState() => _UserScriptsAddDialogState();
+  UserScriptsAddDialogState createState() => UserScriptsAddDialogState();
 }
 
-class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
+class UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
   double hPad = 15;
   double vPad = 20;
   double frame = 10;
@@ -128,41 +128,42 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
               ),
             ),
             Padding(
-                padding: const EdgeInsets.all(10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text("Injection time"),
-                    ToggleSwitch(
-                      minHeight: 28,
-                      customHeights: const [30, 30],
-                      borderColor:
-                          _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-                      initialLabelIndex: _originalTime == UserScriptTime.start ? 0 : 1,
-                      activeBgColor: _themeProvider.currentTheme == AppTheme.light
-                          ? [Colors.blueGrey[400]!]
-                          : _themeProvider.currentTheme == AppTheme.dark
-                              ? [Colors.blueGrey]
-                              : [Colors.blueGrey[700]!],
-                      activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                      inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
-                          ? Colors.white
-                          : _themeProvider.currentTheme == AppTheme.dark
-                              ? Colors.grey[800]
-                              : Colors.black,
-                      inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                      borderWidth: 1,
-                      cornerRadius: 5,
-                      totalSwitches: 2,
-                      animate: true,
-                      animationDuration: 500,
-                      labels: const ["START", "END"],
-                      onToggle: (index) {
-                        index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
-                      },
-                    )
-                  ],
-                ),),
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Injection time"),
+                  ToggleSwitch(
+                    minHeight: 28,
+                    customHeights: const [30, 30],
+                    borderColor:
+                        _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
+                    initialLabelIndex: _originalTime == UserScriptTime.start ? 0 : 1,
+                    activeBgColor: _themeProvider.currentTheme == AppTheme.light
+                        ? [Colors.blueGrey[400]!]
+                        : _themeProvider.currentTheme == AppTheme.dark
+                            ? [Colors.blueGrey]
+                            : [Colors.blueGrey[700]!],
+                    activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                    inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                        ? Colors.white
+                        : _themeProvider.currentTheme == AppTheme.dark
+                            ? Colors.grey[800]
+                            : Colors.black,
+                    inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                    borderWidth: 1,
+                    cornerRadius: 5,
+                    totalSwitches: 2,
+                    animate: true,
+                    animationDuration: 500,
+                    labels: const ["START", "END"],
+                    onToggle: (index) {
+                      index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
+                    },
+                  )
+                ],
+              ),
+            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),

@@ -45,10 +45,10 @@ enum LootTimeType {
 
 class LootPage extends StatefulWidget {
   @override
-  _LootPageState createState() => _LootPageState();
+  LootPageState createState() => LootPageState();
 }
 
-class _LootPageState extends State<LootPage> {
+class LootPageState extends State<LootPage> {
   var _npcIds = <String>[];
   var _filterOutIds = <String>[];
   final _images = <NpcImagesModel>[];
@@ -203,78 +203,90 @@ class _LootPageState extends State<LootPage> {
         ],
       ),
       actions: <Widget>[
-        if (_apiSuccess) IconButton(
-                icon: Icon(
-                  MdiIcons.filterOutline,
-                  color: activeNpcsFiltered() ? Colors.orange[400] : Colors.white,
-                ),
-                onPressed: () {
-                  showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return LootFilterDialog(
-                        allNpcs: _mainLootInfo,
-                        filteredNpcs: _filterOutIds,
-                      );
-                    },
+        if (_apiSuccess)
+          IconButton(
+            icon: Icon(
+              MdiIcons.filterOutline,
+              color: activeNpcsFiltered() ? Colors.orange[400] : Colors.white,
+            ),
+            onPressed: () {
+              showDialog(
+                useRootNavigator: false,
+                context: context,
+                builder: (BuildContext context) {
+                  return LootFilterDialog(
+                    allNpcs: _mainLootInfo,
+                    filteredNpcs: _filterOutIds,
                   );
                 },
-              ) else const SizedBox.shrink(),
-        if (_apiSuccess) IconButton(
-                icon: const Icon(
-                  MdiIcons.timerSandEmpty,
+              );
+            },
+          )
+        else
+          const SizedBox.shrink(),
+        if (_apiSuccess)
+          IconButton(
+            icon: const Icon(
+              MdiIcons.timerSandEmpty,
+            ),
+            onPressed: () {
+              setState(() {
+                if (_lootTimeType == LootTimeType.timer) {
+                  _lootTimeType = LootTimeType.dateTime;
+                  Prefs().setLootTimerType('dateTime');
+                } else {
+                  _lootTimeType = LootTimeType.timer;
+                  Prefs().setLootTimerType('timer');
+                }
+              });
+            },
+          )
+        else
+          const SizedBox.shrink(),
+        if (_apiSuccess && Platform.isAndroid)
+          IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider!.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return LootNotificationsAndroid(
+                      callback: _callBackFromNotificationOptions,
+                      lootRangersEnabled: _dbLootRangersEnabled,
+                    );
+                  },
                 ),
-                onPressed: () {
-                  setState(() {
-                    if (_lootTimeType == LootTimeType.timer) {
-                      _lootTimeType = LootTimeType.dateTime;
-                      Prefs().setLootTimerType('dateTime');
-                    } else {
-                      _lootTimeType = LootTimeType.timer;
-                      Prefs().setLootTimerType('timer');
-                    }
-                  });
-                },
-              ) else const SizedBox.shrink(),
-        if (_apiSuccess && Platform.isAndroid) IconButton(
-                icon: Icon(
-                  Icons.alarm_on,
-                  color: _themeProvider!.buttonText,
+              );
+            },
+          )
+        else
+          const SizedBox.shrink(),
+        if (_apiSuccess && Platform.isIOS)
+          IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider!.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return LootNotificationsIOS(
+                      callback: _callBackFromNotificationOptions,
+                      lootRangersEnabled: _dbLootRangersEnabled,
+                    );
+                  },
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return LootNotificationsAndroid(
-                          callback: _callBackFromNotificationOptions,
-                          lootRangersEnabled: _dbLootRangersEnabled,
-                        );
-                      },
-                    ),
-                  );
-                },
-              ) else const SizedBox.shrink(),
-        if (_apiSuccess && Platform.isIOS) IconButton(
-                icon: Icon(
-                  Icons.alarm_on,
-                  color: _themeProvider!.buttonText,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return LootNotificationsIOS(
-                          callback: _callBackFromNotificationOptions,
-                          lootRangersEnabled: _dbLootRangersEnabled,
-                        );
-                      },
-                    ),
-                  );
-                },
-              ) else const SizedBox.shrink()
+              );
+            },
+          )
+        else
+          const SizedBox.shrink()
       ],
     );
   }
@@ -579,7 +591,9 @@ class _LootPageState extends State<LootPage> {
           npcBoxes.add(
             Card(
               shape: RoundedRectangleBorder(
-                  side: BorderSide(color: cardBorderColor(), width: 1.5), borderRadius: BorderRadius.circular(4.0),),
+                side: BorderSide(color: cardBorderColor(), width: 1.5),
+                borderRadius: BorderRadius.circular(4.0),
+              ),
               elevation: 3,
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -861,18 +875,19 @@ class _LootPageState extends State<LootPage> {
 
                       // Open chaining browser for Loot Rangers
                       context.read<WebViewProvider>().openBrowserPreference(
-                          context: context,
-                          url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
-                          browserTapType: BrowserTapType.chain,
-                          isChainingBrowser: true,
-                          chainingPayload: ChainingPayload()
-                            ..attackIdList = _lootRangersIdOrder
-                            ..attackNameList = _lootRangersNameOrder
-                            ..attackNotesList = notes
-                            ..attackNotesColorList = colors
-                            ..showNotes = true
-                            ..showBlankNotes = false
-                            ..showOnlineFactionWarning = false,);
+                            context: context,
+                            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
+                            browserTapType: BrowserTapType.chain,
+                            isChainingBrowser: true,
+                            chainingPayload: ChainingPayload()
+                              ..attackIdList = _lootRangersIdOrder
+                              ..attackNameList = _lootRangersNameOrder
+                              ..attackNotesList = notes
+                              ..attackNotesColorList = colors
+                              ..showNotes = true
+                              ..showBlankNotes = false
+                              ..showOnlineFactionWarning = false,
+                          );
                     },
                   ),
                 ),
@@ -934,10 +949,12 @@ class _LootPageState extends State<LootPage> {
             final timingsList = <Timing>[];
             npc.timings!.forEach((key, value) {
               value.due = value.ts! - tsNow;
-              timingsList.add(Timing(
-                due: value.due,
-                ts: value.ts,
-              ),);
+              timingsList.add(
+                Timing(
+                  due: value.due,
+                  ts: value.ts,
+                ),
+              );
             });
             // Make sure to advance levels if the times comes in between updates
             if (timingsList[0].due! > 0) {
@@ -965,7 +982,8 @@ class _LootPageState extends State<LootPage> {
   Future<bool> _fetchDatabase() async {
     try {
       // Get current NPCs
-      final String dbNpcsResult = (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
+      final String dbNpcsResult =
+          (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
       _npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
       // Get their hospital out times
@@ -1175,15 +1193,16 @@ class _LootPageState extends State<LootPage> {
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-        notificationId,
-        notificationTitle,
-        notificationSubtitle,
-        //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-        tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
-        platformChannelSpecifics,
-        payload: notificationPayload,
-        androidAllowWhileIdle: true, // Deliver at exact time
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,);
+      notificationId,
+      notificationTitle,
+      notificationSubtitle,
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
+      platformChannelSpecifics,
+      payload: notificationPayload,
+      androidAllowWhileIdle: true, // Deliver at exact time
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
 
     // DEBUG
     //print('Notification for $notificationTitle @ '
@@ -1319,17 +1338,18 @@ class NpcImage extends StatelessWidget {
           boxShadow: shadow,
         ),
         child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
-              'images/npcs/npc_$npcId.png',
-              height: 60,
-              errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                return Image.asset(
-                  "images/npcs/npc_0.png",
-                  height: 60,
-                );
-              },
-            ),),
+          borderRadius: BorderRadius.circular(20),
+          child: Image.asset(
+            'images/npcs/npc_$npcId.png',
+            height: 60,
+            errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+              return Image.asset(
+                "images/npcs/npc_0.png",
+                height: 60,
+              );
+            },
+          ),
+        ),
       ),
       onTap: () async {
         final url = 'https://www.torn.com/profiles.php?XID=$npcId';

@@ -28,10 +28,10 @@ class WtfReviveButton extends StatefulWidget {
   });
 
   @override
-  _WtfReviveButtonState createState() => _WtfReviveButtonState();
+  WtfReviveButtonState createState() => WtfReviveButtonState();
 }
 
-class _WtfReviveButtonState extends State<WtfReviveButton> {
+class WtfReviveButtonState extends State<WtfReviveButton> {
   OwnProfileExtended? _user;
 
   @override
@@ -170,8 +170,9 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                                 ),
                                 const TextSpan(text: ' for more information.'),
                                 const TextSpan(
-                                    text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
-                                        "Refusal to pay will result in getting blacklisted.",),
+                                  text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
+                                      "Refusal to pay will result in getting blacklisted.",
+                                ),
                               ],
                             ),
                           ),
@@ -225,13 +226,14 @@ class _WtfReviveButtonState extends State<WtfReviveButton> {
                                 }
 
                                 final wtf = WtfRevive(
-                                    tornId: _user!.playerId,
-                                    username: _user!.name,
-                                    faction: _user!.faction!.factionName,
-                                    country: countryCheck(
-                                      state: _user!.status!.state,
-                                      description: _user!.status!.description,
-                                    ),);
+                                  tornId: _user!.playerId,
+                                  username: _user!.name,
+                                  faction: _user!.faction!.factionName,
+                                  country: countryCheck(
+                                    state: _user!.status!.state,
+                                    description: _user!.status!.description,
+                                  ),
+                                );
 
                                 wtf.callMedic().then((args) {
                                   var resultColor = Colors.green[800];

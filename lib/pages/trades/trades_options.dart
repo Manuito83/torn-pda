@@ -20,10 +20,10 @@ class TradesOptions extends StatefulWidget {
   });
 
   @override
-  _TradesOptionsState createState() => _TradesOptionsState();
+  TradesOptionsState createState() => TradesOptionsState();
 }
 
-class _TradesOptionsState extends State<TradesOptions> {
+class TradesOptionsState extends State<TradesOptions> {
   static const ttColor = Color(0xffd186cf);
 
   bool _tradeCalculatorEnabled = true;

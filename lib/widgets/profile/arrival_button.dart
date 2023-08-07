@@ -25,10 +25,10 @@ class ArrivalButton extends StatefulWidget {
   });
 
   @override
-  _ArrivalButtonState createState() => _ArrivalButtonState();
+  ArrivalButtonState createState() => ArrivalButtonState();
 }
 
-class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateMixin {
+class ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateMixin {
   late AnimationController _resizableController;
 
   @override
@@ -66,53 +66,54 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
     return Row(
       children: [
         AnimatedBuilder(
-            animation: _resizableController,
-            builder: (context, child) {
-              return ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  elevation: 2,
-                  backgroundColor: widget.themeProvider!.cardColor,
-                  side: BorderSide(
-                    width: _resizableController.value * 8,
-                    color: Colors.orange,
+          animation: _resizableController,
+          builder: (context, child) {
+            return ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 2,
+                backgroundColor: widget.themeProvider!.cardColor,
+                side: BorderSide(
+                  width: _resizableController.value * 8,
+                  color: Colors.orange,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.flight_land,
+                    size: 22,
+                    color: widget.themeProvider!.mainText,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.flight_land,
-                      size: 22,
-                      color: widget.themeProvider!.mainText,
-                    ),
-                    const SizedBox(width: 6),
-                    Column(
-                      children: [
-                        Text(
-                          "APPROACHING",
-                          style: TextStyle(
-                            fontSize: 8,
-                            color: widget.themeProvider!.mainText,
-                          ),
+                  const SizedBox(width: 6),
+                  Column(
+                    children: [
+                      Text(
+                        "APPROACHING",
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: widget.themeProvider!.mainText,
                         ),
-                        Text(
-                          widget.user!.travel!.destination!.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 8,
-                            color: widget.themeProvider!.mainText,
-                          ),
+                      ),
+                      Text(
+                        widget.user!.travel!.destination!.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: widget.themeProvider!.mainText,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                onLongPress: () {
-                  widget.launchBrowser(url: 'https://www.torn.com', shortTap: true);
-                },
-                onPressed: () async {
-                  widget.launchBrowser(url: 'https://www.torn.com', shortTap: false);
-                },
-              );
-            },),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              onLongPress: () {
+                widget.launchBrowser(url: 'https://www.torn.com', shortTap: true);
+              },
+              onPressed: () async {
+                widget.launchBrowser(url: 'https://www.torn.com', shortTap: false);
+              },
+            );
+          },
+        ),
         const SizedBox(width: 20),
         ForeignStockButton(
           userProv: widget.userProv,

@@ -27,10 +27,10 @@ class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({super.key});
 
   @override
-  _SettingsBrowserPageState createState() => _SettingsBrowserPageState();
+  SettingsBrowserPageState createState() => SettingsBrowserPageState();
 }
 
-class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
+class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Timer? _ticker;
 
   Future? _preferencesRestored;
@@ -253,14 +253,15 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           "Friendly factions",
                         ),
                         IconButton(
-                            icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (BuildContext context) => FriendlyFactionsPage(),
-                                ),
-                              );
-                            },),
+                          icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (BuildContext context) => FriendlyFactionsPage(),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),

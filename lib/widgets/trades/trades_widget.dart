@@ -31,10 +31,10 @@ class TradesWidget extends StatefulWidget {
   });
 
   @override
-  _TradesWidgetState createState() => _TradesWidgetState();
+  TradesWidgetState createState() => TradesWidgetState();
 }
 
-class _TradesWidgetState extends State<TradesWidget> {
+class TradesWidgetState extends State<TradesWidget> {
   static const ttColor = Color(0xffd186cf);
 
   final _scrollController = ScrollController();
@@ -189,12 +189,18 @@ class _TradesWidgetState extends State<TradesWidget> {
               // Take into account Torn Trader to leave more or less space
               constraints: _tradesProv.container.ttActive &&
                       (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
-                  ? BoxConstraints.loose(Size.fromHeight(
-                          MediaQuery.of(context).size.height - kToolbarHeight * 3 - AppBar().preferredSize.height,) /
-                      3,)
-                  : BoxConstraints.loose(Size.fromHeight(
-                          MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,) /
-                      3,),
+                  ? BoxConstraints.loose(
+                      Size.fromHeight(
+                            MediaQuery.of(context).size.height - kToolbarHeight * 3 - AppBar().preferredSize.height,
+                          ) /
+                          3,
+                    )
+                  : BoxConstraints.loose(
+                      Size.fromHeight(
+                            MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,
+                          ) /
+                          3,
+                    ),
               child: Scrollbar(
                 controller: _scrollController,
                 thumbVisibility: true,
@@ -321,7 +327,10 @@ class _TradesWidgetState extends State<TradesWidget> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (side == 'left') Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon) else const SizedBox.shrink(),
+          if (side == 'left')
+            Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon)
+          else
+            const SizedBox.shrink(),
           Flexible(
             child: Text(
               '\$${_moneyFormat.format(total)}',
@@ -333,7 +342,10 @@ class _TradesWidgetState extends State<TradesWidget> {
             ),
           ),
           propertyIcon(),
-          if (side == 'right') Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon) else const SizedBox.shrink(),
+          if (side == 'right')
+            Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon)
+          else
+            const SizedBox.shrink(),
         ],
       );
     } else {

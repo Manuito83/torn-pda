@@ -35,10 +35,10 @@ class PersonalNotesDialog extends StatefulWidget {
   });
 
   @override
-  _PersonalNotesDialogState createState() => _PersonalNotesDialogState();
+  PersonalNotesDialogState createState() => PersonalNotesDialogState();
 }
 
-class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
+class PersonalNotesDialogState extends State<PersonalNotesDialog> {
   TargetModel? _target;
   FriendModel? _friend;
   Stakeout? _stakeout;
@@ -175,9 +175,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           selectedColor: Colors.red,
                           backgroundColor: Colors.red,
                           shape: const StadiumBorder(
-                            side: BorderSide(
-                              
-                            ),
+                            side: BorderSide(),
                           ),
                         ),
                         const Padding(
@@ -198,9 +196,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           selectedColor: Colors.orange[600],
                           backgroundColor: Colors.orange[600],
                           shape: const StadiumBorder(
-                            side: BorderSide(
-                              
-                            ),
+                            side: BorderSide(),
                           ),
                         ),
                         const Padding(
@@ -221,9 +217,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                           selectedColor: Colors.green,
                           backgroundColor: Colors.green,
                           shape: const StadiumBorder(
-                            side: BorderSide(
-                              
-                            ),
+                            side: BorderSide(),
                           ),
                         ),
                       ],

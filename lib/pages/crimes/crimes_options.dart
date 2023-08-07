@@ -34,10 +34,10 @@ Map crimesCategories = {
 
 class CrimesOptions extends StatefulWidget {
   @override
-  _CrimesOptionsState createState() => _CrimesOptionsState();
+  CrimesOptionsState createState() => CrimesOptionsState();
 }
 
-class _CrimesOptionsState extends State<CrimesOptions> {
+class CrimesOptionsState extends State<CrimesOptions> {
   final _mainCrimeList = <Crime>[];
   final _titleCrimeString = <String>[];
 

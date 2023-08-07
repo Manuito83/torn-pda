@@ -39,19 +39,20 @@ class WebviewUrlDialog extends StatefulWidget {
   final WebViewController? stockWebView;
   final UserDetailsProvider? userProvider;
 
-  const WebviewUrlDialog(
-      {this.callFindInPage,
-      required this.title,
-      required this.url,
-      this.inAppWebview,
-      this.stockWebView,
-      required this.userProvider,});
+  const WebviewUrlDialog({
+    this.callFindInPage,
+    required this.title,
+    required this.url,
+    this.inAppWebview,
+    this.stockWebView,
+    required this.userProvider,
+  });
 
   @override
-  _WebviewUrlDialogState createState() => _WebviewUrlDialogState();
+  WebviewUrlDialogState createState() => WebviewUrlDialogState();
 }
 
-class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
+class WebviewUrlDialogState extends State<WebviewUrlDialog> {
   ThemeProvider? _themeProvider;
   late ShortcutsProvider _shortcutsProvider;
   late SettingsProvider _settingsProvider;
@@ -299,11 +300,12 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Icon(Icons.home, size: 20),
                             SizedBox(width: 5),
                             Flexible(
-                                child: Text(
-                              'Torn Home',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),),
+                              child: Text(
+                                'Torn Home',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () {
@@ -325,11 +327,12 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Icon(Icons.copy, size: 20),
                             SizedBox(width: 5),
                             Flexible(
-                                child: Text(
-                              'Copy URL',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),),
+                              child: Text(
+                                'Copy URL',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () {
@@ -358,30 +361,32 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
-                          onPressed: _shortcutsProvider.activeShortcuts.isNotEmpty
-                              ? () {
-                                  Navigator.of(context).pop();
-                                  _openShortcutsDialog();
-                                  _customURLController.text = "";
-                                }
-                              : null,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'images/icons/heart.png',
-                                width: 20,
-                                color: _shortcutsProvider.activeShortcuts.isNotEmpty ? Colors.white : Colors.grey,
-                              ),
-                              const SizedBox(width: 5),
-                              const Flexible(
-                                  child: Text(
+                        onPressed: _shortcutsProvider.activeShortcuts.isNotEmpty
+                            ? () {
+                                Navigator.of(context).pop();
+                                _openShortcutsDialog();
+                                _customURLController.text = "";
+                              }
+                            : null,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'images/icons/heart.png',
+                              width: 20,
+                              color: _shortcutsProvider.activeShortcuts.isNotEmpty ? Colors.white : Colors.grey,
+                            ),
+                            const SizedBox(width: 5),
+                            const Flexible(
+                              child: Text(
                                 'Browse shortcuts',
                                 style: TextStyle(fontSize: 12),
                                 textAlign: TextAlign.center,
-                              ),),
-                            ],
-                          ),),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -396,11 +401,12 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             ),
                             const SizedBox(width: 8),
                             const Flexible(
-                                child: Text(
-                              'Save as shortcut',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),),
+                              child: Text(
+                                'Save as shortcut',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () {
@@ -420,11 +426,12 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               Icon(Icons.search, size: 20),
                               SizedBox(width: 8),
                               Flexible(
-                                  child: Text(
-                                'Find in page',
-                                style: TextStyle(fontSize: 12),
-                                textAlign: TextAlign.center,
-                              ),),
+                                child: Text(
+                                  'Find in page',
+                                  style: TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ],
                           ),
                           onPressed: () {
@@ -442,11 +449,12 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Icon(Icons.open_in_browser_outlined, size: 20),
                             SizedBox(width: 8),
                             Flexible(
-                                child: Text(
-                              'External browser',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),),
+                              child: Text(
+                                'External browser',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () async {
@@ -480,7 +488,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     child: const Icon(MdiIcons.minus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newOptions = (await widget.inAppWebview!.getSettings())!;
+                                        final InAppWebViewSettings newOptions =
+                                            (await widget.inAppWebview!.getSettings())!;
                                         if (newOptions.initialScale == 0) {
                                           newOptions.initialScale = 350;
                                         } else if (newOptions.initialScale != null) {
@@ -501,7 +510,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     child: const Icon(MdiIcons.refresh),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newOptions = (await widget.inAppWebview!.getSettings())!;
+                                        final InAppWebViewSettings newOptions =
+                                            (await widget.inAppWebview!.getSettings())!;
                                         newOptions.initialScale = 0;
                                         widget.inAppWebview!.setSettings(settings: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = 0;
@@ -687,10 +697,10 @@ class CustomShortcutDialog extends StatefulWidget {
   });
 
   @override
-  State<CustomShortcutDialog> createState() => _CustomShortcutDialogState();
+  State<CustomShortcutDialog> createState() => CustomShortcutDialogState();
 }
 
-class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
+class CustomShortcutDialogState extends State<CustomShortcutDialog> {
   late ShortcutsProvider _shortcutsProvider;
 
   final _customURLController = TextEditingController();

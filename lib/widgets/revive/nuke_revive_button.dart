@@ -27,10 +27,10 @@ class NukeReviveButton extends StatefulWidget {
   });
 
   @override
-  _NukeReviveButtonState createState() => _NukeReviveButtonState();
+  NukeReviveButtonState createState() => NukeReviveButtonState();
 }
 
-class _NukeReviveButtonState extends State<NukeReviveButton> {
+class NukeReviveButtonState extends State<NukeReviveButton> {
   OwnProfileExtended? _user;
 
   @override
@@ -166,11 +166,13 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                     },
                                 ),
                                 const TextSpan(
-                                    text: "\n\nEach revive must be paid directly to the reviver (unless under a "
-                                        "contract with Nuke) and costs \$1 million or 1 Xanax.",),
+                                  text: "\n\nEach revive must be paid directly to the reviver (unless under a "
+                                      "contract with Nuke) and costs \$1 million or 1 Xanax.",
+                                ),
                                 const TextSpan(
-                                    text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
-                                        "you risk getting blocked from Nuke!",),
+                                  text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
+                                      "you risk getting blocked from Nuke!",
+                                ),
                               ],
                             ),
                           ),
