@@ -5,10 +5,6 @@ import 'package:torn_pda/utils/multitab_detector.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
 
 class CircularMenuTabs extends StatefulWidget {
-  /// Global key to control animation
-  @override
-  final GlobalKey<CircularMenuTabsState>? key;
-
   /// List of CircularMenuItem contains at least two items.
   final List<CircularMenuItem> items;
 
@@ -67,9 +63,7 @@ class CircularMenuTabs extends StatefulWidget {
     this.toggleButtonSize = 40,
     this.toggleButtonIconColor,
     this.toggleButtonAnimatedIconData = AnimatedIcons.menu_close,
-    this.key,
-  })  : assert(items.isNotEmpty, 'items can not be empty list'),
-        super(key: key);
+  }) : assert(items.isNotEmpty, 'items can not be empty list');
 
   @override
   CircularMenuTabsState createState() => CircularMenuTabsState();

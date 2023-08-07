@@ -66,7 +66,6 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
           child: FadeTransition(
             opacity: _tabsOpacity,
             child: CircularMenuTabs(
-              key: _circularMenuKeys[i],
               webViewProvider: _webViewProvider,
               tabIndex: i,
               alignment: Alignment.centerLeft,
