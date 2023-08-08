@@ -51,7 +51,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
     _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
@@ -249,7 +249,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
   }
 
   List<BarChartGroupData> showingGroups() {
-    final double width = MediaQuery.of(context).size.width;
+    final double width = MediaQuery.sizeOf(context).width;
     var pixelPerBar = (width - 200) / widget.graphInfo.length;
     if (pixelPerBar < 1) {
       pixelPerBar = 1;

@@ -16,7 +16,7 @@ class FriendsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+    if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return ListView(children: getChildrenFriends(context));
     } else {
       return ListView(

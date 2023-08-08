@@ -477,7 +477,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
           : _themeProvider!.currentTheme == AppTheme.dark
@@ -1103,20 +1103,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   SystemChrome.setSystemUIOverlayStyle(
                     SystemUiOverlayStyle(
                       statusBarColor: _themeProvider!.statusBar,
-                      systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape
+                      systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
                           ? _themeProvider!.canvas
                           : _themeProvider!.statusBar,
-                      systemNavigationBarIconBrightness: MediaQuery.of(context).orientation == Orientation.landscape
+                      systemNavigationBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
                           ? _themeProvider!.currentTheme == AppTheme.light
                               ? Brightness.dark
                               : Brightness.light
                           : Brightness.light,
                       statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
-                          ? MediaQuery.of(context).orientation == Orientation.portrait
+                          ? MediaQuery.orientationOf(context) == Orientation.portrait
                               ? Brightness.dark
                               : Brightness.light
                           : Brightness.dark,
-                      statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.portrait
+                      statusBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.portrait
                           ? Brightness.light
                           : Brightness.light,
                     ),

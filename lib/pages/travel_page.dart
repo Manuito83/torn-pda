@@ -127,7 +127,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         ),
       ),
       floatingActionButtonAnimator: FabOverrideAnimation(),
-      floatingActionButtonLocation: MediaQuery.of(context).orientation == Orientation.landscape
+      floatingActionButtonLocation: MediaQuery.orientationOf(context) == Orientation.landscape
           ? FloatingActionButtonLocation.endFloat
           : _travelModel.abroad
               ? FloatingActionButtonLocation.endFloat
@@ -436,7 +436,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     return SpeedDial(
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
+          MediaQuery.orientationOf(context) == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       elevation: 2,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,

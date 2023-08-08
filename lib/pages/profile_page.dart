@@ -5046,7 +5046,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return SpeedDial(
       animationDuration: const Duration(),
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
+          MediaQuery.orientationOf(context) == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       curve: Curves.bounceIn,

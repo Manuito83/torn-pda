@@ -326,21 +326,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
           statusBarColor: _themeProvider!.statusBar,
-          systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+          systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
               ? _themeProvider!.statusBar
               : Colors.transparent,
           systemNavigationBarIconBrightness:
-              MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+              MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
                   ? Brightness.light
                   : _themeProvider!.currentTheme == AppTheme.light
                       ? Brightness.dark
                       : Brightness.light,
           statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
-              ? MediaQuery.of(context).orientation == Orientation.landscape
+              ? MediaQuery.orientationOf(context) == Orientation.landscape
                   ? Brightness.dark
                   : Brightness.light
               : Brightness.dark,
-          statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+          statusBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
               ? Brightness.light
               : Brightness.light,
         ),
@@ -1207,7 +1207,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // safe area will be black
           return Container(
             color: _themeProvider!.currentTheme == AppTheme.light
-                ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? MediaQuery.orientationOf(context) == Orientation.portrait
                     ? Colors.blueGrey
                     : _themeProvider!.canvas
                 : _themeProvider!.canvas,
@@ -1245,7 +1245,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Widget _getDrawerHeader() {
     return SizedBox(
-      height: MediaQuery.of(context).orientation == Orientation.portrait ? 280 : 250,
+      height: MediaQuery.orientationOf(context) == Orientation.portrait ? 280 : 250,
       child: DrawerHeader(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1381,21 +1381,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                               SystemChrome.setSystemUIOverlayStyle(
                                 SystemUiOverlayStyle(
                                   statusBarColor: _themeProvider!.statusBar,
-                                  systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape
+                                  systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
                                       ? _themeProvider!.canvas
                                       : _themeProvider!.statusBar,
                                   systemNavigationBarIconBrightness:
-                                      MediaQuery.of(context).orientation == Orientation.landscape
+                                      MediaQuery.orientationOf(context) == Orientation.landscape
                                           ? _themeProvider!.currentTheme == AppTheme.light
                                               ? Brightness.dark
                                               : Brightness.light
                                           : Brightness.light,
                                   statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
-                                      ? MediaQuery.of(context).orientation == Orientation.portrait
+                                      ? MediaQuery.orientationOf(context) == Orientation.portrait
                                           ? Brightness.dark
                                           : Brightness.light
                                       : Brightness.dark,
-                                  statusBarIconBrightness: MediaQuery.of(context).orientation == Orientation.portrait
+                                  statusBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.portrait
                                       ? Brightness.light
                                       : Brightness.light,
                                 ),

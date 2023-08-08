@@ -168,7 +168,7 @@ class WebViewStackViewState extends State<WebViewStackView>
           dialog || (_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
                 : Colors.grey[900]
             : _themeProvider.currentTheme == AppTheme.dark

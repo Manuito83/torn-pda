@@ -144,7 +144,7 @@ class TargetsPageState extends State<TargetsPage> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-          child: MediaQuery.of(context).orientation == Orientation.portrait
+          child: MediaQuery.orientationOf(context) == Orientation.portrait
               ? _mainColumn()
               : SingleChildScrollView(
                   child: _mainColumn(),
@@ -250,7 +250,7 @@ class TargetsPageState extends State<TargetsPage> {
             ),
           ),
         Consumer<TargetsProvider>(
-          builder: (context, targetsModel, child) => MediaQuery.of(context).orientation == Orientation.portrait
+          builder: (context, targetsModel, child) => MediaQuery.orientationOf(context) == Orientation.portrait
               ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
               : TargetsList(targets: targetsModel.allTargets),
         ),

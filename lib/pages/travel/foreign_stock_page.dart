@@ -161,7 +161,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
           : _themeProvider!.currentTheme == AppTheme.dark
@@ -233,7 +233,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                           child: ListView(
                             children: [
                               SizedBox(
-                                height: MediaQuery.of(context).size.height / 2,
+                                height: MediaQuery.sizeOf(context).height / 2,
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: errorTiles,

@@ -181,8 +181,8 @@ class TradesWidgetState extends State<TradesWidget> {
             Center(
               child: Divider(
                 color: Colors.grey,
-                indent: MediaQuery.of(context).size.width / 4,
-                endIndent: MediaQuery.of(context).size.width / 4,
+                indent: MediaQuery.sizeOf(context).width / 4,
+                endIndent: MediaQuery.sizeOf(context).width / 4,
               ),
             ),
             ConstrainedBox(
@@ -191,13 +191,13 @@ class TradesWidgetState extends State<TradesWidget> {
                       (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
                   ? BoxConstraints.loose(
                       Size.fromHeight(
-                            MediaQuery.of(context).size.height - kToolbarHeight * 3 - AppBar().preferredSize.height,
+                            MediaQuery.sizeOf(context).height - kToolbarHeight * 3 - AppBar().preferredSize.height,
                           ) /
                           3,
                     )
                   : BoxConstraints.loose(
                       Size.fromHeight(
-                            MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,
+                            MediaQuery.sizeOf(context).height - kToolbarHeight - AppBar().preferredSize.height,
                           ) /
                           3,
                     ),

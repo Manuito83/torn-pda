@@ -160,7 +160,7 @@ class WarPageState extends State<WarPage> {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                child: MediaQuery.of(context).orientation == Orientation.portrait
+                child: MediaQuery.orientationOf(context) == Orientation.portrait
                     ? _mainColumn()
                     : SingleChildScrollView(
                         child: _mainColumn(),
@@ -1363,7 +1363,7 @@ class WarTargetsListState extends State<WarTargetsList> {
   Widget build(BuildContext context) {
     List<WarCard> filteredCards = getChildrenTarget();
 
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+    if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return ListView.builder(
         shrinkWrap: true,
         itemCount: filteredCards.length,

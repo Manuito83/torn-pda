@@ -61,7 +61,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
 
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider!.canvas
           : _themeProvider!.canvas,
@@ -81,7 +81,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
                             preferredSize: const Size.fromHeight(kToolbarHeight),
                             child: Container(
                               color: _themeProvider!.currentTheme == AppTheme.light
-                                  ? MediaQuery.of(context).orientation == Orientation.portrait
+                                  ? MediaQuery.orientationOf(context) == Orientation.portrait
                                       ? Colors.blueGrey
                                       : _themeProvider!.canvas
                                   : _themeProvider!.canvas,

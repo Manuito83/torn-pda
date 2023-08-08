@@ -76,7 +76,7 @@ class CityWidgetState extends State<CityWidget> {
         ),
         expanded: ConstrainedBox(
           constraints: BoxConstraints.loose(
-            Size.fromHeight(MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height) / 3,
+            Size.fromHeight(MediaQuery.sizeOf(context).height - kToolbarHeight - AppBar().preferredSize.height) / 3,
           ),
           child: Scrollbar(
             controller: _scrollController,

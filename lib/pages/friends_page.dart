@@ -78,7 +78,7 @@ class FriendsPageState extends State<FriendsPage> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-          child: MediaQuery.of(context).orientation == Orientation.portrait
+          child: MediaQuery.orientationOf(context) == Orientation.portrait
               ? _mainColumn()
               : SingleChildScrollView(
                   child: _mainColumn(),
@@ -173,7 +173,7 @@ class FriendsPageState extends State<FriendsPage> {
         ),
         const SizedBox(height: 15),
         Consumer<FriendsProvider>(
-          builder: (context, targetsModel, child) => MediaQuery.of(context).orientation == Orientation.portrait
+          builder: (context, targetsModel, child) => MediaQuery.orientationOf(context) == Orientation.portrait
               ? Flexible(child: FriendsList(friends: targetsModel.allFriends))
               : FriendsList(friends: targetsModel.allFriends),
         ),

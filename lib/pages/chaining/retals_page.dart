@@ -93,7 +93,7 @@ class RetalsPageState extends State<RetalsPage> {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-            child: MediaQuery.of(context).orientation == Orientation.portrait
+            child: MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Column(
                     children: [
                       _topWidgets(r),
@@ -344,7 +344,7 @@ class RetalsTargetsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+    if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return ListView(
         shrinkWrap: true,
         children: getChildrenTargets(),

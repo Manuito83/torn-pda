@@ -136,7 +136,7 @@ class TacPageState extends State<TacPage> {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                  child: MediaQuery.of(context).orientation == Orientation.portrait
+                  child: MediaQuery.orientationOf(context) == Orientation.portrait
                       ? _mainColumn()
                       : SingleChildScrollView(
                           child: _mainColumn(),
@@ -194,7 +194,7 @@ class TacPageState extends State<TacPage> {
                   child: CircularProgressIndicator(),
                 ),
               )
-            : MediaQuery.of(context).orientation == Orientation.portrait
+            : MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Flexible(child: _targetsListView())
                 : _targetsListView(),
       ],

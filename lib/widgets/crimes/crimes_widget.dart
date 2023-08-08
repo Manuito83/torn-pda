@@ -44,7 +44,7 @@ class CrimesWidgetState extends State<CrimesWidget> {
             child: ConstrainedBox(
               constraints: BoxConstraints.loose(
                 Size.fromHeight(
-                      MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height,
+                      MediaQuery.sizeOf(context).height - kToolbarHeight - AppBar().preferredSize.height,
                     ) /
                     3,
               ),

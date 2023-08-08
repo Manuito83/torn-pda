@@ -87,7 +87,7 @@ class BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
     double currentWidth = width;
     double currentElevation = 0.0;
     final movement = widget.movement;

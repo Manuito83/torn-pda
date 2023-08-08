@@ -40,7 +40,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider!.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
                 : _themeProvider!.canvas
             : _themeProvider!.canvas,
