@@ -1433,10 +1433,21 @@ String barsDoubleClickRedirect() {
         function onNerveClick(event) {
           window.open("https://www.torn.com/crimes.php", "_self");
         }
-          
+        
         var savedFound = document.querySelector(".pdaListenerBarsDoubleClick") !== null;
-        var energyBar = document.querySelector(`[id*="barEnergy"]`);
-        var nerveBar = document.querySelector(`[id*="barNerve"]`);
+
+        // Get all bar elements
+        let barElements = Array.from(document.querySelectorAll('[class^="bar___"]'));
+
+        // Find the first barElement that contains a class with 'energy___' and 'bar-'
+        let energyBar = barElements.find(el => 
+          el.className.includes('energy___') && el.className.includes('bar-')
+        );
+        
+        // Find the first barElement that contains a class with 'energy___' and 'bar-'
+        let nerveBar = barElements.find(el => 
+          el.className.includes('nerve___') && el.className.includes('bar-')
+        );
         
         if (!savedFound && energyBar !== null && nerveBar !== null) {
           var save = document.querySelector(".content-wrapper");
@@ -1448,7 +1459,7 @@ String barsDoubleClickRedirect() {
 
       let pass = 0;
       let waitForBarsAndRun = setInterval(() => {
-        if (document.querySelector(`[id*="barEnergy"]`)) {
+        if (document.querySelector('[class^="bar___"]')) {
           addBarsListener();
           return clearInterval(waitForBarsAndRun);
         } else {

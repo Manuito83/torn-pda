@@ -45,12 +45,14 @@ class ChangeLogState extends State<ChangeLog> {
     final v3_1_5 = ChangeLogItem();
     v3_1_5.version = 'Torn PDA v3.1.5';
     v3_1_5.date = '05 SEP 2023';
-    const String feat3_1_5_1 = "Fixed show oneself option in Jail";
-    const String feat3_1_5_2 = "Fixed JS handlers (get, post, inject) for scripts";
-    const String feat3_1_5_3 = "Update packages";
+    const String feat3_1_5_1 = "Fixed energy and nerve bars double tap";
+    const String feat3_1_5_2 = "Fixed show oneself option in Jail";
+    const String feat3_1_5_3 = "Fixed JS handlers (get, post, inject) for scripts";
+    const String feat3_1_5_4 = "Update packages";
     v3_1_5.features.add(feat3_1_5_1);
     v3_1_5.features.add(feat3_1_5_2);
     v3_1_5.features.add(feat3_1_5_3);
+    v3_1_5.features.add(feat3_1_5_4);
 
     // VERSION 3.1.4
     final v3_1_4 = ChangeLogItem();
