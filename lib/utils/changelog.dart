@@ -39,16 +39,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 332 - 08/08/2023
+    // Build 333 - 18/08/2023
 
     // VERSION 3.1.5
     final v3_1_5 = ChangeLogItem();
     v3_1_5.version = 'Torn PDA v3.1.5';
-    v3_1_5.date = '30 AUG 2023';
-    const String feat3_1_5_1 = "Fixed JS handlers (get, post, inject) for scripts";
-    const String feat3_1_5_2 = "Update packages";
+    v3_1_5.date = '05 SEP 2023';
+    const String feat3_1_5_1 = "Fixed show oneself option in Jail";
+    const String feat3_1_5_2 = "Fixed JS handlers (get, post, inject) for scripts";
+    const String feat3_1_5_3 = "Update packages";
     v3_1_5.features.add(feat3_1_5_1);
     v3_1_5.features.add(feat3_1_5_2);
+    v3_1_5.features.add(feat3_1_5_3);
 
     // VERSION 3.1.4
     final v3_1_4 = ChangeLogItem();
