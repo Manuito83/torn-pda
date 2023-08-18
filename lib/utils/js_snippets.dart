@@ -960,7 +960,7 @@ String jailJS({
         
         // Exclude own player
         var name = player.querySelector(".user.name").innerText;
-        if ($excludeSelf && name === "$excludeName" && shouldHide) {
+        if ($excludeSelf && name.toUpperCase() === "$excludeName" && shouldHide) {
           shouldHide = false;
         }
                 
