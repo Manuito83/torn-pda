@@ -176,7 +176,7 @@ class OwnProfileExtended {
         "messages": messages,
         "notifications": notifications,
         "travel": travel == null ? null : travel!.toJson(),
-        "icons": icons == null ? null : icons.toJson(),
+        "icons": icons?.toJson(),
       };
 }
 
@@ -199,7 +199,7 @@ class Chain {
         current: json["current"],
         maximum: json["maximum"],
         timeout: json["timeout"],
-        modifier: json["modifier"] == null ? null : json["modifier"].toDouble(),
+        modifier: json["modifier"]?.toDouble(),
         cooldown: json["cooldown"],
       );
 
@@ -519,7 +519,7 @@ class Job {
         job: json["job"],
         position: json["position"],
         companyId: json["company_id"],
-        companyName: json["company_name"] == null ? null : json["company_name"].toString(),
+        companyName: json["company_name"]?.toString(),
         companyType: json["company_type"],
       );
 

@@ -75,7 +75,7 @@ class Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) => Transaction(
         shares: json["shares"],
-        boughtPrice: json["bought_price"] == null ? null : json["bought_price"].toDouble(),
+        boughtPrice: json["bought_price"]?.toDouble(),
         timeBought: json["time_bought"],
       );
 

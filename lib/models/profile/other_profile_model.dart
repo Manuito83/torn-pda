@@ -304,7 +304,7 @@ class Job {
         job: json["job"],
         position: json["position"],
         companyId: json["company_id"],
-        companyName: json["company_name"] == null ? null : json["company_name"].toString(),
+        companyName: json["company_name"]?.toString(),
         companyType: json["company_type"],
       );
 

@@ -526,15 +526,15 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     child: const Icon(MdiIcons.plus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        final InAppWebViewGroupOptions newOptions =
-                                            (await widget.inAppWebview!.getOptions())!;
-                                        if (newOptions.android.initialScale == 0) {
-                                          newOptions.android.initialScale = 100;
-                                        } else if (newOptions.android.initialScale < 350) {
-                                          newOptions.android.initialScale += 5;
+                                        final InAppWebViewSettings newSettings =
+                                            (await widget.inAppWebview!.getSettings())!;
+                                        if (newSettings.initialScale == 0) {
+                                          newSettings.initialScale = 100;
+                                        } else if (newSettings.initialScale! < 350) {
+                                          newSettings.initialScale = newSettings.initialScale! + 5;
                                         }
-                                        widget.inAppWebview!.setOptions(options: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                        widget.inAppWebview!.setSettings(settings: newSettings);
+                                        _settingsProvider.setAndroidBrowserScale = newSettings.initialScale!;
                                       }
                                     },
                                   ),

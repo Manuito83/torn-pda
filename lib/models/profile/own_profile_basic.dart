@@ -182,7 +182,7 @@ class OwnProfileBasic {
         "job": job == null ? null : job!.toJson(),
         "faction": faction == null ? null : faction!.toJson(),
         "married": married == null ? null : married!.toJson(),
-        "basicicons": basicIcons == null ? null : basicIcons.toJson(),
+        "basicicons": basicIcons?.toJson(),
         "states": states == null ? null : states!.toJson(),
         "last_action": lastAction == null ? null : lastAction!.toJson(),
         "strength_info": strengthInfo == null ? null : List<dynamic>.from(strengthInfo!.map((x) => x)),
@@ -245,7 +245,7 @@ class Faction {
         daysInFaction: json["days_in_faction"],
         factionName: json["faction_name"],
         // API sometimes converts to INT if tag is numbers
-        factionTag: json["faction_tag"] == null ? null : json["faction_tag"].toString(),
+        factionTag: json["faction_tag"]?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -276,7 +276,7 @@ class Job {
         job: json["job"],
         position: json["position"],
         companyId: json["company_id"],
-        companyName: json["company_name"] == null ? null : json["company_name"].toString(),
+        companyName: json["company_name"]?.toString(),
         companyType: json["company_type"],
       );
 

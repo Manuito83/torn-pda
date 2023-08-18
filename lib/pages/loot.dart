@@ -1308,11 +1308,10 @@ class NpcImage extends StatelessWidget {
   final String? npcId;
 
   const NpcImage({
-    int? level,
-    String? npcId,
+    this.level,
+    this.npcId,
     super.key,
-  })  : level = level,
-        npcId = npcId;
+  });
 
   @override
   Widget build(BuildContext context) {

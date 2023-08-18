@@ -1368,7 +1368,7 @@ class WarTargetsListState extends State<WarTargetsList> {
         shrinkWrap: true,
         itemCount: filteredCards.length,
         itemBuilder: (context, index) {
-          return SlidableCard(filteredCards[index]);
+          return slidableCard(filteredCards[index]);
         },
       );
     } else {
@@ -1377,7 +1377,7 @@ class WarTargetsListState extends State<WarTargetsList> {
         itemCount: filteredCards.length,
         physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (context, index) {
-          return SlidableCard(filteredCards[index]);
+          return slidableCard(filteredCards[index]);
         },
       );
     }
@@ -1507,7 +1507,7 @@ class WarTargetsListState extends State<WarTargetsList> {
     return filteredCards;
   }
 
-  Widget SlidableCard(WarCard filteredCard) {
+  Widget slidableCard(WarCard filteredCard) {
     return Slidable(
       closeOnScroll: false,
       startActionPane: ActionPane(

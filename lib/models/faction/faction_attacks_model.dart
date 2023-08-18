@@ -85,12 +85,12 @@ class Attack {
         defenderFactionname: json["defender_factionname"],
         result: json["result"] == null ? null : resultValues.map[json["result"]],
         stealthed: json["stealthed"],
-        respect: json["respect"] == null ? null : json["respect"].toDouble(),
+        respect: json["respect"]?.toDouble(),
         chain: json["chain"],
         raid: json["raid"],
         rankedWar: json["ranked_war"],
-        respectGain: json["respect_gain"] == null ? null : json["respect_gain"].toDouble(),
-        respectLoss: json["respect_loss"] == null ? null : json["respect_loss"].toDouble(),
+        respectGain: json["respect_gain"]?.toDouble(),
+        respectLoss: json["respect_loss"]?.toDouble(),
         modifiers: json["modifiers"] == null ? null : Modifiers.fromJson(json["modifiers"]),
       );
 
@@ -136,12 +136,12 @@ class Modifiers {
   double? chainBonus;
 
   factory Modifiers.fromJson(Map<String, dynamic> json) => Modifiers(
-        fairFight: json["fair_fight"] == null ? null : json["fair_fight"].toDouble(),
-        war: json["war"] == null ? null : json["war"].toDouble(),
-        retaliation: json["retaliation"] == null ? null : json["retaliation"].toDouble(),
-        groupAttack: json["group_attack"] == null ? null : json["group_attack"].toDouble(),
-        overseas: json["overseas"] == null ? null : json["overseas"].toDouble(),
-        chainBonus: json["chain_bonus"] == null ? null : json["chain_bonus"].toDouble(),
+        fairFight: json["fair_fight"]?.toDouble(),
+        war: json["war"]?.toDouble(),
+        retaliation: json["retaliation"]?.toDouble(),
+        groupAttack: json["group_attack"]?.toDouble(),
+        overseas: json["overseas"]?.toDouble(),
+        chainBonus: json["chain_bonus"]?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {

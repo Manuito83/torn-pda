@@ -76,7 +76,7 @@ class Attack {
   });
 
   factory Attack.fromJson(Map<String, dynamic> json) => Attack(
-        code: json["code"] == null ? null : json["code"].toString(), // If code is all number, it comes as double
+        code: json["code"]?.toString(), // If code is all number, it comes as double
         timestampStarted: json["timestamp_started"],
         timestampEnded: json["timestamp_ended"],
         attackerId: json["attacker_id"],

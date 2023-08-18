@@ -41,7 +41,7 @@ class TargetsListState extends State<TargetsList> {
         shrinkWrap: true,
         itemCount: widget.targets.length,
         itemBuilder: (context, index) {
-          return SlidableCard(index, context);
+          return slidableCard(index, context);
         },
       );
     } else {
@@ -50,13 +50,13 @@ class TargetsListState extends State<TargetsList> {
         itemCount: widget.targets.length,
         physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (context, index) {
-          return SlidableCard(index, context);
+          return slidableCard(index, context);
         },
       );
     }
   }
 
-  Widget SlidableCard(int index, BuildContext context) {
+  Widget slidableCard(int index, BuildContext context) {
     if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
         _targetsProvider.currentColorFilterOut.contains(widget.targets[index].personalNoteColor)) {
       return const SizedBox.shrink();

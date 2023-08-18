@@ -834,7 +834,7 @@ class WarCardState extends State<WarCard> {
   }
 
   Widget _statsWidget() {
-    void _showDetailedStatsDialog() {
+    void showDetailedStatsDialog() {
       String lastUpdated = "";
       if (_member!.statsExactUpdated != 0) {
         lastUpdated = readTimestamp(_member!.statsExactUpdated!);
@@ -1182,7 +1182,7 @@ class WarCardState extends State<WarCard> {
               size: 16,
             ),
             onTap: () {
-              _showDetailedStatsDialog();
+              showDetailedStatsDialog();
             },
           ),
         ],

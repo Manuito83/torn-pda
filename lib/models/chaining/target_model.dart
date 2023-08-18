@@ -387,13 +387,13 @@ class Competition {
         attacks: json["attacks"],
         image: json["image"],
         name: json["name"],
-        score: json["score"] == null ? null : json["score"].toDouble(),
+        score: json["score"]?.toDouble(),
         team: json["team"],
         text: json["text"],
         total: json["total"],
         treatsCollectedTotal: json["treats_collected_total"],
         votes: json["votes"],
-        position: json["position"] == null ? null : json["position"].toString(),
+        position: json["position"]?.toString(),
       );
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Competition model");

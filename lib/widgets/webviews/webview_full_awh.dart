@@ -157,11 +157,11 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
                 },
               );
             },
-            onCreateWindow: (c, request) {
+            onCreateWindow: (c, request) async {
               // Allows IOS to open links with target=_blank
               webView!.loadUrl(urlRequest: request.request);
-              return;
-            } as Future<bool?> Function(InAppWebViewController, CreateWindowAction)?,
+              return true;
+            },
             onLoadStart: (c, uri) async {},
             onProgressChanged: (c, progress) async {
               if (mounted) {

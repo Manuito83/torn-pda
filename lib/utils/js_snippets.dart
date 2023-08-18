@@ -1095,7 +1095,7 @@ String jailJS({
 
 // Not required any longer with inAppWebView PR #1042
 // (otherwise, two tabs will open)
-String MiniProfiles() {
+String miniProfiles() {
   return '''
     \$(document).on("click","[class*=profile-mini-_userWrap]", async function(e){
         window.flutter_inappwebview.callHandler('handlerMiniProfiles', e.target.href);

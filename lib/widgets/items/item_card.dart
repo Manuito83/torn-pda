@@ -3,7 +3,7 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/src/provider.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';

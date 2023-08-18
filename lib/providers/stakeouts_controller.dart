@@ -39,17 +39,9 @@ class StakeoutsController extends GetxController {
   //UserController _u = Get.put(UserController());
   late Function(String url) callbackBrowser;
 
-  List<Stakeout> _stakeouts = <Stakeout>[];
-  List<Stakeout> get stakeouts => _stakeouts;
-  set stakeouts(List<Stakeout> value) {
-    _stakeouts = value;
-  }
+  List<Stakeout> stakeouts = <Stakeout>[];
 
-  List<StakeoutCardDetails> _orderedCardsDetails = <StakeoutCardDetails>[];
-  List<StakeoutCardDetails> get orderedCardsDetails => _orderedCardsDetails;
-  set orderedCardsDetails(List<StakeoutCardDetails> value) {
-    _orderedCardsDetails = value;
-  }
+  List<StakeoutCardDetails> orderedCardsDetails = <StakeoutCardDetails>[];
 
   bool? _stakeoutsEnabled;
   bool? get stakeoutsEnabled => _stakeoutsEnabled;

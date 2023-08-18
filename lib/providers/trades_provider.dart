@@ -11,7 +11,7 @@ import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 //import 'package:torn_pda/utils/external/torntrader_comm.dart';
-import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
+import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesContainer {
@@ -90,7 +90,7 @@ class TradesProvider extends ChangeNotifier {
     // Color 2 is general items
     void addColor2Items(dom.Element itemLine, ItemsModel allTornItems, List<TradeItem> sideItems) {
       final thisItem = TradeItem();
-      final row = pdaParser.HtmlParser.fix(itemLine.innerHtml.trim());
+      final row = pda_parser.HtmlParser.fix(itemLine.innerHtml.trim());
       thisItem.name = row.split(" x")[0].trim();
       row.split(" x").length > 1 ? thisItem.quantity = int.parse(row.split(" x")[1]) : thisItem.quantity = 1;
       allTornItems.items!.forEach((key, value) {
@@ -104,7 +104,7 @@ class TradesProvider extends ChangeNotifier {
     }
 
     if (leftItemsElements.isNotEmpty || rightItemsElements.isNotEmpty) {
-      var allTornItems;
+      dynamic allTornItems;
       try {
         allTornItems = await Get.find<ApiCallerController>().getItems();
       } catch (e) {
@@ -160,7 +160,7 @@ class TradesProvider extends ChangeNotifier {
     // Color 3 is properties
     void addColor3Items(dom.Element propertyLine, List<TradeItem> sideProperty) {
       final thisProperty = TradeItem();
-      final row = pdaParser.HtmlParser.fix(propertyLine.innerHtml.trim());
+      final row = pda_parser.HtmlParser.fix(propertyLine.innerHtml.trim());
       thisProperty.name = row.split(" (")[0].trim();
       final RegExp regExp = RegExp("[0-9]+ happiness");
       try {
@@ -184,7 +184,7 @@ class TradesProvider extends ChangeNotifier {
     // Color 4 is general items
     void addColor4Items(dom.Element shareLine, List<TradeItem> sideShares) {
       final thisShare = TradeItem();
-      final row = pdaParser.HtmlParser.fix(shareLine.innerHtml.trim());
+      final row = pda_parser.HtmlParser.fix(shareLine.innerHtml.trim());
       thisShare.name = row.split(" x")[0].trim();
 
       try {

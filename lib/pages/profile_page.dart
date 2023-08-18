@@ -2853,7 +2853,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _occurrenceTimeFormatted(eventTime),
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: unreadCount >= loopCount == 0 ? FontWeight.bold : FontWeight.normal,
+                fontWeight: unreadCount >= loopCount ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),

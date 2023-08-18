@@ -1461,7 +1461,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   Future<void> _hideMember(ForeignStock stock) async {
     for (final s in _hiddenStocks) {
       // Repeated hiding attempt!
-      if (s.id == stock.id && s.id == stock.countryCode) return;
+      if (s.id == stock.id && s.countryCode == stock.countryCode) return;
     }
 
     setState(() {

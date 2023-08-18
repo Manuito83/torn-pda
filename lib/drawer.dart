@@ -1983,7 +1983,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     );
   }
 
-  void changeUID(String UID) {
-    _userUID = UID;
+  void changeUID(String uid) {
+    _userUID = uid;
   }
 }

@@ -704,7 +704,7 @@ class RetalCardState extends State<RetalCard> {
   }
 
   Widget _statsWidget() {
-    void _showDetailedStatsDialog() {
+    void showDetailedStatsDialog() {
       String lastUpdated = "";
       if (_retal!.statsExactUpdated != 0) {
         lastUpdated = readTimestamp(_retal!.statsExactUpdated!);
@@ -1051,7 +1051,7 @@ class RetalCardState extends State<RetalCard> {
               size: 16,
             ),
             onTap: () {
-              _showDetailedStatsDialog();
+              showDetailedStatsDialog();
             },
           ),
         ],

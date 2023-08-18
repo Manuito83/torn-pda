@@ -177,9 +177,9 @@ class Spy {
         playerId: json["player_id"],
         playerLevel: json["player_level"],
         playerFaction: json["player_faction"],
-        targetScore: json["target_score"] == null ? null : json["target_score"].toDouble(),
-        yourScore: json["your_score"] == null ? null : json["your_score"].toDouble(),
-        fairFightBonus: json["fair_fight_bonus"] == null ? null : json["fair_fight_bonus"].toDouble(),
+        targetScore: json["target_score"]?.toDouble(),
+        yourScore: json["your_score"]?.toDouble(),
+        fairFightBonus: json["fair_fight_bonus"]?.toDouble(),
         difference: json["difference"],
         timestamp: json["timestamp"],
         strength: json["strength"] == null

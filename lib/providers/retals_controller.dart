@@ -177,14 +177,14 @@ class RetalsController extends GetxController {
         }
 
         if (retal.retalId == value.defenderId) {
-          if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+          if (value.result as Result == Result.LOST || value.result as Result == Result.STALEMATE) {
             // If we attacked and lost
             userWonOrDefended.add(false);
           } else {
             userWonOrDefended.add(true);
           }
         } else if (retal.retalId == value.attackerId) {
-          if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+          if (value.result as Result == Result.LOST || value.result as Result == Result.STALEMATE) {
             // If we were attacked and the attacker lost
             userWonOrDefended.add(true);
           } else {

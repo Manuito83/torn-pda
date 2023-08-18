@@ -55,7 +55,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
-import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
+import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
@@ -2326,7 +2326,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     String? title = '';
     final h4 = document.querySelector(".content-title > h4");
     if (h4 != null) {
-      title = pdaParser.HtmlParser.fix(h4.innerHtml.substring(0).trim());
+      title = pda_parser.HtmlParser.fix(h4.innerHtml.substring(0).trim());
     }
 
     if (h4 == null && showTitle) {

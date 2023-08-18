@@ -17,12 +17,12 @@ class ChainModel {
   });
 
   factory ChainModel.fromJson(Map<String, dynamic> json) => ChainModel(
-    chain: ChainDetails.fromJson(json["chain"]),
-  );
+        chain: ChainDetails.fromJson(json["chain"]),
+      );
 
   Map<String, dynamic> toJson() => {
-    "chain": chain!.toJson(),
-  };
+        "chain": chain!.toJson(),
+      };
 }
 
 class ChainDetails {
@@ -37,26 +37,26 @@ class ChainDetails {
     this.current = 0,
     this.max = 0,
     this.timeout = 0,
-    this.modifier= 0,
+    this.modifier = 0,
     this.cooldown = 0,
     this.start = 0,
   });
 
   factory ChainDetails.fromJson(Map<String, dynamic> json) => ChainDetails(
-    current: json["current"],
-    max: json["max"],
-    timeout: json["timeout"],
-    modifier: json["modifier"] == null ? null : json["modifier"].toDouble(),
-    cooldown: json["cooldown"],
-    start: json["start"],
-  );
+        current: json["current"],
+        max: json["max"],
+        timeout: json["timeout"],
+        modifier: json["modifier"]?.toDouble(),
+        cooldown: json["cooldown"],
+        start: json["start"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "current": current,
-    "max": max,
-    "timeout": timeout,
-    "modifier": modifier,
-    "cooldown": cooldown,
-    "start": start,
-  };
+        "current": current,
+        "max": max,
+        "timeout": timeout,
+        "modifier": modifier,
+        "cooldown": cooldown,
+        "start": start,
+      };
 }
