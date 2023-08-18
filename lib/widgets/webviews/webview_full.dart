@@ -72,6 +72,7 @@ import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
+import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -1514,6 +1515,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               if (!consoleMessage.message.contains("Refused to connect to ") &&
                   !consoleMessage.message.contains("Uncaught (in promise) TypeError") &&
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
+                  !consoleMessage.message.contains("has been blocked by CORS policy") &&
                   !consoleMessage.message.contains("Error with Permissions-Policy header")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
@@ -1951,6 +1953,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         title: GestureDetector(
           onTap: () {
             openUrlDialog();
+          },
+          onLongPress: () {
+            showDialog<void>(
+              context: context,
+              builder: (BuildContext context) {
+                return const WebviewShortcutsDialog();
+              },
+            );
           },
           child: DottedBorder(
             padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
