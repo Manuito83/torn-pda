@@ -239,10 +239,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _helaReviveActive = false;
   bool _wtfReviveActive = false;
 
-  bool? _warnAboutChains = false;
-  bool? _showHeaderWallet = false;
-  bool? _showHeaderIcons = false;
-  bool? _dedicatedTravelCard = false;
+  bool _warnAboutChains = false;
+  bool _showHeaderWallet = false;
+  bool _showHeaderIcons = false;
+  bool _dedicatedTravelCard = false;
 
   late ChainModel _chainModel;
 
@@ -703,10 +703,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             );
             widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {
-              _warnAboutChains = newOptions.warnAboutChainsEnabled;
-              _showHeaderWallet = newOptions.showHeaderWallet;
-              _showHeaderIcons = newOptions.showHeaderIcons;
-              _dedicatedTravelCard = newOptions.dedicatedTravelCard;
+              if (newOptions.warnAboutChainsEnabled != null) {
+                _warnAboutChains = newOptions.warnAboutChainsEnabled!;
+              }
+              if (newOptions.showHeaderWallet != null) {
+                _showHeaderWallet = newOptions.showHeaderWallet!;
+              }
+              if (newOptions.showHeaderIcons != null) {
+                _showHeaderIcons = newOptions.showHeaderIcons!;
+              }
+              if (newOptions.dedicatedTravelCard != null) {
+                _dedicatedTravelCard = newOptions.dedicatedTravelCard!;
+              }
               _eventsExpController.expanded = newOptions.expandEvents!;
               _messagesShowNumber = newOptions.messagesShowNumber;
               _eventsShowNumber = newOptions.eventsShowNumber;
@@ -734,7 +742,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
       child: Column(
         children: <Widget>[
-          if (_showHeaderWallet!)
+          if (_showHeaderWallet)
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
               child: Row(
@@ -744,7 +752,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
             ),
-          if (_showHeaderIcons!)
+          if (_showHeaderIcons)
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
               child: StatusIconsWrap(
@@ -1193,7 +1201,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             _notificationIcon(ProfileNotification.travel),
                           ],
                         ),
-                        if (!_dedicatedTravelCard!) _travelWidget(repatriated: true),
+                        if (!_dedicatedTravelCard) _travelWidget(repatriated: true),
                       ],
                     ),
                   BazaarStatusCard(
@@ -1201,7 +1209,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     bazaarModel: _miscModel?.bazaar,
                     launchBrowser: _launchBrowser,
                   ),
-                  if (!_dedicatedTravelCard!) _travelWidget(),
+                  if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
                   if (_user!.status!.state == 'Hospital' && _nukeReviveActive)
                     Padding(
@@ -1338,7 +1346,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                   ],
                 ),
-                if (!_dedicatedTravelCard!) _notificationIcon(ProfileNotification.travel),
+                if (!_dedicatedTravelCard) _notificationIcon(ProfileNotification.travel),
               ],
             ),
             const SizedBox(height: 10),
@@ -1726,7 +1734,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(left: 8),
               child: Column(
                 children: <Widget>[
-                  if (_warnAboutChains! && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
+                  if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
                     Row(
                       children: [
                         const SizedBox(width: 65),
@@ -1791,7 +1799,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               ),
                             ),
                           ),
-                          if (_warnAboutChains! && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
+                          if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
                             Padding(
                               padding: const EdgeInsets.only(left: 5),
                               child: GestureDetector(
@@ -6727,7 +6735,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: _playerStatus(),
           ),
         );
-      } else if (section == "Travel" && _dedicatedTravelCard!) {
+      } else if (section == "Travel" && _dedicatedTravelCard) {
         sectionSort.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),

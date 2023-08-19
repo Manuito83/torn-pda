@@ -118,10 +118,19 @@ class ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateMi
         ForeignStockButton(
           userProv: widget.userProv,
           settingsProv: widget.settingsProv,
-          launchBrowser: widget.launchBrowser as dynamic Function({bool? shortTap, String? url}),
+          launchBrowser: _launchBrowser,
           updateCallback: widget.updateCallback,
         ),
       ],
     );
+  }
+
+  _launchBrowser({required bool? shortTap, required String? url}) {
+    if (shortTap == null) return;
+    if (shortTap) {
+      widget.launchBrowser(url: 'https://www.torn.com', shortTap: true);
+    } else {
+      widget.launchBrowser(url: 'https://www.torn.com', shortTap: false);
+    }
   }
 }
