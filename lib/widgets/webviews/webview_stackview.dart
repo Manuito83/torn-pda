@@ -588,7 +588,7 @@ class WebViewStackViewState extends State<WebViewStackView>
                               showDialog<void>(
                                 context: context,
                                 builder: (BuildContext context) {
-                                  return const WebviewShortcutsDialog(fromShortcut: true);
+                                  return WebviewShortcutsDialog(fromShortcut: true);
                                 },
                               );
                             },
@@ -629,7 +629,7 @@ class WebViewStackViewState extends State<WebViewStackView>
                                   showDialog<void>(
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return const WebviewShortcutsDialog(fromShortcut: true);
+                                      return WebviewShortcutsDialog(fromShortcut: true);
                                     },
                                   );
                                 },

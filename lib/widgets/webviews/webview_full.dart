@@ -1958,7 +1958,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             showDialog<void>(
               context: context,
               builder: (BuildContext context) {
-                return const WebviewShortcutsDialog();
+                return WebviewShortcutsDialog(
+                  inAppWebView: webView,
+                );
               },
             );
           },

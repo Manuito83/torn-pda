@@ -23,7 +23,8 @@ class WebviewShortcutsDialog extends StatefulWidget {
     this.inAppWebView,
     this.stockWebview,
     this.fromShortcut,
-  });
+  }) : assert(inAppWebView != null || stockWebview != null || fromShortcut != null,
+            "If not coming from a shortcuts, this needs a webview attached!");
 
   @override
   WebviewShortcutsDialogState createState() => WebviewShortcutsDialogState();
