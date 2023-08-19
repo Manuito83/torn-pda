@@ -472,7 +472,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               b.marketPrice = b.marketPrice.round();
             }
 
-            bazaar += int.parse(b.marketPrice * b.quantity);
+            var itemCost = b.marketPrice * b.quantity;
+            bazaar += itemCost as int;
           }
         }
 
