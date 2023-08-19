@@ -1000,26 +1000,44 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               Consumer<SettingsProvider>(
                 builder: (_, value, __) {
                   if (value.terminalEnabled) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 2, color: Colors.green[900]!),
-                      ),
-                      height: 100,
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.all(5),
-                          child: Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  _terminalProvider.terminal,
-                                  style: const TextStyle(color: Colors.green, fontSize: 13),
-                                ),
+                    return Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(width: 2, color: Colors.green[900]!),
+                          ),
+                          height: 120,
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      _terminalProvider.terminal,
+                                      style: const TextStyle(color: Colors.green, fontSize: 13),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
+                        GestureDetector(
+                          onTap: () {
+                            _terminalProvider.clearTerminal();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 3, 2, 0),
+                            child: Icon(
+                              Icons.delete,
+                              color: Colors.orange,
+                              size: 16,
+                            ),
+                          ),
+                        )
+                      ],
                     );
                   }
                   return const SizedBox.shrink();
@@ -1516,6 +1534,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   !consoleMessage.message.contains("Uncaught (in promise) TypeError") &&
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("has been blocked by CORS policy") &&
+                  !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
                   !consoleMessage.message.contains("Error with Permissions-Policy header")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
