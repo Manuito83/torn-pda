@@ -12,6 +12,7 @@ import 'package:torn_pda/models/chaining/attack_sort.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/attacks_list.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
@@ -139,7 +140,7 @@ class AttacksPageState extends State<AttacksPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Attacks'),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -151,7 +152,7 @@ class AttacksPageState extends State<AttacksPage> {
               }
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

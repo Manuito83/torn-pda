@@ -227,7 +227,7 @@ class TipsPageState extends State<TipsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -239,7 +239,7 @@ class TipsPageState extends State<TipsPage> {
               }
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
       title: const Text('Torn PDA - Tips'),

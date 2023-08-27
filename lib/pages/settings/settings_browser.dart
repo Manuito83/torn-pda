@@ -1742,7 +1742,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
       title: const Text('Browser settings'),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -1751,7 +1751,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               _goBack();
             },
           ),
-          const PdaBrowserIcon(),
+          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
     );
@@ -1808,13 +1808,6 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ],
       onChanged: (value) {
-        if ((_browserStyle != 2 && value == 2) || _browserStyle == 2 && value != 2) {
-          // If you go to/from dialog, we will be rebuilding the stackview and therefore the browser will reset
-          // to how it was when the app first launched. To force a reload of the last session, just before the change,
-          // we transform it into a Container and let the provider change it back to a webview with [recallLastSession]
-          _webViewProvider.stackView = Container();
-        }
-
         _browserStyle = value;
 
         switch (value) {

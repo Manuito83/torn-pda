@@ -54,7 +54,7 @@ class RankedWarCardState extends State<RankedWarCard> {
   String _titleString = "";
   String _finishedString = "";
 
-  final WarController _w = Get.put(WarController());
+  final WarController _w = Get.find<WarController>();
   bool _factionLeftAdded = false;
   bool _factionRightAdded = false;
 
@@ -284,7 +284,7 @@ class RankedWarCardState extends State<RankedWarCard> {
   void removeFaction({required bool left}) {
     final int side = left ? 0 : 1;
 
-    _w.removeFaction(int.parse(_factionsIds[0]));
+    _w.removeFaction(int.parse(_factionsIds[side]));
     setState(() {
       left ? _factionLeftAdded = false : _factionRightAdded = false;
     });

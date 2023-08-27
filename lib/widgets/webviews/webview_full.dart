@@ -261,7 +261,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
-  ThemeProvider? _themeProvider;
+  late ThemeProvider _themeProvider;
 
   PullToRefreshController? _pullToRefreshController;
 
@@ -310,6 +310,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // We will later changed this for a listenable one in build()
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
     WebView.debugLoggingSettings.enabled = false;
 
     _localChatRemovalActive = widget.chatRemovalActive;
@@ -328,7 +331,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _isChainingBrowser = widget.isChainingBrowser;
     if (_isChainingBrowser) {
       _chainingPayload = widget.chainingPayload;
-      _w = Get.put(WarController());
+      _w = Get.find<WarController>();
       String? title = _chainingPayload!.attackNameList[0];
       _pageTitle = title;
       // Decide if voluntarily skipping first target (always when it's a panic target)
@@ -348,8 +351,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     } else {
       _pageTitle = widget.customTitle;
     }
-
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     _findController.addListener(onFindInputTextChange);
 
@@ -387,7 +388,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       settings: PullToRefreshSettings(
         color: Colors.orange[800],
         size: PullToRefreshSize.DEFAULT,
-        backgroundColor: _themeProvider!.secondBackground,
+        backgroundColor: _themeProvider.secondBackground,
         enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
         slingshotDistance: 300,
         distanceToTriggerSync: 300,
@@ -427,6 +428,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _terminalProvider = Provider.of<TerminalProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
     return ShowCaseWidget(
       builder: Builder(
@@ -477,27 +479,25 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final bool dialog = _webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2;
 
     return Container(
-      color: _themeProvider!.currentTheme == AppTheme.light
+      color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : _themeProvider!.currentTheme == AppTheme.dark
+          : _themeProvider.currentTheme == AppTheme.dark
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
         top: !dialog && !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
         bottom:
             !dialog && !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        left:
-            !dialog && !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
-        right:
-            !dialog && !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+        left: assessSafeAreaSide(dialog, "left"),
+        right: assessSafeAreaSide(dialog, "right"),
         child: Consumer<WebViewProvider>(
           builder: (context, wv, child) => Scaffold(
             resizeToAvoidBottomInset:
                 // Dialog displaces the webview up by default
                 !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
-            backgroundColor: _themeProvider!.canvas,
+            backgroundColor: _themeProvider.canvas,
             appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
                 // Show appBar only if we are not showing the webView in a dialog style
                 ? null
@@ -528,7 +528,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       ),
             body: Container(
               // Background color for all browser widgets
-              color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+              color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
               child: Column(
                 children: [
                   Expanded(child: mainWebViewColumn()),
@@ -550,10 +550,28 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
+  bool assessSafeAreaSide(bool dialog, String safeSide) {
+    if (safeSide == "left" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right) {
+      return false;
+    } else if (safeSide == "right" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+      return false;
+    } else {
+      if (!dialog) {
+        if (!(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen)) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+
   Widget _bottomBarStyleBottomBar() {
     if (_findInPageActive) {
       return Container(
-        color: _themeProvider!.secondBackground,
+        color: _themeProvider.secondBackground,
         child: Row(
           children: [
             IconButton(
@@ -594,7 +612,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 ),
                               ),
                               style: TextStyle(
-                                color: _themeProvider!.mainText,
+                                color: _themeProvider.mainText,
                                 fontSize: 16,
                               ),
                             ),
@@ -643,7 +661,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     return Container(
-      color: _themeProvider!.currentTheme == AppTheme.light ? Colors.white : _themeProvider!.secondBackground,
+      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.secondBackground,
       height: 38,
       child: GestureDetector(
         onLongPress: () => openUrlDialog(),
@@ -708,7 +726,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding:
+                    EdgeInsets.only(top: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off ? 8 : 13),
                 child: Showcase(
                   key: _showCaseCloseButton,
                   title: 'Options menu',
@@ -717,8 +736,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       'Swipe down/up to hide or show your tab bar!',
                   targetPadding: const EdgeInsets.only(top: 8),
                   disableMovingAnimation: true,
-                  textColor: _themeProvider!.mainText!,
-                  tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                  textColor: _themeProvider.mainText!,
+                  tooltipBackgroundColor: _themeProvider.secondBackground!,
                   descTextStyle: const TextStyle(fontSize: 13),
                   tooltipPadding: const EdgeInsets.all(20),
                   child: GestureDetector(
@@ -726,32 +745,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       color: Colors.transparent, // Background to extend the buttons detection area
                       child: Column(
                         children: [
-                          Text(
-                            "CLOSE",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: _themeProvider!.mainText,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
+                          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off)
+                            Column(
+                              children: [
+                                Text(
+                                  "CLOSE",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: _themeProvider.mainText,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 15,
+                                  child: Divider(
+                                    height: 3,
+                                    thickness: 1,
+                                    color: _themeProvider.mainText,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          SizedBox(
-                            width: 15,
-                            child: Divider(
-                              height: 3,
-                              thickness: 1,
-                              color: _themeProvider!.mainText,
-                            ),
-                          ),
                           if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
                               _userProvider!.basic?.faction?.factionId != 0)
-                            const Text(
+                            Text(
                               "ASSIST",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.red,
-                                fontSize: 7,
+                                fontSize: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off ? 7 : 12,
                               ),
                             )
                           else
@@ -759,15 +783,23 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               "OPTIONS",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: _themeProvider!.mainText,
-                                fontSize: 7,
+                                color: _themeProvider.mainText,
+                                fontSize: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off ? 7 : 12,
                               ),
                             ),
                         ],
                       ),
                     ),
                     onTap: () {
-                      _webViewProvider.browserShowInForeground = false;
+                      if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+                        openUrlDialog();
+                        return;
+                      }
+
+                      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+                        _webViewProvider.browserShowInForeground = false;
+                      }
+
                       _checkIfTargetsAttackedAndRevertChaining();
                     },
                   ),
@@ -1104,33 +1136,33 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 if (args.contains("dark")) {
                   // Only change to dark themes if we are currently in light (the web will respond with a
                   // theme change event when we initiate the change, and it could revert to the default dark)
-                  if (_themeProvider!.currentTheme == AppTheme.light) {
+                  if (_themeProvider.currentTheme == AppTheme.light) {
                     if (_settingsProvider.darkThemeToSyncFromWeb == "dark") {
-                      _themeProvider!.changeTheme = AppTheme.dark;
+                      _themeProvider.changeTheme = AppTheme.dark;
                       log("Web theme changed to dark!");
                     } else {
-                      _themeProvider!.changeTheme = AppTheme.extraDark;
+                      _themeProvider.changeTheme = AppTheme.extraDark;
                       log("Web theme changed to extra dark!");
                     }
                   }
                 } else if (args.contains("light")) {
-                  _themeProvider!.changeTheme = AppTheme.light;
+                  _themeProvider.changeTheme = AppTheme.light;
                   log("Web theme changed to light!");
                 }
 
                 setState(() {
                   SystemChrome.setSystemUIOverlayStyle(
                     SystemUiOverlayStyle(
-                      statusBarColor: _themeProvider!.statusBar,
+                      statusBarColor: _themeProvider.statusBar,
                       systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
-                          ? _themeProvider!.canvas
-                          : _themeProvider!.statusBar,
+                          ? _themeProvider.canvas
+                          : _themeProvider.statusBar,
                       systemNavigationBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
-                          ? _themeProvider!.currentTheme == AppTheme.light
+                          ? _themeProvider.currentTheme == AppTheme.light
                               ? Brightness.dark
                               : Brightness.light
                           : Brightness.light,
-                      statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
+                      statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
                           ? MediaQuery.orientationOf(context) == Orientation.portrait
                               ? Brightness.dark
                               : Brightness.light
@@ -1944,31 +1976,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           : null,
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
+        primary: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off,
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        leading: IconButton(
-          icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
-          onPressed: () async {
-            // Normal behavior is just to pop and go to previous page
-            if (_backButtonPopsContext) {
-              _webViewProvider.setCurrentUiMode(UiMode.window, context);
-              if (mounted) {
-                _webViewProvider.browserShowInForeground = false;
-                _checkIfTargetsAttackedAndRevertChaining();
-              }
-            } else {
-              // But we can change and go back to previous page in certain
-              // situations (e.g. when going for the vault while trading)
-              final backPossible = await webView!.canGoBack();
-              if (backPossible) {
-                webView!.goBack();
-              } else {
-                if (!mounted) return;
-                Navigator.pop(context);
-              }
-              _backButtonPopsContext = true;
-            }
-          },
-        ),
+        leading: _backButtonPopsContext && _webViewProvider.splitScreenPosition != WebViewSplitPosition.off
+            ? null
+            : IconButton(
+                icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
+                onPressed: () async {
+                  // Normal behavior is just to pop and go to previous page
+                  if (_backButtonPopsContext) {
+                    _webViewProvider.setCurrentUiMode(UiMode.window, context);
+                    if (mounted) {
+                      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+                        _webViewProvider.browserShowInForeground = false;
+                      }
+
+                      _checkIfTargetsAttackedAndRevertChaining();
+                    }
+                  } else {
+                    // But we can change and go back to previous page in certain
+                    // situations (e.g. when going for the vault while trading)
+                    final backPossible = await webView!.canGoBack();
+                    if (backPossible) {
+                      webView!.goBack();
+                    } else {
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                    }
+                    _backButtonPopsContext = true;
+                  }
+                },
+              ),
         title: GestureDetector(
           onTap: () {
             openUrlDialog();
@@ -1997,8 +2035,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     'Swipe down/up to hide or show your tab bar!',
                 targetPadding: const EdgeInsets.all(10),
                 disableMovingAnimation: true,
-                textColor: _themeProvider!.mainText!,
-                tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                textColor: _themeProvider.mainText!,
+                tooltipBackgroundColor: _themeProvider.secondBackground!,
                 descTextStyle: const TextStyle(fontSize: 13),
                 tooltipPadding: const EdgeInsets.all(20),
                 child: Row(
@@ -2228,6 +2266,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       dom.Document doc;
       var pageTitle = "";
       final html = await webView!.getHtml();
+      if (html == null) return;
+
       doc = parse(html);
       pageTitle = (await _getPageTitle(doc))!.toLowerCase();
 
@@ -2469,7 +2509,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               splashColor: Colors.blueGrey,
               child: Icon(
                 Icons.home,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
               ),
               onTap: () async {
                 setState(() {
@@ -2568,7 +2608,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider!.canvas!,
+        openColor: _themeProvider.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2577,7 +2617,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.fingerprint,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
               ),
             ),
           );
@@ -2771,7 +2811,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return PopupMenuButton<VaultsOptions>(
         icon: Icon(
           MdiIcons.cashUsdOutline,
-          color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+          color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
         ),
         onSelected: _openVaultsOptions,
         itemBuilder: (BuildContext context) {
@@ -2821,7 +2861,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider!.canvas!,
+        openColor: _themeProvider.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2830,7 +2870,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.accountSwitchOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
               ),
             ),
           );
@@ -2958,7 +2998,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider!.canvas!,
+        openColor: _themeProvider.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2967,7 +3007,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.safeSquareOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
               ),
             ),
           );
@@ -3118,7 +3158,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider!.canvas!,
+        openColor: _themeProvider.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.all(8.0),
@@ -3127,7 +3167,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Icon(
                 MdiIcons.cityVariantOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
               ),
             ),
           );
@@ -3192,7 +3232,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               color: _bazaarFillActive
                   ? Colors.yellow[600]
                   : _webViewProvider.bottomBarStyleEnabled
-                      ? _themeProvider!.mainText
+                      ? _themeProvider.mainText
                       : Colors.white,
               fontSize: 12,
             ),
@@ -3281,7 +3321,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider!.canvas!,
+        openColor: _themeProvider.canvas!,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -3290,7 +3330,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               width: 20,
               child: Image.asset(
                 'images/icons/quick_items.png',
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
               ),
             ),
           );
@@ -3410,7 +3450,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         child: GestureDetector(
           child: Icon(
             MdiIcons.chatOutline,
-            color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider!.mainText : Colors.white,
+            color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
           ),
           onTap: () async {
             webView!.evaluateJavascript(source: removeChatJS());
@@ -3639,6 +3679,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _jailModel = jailModel;
     webView!.evaluateJavascript(
       source: jailJS(
+        filtersEnabled: _jailModel!.filtersEnabled,
         levelMin: _jailModel!.levelMin,
         levelMax: _jailModel!.levelMax,
         timeMin: _jailModel!.timeMin,
@@ -3813,7 +3854,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _isChainingBrowser = true;
     _attackNumber = 0;
     _chainingPayload = chainingPayload;
-    _w ??= Get.put(WarController());
+    _w ??= Get.find<WarController>();
     String? title = chainingPayload.attackNameList[0];
     _pageTitle = title;
     _chainStatusProvider = context.read<ChainStatusProvider>();
@@ -3830,7 +3871,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  // Called from parent though GlobalKey state
+  /// Called from parent though GlobalKey state
+  /// Do not call this directly, do it through the webview provider to ensure that the tab is also updated
   Future<void> cancelChainingBrowser() async {
     final html = await webView!.getHtml();
     final dom.Document document = parse(html);
@@ -4142,12 +4184,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           'to revert to a standard browser tab!',
       targetPadding: const EdgeInsets.all(10),
       disableMovingAnimation: true,
-      textColor: _themeProvider!.mainText!,
-      tooltipBackgroundColor: _themeProvider!.secondBackground!,
+      textColor: _themeProvider.mainText!,
+      tooltipBackgroundColor: _themeProvider.secondBackground!,
       descTextStyle: const TextStyle(fontSize: 13),
       tooltipPadding: const EdgeInsets.all(20),
       child: GestureDetector(
-        onTap: _nextButtonPressed ? null : () => _launchNextAttack(),
+        onTap: _nextButtonPressed
+            ? null
+            : () {
+                _launchNextAttack();
+
+                if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+                  _checkIfTargetsAttackedAndRevertChaining(split: true);
+                }
+              },
         onLongPress: () => _webViewProvider.cancelChainingBrowser(),
         child: const Padding(
           padding: EdgeInsets.only(right: 10),
@@ -4595,21 +4645,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _webViewProvider.setCurrentUiMode(UiMode.window, context);
     await Future.delayed(const Duration(milliseconds: 150));
     if (mounted) {
-      _webViewProvider.browserShowInForeground = false;
+      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+        _webViewProvider.browserShowInForeground = false;
+      }
       _checkIfTargetsAttackedAndRevertChaining();
     }
   }
 
   /// Updates attacked targets if we are in a chaining browser and then cancels the chain
-  void _checkIfTargetsAttackedAndRevertChaining() {
+  void _checkIfTargetsAttackedAndRevertChaining({bool split = false}) {
     String message = "";
     if (_isChainingBrowser) {
       if (_chainingPayload!.war && _lastAttackedMembers.isNotEmpty) {
-        message = '${_lastAttackedMembers.length} attacked targets will auto update in a few seconds!';
+        message = split
+            ? 'Updating member'
+            : '${_lastAttackedMembers.length} attacked targets will auto update in a few seconds!';
         _w!.updateSomeMembersAfterAttack(lastAttackedMembers: _lastAttackedMembers);
         _lastAttackedMembers.clear();
       } else if (!_chainingPayload!.war && _lastAttackedTargets.isNotEmpty) {
-        message = '${_lastAttackedTargets.length} attacked targets will auto update in a few seconds!';
+        message = split
+            ? 'Updating target'
+            : '${_lastAttackedTargets.length} attacked targets will auto update in a few seconds!';
         _targetsProvider.updateTargetsAfterAttacks(lastAttackedTargets: _lastAttackedTargets);
         _lastAttackedTargets.clear();
       }
@@ -4623,7 +4679,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           color: Colors.white,
         ),
         contentColor: Colors.grey[800]!,
-        duration: const Duration(seconds: 4),
+        duration: Duration(seconds: split ? 1 : 4),
         contentPadding: const EdgeInsets.all(10),
       );
     }

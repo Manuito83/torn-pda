@@ -118,7 +118,7 @@ class JailWidgetState extends State<JailWidget> {
                         ],
                       ),
                     ),
-                  const SizedBox(
+                  SizedBox(
                     width: 80,
                     child: Column(
                       children: [
@@ -129,6 +129,10 @@ class JailWidgetState extends State<JailWidget> {
                         Text(
                           '(tap to expand)',
                           style: TextStyle(color: Colors.orange, fontSize: 9),
+                        ),
+                        Text(
+                          _jailModel.filtersEnabled ? '' : 'FILTERS DISABLED',
+                          style: TextStyle(color: Colors.red, fontSize: 9),
                         ),
                       ],
                     ),
@@ -185,11 +189,22 @@ class JailWidgetState extends State<JailWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _bailEnabled(),
-            _bustEnabler(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _filtersEnabled(),
+                _excludeSelf(),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _bailEnabled(),
+                _bustEnabler(),
+              ],
+            ),
           ],
         ),
-        _excludeSelf(),
         _timeSlider(),
         _levelSlider(),
         _scoreSlider(),
@@ -255,11 +270,40 @@ class JailWidgetState extends State<JailWidget> {
     );
   }
 
+  Row _filtersEnabled() {
+    return Row(
+      children: [
+        const Text(
+          "Filters enabled",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Switch(
+          value: _jailModel.filtersEnabled,
+          activeColor: Colors.green,
+          activeTrackColor: Colors.green[200],
+          inactiveThumbColor: Colors.red,
+          inactiveTrackColor: Colors.red[200],
+          onChanged: (enabled) {
+            setState(() {
+              _jailModel.filtersEnabled = enabled;
+            });
+            widget.fireScriptCallback(_jailModel);
+            _saveModel();
+          },
+        )
+      ],
+    );
+  }
+
   Row _excludeSelf() {
     return Row(
       children: [
         const Text(
-          "Always show oneself",
+          "Always show self",
           style: TextStyle(
             color: Colors.white,
             fontSize: 12,
@@ -584,6 +628,7 @@ class JailWidgetState extends State<JailWidget> {
 
   void _saveModel() {
     _jailModel
+      ..filtersEnabled = _jailModel.filtersEnabled
       ..levelMin = _jailModel.levelMin
       ..levelMax = _jailModel.levelMax
       ..timeMin = _jailModel.timeMin

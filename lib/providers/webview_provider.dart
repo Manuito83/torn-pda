@@ -36,6 +36,12 @@ enum UiMode {
   fullScreen,
 }
 
+enum WebViewSplitPosition {
+  right,
+  left,
+  off,
+}
+
 class TabDetails {
   bool sleepTab = false;
   bool initialised = false;
@@ -96,6 +102,11 @@ class WebViewProvider extends ChangeNotifier {
   bool _isBrowserForeground = false;
   bool get browserShowInForeground => _isBrowserForeground;
   set browserShowInForeground(bool bringToForeground) {
+    // Browser should not be resumed/paused while we are in split screen
+    if (_webViewSplitActive != WebViewSplitPosition.off) {
+      return;
+    }
+
     if (bringToForeground) {
       if (stackView is Container) {
         stackView = const WebViewStackView(
@@ -122,6 +133,20 @@ class WebViewProvider extends ChangeNotifier {
 
       _sleepOldTabs();
     }
+  }
+
+  /// Use to transition to split screen, ensuring that browser is also resumed
+  void browserForegroundWithSplitTransition() {
+    if (stackView is Container) {
+      stackView = const WebViewStackView(
+        recallLastSession: true,
+      );
+    }
+
+    // Change browser visibility early to avoid issues if device returns an error
+    _isBrowserForeground = true;
+    notifyListeners();
+    resumeAllWebviews();
   }
 
   pdaIconActivation({
@@ -200,6 +225,15 @@ class WebViewProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  WebViewSplitPosition _webViewSplitActive = WebViewSplitPosition.off;
+  WebViewSplitPosition get splitScreenPosition => _webViewSplitActive;
+  set splitScreenPosition(WebViewSplitPosition value) {
+    _webViewSplitActive = value;
+    notifyListeners();
+  }
+
+  bool splitScreenJustTransitioned = false;
 
   // Vertical expanding menu (menu button)
   int verticalMenuCurrentIndex = 0;
@@ -901,7 +935,6 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  /// Do not call this directly, do it through the webview provider to ensure that the tab is also updated
   void cancelChainingBrowser() {
     if (_tabList.isEmpty) return;
     final tab = _tabList[0];

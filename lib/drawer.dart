@@ -456,9 +456,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _callSectionFromOutside(2); // Chaining
       return;
     } else if (intent.data!.contains("pdaWidget://empty-shortcuts-clicked")) {
-      setState(() {
-        _webViewProvider.browserShowInForeground = false;
-      });
+      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+        setState(() {
+          _webViewProvider.browserShowInForeground = false;
+        });
+      }
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (BuildContext context) => ShortcutsPage(),
@@ -1212,6 +1214,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     : _themeProvider!.canvas
                 : _themeProvider!.canvas,
             child: SafeArea(
+              right: _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
+              left: _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
               child: Scaffold(
                 key: _scaffoldKey,
                 body: _getPages(),
@@ -1839,7 +1843,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _callSectionFromOutside(int section) {
     setState(() {
-      _webViewProvider.browserShowInForeground = false;
+      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+        _webViewProvider.browserShowInForeground = false;
+      }
+
       _selected = section;
       _activeDrawerIndex = section;
     });

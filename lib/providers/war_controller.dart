@@ -315,11 +315,13 @@ class WarController extends GetxController {
         for (final FactionModel f in thisFactions) {
           // If the member is found in the faction, add the update task to the list
           if (f.members!.containsKey(card.memberId.toString())) {
-            updateTasks.add(updateSingleMemberFull(
-              f.members![card.memberId.toString()]!,
-              allAttacks: allAttacksSuccess,
-              ownStats: ownStatsSuccess,
-            ),);
+            updateTasks.add(
+              updateSingleMemberFull(
+                f.members![card.memberId.toString()]!,
+                allAttacks: allAttacksSuccess,
+                ownStats: ownStatsSuccess,
+              ),
+            );
             break;
           }
         }

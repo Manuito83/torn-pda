@@ -39,24 +39,29 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 334 - 19/08/2023
+    // Build 335 - 27/08/2023
 
     // VERSION 3.1.5
     final v3_1_5 = ChangeLogItem();
     v3_1_5.version = 'Torn PDA v3.1.5';
     v3_1_5.date = '05 SEP 2023';
-    const String feat3_1_5_1 = "Browser: long press in title opens shortcuts (default style)";
-    const String feat3_1_5_2 = "Browser: the terminal can now be cleared";
-    const String feat3_1_5_3 = "Fixed energy and nerve bars double tap";
-    const String feat3_1_5_4 = "Fixed show oneself option in Jail";
-    const String feat3_1_5_5 = "Fixed JS handlers (get, post, inject) for scripts";
-    const String feat3_1_5_6 = "Update packages";
+    const String feat3_1_5_1 = "Added split screen mode between browser and app";
+    const String feat3_1_5_2 = "Browser: long press in title opens shortcuts (default style)";
+    const String feat3_1_5_3 = "Browser: the terminal can now be cleared";
+    const String feat3_1_5_4 = "Jail widget: added option to disable filters";
+    const String feat3_1_5_5 = "Added support for longer Torn Stats API keys";
+    const String feat3_1_5_6 = "Fixed double tap in energy and nerve bars";
+    const String feat3_1_5_7 = "Fixed show oneself and score dialog settings in jail widget";
+    const String feat3_1_5_8 = "Fixed JS handlers (get, post, inject) for scripts";
+    const String feat3_1_5_9 = "Update packages";
     v3_1_5.features.add(feat3_1_5_1);
     v3_1_5.features.add(feat3_1_5_2);
     v3_1_5.features.add(feat3_1_5_3);
     v3_1_5.features.add(feat3_1_5_4);
     v3_1_5.features.add(feat3_1_5_5);
     v3_1_5.features.add(feat3_1_5_6);
+    v3_1_5.features.add(feat3_1_5_7);
+    v3_1_5.features.add(feat3_1_5_8);
 
     // VERSION 3.1.4
     final v3_1_4 = ChangeLogItem();

@@ -13,6 +13,7 @@ import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
@@ -187,7 +188,7 @@ class RetalsPageState extends State<RetalsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Retaliation"),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -199,7 +200,7 @@ class RetalsPageState extends State<RetalsPage> {
               }
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

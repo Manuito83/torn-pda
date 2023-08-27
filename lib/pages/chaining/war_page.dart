@@ -78,7 +78,7 @@ class WarPageState extends State<WarPage> {
 
   final _chainWidgetKey = GlobalKey();
 
-  final WarController _w = Get.put(WarController());
+  final WarController _w = Get.find<WarController>();
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
   WebViewProvider? _webViewProvider;
@@ -561,7 +561,7 @@ class WarPageState extends State<WarPage> {
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War"),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -573,7 +573,7 @@ class WarPageState extends State<WarPage> {
               }
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -650,9 +650,8 @@ class WarPageState extends State<WarPage> {
                         if (allMembers > 60) {
                           BotToast.showText(
                             clickClose: true,
-                            text:
-                                "Updating $allMembers war targets, this might take a while. Extra time needed to avoid "
-                                "issues with API request limits!",
+                            text: "Updating $allMembers war targets, this might take a while. Extra time needed to "
+                                "avoid issues with API request limits!",
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
@@ -663,8 +662,8 @@ class WarPageState extends State<WarPage> {
                           );
                         }
                         List<int> result = await _w.updateAllMembersFull();
-                        allMembers =
-                            result[0]; // This might have changed if new members are added with integrityCheck()
+                        // This might have changed if new members are added with integrityCheck()
+                        allMembers = result[0];
                         updatedMembers = result[1];
                       }
 

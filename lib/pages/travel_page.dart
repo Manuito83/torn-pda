@@ -190,7 +190,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -202,7 +202,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               }
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
       title: const Text('Travel'),

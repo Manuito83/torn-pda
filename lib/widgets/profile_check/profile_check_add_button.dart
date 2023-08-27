@@ -192,7 +192,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   bool _togglePanicActive = false;
   bool _isPanic = false;
 
-  final WarController _w = Get.put(WarController(initWithIntegrity: false));
+  final WarController _w = Get.find<WarController>();
   bool _toggleWarActive = false;
   bool _isWar = false;
   bool _warInit = false;

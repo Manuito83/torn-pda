@@ -226,7 +226,7 @@ class ChainingPageState extends State<ChainingPage> {
       case 2:
         analytics.setCurrentScreen(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
-          Get.put(WarController()).launchShowCaseAddFaction();
+          Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
       case 3:
@@ -253,7 +253,7 @@ class ChainingPageState extends State<ChainingPage> {
       case 2:
         analytics.setCurrentScreen(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
-          Get.put(WarController()).launchShowCaseAddFaction();
+          Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
         Prefs().setChainingCurrentPage(_currentPage);

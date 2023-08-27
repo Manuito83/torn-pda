@@ -209,7 +209,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           isDense: true,
                         ),
                         style: const TextStyle(fontSize: 12),
-                        maxLength: 16,
+                        maxLength: 19,
                         onChanged: (key) {
                           if (key.isEmpty) {
                             key = w.apiKey!;

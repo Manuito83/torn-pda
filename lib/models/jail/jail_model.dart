@@ -10,6 +10,7 @@ String jailModelToJson(JailModel data) => json.encode(data.toJson());
 
 class JailModel {
   JailModel({
+    this.filtersEnabled = true,
     this.levelMin = 1,
     this.levelMax = 100,
     this.timeMin = 0,
@@ -22,6 +23,7 @@ class JailModel {
     this.excludeName = "",
   });
 
+  bool filtersEnabled;
   int levelMin;
   int levelMax;
   int timeMin;
@@ -34,6 +36,7 @@ class JailModel {
   String excludeName;
 
   factory JailModel.fromJson(Map<String, dynamic> json) => JailModel(
+        filtersEnabled: json["enabled"] ?? true,
         levelMin: json["levelMin"] ?? 1,
         levelMax: json["levelMax"] ?? 100,
         timeMin: json["timeMin"] ?? 0,
@@ -47,6 +50,7 @@ class JailModel {
       );
 
   Map<String, dynamic> toJson() => {
+        "enabled": filtersEnabled,
         "levelMin": levelMin,
         "levelMax": levelMax,
         "timeMin": timeMin,

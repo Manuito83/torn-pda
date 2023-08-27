@@ -61,7 +61,7 @@ class PersonalNotesDialogState extends State<PersonalNotesDialog> {
 
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
-    _w = Get.put(WarController());
+    _w = Get.find<WarController>();
     _s = Get.put(StakeoutsController());
 
     if (widget.noteType == PersonalNoteType.target) {

@@ -63,7 +63,7 @@ class WarCardState extends State<WarCard> {
 
   bool _addButtonActive = true;
 
-  final WarController _w = Get.put(WarController());
+  final WarController _w = Get.find<WarController>();
 
   @override
   void initState() {

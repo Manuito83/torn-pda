@@ -90,6 +90,7 @@ class SettingsPageState extends State<SettingsPage> {
   late UserDetailsProvider _userProvider;
   late ThemeProvider _themeProvider;
   late ShortcutsProvider _shortcutsProvider;
+  late WebViewProvider _webViewProvider;
   final ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final _expandableController = ExpandableController();
@@ -108,6 +109,7 @@ class SettingsPageState extends State<SettingsPage> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     analytics.setCurrentScreen(screenName: 'settings');
@@ -185,6 +187,10 @@ class SettingsPageState extends State<SettingsPage> {
                       const Divider(),
                       const SizedBox(height: 5),
                       _revivingServicesSection(context),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      _screenConfigurationSection(),
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
@@ -895,6 +901,87 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Column _screenConfigurationSection() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'SCREEN CONFIGURATION',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Allow auto rotation",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.allowScreenRotation,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.changeAllowScreenRotation = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
+            'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
+            'to be manually scrolled and some elements might look too big)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Split screen",
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: _splitScreenDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'If enabled, the device screen will be splitted to show the main app the the browser at the same time. '
+            'A minimum width (800 dpi) is needed for this to be allowed',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Column _miscSection() {
     return Column(
       children: [
@@ -1433,7 +1520,7 @@ class SettingsPageState extends State<SettingsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('Settings'),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -1445,7 +1532,7 @@ class SettingsPageState extends State<SettingsPage> {
               }
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
     );
@@ -1828,6 +1915,61 @@ class SettingsPageState extends State<SettingsPage> {
         ),
       );
     }
+  }
+
+  DropdownButton _splitScreenDropdown() {
+    return DropdownButton<WebViewSplitPosition>(
+      value: _webViewProvider.splitScreenPosition,
+      items: const [
+        DropdownMenuItem(
+          value: WebViewSplitPosition.off,
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Off",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: WebViewSplitPosition.left,
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Browser left",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: WebViewSplitPosition.right,
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Browser right",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _webViewProvider.splitScreenPosition = value!;
+          if (value == WebViewSplitPosition.off) {
+            _webViewProvider.browserShowInForeground = false;
+          } else {
+            _webViewProvider.browserForegroundWithSplitTransition();
+          }
+        });
+      },
+    );
   }
 
   DropdownButton _openSectionDropdown() {

@@ -14,6 +14,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/stakeouts/stakeout_card.dart';
 import 'package:torn_pda/widgets/stakeouts/stakeouts_info_dialog.dart';
@@ -186,7 +187,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stakeouts"),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -198,7 +199,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
               }
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

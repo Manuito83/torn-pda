@@ -10,7 +10,14 @@ class PdaBrowserIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WebViewProvider webviewProvider = Provider.of<WebViewProvider>(context);
+
     final bool automaticLogins = context.read<NativeAuthProvider>().tryAutomaticLogins;
+
+    if (webviewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+      return Container();
+    }
+
     return GestureDetector(
       child: Image.asset(
         'images/icons/torn_pda_browser.png',

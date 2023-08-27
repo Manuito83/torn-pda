@@ -886,6 +886,7 @@ String chatHighlightJS({required String highlightMap}) {
 }
 
 String jailJS({
+  required bool? filtersEnabled,
   required int? levelMin,
   required int? levelMax,
   required int? timeMin,
@@ -938,6 +939,8 @@ String jailJS({
 
       // FILTERS
       for (var player of doc.querySelectorAll(".users-list > li")) {
+
+        
         var shouldHide = false;
 
         var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
@@ -964,10 +967,10 @@ String jailJS({
           shouldHide = false;
         }
                 
-        if (shouldHide) {
+        if (shouldHide && $filtersEnabled) {
           //player.hidden = true; // Not allowed with new user agent on iOS
           player.style.display = "none"; 
-        } else {
+        } else if (!shouldHide || !$filtersEnabled) {
           //player.hidden = false; // Not allowed with new user agent on iOS
           player.style.display = ""; 
         }

@@ -40,6 +40,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
@@ -50,8 +51,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.1.5';
-const String androidCompilation = '334';
-const String iosCompilation = '334';
+const String androidCompilation = '335';
+const String iosCompilation = '335';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -161,6 +162,7 @@ Future<void> main() async {
   }
 
   Get.put(ApiCallerController(), permanent: true);
+  Get.put(WarController(), permanent: true);
 
   HttpOverrides.global = MyHttpOverrides();
 
@@ -224,13 +226,16 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => MyAppState();
 }
 
-class MyAppState extends State<MyApp> {
+class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
     // Handle home widget
     if (Platform.isAndroid) {
@@ -246,6 +251,30 @@ class MyAppState extends State<MyApp> {
         _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
       }
     });
+  }
+
+  @override
+  void didChangeMetrics() async {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+        var width = MediaQuery.of(context).size.width;
+        if (width > 800) {
+          _webViewProvider.browserForegroundWithSplitTransition();
+        } else {
+          _webViewProvider.splitScreenPosition = WebViewSplitPosition.off;
+        }
+      } else {
+        if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+          _webViewProvider.splitScreenPosition = WebViewSplitPosition.off;
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -291,25 +320,65 @@ class MyAppState extends State<MyApp> {
                 return false;
               }
             },
-            child: Stack(
-              children: [
-                GetMaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  theme: theme,
-                  home: DrawerPage(),
-                ),
-                Consumer<WebViewProvider>(
-                  builder: (context, wProvider, child) {
-                    return Visibility(
+            child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
+              if (wProvider.splitScreenPosition == WebViewSplitPosition.right) {
+                return Stack(
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: GetMaterialApp(
+                            debugShowCheckedModeBanner: false,
+                            theme: theme,
+                            home: DrawerPage(),
+                          ),
+                        ),
+                        Flexible(
+                          child: wProvider.stackView,
+                        ),
+                      ],
+                    ),
+                    const AppBorder(),
+                  ],
+                );
+              } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                return Stack(
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: wProvider.stackView,
+                        ),
+                        Flexible(
+                          child: GetMaterialApp(
+                            debugShowCheckedModeBanner: false,
+                            theme: theme,
+                            home: DrawerPage(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const AppBorder(),
+                  ],
+                );
+              } else {
+                return Stack(
+                  children: [
+                    GetMaterialApp(
+                      debugShowCheckedModeBanner: false,
+                      theme: theme,
+                      home: DrawerPage(),
+                    ),
+                    Visibility(
                       maintainState: true,
                       visible: wProvider.browserShowInForeground,
                       child: wProvider.stackView,
-                    );
-                  },
-                ),
-                const AppBorder(),
-              ],
-            ),
+                    ),
+                    const AppBorder(),
+                  ],
+                );
+              }
+            }),
           ),
         ),
       ),

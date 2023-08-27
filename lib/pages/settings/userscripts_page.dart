@@ -83,108 +83,104 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    final WebViewProvider webviewProvider = Provider.of<WebViewProvider>(context);
-    return Visibility(
-      visible: !webviewProvider.browserShowInForeground,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                child: Column(
-                  children: <Widget>[
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: const BorderSide(width: 2, color: Colors.blueGrey),
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: Column(
+                children: <Widget>[
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      ButtonTheme(
+                        minWidth: 1.0,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
+                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: const BorderSide(width: 2, color: Colors.blueGrey),
+                              ),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 20,
+                            color: _themeProvider.mainText,
+                          ),
+                          onPressed: () {
+                            _showAddDialog(context);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      ButtonTheme(
+                        minWidth: 1.0,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
+                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: const BorderSide(
+                                  width: 2,
+                                  color: Colors.blueGrey,
                                 ),
                               ),
                             ),
-                            child: Icon(
-                              Icons.add,
-                              size: 20,
-                              color: _themeProvider.mainText,
-                            ),
-                            onPressed: () {
-                              _showAddDialog(context);
-                            },
                           ),
-                        ),
-                        const SizedBox(width: 15),
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: const BorderSide(
-                                    width: 2,
-                                    color: Colors.blueGrey,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: _themeProvider.mainText,
-                            ),
-                            onPressed: () {
-                              _openWipeDialog();
-                            },
+                          child: Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: _themeProvider.mainText,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Preexisting scripts might require modifications to work with Torn PDA. '
-                        'Please ensure that you use scripts responsibly and '
-                        'understand the hazards. Tap the exclamation mark for more information.',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                          onPressed: () {
+                            _openWipeDialog();
+                          },
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Flexible(
-                      child: Consumer<UserScriptsProvider>(
-                        builder: (context, settingsProvider, child) => scriptsCards(),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Preexisting scripts might require modifications to work with Torn PDA. '
+                      'Please ensure that you use scripts responsibly and '
+                      'understand the hazards. Tap the exclamation mark for more information.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  Flexible(
+                    child: Consumer<UserScriptsProvider>(
+                      builder: (context, settingsProvider, child) => scriptsCards(),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -347,7 +343,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('User scripts'),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -356,7 +352,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          const PdaBrowserIcon(),
+          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off)
+            PdaBrowserIcon()
+          else
+            Container(),
         ],
       ),
       actions: [

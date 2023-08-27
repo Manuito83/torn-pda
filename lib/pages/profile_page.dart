@@ -142,7 +142,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   ThemeProvider? _themeProvider;
   UserDetailsProvider? _userProv;
   late ShortcutsProvider _shortcutsProv;
-  WebViewProvider? _webViewProvider;
+  late WebViewProvider _webViewProvider;
   final UserController _u = Get.put(UserController());
 
   late int _travelNotificationAhead;
@@ -309,7 +309,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
     // So that we can 1) refresh the API, 2) start the API timer again
-    _browserHasClosed = _webViewProvider!.browserHasClosedStream.stream;
+    _browserHasClosed = _webViewProvider.browserHasClosedStream.stream;
     _browserHasClosedSubscription = _browserHasClosed.listen((event) {
       log("Browser has closed in Profile, resuming API calls!");
       _resetApiTimer(initCall: true);
@@ -321,18 +321,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     routeName = "profile`";
   }
 
-  /// Restarts the API timer (to be executed after 20 minutes)
+  /// Restarts the API timer (to be executed after 20 seconds)
   /// If [initCall] is true, a call is placed also at the start
   /// (unless the browser is open)
   void _resetApiTimer({bool initCall = false}) {
-    if (initCall && !_webViewProvider!.browserShowInForeground) {
+    if (initCall &&
+        (!_webViewProvider.browserShowInForeground ||
+            _webViewProvider.splitScreenPosition != WebViewSplitPosition.off)) {
       _apiRefreshPeriodic(forceMisc: true);
     }
 
     _tickerCallApi?.cancel();
     _tickerCallApi = Timer.periodic(const Duration(seconds: 20), (Timer t) {
       // Only refresh if the browser is not open!
-      if (!_webViewProvider!.browserShowInForeground) {
+      if (!_webViewProvider.browserShowInForeground ||
+          _webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
         _apiRefreshPeriodic();
       }
     });
@@ -626,7 +629,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             const Text("Profile"),
         ],
       ),
-      leadingWidth: 80,
+      leadingWidth: _webViewProvider.splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -638,22 +641,25 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             },
           ),
-          Showcase(
-            key: _showcasePdaBrowserButton,
-            title: 'Direct Torn access!',
-            description: '\nUse this PDA button in any section to quickly access Torn.\n\n'
-                'By using this icon, you will immediately resume your Torn browser experience, exactly as you '
-                'left it, with no new tabs reloading.\n\n'
-                'Make sure to visit the Settings and Tips section to learn how you can also configure '
-                'your taps (quick or long) to launch the browser in windowed or full screen modes!',
-            showArrow: false,
-            disableMovingAnimation: true,
-            textColor: _themeProvider!.mainText!,
-            tooltipBackgroundColor: _themeProvider!.secondBackground!,
-            descTextStyle: const TextStyle(fontSize: 13),
-            tooltipPadding: const EdgeInsets.all(20),
-            child: const PdaBrowserIcon(),
-          ),
+          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off)
+            Showcase(
+              key: _showcasePdaBrowserButton,
+              title: 'Direct Torn access!',
+              description: '\nUse this PDA button in any section to quickly access Torn.\n\n'
+                  'By using this icon, you will immediately resume your Torn browser experience, exactly as you '
+                  'left it, with no new tabs reloading.\n\n'
+                  'Make sure to visit the Settings and Tips section to learn how you can also configure '
+                  'your taps (quick or long) to launch the browser in windowed or full screen modes!',
+              showArrow: false,
+              disableMovingAnimation: true,
+              textColor: _themeProvider!.mainText!,
+              tooltipBackgroundColor: _themeProvider!.secondBackground!,
+              descTextStyle: const TextStyle(fontSize: 13),
+              tooltipPadding: const EdgeInsets.all(20),
+              child: PdaBrowserIcon(),
+            )
+          else
+            Container(),
         ],
       ),
       actions: <Widget>[
@@ -5242,7 +5248,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _launchBrowser({required String? url, required bool? shortTap, bool recallLastSession = false}) async {
     if (url == null || shortTap == null) return;
 
-    _webViewProvider!.openBrowserPreference(
+    _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
       browserTapType: shortTap ? BrowserTapType.short : BrowserTapType.long,

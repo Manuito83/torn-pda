@@ -120,34 +120,39 @@ class WebViewStackViewState extends State<WebViewStackView>
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     if (_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2) {
-      return Dialog(
-        insetPadding: EdgeInsets.only(
-          top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
-          bottom: _webViewProvider.currentUiMode == UiMode.window
-              ? _keyboardVisible
-                  ? 0
-                  : 45
-              : 0,
-          left: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
-          right: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Container(
-          color: _themeProvider.currentTheme == AppTheme.extraDark ? const Color(0xFF131313) : Colors.transparent,
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: _webViewProvider.currentUiMode == UiMode.window ? 6 : 0,
-              bottom: _webViewProvider.currentUiMode == UiMode.window
-                  ? _themeProvider.currentTheme == AppTheme.extraDark
-                      ? 6
-                      : 4
-                  : 0,
-              left: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
-              right: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
+      return Container(
+        color: _webViewProvider.splitScreenPosition != WebViewSplitPosition.off
+            ? _themeProvider.canvas
+            : Colors.transparent,
+        child: Dialog(
+          insetPadding: EdgeInsets.only(
+            top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
+            bottom: _webViewProvider.currentUiMode == UiMode.window
+                ? _keyboardVisible
+                    ? 0
+                    : 45
+                : 0,
+            left: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
+            right: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? const Color(0xFF131313) : Colors.transparent,
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: _webViewProvider.currentUiMode == UiMode.window ? 6 : 0,
+                bottom: _webViewProvider.currentUiMode == UiMode.window
+                    ? _themeProvider.currentTheme == AppTheme.extraDark
+                        ? 6
+                        : 4
+                    : 0,
+                left: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
+                right: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
+              ),
+              child: stackView(),
             ),
-            child: stackView(),
           ),
         ),
       );
@@ -179,10 +184,8 @@ class WebViewStackViewState extends State<WebViewStackView>
               !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
           bottom: !dialog &&
               !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
-          left: !dialog &&
-              !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
-          right: !dialog &&
-              !(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen),
+          left: assessSafeAreaSide(dialog, "left"),
+          right: assessSafeAreaSide(dialog, "right"),
           child: ShowCaseWidget(
             builder: Builder(
               builder: (_) {
@@ -289,6 +292,24 @@ class WebViewStackViewState extends State<WebViewStackView>
         ),
       ),
     );
+  }
+
+  bool assessSafeAreaSide(bool dialog, String safeSide) {
+    if (safeSide == "left" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right) {
+      return false;
+    } else if (safeSide == "right" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+      return false;
+    } else {
+      if (!dialog) {
+        if (!(_settingsProvider.fullScreenOverSides && _webViewProvider.currentUiMode == UiMode.fullScreen)) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
   }
 
   void _launchShowCases(BuildContext _) {
