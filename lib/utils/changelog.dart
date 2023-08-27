@@ -62,6 +62,7 @@ class ChangeLogState extends State<ChangeLog> {
     v3_1_5.features.add(feat3_1_5_6);
     v3_1_5.features.add(feat3_1_5_7);
     v3_1_5.features.add(feat3_1_5_8);
+    v3_1_5.features.add(feat3_1_5_9);
 
     // VERSION 3.1.4
     final v3_1_4 = ChangeLogItem();
