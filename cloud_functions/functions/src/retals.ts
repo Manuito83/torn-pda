@@ -45,7 +45,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         if (ownFactionId === 0) return;
 
         // DEBUG!
-        //if (ownFactionId !== 33241) continue;
+        //if (ownFactionId !== 6974) return;
 
         if (factionsList[id].timestamp === undefined) {
             promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
@@ -136,7 +136,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
             for (const key of Array.from(subscribers.keys())) {
                 // Only take into account hosts (users with faction API permits)
-                if (!subscribers[key].retalsNotificationHost) return;
+                if (!subscribers[key].retalsNotificationHost) continue;
 
                 if (subscribers[key].lastActive > lastActiveUserTime) {
                     lastActiveUserTime = subscribers[key].lastActive;
