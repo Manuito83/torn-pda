@@ -978,6 +978,35 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Split reverts to",
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: _splitScreenRevertionDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'When the split screen condition is no longer active (e.g.: if the device is rotated and the width is '
+            'loweer than 800 dpi), this option dictates whether the webview or the app should remain in the foreground',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -1528,7 +1557,12 @@ class SettingsPageState extends State<SettingsPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                scaffoldState.openDrawer();
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
               }
             },
           ),
@@ -1965,8 +1999,48 @@ class SettingsPageState extends State<SettingsPage> {
           if (value == WebViewSplitPosition.off) {
             _webViewProvider.browserShowInForeground = false;
           } else {
-            _webViewProvider.browserForegroundWithSplitTransition();
+            if (MediaQuery.sizeOf(context).width > 800) {
+              _webViewProvider.webViewSplitActive = true;
+              _webViewProvider.browserForegroundWithSplitTransition();
+            }
           }
+        });
+      },
+    );
+  }
+
+  DropdownButton _splitScreenRevertionDropdown() {
+    return DropdownButton<bool>(
+      value: _webViewProvider.splitScreenRevertsToApp,
+      items: const [
+        DropdownMenuItem(
+          value: true,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "App",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: false,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Browser",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _webViewProvider.splitScreenRevertsToApp = value!;
         });
       },
     );

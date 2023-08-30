@@ -456,7 +456,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _callSectionFromOutside(2); // Chaining
       return;
     } else if (intent.data!.contains("pdaWidget://empty-shortcuts-clicked")) {
-      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+      if (!_webViewProvider.webViewSplitActive) {
         setState(() {
           _webViewProvider.browserShowInForeground = false;
         });
@@ -1214,22 +1214,41 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     : _themeProvider!.canvas
                 : _themeProvider!.canvas,
             child: SafeArea(
-              right: _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-              left: _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+              right: _webViewProvider.webViewSplitActive &&
+                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
+              left: _webViewProvider.webViewSplitActive &&
+                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
               child: Scaffold(
                 key: _scaffoldKey,
                 body: _getPages(),
-                drawer: Drawer(
-                  backgroundColor: _themeProvider!.canvas,
-                  elevation: 2, // This avoids shadow over SafeArea
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: <Widget>[
-                      _getDrawerHeader(),
-                      _getDrawerItems(),
-                    ],
-                  ),
-                ),
+                endDrawer: _webViewProvider.webViewSplitActive &&
+                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                    ? Drawer(
+                        backgroundColor: _themeProvider!.canvas,
+                        elevation: 2, // This avoids shadow over SafeArea
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          children: <Widget>[
+                            _getDrawerHeader(),
+                            _getDrawerItems(),
+                          ],
+                        ),
+                      )
+                    : null,
+                drawer: _webViewProvider.webViewSplitActive &&
+                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                    ? null
+                    : Drawer(
+                        backgroundColor: _themeProvider!.canvas,
+                        elevation: 2, // This avoids shadow over SafeArea
+                        child: ListView(
+                          padding: EdgeInsets.zero,
+                          children: <Widget>[
+                            _getDrawerHeader(),
+                            _getDrawerItems(),
+                          ],
+                        ),
+                      ),
               ),
             ),
           );
@@ -1843,7 +1862,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _callSectionFromOutside(int section) {
     setState(() {
-      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+      if (!_webViewProvider.webViewSplitActive) {
         _webViewProvider.browserShowInForeground = false;
       }
 
@@ -1855,7 +1874,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   _openDrawer() {
     if (routeWithDrawer) {
-      _scaffoldKey.currentState!.openDrawer();
+      if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+        _scaffoldKey.currentState!.openEndDrawer();
+      } else {
+        _scaffoldKey.currentState!.openDrawer();
+      }
     }
   }
 

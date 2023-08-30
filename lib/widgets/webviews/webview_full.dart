@@ -551,9 +551,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   bool assessSafeAreaSide(bool dialog, String safeSide) {
-    if (safeSide == "left" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right) {
+    if (safeSide == "left" &&
+        _webViewProvider.webViewSplitActive &&
+        _webViewProvider.splitScreenPosition == WebViewSplitPosition.right) {
       return false;
-    } else if (safeSide == "right" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+    } else if (safeSide == "right" &&
+        _webViewProvider.webViewSplitActive &&
+        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
       return false;
     } else {
       if (!dialog) {
@@ -726,8 +730,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             ),
             Expanded(
               child: Padding(
-                padding:
-                    EdgeInsets.only(top: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off ? 8 : 13),
+                padding: EdgeInsets.only(top: !_webViewProvider.webViewSplitActive ? 8 : 13),
                 child: Showcase(
                   key: _showCaseCloseButton,
                   title: 'Options menu',
@@ -745,7 +748,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       color: Colors.transparent, // Background to extend the buttons detection area
                       child: Column(
                         children: [
-                          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off)
+                          if (!_webViewProvider.webViewSplitActive)
                             Column(
                               children: [
                                 Text(
@@ -775,7 +778,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.red,
-                                fontSize: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off ? 7 : 12,
+                                fontSize: !_webViewProvider.webViewSplitActive ? 7 : 12,
                               ),
                             )
                           else
@@ -784,19 +787,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: _themeProvider.mainText,
-                                fontSize: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off ? 7 : 12,
+                                fontSize: !_webViewProvider.webViewSplitActive ? 7 : 12,
                               ),
                             ),
                         ],
                       ),
                     ),
                     onTap: () {
-                      if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+                      if (_webViewProvider.webViewSplitActive) {
                         openUrlDialog();
                         return;
                       }
 
-                      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+                      if (!_webViewProvider.webViewSplitActive) {
                         _webViewProvider.browserShowInForeground = false;
                       }
 
@@ -1976,9 +1979,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           : null,
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
-        primary: _webViewProvider.splitScreenPosition == WebViewSplitPosition.off,
+        primary: !_webViewProvider.webViewSplitActive,
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        leading: _backButtonPopsContext && _webViewProvider.splitScreenPosition != WebViewSplitPosition.off
+        leading: _backButtonPopsContext && _webViewProvider.webViewSplitActive
             ? null
             : IconButton(
                 icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
@@ -1987,7 +1990,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   if (_backButtonPopsContext) {
                     _webViewProvider.setCurrentUiMode(UiMode.window, context);
                     if (mounted) {
-                      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+                      if (!_webViewProvider.webViewSplitActive) {
                         _webViewProvider.browserShowInForeground = false;
                       }
 
@@ -4194,7 +4197,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             : () {
                 _launchNextAttack();
 
-                if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+                if (_webViewProvider.webViewSplitActive) {
                   _checkIfTargetsAttackedAndRevertChaining(split: true);
                 }
               },
@@ -4645,7 +4648,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _webViewProvider.setCurrentUiMode(UiMode.window, context);
     await Future.delayed(const Duration(milliseconds: 150));
     if (mounted) {
-      if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) {
+      if (!_webViewProvider.webViewSplitActive) {
         _webViewProvider.browserShowInForeground = false;
       }
       _checkIfTargetsAttackedAndRevertChaining();

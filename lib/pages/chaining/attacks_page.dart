@@ -148,7 +148,12 @@ class AttacksPageState extends State<AttacksPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                scaffoldState.openDrawer();
+                if (context.read<WebViewProvider>().webViewSplitActive &&
+                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
               }
             },
           ),

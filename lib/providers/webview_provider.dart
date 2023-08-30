@@ -78,6 +78,10 @@ class SleepingWebView {
 }
 
 class WebViewProvider extends ChangeNotifier {
+  WebViewProvider() {
+    _restorePreferences();
+  }
+
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
@@ -103,7 +107,7 @@ class WebViewProvider extends ChangeNotifier {
   bool get browserShowInForeground => _isBrowserForeground;
   set browserShowInForeground(bool bringToForeground) {
     // Browser should not be resumed/paused while we are in split screen
-    if (_webViewSplitActive != WebViewSplitPosition.off) {
+    if (webViewSplitActive) {
       return;
     }
 
@@ -226,14 +230,41 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  WebViewSplitPosition _webViewSplitActive = WebViewSplitPosition.off;
-  WebViewSplitPosition get splitScreenPosition => _webViewSplitActive;
-  set splitScreenPosition(WebViewSplitPosition value) {
+  // SPLIT SCREEN ####
+  // Main state
+  bool _webViewSplitActive = false;
+  bool get webViewSplitActive => _webViewSplitActive;
+  set webViewSplitActive(bool value) {
     _webViewSplitActive = value;
     notifyListeners();
   }
 
-  bool splitScreenJustTransitioned = false;
+  // If active conditions met, this is the user preference
+  WebViewSplitPosition _webViewSplitPosition = WebViewSplitPosition.off;
+  WebViewSplitPosition get splitScreenPosition => _webViewSplitPosition;
+  set splitScreenPosition(WebViewSplitPosition value) {
+    _webViewSplitPosition = value;
+    switch (value) {
+      case WebViewSplitPosition.off:
+        Prefs().setSplitScreenWebview("off");
+      case WebViewSplitPosition.left:
+        Prefs().setSplitScreenWebview("left");
+      case WebViewSplitPosition.right:
+        Prefs().setSplitScreenWebview("right");
+    }
+    notifyListeners();
+  }
+
+  // Recovery after conditions are no longer met
+  bool _splitScreenRevertsToApp = true;
+  bool get splitScreenRevertsToApp => _splitScreenRevertsToApp;
+  set splitScreenRevertsToApp(bool value) {
+    _splitScreenRevertsToApp = value;
+    Prefs().setSplitScreenRevertsToApp(value);
+    notifyListeners();
+  }
+
+  // SPLIT SCREEN END ####
 
   // Vertical expanding menu (menu button)
   int verticalMenuCurrentIndex = 0;
@@ -1322,5 +1353,19 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     return boxWidget;
+  }
+
+  void _restorePreferences() async {
+    String splitType = await Prefs().getSplitScreenWebview();
+    switch (splitType) {
+      case "off":
+        _webViewSplitPosition = WebViewSplitPosition.off;
+      case "left":
+        _webViewSplitPosition = WebViewSplitPosition.left;
+      case "right":
+        _webViewSplitPosition = WebViewSplitPosition.right;
+    }
+
+    _splitScreenRevertsToApp = await Prefs().getSplitScreenRevertsToApp();
   }
 }

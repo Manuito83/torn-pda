@@ -81,7 +81,7 @@ class WarPageState extends State<WarPage> {
   final WarController _w = Get.find<WarController>();
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
-  WebViewProvider? _webViewProvider;
+  late WebViewProvider _webViewProvider;
 
   bool _quickUpdateActive = false;
 
@@ -561,7 +561,7 @@ class WarPageState extends State<WarPage> {
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War"),
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: _webViewProvider.splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -569,11 +569,16 @@ class WarPageState extends State<WarPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                scaffoldState.openDrawer();
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
               }
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

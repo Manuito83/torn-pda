@@ -606,7 +606,7 @@ class AboutPageState extends State<AboutPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -614,11 +614,16 @@ class AboutPageState extends State<AboutPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                scaffoldState.openDrawer();
+                if (context.read<WebViewProvider>().webViewSplitActive &&
+                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
               }
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon()
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon()
         ],
       ),
       title: const Text('About'),

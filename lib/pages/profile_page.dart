@@ -325,17 +325,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   /// If [initCall] is true, a call is placed also at the start
   /// (unless the browser is open)
   void _resetApiTimer({bool initCall = false}) {
-    if (initCall &&
-        (!_webViewProvider.browserShowInForeground ||
-            _webViewProvider.splitScreenPosition != WebViewSplitPosition.off)) {
+    if (initCall && (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive)) {
       _apiRefreshPeriodic(forceMisc: true);
     }
 
     _tickerCallApi?.cancel();
     _tickerCallApi = Timer.periodic(const Duration(seconds: 20), (Timer t) {
       // Only refresh if the browser is not open!
-      if (!_webViewProvider.browserShowInForeground ||
-          _webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
+      if (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive) {
         _apiRefreshPeriodic();
       }
     });
@@ -629,7 +626,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             const Text("Profile"),
         ],
       ),
-      leadingWidth: _webViewProvider.splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -637,11 +634,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                scaffoldState.openDrawer();
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
               }
             },
           ),
-          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off)
+          if (!_webViewProvider.webViewSplitActive)
             Showcase(
               key: _showcasePdaBrowserButton,
               title: 'Direct Torn access!',

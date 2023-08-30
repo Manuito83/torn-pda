@@ -51,9 +51,10 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat3_1_5_4 = "Jail widget: added option to disable filters";
     const String feat3_1_5_5 = "Added support for longer Torn Stats API keys";
     const String feat3_1_5_6 = "Fixed double tap in energy and nerve bars";
-    const String feat3_1_5_7 = "Fixed show oneself and score dialog settings in jail widget";
-    const String feat3_1_5_8 = "Fixed JS handlers (get, post, inject) for scripts";
-    const String feat3_1_5_9 = "Update packages";
+    const String feat3_1_5_7 = "Fixed retalation alerts (re-enable if still not working)";
+    const String feat3_1_5_8 = "Fixed show oneself and score dialog settings in jail widget";
+    const String feat3_1_5_9 = "Fixed JS handlers (get, post, inject) for scripts";
+    const String feat3_1_5_10 = "Update packages";
     v3_1_5.features.add(feat3_1_5_1);
     v3_1_5.features.add(feat3_1_5_2);
     v3_1_5.features.add(feat3_1_5_3);
@@ -63,6 +64,7 @@ class ChangeLogState extends State<ChangeLog> {
     v3_1_5.features.add(feat3_1_5_7);
     v3_1_5.features.add(feat3_1_5_8);
     v3_1_5.features.add(feat3_1_5_9);
+    v3_1_5.features.add(feat3_1_5_10);
 
     // VERSION 3.1.4
     final v3_1_4 = ChangeLogItem();

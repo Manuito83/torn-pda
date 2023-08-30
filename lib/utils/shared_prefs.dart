@@ -308,6 +308,10 @@ class Prefs {
   final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
   final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
 
+  // Split screen configuration
+  final String _kSplitScreenWebview = "pda_splitScreenWebview";
+  final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -2969,5 +2973,28 @@ class Prefs {
   Future<bool> setShowApiMaxCallWarning(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowApiMaxCallWarning, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Split Screen
+  /// ----------------------------
+  Future<String> getSplitScreenWebview() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kSplitScreenWebview) ?? 'off';
+  }
+
+  Future<bool> setSplitScreenWebview(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kSplitScreenWebview, value);
+  }
+
+  Future<bool> getSplitScreenRevertsToApp() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSplitScreenRevertsToApp) ?? true;
+  }
+
+  Future<bool> setSplitScreenRevertsToApp(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSplitScreenRevertsToApp, value);
   }
 }

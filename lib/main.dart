@@ -256,16 +256,22 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() async {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
-        var width = MediaQuery.of(context).size.width;
-        if (width > 800) {
-          _webViewProvider.browserForegroundWithSplitTransition();
+      final bool splitNowActive = _webViewProvider.webViewSplitActive;
+      final bool splitUserEnabled = _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
+      final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
+
+      if (!splitNowActive && splitUserEnabled && screenIsWide) {
+        _webViewProvider.webViewSplitActive = true;
+        _webViewProvider.browserForegroundWithSplitTransition();
+      } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
+        _webViewProvider.webViewSplitActive = false;
+        if (_webViewProvider.splitScreenRevertsToApp) {
+          _webViewProvider.browserShowInForeground = false;
+          // If we deactivate the split screen but come back to the app, the webview gets disposed as state is not
+          // maintained, so we force it to be recreated later
+          _webViewProvider.stackView = Container();
         } else {
-          _webViewProvider.splitScreenPosition = WebViewSplitPosition.off;
-        }
-      } else {
-        if (_webViewProvider.splitScreenPosition != WebViewSplitPosition.off) {
-          _webViewProvider.splitScreenPosition = WebViewSplitPosition.off;
+          _webViewProvider.browserShowInForeground = true;
         }
       }
     });
@@ -280,6 +286,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
 
     // https://github.com/flutter/flutter/issues/126585
     MediaQuery.viewInsetsOf(context).bottom;
@@ -321,7 +328,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
               }
             },
             child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
-              if (wProvider.splitScreenPosition == WebViewSplitPosition.right) {
+              if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
+                  _webViewProvider.webViewSplitActive &&
+                  screenIsWide) {
                 return Stack(
                   children: [
                     Row(
@@ -341,7 +350,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     const AppBorder(),
                   ],
                 );
-              } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left) {
+              } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+                  _webViewProvider.webViewSplitActive &&
+                  screenIsWide) {
                 return Stack(
                   children: [
                     Row(

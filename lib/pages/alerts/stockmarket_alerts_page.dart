@@ -191,7 +191,12 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           if (widget.calledFromMenu) {
             final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
             if (scaffoldState != null) {
-              scaffoldState.openDrawer();
+              if (_webViewProvider.webViewSplitActive &&
+                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                scaffoldState.openEndDrawer();
+              } else {
+                scaffoldState.openDrawer();
+              }
             }
           } else {
             routeWithDrawer = true;

@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_card.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_options.dart';
 
@@ -372,7 +373,12 @@ class RankedWarsPageState extends State<RankedWarsPage> {
           if (widget.calledFromMenu) {
             final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
             if (scaffoldState != null) {
-              scaffoldState.openDrawer();
+              if (context.read<WebViewProvider>().webViewSplitActive &&
+                  context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                scaffoldState.openEndDrawer();
+              } else {
+                scaffoldState.openDrawer();
+              }
             }
           } else {
             Get.back();
@@ -428,7 +434,12 @@ class RankedWarsPageState extends State<RankedWarsPage> {
     if (widget.calledFromMenu) {
       final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
       if (scaffoldState != null) {
-        scaffoldState.openDrawer();
+        if (context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+          scaffoldState.openEndDrawer();
+        } else {
+          scaffoldState.openDrawer();
+        }
       }
     } else {
       routeWithDrawer = true;

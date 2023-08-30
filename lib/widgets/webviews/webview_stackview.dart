@@ -121,9 +121,7 @@ class WebViewStackViewState extends State<WebViewStackView>
 
     if (_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2) {
       return Container(
-        color: _webViewProvider.splitScreenPosition != WebViewSplitPosition.off
-            ? _themeProvider.canvas
-            : Colors.transparent,
+        color: _webViewProvider.webViewSplitActive ? _themeProvider.canvas : Colors.transparent,
         child: Dialog(
           insetPadding: EdgeInsets.only(
             top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
@@ -295,9 +293,13 @@ class WebViewStackViewState extends State<WebViewStackView>
   }
 
   bool assessSafeAreaSide(bool dialog, String safeSide) {
-    if (safeSide == "left" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right) {
+    if (safeSide == "left" &&
+        _webViewProvider.webViewSplitActive &&
+        _webViewProvider.splitScreenPosition == WebViewSplitPosition.right) {
       return false;
-    } else if (safeSide == "right" && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+    } else if (safeSide == "right" &&
+        _webViewProvider.webViewSplitActive &&
+        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
       return false;
     } else {
       if (!dialog) {
@@ -323,6 +325,9 @@ class WebViewStackViewState extends State<WebViewStackView>
     _lastShowCasesCheck = now;
 
     Future.delayed(const Duration(seconds: 1), () async {
+      // Avoid errors when split view reverts with the browser in the background (as it's converted into a Container)
+      if (_webViewProvider.tabList.isEmpty) return;
+
       bool showCasesNeedToWait = false;
 
       final List showCases = <GlobalKey<State<StatefulWidget>>>[];

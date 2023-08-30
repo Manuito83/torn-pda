@@ -19,6 +19,7 @@ import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -865,7 +866,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
         onPressed: () {
           final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
           if (scaffoldState != null) {
-            scaffoldState.openDrawer();
+            if (context.read<WebViewProvider>().webViewSplitActive &&
+                context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+              scaffoldState.openEndDrawer();
+            } else {
+              scaffoldState.openDrawer();
+            }
           }
         },
       ),
