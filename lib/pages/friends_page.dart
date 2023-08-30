@@ -187,7 +187,7 @@ class FriendsPageState extends State<FriendsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: _appBarText,
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -204,7 +204,7 @@ class FriendsPageState extends State<FriendsPage> {
               }
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

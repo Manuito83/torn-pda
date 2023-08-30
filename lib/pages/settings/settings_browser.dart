@@ -1742,7 +1742,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
       title: const Text('Browser settings'),
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -1751,7 +1751,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               _goBack();
             },
           ),
-          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
     );

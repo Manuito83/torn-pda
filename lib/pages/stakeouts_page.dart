@@ -187,7 +187,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stakeouts"),
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -204,7 +204,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
               }
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

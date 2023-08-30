@@ -436,7 +436,7 @@ class AwardsPageState extends State<AwardsPage> {
           ),
         ],
       ),
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -453,7 +453,7 @@ class AwardsPageState extends State<AwardsPage> {
               }
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: [

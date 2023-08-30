@@ -343,7 +343,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('User scripts'),
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -352,10 +352,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off)
-            PdaBrowserIcon()
-          else
-            Container(),
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon() else Container(),
         ],
       ),
       actions: [

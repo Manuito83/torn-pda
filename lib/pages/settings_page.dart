@@ -1549,7 +1549,7 @@ class SettingsPageState extends State<SettingsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('Settings'),
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -1566,7 +1566,7 @@ class SettingsPageState extends State<SettingsPage> {
               }
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
     );
@@ -2001,6 +2001,9 @@ class SettingsPageState extends State<SettingsPage> {
           } else {
             if (MediaQuery.sizeOf(context).width > 800) {
               _webViewProvider.webViewSplitActive = true;
+
+              // Force stackview convertion from Container if it still hasn't happened
+              _webViewProvider.browserForegroundWithSplitTransition();
             }
           }
         });

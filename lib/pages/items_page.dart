@@ -220,7 +220,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: context.read<WebViewProvider>().splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -237,7 +237,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       title: const Text('Items'),

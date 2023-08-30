@@ -561,7 +561,7 @@ class WarPageState extends State<WarPage> {
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War"),
-      leadingWidth: _webViewProvider.splitScreenPosition != WebViewSplitPosition.off ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -578,7 +578,7 @@ class WarPageState extends State<WarPage> {
               }
             },
           ),
-          if (_webViewProvider.splitScreenPosition == WebViewSplitPosition.off) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
