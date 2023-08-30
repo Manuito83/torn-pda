@@ -104,22 +104,26 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                             body = `Inactive`;
                         }
 
-                        promisesFaction.push(
-                            sendNotificationToUser(
-                                subscribers[key].token,
-                                title,
-                                body,
-                                "notification_retals",
-                                "#FF0000",
-                                "Alerts retals",
-                                "",
-                                "",
-                                "-1",
-                                "-1",
-                                subscribers[key].vibration,
-                                "sword_clash.aiff"
-                            )
-                        );
+                        try {
+                            promisesFaction.push(
+                                sendNotificationToUser(
+                                    subscribers[key].token,
+                                    title,
+                                    body,
+                                    "notification_retals",
+                                    "#FF0000",
+                                    "Alerts retals",
+                                    "",
+                                    "",
+                                    "-1",
+                                    "-1",
+                                    subscribers[key].vibration,
+                                    "sword_clash.aiff"
+                                )
+                            );
+                        } catch (e) {
+                            // Entity not found?
+                        }
                     }
                 }
                 promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(true));
