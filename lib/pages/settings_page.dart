@@ -2001,7 +2001,6 @@ class SettingsPageState extends State<SettingsPage> {
           } else {
             if (MediaQuery.sizeOf(context).width > 800) {
               _webViewProvider.webViewSplitActive = true;
-              _webViewProvider.browserForegroundWithSplitTransition();
             }
           }
         });

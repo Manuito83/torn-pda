@@ -267,9 +267,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         _webViewProvider.webViewSplitActive = false;
         if (_webViewProvider.splitScreenRevertsToApp) {
           _webViewProvider.browserShowInForeground = false;
-          // If we deactivate the split screen but come back to the app, the webview gets disposed as state is not
-          // maintained, so we force it to be recreated later
-          _webViewProvider.stackView = Container();
         } else {
           _webViewProvider.browserShowInForeground = true;
         }

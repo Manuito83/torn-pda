@@ -37,6 +37,12 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _webViewProvider = Provider.of<WebViewProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
