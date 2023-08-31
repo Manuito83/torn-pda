@@ -36,6 +36,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
   final StakeoutsController _s = Get.find();
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   // Showcases
   final GlobalKey _showcaseInfo = GlobalKey();
@@ -59,6 +60,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return ShowCaseWidget(
       builder: Builder(
@@ -187,7 +189,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stakeouts"),
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -195,8 +197,8 @@ class StakeoutsPageState extends State<StakeoutsPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -204,7 +206,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

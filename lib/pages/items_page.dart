@@ -48,6 +48,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   String _currentSearchFilter = '';
   final _searchController = TextEditingController();
@@ -105,6 +106,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider!.canvas,
       drawer: const Drawer(),
@@ -220,7 +223,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -228,8 +231,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -237,7 +240,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       title: const Text('Items'),

@@ -1200,6 +1200,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     super.build(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _userProvider = Provider.of<UserDetailsProvider>(context);
+    // Listen actively to [_webViewProvider] even if was already assigned in [_loadInitPreferences]
+    // so that the drawer is properly configured based on split/rotation preferences
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     _s.callbackBrowser = _openBrowserFromToast;
     return FutureBuilder(
       future: _finishedWithPreferences,

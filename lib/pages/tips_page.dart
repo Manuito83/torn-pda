@@ -93,6 +93,7 @@ class TipsPage extends StatefulWidget {
 class TipsPageState extends State<TipsPage> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   var _generalTipList = <TipTextBuilder>[];
   var _browserGeneralTipList = <TipTextBuilder>[];
@@ -133,6 +134,7 @@ class TipsPageState extends State<TipsPage> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
@@ -227,7 +229,7 @@ class TipsPageState extends State<TipsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -235,8 +237,8 @@ class TipsPageState extends State<TipsPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -244,7 +246,7 @@ class TipsPageState extends State<TipsPage> {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       title: const Text('Torn PDA - Tips'),

@@ -54,7 +54,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     super.initState();
 
     _settingsP = Provider.of<SettingsProvider>(context, listen: false);
-    _webViewProvider = context.read<WebViewProvider>();
+
     routeName = "stockmarket_alerts_page";
     if (!widget.calledFromMenu) {
       // We are NOT getting updated stocks every time
@@ -74,6 +74,8 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait

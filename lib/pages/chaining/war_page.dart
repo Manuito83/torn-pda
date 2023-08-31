@@ -115,7 +115,6 @@ class WarPageState extends State<WarPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _webViewProvider = context.read<WebViewProvider>();
 
     _performQuickUpdate(firstTime: true);
 
@@ -135,6 +134,8 @@ class WarPageState extends State<WarPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return ShowCaseWidget(
       builder: Builder(
         builder: (_) {
