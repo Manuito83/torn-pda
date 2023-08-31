@@ -72,6 +72,7 @@ class TargetsPageState extends State<TargetsPage> {
   late TargetsProvider _targetsProvider;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   // For appBar search
   Icon _searchIcon = const Icon(Icons.search);
@@ -130,6 +131,7 @@ class TargetsPageState extends State<TargetsPage> {
   Widget build(BuildContext context) {
     _targetsProvider = Provider.of<TargetsProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
@@ -265,7 +267,7 @@ class TargetsPageState extends State<TargetsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: _appBarText,
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -273,8 +275,8 @@ class TargetsPageState extends State<TargetsPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -282,7 +284,7 @@ class TargetsPageState extends State<TargetsPage> {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

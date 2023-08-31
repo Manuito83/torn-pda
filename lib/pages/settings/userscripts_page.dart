@@ -31,6 +31,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
+  late WebViewProvider _webViewProvider;
 
   bool _firstTimeNotAccepted = false;
 
@@ -83,6 +84,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
@@ -343,7 +345,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('User scripts'),
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -352,7 +354,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon() else Container(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon() else Container(),
         ],
       ),
       actions: [

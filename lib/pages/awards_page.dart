@@ -61,6 +61,7 @@ class AwardsPageState extends State<AwardsPage> {
   late UserDetailsProvider _userProvider;
   late ThemeProvider _themeProvider;
   late AwardsProvider _pinProvider;
+  late WebViewProvider _webViewProvider;
 
   final PanelController _pc = PanelController();
   final double _initFabHeight = 25.0;
@@ -105,6 +106,8 @@ class AwardsPageState extends State<AwardsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -436,7 +439,7 @@ class AwardsPageState extends State<AwardsPage> {
           ),
         ],
       ),
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -444,8 +447,8 @@ class AwardsPageState extends State<AwardsPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -453,7 +456,7 @@ class AwardsPageState extends State<AwardsPage> {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: [

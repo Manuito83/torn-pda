@@ -48,6 +48,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   late ThemeProvider _themeProvider;
   SettingsProvider? _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   bool _notificationsPending = false;
   bool _alarmSound = false;
@@ -94,6 +95,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
@@ -190,7 +193,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -198,8 +201,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -207,7 +210,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       title: const Text('Travel'),

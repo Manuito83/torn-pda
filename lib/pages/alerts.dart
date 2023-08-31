@@ -47,6 +47,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   late SettingsProvider _settingsProvider;
   ThemeProvider? _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -65,6 +66,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider!.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -866,8 +869,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
         onPressed: () {
           final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
           if (scaffoldState != null) {
-            if (context.read<WebViewProvider>().webViewSplitActive &&
-                context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+            if (_webViewProvider.webViewSplitActive &&
+                _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
               scaffoldState.openEndDrawer();
             } else {
               scaffoldState.openDrawer();

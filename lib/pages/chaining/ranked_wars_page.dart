@@ -31,6 +31,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
   late UserDetailsProvider _userProvider;
+  late WebViewProvider _webViewProvider;
 
   Future? _rankedWarsFetched;
   RankedWarsModel _rankedWarsModel = RankedWarsModel();
@@ -59,6 +60,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
@@ -373,8 +375,8 @@ class RankedWarsPageState extends State<RankedWarsPage> {
           if (widget.calledFromMenu) {
             final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
             if (scaffoldState != null) {
-              if (context.read<WebViewProvider>().webViewSplitActive &&
-                  context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+              if (_webViewProvider.webViewSplitActive &&
+                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                 scaffoldState.openEndDrawer();
               } else {
                 scaffoldState.openDrawer();
@@ -434,8 +436,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
     if (widget.calledFromMenu) {
       final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
       if (scaffoldState != null) {
-        if (context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+        if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
           scaffoldState.openEndDrawer();
         } else {
           scaffoldState.openDrawer();

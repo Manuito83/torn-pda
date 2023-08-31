@@ -294,8 +294,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _webViewProvider = context.read<WebViewProvider>();
-
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -309,7 +307,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
     // So that we can 1) refresh the API, 2) start the API timer again
-    _browserHasClosed = _webViewProvider.browserHasClosedStream.stream;
+    _browserHasClosed = context.read<WebViewProvider>().browserHasClosedStream.stream;
     _browserHasClosedSubscription = _browserHasClosed.listen((event) {
       log("Browser has closed in Profile, resuming API calls!");
       _resetApiTimer(initCall: true);
@@ -375,6 +373,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _shortcutsProv = Provider.of<ShortcutsProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return ShowCaseWidget(
       builder: Builder(
         builder: (_) {

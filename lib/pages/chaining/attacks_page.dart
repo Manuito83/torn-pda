@@ -29,6 +29,7 @@ class AttacksPageState extends State<AttacksPage> {
   late AttacksProvider _attacksProvider;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   Color? _filterTypeColor;
   Text _filterText = const Text('');
@@ -56,6 +57,7 @@ class AttacksPageState extends State<AttacksPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
@@ -140,7 +142,7 @@ class AttacksPageState extends State<AttacksPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Attacks'),
-      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
@@ -148,8 +150,8 @@ class AttacksPageState extends State<AttacksPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -157,7 +159,7 @@ class AttacksPageState extends State<AttacksPage> {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

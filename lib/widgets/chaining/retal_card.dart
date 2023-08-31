@@ -83,6 +83,7 @@ class RetalCardState extends State<RetalCard> {
   Widget build(BuildContext context) {
     _retal = widget.retalModel;
     _themeProvider = Provider.of<ThemeProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Card(

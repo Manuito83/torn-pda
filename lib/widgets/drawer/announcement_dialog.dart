@@ -8,7 +8,7 @@ class AnnouncementDialog extends StatelessWidget {
   const AnnouncementDialog({
     required ThemeProvider? themeProvider,
     super.key,
-  })  : _themeProvider = themeProvider;
+  }) : _themeProvider = themeProvider;
 
   final ThemeProvider? _themeProvider;
 
@@ -80,9 +80,10 @@ class AnnouncementDialog extends StatelessWidget {
                     ),
                   ),
                   const TextSpan(
-                      text: ", rate the app with your honest opinion, and keep your "
-                          "suggestions coming. And do so with any other apps, services, extensions, helpers, spreadsheets,... "
-                          "you use. Third-party developers work every day to make the game we all love a bit more enjoyable!",),
+                    text: ", rate the app with your honest opinion, and keep your "
+                        "suggestions coming. And do so with any other apps, services, extensions, helpers, spreadsheets,... "
+                        "you use. Third-party developers work every day to make the game we all love a bit more enjoyable!",
+                  ),
                 ],
               ),
             ),
