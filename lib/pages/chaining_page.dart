@@ -12,7 +12,7 @@ import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/pages/chaining/retals_page.dart';
-//import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
+import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
@@ -23,7 +23,6 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/bounce_tabbar.dart';
-//import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ChainingPage extends StatefulWidget {
   final bool retalsRedirection;
@@ -35,7 +34,7 @@ class ChainingPage extends StatefulWidget {
 }
 
 class ChainingPageState extends State<ChainingPage> {
-  ThemeProvider? _themeProvider;
+  late ThemeProvider _themeProvider;
   late ChainStatusProvider _chainStatusProvider;
   Future? _preferencesLoaded;
   late SettingsProvider _settingsProvider;
@@ -47,7 +46,8 @@ class ChainingPageState extends State<ChainingPage> {
 
   bool _retaliationEnabled = true;
 
-  //bool _tacEnabled = true;
+  // TODO!
+  bool _tacEnabled = true;
 
   @override
   void initState() {
@@ -66,10 +66,10 @@ class ChainingPageState extends State<ChainingPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    final bool isThemeLight = _themeProvider!.currentTheme == AppTheme.light || false;
+    final bool isThemeLight = _themeProvider.currentTheme == AppTheme.light || false;
     final double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
     return Scaffold(
-      backgroundColor: _themeProvider!.canvas,
+      backgroundColor: _themeProvider.canvas,
       extendBody: true,
       body: FutureBuilder(
         future: _preferencesLoaded,
@@ -90,11 +90,7 @@ class ChainingPageState extends State<ChainingPage> {
                       const AttacksPage(),
                       const WarPage(),
                       if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled) const RetalsPage(),
-                      /*
-                      TacPage(
-                        userKey: _myCurrentKey,
-                      ),
-                      */
+                      const TacPage(),
                     ],
                   ),
                 ),
@@ -114,25 +110,25 @@ class ChainingPageState extends State<ChainingPage> {
                           items: [
                             Image.asset(
                               'images/icons/ic_target_account_black_48dp.png',
-                              color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
                               width: 28,
                             ),
                             Icon(
                               Icons.people,
-                              color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
                             ),
                             Image.asset(
                               'images/icons/faction.png',
                               width: 17,
-                              color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
                             ),
                             if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
                               FaIcon(
                                 FontAwesomeIcons.personWalkingArrowLoopLeft,
-                                color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                                color: isThemeLight ? Colors.white : _themeProvider.mainText,
                                 size: 18,
                               ),
-                            // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
+                            Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                           ],
                           locationTop: true,
                         );
@@ -165,25 +161,25 @@ class ChainingPageState extends State<ChainingPage> {
                     items: [
                       Image.asset(
                         'images/icons/ic_target_account_black_48dp.png',
-                        color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
                         width: 28,
                       ),
                       Icon(
                         Icons.people,
-                        color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
                       ),
                       Image.asset(
                         'images/icons/faction.png',
                         width: 17,
-                        color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
                       ),
                       if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
                         FaIcon(
                           FontAwesomeIcons.personWalkingArrowLoopLeft,
-                          color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                          color: isThemeLight ? Colors.white : _themeProvider.mainText,
                           size: 18,
                         ),
-                      // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
+                      Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                     ],
                     locationTop: false,
                   );
@@ -203,7 +199,7 @@ class ChainingPageState extends State<ChainingPage> {
   }
 
   Future _restorePreferences() async {
-    //_tacEnabled = await Prefs().getTACEnabled();
+    _tacEnabled = await Prefs().getTACEnabled();
 
     if (!_chainStatusProvider.initialised) {
       await _chainStatusProvider.loadPreferences();
@@ -234,6 +230,8 @@ class ChainingPageState extends State<ChainingPage> {
           analytics.setCurrentScreen(screenName: 'retals');
           _r.retrieveRetals(context);
         }
+      case 4:
+        analytics.setCurrentScreen(screenName: 'tac');
     }
   }
 

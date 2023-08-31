@@ -26,12 +26,12 @@ class ChainModel {
 }
 
 class ChainDetails {
-  int? current;
-  int? max;
-  int? timeout;
-  double? modifier;
-  int? cooldown;
-  int? start;
+  int current;
+  int max;
+  int timeout;
+  double modifier;
+  int cooldown;
+  int start;
 
   ChainDetails({
     this.current = 0,

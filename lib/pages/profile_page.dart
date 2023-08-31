@@ -1742,7 +1742,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(left: 8),
               child: Column(
                 children: <Widget>[
-                  if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
+                  if (_warnAboutChains && _chainModel.chain!.current > 10 && _chainModel.chain!.cooldown == 0)
                     Row(
                       children: [
                         const SizedBox(width: 65),
@@ -1807,7 +1807,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               ),
                             ),
                           ),
-                          if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
+                          if (_warnAboutChains && _chainModel.chain!.current > 10 && _chainModel.chain!.cooldown == 0)
                             Padding(
                               padding: const EdgeInsets.only(left: 5),
                               child: GestureDetector(

@@ -146,7 +146,7 @@ class ChainWidgetState extends State<ChainWidget> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     Text(
-                                      _chainStatusProvider.chainModel!.chain!.cooldown! > 0 ? 'Cooldown ' : 'Chain ',
+                                      _chainStatusProvider.chainModel!.chain!.cooldown > 0 ? 'Cooldown ' : 'Chain ',
                                       style: TextStyle(color: titleColor),
                                     ),
                                     Text(
@@ -170,19 +170,19 @@ class ChainWidgetState extends State<ChainWidget> {
                                 width: 150,
                                 lineHeight: 16,
                                 backgroundColor: Colors.grey,
-                                progressColor: _chainStatusProvider.chainModel!.chain!.cooldown! > 0
+                                progressColor: _chainStatusProvider.chainModel!.chain!.cooldown > 0
                                     ? Colors.green[200]
                                     : Colors.blue[200],
                                 center: Text(
-                                  _chainStatusProvider.chainModel!.chain!.cooldown! > 0
+                                  _chainStatusProvider.chainModel!.chain!.cooldown > 0
                                       ? '${_chainStatusProvider.chainModel!.chain!.current} hits'
                                       : '${_chainStatusProvider.chainModel!.chain!.current}/${_chainStatusProvider.chainModel!.chain!.max}',
                                   style: const TextStyle(color: Colors.black),
                                 ),
-                                percent: _chainStatusProvider.chainModel!.chain!.cooldown! > 0
+                                percent: _chainStatusProvider.chainModel!.chain!.cooldown > 0
                                     ? 1.0
-                                    : _chainStatusProvider.chainModel!.chain!.current! /
-                                        _chainStatusProvider.chainModel!.chain!.max!,
+                                    : _chainStatusProvider.chainModel!.chain!.current /
+                                        _chainStatusProvider.chainModel!.chain!.max,
                               ),
                             ],
                           );

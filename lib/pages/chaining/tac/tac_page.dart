@@ -1,6 +1,7 @@
-/*
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/gestures.dart';
@@ -10,10 +11,14 @@ import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:expandable/expandable.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/private/tac_config.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/tac/tac_list.dart';
@@ -22,46 +27,45 @@ import 'package:torn_pda/widgets/chaining/tac/tac_list.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_filters_model.dart';
-import 'package:torn_pda/models/chaining/tac/tac_in_model.dart';
+import 'package:torn_pda/models/chaining/tac/tac_comm_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
 //import 'package:torn_pda/private/tac_config.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/tac/tac_card.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class TacPage extends StatefulWidget {
-  final String userKey;
-
-  const TacPage({Key key, @required this.userKey}) : super(key: key);
+  const TacPage();
 
   @override
-TacPageState createState() => TacPageState();
+  TacPageState createState() => TacPageState();
 }
 
 class TacPageState extends State<TacPage> {
-  var _targetCards = <TacCard>[];
+  final _targetCards = <TacCard>[];
 
-  Future _preferencesLoaded;
+  late Future _preferencesLoaded;
 
-  TacProvider _tacProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
+  late TacProvider _tacProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
 
   final _chainWidgetKey = GlobalKey();
 
-  TacFilters _tacFilters;
+  late TacFilters _tacFilters;
   bool _apiCall = false;
   bool _getButtonActive = true;
 
   var difficultyLabel = "";
   var _incorrectPremium = false;
 
-  var _statsMap = {
+  final _statsMap = {
     0: "Under 2k",
     1: "2k - 25k",
     2: "20k - 250k",
@@ -71,7 +75,7 @@ class TacPageState extends State<TacPage> {
     6: "Over 200M",
   };
 
-  var _ranksMap = {
+  final _ranksMap = {
     1: "Absolute beginner",
     2: "Beginner",
     3: "Inexperienced",
@@ -135,7 +139,7 @@ class TacPageState extends State<TacPage> {
               if (snapshot.connectionState == ConnectionState.done) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: MediaQuery.orientationOf(context) == Orientation.portrait
                       ? _mainColumn()
                       : SingleChildScrollView(
@@ -425,7 +429,7 @@ class TacPageState extends State<TacPage> {
 
     for (var i = 0; i < _tacProvider.targetsList.length; i++) {
       if (mounted) {
-        dynamic target = await Get.find<TornApiCaller>().getTarget(playerId: _tacProvider.targetsList[i].id.toString());
+        dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: _tacProvider.targetsList[i].id);
 
         if (target is TargetModel) {
           _tacProvider.getSingleStatus(i, target);
@@ -473,7 +477,7 @@ class TacPageState extends State<TacPage> {
               value: _tacFilters.useOptimal,
               onChanged: (value) {
                 setState(() {
-                  _tacFilters.useOptimal = value;
+                  _tacFilters.useOptimal = value!;
                 });
                 _saveFilters();
               },
@@ -487,7 +491,7 @@ class TacPageState extends State<TacPage> {
               child: GestureDetector(
                 onTap: () async {
                   await showDialog(
-  useRootNavigator: false,
+                    useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
                       return _optimalExplanationDialog();
@@ -618,17 +622,24 @@ class TacPageState extends State<TacPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Torn Attack Central"),
-      leadingWidth: 80,
+      leadingWidth: context.read<WebViewProvider>().webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (context.read<WebViewProvider>().webViewSplitActive &&
+                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          PdaBrowserIcon(),
+          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon()
         ],
       ),
       actions: <Widget>[
@@ -636,7 +647,7 @@ class TacPageState extends State<TacPage> {
           icon: Icon(Icons.info_outline_rounded),
           onPressed: () async {
             await showDialog(
-  useRootNavigator: false,
+              useRootNavigator: false,
               context: context,
               builder: (BuildContext context) {
                 return _tacExplanationDialog();
@@ -663,21 +674,22 @@ class TacPageState extends State<TacPage> {
       _targetCards.clear();
     });
     int currentChainHit = 0;
-    var chainResponse = await Get.find<TornApiCaller>().getChainStatus();
+    var chainResponse = await Get.find<ApiCallerController>().getChainStatus();
     if (chainResponse is ChainModel) {
-      currentChainHit = chainResponse.chain.current;
+      currentChainHit = chainResponse.chain!.current;
     }
 
     setState(() {
       _apiCall = true;
     });
 
+    /*
     var optimal = 0;
     if (_tacFilters.useOptimal) optimal = 1;
-
+    
     var url = 'https://tornattackcentral.eu/pdaintegration.php?'
         //'password=${TacConfig.password}'
-        '&userid=${_userProvider.basic.playerId}'
+        '&userid=${_userProvider.basic!.playerId}'
         '&optimallevel=${_tacFilters.optimalLevel}'
         '&optimal=$optimal'
         '&rank=${_tacFilters.rank}'
@@ -685,74 +697,87 @@ class TacPageState extends State<TacPage> {
         '&minlevel=${_tacFilters.minLevel}'
         '&maxlevel=${_tacFilters.maxLevel}'
         '&maxlife=${_tacFilters.maxLife}'
-        '&strength=${_userProvider.basic.strength}'
-        '&speed=${_userProvider.basic.speed}'
-        '&dexterity=${_userProvider.basic.dexterity}'
-        '&defense=${_userProvider.basic.defense}'
+        '&strength=${_userProvider.basic!.strength}'
+        '&speed=${_userProvider.basic!.speed}'
+        '&dexterity=${_userProvider.basic!.dexterity}'
+        '&defense=${_userProvider.basic!.defense}'
         '&chainnumber=$currentChainHit';
+    */
+
+    TacOutModel tom = TacOutModel(
+      userId: _userProvider.basic!.playerId!,
+      password: TacConfig.password,
+      minLevel: _tacFilters.minLevel,
+      maxLevel: _tacFilters.maxLevel,
+      userBattleScore: _tacFilters.battleStats,
+      minFF: 1,
+      maxFF: 3,
+      numberRequested: 10,
+      pdaBuild: Platform.isAndroid ? int.parse(androidCompilation) : int.parse(iosCompilation),
+    );
 
     try {
-      var response = await http.get(
-        Uri.parse(url),
-        headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8'},
+      var response = await http.post(
+        Uri.parse(TacConfig.url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': TacConfig.authorization,
+        },
+        body: json.encode(tom),
       );
 
+      // TODO!
       if (response.statusCode == 200) {
-        // Fix TAC json encoding
-        var model = tacModelFromJson(response.body);
-        if (model is TacInModel) {
-          setState(() {
-            // Optimal targets are obtained only for premium users when the
-            // _optimal checkbox is ticked. In this case, we get battle stats
-            // instead of estimated stats (they are two different parameters)
-            bool optimalTargets = false;
-            if (_tacFilters.useOptimal && model.premium == 1) {
-              optimalTargets = true;
-            }
-            model.targets.forEach((key, value) {
-              value.optimal = optimalTargets;
-            });
-
-            if (model.targets.length > 0) {
-              var time = 3;
-
-              var resultString = 'Retrieved ${model.targets.length} '
-                  'targets from Torn Attack Central!';
-
-              // Needs to assign the premium check, as it does not come from API
-              // We save it in the model to save in preferences
-              model.incorrectPremium = false;
-              if (model.premium == 0 && _tacFilters.useOptimal) {
-                model.incorrectPremium = true;
-                resultString += '\n\nNOTE: no optimal targets retrieved '
-                    'as your account is not premium!';
-                time = 5;
-              }
-
-              _showSuccessToast(
-                resultString,
-                Colors.green,
-                time: time,
-              );
-
-              _incorrectPremium = model.incorrectPremium;
-              _createTargets(model);
-              _saveTargets(model);
-            } else {
-              _showSuccessToast(
-                'No targets found with the current filters!',
-                Colors.orange[700],
-              );
-            }
-
-            _apiCall = false;
-          });
-        } else {
-          setState(() {
-            _showErrorToast();
-            _apiCall = false;
-          });
+        TacInModel model = tacModelFromJson(response.body);
+        if (model.targets == null) {
+          throw ("Null targets!");
         }
+        setState(() {
+          // Optimal targets are obtained only for premium users when the
+          // _optimal checkbox is ticked. In this case, we get battle stats
+          // instead of estimated stats (they are two different parameters)
+          bool optimalTargets = false;
+          if (_tacFilters.useOptimal && model.premium == 1) {
+            optimalTargets = true;
+          }
+          model.targets!.forEach((key, value) {
+            value.optimal = optimalTargets;
+          });
+
+          if (model.targets!.isNotEmpty) {
+            var time = 3;
+
+            var resultString = 'Retrieved ${model.targets!.length} '
+                'targets from Torn Attack Central!';
+
+            // Needs to assign the premium check, as it does not come from API
+            // We save it in the model to save in preferences
+            model.incorrectPremium = false;
+            if (model.premium == 0 && _tacFilters.useOptimal) {
+              model.incorrectPremium = true;
+              resultString += '\n\nNOTE: no optimal targets retrieved '
+                  'as your account is not premium!';
+              time = 5;
+            }
+
+            _showSuccessToast(
+              resultString,
+              Colors.green,
+              time: time,
+            );
+
+            _incorrectPremium = model.incorrectPremium!;
+            _createTargets(model);
+            _saveTargets(model);
+          } else {
+            _showSuccessToast(
+              'No targets found with the current filters!',
+              Colors.orange[700]!,
+            );
+          }
+
+          _apiCall = false;
+        });
       }
     } catch (e) {
       print(e);
@@ -808,7 +833,7 @@ class TacPageState extends State<TacPage> {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
-                      useDialog: _settingsProvider.useQuickBrowser,
+                      browserTapType: BrowserTapType.short,
                     );
               },
             style: TextStyle(
@@ -825,7 +850,7 @@ class TacPageState extends State<TacPage> {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
-                      useDialog: _settingsProvider.useQuickBrowser,
+                      browserTapType: BrowserTapType.short,
                     );
               },
             style: TextStyle(
@@ -879,7 +904,7 @@ class TacPageState extends State<TacPage> {
                   await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: url,
-                        useDialog: _settingsProvider.useQuickBrowser,
+                        browserTapType: BrowserTapType.short,
                       );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
@@ -893,7 +918,7 @@ class TacPageState extends State<TacPage> {
                   await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: url,
-                        useDialog: _settingsProvider.useQuickBrowser,
+                        browserTapType: BrowserTapType.short,
                       );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
@@ -907,7 +932,7 @@ class TacPageState extends State<TacPage> {
                   await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: url,
-                        useDialog: _settingsProvider.useQuickBrowser,
+                        browserTapType: BrowserTapType.short,
                       );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
@@ -934,7 +959,8 @@ class TacPageState extends State<TacPage> {
   }
 
   void _createTargets(TacInModel model) {
-    model.targets.forEach((targetId, value) {
+    if (model.targets == null) return;
+    model.targets!.forEach((targetId, value) {
       var thisTacTarget = TacTarget();
       thisTacTarget
         ..id = targetId
@@ -967,11 +993,10 @@ class TacPageState extends State<TacPage> {
       var model = tacModelFromJson(savedModel);
       _createTargets(model);
       setState(() {
-        if (model.incorrectPremium) {
+        if (model.incorrectPremium!) {
           _incorrectPremium = true;
         }
       });
     }
   }
 }
-*/

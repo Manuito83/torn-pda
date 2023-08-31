@@ -1,4 +1,3 @@
-/*
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -8,6 +7,10 @@ import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/tac_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -15,26 +18,29 @@ import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 
 class TacCard extends StatefulWidget {
   final TacTarget target;
   final TacProvider tacProvider;
 
-  TacCard({@required this.target, @required this.tacProvider, @required Key key}) : super(key: key);
+  TacCard({
+    required this.target,
+    required this.tacProvider,
+    required Key key,
+  }) : super(key: key);
 
   @override
-TacCardState createState() => TacCardState();
+  TacCardState createState() => TacCardState();
 }
 
 class TacCardState extends State<TacCard> {
-  TacTarget _target;
+  late TacTarget _target;
 
-  SettingsProvider _settingsProvider;
+  late SettingsProvider _settingsProvider;
 
   bool _addButtonActive = true;
 
-  final decimalFormat = new NumberFormat("#,##0", "en_US");
+  final decimalFormat = NumberFormat("#,##0", "en_US");
 
   @override
   void initState() {
@@ -117,7 +123,7 @@ class TacCardState extends State<TacCard> {
                   children: <Widget>[
                     Flexible(
                       child: Text(
-                        _target.optimal
+                        _target.optimal!
                             ? 'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}'
                             : 'Stats (est.): ${_target.battleStats}',
                         style: TextStyle(fontSize: 12),
@@ -142,8 +148,7 @@ class TacCardState extends State<TacCard> {
                 ),
               ),
               // LINE 3 (optional)
-              if (_target.currentLife != null)
-                _lifeBar(),
+              if (_target.currentLife != null) _lifeBar(),
               SizedBox(height: 10),
             ],
           ),
@@ -184,33 +189,38 @@ class TacCardState extends State<TacCard> {
         List<String> attacksNotesColor = <String>[];
         for (var tar in myTargetList) {
           attacksIds.add(tar.id.toString());
-          attacksNames.add(tar.username);
-          _target.optimal
+          attacksNames.add(tar.username!);
+          _target.optimal!
               ? attackNotes.add('Stats (est.): ${decimalFormat.format(tar.estimatedStats)}')
               : attackNotes.add('Stats (est.): ${tar.battleStats}');
           attacksNotesColor.add("");
         }
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => TornWebViewAttack(
-              attackIdList: attacksIds,
-              attackNameList: attacksNames,
-              attackNotesList: attackNotes,
-              attackNotesColorList: attacksNotesColor,
-              //attacksCallback: _updateSeveralTargets,
-              showOnlineFactionWarning: true,
-              showNotes: true,
-              showBlankNotes: true,
-            ),
-          ),
-        );
+
+        final bool showNotes = await Prefs().getShowTargetsNotes();
+        final bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
+        final bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+
+        context.read<WebViewProvider>().openBrowserPreference(
+              context: context,
+              url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+              browserTapType: BrowserTapType.chain,
+              isChainingBrowser: true,
+              chainingPayload: ChainingPayload()
+                ..attackIdList = attacksIds
+                ..attackNameList = attacksNames
+                ..attackNotesList = attackNotes
+                ..attackNotesColorList = attacksNotesColor
+                ..showNotes = showNotes
+                ..showBlankNotes = showBlankNotes
+                ..showOnlineFactionWarning = showOnlineFactionWarning,
+            );
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid='
             'attack&user2ID=${_target.id}';
         if (await canLaunchUrl(Uri.parse(url))) {
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      }
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        }
         break;
     }
   }
@@ -242,7 +252,7 @@ class TacCardState extends State<TacCard> {
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.orange[900],
+            contentColor: Colors.orange[900]!,
             duration: Duration(seconds: 5),
             contentPadding: EdgeInsets.all(10),
           );
@@ -280,14 +290,13 @@ class TacCardState extends State<TacCard> {
 
                 if (tryAddTarget.success) {
                   BotToast.showText(
-                    text: HtmlParser.fix(
-                        'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
+                    text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
                         'main targets list in Torn PDA!'),
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.green[700],
+                    contentColor: Colors.green[700]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
@@ -298,7 +307,7 @@ class TacCardState extends State<TacCard> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.red[900],
+                    contentColor: Colors.red[900]!,
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
@@ -322,16 +331,16 @@ class TacCardState extends State<TacCard> {
     Widget abroadWarning = SizedBox.shrink();
     String lifeText = _target.currentLife.toString();
 
-    if (_target.hospital != null && _target.hospital) {
-        lifeBarColor = Colors.red[300];
-        hospitalWarning = Icon(
-          Icons.local_hospital,
-          size: 20,
-          color: Colors.red,
-        );
+    if (_target.hospital != null && _target.hospital!) {
+      lifeBarColor = Colors.red[300]!;
+      hospitalWarning = Icon(
+        Icons.local_hospital,
+        size: 20,
+        color: Colors.red,
+      );
     }
 
-    if (_target.abroad != null && _target.abroad) {
+    if (_target.abroad != null && _target.abroad!) {
       abroadWarning = Icon(
         Icons.airplanemode_active_outlined,
         size: 20,
@@ -342,12 +351,12 @@ class TacCardState extends State<TacCard> {
     // Found players in federal jail with a higher life than their maximum. Correct it if it's the
     // case to avoid issues with percentage bar
     double lifePercentage;
-    if (_target.currentLife / _target.maxLife > 1) {
+    if (_target.currentLife! / _target.maxLife! > 1) {
       lifePercentage = 1;
-    } else if (_target.currentLife / _target.maxLife > 1) {
+    } else if (_target.currentLife! / _target.maxLife! > 1) {
       lifePercentage = 0;
     } else {
-      lifePercentage = _target.currentLife / _target.maxLife;
+      lifePercentage = _target.currentLife! / _target.maxLife!;
     }
 
     return Padding(
@@ -360,8 +369,8 @@ class TacCardState extends State<TacCard> {
             style: TextStyle(fontSize: 12),
           ),
           LinearPercentIndicator(
-                    padding: EdgeInsets.all(0),
-                              barRadius: Radius.circular(10),
+            padding: EdgeInsets.all(0),
+            barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 12,
             progressColor: lifeBarColor,
@@ -378,4 +387,3 @@ class TacCardState extends State<TacCard> {
     );
   }
 }
-*/

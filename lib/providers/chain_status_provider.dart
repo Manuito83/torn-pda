@@ -262,7 +262,7 @@ class ChainStatusProvider extends ChangeNotifier {
       _currentSecondsCounter--;
     }
     if (!_modelError) {
-      if (chainModel!.chain!.cooldown! > 0) {
+      if (chainModel!.chain!.cooldown > 0) {
         _refreshCooldownClock(currentSecondsCounter);
       } else {
         _refreshChainClock(currentSecondsCounter);
@@ -274,12 +274,12 @@ class ChainStatusProvider extends ChangeNotifier {
     if (chainModel == null) return;
 
     // Adapt API calls depending on the Chain count
-    if ((chainModel!.chain!.current! < 10 || chainModel!.chain!.cooldown! > 0) && _currentApiCallPeriod != 30) {
+    if ((chainModel!.chain!.current < 10 || chainModel!.chain!.cooldown > 0) && _currentApiCallPeriod != 30) {
       _tickerCallChainApi?.cancel();
       _currentApiCallPeriod = 30;
       _tickerCallChainApi = Timer.periodic(const Duration(seconds: 30), (Timer t) => _getAllStatus());
       log("Decreasing Chain Status calls to every 30 seconds");
-    } else if (chainModel!.chain!.current! >= 10 && _currentApiCallPeriod != 10) {
+    } else if (chainModel!.chain!.current >= 10 && _currentApiCallPeriod != 10) {
       _tickerCallChainApi?.cancel();
       _currentApiCallPeriod = 10;
       _tickerCallChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
@@ -324,51 +324,51 @@ class ChainStatusProvider extends ChangeNotifier {
         _lastChainCount = 0;
         _currentSecondsCounter = 0;
         _refreshChainClock(currentSecondsCounter);
-      } else if (chainModel!.chain!.cooldown! > 0) {
+      } else if (chainModel!.chain!.cooldown > 0) {
         // OPTION 2, WE ARE WITH COOLDOWN
         // If current seconds is zero, is because we are entering the app,
         // so, perform an update
         if (currentSecondsCounter == 0) {
-          _currentSecondsCounter = chainModel!.chain!.cooldown!;
-          _refreshCooldownClock(chainModel!.chain!.cooldown!);
+          _currentSecondsCounter = chainModel!.chain!.cooldown;
+          _refreshCooldownClock(chainModel!.chain!.cooldown);
         }
         // Thereafter, only update if what we get from the API is below the
         // current automatic timer, or the last thing we have is chaining
-        if (chainModel!.chain!.cooldown! < currentSecondsCounter || _wereWeChaining) {
-          _currentSecondsCounter = chainModel!.chain!.cooldown!;
-          _refreshCooldownClock(chainModel!.chain!.cooldown!);
+        if (chainModel!.chain!.cooldown < currentSecondsCounter || _wereWeChaining) {
+          _currentSecondsCounter = chainModel!.chain!.cooldown;
+          _refreshCooldownClock(chainModel!.chain!.cooldown);
           _wereWeChaining = false;
         }
-      } else if (chainModel!.chain!.current! < 10) {
+      } else if (chainModel!.chain!.current < 10) {
         // OPTION 3, CHAIN UNDER 10
         // Update if for some reason the count in the app is delayed
         // and the real timer is less in Torn
-        if (chainModel!.chain!.timeout! < currentSecondsCounter) {
-          _currentSecondsCounter = chainModel!.chain!.timeout!;
+        if (chainModel!.chain!.timeout < currentSecondsCounter) {
+          _currentSecondsCounter = chainModel!.chain!.timeout;
           _refreshChainClock(currentSecondsCounter);
         }
         // Below 10, update count but only update timer if it was at 0
         // at the beginning (otherwise count won't start)
-        if (chainModel!.chain!.current! > _lastChainCount) {
+        if (chainModel!.chain!.current > _lastChainCount) {
           if (currentSecondsCounter == 0) {
-            _currentSecondsCounter = chainModel!.chain!.timeout!;
+            _currentSecondsCounter = chainModel!.chain!.timeout;
           }
-          _lastChainCount = chainModel!.chain!.current!;
+          _lastChainCount = chainModel!.chain!.current;
           _refreshChainClock(currentSecondsCounter);
         }
       } else {
         // OPTION 4, CHAIN OF 10 OR MORE
         // Check if counts are different
         _wereWeChaining = true;
-        if (chainModel!.chain!.current! > _lastChainCount) {
-          _currentSecondsCounter = chainModel!.chain!.timeout!;
-          _lastChainCount = chainModel!.chain!.current!;
+        if (chainModel!.chain!.current > _lastChainCount) {
+          _currentSecondsCounter = chainModel!.chain!.timeout;
+          _lastChainCount = chainModel!.chain!.current;
           _refreshChainClock(currentSecondsCounter);
         } else {
           // Else, even if the count has not changed,
           // take a look at the timer, in case it's delayed and update
-          if (chainModel!.chain!.timeout! < currentSecondsCounter) {
-            _currentSecondsCounter = chainModel!.chain!.timeout!;
+          if (chainModel!.chain!.timeout < currentSecondsCounter) {
+            _currentSecondsCounter = chainModel!.chain!.timeout;
             _refreshChainClock(currentSecondsCounter);
           }
         }
@@ -396,7 +396,7 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     // If under cooldown, apply blue color and return
-    if (chainModel!.chain!.cooldown! > 0) {
+    if (chainModel!.chain!.cooldown > 0) {
       if (_chainWatcherDefcon != WatchDefcon.cooldown) {
         _chainWatcherDefcon = WatchDefcon.cooldown;
         _borderColor = Colors.lightBlue[300]!;
@@ -405,7 +405,7 @@ class ChainStatusProvider extends ChangeNotifier {
       return;
     }
 
-    if (chainModel!.chain!.current! >= 10 && currentSecondsCounter > 1) {
+    if (chainModel!.chain!.current >= 10 && currentSecondsCounter > 1) {
       if (panicModeActive) {
         // PANIC MODE LEVEL
         if (currentSecondsCounter <= _panicValue) {
@@ -1761,7 +1761,7 @@ class ChainStatusProvider extends ChangeNotifier {
         (!widgetVisible &&
             !watcherActive &&
             ((chainModel!.chain!.current == 0 && chainModel!.chain!.timeout == 0) ||
-                _chainModel!.chain!.cooldown! > 0))) {
+                _chainModel!.chain!.cooldown > 0))) {
       deactivateStatus();
     }
   }

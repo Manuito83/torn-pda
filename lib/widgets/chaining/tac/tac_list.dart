@@ -1,4 +1,3 @@
-/*
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -13,7 +12,7 @@ class TacList extends StatelessWidget {
   final List<TacTarget> targets;
   final TacProvider tacProvider;
 
-  TacList({@required this.targets, @required this.tacProvider});
+  TacList({required this.targets, required this.tacProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -43,4 +42,3 @@ class TacList extends StatelessWidget {
     return filteredCards;
   }
 }
-*/

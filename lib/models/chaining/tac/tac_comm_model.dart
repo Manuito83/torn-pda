@@ -83,3 +83,52 @@ class Target {
         "respect": respect,
       };
 }
+
+class TacOutModel {
+  TacOutModel({
+    required this.userId,
+    required this.password,
+    required this.minLevel,
+    required this.maxLevel,
+    required this.userBattleScore,
+    required this.minFF,
+    required this.maxFF,
+    required this.numberRequested,
+    required this.pdaBuild,
+  });
+  late final int userId;
+  late final String password;
+  late final int minLevel;
+  late final int maxLevel;
+  late final int userBattleScore;
+  late final int minFF;
+  late final int maxFF;
+  late final int numberRequested;
+  late final int pdaBuild;
+
+  TacOutModel.fromJson(Map<String, dynamic> json) {
+    userId = json['userId'];
+    password = json['password'];
+    minLevel = json['minLevel'];
+    maxLevel = json['maxLevel'];
+    userBattleScore = json['userBattleScore'];
+    minFF = json['minFF'];
+    maxFF = json['maxFF'];
+    numberRequested = json['numberRequested'];
+    pdaBuild = json['pdaBuild'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data['userId'] = userId;
+    data['password'] = password;
+    data['minLevel'] = minLevel;
+    data['maxLevel'] = maxLevel;
+    data['userBattleScore'] = userBattleScore;
+    data['minFF'] = minFF;
+    data['maxFF'] = maxFF;
+    data['numberRequested'] = numberRequested;
+    data['pdaBuild'] = pdaBuild;
+    return data;
+  }
+}
