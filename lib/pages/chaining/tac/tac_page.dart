@@ -55,6 +55,7 @@ class TacPageState extends State<TacPage> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late UserDetailsProvider _userProvider;
+  late WebViewProvider _webViewProvider;
 
   final _chainWidgetKey = GlobalKey();
 
@@ -120,7 +121,9 @@ class TacPageState extends State<TacPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
@@ -630,8 +633,8 @@ class TacPageState extends State<TacPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (context.read<WebViewProvider>().webViewSplitActive &&
-                    context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -639,7 +642,7 @@ class TacPageState extends State<TacPage> {
               }
             },
           ),
-          if (!context.read<WebViewProvider>().webViewSplitActive) PdaBrowserIcon()
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon()
         ],
       ),
       actions: <Widget>[
@@ -830,7 +833,7 @@ class TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://tornattackcentral.eu/premium.php';
-                await _webViewProvider.splitScreenPosition.openBrowserPreference(
+                await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
                       browserTapType: BrowserTapType.short,
@@ -847,7 +850,7 @@ class TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                await _webViewProvider.splitScreenPosition.openBrowserPreference(
+                await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
                       browserTapType: BrowserTapType.short,
@@ -901,7 +904,7 @@ class TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://tornattackcentral.eu';
-                  await _webViewProvider.splitScreenPosition.openBrowserPreference(
+                  await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: url,
                         browserTapType: BrowserTapType.short,
@@ -915,7 +918,7 @@ class TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                  await _webViewProvider.splitScreenPosition.openBrowserPreference(
+                  await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: url,
                         browserTapType: BrowserTapType.short,
@@ -929,7 +932,7 @@ class TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
-                  await _webViewProvider.splitScreenPosition.openBrowserPreference(
+                  await context.read<WebViewProvider>().openBrowserPreference(
                         context: context,
                         url: url,
                         browserTapType: BrowserTapType.short,
