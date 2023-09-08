@@ -39,12 +39,12 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 336 - 31/08/2023
+    // Build 337 - 07/09/2023
 
     // VERSION 3.1.5
     final v3_1_5 = ChangeLogItem();
     v3_1_5.version = 'Torn PDA v3.1.5';
-    v3_1_5.date = '15 SEP 2023';
+    v3_1_5.date = '20 SEP 2023';
     const String feat3_1_5_1 = "Added split screen mode between browser and app";
     const String feat3_1_5_2 = "Browser: long press in title opens shortcuts (default style)";
     const String feat3_1_5_3 = "Browser: the terminal can now be cleared";
