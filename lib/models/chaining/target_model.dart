@@ -361,7 +361,7 @@ class Competition {
   String? image;
   String? name;
   double? score;
-  int? team;
+  dynamic team;
   String? text;
   int? total;
   int? treatsCollectedTotal;
