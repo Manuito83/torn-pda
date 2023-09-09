@@ -112,6 +112,7 @@ class WebViewFull extends StatefulWidget {
   //final bool dialog;
   final bool useTabs;
   final bool chatRemovalActive;
+
   @override
   final GlobalKey<WebViewFullState>? key;
 

@@ -36,7 +36,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
     // Fires when widget is updated
     @Override
     public void onUpdate(@NonNull Context context, @NonNull AppWidgetManager appWidgetManager, int[] appWidgetIds,
-                         @NonNull SharedPreferences widgetData) {
+            @NonNull SharedPreferences widgetData) {
 
         prefs = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE);
         for (int widgetId : appWidgetIds) {
@@ -48,10 +48,14 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
     private void createRemoteViews(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         boolean dark = prefs.getBoolean("darkMode", false);
 
-        RemoteViews oneRowNarrow = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_one_row_narrow_dark : R.layout.bars_layout_one_row_narrow);
-        RemoteViews oneRowWide = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_one_row_wide_dark : R.layout.bars_layout_one_row_wide);
-        RemoteViews twoRowNarrow = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_two_row_narrow_dark : R.layout.bars_layout_two_row_narrow);
-        RemoteViews twoRowWide = new RemoteViews(context.getPackageName(), dark ? R.layout.bars_layout_two_row_wide_dark : R.layout.bars_layout_two_row_wide);
+        RemoteViews oneRowNarrow = new RemoteViews(context.getPackageName(),
+                dark ? R.layout.bars_layout_one_row_narrow_dark : R.layout.bars_layout_one_row_narrow);
+        RemoteViews oneRowWide = new RemoteViews(context.getPackageName(),
+                dark ? R.layout.bars_layout_one_row_wide_dark : R.layout.bars_layout_one_row_wide);
+        RemoteViews twoRowNarrow = new RemoteViews(context.getPackageName(),
+                dark ? R.layout.bars_layout_two_row_narrow_dark : R.layout.bars_layout_two_row_narrow);
+        RemoteViews twoRowWide = new RemoteViews(context.getPackageName(),
+                dark ? R.layout.bars_layout_two_row_wide_dark : R.layout.bars_layout_two_row_wide);
 
         oneRowNarrow = loadWidgetData(oneRowNarrow, context);
         oneRowWide = loadWidgetData(oneRowWide, context);
@@ -82,7 +86,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         boolean backgroundServiceRunning = prefs.getBoolean("background_active", false);
 
         // ## Open App on Widget Click with no URI ##
-        PendingIntent openAppIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,null);
+        PendingIntent openAppIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, null);
         view.setOnClickPendingIntent(R.id.widget_status_green, openAppIntent);
         view.setOnClickPendingIntent(R.id.widget_status_red, openAppIntent);
         view.setOnClickPendingIntent(R.id.widget_status_blue, openAppIntent);
@@ -91,31 +95,40 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         view.setOnClickPendingIntent(R.id.widget_pda_logo_error, openAppIntent);
 
         // ## Intents that need to be capture by the app (in Drawer) with URI
-        PendingIntent energyBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://energy-box-clicked"));
+        PendingIntent energyBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://energy:box:clicked"));
         view.setOnClickPendingIntent(R.id.widget_energy_box, energyBoxIntent);
 
-        PendingIntent nerveBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://nerve-box-clicked"));
+        PendingIntent nerveBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://nerve:box:clicked"));
         view.setOnClickPendingIntent(R.id.widget_nerve_box, nerveBoxIntent);
 
-        PendingIntent happyBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://happy-box-clicked"));
+        PendingIntent happyBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://happy:box:clicked"));
         view.setOnClickPendingIntent(R.id.widget_happy_box, happyBoxIntent);
 
-        PendingIntent lifeBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://life-box-clicked"));
+        PendingIntent lifeBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://life:box:clicked"));
         view.setOnClickPendingIntent(R.id.widget_life_box, lifeBoxIntent);
 
-        PendingIntent chainBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://chain-box-clicked"));
+        PendingIntent chainBoxIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://chain:box:clicked"));
         view.setOnClickPendingIntent(R.id.widget_chain_box, chainBoxIntent);
 
-        PendingIntent blueStatusIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-clicked"));
+        PendingIntent blueStatusIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://blue:status:clicked"));
         view.setOnClickPendingIntent(R.id.widget_status_blue, blueStatusIntent);
 
-        PendingIntent messagesIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://messages-clicked"));
+        PendingIntent messagesIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://messages:clicked"));
         view.setOnClickPendingIntent(R.id.widget_main_messages_box, messagesIntent);
 
-        PendingIntent eventsIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://events-clicked"));
+        PendingIntent eventsIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://events:clicked"));
         view.setOnClickPendingIntent(R.id.widget_main_events_box, eventsIntent);
 
-        PendingIntent emptyShortcutsIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://empty-shortcuts-clicked"));
+        PendingIntent emptyShortcutsIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class,
+                Uri.parse("pdaWidget://empty:shortcuts:clicked"));
         view.setOnClickPendingIntent(R.id.widget_shortcuts_empty_box, emptyShortcutsIntent);
 
         // ## MAIN LAYOUT ##
@@ -189,7 +202,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_status_red, View.GONE);
                 view.setViewVisibility(R.id.widget_status_blue, View.VISIBLE);
 
-                PendingIntent blueStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-icon-clicked"));
+                PendingIntent blueStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://blue:status:icon:clicked"));
                 view.setOnClickPendingIntent(R.id.widget_status_icon_main, blueStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_blue, blueStatusIconIntent);
                 // Abroad AND IN HOSPITAL
@@ -201,15 +215,16 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_status_blue, View.GONE);
                 view.setViewVisibility(R.id.widget_status_extra_icon_main, View.VISIBLE);
 
-                // Report blue status clicked, even though we are in hospital, so that the browser opens to the country
-                PendingIntent abroadHospitalStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://blue-status-icon-clicked"));
+                // Report blue status clicked, even though we are in hospital, so that the
+                // browser opens to the country
+                PendingIntent abroadHospitalStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://blue:status:icon:clicked"));
                 view.setOnClickPendingIntent(R.id.widget_status_icon_main, abroadHospitalStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_red, abroadHospitalStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_extra_icon_main, abroadHospitalStatusIconIntent);
             }
 
-
-        // We are NOT ABROAD, AND RED
+            // We are NOT ABROAD, AND RED
         } else if (statusColor.equals("red")) {
             view.setTextViewText(R.id.widget_status_red, status);
 
@@ -219,17 +234,19 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
 
             if (status.contains("Hospital")) {
                 view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.hospital);
-                PendingIntent hospitalStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://hospital-status-icon-clicked"));
+                PendingIntent hospitalStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://hospital:status:icon:clicked"));
                 view.setOnClickPendingIntent(R.id.widget_status_icon_main, hospitalStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_red, hospitalStatusIconIntent);
             } else if (status.contains("Jail")) {
                 view.setImageViewResource(R.id.widget_status_icon_main, R.drawable.jail);
-                PendingIntent jailStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://jail-status-icon-clicked"));
+                PendingIntent jailStatusIconIntent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://jail:status:icon:clicked"));
                 view.setOnClickPendingIntent(R.id.widget_status_icon_main, jailStatusIconIntent);
                 view.setOnClickPendingIntent(R.id.widget_status_red, jailStatusIconIntent);
             }
 
-        // We are OKAY
+            // We are OKAY
         } else {
             view.setViewVisibility(R.id.widget_status_green, View.VISIBLE);
             view.setViewVisibility(R.id.widget_status_red, View.GONE);
@@ -332,7 +349,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             view.setViewVisibility(R.id.widget_icon_reload_active, View.GONE);
         }
 
-        PendingIntent reloadIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context, Uri.parse("pdaWidget://reload-clicked"), "Reloading...");
+        PendingIntent reloadIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context,
+                Uri.parse("pdaWidget://reload:clicked"), "Reloading...");
         view.setOnClickPendingIntent(R.id.widget_update_box, reloadIntent);
 
         // ## DRUGS
@@ -345,7 +363,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         view.setViewVisibility(R.id.widget_icon_drugs4, View.INVISIBLE);
         view.setViewVisibility(R.id.widget_icon_drugs5, View.INVISIBLE);
         view.setViewVisibility(R.id.widget_drugs_box, View.VISIBLE);
-        PendingIntent drugIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context, Uri.parse("pdaWidget://drug-clicked"), drugString);
+        PendingIntent drugIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context,
+                Uri.parse("pdaWidget://drug:clicked"), drugString);
         view.setOnClickPendingIntent(R.id.widget_drugs_box, drugIntent);
         if (drugLevel == 0) {
             view.setViewVisibility(R.id.widget_drugs_box, View.INVISIBLE);
@@ -371,7 +390,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         view.setViewVisibility(R.id.widget_icon_medical4, View.INVISIBLE);
         view.setViewVisibility(R.id.widget_icon_medical5, View.INVISIBLE);
         view.setViewVisibility(R.id.widget_medical_box, View.VISIBLE);
-        PendingIntent medicalIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context, Uri.parse("pdaWidget://medical-clicked"), medicalString);
+        PendingIntent medicalIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context,
+                Uri.parse("pdaWidget://medical:clicked"), medicalString);
         view.setOnClickPendingIntent(R.id.widget_medical_box, medicalIntent);
         if (medicalLevel == 0) {
             view.setViewVisibility(R.id.widget_medical_box, View.INVISIBLE);
@@ -397,7 +417,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         view.setViewVisibility(R.id.widget_icon_booster4, View.INVISIBLE);
         view.setViewVisibility(R.id.widget_icon_booster5, View.INVISIBLE);
         view.setViewVisibility(R.id.widget_booster_box, View.VISIBLE);
-        PendingIntent boosterIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context, Uri.parse("pdaWidget://booster-clicked"), boosterString);
+        PendingIntent boosterIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context,
+                Uri.parse("pdaWidget://booster:clicked"), boosterString);
         view.setOnClickPendingIntent(R.id.widget_booster_box, boosterIntent);
         if (boosterLevel == 0) {
             view.setViewVisibility(R.id.widget_booster_box, View.INVISIBLE);
@@ -420,14 +441,15 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             view.setViewVisibility(R.id.widget_shortcuts_empty_box, View.VISIBLE);
         } else {
             view.setViewVisibility(R.id.widget_shortcuts_empty_box, View.GONE);
-            
+
             // Short 1
             String shortcut1_name = prefs.getString("shortcut1_name", "");
             if (!shortcut1_name.isEmpty()) {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut1_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut1_text, shortcut1_name);
                 String shortcut1_url = prefs.getString("shortcut1_url", "");
-                PendingIntent shortcut1_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut1_url));
+                PendingIntent shortcut1_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut1_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut1_text, shortcut1_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut1_text, View.INVISIBLE);
@@ -439,7 +461,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut2_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut2_text, shortcut2_name);
                 String shortcut2_url = prefs.getString("shortcut2_url", "");
-                PendingIntent shortcut2_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut2_url));
+                PendingIntent shortcut2_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut2_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut2_text, shortcut2_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut2_text, View.INVISIBLE);
@@ -451,7 +474,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut3_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut3_text, shortcut3_name);
                 String shortcut3_url = prefs.getString("shortcut3_url", "");
-                PendingIntent shortcut3_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut3_url));
+                PendingIntent shortcut3_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut3_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut3_text, shortcut3_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut3_text, View.INVISIBLE);
@@ -463,7 +487,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut4_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut4_text, shortcut4_name);
                 String shortcut4_url = prefs.getString("shortcut4_url", "");
-                PendingIntent shortcut4_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut4_url));
+                PendingIntent shortcut4_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut4_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut4_text, shortcut4_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut4_text, View.INVISIBLE);
@@ -475,7 +500,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut5_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut5_text, shortcut5_name);
                 String shortcut5_url = prefs.getString("shortcut5_url", "");
-                PendingIntent shortcut5_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut5_url));
+                PendingIntent shortcut5_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut5_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut5_text, shortcut5_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut5_text, View.INVISIBLE);
@@ -487,7 +513,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut6_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut6_text, shortcut6_name);
                 String shortcut6_url = prefs.getString("shortcut6_url", "");
-                PendingIntent shortcut6_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut6_url));
+                PendingIntent shortcut6_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut6_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut6_text, shortcut6_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut6_text, View.INVISIBLE);
@@ -499,7 +526,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut7_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut7_text, shortcut7_name);
                 String shortcut7_url = prefs.getString("shortcut7_url", "");
-                PendingIntent shortcut7_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut7_url));
+                PendingIntent shortcut7_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut7_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut7_text, shortcut7_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut7_text, View.INVISIBLE);
@@ -511,7 +539,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut8_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut8_text, shortcut8_name);
                 String shortcut8_url = prefs.getString("shortcut8_url", "");
-                PendingIntent shortcut8_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut8_url));
+                PendingIntent shortcut8_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut8_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut8_text, shortcut8_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut8_text, View.INVISIBLE);
@@ -523,7 +552,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut9_text, View.VISIBLE);
                 view.setTextViewText(R.id.widget_shortcuts_shortcut9_text, shortcut9_name);
                 String shortcut9_url = prefs.getString("shortcut9_url", "");
-                PendingIntent shortcut9_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context, MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut9_url));
+                PendingIntent shortcut9_intent = HomeWidgetLaunchIntent.INSTANCE.getActivity(context,
+                        MainActivity.class, Uri.parse("pdaWidget://shortcut:" + shortcut9_url));
                 view.setOnClickPendingIntent(R.id.widget_shortcuts_shortcut9_text, shortcut9_intent);
             } else {
                 view.setViewVisibility(R.id.widget_shortcuts_shortcut9_text, View.INVISIBLE);
@@ -538,7 +568,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             errorVis = View.GONE;
         } else {
             errorVis = View.VISIBLE;
-            // If updates are not active, we just positioned the widget, so we don't need the "Reload"
+            // If updates are not active, we just positioned the widget, so we don't need
+            // the "Reload"
             // text and icons, since the only thing we need to do is launch the app
             if (!backgroundServiceRunning) {
                 view.setViewVisibility(R.id.widget_icon_reload_error, View.GONE);

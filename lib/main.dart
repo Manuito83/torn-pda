@@ -298,121 +298,114 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
     );
 
-    final MediaQuery mq = MediaQuery(
-      data: MediaQueryData.fromView(View.of(context)),
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: MaterialApp(
-          title: 'Torn PDA',
-          theme: theme,
-          debugShowCheckedModeBanner: false,
-          builder: BotToastInit(),
-          navigatorObservers: [BotToastNavigatorObserver()],
-          home: WillPopScope(
-            onWillPop: () async {
-              final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
-
-              if (w.browserShowInForeground) {
-                // Browser is in front, delegate the call
-                w.tryGoBack();
-                return false;
-              } else {
-                // App is in front
-                //_webViewProvider.willPopCallbackStream.add(true);
-                final bool shouldPop = await _willPopFromApp();
-                if (shouldPop) return true;
-                return false;
-              }
-            },
-            child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
-              if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
-                  _webViewProvider.webViewSplitActive &&
-                  screenIsWide) {
-                return Stack(
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: GetMaterialApp(
-                            debugShowCheckedModeBanner: false,
-                            theme: theme,
-                            home: DrawerPage(),
-                          ),
-                        ),
-                        Flexible(
-                          child: wProvider.stackView,
-                        ),
-                      ],
-                    ),
-                    const AppBorder(),
-                  ],
-                );
-              } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
-                  _webViewProvider.webViewSplitActive &&
-                  screenIsWide) {
-                return Stack(
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: wProvider.stackView,
-                        ),
-                        Flexible(
-                          child: GetMaterialApp(
-                            debugShowCheckedModeBanner: false,
-                            theme: theme,
-                            home: DrawerPage(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const AppBorder(),
-                  ],
-                );
-              } else {
-                return Stack(
-                  children: [
-                    GetMaterialApp(
-                      debugShowCheckedModeBanner: false,
-                      theme: theme,
-                      home: DrawerPage(),
-                    ),
-                    Visibility(
-                      maintainState: true,
-                      visible: wProvider.browserShowInForeground,
-                      child: wProvider.stackView,
-                    ),
-                    const AppBorder(),
-                  ],
-                );
-              }
-            }),
-          ),
-        ),
-      ),
-    );
-
-    final orientation = mq.data.orientation;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: _themeProvider.statusBar,
-        systemNavigationBarColor:
-            orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
-        systemNavigationBarIconBrightness: orientation == Orientation.landscape
+        systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
+            ? _themeProvider.canvas
+            : _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
             ? _themeProvider.currentTheme == AppTheme.light
                 ? Brightness.dark
                 : Brightness.light
             : Brightness.light,
         statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
-            ? orientation == Orientation.portrait
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Brightness.dark
                 : Brightness.light
             : Brightness.dark,
-        statusBarIconBrightness: orientation == Orientation.portrait ? Brightness.light : Brightness.light,
+        statusBarIconBrightness:
+            MediaQuery.orientationOf(context) == Orientation.portrait ? Brightness.light : Brightness.light,
       ),
     );
 
-    return mq;
+    return MaterialApp(
+      title: 'Torn PDA',
+      theme: theme,
+      debugShowCheckedModeBanner: false,
+      builder: BotToastInit(),
+      navigatorObservers: [BotToastNavigatorObserver()],
+      home: WillPopScope(
+        onWillPop: () async {
+          final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+
+          if (w.browserShowInForeground) {
+            // Browser is in front, delegate the call
+            w.tryGoBack();
+            return false;
+          } else {
+            // App is in front
+            //_webViewProvider.willPopCallbackStream.add(true);
+            final bool shouldPop = await _willPopFromApp();
+            if (shouldPop) return true;
+            return false;
+          }
+        },
+        child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
+          if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
+              _webViewProvider.webViewSplitActive &&
+              screenIsWide) {
+            return Stack(
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: GetMaterialApp(
+                        debugShowCheckedModeBanner: false,
+                        theme: theme,
+                        home: DrawerPage(),
+                      ),
+                    ),
+                    Flexible(
+                      child: wProvider.stackView,
+                    ),
+                  ],
+                ),
+                const AppBorder(),
+              ],
+            );
+          } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+              _webViewProvider.webViewSplitActive &&
+              screenIsWide) {
+            return Stack(
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: wProvider.stackView,
+                    ),
+                    Flexible(
+                      child: GetMaterialApp(
+                        debugShowCheckedModeBanner: false,
+                        theme: theme,
+                        home: DrawerPage(),
+                      ),
+                    ),
+                  ],
+                ),
+                const AppBorder(),
+              ],
+            );
+          } else {
+            return Stack(
+              children: [
+                GetMaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  theme: theme,
+                  home: DrawerPage(),
+                ),
+                Visibility(
+                  maintainState: true,
+                  visible: wProvider.browserShowInForeground,
+                  child: wProvider.stackView,
+                ),
+                const AppBorder(),
+              ],
+            );
+          }
+        }),
+      ),
+    );
   }
 
   Future<bool> _willPopFromApp() async {

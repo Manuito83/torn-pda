@@ -29,6 +29,7 @@ dependencies:
   cloud_functions: 4.0.7
   connectivity_plus: 2.3.7
   cookie_jar: 3.0.1
+  crypto: 3.0.3
   cupertino_icons: 1.0.2
   dart_ping: 8.0.1
   dart_ping_ios: 3.0.0

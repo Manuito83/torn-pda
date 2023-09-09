@@ -2753,7 +2753,7 @@ class SettingsPageState extends State<SettingsPage> {
 
           // Update the home widget if it's installed
           if (Platform.isAndroid) {
-            if ((await pdaWidget_numberInstalled())! > 0) {
+            if ((await pdaWidget_numberInstalled()) > 0) {
               pdaWidget_fetchData();
             }
           }
