@@ -4877,9 +4877,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
 
         // Refresh events
-        setState(() {
-          _events = List<Event>.from(allEventsResponse);
-        });
+        if (mounted) {
+          setState(() {
+            _events = List<Event>.from(allEventsResponse);
+          });
+        }
       } else {
         // In case of error, return what's saved
         if (mounted) {
