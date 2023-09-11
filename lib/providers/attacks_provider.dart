@@ -9,8 +9,8 @@ import 'package:get/get.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum AttackTypeFilter {
@@ -19,7 +19,7 @@ enum AttackTypeFilter {
 }
 
 class AttacksProvider extends ChangeNotifier {
-  List<Attack> _attacks = [];
+  final List<Attack> _attacks = [];
   UnmodifiableListView<Attack> get allAttacks => UnmodifiableListView(_attacks);
 
   bool _apiError = false;
@@ -34,20 +34,19 @@ class AttacksProvider extends ChangeNotifier {
   AttackTypeFilter _currentTypeFilter = AttackTypeFilter.all;
   AttackTypeFilter get currentTypeFilter => _currentTypeFilter;
 
-  AttackSortType _currentSort;
+  AttackSortType? _currentSort;
 
   String _ownId = '';
 
-  OwnProfileBasic _userDetails;
-  AttacksProvider(this._userDetails);
+  final UserController _u = Get.put(UserController());
 
-  void initializeAttacks() async {
+  Future initializeAttacks() async {
     await restoreSharedPreferences();
-    dynamic attacksResult = await Get.find<ApiCallerController>().getAttacks();
+    final dynamic attacksResult = await Get.find<ApiCallerController>().getAttacks();
     if (attacksResult is AttackModel) {
       _apiError = false;
       _attacks.clear();
-      attacksResult.attacks.forEach((key, thisAttack) {
+      attacksResult.attacks!.forEach((key, thisAttack) {
         // If someone attacked in stealth, it is of no use to us
         if (thisAttack.attackerName != null) {
           // Determine who's the actual target
@@ -78,7 +77,7 @@ class AttacksProvider extends ChangeNotifier {
       green = true;
     }
 
-    if (_attacks.length == 0) {
+    if (_attacks.isEmpty) {
       // At the beginning the list is empty, so we just add a new target
       thisAttack.attackSeriesGreen.add(green);
       _attacks.add(thisAttack);
@@ -86,7 +85,7 @@ class AttacksProvider extends ChangeNotifier {
       bool sameTargetFound = false;
       for (var i = 0; i < _attacks.length; i++) {
         // Skip loop if attacker was anonymous (so that we don't join anonymous attackers together)
-        if (_attacks[i].attackerName.isEmpty) continue;
+        if (_attacks[i].attackerName!.isEmpty) continue;
         if (_attacks[i].targetId == thisAttack.targetId) {
           // If we have attacked the same person more than one
           // add won/lost to the series list, but then do nothing more
@@ -125,14 +124,14 @@ class AttacksProvider extends ChangeNotifier {
         // Also, standardize respect as double
         thisAttack.respectGain = respectGain;
       }
-      double modifiers = thisAttack.modifiers.getTotalModifier;
+      double modifiers = thisAttack.modifiers!.getTotalModifier;
       if (thisAttack.result == Result.MUGGED) {
         modifiers *= 0.75;
       }
-      double baseRespect = respectGain / modifiers;
+      final double baseRespect = respectGain / modifiers;
       // Base respect = (Ln(level) + 1.0)/4.0
       // From the second formula: Level = e^(Base Respect / 4 - 1)
-      double levelD = exp(4 * baseRespect - 1);
+      final double levelD = exp(4 * baseRespect - 1);
       thisAttack.targetLevel = levelD.round();
     } else {
       thisAttack.respectGain = 0;
@@ -162,26 +161,23 @@ class AttacksProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortAttacks(AttackSortType sortType) {
+  void sortAttacks(AttackSortType? sortType) {
     _currentSort = sortType;
     switch (sortType) {
       case AttackSortType.levelDes:
         _attacks.sort((a, b) => b.targetLevel.compareTo(a.targetLevel));
-        break;
       case AttackSortType.levelAsc:
         _attacks.sort((a, b) => a.targetLevel.compareTo(b.targetLevel));
-        break;
       case AttackSortType.respectDes:
         _attacks.sort((a, b) => b.respectGain.compareTo(a.respectGain));
-        break;
       case AttackSortType.respectAsc:
         _attacks.sort((a, b) => a.respectGain.compareTo(b.respectGain));
-        break;
       case AttackSortType.dateDes:
-        _attacks.sort((a, b) => b.timestampEnded.compareTo(a.timestampEnded));
-        break;
+        _attacks.sort((a, b) => b.timestampEnded!.compareTo(a.timestampEnded!));
       case AttackSortType.dateAsc:
-        _attacks.sort((a, b) => a.timestampEnded.compareTo(b.timestampEnded));
+        _attacks.sort((a, b) => a.timestampEnded!.compareTo(b.timestampEnded!));
+      default:
+        _attacks.sort((a, b) => b.timestampEnded!.compareTo(a.timestampEnded!));
         break;
     }
     _saveSortSharedPrefs();
@@ -189,24 +185,21 @@ class AttacksProvider extends ChangeNotifier {
   }
 
   void _saveSortSharedPrefs() {
-    String sortToSave;
+    late String sortToSave;
     switch (_currentSort) {
       case AttackSortType.levelDes:
         sortToSave = 'levelDes';
-        break;
       case AttackSortType.levelAsc:
         sortToSave = 'levelAsc';
-        break;
       case AttackSortType.respectDes:
         sortToSave = 'respectDes';
-        break;
       case AttackSortType.respectAsc:
         sortToSave = 'respectDes';
-        break;
       case AttackSortType.dateAsc:
-        sortToSave = 'dateDes';
-        break;
+        sortToSave = 'dateAsc';
       case AttackSortType.dateDes:
+        sortToSave = 'dateDes';
+      default:
         sortToSave = 'dateDes';
         break;
     }
@@ -215,32 +208,25 @@ class AttacksProvider extends ChangeNotifier {
 
   Future<void> restoreSharedPreferences() async {
     // User key
-    _ownId = _userDetails.playerId.toString();
+    _ownId = _u.apiKey!;
 
     // Attack sort
-    String attackSort = await Prefs().getAttackSort();
+    final String attackSort = await Prefs().getAttackSort();
     switch (attackSort) {
       case '':
-        _currentSort = AttackSortType.levelDes;
-        break;
+        _currentSort = AttackSortType.dateDes;
       case 'levelDes':
         _currentSort = AttackSortType.levelDes;
-        break;
       case 'levelAsc':
         _currentSort = AttackSortType.levelAsc;
-        break;
       case 'respectDes':
         _currentSort = AttackSortType.respectDes;
-        break;
       case 'respectAsc':
         _currentSort = AttackSortType.respectAsc;
-        break;
       case 'dateDes':
         _currentSort = AttackSortType.dateDes;
-        break;
       case 'dateAsc':
         _currentSort = AttackSortType.dateAsc;
-        break;
     }
   }
 }

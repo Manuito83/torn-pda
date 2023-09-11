@@ -38,32 +38,32 @@ class BasicProfileModel {
     this.lastAction,
   });
 
-  String rank;
-  int level;
-  String gender;
-  String property;
-  DateTime signup;
-  int awards;
-  int friends;
-  int enemies;
-  int forumPosts;
-  int karma;
-  int age;
-  String role;
-  int donator;
-  int playerId;
-  String name;
-  int propertyId;
+  String? rank;
+  int? level;
+  String? gender;
+  String? property;
+  DateTime? signup;
+  int? awards;
+  int? friends;
+  int? enemies;
+  int? forumPosts;
+  int? karma;
+  int? age;
+  String? role;
+  int? donator;
+  int? playerId;
+  String? name;
+  int? propertyId;
   dynamic competition;
-  int revivable;
-  Life life;
-  Status status;
-  Job job;
-  Faction faction;
-  Married married;
-  Basicicons basicicons;
-  States states;
-  LastAction lastAction;
+  int? revivable;
+  Life? life;
+  Status? status;
+  Job? job;
+  Faction? faction;
+  Married? married;
+  Basicicons? basicicons;
+  States? states;
+  LastAction? lastAction;
 
   factory BasicProfileModel.fromJson(Map<String, dynamic> json) => BasicProfileModel(
         rank: json["rank"],
@@ -99,7 +99,7 @@ class BasicProfileModel {
         "level": level,
         "gender": gender,
         "property": property,
-        "signup": signup.toIso8601String(),
+        "signup": signup!.toIso8601String(),
         "awards": awards,
         "friends": friends,
         "enemies": enemies,
@@ -113,14 +113,14 @@ class BasicProfileModel {
         "property_id": propertyId,
         "competition": competition,
         "revivable": revivable,
-        "life": life.toJson(),
-        "status": status.toJson(),
-        "job": job.toJson(),
-        "faction": faction.toJson(),
-        "married": married.toJson(),
-        "basicicons": basicicons.toJson(),
-        "states": states.toJson(),
-        "last_action": lastAction.toJson(),
+        "life": life!.toJson(),
+        "status": status!.toJson(),
+        "job": job!.toJson(),
+        "faction": faction!.toJson(),
+        "married": married!.toJson(),
+        "basicicons": basicicons!.toJson(),
+        "states": states!.toJson(),
+        "last_action": lastAction!.toJson(),
       };
 }
 
@@ -135,13 +135,13 @@ class Basicicons {
     this.icon35,
   });
 
-  String icon5;
-  String icon6;
-  String icon3;
-  String icon8;
-  String icon27;
-  String icon9;
-  String icon35;
+  String? icon5;
+  String? icon6;
+  String? icon3;
+  String? icon8;
+  String? icon27;
+  String? icon9;
+  String? icon35;
 
   factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
         icon5: json["icon5"],
@@ -173,11 +173,11 @@ class Faction {
     this.factionTag,
   });
 
-  String position;
-  int factionId;
-  int daysInFaction;
-  String factionName;
-  String factionTag;
+  String? position;
+  int? factionId;
+  int? daysInFaction;
+  String? factionName;
+  String? factionTag;
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
         position: json["position"],
@@ -205,11 +205,11 @@ class Job {
     this.companyType,
   });
 
-  String job;
-  String position;
-  int companyId;
-  String companyName;
-  int companyType;
+  String? job;
+  String? position;
+  int? companyId;
+  String? companyName;
+  int? companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         job: json["job"],
@@ -235,9 +235,9 @@ class LastAction {
     this.relative,
   });
 
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
         status: json["status"],
@@ -262,12 +262,12 @@ class Life {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Life.fromJson(Map<String, dynamic> json) => Life(
         current: json["current"],
@@ -295,9 +295,9 @@ class Married {
     this.duration,
   });
 
-  int spouseId;
-  String spouseName;
-  int duration;
+  int? spouseId;
+  String? spouseName;
+  int? duration;
 
   factory Married.fromJson(Map<String, dynamic> json) => Married(
         spouseId: json["spouse_id"],
@@ -318,8 +318,8 @@ class States {
     this.jailTimestamp,
   });
 
-  int hospitalTimestamp;
-  int jailTimestamp;
+  int? hospitalTimestamp;
+  int? jailTimestamp;
 
   factory States.fromJson(Map<String, dynamic> json) => States(
         hospitalTimestamp: json["hospital_timestamp"],
@@ -341,11 +341,11 @@ class Status {
     this.until,
   });
 
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
+  String? description;
+  String? details;
+  String? state;
+  String? color;
+  int? until;
 
   factory Status.fromJson(Map<String, dynamic> json) => Status(
         description: json["description"],

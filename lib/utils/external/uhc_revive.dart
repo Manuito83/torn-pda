@@ -1,9 +1,6 @@
 // Dart imports:
 import 'dart:convert';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:http/http.dart' as http;
 
@@ -12,30 +9,30 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/revive_services/uhc_revive_model.dart';
 
 class UhcRevive {
-  int playerId;
-  String playerName;
-  String playerFaction;
-  int playerFactionId;
+  int? playerId;
+  String? playerName;
+  String? playerFaction;
+  int? playerFactionId;
 
   UhcRevive({
-    @required this.playerId,
-    @required this.playerName,
-    @required this.playerFaction,
-    @required this.playerFactionId,
+    required this.playerId,
+    required this.playerName,
+    required this.playerFaction,
+    required this.playerFactionId,
   });
 
-  Future<String> callMedic() async {
-    var modelOut = UhcReviveModel()
+  Future<String?> callMedic() async {
+    final modelOut = UhcReviveModel()
       ..userID = playerId
       ..userName = "$playerName"
       ..factionName = playerFaction
       ..factionID = playerFactionId
       ..source = "Torn PDA v$appVersion";
 
-    var bodyOut = uhcReviveModelToJson(modelOut);
+    final bodyOut = uhcReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         Uri.parse('https://elimination.me/api/request'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -46,7 +43,7 @@ class UhcRevive {
       if (response.statusCode == 200) {
         return "200";
       } else {
-        var details = json.decode(response.body);
+        final details = json.decode(response.body);
         return details["reason"];
       }
     } catch (e) {

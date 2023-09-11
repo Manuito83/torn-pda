@@ -8,13 +8,13 @@ import 'package:torn_pda/widgets/alerts/share_price_dialog.dart';
 class SharePriceCard extends StatefulWidget {
   final StockMarketStock stock;
 
-  const SharePriceCard({@required this.stock});
+  const SharePriceCard({required this.stock});
 
   @override
-  _SharePriceCardState createState() => _SharePriceCardState();
+  SharePriceCardState createState() => SharePriceCardState();
 }
 
-class _SharePriceCardState extends State<SharePriceCard> {
+class SharePriceCardState extends State<SharePriceCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -22,9 +22,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
       child: Card(
         shape: RoundedRectangleBorder(
           side: BorderSide(
-            color: widget.stock.alertGain != null || widget.stock.alertLoss != null
-                ? Colors.blue
-                : Colors.transparent,
+            color: widget.stock.alertGain != null || widget.stock.alertLoss != null ? Colors.blue : Colors.transparent,
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(4.0),
@@ -32,10 +30,10 @@ class _SharePriceCardState extends State<SharePriceCard> {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: ExpandablePanel(
-            theme: ExpandableThemeData(
+            theme: const ExpandableThemeData(
               hasIcon: false,
             ),
-            collapsed: null,
+            collapsed: Container(),
             expanded: expanded(),
             header: header(),
           ),
@@ -45,13 +43,13 @@ class _SharePriceCardState extends State<SharePriceCard> {
   }
 
   Widget header() {
-    Widget gain = SizedBox.shrink();
+    Widget gain = const SizedBox.shrink();
     if (widget.stock.owned == 1) {
-      var priceGain = widget.stock.gain.toInt();
+      final priceGain = widget.stock.gain!.toInt();
       gain = Padding(
         padding: const EdgeInsets.only(left: 10),
         child: Text(
-          "[\$${formatProfit(inputInt: priceGain.abs())}, ${widget.stock.percentageGain.toStringAsFixed(2)}%]",
+          "[\$${formatProfit(inputInt: priceGain.abs())}, ${widget.stock.percentageGain!.toStringAsFixed(2)}%]",
           style: TextStyle(
             color: priceGain >= 0 ? Colors.green : Colors.red,
             fontSize: 12,
@@ -69,17 +67,17 @@ class _SharePriceCardState extends State<SharePriceCard> {
           children: [
             Row(
               children: [
-                Text("(${widget.stock.acronym}) ", style: TextStyle(fontSize: 12)),
-                Text(widget.stock.name, style: TextStyle(fontSize: 12)),
+                Text("(${widget.stock.acronym}) ", style: const TextStyle(fontSize: 12)),
+                Text(widget.stock.name!, style: const TextStyle(fontSize: 12)),
               ],
             ),
-            SizedBox(height: 2),
+            const SizedBox(height: 2),
             // Second Row
             Row(
               children: [
                 Text(
                   "Price: \$${widget.stock.currentPrice}",
-                  style: TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 12),
                 ),
                 gain,
               ],
@@ -97,19 +95,19 @@ class _SharePriceCardState extends State<SharePriceCard> {
                         padding: const EdgeInsets.only(right: 10),
                         child: Text(
                           "OWNED (x${formatProfit(inputInt: widget.stock.sharesOwned)})",
-                          style: TextStyle(color: Colors.green, fontSize: 10),
+                          style: const TextStyle(color: Colors.green, fontSize: 10),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(right: 10),
                         child: Text(
-                          "\$${formatProfit(inputDouble: widget.stock.sharesOwned * widget.stock.currentPrice)}",
-                          style: TextStyle(color: Colors.green, fontSize: 10),
+                          "\$${formatProfit(inputDouble: widget.stock.sharesOwned! * widget.stock.currentPrice!)}",
+                          style: const TextStyle(color: Colors.green, fontSize: 10),
                         ),
                       ),
                     ],
                   ),
-                Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
+                const Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
               ],
             ),
           ],
@@ -120,24 +118,24 @@ class _SharePriceCardState extends State<SharePriceCard> {
 
   Widget expanded() {
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
       child: Row(
         children: [
           IconButton(
-            icon: Icon(MdiIcons.vectorPolylineEdit),
+            icon: const Icon(MdiIcons.vectorPolylineEdit),
             onPressed: () {
               _showSharePriceDialog();
             },
           ),
-          SizedBox(width: 20),
+          const SizedBox(width: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Text("Gain alert: ", style: TextStyle(fontSize: 12)),
+                  const Text("Gain alert: ", style: TextStyle(fontSize: 12)),
                   if (widget.stock.alertGain == null)
-                    Row(
+                    const Row(
                       children: [
                         Text("not set", style: TextStyle(fontSize: 12)),
                         SizedBox(width: 10),
@@ -146,20 +144,18 @@ class _SharePriceCardState extends State<SharePriceCard> {
                   else
                     Row(
                       children: [
-                        Text(
-                            "\$${removeZeroDecimals(widget.stock.alertGain)}",
-                            style: TextStyle(fontSize: 12)),
-                        SizedBox(width: 10),
+                        Text("\$${removeZeroDecimals(widget.stock.alertGain)}", style: const TextStyle(fontSize: 12)),
+                        const SizedBox(width: 10),
                       ],
                     )
                 ],
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(
                 children: [
-                  Text("Loss alert: ", style: TextStyle(fontSize: 12)),
+                  const Text("Loss alert: ", style: TextStyle(fontSize: 12)),
                   if (widget.stock.alertLoss == null)
-                    Row(
+                    const Row(
                       children: [
                         Text("not set", style: TextStyle(fontSize: 12)),
                         SizedBox(width: 10),
@@ -168,8 +164,8 @@ class _SharePriceCardState extends State<SharePriceCard> {
                   else
                     Row(
                       children: [
-                        Text("\$${removeZeroDecimals(widget.stock.alertLoss)}", style: TextStyle(fontSize: 12)),
-                        SizedBox(width: 10),
+                        Text("\$${removeZeroDecimals(widget.stock.alertLoss)}", style: const TextStyle(fontSize: 12)),
+                        const SizedBox(width: 10),
                       ],
                     )
                 ],
@@ -208,7 +204,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
     });
   }
 
-  String removeZeroDecimals(double input) {
+  String removeZeroDecimals(double? input) {
     return input.toString().replaceAll(RegExp(r"([.]*0)(?!.*\d)"), "");
   }
 }

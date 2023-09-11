@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 // Project imports:
-import '../../main.dart';
+import 'package:torn_pda/main.dart';
 
 ForeignStockOutModel foreignStockOutModelFromJson(String str) =>
     ForeignStockOutModel.fromJson(json.decode(str));
@@ -11,9 +11,9 @@ String foreignStockOutModelToJson(ForeignStockOutModel data) =>
     json.encode(data.toJson());
 
 class ForeignStockOutItem {
-  int id;
-  int quantity;
-  int cost;
+  int? id;
+  int? quantity;
+  int? cost;
 
   ForeignStockOutItem({
     this.id,
@@ -36,12 +36,12 @@ class ForeignStockOutItem {
 }
 
 class ForeignStockOutModel {
-  String client;
-  String version;
-  String authorName;
-  int authorId;
-  String country;
-  List<ForeignStockOutItem> items;
+  String? client;
+  String? version;
+  String? authorName;
+  int? authorId;
+  String? country;
+  List<ForeignStockOutItem>? items;
 
   ForeignStockOutModel(
       {this.client,
@@ -49,7 +49,7 @@ class ForeignStockOutModel {
       this.authorName,
       this.authorId,
       this.country,
-      this.items}) {
+      this.items,}) {
     client = "Torn PDA";
     version = appVersion;
     items = <ForeignStockOutItem>[];
@@ -63,7 +63,7 @@ class ForeignStockOutModel {
         authorId: json["author_id"],
         country: json["country"],
         items: List<ForeignStockOutItem>.from(
-            json["items"].map((x) => ForeignStockOutItem.fromJson(x))),
+            json["items"].map((x) => ForeignStockOutItem.fromJson(x)),),
       );
 
   Map<String, dynamic> toJson() => {
@@ -72,6 +72,6 @@ class ForeignStockOutModel {
         "author_name": authorName,
         "author_id": authorId,
         "country": country,
-        "items": List<dynamic>.from(items.map((x) => x.toJson())),
+        "items": List<dynamic>.from(items!.map((x) => x.toJson())),
       };
 }

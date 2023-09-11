@@ -11,17 +11,17 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TargetsOptionsReturn {
-  bool yataEnabled;
-  bool retaliationEnabled;
+  bool? yataEnabled;
+  bool? retaliationEnabled;
   //bool tacEnabled;
 }
 
 class TargetsOptionsPage extends StatefulWidget {
   @override
-  _TargetsOptionsPageState createState() => _TargetsOptionsPageState();
+  TargetsOptionsPageState createState() => TargetsOptionsPageState();
 }
 
-class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
+class TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // Targets notes while chaining
   bool _showTargetsNotes = true;
   bool _showBlankTargetsNotes = true;
@@ -36,10 +36,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // TAC
   //bool _tacEnabled = true;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -56,10 +56,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
@@ -79,7 +79,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -88,8 +88,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              SizedBox(height: 15),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -103,7 +103,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Show targets notes"),
+                                    const Text("Show targets notes"),
                                     Switch(
                                       value: _showTargetsNotes,
                                       onChanged: (value) {
@@ -131,7 +131,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 15),
+                              const SizedBox(height: 15),
                               if (_showTargetsNotes)
                                 Column(
                                   children: [
@@ -140,7 +140,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
-                                          Text("Show blank notes"),
+                                          const Text("Show blank notes"),
                                           Switch(
                                             value: _showBlankTargetsNotes,
                                             onChanged: (value) {
@@ -158,7 +158,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 15),
                                       child: Text(
-                                        'If enabled, you will be shown a colored square even if your target\'s note is empty, '
+                                        "If enabled, you will be shown a colored square even if your target's note is empty, "
                                         'so that you are aware of the color even if no details have been entered.',
                                         style: TextStyle(
                                           color: Colors.grey[600],
@@ -167,7 +167,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                         ),
                                       ),
                                     ),
-                                    SizedBox(height: 15),
+                                    const SizedBox(height: 15),
                                   ],
                                 ),
                               if (_showTargetsNotes)
@@ -178,7 +178,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
-                                          Text("Last online & faction warning"),
+                                          const Text("Last online & faction warning"),
                                           Switch(
                                             value: _showOnlineFactionWarning,
                                             onChanged: (value) {
@@ -196,7 +196,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 15),
                                       child: Text(
-                                        'If enabled, in addition to the target\'s note (if any) you\'ll be shown if the '
+                                        "If enabled, in addition to the target's note (if any) you'll be shown if the "
                                         'target has been online in the last 7 days. If so, a faction check will also be performed. '
                                         'This is to avoid attacking active targets, if desired.',
                                         style: TextStyle(
@@ -206,7 +206,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                         ),
                                       ),
                                     ),
-                                    SizedBox(height: 15),
+                                    const SizedBox(height: 15),
                                   ],
                                 ),
                               Padding(
@@ -214,7 +214,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Skip red/blue targets"),
+                                    const Text("Skip red/blue targets"),
                                     Switch(
                                       value: _settingsProvider.targetSkippingAll,
                                       onChanged: (value) {
@@ -241,7 +241,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 15),
+                              const SizedBox(height: 15),
                               if (_settingsProvider.targetSkippingAll)
                                 Column(
                                   children: [
@@ -250,7 +250,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
-                                          Text("Also skip first target"),
+                                          const Text("Also skip first target"),
                                           Switch(
                                             value: _settingsProvider.targetSkippingFirst,
                                             onChanged: (value) {
@@ -267,7 +267,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 15),
                                       child: Text(
-                                        'If enabled, your first, manually selected target will be skipped as well if it\'s '
+                                        "If enabled, your first, manually selected target will be skipped as well if it's "
                                         'red/blue. This might be useful if your list is not updated and the target you '
                                         'select is not available. This does NOT affect Panic Mode.',
                                         style: TextStyle(
@@ -279,10 +279,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     ),
                                   ],
                                 ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -296,7 +296,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Section enabled"),
+                                    const Text("Section enabled"),
                                     Switch(
                                       value: _retaliationEnabled,
                                       onChanged: (value) {
@@ -313,10 +313,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -330,7 +330,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Show YATA icon"),
+                                    const Text("Show YATA icon"),
                                     Switch(
                                       value: _yataTargetsEnabled,
                                       onChanged: (value) {
@@ -348,7 +348,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
-                                  'If enabled, you\'ll have access to a \'Y\' icon in the top bar from '
+                                  "If enabled, you'll have access to a 'Y' icon in the top bar from "
                                   'where you can import and export to YATA. Please note that deletions '
                                   'are not propagated between YATA and Torn PDA, but notes are '
                                   'overwritten in either direction.',
@@ -405,12 +405,12 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               */
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -429,9 +429,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Chaining Options"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Chaining Options"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -440,11 +440,11 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   }
 
   Future _restorePreferences() async {
-    var showTargetsNotes = await Prefs().getShowTargetsNotes();
-    var showBlankTargetsNotes = await Prefs().getShowBlankTargetsNotes();
-    var showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
-    var yataEnabled = await Prefs().getYataTargetsEnabled();
-    var retaliationEnabled = await Prefs().getRetaliationSectionEnabled();
+    final showTargetsNotes = await Prefs().getShowTargetsNotes();
+    final showBlankTargetsNotes = await Prefs().getShowBlankTargetsNotes();
+    final showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+    final yataEnabled = await Prefs().getYataTargetsEnabled();
+    final retaliationEnabled = await Prefs().getRetaliationSectionEnabled();
     //var tacEnabled = await Prefs().getTACEnabled();
 
     setState(() {

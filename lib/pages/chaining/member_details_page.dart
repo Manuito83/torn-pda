@@ -1,14 +1,12 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
@@ -20,19 +18,19 @@ import 'package:torn_pda/utils/html_parser.dart';
 class MemberDetailsPage extends StatefulWidget {
   final String memberId;
 
-  MemberDetailsPage({@required this.memberId});
+  const MemberDetailsPage({required this.memberId});
 
   @override
-  _MemberDetailsPageState createState() => _MemberDetailsPageState();
+  MemberDetailsPageState createState() => MemberDetailsPageState();
 }
 
-class _MemberDetailsPageState extends State<MemberDetailsPage> {
-  UserDetailsProvider _userDetails;
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+class MemberDetailsPageState extends State<MemberDetailsPage> {
+  late UserDetailsProvider _userDetails;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
-  Future _memberFetched;
-  TargetModel _member;
+  Future? _memberFetched;
+  TargetModel? _member;
 
   @override
   void initState() {
@@ -50,7 +48,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return FutureBuilder(
       future: _memberFetched,
       builder: (context, snapshot) {
@@ -58,7 +56,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
           if (_member != null) {
             return Container(
               color: _themeProvider.currentTheme == AppTheme.light
-                  ? MediaQuery.of(context).orientation == Orientation.portrait
+                  ? MediaQuery.orientationOf(context) == Orientation.portrait
                       ? Colors.blueGrey
                       : Colors.grey[900]
                   : _themeProvider.currentTheme == AppTheme.dark
@@ -67,7 +65,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
               child: SafeArea(
                 child: Scaffold(
                   backgroundColor: _themeProvider.canvas,
-                  drawer: Drawer(),
+                  drawer: const Drawer(),
                   appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
                   bottomNavigationBar: !_settingsProvider.appBarTop
                       ? SizedBox(
@@ -87,8 +85,8 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '${_member.name} [${_member.playerId}]',
-                                    style: TextStyle(
+                                    '${_member!.name} [${_member!.playerId}]',
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -99,20 +97,20 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                                       width: 30,
                                       height: 30,
                                       child: IconButton(
-                                        icon: Icon(Icons.content_copy),
+                                        icon: const Icon(Icons.content_copy),
                                         iconSize: 20,
                                         onPressed: () {
-                                          Clipboard.setData(ClipboardData(text: _member.playerId.toString()));
+                                          Clipboard.setData(ClipboardData(text: _member!.playerId.toString()));
                                           BotToast.showText(
-                                            text: "Your target's ID [${_member.playerId}] has been "
+                                            text: "Your target's ID [${_member!.playerId}] has been "
                                                 "copied to the clipboard!",
-                                            textStyle: TextStyle(
+                                            textStyle: const TextStyle(
                                               fontSize: 14,
                                               color: Colors.white,
                                             ),
                                             contentColor: Colors.green,
-                                            duration: Duration(seconds: 5),
-                                            contentPadding: EdgeInsets.all(10),
+                                            duration: const Duration(seconds: 5),
+                                            contentPadding: const EdgeInsets.all(10),
                                           );
                                         },
                                       ),
@@ -120,30 +118,30 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                                   ),
                                 ],
                               ),
-                              Text('${_member.rank}'),
-                              SizedBox(height: 20),
-                              Text('Level: ${_member.level}'),
-                              Text('Gender: ${_member.gender}'),
-                              Text('Age: ${_member.age} days'),
-                              SizedBox(height: 20),
+                              Text('${_member!.rank}'),
+                              const SizedBox(height: 20),
+                              Text('Level: ${_member!.level}'),
+                              Text('Gender: ${_member!.gender}'),
+                              Text('Age: ${_member!.age} days'),
+                              const SizedBox(height: 20),
                               _returnLife(),
-                              SizedBox(height: 5),
+                              const SizedBox(height: 5),
                               _returnLastAction(),
-                              SizedBox(height: 5),
+                              const SizedBox(height: 5),
                               _returnStatus(),
-                              SizedBox(height: 20),
-                              Text('Awards: ${_member.awards} '
-                                  '(you have ${_userDetails.basic.awards})'),
-                              SizedBox(height: 20),
-                              Text('Donator: ${_member.donator == 0 ? 'NO' : 'YES'}'),
-                              Text('Friends/Enemies: ${_member.friends}'
-                                  '/${_member.enemies}'),
-                              SizedBox(height: 20),
+                              const SizedBox(height: 20),
+                              Text('Awards: ${_member!.awards} '
+                                  '(you have ${_userDetails.basic!.awards})'),
+                              const SizedBox(height: 20),
+                              Text('Donator: ${_member!.donator == 0 ? 'NO' : 'YES'}'),
+                              Text('Friends/Enemies: ${_member!.friends}'
+                                  '/${_member!.enemies}'),
+                              const SizedBox(height: 20),
                               _returnFaction(),
                               _returnJob(),
                               _returnDiscord(),
                               _returnCompetition(),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         ),
@@ -154,7 +152,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
               ),
             );
           } else {
-            return Column(
+            return const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 SizedBox(height: 50),
@@ -163,7 +161,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
                   style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
                   child: Column(
                     children: [
                       Text(
@@ -178,7 +176,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
             );
           }
         } else {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
       },
     );
@@ -189,7 +187,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -201,31 +199,33 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        SizedBox(
+        const SizedBox(
           width: 35,
           child: Text('Life'),
         ),
         LinearPercentIndicator(
-          padding: null,
-          barRadius: Radius.circular(10),
+          padding: const EdgeInsets.all(0),
+          barRadius: const Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,
           backgroundColor: Colors.grey,
           center: Text(
-            '${_member.life.current}',
-            style: TextStyle(color: Colors.black),
+            '${_member!.life!.current}',
+            style: const TextStyle(color: Colors.black),
           ),
-          percent:
-              _member.life.current / _member.life.maximum > 1.0 ? 1.0 : _member.life.current / _member.life.maximum,
+          percent: _member!.life!.current! / _member!.life!.maximum! > 1.0
+              ? 1.0
+              : _member!.life!.current! / _member!.life!.maximum!,
         ),
-        _member.status.state == "Hospital"
-            ? Icon(
-                Icons.local_hospital,
-                size: 20,
-                color: Colors.red,
-              )
-            : SizedBox.shrink(),
+        if (_member!.status!.state == "Hospital")
+          const Icon(
+            Icons.local_hospital,
+            size: 20,
+            color: Colors.red,
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }
@@ -234,11 +234,11 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text(
+        const Text(
           'Last action: ',
         ),
         Text(
-          _member.lastAction.relative == "0 minutes ago" ? 'now' : _member.lastAction.relative,
+          _member!.lastAction!.relative == "0 minutes ago" ? 'now' : _member!.lastAction!.relative!,
         ),
         Padding(
           padding: const EdgeInsets.only(left: 8.0),
@@ -246,9 +246,9 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
             width: 14,
             height: 14,
             decoration: BoxDecoration(
-              color: _returnLastActionColor(_member.lastAction.status),
+              color: _returnLastActionColor(_member!.lastAction!.status),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.black),
+              border: Border.all(),
             ),
           ),
         ),
@@ -256,89 +256,87 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
     );
   }
 
-  Color _returnLastActionColor(String status) {
+  Color _returnLastActionColor(String? status) {
     switch (status) {
       case 'Online':
         return Colors.green;
-        break;
       case 'Idle':
         return Colors.orange;
-        break;
       default:
         return Colors.grey;
     }
   }
 
   Widget _returnStatus() {
-    Color stateColor;
-    if (_member.status.color == 'red') {
+    Color? stateColor;
+    if (_member!.status!.color == 'red') {
       stateColor = Colors.red;
-    } else if (_member.status.color == 'green') {
+    } else if (_member!.status!.color == 'green') {
       stateColor = Colors.green;
-    } else if (_member.status.color == 'blue') {
+    } else if (_member!.status!.color == 'blue') {
       stateColor = Colors.blue;
     }
 
-    Widget stateBall = Padding(
-      padding: EdgeInsets.only(left: 5, right: 3, top: 1),
+    final Widget stateBall = Padding(
+      padding: const EdgeInsets.only(left: 5, right: 3, top: 1),
       child: Container(
         width: 13,
         height: 13,
-        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all()),
       ),
     );
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        Text('Status: ${_member.status.state}'),
+        Text('Status: ${_member!.status!.state}'),
         stateBall,
       ],
     );
   }
 
   Widget _returnFaction() {
-    if (_member.faction.factionId != 0) {
+    if (_member!.faction!.factionId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Faction: ${HtmlParser.fix(_member.faction.factionName)}'),
-            Text('Position: ${_member.faction.position}'),
-            Text('Joined: ${_member.faction.daysInFaction} days ago'),
+            Text('Faction: ${HtmlParser.fix(_member!.faction!.factionName)}'),
+            Text('Position: ${_member!.faction!.position}'),
+            Text('Joined: ${_member!.faction!.daysInFaction} days ago'),
           ],
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   Widget _returnJob() {
-    if (_member.job.companyId != 0) {
+    if (_member!.job!.companyId != 0) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 20),
         child: Column(
           children: <Widget>[
-            Text('Company: ${HtmlParser.fix(_member.job.companyName)}'),
-            Text('Position: ${_member.job.job}'),
+            Text('Company: ${HtmlParser.fix(_member!.job!.companyName)}'),
+            Text('Position: ${_member!.job!.job}'),
           ],
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   Widget _returnDiscord() {
     // Discord was introduced in v1.7.1 for targets, reason why we
     // perform a null check
-    if (_member.discord == null) {
-      return SizedBox.shrink();
+    if (_member!.discord == null) {
+      return const SizedBox.shrink();
     }
 
-    if (_member.discord.discordId == "") {
-      return SizedBox.shrink();
+    if (_member!.discord!.discordId == "") {
+      return const SizedBox.shrink();
     }
 
     return Padding(
@@ -346,27 +344,27 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text('Discord ID'),
+          const Text('Discord ID'),
           Padding(
             padding: const EdgeInsets.only(bottom: 5),
             child: SizedBox(
               width: 30,
               height: 30,
               child: IconButton(
-                icon: Icon(Icons.content_copy),
+                icon: const Icon(Icons.content_copy),
                 iconSize: 20,
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: _member.discord.discordId));
+                  Clipboard.setData(ClipboardData(text: _member!.discord!.discordId!));
                   BotToast.showText(
-                    text: "Your target's Discord ID (${_member.discord.discordId}) has been "
+                    text: "Your target's Discord ID (${_member!.discord!.discordId}) has been "
                         "copied to the clipboard!",
-                    textStyle: TextStyle(
+                    textStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
                     contentColor: Colors.green,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
                   );
                 },
               ),
@@ -378,8 +376,8 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
   }
 
   Widget _returnCompetition() {
-    if (_member.competition == null) {
-      return SizedBox.shrink();
+    if (_member!.competition == null) {
+      return const SizedBox.shrink();
     }
 
     return Padding(
@@ -387,51 +385,51 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text(
+          const Text(
             'COMPETITION',
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),
           ),
-          if (_member.competition.name != null)
+          if (_member!.competition!.name != null)
             Text(
-              '"${_member.competition.name}"',
+              '"${_member!.competition!.name}"',
             ),
-          if (_member.competition.attacks != null)
+          if (_member!.competition!.attacks != null)
             Text(
-              'Attacks: ${_member.competition.attacks}',
+              'Attacks: ${_member!.competition!.attacks}',
             ),
-          if (_member.competition.image != null)
+          if (_member!.competition!.image != null)
             Text(
-              'Image: ${_member.competition.image}',
+              'Image: ${_member!.competition!.image}',
             ),
-          if (_member.competition.score != null)
+          if (_member!.competition!.score != null)
             Text(
-              'Score: ${_member.competition.score.ceil()}',
+              'Score: ${_member!.competition!.score!.ceil()}',
             ),
-          if (_member.competition.team != null)
+          if (_member!.competition!.team != null)
             Text(
-              'Team: ${_member.competition.team}',
+              'Team: ${_member!.competition!.team}',
             ),
-          if (_member.competition.text != null)
+          if (_member!.competition!.text != null)
             Text(
-              'Text: ${_member.competition.text}',
+              'Text: ${_member!.competition!.text}',
             ),
-          if (_member.competition.total != null)
+          if (_member!.competition!.total != null)
             Text(
-              'Total (accumulated): ${_member.competition.total}',
+              'Total (accumulated): ${_member!.competition!.total}',
             ),
-          if (_member.competition.treatsCollectedTotal != null)
+          if (_member!.competition!.treatsCollectedTotal != null)
             Text(
-              'Treats collected: ${_member.competition.treatsCollectedTotal}',
+              'Treats collected: ${_member!.competition!.treatsCollectedTotal}',
             ),
-          if (_member.competition.votes != null)
+          if (_member!.competition!.votes != null)
             Text(
-              'Votes: ${_member.competition.votes}',
+              'Votes: ${_member!.competition!.votes}',
             ),
-          if (_member.competition.position != null)
+          if (_member!.competition!.position != null)
             Text(
-              'Position: ${_member.competition.position}',
+              'Position: ${_member!.competition!.position}',
             ),
         ],
       ),
@@ -439,7 +437,7 @@ class _MemberDetailsPageState extends State<MemberDetailsPage> {
   }
 
   Future _fetchMemberDetails() async {
-    dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: widget.memberId);
+    final dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: widget.memberId);
 
     if (myNewTargetModel is TargetModel) {
       _member = myNewTargetModel;

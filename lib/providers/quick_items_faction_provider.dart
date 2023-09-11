@@ -15,16 +15,16 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   bool _firstLoad = true;
   bool _itemSuccess = false;
 
-  var _activeQuickItemsListFaction = <QuickItem>[];
+  final _activeQuickItemsListFaction = <QuickItem>[];
   UnmodifiableListView<QuickItem> get activeQuickItemsFaction => UnmodifiableListView(_activeQuickItemsListFaction);
 
-  var _fullQuickItemsListFaction = <QuickItem>[];
+  final _fullQuickItemsListFaction = <QuickItem>[];
   UnmodifiableListView<QuickItem> get fullQuickItemsFaction => UnmodifiableListView(_fullQuickItemsListFaction);
 
   String _currentSearchFilter = '';
   String get searchFilter => _currentSearchFilter;
 
-  var _quickItemTypes = [
+  final _quickItemTypes = [
     ItemType.ALCOHOL,
     ItemType.BOOSTER,
     ItemType.CANDY,
@@ -33,7 +33,7 @@ class QuickItemsProviderFaction extends ChangeNotifier {
     ItemType.MEDICAL,
   ];
 
-  var _quickItemExceptions = [
+  final _quickItemExceptions = [
     "box of tissues",
   ];
 
@@ -53,10 +53,10 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   }
 
   Future _loadSaveActiveItems() async {
-    var savedActives = await Prefs().getQuickItemsListFaction();
+    final savedActives = await Prefs().getQuickItemsListFaction();
     bool oldPoints = false;
-    for (var rawItem in savedActives) {
-      QuickItem activeItem = quickItemFromJson(rawItem);
+    for (final rawItem in savedActives) {
+      final QuickItem activeItem = quickItemFromJson(rawItem);
       if (activeItem.name == "Faction points refill") {
         oldPoints = true;
         continue;
@@ -77,8 +77,8 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   }
 
   void decreaseInventory(QuickItem item) {
-    if (item.inventory > 0) {
-      item.inventory--;
+    if (item.inventory! > 0) {
+      item.inventory = item.inventory! - 1;
       _saveListAfterChanges();
       notifyListeners();
     }
@@ -91,7 +91,7 @@ class QuickItemsProviderFaction extends ChangeNotifier {
 
     // Look for the correct item set active false, so that it reappears in the
     // main available items list
-    for (var stock in _fullQuickItemsListFaction) {
+    for (final stock in _fullQuickItemsListFaction) {
       if (stock.name == oldItem.name) {
         stock.active = false;
         break;
@@ -102,10 +102,10 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   }
 
   void wipeAllQuickItems() {
-    for (var oldItem in _activeQuickItemsListFaction) {
+    for (final oldItem in _activeQuickItemsListFaction) {
       // Look for the correct item set active false, so that it reappears in the
       // main available items list
-      for (var stock in _fullQuickItemsListFaction) {
+      for (final stock in _fullQuickItemsListFaction) {
         if (stock.name == oldItem.name) {
           stock.active = false;
           break;
@@ -128,10 +128,10 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   }
 
   void _saveListAfterChanges() {
-    var saveList = <String>[];
+    final saveList = <String>[];
 
-    for (var item in activeQuickItemsFaction) {
-      var save = quickItemToJson(item);
+    for (final item in activeQuickItemsFaction) {
+      final save = quickItemToJson(item);
       saveList.add(save);
     }
 
@@ -146,19 +146,19 @@ class QuickItemsProviderFaction extends ChangeNotifier {
   }
 
   Future _getAllTornItems() async {
-    var allTornItems = await Get.find<ApiCallerController>().getItems();
+    final allTornItems = await Get.find<ApiCallerController>().getItems();
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsListFaction.clear();
 
       // Add Torn items
-      allTornItems.items.forEach((itemNumber, itemProperties) {
+      allTornItems.items!.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type) ||
-            _quickItemExceptions.contains(itemProperties.name.toLowerCase())) {
+            _quickItemExceptions.contains(itemProperties.name!.toLowerCase())) {
           // If the item was saved as active, mark it as such so that we can
           // filter it in our full list
           var savedActive = false;
-          for (var saved in _activeQuickItemsListFaction) {
+          for (final saved in _activeQuickItemsListFaction) {
             if (saved.name == itemProperties.name) {
               savedActive = true;
               break;
@@ -174,17 +174,17 @@ class QuickItemsProviderFaction extends ChangeNotifier {
           );
         }
       });
-      _fullQuickItemsListFaction.sort((a, b) => a.name.compareTo(b.name));
+      _fullQuickItemsListFaction.sort((a, b) => a.name!.compareTo(b.name!));
 
       // Insert energy points
       var savedEnergyActive = false;
-      var savedNerveActive = false;
+      const savedNerveActive = false;
 
-      for (var saved in _activeQuickItemsListFaction) {
-        if (saved.isEnergyPoints) {
+      for (final saved in _activeQuickItemsListFaction) {
+        if (saved.isEnergyPoints!) {
           savedEnergyActive = true;
         }
-        if (saved.isNervePoints) {
+        if (saved.isNervePoints!) {
           savedEnergyActive = true;
         }
       }

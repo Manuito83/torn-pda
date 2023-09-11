@@ -12,13 +12,13 @@ enum AppTheme {
 }
 
 class ThemeProvider extends ChangeNotifier {
-  Color canvas;
-  Color secondBackground;
-  Color mainText;
-  Color buttonText;
-  Color navSelected;
-  Color cardColor;
-  Color statusBar;
+  Color? canvas;
+  Color? secondBackground;
+  Color? mainText;
+  Color? buttonText;
+  Color? navSelected;
+  Color? cardColor;
+  Color? statusBar;
 
   ThemeProvider() {
     _restoreSharedPreferences();
@@ -34,31 +34,31 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   // COLORS ##LIGHT##
-  var _canvasBackgroundLIGHT = Colors.grey[50];
-  var _colorBackgroundLIGHT = Colors.grey[200];
-  var _colorMainTextLIGHT = Colors.black;
-  var _colorButtonTextLIGHT = Colors.white;
-  var _colorNavSelectedLIGHT = Colors.blueGrey[100];
-  var _colorCardLIGHT = Colors.white;
-  var _colorStatusBarLIGHT = Colors.blueGrey;
+  final _canvasBackgroundLIGHT = Colors.grey[50];
+  final _colorBackgroundLIGHT = Colors.grey[200];
+  final _colorMainTextLIGHT = Colors.black;
+  final _colorButtonTextLIGHT = Colors.white;
+  final _colorNavSelectedLIGHT = Colors.blueGrey[100];
+  final _colorCardLIGHT = Colors.white;
+  final _colorStatusBarLIGHT = Colors.blueGrey;
 
   // COLORS ##DARK##
-  var _canvasBackgroundDARK = Colors.grey[900];
-  var _colorBackgroundDARK = Colors.grey[800];
-  var _colorMainTextDARK = Colors.grey[50];
-  var _colorButtonTextDARK = Colors.grey[200];
-  var _colorNavSelectedDARK = Colors.blueGrey[600];
-  var _colorCardDARK = Colors.grey[800];
-  var _colorStatusBarDARK = Color.fromARGB(255, 37, 37, 37);
+  final _canvasBackgroundDARK = Colors.grey[900];
+  final _colorBackgroundDARK = Colors.grey[800];
+  final _colorMainTextDARK = Colors.grey[50];
+  final _colorButtonTextDARK = Colors.grey[200];
+  final _colorNavSelectedDARK = Colors.blueGrey[600];
+  final _colorCardDARK = Colors.grey[800];
+  final _colorStatusBarDARK = const Color.fromARGB(255, 37, 37, 37);
 
   // COLORS ##EXTRA DARK##
-  var _canvasBackgroundExtraDARK = Colors.black;
-  var _colorBackgroundExtraDARK = Color(0xFF0C0C0C);
-  var _colorMainTextExtraDARK = Colors.grey[50];
-  var _colorButtonTextExtraDARK = Colors.grey[200];
-  var _colorNavSelectedExtraDARK = Colors.blueGrey[800];
-  var _colorCardExtraDARK = Color(0xFF131313);
-  var _colorStatusBarExtraDARK = Color(0xFF0C0C0C);
+  final _canvasBackgroundExtraDARK = Colors.black;
+  final _colorBackgroundExtraDARK = const Color(0xFF0C0C0C);
+  final _colorMainTextExtraDARK = Colors.grey[50];
+  final _colorButtonTextExtraDARK = Colors.grey[200];
+  final _colorNavSelectedExtraDARK = Colors.blueGrey[800];
+  final _colorCardExtraDARK = const Color(0xFF131313);
+  final _colorStatusBarExtraDARK = const Color(0xFF0C0C0C);
 
   void _getColors() {
     switch (_currentTheme) {
@@ -70,7 +70,6 @@ class ThemeProvider extends ChangeNotifier {
         navSelected = _colorNavSelectedLIGHT;
         cardColor = _colorCardLIGHT;
         statusBar = _colorStatusBarLIGHT;
-        break;
       case AppTheme.dark:
         canvas = _canvasBackgroundDARK;
         secondBackground = _colorBackgroundDARK;
@@ -79,7 +78,6 @@ class ThemeProvider extends ChangeNotifier {
         navSelected = _colorNavSelectedDARK;
         cardColor = _colorCardDARK;
         statusBar = _colorStatusBarDARK;
-        break;
       case AppTheme.extraDark:
         canvas = _canvasBackgroundExtraDARK;
         secondBackground = _colorBackgroundExtraDARK;
@@ -88,39 +86,32 @@ class ThemeProvider extends ChangeNotifier {
         navSelected = _colorNavSelectedExtraDARK;
         cardColor = _colorCardExtraDARK;
         statusBar = _colorStatusBarExtraDARK;
-        break;
     }
   }
 
   void _saveThemeSharedPrefs() {
-    String themeSave;
+    late String themeSave;
     switch (_currentTheme) {
       case AppTheme.light:
         themeSave = 'light';
-        break;
       case AppTheme.dark:
         themeSave = 'dark';
-        break;
       case AppTheme.extraDark:
         themeSave = 'extraDark';
-        break;
     }
     Prefs().setAppTheme(themeSave);
   }
 
   Future<void> _restoreSharedPreferences() async {
-    String restoredTheme = await Prefs().getAppTheme();
+    final String restoredTheme = await Prefs().getAppTheme();
     await analytics.setUserProperty(name: "theme", value: restoredTheme);
     switch (restoredTheme) {
       case 'light':
         _currentTheme = AppTheme.light;
-        break;
       case 'dark':
         _currentTheme = AppTheme.dark;
-        break;
       case 'extraDark':
         _currentTheme = AppTheme.extraDark;
-        break;
     }
 
     _getColors();

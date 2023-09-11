@@ -1,44 +1,40 @@
 // Dart imports:
 import 'dart:async';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:get/get.dart';
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/bars_model.dart';
-import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
 class ChainWidget extends StatefulWidget {
   final bool alwaysDarkBackground;
-  final Function callBackOptions;
+  final Function? callBackOptions;
 
-  ChainWidget({
-    @required Key key,
-    @required this.alwaysDarkBackground,
+  const ChainWidget({
+    required Key key,
+    required this.alwaysDarkBackground,
     this.callBackOptions,
   }) : super(key: key);
 
   @override
-  _ChainWidgetState createState() => _ChainWidgetState();
+  ChainWidgetState createState() => ChainWidgetState();
 }
 
-class _ChainWidgetState extends State<ChainWidget> {
-  ThemeProvider _themeProvider;
+class ChainWidgetState extends State<ChainWidget> {
+  late ThemeProvider _themeProvider;
 
-  Future _finishedLoadingChain;
-  Future _finishedGettingBars;
+  Future? _finishedLoadingChain;
+  Future? _finishedGettingBars;
 
-  ChainStatusProvider _chainStatusProvider;
+  late ChainStatusProvider _chainStatusProvider;
 
   bool _initialised = false;
 
@@ -53,12 +49,12 @@ class _ChainWidgetState extends State<ChainWidget> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context);
     initialise();
     _chainStatusProvider.widgetVisible = true;
 
-    Color titleColor;
+    Color? titleColor;
     if (widget.alwaysDarkBackground) {
       titleColor = Colors.white;
     } else {
@@ -81,7 +77,8 @@ class _ChainWidgetState extends State<ChainWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (!_chainStatusProvider.panicModeEnabled) SizedBox(width: 35), // Centers the widget without P icon
+              if (!_chainStatusProvider.panicModeEnabled)
+                const SizedBox(width: 35), // Centers the widget without P icon
               SizedBox(
                 width: 30,
                 child: !_chainStatusProvider.modelError
@@ -106,7 +103,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                           });
                         },
                       )
-                    : SizedBox.shrink(),
+                    : const SizedBox.shrink(),
               ),
               if (_chainStatusProvider.panicModeEnabled)
                 SizedBox(
@@ -131,9 +128,9 @@ class _ChainWidgetState extends State<ChainWidget> {
                             }
                           },
                         )
-                      : SizedBox.shrink(),
+                      : const SizedBox.shrink(),
                 ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Column(
                 children: <Widget>[
                   FutureBuilder(
@@ -144,12 +141,12 @@ class _ChainWidgetState extends State<ChainWidget> {
                           return Column(
                             children: <Widget>[
                               Padding(
-                                padding: EdgeInsets.only(bottom: 4),
+                                padding: const EdgeInsets.only(bottom: 4),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     Text(
-                                      _chainStatusProvider.chainModel.chain.cooldown > 0 ? 'Cooldown ' : 'Chain ',
+                                      _chainStatusProvider.chainModel!.chain!.cooldown! > 0 ? 'Cooldown ' : 'Chain ',
                                       style: TextStyle(color: titleColor),
                                     ),
                                     Text(
@@ -158,7 +155,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                                         fontWeight: FontWeight.bold,
                                         color: _chainStatusProvider.currentSecondsCounter > 0 &&
                                                 _chainStatusProvider.currentSecondsCounter < 60 &&
-                                                _chainStatusProvider.chainModel.chain.cooldown == 0
+                                                _chainStatusProvider.chainModel!.chain!.cooldown == 0
                                             ? Colors.red
                                             : titleColor,
                                       ),
@@ -167,25 +164,25 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 ),
                               ),
                               LinearPercentIndicator(
-                                padding: null,
-                                barRadius: Radius.circular(10),
+                                padding: const EdgeInsets.all(0),
+                                barRadius: const Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
                                 backgroundColor: Colors.grey,
-                                progressColor: _chainStatusProvider.chainModel.chain.cooldown > 0
+                                progressColor: _chainStatusProvider.chainModel!.chain!.cooldown! > 0
                                     ? Colors.green[200]
                                     : Colors.blue[200],
                                 center: Text(
-                                  _chainStatusProvider.chainModel.chain.cooldown > 0
-                                      ? '${_chainStatusProvider.chainModel.chain.current} hits'
-                                      : '${_chainStatusProvider.chainModel.chain.current}/${_chainStatusProvider.chainModel.chain.max}',
-                                  style: TextStyle(color: Colors.black),
+                                  _chainStatusProvider.chainModel!.chain!.cooldown! > 0
+                                      ? '${_chainStatusProvider.chainModel!.chain!.current} hits'
+                                      : '${_chainStatusProvider.chainModel!.chain!.current}/${_chainStatusProvider.chainModel!.chain!.max}',
+                                  style: const TextStyle(color: Colors.black),
                                 ),
-                                percent: _chainStatusProvider.chainModel.chain.cooldown > 0
+                                percent: _chainStatusProvider.chainModel!.chain!.cooldown! > 0
                                     ? 1.0
-                                    : _chainStatusProvider.chainModel.chain.current /
-                                        _chainStatusProvider.chainModel.chain.max,
+                                    : _chainStatusProvider.chainModel!.chain!.current! /
+                                        _chainStatusProvider.chainModel!.chain!.max!,
                               ),
                             ],
                           );
@@ -196,11 +193,11 @@ class _ChainWidgetState extends State<ChainWidget> {
                           );
                         }
                       } else {
-                        return SizedBox(height: 30);
+                        return const SizedBox(height: 30);
                       }
                     },
                   ),
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.symmetric(vertical: 2),
                   ),
                   FutureBuilder(
@@ -212,8 +209,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                           return Column(
                             children: <Widget>[
                               LinearPercentIndicator(
-                                padding: null,
-                                barRadius: Radius.circular(10),
+                                padding: const EdgeInsets.all(0),
+                                barRadius: const Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
@@ -221,39 +218,39 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 progressColor: Colors.green,
                                 center: Text(
                                   'E: ${bars.energy.current}/${bars.energy.maximum}',
-                                  style: TextStyle(color: Colors.black),
+                                  style: const TextStyle(color: Colors.black),
                                 ),
                                 // Take drugs into account
                                 percent: (bars.energy.current / bars.energy.maximum) > 1.0
                                     ? 1.0
                                     : bars.energy.current / bars.energy.maximum,
                               ),
-                              Padding(
+                              const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 2),
                               ),
                               LinearPercentIndicator(
-                                padding: null,
-                                barRadius: Radius.circular(10),
+                                padding: const EdgeInsets.all(0),
+                                barRadius: const Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 3,
                                 backgroundColor: Colors.green[100],
                                 progressColor: Colors.green,
-                                percent: 1 - bars.energy.ticktime / bars.energy.interval,
+                                percent: 1 - bars.energy.ticktime / bars.energy.interval as double,
                               ),
                             ],
                           );
                         } else {
-                          return SizedBox.shrink();
+                          return const SizedBox.shrink();
                         }
                       } else {
-                        return SizedBox.shrink();
+                        return const SizedBox.shrink();
                       }
                     },
                   ),
                 ],
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               SizedBox(
                 width: 30,
                 child: GestureDetector(
@@ -272,7 +269,7 @@ class _ChainWidgetState extends State<ChainWidget> {
                   },
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 35,
               ),
             ],
@@ -285,41 +282,32 @@ class _ChainWidgetState extends State<ChainWidget> {
   void _callBackChainOptions() {
     if (widget.callBackOptions != null) {
       setState(() {
-        widget.callBackOptions();
+        widget.callBackOptions!();
       });
     }
   }
 
-  var lastReported = WatchDefcon.red1;
-  _assessChainBorderWidth() {
+  WatchDefcon lastReported = WatchDefcon.red1;
+  double _assessChainBorderWidth() {
     switch (_chainStatusProvider.chainWatcherDefcon) {
       case WatchDefcon.cooldown:
         return 20.0;
-        break;
       case WatchDefcon.green1:
         return 20.0;
-        break;
       case WatchDefcon.green2:
         return 20.0;
-        break;
       case WatchDefcon.orange1:
         return 20.0;
-        break;
       case WatchDefcon.orange2:
         return 20.0;
-        break;
       case WatchDefcon.red1:
         return 20.0;
-        break;
       case WatchDefcon.red2:
         return 20.0;
-        break;
       case WatchDefcon.off:
         return 0.0;
-        break;
       case WatchDefcon.panic:
         return 20.0;
-        break;
     }
   }
 
@@ -333,13 +321,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: message,
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.green[700],
-      duration: Duration(seconds: 7),
-      contentPadding: EdgeInsets.all(10),
+      contentColor: Colors.green[700]!,
+      duration: const Duration(seconds: 7),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 
@@ -352,13 +340,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: 'Chain watcher deactivated!',
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.orange[700],
-      duration: Duration(seconds: 5),
-      contentPadding: EdgeInsets.all(10),
+      contentColor: Colors.orange[700]!,
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 
@@ -374,13 +362,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: message,
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.green[700],
-      duration: Duration(seconds: 7),
-      contentPadding: EdgeInsets.all(10),
+      contentColor: Colors.green[700]!,
+      duration: const Duration(seconds: 7),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 
@@ -389,13 +377,13 @@ class _ChainWidgetState extends State<ChainWidget> {
 
     BotToast.showText(
       text: 'Panic mode deactivated!',
-      textStyle: TextStyle(
+      textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.orange[700],
-      duration: Duration(seconds: 5),
-      contentPadding: EdgeInsets.all(10),
+      contentColor: Colors.orange[700]!,
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 

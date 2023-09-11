@@ -15,19 +15,19 @@ class YataTargetsDistribution extends StatefulWidget {
   final List<TargetsOnlyLocal> onlyLocal;
   final List<TargetsBothSides> bothSides;
 
-  YataTargetsDistribution({
-    @required this.bothSides,
-    @required this.onlyYata,
-    @required this.onlyLocal,
+  const YataTargetsDistribution({
+    required this.bothSides,
+    required this.onlyYata,
+    required this.onlyLocal,
   });
 
   @override
-  _YataTargetsDistributionState createState() => _YataTargetsDistributionState();
+  YataTargetsDistributionState createState() => YataTargetsDistributionState();
 }
 
-class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+class YataTargetsDistributionState extends State<YataTargetsDistribution> {
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -40,10 +40,10 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
@@ -52,7 +52,7 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          drawer: Drawer(),
+          drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -68,65 +68,65 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: <Widget>[
-                      Text(
+                      const Text(
                         'TARGETS ONLY IN YATA',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
+                      const Text(
                         '(CAN BE IMPORTED)',
                         style: TextStyle(
                           fontSize: 11,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Column(
                         children: _returnTargetsOnlyInYata(),
                       ),
-                      SizedBox(height: 10),
-                      Divider(),
-                      SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: 10),
+                      const Divider(),
+                      const SizedBox(height: 10),
+                      const Text(
                         'COMMON TARGETS',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
+                      const Text(
                         '(ONLY NOTES UPDATED)',
                         style: TextStyle(
                           fontSize: 11,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Column(
                         children: _returnTargetsBothSides(),
                       ),
-                      SizedBox(height: 10),
-                      Divider(),
-                      SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: 10),
+                      const Divider(),
+                      const SizedBox(height: 10),
+                      const Text(
                         'TARGETS ONLY IN TORN PDA',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
+                      const Text(
                         '(CAN BE EXPORTED)',
                         style: TextStyle(
                           fontSize: 11,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Column(
                         children: _returnTargetsOnlyInTornPDA(),
                       ),
-                      SizedBox(height: 10),
-                      SizedBox(height: 50),
+                      const SizedBox(height: 10),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
@@ -142,9 +142,9 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text('YATA targets'),
+      title: const Text('YATA targets'),
       leading: IconButton(
-        icon: Icon(Icons.arrow_back),
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           Navigator.of(context).pop();
         },
@@ -153,21 +153,21 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   }
 
   List<Widget> _returnTargetsOnlyInYata() {
-    var itemList = <Widget>[];
+    final itemList = <Widget>[];
 
     if (widget.onlyYata.isEmpty) {
       itemList.add(
-        Text(
+        const Text(
           "none",
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
       );
     } else {
-      for (var yataTarget in widget.onlyYata) {
+      for (final yataTarget in widget.onlyYata) {
         itemList.add(
           Text(
             "${yataTarget.name} [${yataTarget.id}]",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
         );
       }
@@ -177,21 +177,21 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   }
 
   List<Widget> _returnTargetsBothSides() {
-    var itemList = <Widget>[];
+    final itemList = <Widget>[];
 
     if (widget.bothSides.isEmpty) {
       itemList.add(
-        Text(
+        const Text(
           "none",
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
       );
     } else {
-      for (var bothSidesTarget in widget.bothSides) {
+      for (final bothSidesTarget in widget.bothSides) {
         itemList.add(
           Text(
             "${bothSidesTarget.name} [${bothSidesTarget.id}]",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
         );
       }
@@ -201,21 +201,21 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   }
 
   List<Widget> _returnTargetsOnlyInTornPDA() {
-    var itemList = <Widget>[];
+    final itemList = <Widget>[];
 
     if (widget.onlyLocal.isEmpty) {
       itemList.add(
-        Text(
+        const Text(
           "none",
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
       );
     } else {
-      for (var localTarget in widget.onlyLocal) {
+      for (final localTarget in widget.onlyLocal) {
         itemList.add(
           Text(
             "${localTarget.name} [${localTarget.id}]",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
         );
       }

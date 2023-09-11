@@ -15,7 +15,6 @@ class TacTarget {
     this.maxLife,
     this.hospital,
     this.abroad,
-
     this.battleStats = "",
     this.estimatedStats = 0,
     this.rank = "",
@@ -28,42 +27,42 @@ class TacTarget {
   });
 
   // Does not get saved
-  int currentLife;
-  int maxLife;
-  bool hospital;
-  bool abroad;
+  int? currentLife;
+  int? maxLife;
+  bool? hospital;
+  bool? abroad;
 
-  bool optimal;
-  String id;
-  String username;
-  int userLevel;
-  int estimatedStats;
-  String battleStats;
-  String rank;
-  double fairfight;
-  double respect;
+  bool? optimal;
+  String? id;
+  String? username;
+  int? userLevel;
+  int? estimatedStats;
+  String? battleStats;
+  String? rank;
+  double? fairfight;
+  double? respect;
 
   factory TacTarget.fromJson(Map<String, dynamic> json) => TacTarget(
-    battleStats: json["battleStats"] == null ? null : json["battleStats"],
-    estimatedStats: json["estimatedStats"] == null ? null : json["estimatedStats"],
-    rank: json["rank"] == null ? null : json["rank"],
-    userLevel: json["userLevel"] == null ? null : json["userLevel"],
-    username: json["username"] == null ? null : json["username"],
-    id: json["id"] == null ? null : json["id"],
-    optimal: json["optimal"] == null ? null : json["optimal"],
-    fairfight: json["fairfight"] == null ? null : json["fairfight"].toDouble(),
-    respect: json["respect"] == null ? null : json["respect"].toDouble(),
-  );
+        battleStats: json["battleStats"],
+        estimatedStats: json["estimatedStats"],
+        rank: json["rank"],
+        userLevel: json["userLevel"],
+        username: json["username"],
+        id: json["id"],
+        optimal: json["optimal"],
+        fairfight: json["fairfight"]?.toDouble(),
+        respect: json["respect"]?.toDouble(),
+      );
 
   Map<String, dynamic> toJson() => {
-    "battleStats": battleStats == null ? null : battleStats,
-    "estimatedStats": estimatedStats == null ? null : estimatedStats,
-    "rank": rank == null ? null : rank,
-    "userLevel": userLevel == null ? null : userLevel,
-    "username": username == null ? null : username,
-    "id": id == null ? null : id,
-    "optimal": optimal == null ? null : optimal,
-    "fairfight": fairfight == null ? null : fairfight,
-    "respect": respect == null ? null : respect,
-  };
+        "battleStats": battleStats,
+        "estimatedStats": estimatedStats,
+        "rank": rank,
+        "userLevel": userLevel,
+        "username": username,
+        "id": id,
+        "optimal": optimal,
+        "fairfight": fairfight,
+        "respect": respect,
+      };
 }

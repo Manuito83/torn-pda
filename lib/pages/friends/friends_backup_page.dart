@@ -1,17 +1,15 @@
 // Dart imports:
 import 'dart:async';
 
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// Package imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -20,34 +18,34 @@ import 'package:torn_pda/providers/theme_provider.dart';
 
 class FriendsBackupPage extends StatefulWidget {
   @override
-  _FriendsBackupPageState createState() => _FriendsBackupPageState();
+  FriendsBackupPageState createState() => FriendsBackupPageState();
 }
 
-class _FriendsBackupPageState extends State<FriendsBackupPage> {
-  FriendsProvider _friendsProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+class FriendsBackupPageState extends State<FriendsBackupPage> {
+  late FriendsProvider _friendsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
-  FriendsBackupModel _tentativeImportModel;
+  late FriendsBackupModel _tentativeImportModel;
 
   bool _importActive = false;
   int _importSuccessEvents = 0;
 
   final _importFormKey = GlobalKey<FormState>();
-  final _importInputController = new TextEditingController();
+  final _importInputController = TextEditingController();
 
-  String _exportInfo = "In order to export & backup your friends, you can either copy/paste "
+  final String _exportInfo = "In order to export & backup your friends, you can either copy/paste "
       "to a text file manually, or share and save it at your desired location. "
       "In any case, please keep the text original structure.";
 
-  String _importInfo = "In order to import friends, please paste here the string that "
+  final String _importInfo = "In order to import friends, please paste here the string that "
       "you exported in the past. You can make changes outside of Torn PDA, "
       "but ensure that the main structure is kept!";
 
-  String _importChoiceString = "you can either add them to your current list, or replace everything "
+  final String _importChoiceString = "you can either add them to your current list, or replace everything "
       "(you'll lose your current friends!).\n\nChoose wisely.";
 
-  Color _importHintStyle = Colors.black;
+  Color? _importHintStyle = Colors.black;
   String _importHintText = 'Paste here previously exported data';
   FontWeight _importHintWeight = FontWeight.normal;
 
@@ -66,34 +64,35 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   @override
   Widget build(BuildContext context) {
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     _importHintStyle = _themeProvider.mainText;
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Builder(builder: (BuildContext context) {
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
               return Container(
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: SingleChildScrollView(
                     child: Column(
                       children: <Widget>[
-                        Padding(
+                        const Padding(
                           padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                           child: Text(
                             "HOW TO EXPORT friends",
@@ -101,71 +100,71 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                          padding: const EdgeInsets.fromLTRB(30, 10, 30, 15),
                           child: Text(
                             _exportInfo,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                             ),
                           ),
                         ),
                         Wrap(
                           alignment: WrapAlignment.center,
-                          direction: Axis.horizontal,
                           children: <Widget>[
                             Padding(
-                                padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-                                child: ElevatedButton.icon(
-                                  icon: Icon(Icons.share),
-                                  label: Text("Export"),
-                                  onPressed: () async {
-                                    var export = _friendsProvider.exportFriends();
-                                    if (export == '') {
-                                      BotToast.showText(
-                                        text: 'No friends to export!',
-                                        textStyle: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                        contentColor: Colors.red,
-                                        duration: Duration(seconds: 3),
-                                        contentPadding: EdgeInsets.all(10),
-                                      );
-                                    } else {
-                                      Share.share(export);
-                                    }
-                                  },
-                                )),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
                               child: ElevatedButton.icon(
-                                icon: Icon(Icons.content_copy),
-                                label: Text("Clipboard"),
+                                icon: const Icon(Icons.share),
+                                label: const Text("Export"),
                                 onPressed: () async {
-                                  var export = _friendsProvider.exportFriends();
+                                  final export = _friendsProvider.exportFriends();
                                   if (export == '') {
                                     BotToast.showText(
                                       text: 'No friends to export!',
-                                      textStyle: TextStyle(
+                                      textStyle: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
                                       ),
                                       contentColor: Colors.red,
-                                      duration: Duration(seconds: 3),
-                                      contentPadding: EdgeInsets.all(10),
+                                      duration: const Duration(seconds: 3),
+                                      contentPadding: const EdgeInsets.all(10),
+                                    );
+                                  } else {
+                                    Share.share(export);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.content_copy),
+                                label: const Text("Clipboard"),
+                                onPressed: () async {
+                                  final export = _friendsProvider.exportFriends();
+                                  if (export == '') {
+                                    BotToast.showText(
+                                      text: 'No friends to export!',
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.red,
+                                      duration: const Duration(seconds: 3),
+                                      contentPadding: const EdgeInsets.all(10),
                                     );
                                   } else {
                                     Clipboard.setData(ClipboardData(text: export));
                                     BotToast.showText(
                                       text: "${_friendsProvider.getFriendNumber()} "
                                           "Friends copied to clipboard!",
-                                      textStyle: TextStyle(
+                                      textStyle: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
                                       ),
                                       contentColor: Colors.green,
-                                      duration: Duration(seconds: 3),
-                                      contentPadding: EdgeInsets.all(10),
+                                      duration: const Duration(seconds: 3),
+                                      contentPadding: const EdgeInsets.all(10),
                                     );
                                   }
                                 },
@@ -173,11 +172,11 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                             ),
                           ],
                         ),
-                        Padding(
+                        const Padding(
                           padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
                           child: Divider(),
                         ),
-                        Padding(
+                        const Padding(
                           padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
                           child: Text(
                             "HOW TO IMPORT friends",
@@ -185,17 +184,17 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                          padding: const EdgeInsets.fromLTRB(30, 10, 30, 15),
                           child: Text(
                             _importInfo,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                             ),
                           ),
                         ),
                         _importProgressWidget(),
                         Padding(
-                          padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                           child: Form(
                             key: _importFormKey,
                             child: Column(
@@ -203,10 +202,10 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                                 TextFormField(
                                   controller: _importInputController,
                                   maxLines: 6,
-                                  style: TextStyle(fontSize: 12),
+                                  style: const TextStyle(fontSize: 12),
                                   decoration: InputDecoration(
                                     counterText: "",
-                                    border: OutlineInputBorder(),
+                                    border: const OutlineInputBorder(),
                                     hintText: _importHintText,
                                     hintStyle: TextStyle(
                                       color: _importHintStyle,
@@ -214,34 +213,34 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value.isEmpty) {
+                                    if (value!.isEmpty) {
                                       return "Cannot be empty!";
                                     }
                                     return null;
                                   },
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                   child: ElevatedButton.icon(
-                                    icon: Icon(Icons.file_download),
-                                    label: Text("Import"),
+                                    icon: const Icon(Icons.file_download),
+                                    label: const Text("Import"),
                                     onPressed: () {
-                                      if (_importFormKey.currentState.validate()) {
-                                        var numberImported = _importChecker();
+                                      if (_importFormKey.currentState!.validate()) {
+                                        final numberImported = _importChecker();
                                         if (numberImported == 0) {
                                           BotToast.showText(
                                             text: 'No friends to import! '
                                                 'Is the file structure correct?',
-                                            textStyle: TextStyle(
+                                            textStyle: const TextStyle(
                                               fontSize: 14,
                                               color: Colors.white,
                                             ),
                                             contentColor: Colors.red,
-                                            duration: Duration(seconds: 3),
-                                            contentPadding: EdgeInsets.all(10),
+                                            duration: const Duration(seconds: 3),
+                                            contentPadding: const EdgeInsets.all(10),
                                           );
                                         } else {
-                                          FocusScope.of(context).requestFocus(new FocusNode());
+                                          FocusScope.of(context).requestFocus(FocusNode());
                                           _showImportDialog();
                                         }
                                       }
@@ -252,13 +251,15 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 50),
+                        const SizedBox(height: 50),
                       ],
                     ),
                   ),
                 ),
               );
-            })),
+            },
+          ),
+        ),
       ),
     );
   }
@@ -267,7 +268,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Import & Export"),
+      title: const Text("Import & Export"),
     );
   }
 
@@ -281,44 +282,44 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
 
   Widget _importProgressWidget() {
     if (!_importActive) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
       child: LinearPercentIndicator(
-        padding: null,
-        barRadius: Radius.circular(10),
+        padding: const EdgeInsets.all(0),
+        barRadius: const Radius.circular(10),
         alignment: MainAxisAlignment.center,
         width: 200,
         lineHeight: 16,
         progressColor: Colors.green[200],
         backgroundColor: Colors.red[200],
         center: Text(
-          '$_importSuccessEvents/${_tentativeImportModel.friendBackup.length}',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          '$_importSuccessEvents/${_tentativeImportModel.friendBackup!.length}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        percent: _importSuccessEvents / _tentativeImportModel.friendBackup.length,
+        percent: _importSuccessEvents / _tentativeImportModel.friendBackup!.length,
       ),
     );
   }
 
   int _importChecker() {
     try {
-      String inputString = _importInputController.text;
-      FriendsBackupModel inputModel = friendsBackupModelFromJson(inputString);
-      for (var tar in inputModel.friendBackup) {
-        if (tar.notesColor.length > 10) {
-          tar.notesColor = tar.notesColor.substring(0, 9);
+      final String inputString = _importInputController.text;
+      final FriendsBackupModel inputModel = friendsBackupModelFromJson(inputString);
+      for (final tar in inputModel.friendBackup!) {
+        if (tar.notesColor!.length > 10) {
+          tar.notesColor = tar.notesColor!.substring(0, 9);
         }
-        if (tar.notesColor.length > 200) {
-          tar.notesColor = tar.notesColor.substring(0, 199);
+        if (tar.notesColor!.length > 200) {
+          tar.notesColor = tar.notesColor!.substring(0, 199);
         }
         if (tar.notesColor != "red" && tar.notesColor != "green" && tar.notesColor != "blue") {
           tar.notesColor = "";
         }
       }
       _tentativeImportModel = inputModel;
-      return _tentativeImportModel.friendBackup.length;
+      return _tentativeImportModel.friendBackup!.length;
     } catch (e) {
       return 0;
     }
@@ -337,29 +338,28 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: 12,
                 bottom: 16,
                 left: 16,
                 right: 16,
               ),
               //margin: EdgeInsets.only(top: 30),
-              decoration: new BoxDecoration(
+              decoration: BoxDecoration(
                 color: _themeProvider.secondBackground,
-                shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
                     blurRadius: 10.0,
-                    offset: const Offset(0.0, 10.0),
+                    offset: Offset(0.0, 10.0),
                   ),
                 ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min, // To make the card compact
                 children: <Widget>[
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                     child: Text(
                       "How would you like to import?",
@@ -367,12 +367,10 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(30, 10, 30, 20),
+                    padding: const EdgeInsets.fromLTRB(30, 10, 30, 20),
                     child: Text(
-                      "${_tentativeImportModel.friendBackup.length} "
-                              "new friends were found, " +
-                          _importChoiceString,
-                      style: TextStyle(
+                      "${_tentativeImportModel.friendBackup!.length} new friends were found, $_importChoiceString",
+                      style: const TextStyle(
                         fontSize: 12,
                       ),
                     ),
@@ -381,17 +379,17 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       ElevatedButton(
-                        child: Text("Add"),
+                        child: const Text("Add"),
                         onPressed: () async {
                           Navigator.of(context).pop();
                           onImportPressed(replace: false);
                         },
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 5, right: 5),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 5, right: 5),
                       ),
                       ElevatedButton(
-                        child: Text("Replace"),
+                        child: const Text("Replace"),
                         onPressed: () {
                           Navigator.of(context).pop();
                           onImportPressed(replace: true);
@@ -408,7 +406,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          child: Text("Cancel import"),
+                          child: const Text("Cancel import"),
                         ),
                       ],
                     ),
@@ -422,7 +420,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
     );
   }
 
-  void onImportPressed({bool replace}) async {
+  Future<void> onImportPressed({required bool replace}) async {
     String existing = ' to the existing list';
     if (replace) {
       existing = '';
@@ -432,8 +430,8 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
     if (mounted) {
       setState(() {
         // More readable variables makes it easier
-        var total = _tentativeImportModel.friendBackup.length;
-        var numWorked = _importSuccessEvents;
+        final total = _tentativeImportModel.friendBackup!.length;
+        final numWorked = _importSuccessEvents;
         _importInputController.text = "";
         if (numWorked == 0) {
           _importHintText = "Import of all $total friends failed! "
@@ -459,8 +457,8 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   Future<void> _importFriends() async {
     _importActive = true; // Show import status
     _importSuccessEvents = 0;
-    for (var import in _tentativeImportModel.friendBackup) {
-      var importResult = await _friendsProvider.addFriend(
+    for (final import in _tentativeImportModel.friendBackup!) {
+      final importResult = await _friendsProvider.addFriend(
         import.id.toString(),
         notes: import.notes,
         notesColor: import.notesColor,
@@ -473,7 +471,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
         }
       }
       // Avoid issues with API limits
-      if (_tentativeImportModel.friendBackup.length > 60) {
+      if (_tentativeImportModel.friendBackup!.length > 60) {
         await Future.delayed(const Duration(seconds: 1), () {});
       }
     }

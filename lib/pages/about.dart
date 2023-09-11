@@ -3,33 +3,32 @@ import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
+// Project imports:
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// Project imports:
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/changelog.dart';
-import '../main.dart';
-
 class AboutPage extends StatefulWidget {
   final String uid;
 
-  AboutPage({@required this.uid});
+  const AboutPage({required this.uid});
 
   @override
-  _AboutPageState createState() => _AboutPageState();
+  AboutPageState createState() => AboutPageState();
 }
 
-class _AboutPageState extends State<AboutPage> {
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+class AboutPageState extends State<AboutPage> {
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -44,10 +43,11 @@ class _AboutPageState extends State<AboutPage> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
-      drawer: Drawer(),
+      drawer: const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -59,9 +59,8 @@ class _AboutPageState extends State<AboutPage> {
         color: _themeProvider.canvas,
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Padding(
+              const Padding(
                 padding: EdgeInsets.fromLTRB(20, 50, 30, 10),
                 child: Image(
                   image: AssetImage('images/icons/torn_pda.png'),
@@ -69,14 +68,14 @@ class _AboutPageState extends State<AboutPage> {
                   fit: BoxFit.fill,
                 ),
               ),
-              Text(
+              const Text(
                 "Torn PDA",
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.fromLTRB(20, 25, 30, 10),
                 child: Text(
                   "Torn PDA has been developed as an assistant for "
@@ -84,10 +83,9 @@ class _AboutPageState extends State<AboutPage> {
                   "experience of playing Torn from a mobile platform.",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.fromLTRB(20, 10, 30, 20),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Flexible(
                       child: Text(
@@ -98,9 +96,8 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
+                padding: const EdgeInsets.fromLTRB(40, 0, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Padding(
                       padding: const EdgeInsets.only(right: 10),
@@ -114,38 +111,39 @@ class _AboutPageState extends State<AboutPage> {
                       ),
                     ),
                     Flexible(
-                        child: RichText(
-                      text: TextSpan(
-                        text: 'Join our ',
-                        style: DefaultTextStyle.of(context).style,
-                        children: <TextSpan>[
-                          TextSpan(
-                            text: 'Discord channel',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () async {
-                                var url = 'https://discord.gg/vyP23kJ';
-                                if (await canLaunchUrl(Uri.parse(url))) {
-                                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                                }
-                              },
-                          ),
-                          TextSpan(
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Join our ',
+                          style: DefaultTextStyle.of(context).style,
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Discord channel',
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () async {
+                                  const url = 'https://discord.gg/vyP23kJ';
+                                  if (await canLaunchUrl(Uri.parse(url))) {
+                                    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                            ),
+                            const TextSpan(
                               text: ' and offer suggestions for new '
-                                  'features or report bugs you find!'),
-                        ],
+                                  'features or report bugs you find!',
+                            ),
+                          ],
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
+                padding: const EdgeInsets.fromLTRB(40, 0, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
+                    const Padding(
+                      padding: EdgeInsets.only(right: 10),
                       child: Icon(Icons.forum),
                     ),
                     Flexible(
@@ -157,7 +155,7 @@ class _AboutPageState extends State<AboutPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
+                                  const url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -165,22 +163,23 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
+                                  const url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Torn Forums',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
                               ),
                             ),
-                            TextSpan(
-                                text: ' and stay updated about the app or '
-                                    'suggest new features.'),
+                            const TextSpan(
+                              text: ' and stay updated about the app or '
+                                  'suggest new features.',
+                            ),
                           ],
                         ),
                       ),
@@ -189,9 +188,8 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
+                padding: const EdgeInsets.fromLTRB(40, 0, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Padding(
                       padding: const EdgeInsets.only(right: 10),
@@ -213,7 +211,7 @@ class _AboutPageState extends State<AboutPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://github.com/Manuito83/torn-pda';
+                                  const url = 'https://github.com/Manuito83/torn-pda';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -221,22 +219,23 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://github.com/Manuito83/torn-pda';
+                                  const url = 'https://github.com/Manuito83/torn-pda';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Github',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
                               ),
                             ),
-                            TextSpan(
-                                text: '. It is a nice way to practice your '
-                                    'coding skills in Flutter!'),
+                            const TextSpan(
+                              text: '. It is a nice way to practice your '
+                                  'coding skills in Flutter!',
+                            ),
                           ],
                         ),
                       ),
@@ -245,12 +244,11 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
+                padding: const EdgeInsets.fromLTRB(40, 0, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
+                    const Padding(
+                      padding: EdgeInsets.only(right: 10),
                       child: SizedBox(
                         height: 24,
                         width: 24,
@@ -260,14 +258,14 @@ class _AboutPageState extends State<AboutPage> {
                     Flexible(
                       child: RichText(
                         text: TextSpan(
-                          text: 'If you\'d like to show your appreciation and '
+                          text: "If you'd like to show your appreciation and "
                               'can afford a ',
                           style: DefaultTextStyle.of(context).style,
                           children: <InlineSpan>[
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
+                                  const url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -275,20 +273,20 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
+                                  const url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'donation in game',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
                               ),
                             ),
-                            TextSpan(text: ' it would be certainly appreciated!'),
+                            const TextSpan(text: ' it would be certainly appreciated!'),
                           ],
                         ),
                       ),
@@ -297,13 +295,12 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(20, 15, 30, 0),
+                padding: const EdgeInsets.fromLTRB(20, 15, 30, 0),
                 child: Column(
                   children: <Widget>[
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
-                        Flexible(
+                        const Flexible(
                           flex: 2,
                           child: Text(
                             "Changelog (major versions): ",
@@ -311,22 +308,21 @@ class _AboutPageState extends State<AboutPage> {
                         ),
                         Flexible(
                           child: InkWell(
-                            child: Text(
+                            onTap: _showChangeLogDialog,
+                            child: const Text(
                               "show",
                               style: TextStyle(
                                 decoration: TextDecoration.underline,
                                 color: Colors.blue,
                               ),
                             ),
-                            onTap: _showChangeLogDialog,
                           ),
                         ),
                       ],
                     ),
                     Padding(
-                      padding: EdgeInsets.only(top: 15),
+                      padding: const EdgeInsets.only(top: 15),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
                           Flexible(
                             flex: 2,
@@ -339,7 +335,6 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                     if (widget.uid.isNotEmpty)
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
                           Flexible(
                             flex: 2,
@@ -352,7 +347,7 @@ class _AboutPageState extends State<AboutPage> {
                   ],
                 ),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(20, 15, 30, 0),
@@ -360,9 +355,8 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(30, 15, 30, 10),
+                padding: const EdgeInsets.fromLTRB(30, 15, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Flexible(
                       child: RichText(
@@ -373,7 +367,7 @@ class _AboutPageState extends State<AboutPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2225097';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2225097';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -381,14 +375,14 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2225097';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2225097';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Manuito',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
@@ -402,9 +396,8 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Flexible(
                       child: RichText(
@@ -415,7 +408,7 @@ class _AboutPageState extends State<AboutPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2184575';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2184575';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -423,26 +416,26 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2184575';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2184575';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Phillip_J_Fry',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
                               ),
                             ),
-                            TextSpan(
+                            const TextSpan(
                               text: ', ',
                             ),
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2233317';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2233317';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -450,14 +443,14 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2233317';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2233317';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'VioletStorm',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
@@ -471,9 +464,8 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Flexible(
                       child: RichText(
@@ -484,7 +476,7 @@ class _AboutPageState extends State<AboutPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2000607';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2000607';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -492,14 +484,14 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2000607';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2000607';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Kivou',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
@@ -512,7 +504,7 @@ class _AboutPageState extends State<AboutPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=776';
+                                  const url = 'https://www.torn.com/profiles.php?XID=776';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -520,14 +512,14 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=776';
+                                  const url = 'https://www.torn.com/profiles.php?XID=776';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'IceBlueFire',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
@@ -544,7 +536,7 @@ class _AboutPageState extends State<AboutPage> {
                   ],
                 ),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
@@ -553,7 +545,7 @@ class _AboutPageState extends State<AboutPage> {
                       'and Universal Health Care.'),
                 ),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
@@ -563,9 +555,8 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Flexible(
                       child: RichText(
@@ -577,7 +568,7 @@ class _AboutPageState extends State<AboutPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2503189';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2503189';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -585,14 +576,14 @@ class _AboutPageState extends State<AboutPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/profiles.php?XID=2503189';
+                                  const url = 'https://www.torn.com/profiles.php?XID=2503189';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Knoxby',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
@@ -605,7 +596,7 @@ class _AboutPageState extends State<AboutPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 60),
+              const SizedBox(height: 60),
             ],
           ),
         ),
@@ -617,30 +608,38 @@ class _AboutPageState extends State<AboutPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      leadingWidth: 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon()
         ],
       ),
-      title: Text('About'),
+      title: const Text('About'),
     );
   }
 
   void _showChangeLogDialog() {
     showDialog(
-        useRootNavigator: false,
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (context) {
-          return ChangeLog();
-        });
+      useRootNavigator: false,
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (context) {
+        return ChangeLog();
+      },
+    );
   }
 }

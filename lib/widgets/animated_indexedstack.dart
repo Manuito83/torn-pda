@@ -8,21 +8,21 @@ class AnimatedIndexedStack extends StatefulWidget {
   final Function errorCallback;
 
   const AnimatedIndexedStack({
-    Key key,
-    @required this.index,
-    @required this.children,
-    @required this.duration,
-    @required this.errorCallback,
-  }) : super(key: key);
+    super.key,
+    required this.index,
+    required this.children,
+    required this.duration,
+    required this.errorCallback,
+  });
 
   @override
-  _AnimatedIndexedStackState createState() => _AnimatedIndexedStackState();
+  AnimatedIndexedStackState createState() => AnimatedIndexedStackState();
 }
 
-class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-  Animation<double> _animation;
-  int _index;
+class AnimatedIndexedStackState extends State<AnimatedIndexedStack> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  int? _index;
 
   @override
   void initState() {
@@ -61,14 +61,14 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
   @override
   Widget build(BuildContext context) {
     try {
-      if (_index == null || widget.children == null || widget.children[_index] == null) {
+      if (_index == null) {
         // Throw
-        throw ("Forced IndexedStack throw!");
+        throw "Forced IndexedStack throw!";
       }
 
-      if (_index < 0) {
+      if (_index! < 0) {
         _index = 0;
-      } else if (_index > widget.children.length - 1) {
+      } else if (_index! > widget.children.length - 1) {
         _index = widget.children.length - 1;
       }
 
@@ -87,12 +87,10 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
       );
     } catch (e) {
       FirebaseCrashlytics.instance.log("PDA Crash at AnimatedIndexedStack. Children number: ${widget.children.length}. "
-          "Index number: $_index. Error: ${e.toString()}");
+          "Index number: $_index. Error: $e");
       FirebaseCrashlytics.instance.recordError(e.toString(), null);
-      if (widget.errorCallback != null) {
-        widget.errorCallback();
-      }
+      widget.errorCallback();
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 }

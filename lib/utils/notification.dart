@@ -54,7 +54,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   }
 
   String notificationIcon = "notification_icon";
-  Color notificationColor = Colors.grey;
+  Color? notificationColor = Colors.grey;
 
   if (channel.contains("Alerts energy")) {
     notificationIcon = "notification_energy";
@@ -188,7 +188,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   }
 
   if (Platform.isAndroid) {
-    var modifier = await getNotificationChannelsModifiers();
+    final modifier = await getNotificationChannelsModifiers();
 
     // Add s for custom sounds
     if (channelId.contains("travel") || channelId.contains("assists") || channelId.contains("loot")) {
@@ -199,23 +199,20 @@ Future showNotificationBoth(Map payload, int notId) async {
       channelName = "$channelName ${modifier.channelIdModifier}";
     }
 
-    var platformChannelSpecifics = NotificationDetails(
+    final platformChannelSpecifics = NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
         channelName,
         channelDescription: channelDescription,
-        styleInformation: BigTextStyleInformation(''),
+        styleInformation: const BigTextStyleInformation(''),
         priority: Priority.high,
         visibility: NotificationVisibility.public,
-        autoCancel: true,
-        channelShowBadge: true,
         icon: notificationIcon,
         color: notificationColor,
         ledOnMs: 1000,
         ledOffMs: 500,
         ticker: payload["title"],
       ),
-      iOS: null,
     );
 
     await flutterLocalNotificationsPlugin.show(
@@ -227,40 +224,35 @@ Future showNotificationBoth(Map payload, int notId) async {
       payload: onTapPayload,
     );
   } else if (Platform.isIOS) {
-    var platformChannelSpecifics = NotificationDetails(
-      android: null,
+    var platformChannelSpecifics = const NotificationDetails(
       iOS: DarwinNotificationDetails(
         presentSound: true,
         sound: 'slow_spring_board.aiff',
       ),
     );
     if (channelName.contains("travel")) {
-      platformChannelSpecifics = NotificationDetails(
-        android: null,
+      platformChannelSpecifics = const NotificationDetails(
         iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'aircraft_seatbelt.aiff',
         ),
       );
     } else if (channelName.contains("assists")) {
-      platformChannelSpecifics = NotificationDetails(
-        android: null,
+      platformChannelSpecifics = const NotificationDetails(
         iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
       );
     } else if (channelName.contains("loot")) {
-      platformChannelSpecifics = NotificationDetails(
-        android: null,
+      platformChannelSpecifics = const NotificationDetails(
         iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
         ),
       );
     } else if (channelName.contains("retals")) {
-      platformChannelSpecifics = NotificationDetails(
-        android: null,
+      platformChannelSpecifics = const NotificationDetails(
         iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
@@ -280,17 +272,17 @@ Future showNotificationBoth(Map payload, int notId) async {
 }
 
 class VibrationModifier {
-  String channelIdModifier;
-  Int64List vibrationPattern;
+  String? channelIdModifier;
+  Int64List? vibrationPattern;
 }
 
-Future<VibrationModifier> getNotificationChannelsModifiers({String mod = ""}) async {
+Future<VibrationModifier> getNotificationChannelsModifiers({String? mod = ""}) async {
   var savedPattern = mod;
   if (mod == "") {
     savedPattern = await Prefs().getVibrationPattern();
   }
 
-  var vibrationPatternLong = Int64List(8);
+  final vibrationPatternLong = Int64List(8);
   vibrationPatternLong[0] = 0;
   vibrationPatternLong[1] = 400;
   vibrationPatternLong[2] = 400;
@@ -300,21 +292,21 @@ Future<VibrationModifier> getNotificationChannelsModifiers({String mod = ""}) as
   vibrationPatternLong[6] = 400;
   vibrationPatternLong[7] = 1000;
 
-  var vibrationPatternMedium = Int64List(5);
+  final vibrationPatternMedium = Int64List(5);
   vibrationPatternMedium[0] = 0;
   vibrationPatternMedium[1] = 400;
   vibrationPatternMedium[2] = 400;
   vibrationPatternMedium[3] = 400;
   vibrationPatternMedium[4] = 400;
 
-  var vibrationPatternShort = Int64List(2);
+  final vibrationPatternShort = Int64List(2);
   vibrationPatternShort[0] = 0;
   vibrationPatternShort[1] = 400;
 
-  var vibrationPatternOff = Int64List(1);
+  final vibrationPatternOff = Int64List(1);
   vibrationPatternOff[0] = 0;
 
-  var modifier = VibrationModifier();
+  final modifier = VibrationModifier();
   if (savedPattern == "no-vib") {
     modifier.channelIdModifier = "no-vib";
     modifier.vibrationPattern = vibrationPatternOff;
@@ -332,10 +324,10 @@ Future<VibrationModifier> getNotificationChannelsModifiers({String mod = ""}) as
   return modifier;
 }
 
-Future configureNotificationChannels({String mod = ""}) async {
+Future configureNotificationChannels({String? mod = ""}) async {
   List<AndroidNotificationChannel> channels = [];
 
-  var modifier = await getNotificationChannelsModifiers(mod: mod);
+  final modifier = await getNotificationChannelsModifiers(mod: mod);
 
   channels.add(
     AndroidNotificationChannel(
@@ -343,7 +335,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts travel ${modifier.channelIdModifier} s',
       description: 'Automatic alerts for travel',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
+      sound: const RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -356,7 +348,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts restocks ${modifier.channelIdModifier}',
       description: 'Automatic alerts for foreign restocks',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -369,7 +361,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual travel ${modifier.channelIdModifier} s',
       description: 'Manual notifications for travel',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
+      sound: const RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -382,7 +374,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual flight departure ${modifier.channelIdModifier} s',
       description: 'Manual notifications for delayed flight departure',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
+      sound: const RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -395,7 +387,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts energy ${modifier.channelIdModifier}',
       description: 'Automatic alerts for energy',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -408,7 +400,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual energy ${modifier.channelIdModifier}',
       description: 'Manual notifications for energy',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -421,7 +413,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts nerve ${modifier.channelIdModifier}',
       description: 'Automatic alerts for nerve',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -434,7 +426,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual nerve ${modifier.channelIdModifier}',
       description: 'Manual notifications for nerve',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -447,7 +439,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts hospital ${modifier.channelIdModifier}',
       description: 'Automatic alerts for hospital',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -460,7 +452,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual hospital ${modifier.channelIdModifier}',
       description: 'Manual notifications for hospital',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -473,7 +465,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual jail ${modifier.channelIdModifier}',
       description: 'Manual notifications for jail',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -486,7 +478,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual war ${modifier.channelIdModifier}',
       description: 'Manual notifications for war',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -499,7 +491,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts drugs ${modifier.channelIdModifier}',
       description: 'Automatic alerts for drugs',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -512,7 +504,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual drugs ${modifier.channelIdModifier}',
       description: 'Manual notifications for drugs',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -525,7 +517,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts racing ${modifier.channelIdModifier}',
       description: 'Automatic alerts for racing',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -538,7 +530,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts messages ${modifier.channelIdModifier}',
       description: 'Automatic alerts for messages',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -551,7 +543,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts events ${modifier.channelIdModifier}',
       description: 'Automatic alerts for events',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -564,7 +556,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts trades ${modifier.channelIdModifier}',
       description: 'Automatic alerts for trades',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -577,7 +569,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts loot ${modifier.channelIdModifier} s',
       description: 'Automatic alerts for loot',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('sword_clash'),
+      sound: const RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -590,7 +582,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual loot ${modifier.channelIdModifier}',
       description: 'Manual notifications for loot',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('sword_clash'),
+      sound: const RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -603,7 +595,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual life ${modifier.channelIdModifier}',
       description: 'Manual notifications for life',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -616,7 +608,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts medical ${modifier.channelIdModifier}',
       description: 'Automatic alerts for medical',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -629,7 +621,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual medical ${modifier.channelIdModifier}',
       description: 'Manual notifications for medical',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -642,7 +634,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts booster ${modifier.channelIdModifier}',
       description: 'Automatic alerts for booster',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -655,7 +647,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual booster ${modifier.channelIdModifier}',
       description: 'Manual notifications for booster',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -668,7 +660,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts stale user ${modifier.channelIdModifier}',
       description: 'Automatic alerts for inactivity',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -681,7 +673,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts refills ${modifier.channelIdModifier}',
       description: 'Automatic alerts for refills',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -694,7 +686,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts stocks ${modifier.channelIdModifier}',
       description: 'Automatic alerts for stocks',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -707,7 +699,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts assists ${modifier.channelIdModifier} s',
       description: 'Automatic alerts for assists',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('sword_clash'),
+      sound: const RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -720,7 +712,7 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts retals ${modifier.channelIdModifier} s',
       description: 'Automatic alerts for retals',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('sword_clash'),
+      sound: const RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -733,23 +725,23 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual chain ${modifier.channelIdModifier}',
       description: 'Manual notifications for chain',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
-  for (var channel in channels) {
+  for (final channel in channels) {
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 }
 
-Future reconfigureNotificationChannels({String mod}) async {
+Future reconfigureNotificationChannels({String? mod}) async {
   if (Platform.isAndroid) {
-    const platform = const MethodChannel('tornpda.channel');
+    const platform = MethodChannel('tornpda.channel');
     platform.invokeMethod('deleteNotificationChannels');
     configureNotificationChannels(mod: mod);
   }

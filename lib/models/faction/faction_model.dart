@@ -5,7 +5,7 @@
 // Dart imports:
 import 'dart:convert';
 
-import '../profile/own_profile_basic.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
@@ -29,22 +29,22 @@ class FactionModel {
   });
 
   // War state
-  bool hidden = false;
+  bool? hidden = false;
 
-  int id;
-  String name;
+  int? id;
+  String? name;
   dynamic tag;
-  int leader;
-  int coLeader;
-  int respect;
-  int age;
-  int bestChain;
+  int? leader;
+  int? coLeader;
+  int? respect;
+  int? age;
+  int? bestChain;
   // If we want to use these in the future, make sure to find good example to build the classes, otherwise
   // we'll get API errors if they are empty
   //TerritoryWars territoryWars;
   //RaidWars raidWars;
   //Peace peace;
-  Map<String, Member> members;
+  Map<String, Member?>? members;
 
   factory FactionModel.fromJson(Map<String, dynamic> json) => FactionModel(
         hidden: json["hidden"] ?? false,
@@ -77,7 +77,7 @@ class FactionModel {
         //"territory_wars": territoryWars.toJson(),
         //"raid_wars": raidWars.toJson(),
         //"peace": peace.toJson(),
-        "members": Map.from(members).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "members": Map.from(members!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -133,53 +133,53 @@ class Member {
   });
 
   // State for wars
-  int memberId = 0;
-  bool isUpdating = false;
-  String factionName = "";
-  int factionLeader = 0;
-  int factionColeader = 0;
-  int lifeCurrent = -1;
-  int lifeMaximum = -1;
-  DateTime lastUpdated;
-  bool justUpdatedWithSuccess = false;
-  bool justUpdatedWithError = false;
-  double respectGain = -1;
-  double fairFight = -1;
-  bool userWonOrDefended = false;
-  String personalNote = "";
-  String personalNoteColor = "";
-  bool hidden = false;
-  String statsEstimated = "";
-  String spiesSource = "yata";
-  int statsExactTotal = -1;
-  int statsExactTotalKnown = -1;
-  int statsExactUpdated = 0;
-  int statsStr = -1;
-  int statsSpd = -1;
-  int statsDef = -1;
-  int statsDex = -1;
-  int statsSort = 0; // Mixed estimates and exacts so that members can be sorted
-  int lifeSort = 0;
-  bool overrideEasyLife = false;
+  int? memberId = 0;
+  bool? isUpdating = false;
+  String? factionName = "";
+  int? factionLeader = 0;
+  int? factionColeader = 0;
+  int? lifeCurrent = -1;
+  int? lifeMaximum = -1;
+  DateTime? lastUpdated;
+  bool? justUpdatedWithSuccess = false;
+  bool? justUpdatedWithError = false;
+  double? respectGain = -1;
+  double? fairFight = -1;
+  bool? userWonOrDefended = false;
+  String? personalNote = "";
+  String? personalNoteColor = "";
+  bool? hidden = false;
+  String? statsEstimated = "";
+  String? spiesSource = "yata";
+  int? statsExactTotal = -1;
+  int? statsExactTotalKnown = -1;
+  int? statsExactUpdated = 0;
+  int? statsStr = -1;
+  int? statsSpd = -1;
+  int? statsDef = -1;
+  int? statsDex = -1;
+  int? statsSort = 0; // Mixed estimates and exacts so that members can be sorted
+  int? lifeSort = 0;
+  bool? overrideEasyLife = false;
   // For stats estimates calculation
-  bool statsComparisonSuccess = false;
-  int memberXanax = 0;
-  int myXanax = 0;
-  int memberRefill = 0;
-  int myRefill = 0;
-  int memberEnhancement = 0;
-  int myEnhancement = 0;
-  int memberEcstasy = 0;
-  int memberLsd = 0;
-  int memberCans = 0;
-  int myCans = 0;
+  bool? statsComparisonSuccess = false;
+  int? memberXanax = 0;
+  int? myXanax = 0;
+  int? memberRefill = 0;
+  int? myRefill = 0;
+  int? memberEnhancement = 0;
+  int? myEnhancement = 0;
+  int? memberEcstasy = 0;
+  int? memberLsd = 0;
+  int? memberCans = 0;
+  int? myCans = 0;
 
-  String name;
-  int level;
-  int daysInFaction;
-  LastAction lastAction;
-  Status status;
-  String position;
+  String? name;
+  int? level;
+  int? daysInFaction;
+  LastAction? lastAction;
+  Status? status;
+  String? position;
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
         memberId: json["memberId"] ?? 0,
@@ -191,11 +191,11 @@ class Member {
         lifeMaximum: json["lifeMaximum"] ?? -1,
         lastUpdated:
             json["lastUpdated"] == null ? DateTime.now() : DateTime.fromMillisecondsSinceEpoch(json["lastUpdated"]),
-        justUpdatedWithSuccess: json["justUpdatedWithSuccess"] == null ? false : json["justUpdatedWithSuccess"],
-        justUpdatedWithError: json["justUpdatedWithSuccess"] == null ? false : json["justUpdatedWithSuccess"],
-        respectGain: json["respectGain"] == null ? -1 : json["respectGain"],
-        fairFight: json["fairFight"] == null ? -1 : json["fairFight"],
-        userWonOrDefended: json["userWonOrDefended"] == null ? false : json["userWonOrDefended"],
+        justUpdatedWithSuccess: json["justUpdatedWithSuccess"] ?? false,
+        justUpdatedWithError: json["justUpdatedWithSuccess"] ?? false,
+        respectGain: json["respectGain"] ?? -1,
+        fairFight: json["fairFight"] ?? -1,
+        userWonOrDefended: json["userWonOrDefended"] ?? false,
         personalNote: json["personalNotes"] ?? "",
         personalNoteColor: json["personalNoteColor"] ?? "",
         hidden: json["hidden"] ?? false,
@@ -209,7 +209,7 @@ class Member {
         statsDef: json["statsDef"] ?? -1,
         statsDex: json["statsDex"] ?? -1,
         statsSort: json["statsSort"] ?? 0,
-        lifeSort: json["lifeSort"] == null ? json["lifeCurrent"] ?? 0 : json["lifeSort"],
+        lifeSort: json["lifeSort"] ?? json["lifeCurrent"] ?? 0,
         overrideEasyLife: json["overrideEasyLife"] ?? false,
         statsComparisonSuccess: json["statsComparisonSuccess"] ?? false,
         memberXanax: json["memberXanax"] ?? 0,
@@ -224,7 +224,7 @@ class Member {
         myCans: json["myCans"] ?? 0,
         //
         name: json["name"],
-        level: json["level"] == null ? null : json["level"],
+        level: json["level"],
         daysInFaction: json["days_in_faction"],
         lastAction: LastAction.fromJson(json["last_action"]),
         status: Status.fromJson(json["status"]),
@@ -239,7 +239,7 @@ class Member {
         "factionColeader": factionColeader,
         "lifeCurrent": lifeCurrent,
         "lifeMaximum": lifeMaximum,
-        "lastUpdated": lastUpdated.millisecondsSinceEpoch,
+        "lastUpdated": lastUpdated!.millisecondsSinceEpoch,
         "respectGain": respectGain,
         "fairFight": fairFight,
         "userWonOrDefended": userWonOrDefended,
@@ -271,10 +271,10 @@ class Member {
         "myCans": myCans,
         //
         "name": name,
-        "level": level == null ? null : level,
+        "level": level,
         "days_in_faction": daysInFaction,
-        "last_action": lastAction.toJson(),
-        "status": status.toJson(),
+        "last_action": lastAction!.toJson(),
+        "status": status!.toJson(),
         "position": position,
       };
 }
@@ -286,9 +286,9 @@ class LastAction {
     this.relative,
   });
 
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
         status: json["status"],

@@ -22,28 +22,28 @@ class WebViewFullAwh extends StatefulWidget {
   final int sellerId;
   final Function awhMessageCallback;
 
-  WebViewFullAwh({
-    @required this.customUrl,
-    @required this.customTitle,
-    @required this.sellerName,
-    @required this.sellerId,
-    @required this.awhMessageCallback,
+  const WebViewFullAwh({
+    required this.customUrl,
+    required this.customTitle,
+    required this.sellerName,
+    required this.sellerId,
+    required this.awhMessageCallback,
   });
 
   @override
-  _WebViewFullAwhState createState() => _WebViewFullAwhState();
+  WebViewFullAwhState createState() => WebViewFullAwhState();
 }
 
-class _WebViewFullAwhState extends State<WebViewFullAwh> {
-  InAppWebViewController webView;
+class WebViewFullAwhState extends State<WebViewFullAwh> {
+  InAppWebViewController? webView;
   var _initialWebViewSettings = InAppWebViewSettings();
-  URLRequest _initialUrl;
+  URLRequest? _initialUrl;
   String _pageTitle = "";
 
   double progress = 0;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -52,9 +52,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
     _initialUrl = URLRequest(url: WebUri(widget.customUrl));
     _pageTitle = widget.customTitle;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    _initialWebViewSettings = InAppWebViewSettings(
-      useHybridComposition: true,
-    );
+    _initialWebViewSettings = InAppWebViewSettings();
   }
 
   @override
@@ -77,7 +75,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
   Widget buildScaffold(BuildContext context) {
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
@@ -106,18 +104,19 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
   Column mainWebViewColumn() {
     return Column(
       children: [
-        _settingsProvider.loadBarBrowser
-            ? Container(
-                height: 2,
-                child: progress < 1.0
-                    ? LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.blueGrey[100],
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange[300]),
-                      )
-                    : Container(height: 2),
-              )
-            : SizedBox.shrink(),
+        if (_settingsProvider.loadBarBrowser)
+          SizedBox(
+            height: 2,
+            child: progress < 1.0
+                ? LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.blueGrey[100],
+                    valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
+                  )
+                : Container(height: 2),
+          )
+        else
+          const SizedBox.shrink(),
         Expanded(
           child: InAppWebView(
             initialUrlRequest: _initialUrl,
@@ -125,43 +124,43 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
             onWebViewCreated: (c) {
               webView = c;
               // For Arson Warehouse
-              webView.addJavaScriptHandler(
-                  handlerName: 'copyToClipboard',
-                  callback: (args) {
-                    if (args.length > 0) {
-                      // Copy custom message or total
-                      String toastMessage = "";
-                      if (args[1] == "total") {
-                        toastMessage = "Total of \$${args[0]} copied to the clipboard!";
+              webView!.addJavaScriptHandler(
+                handlerName: 'copyToClipboard',
+                callback: (args) {
+                  if (args.isNotEmpty) {
+                    // Copy custom message or total
+                    String toastMessage = "";
+                    if (args[1] == "total") {
+                      toastMessage = "Total of \$${args[0]} copied to the clipboard!";
+                      Clipboard.setData(ClipboardData(text: args[0]));
+                    } else if (args[1] == "message") {
+                      if (widget.sellerId > 0) {
+                        toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
                         Clipboard.setData(ClipboardData(text: args[0]));
-                      } else if (args[1] == "message") {
-                        if (widget.sellerId > 0) {
-                          toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
-                          Clipboard.setData(ClipboardData(text: args[0]));
-                          widget.awhMessageCallback();
-                        } else {
-                          toastMessage = "Message copied to the clipboard!";
-                          Clipboard.setData(ClipboardData(text: args[0]));
-                        }
+                        widget.awhMessageCallback();
+                      } else {
+                        toastMessage = "Message copied to the clipboard!";
+                        Clipboard.setData(ClipboardData(text: args[0]));
                       }
-
-                      BotToast.showText(
-                        text: toastMessage,
-                        textStyle: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.green[800],
-                        duration: Duration(seconds: 2),
-                        contentPadding: EdgeInsets.all(10),
-                      );
                     }
-                  });
+
+                    BotToast.showText(
+                      text: toastMessage,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.green[800]!,
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  }
+                },
+              );
             },
-            onCreateWindow: (c, request) {
+            onCreateWindow: (c, request) async {
               // Allows IOS to open links with target=_blank
-              webView.loadUrl(urlRequest: request.request);
-              return;
+              webView!.loadUrl(urlRequest: request.request);
+              return true;
             },
             onLoadStart: (c, uri) async {},
             onProgressChanged: (c, progress) async {
@@ -184,12 +183,13 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         leading: IconButton(
-            icon: Icon(Icons.close),
-            onPressed: () async {
-              Navigator.pop(context);
-            }),
+          icon: const Icon(Icons.close),
+          onPressed: () async {
+            Navigator.pop(context);
+          },
+        ),
         title: Text(_pageTitle),
-        actions: <Widget>[],
+        actions: const <Widget>[],
       ),
     );
   }

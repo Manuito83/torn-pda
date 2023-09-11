@@ -9,11 +9,11 @@ import 'package:torn_pda/providers/targets_provider.dart';
 
 class ColorFilterDialog extends StatefulWidget {
   @override
-  _ColorFilterDialogState createState() => _ColorFilterDialogState();
+  ColorFilterDialogState createState() => ColorFilterDialogState();
 }
 
-class _ColorFilterDialogState extends State<ColorFilterDialog> {
-  TargetsProvider _targetsProvider;
+class ColorFilterDialogState extends State<ColorFilterDialog> {
+  late TargetsProvider _targetsProvider;
 
   @override
   void initState() {
@@ -24,11 +24,11 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
   Widget build(BuildContext context) {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     return AlertDialog(
-      title: Text("Filter out colors"),
+      title: const Text("Filter out colors"),
       content: SingleChildScrollView(
         child: Column(
           children: [
-            Text(
+            const Text(
               "Choose if you would like to filter OUT targets based on their note color.",
               style: TextStyle(
                 fontSize: 13,
@@ -39,11 +39,11 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("No color"),
+                  const Text("No color"),
                   Switch(
                     value: _targetsProvider.currentColorFilterOut.contains('z'),
                     onChanged: (value) {
-                      var temp = _targetsProvider.currentColorFilterOut;
+                      final temp = _targetsProvider.currentColorFilterOut;
                       if (value) {
                         temp.add('z');
                         setState(() {
@@ -68,11 +68,11 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Red"),
+                  const Text("Red"),
                   Switch(
                     value: _targetsProvider.currentColorFilterOut.contains('red'),
                     onChanged: (value) {
-                      var temp = _targetsProvider.currentColorFilterOut;
+                      final temp = _targetsProvider.currentColorFilterOut;
                       if (value) {
                         temp.add('red');
                         setState(() {
@@ -97,11 +97,11 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Yellow"),
+                  const Text("Yellow"),
                   Switch(
                     value: _targetsProvider.currentColorFilterOut.contains('orange'),
                     onChanged: (value) {
-                      var temp = _targetsProvider.currentColorFilterOut;
+                      final temp = _targetsProvider.currentColorFilterOut;
                       if (value) {
                         temp.add('orange');
                         setState(() {
@@ -126,11 +126,11 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Green"),
+                  const Text("Green"),
                   Switch(
                     value: _targetsProvider.currentColorFilterOut.contains('green'),
                     onChanged: (value) {
-                      var temp = _targetsProvider.currentColorFilterOut;
+                      final temp = _targetsProvider.currentColorFilterOut;
                       if (value) {
                         temp.add('green');
                         setState(() {
@@ -157,7 +157,7 @@ class _ColorFilterDialogState extends State<ColorFilterDialog> {
         Padding(
           padding: const EdgeInsets.only(right: 15),
           child: TextButton(
-            child: Text("Close"),
+            child: const Text("Close"),
             onPressed: () {
               Navigator.of(context).pop();
             },

@@ -13,25 +13,25 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/travel/travel_notification_text.dart';
 
 class TravelOptionsAndroid extends StatefulWidget {
-  final Function callback;
+  final Function? callback;
 
-  TravelOptionsAndroid({
+  const TravelOptionsAndroid({
     this.callback,
   });
 
   @override
-  _TravelOptionsAndroidState createState() => _TravelOptionsAndroidState();
+  TravelOptionsAndroidState createState() => TravelOptionsAndroidState();
 }
 
-class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
-  String _travelNotificationAheadDropDownValue;
-  String _travelAlarmAheadDropDownValue;
-  String _travelTimerAheadDropDownValue;
+class TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
+  String? _travelNotificationAheadDropDownValue;
+  String? _travelAlarmAheadDropDownValue;
+  String? _travelTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -48,12 +48,12 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
                 : _themeProvider.canvas
             : _themeProvider.canvas,
@@ -73,7 +73,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
                   color: _themeProvider.canvas,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                    onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                     child: FutureBuilder(
                       future: _preferencesLoaded,
                       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -81,19 +81,19 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
                           return SingleChildScrollView(
                             child: Column(
                               children: <Widget>[
-                                Padding(
-                                  padding: const EdgeInsets.all(20.0),
+                                const Padding(
+                                  padding: EdgeInsets.all(20.0),
                                   child: Text('Here you can specify your preferred notification '
                                       'trigger time before arrival. Tap the text icon in the appbar '
                                       'to change the notification title and body.'),
                                 ),
                                 _rowsWithTypes(),
-                                SizedBox(height: 50),
+                                const SizedBox(height: 50),
                               ],
                             ),
                           );
                         } else {
-                          return Center(
+                          return const Center(
                             child: CircularProgressIndicator(),
                           );
                         }
@@ -113,18 +113,18 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Travel notification"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Travel notification"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
       ),
       actions: [
         IconButton(
-          icon: Icon(MdiIcons.commentTextOutline),
+          icon: const Icon(MdiIcons.commentTextOutline),
           onPressed: () {
-            return _showNotificationTextDialog();
+            _showNotificationTextDialog();
           },
         ),
       ],
@@ -139,10 +139,10 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text('Notification'),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -156,10 +156,10 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
+              const Flexible(
                 child: Text('Alarm'),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -174,7 +174,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
                         ),
                       ],
                     ),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Flexible(
@@ -199,10 +199,10 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text('Timer'),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -218,7 +218,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   DropdownButton _travelNotificationAheadDropDown() {
     return DropdownButton<String>(
       value: _travelNotificationAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -286,7 +286,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setTravelNotificationAhead(value);
+        Prefs().setTravelNotificationAhead(value!);
         setState(() {
           _travelNotificationAheadDropDownValue = value;
         });
@@ -297,7 +297,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   DropdownButton _travelAlarmAheadDropDown() {
     return DropdownButton<String>(
       value: _travelAlarmAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -352,7 +352,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setTravelAlarmAhead(value);
+        Prefs().setTravelAlarmAhead(value!);
         setState(() {
           _travelAlarmAheadDropDownValue = value;
         });
@@ -363,7 +363,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   DropdownButton _travelTimerAheadDropDown() {
     return DropdownButton<String>(
       value: _travelTimerAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -431,7 +431,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setTravelTimerAhead(value);
+        Prefs().setTravelTimerAhead(value!);
         setState(() {
           _travelTimerAheadDropDownValue = value;
         });
@@ -440,9 +440,9 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   }
 
   Future _restorePreferences() async {
-    var travelNotificationAhead = await Prefs().getTravelNotificationAhead();
-    var travelAlarmAhead = await Prefs().getTravelAlarmAhead();
-    var travelTimerAhead = await Prefs().getTravelTimerAhead();
+    final travelNotificationAhead = await Prefs().getTravelNotificationAhead();
+    final travelAlarmAhead = await Prefs().getTravelAlarmAhead();
+    final travelTimerAhead = await Prefs().getTravelTimerAhead();
 
     setState(() {
       _travelNotificationAheadDropDownValue = travelNotificationAhead;
@@ -453,16 +453,16 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
 
   Future<bool> _willPopCallback() async {
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     return true;
   }
 
-  Future<void> _showNotificationTextDialog() async {
-    var title = await Prefs().getTravelNotificationTitle();
-    var body = await Prefs().getTravelNotificationBody();
+  Future _showNotificationTextDialog() async {
+    final title = await Prefs().getTravelNotificationTitle();
+    final body = await Prefs().getTravelNotificationBody();
 
-    return showDialog<void>(
+    showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
@@ -485,7 +485,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
     routeWithDrawer = false;
     routeName = "profile_notifications";
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     Navigator.of(context).pop();
   }

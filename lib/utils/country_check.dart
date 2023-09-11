@@ -1,17 +1,15 @@
-import 'package:flutter/material.dart';
-
 /// Takes a player status and returns the country
 /// Active travels are considered as being abroad in the destination country
-String countryCheck({@required String state, @required String description}) {
+String countryCheck({required String? state, required String? description}) {
   try {
     // Visiting
     if (state == "Abroad") {
-      return description.split("In ")[1];
+      return description!.split("In ")[1];
     }
 
     // Travelling
     if (state == "Traveling") {
-      if (description.contains("Returning to Torn")) {
+      if (description!.contains("Returning to Torn")) {
         return "Torn";
       }
       return description.split("Traveling to ")[1];
@@ -19,7 +17,7 @@ String countryCheck({@required String state, @required String description}) {
 
     // Abroad hospital
     if (state == "Hospital") {
-      if (description.contains("In a Swiss hospital")) {
+      if (description!.contains("In a Swiss hospital")) {
         return "Switzerland";
       } else if (description.contains("In an Emirati hospital")) {
         return "UAE";
@@ -52,7 +50,7 @@ String countryCheck({@required String state, @required String description}) {
 }
 
 /// Takes a player status and returns if the player is traveling (active flight)
-bool travelingCheck({@required String state}) {
+bool travelingCheck({required String? state}) {
   try {
     // Travelling
     if (state == "Traveling") {

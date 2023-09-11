@@ -18,20 +18,20 @@ class ForeignStockInModel {
     this.timestamp,
   });
 
-  Map<String, CountryDetails> countries;
-  int timestamp;
+  Map<String, CountryDetails>? countries;
+  int? timestamp;
 
   factory ForeignStockInModel.fromJson(Map<String, dynamic> json) => ForeignStockInModel(
         countries: json["stocks"] == null
             ? null
             : Map.from(json["stocks"]).map((k, v) => MapEntry<String, CountryDetails>(k, CountryDetails.fromJson(v))),
-        timestamp: json["timestamp"] == null ? null : json["timestamp"],
+        timestamp: json["timestamp"],
       );
 
   Map<String, dynamic> toJson() => {
         "stocks":
-            countries == null ? null : Map.from(countries).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-        "timestamp": timestamp == null ? null : timestamp,
+            countries == null ? null : Map.from(countries!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "timestamp": timestamp,
       };
 }
 
@@ -41,19 +41,19 @@ class CountryDetails {
     this.stocks,
   });
 
-  int update;
-  List<ForeignStock> stocks;
+  int? update;
+  List<ForeignStock>? stocks;
 
   factory CountryDetails.fromJson(Map<String, dynamic> json) => CountryDetails(
-        update: json["update"] == null ? null : json["update"],
+        update: json["update"],
         stocks: json["stocks"] == null
             ? null
             : List<ForeignStock>.from(json["stocks"].map((x) => ForeignStock.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
-        "update": update == null ? null : update,
-        "stocks": stocks == null ? null : List<dynamic>.from(stocks.map((x) => x.toJson())),
+        "update": update,
+        "stocks": stocks == null ? null : List<dynamic>.from(stocks!.map((x) => x.toJson())),
       };
 }
 
@@ -72,35 +72,35 @@ class ForeignStock {
 
   // NOT INCLUDED WITH YATA IMPORT
   // Calculated, NOT exported to Shared Preferences!
-  CountryName country;
-  String countryCode;
-  String countryFullName;
-  DateTime arrivalTime;
-  int timestamp;
-  ItemType itemType;
+  CountryName? country;
+  String? countryCode;
+  String? countryFullName;
+  late DateTime arrivalTime;
+  int? timestamp;
+  ItemType? itemType;
   int value = 0;
   int profit = 0;
-  int inventoryQuantity = 0;
+  int? inventoryQuantity = 0;
 
-  int id;
-  String name;
-  int quantity;
-  int cost;
+  int? id;
+  String? name;
+  int? quantity;
+  int? cost;
 
   factory ForeignStock.fromJson(Map<String, dynamic> json) => ForeignStock(
-        id: json["id"] == null ? null : json["id"],
-        name: json["name"] == null ? null : json["name"],
-        quantity: json["quantity"] == null ? null : json["quantity"],
-        cost: json["cost"] == null ? null : json["cost"],
-        countryCode: json["countryCode"] == null ? null : json["countryCode"],
+        id: json["id"],
+        name: json["name"],
+        quantity: json["quantity"],
+        cost: json["cost"],
+        countryCode: json["countryCode"],
       );
 
   Map<String, dynamic> toJson() => {
-        "id": id == null ? null : id,
-        "name": name == null ? null : name,
-        "quantity": quantity == null ? null : quantity,
-        "cost": cost == null ? null : cost,
-        "countryCode": countryCode == null ? null : countryCode,
+        "id": id,
+        "name": name,
+        "quantity": quantity,
+        "cost": cost,
+        "countryCode": countryCode,
       };
 }
 

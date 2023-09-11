@@ -5,5 +5,5 @@ class TradeItem {
   int priceUnit = 0;
   double shareUnit = 0;
   int totalPrice = 0;
-  String happiness;
+  late String happiness;
 }

@@ -2,36 +2,36 @@
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 
 class FirebaseUserModel extends OwnProfileExtended {
-  String token;
-  String uid;
+  String? token;
+  String? uid;
   bool discrete = false;
-  bool travelNotification = false;
-  bool foreignRestockNotification = false;
-  bool energyNotification = false;
+  bool? travelNotification = false;
+  bool? foreignRestockNotification = false;
+  bool? energyNotification = false;
   bool energyLastCheckFull = true;
-  bool nerveNotification = false;
+  bool? nerveNotification = false;
   bool nerveLastCheckFull = true;
   List lootAlerts = [];
-  bool lootRangersAlerts = false;
-  bool hospitalNotification = false;
-  bool drugsNotification = false;
+  bool? lootRangersAlerts = false;
+  bool? hospitalNotification = false;
+  bool? drugsNotification = false;
   bool drugsInfluence = false;
-  bool medicalNotification = false;
+  bool? medicalNotification = false;
   bool medicalInfluence = false;
-  bool boosterNotification = false;
+  bool? boosterNotification = false;
   bool boosterInfluence = false;
-  bool racingNotification = false;
-  bool messagesNotification = false;
-  bool eventsNotification = false;
+  bool? racingNotification = false;
+  bool? messagesNotification = false;
+  bool? eventsNotification = false;
   List eventsFilter = [];
-  bool refillsNotification = false;
-  int refillsTime = 22;
+  bool? refillsNotification = false;
+  int? refillsTime = 22;
   List refillsRequested = [];
   bool racingSent = true;
-  bool stockMarketNotification = false;
+  bool? stockMarketNotification = false;
   List stockMarketShares = [];
-  bool factionAssistMessage = true;
-  bool retalsNotification = false;
+  bool? factionAssistMessage = true;
+  bool? retalsNotification = false;
 
   FirebaseUserModel();
 
@@ -43,7 +43,7 @@ class FirebaseUserModel extends OwnProfileExtended {
     life = model.life;
   }
 
-  toMap() {
+  Map<String, Object?> toMap() {
     return {
       "uid": uid,
       "name": name,
@@ -112,7 +112,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..level = data["level"]
       ..name = data["name"]
       ..life = Life()
-      ..life.current = data["life"]
+      ..life!.current = data["life"]
       ..stockMarketNotification = data["stockMarketNotification"] ?? false
       ..stockMarketShares = data["stockMarketShares"] ?? []
       ..factionAssistMessage = data["factionAssistMessage"] ?? true

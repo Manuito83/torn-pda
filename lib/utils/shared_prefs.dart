@@ -308,6 +308,10 @@ class Prefs {
   final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
   final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
 
+  // Split screen configuration
+  final String _kSplitScreenWebview = "pda_splitScreenWebview";
+  final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -1274,7 +1278,7 @@ class Prefs {
   /// ----------------------------
   Future<List<String>> getStockCountryFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1', growable: false);
+    return prefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1');
   }
 
   Future<bool> setStockCountryFilter(List<String> value) async {
@@ -1284,7 +1288,7 @@ class Prefs {
 
   Future<List<String>> getStockTypeFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1', growable: false);
+    return prefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1');
   }
 
   Future<bool> setStockTypeFilter(List<String> value) async {
@@ -2112,14 +2116,14 @@ class Prefs {
     return prefs.setBool(_kShowAchievedAwards, value);
   }
 
-  Future<List<String>> getHiddenAwardCategories() async {
+  Future<List<String?>> getHiddenAwardCategories() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getStringList(_kHiddenAwardCategories) ?? <String>[];
   }
 
-  Future<bool> setHiddenAwardCategories(List<String> value) async {
+  Future<bool> setHiddenAwardCategories(List<String?> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kHiddenAwardCategories, value);
+    return prefs.setStringList(_kHiddenAwardCategories, value as List<String>);
   }
 
   /// ----------------------------
@@ -2390,9 +2394,9 @@ class Prefs {
     return prefs.setBool(_kUserScriptsEnabled, value);
   }
 
-  Future<String> getUserScriptsList() async {
+  Future<String?> getUserScriptsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kUserScriptsList) ?? null;
+    return prefs.getString(_kUserScriptsList);
   }
 
   Future<bool> setUserScriptsList(String value) async {
@@ -2969,5 +2973,28 @@ class Prefs {
   Future<bool> setShowApiMaxCallWarning(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowApiMaxCallWarning, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Split Screen
+  /// ----------------------------
+  Future<String> getSplitScreenWebview() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kSplitScreenWebview) ?? 'off';
+  }
+
+  Future<bool> setSplitScreenWebview(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kSplitScreenWebview, value);
+  }
+
+  Future<bool> getSplitScreenRevertsToApp() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSplitScreenRevertsToApp) ?? true;
+  }
+
+  Future<bool> setSplitScreenRevertsToApp(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSplitScreenRevertsToApp, value);
   }
 }

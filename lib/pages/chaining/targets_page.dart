@@ -1,17 +1,15 @@
 // Dart imports:
 import 'dart:async';
 
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-
-// Package imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
@@ -21,6 +19,7 @@ import 'package:torn_pda/pages/chaining/targets_options_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
@@ -29,23 +28,19 @@ import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class TargetsOptions {
-  String description;
-  IconData iconData;
+  String? description;
+  IconData? iconData;
 
   TargetsOptions({this.description}) {
     switch (description) {
       case "Options":
         iconData = Icons.settings;
-        break;
       case "Filter Color":
         iconData = Icons.filter_list;
-        break;
       case "Backup":
         iconData = Icons.save;
-        break;
       case "Wipe":
         iconData = Icons.delete_forever_outlined;
-        break;
     }
   }
 }
@@ -55,28 +50,29 @@ class TargetsPage extends StatefulWidget {
   //final Function tabCallback;
 
   const TargetsPage({
-    Key key,
-    @required this.retaliationCallback,
+    super.key,
+    required this.retaliationCallback,
     //@required this.tabCallback,
-  }) : super(key: key);
+  });
 
   @override
-  _TargetsPageState createState() => _TargetsPageState();
+  TargetsPageState createState() => TargetsPageState();
 }
 
-class _TargetsPageState extends State<TargetsPage> {
+class TargetsPageState extends State<TargetsPage> {
   final _searchController = TextEditingController();
   final _addIdController = TextEditingController();
 
   final _addFormKey = GlobalKey<FormState>();
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
   final _chainWidgetKey = GlobalKey();
 
-  TargetsProvider _targetsProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late TargetsProvider _targetsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   // For appBar search
   Icon _searchIcon = const Icon(Icons.search);
@@ -88,7 +84,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   /// Dictates if it has been pressed and is showing a circular
   /// progress indicator while fetching data from Yata
-  bool _yataButtonEnabled = true;
+  bool? _yataButtonEnabled = true;
 
   final _popupSortChoices = <TargetSort>[
     TargetSort(type: TargetSortType.levelDes),
@@ -133,8 +129,9 @@ class _TargetsPageState extends State<TargetsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _targetsProvider = Provider.of<TargetsProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
@@ -150,7 +147,7 @@ class _TargetsPageState extends State<TargetsPage> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-          child: MediaQuery.of(context).orientation == Orientation.portrait
+          child: MediaQuery.orientationOf(context) == Orientation.portrait
               ? _mainColumn()
               : SingleChildScrollView(
                   child: _mainColumn(),
@@ -256,7 +253,7 @@ class _TargetsPageState extends State<TargetsPage> {
             ),
           ),
         Consumer<TargetsProvider>(
-          builder: (context, targetsModel, child) => MediaQuery.of(context).orientation == Orientation.portrait
+          builder: (context, targetsModel, child) => MediaQuery.orientationOf(context) == Orientation.portrait
               ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
               : TargetsList(targets: targetsModel.allTargets),
         ),
@@ -270,17 +267,24 @@ class _TargetsPageState extends State<TargetsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: _appBarText,
-      leadingWidth: 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -288,7 +292,7 @@ class _TargetsPageState extends State<TargetsPage> {
           icon: _searchIcon,
           onPressed: () {
             setState(() {
-              Color myColor = Colors.white;
+              Color? myColor = Colors.white;
               if (_searchController.text != '') {
                 myColor = Colors.orange[500];
               }
@@ -350,7 +354,7 @@ class _TargetsPageState extends State<TargetsPage> {
           future: _preferencesLoaded,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              if (_yataButtonEnabled) {
+              if (_yataButtonEnabled!) {
                 if (_yataButtonInProgress) {
                   return IconButton(
                     icon: const Icon(MdiIcons.alphaYCircleOutline),
@@ -374,7 +378,7 @@ class _TargetsPageState extends State<TargetsPage> {
                             fontSize: 13,
                             color: Colors.white,
                           ),
-                          contentColor: Colors.red[800],
+                          contentColor: Colors.red[800]!,
                           duration: const Duration(seconds: 5),
                           contentPadding: const EdgeInsets.all(10),
                         );
@@ -493,7 +497,7 @@ class _TargetsPageState extends State<TargetsPage> {
                               labelText: 'Insert player ID',
                             ),
                             validator: (value) {
-                              if (value.isEmpty) {
+                              if (value!.isEmpty) {
                                 return "Cannot be empty!";
                               }
                               final n = num.tryParse(value);
@@ -511,7 +515,7 @@ class _TargetsPageState extends State<TargetsPage> {
                               TextButton(
                                 child: const Text("Add"),
                                 onPressed: () async {
-                                  if (_addFormKey.currentState.validate()) {
+                                  if (_addFormKey.currentState!.validate()) {
                                     // Get rid of dialog first, so that it can't
                                     // be pressed twice
                                     Navigator.of(context).pop();
@@ -534,7 +538,7 @@ class _TargetsPageState extends State<TargetsPage> {
                                         fontSize: 14,
                                         color: Colors.white,
                                       ),
-                                      contentColor: tryAddTarget.success ? Colors.green : Colors.orange[700],
+                                      contentColor: tryAddTarget.success ? Colors.green : Colors.orange[700]!,
                                       duration: const Duration(seconds: 3),
                                       contentPadding: const EdgeInsets.all(10),
                                     );
@@ -591,51 +595,38 @@ class _TargetsPageState extends State<TargetsPage> {
     switch (choice.type) {
       case TargetSortType.levelDes:
         _targetsProvider.sortTargets(TargetSortType.levelDes);
-        break;
       case TargetSortType.levelAsc:
         _targetsProvider.sortTargets(TargetSortType.levelAsc);
-        break;
       case TargetSortType.respectDes:
         _targetsProvider.sortTargets(TargetSortType.respectDes);
-        break;
       case TargetSortType.respectAsc:
         _targetsProvider.sortTargets(TargetSortType.respectAsc);
-        break;
       case TargetSortType.ffDes:
         _targetsProvider.sortTargets(TargetSortType.ffDes);
-        break;
       case TargetSortType.ffAsc:
         _targetsProvider.sortTargets(TargetSortType.ffAsc);
-        break;
       case TargetSortType.nameDes:
         _targetsProvider.sortTargets(TargetSortType.nameDes);
-        break;
       case TargetSortType.nameAsc:
         _targetsProvider.sortTargets(TargetSortType.nameAsc);
-        break;
       case TargetSortType.lifeDes:
         _targetsProvider.sortTargets(TargetSortType.lifeDes);
-        break;
       case TargetSortType.lifeAsc:
         _targetsProvider.sortTargets(TargetSortType.lifeAsc);
-        break;
       case TargetSortType.colorDes:
         _targetsProvider.sortTargets(TargetSortType.colorDes);
-        break;
       case TargetSortType.colorAsc:
         _targetsProvider.sortTargets(TargetSortType.colorAsc);
-        break;
       case TargetSortType.onlineDes:
         _targetsProvider.sortTargets(TargetSortType.onlineDes);
-        break;
       case TargetSortType.onlineAsc:
         _targetsProvider.sortTargets(TargetSortType.onlineAsc);
-        break;
       case TargetSortType.notesDes:
         _targetsProvider.sortTargets(TargetSortType.notesDes);
-        break;
       case TargetSortType.notesAsc:
         _targetsProvider.sortTargets(TargetSortType.notesAsc);
+      default:
+        _targetsProvider.sortTargets(TargetSortType.ffAsc);
         break;
     }
   }
@@ -652,7 +643,7 @@ class _TargetsPageState extends State<TargetsPage> {
               children: [
                 Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
                 const SizedBox(width: 10),
-                Text(choice.description),
+                Text(choice.description!),
               ],
             ),
           );
@@ -664,18 +655,17 @@ class _TargetsPageState extends State<TargetsPage> {
   Future _openOption(TargetsOptions choice) async {
     switch (choice.description) {
       case "Options":
-        final TargetsOptionsReturn newOptions = await Navigator.push(
+        final TargetsOptionsReturn newOptions = await (Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => TargetsOptionsPage(),
           ),
-        );
+        ));
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
         widget.retaliationCallback(newOptions.retaliationEnabled);
-        //widget.tabCallback(newOptions.tacEnabled);
-        break;
+      //widget.tabCallback(newOptions.tacEnabled);
       case "Filter Color":
         showDialog(
           useRootNavigator: false,
@@ -684,7 +674,6 @@ class _TargetsPageState extends State<TargetsPage> {
             return ColorFilterDialog();
           },
         );
-        break;
       case "Backup":
         Navigator.push(
           context,
@@ -692,10 +681,8 @@ class _TargetsPageState extends State<TargetsPage> {
             builder: (context) => TargetsBackupPage(),
           ),
         );
-        break;
       case "Wipe":
         _openWipeDialog();
-        break;
     }
   }
 
@@ -708,7 +695,7 @@ class _TargetsPageState extends State<TargetsPage> {
     // If we have no targets locally, we'll import all incoming (we assume that [bothSides] and
     // [onlyLocal] are zero
     if (_targetsProvider.allTargets.isEmpty) {
-      importedTargets.targets.forEach((key, yataTarget) {
+      importedTargets.targets!.forEach((key, yataTarget) {
         onlyYata.add(
           TargetsOnlyYata()
             ..id = key
@@ -720,7 +707,7 @@ class _TargetsPageState extends State<TargetsPage> {
     }
     // Otherwise, we'll see how many are new or only local
     else {
-      importedTargets.targets.forEach((key, yataTarget) {
+      importedTargets.targets!.forEach((key, yataTarget) {
         bool foundLocally = false;
         for (final localTarget in _targetsProvider.allTargets) {
           if (!foundLocally) {
@@ -751,7 +738,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
       for (final localTarget in _targetsProvider.allTargets) {
         bool foundInYata = false;
-        importedTargets.targets.forEach((key, yataTarget) {
+        importedTargets.targets!.forEach((key, yataTarget) {
           if (!foundInYata) {
             if (localTarget.playerId.toString() == key) {
               foundInYata = true;
@@ -783,20 +770,16 @@ class _TargetsPageState extends State<TargetsPage> {
     );
   }
 
-  int _yataColorCode(String colorString) {
+  int _yataColorCode(String? colorString) {
     switch (colorString) {
       case "z":
         return 0;
-        break;
       case "green":
         return 1;
-        break;
       case "orange":
         return 2;
-        break;
       case "red":
         return 3;
-        break;
     }
     return 0;
   }

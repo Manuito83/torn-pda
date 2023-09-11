@@ -17,20 +17,20 @@ class NpcAlertModel {
 }
 
 class LootAlertsDialog extends StatefulWidget {
-  final FirebaseUserModel userModel;
+  final FirebaseUserModel? userModel;
 
-  LootAlertsDialog({@required this.userModel});
+  const LootAlertsDialog({required this.userModel});
 
   @override
-  _LootAlertsDialogState createState() => _LootAlertsDialogState();
+  LootAlertsDialogState createState() => LootAlertsDialogState();
 }
 
-class _LootAlertsDialogState extends State<LootAlertsDialog> {
-  FirebaseUserModel _firebaseUserModel;
+class LootAlertsDialogState extends State<LootAlertsDialog> {
+  FirebaseUserModel? _firebaseUserModel;
 
-  List<NpcAlertModel> _npcAlertModelList = <NpcAlertModel>[];
+  final List<NpcAlertModel> _npcAlertModelList = <NpcAlertModel>[];
 
-  Future _npcsInitialised;
+  Future? _npcsInitialised;
 
   @override
   void initState() {
@@ -42,15 +42,15 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Loot alerts"),
-      content: Container(
+      title: const Text("Loot alerts"),
+      content: SizedBox(
         width: double.maxFinite,
         child: Scrollbar(
-          isAlwaysShown: true,
+          thumbVisibility: true,
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Choose which NPCs and levels you would like to be alerted about",
                   style: TextStyle(fontSize: 14),
                 ),
@@ -59,7 +59,7 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
                   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                     if (snapshot.connectionState == ConnectionState.done) {
                       if (_npcAlertModelList.isEmpty) {
-                        return Text(
+                        return const Text(
                           "\nError!\n\nThere was a problem retrieving your current configuration from the database. "
                           "\n\nPlease check your internet connection or use the hammer icon at the top to reset your alert "
                           "preferences.",
@@ -71,7 +71,7 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
                           padding: const EdgeInsets.only(top: 20),
                           child: ListView.builder(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             itemCount: _npcAlertModelList.length,
                             itemBuilder: (context, index) {
                               return NpcAlertConfigLine(
@@ -84,8 +84,8 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
                         );
                       }
                     }
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 30.0),
+                    return const Padding(
+                      padding: EdgeInsets.only(top: 30.0),
                       child: Column(
                         children: [
                           CircularProgressIndicator(),
@@ -108,7 +108,7 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
         Padding(
           padding: const EdgeInsets.only(right: 15),
           child: TextButton(
-            child: Text("Close"),
+            child: const Text("Close"),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -120,26 +120,27 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
 
   Future _initialiseNpcs() async {
     // Get current NPCs
-    String dbNpcsResult = (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value;
-    List npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
+    final String dbNpcsResult =
+        (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
+    final List npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
     // Get npc names. First with the known ones, then calling the API as last resort
-    for (String id in npcIds) {
-      var name = "";
-      if (id == "4")
+    for (final String id in npcIds as Iterable<String>) {
+      String? name = "";
+      if (id == "4") {
         name = "Duke";
-      else if (id == "15")
+      } else if (id == "15") {
         name = "Leslie";
-      else if (id == "17")
+      } else if (id == "17") {
         name = "Easter Bunny";
-      else if (id == "19")
+      } else if (id == "19") {
         name = "Jimmy";
-      else if (id == "20")
+      } else if (id == "20") {
         name = "Fernando";
-      else if (id == "21")
+      } else if (id == "21") {
         name = "Tiny";
-      else {
-        var tornTarget = await Get.find<ApiCallerController>().getTarget(playerId: id.toString());
+      } else {
+        final tornTarget = await Get.find<ApiCallerController>().getTarget(playerId: id);
         if (tornTarget is TargetModel) {
           name = tornTarget.name;
         } else {
@@ -148,12 +149,12 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
       }
 
       // Initialise model list
-      NpcAlertModel thisModel = NpcAlertModel();
+      final NpcAlertModel thisModel = NpcAlertModel();
       thisModel.id = id;
-      thisModel.name = name;
+      thisModel.name = name!;
 
       // See if the user has any alert active for this NPC in the realtime database
-      var firestoreActive = _firebaseUserModel.lootAlerts;
+      final firestoreActive = _firebaseUserModel!.lootAlerts;
       if (firestoreActive.contains("$id:4")) {
         thisModel.level4 = true;
       }
@@ -170,20 +171,20 @@ class _LootAlertsDialogState extends State<LootAlertsDialog> {
 class NpcAlertConfigLine extends StatefulWidget {
   final NpcAlertModel npcAlertModel;
   final int npcLineNumber;
-  final FirebaseUserModel firebaseUserModel;
+  final FirebaseUserModel? firebaseUserModel;
 
-  NpcAlertConfigLine({
-    @required this.npcAlertModel,
-    @required this.npcLineNumber,
-    @required this.firebaseUserModel,
-    Key key,
-  }) : super(key: key);
+  const NpcAlertConfigLine({
+    required this.npcAlertModel,
+    required this.npcLineNumber,
+    required this.firebaseUserModel,
+    super.key,
+  });
 
   @override
-  State<NpcAlertConfigLine> createState() => _NpcAlertConfigLineState();
+  State<NpcAlertConfigLine> createState() => NpcAlertConfigLineState();
 }
 
-class _NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
+class NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -195,13 +196,13 @@ class _NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
             width: 90,
             child: Text(
               widget.npcAlertModel.name,
-              style: TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: 13),
             ),
           ),
           Column(
             children: [
               if (widget.npcLineNumber == 0)
-                Baseline(
+                const Baseline(
                   baseline: 0,
                   baselineType: TextBaseline.alphabetic,
                   child: Text(
@@ -210,7 +211,7 @@ class _NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
                   ),
                 ),
               Switch(
-                value: widget.firebaseUserModel.lootAlerts.contains("${widget.npcAlertModel.id}:4"),
+                value: widget.firebaseUserModel!.lootAlerts.contains("${widget.npcAlertModel.id}:4"),
                 onChanged: (value) {
                   setState(() {
                     firestore.toggleNpcAlert(id: widget.npcAlertModel.id, level: 4, active: value);
@@ -219,11 +220,11 @@ class _NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
               ),
             ],
           ),
-          SizedBox(width: 15),
+          const SizedBox(width: 15),
           Column(
             children: [
               if (widget.npcLineNumber == 0)
-                Baseline(
+                const Baseline(
                   baseline: 0,
                   baselineType: TextBaseline.alphabetic,
                   child: Text(
@@ -232,7 +233,7 @@ class _NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
                   ),
                 ),
               Switch(
-                value: widget.firebaseUserModel.lootAlerts.contains("${widget.npcAlertModel.id}:5"),
+                value: widget.firebaseUserModel!.lootAlerts.contains("${widget.npcAlertModel.id}:5"),
                 onChanged: (value) {
                   setState(() {
                     firestore.toggleNpcAlert(id: widget.npcAlertModel.id, level: 5, active: value);

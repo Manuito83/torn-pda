@@ -17,31 +17,31 @@ import 'package:torn_pda/widgets/vault/vault_configuration_dialog.dart';
 
 class VaultConfigurationPage extends StatefulWidget {
   final Function callback;
-  final UserDetailsProvider userProvider;
+  final UserDetailsProvider? userProvider;
   final VaultStatusModel vaultStatus;
   final VaultTransactionModel lastTransaction;
 
-  VaultConfigurationPage({
-    @required this.callback,
-    @required this.userProvider,
-    @required this.vaultStatus,
-    @required this.lastTransaction,
+  const VaultConfigurationPage({
+    required this.callback,
+    required this.userProvider,
+    required this.vaultStatus,
+    required this.lastTransaction,
   });
 
   @override
-  _VaultConfigurationPageState createState() => _VaultConfigurationPageState();
+  VaultConfigurationPageState createState() => VaultConfigurationPageState();
 }
 
-class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
-  final _moneyFormat = new NumberFormat("#,##0", "en_US");
+class VaultConfigurationPageState extends State<VaultConfigurationPage> {
+  final _moneyFormat = NumberFormat("#,##0", "en_US");
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
@@ -62,9 +62,9 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       _setupContainer(),
-                      SizedBox(height: 50),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
@@ -80,9 +80,9 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Vault configuration"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Vault configuration"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           widget.callback();
           Navigator.of(context).pop();
@@ -113,46 +113,47 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
       );
     }
 
-    Widget top = SizedBox.shrink();
-    Widget topError = SizedBox.shrink();
-    Widget share = SizedBox.shrink();
-    Widget options = SizedBox.shrink();
+    Widget top = const SizedBox.shrink();
+    Widget topError = const SizedBox.shrink();
+    Widget share = const SizedBox.shrink();
+    Widget options = const SizedBox.shrink();
 
-    var spouseName =
-        widget.userProvider.basic.married?.spouseId == 0 ? "Spouse" : widget.userProvider.basic.married.spouseName;
+    final spouseName =
+        widget.userProvider!.basic!.married?.spouseId == 0 ? "Spouse" : widget.userProvider!.basic!.married!.spouseName;
 
     // If we have never initialise (or we deleted) the share
     if (widget.vaultStatus.player == null) {
-      top = Text("You have not initialised the vault share yet!");
+      top = const Text("You have not initialised the vault share yet!");
       share = Column(
         children: [
           Text("Total: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
-          SizedBox(height: 10),
-          Text("${widget.userProvider.basic.name}: ?"),
+          const SizedBox(height: 10),
+          Text("${widget.userProvider!.basic!.name}: ?"),
           Text("$spouseName: ?"),
         ],
       );
       options = ElevatedButton(
-        child: Text("Initialise"),
+        child: const Text("Initialise"),
         onPressed: () {
           _showVaultConfigurationDialog();
         },
       );
     } else {
       var firstButtonText = "Change";
-      var time = DateTime.fromMillisecondsSinceEpoch(widget.vaultStatus.timestamp);
-      var formatter = TimeFormatter(
-          inputTime: time,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone);
+      final time = DateTime.fromMillisecondsSinceEpoch(widget.vaultStatus.timestamp!);
+      final formatter = TimeFormatter(
+        inputTime: time,
+        timeFormatSetting: _settingsProvider.currentTimeFormat,
+        timeZoneSetting: _settingsProvider.currentTimeZone,
+      );
 
-      if (!widget.vaultStatus.error) {
+      if (!widget.vaultStatus.error!) {
         top = Text("Last transaction on ${formatter.formatMonthDay} @${formatter.formatHour}");
         share = Column(
           children: [
             Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
-            SizedBox(height: 10),
-            Text("${widget.userProvider.basic.name}: "
+            const SizedBox(height: 10),
+            Text("${widget.userProvider!.basic!.name}: "
                 "${_moneyFormat.format(widget.vaultStatus.player)}"),
             Text("$spouseName: "
                 "${_moneyFormat.format(widget.vaultStatus.spouse)}"),
@@ -175,9 +176,9 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
                 color: Colors.orange[800],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
-              "${widget.userProvider.basic.name}: "
+              "${widget.userProvider!.basic!.name}: "
               "${_moneyFormat.format(widget.vaultStatus.player)}",
               style: TextStyle(
                 color: Colors.orange[800],
@@ -196,14 +197,14 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
           padding: const EdgeInsets.only(top: 5),
           child: Column(
             children: [
-              Divider(),
-              SizedBox(height: 20),
-              Text("Please, calculate your totals from the last known transaction (above) and reset the vault "
+              const Divider(),
+              const SizedBox(height: 20),
+              const Text("Please, calculate your totals from the last known transaction (above) and reset the vault "
                   "distribution with the correct values"),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text("In the vault now: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
-              SizedBox(height: 10),
-              Text("${widget.userProvider.basic.name}: ?"),
+              const SizedBox(height: 10),
+              Text("${widget.userProvider!.basic!.name}: ?"),
               Text("$spouseName: ?"),
             ],
           ),
@@ -220,9 +221,9 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
               _showVaultConfigurationDialog();
             },
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           ElevatedButton(
-            child: Icon(Icons.delete_outline),
+            child: const Icon(Icons.delete_outline),
             onPressed: () {
               _showResetVaultConfiguration();
             },
@@ -238,16 +239,15 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
         children: [
           Flexible(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 top,
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: topError,
                 ),
                 share,
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 options,
               ],
             ),
@@ -285,18 +285,18 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Reset vault distribution"),
-          content: Text("Caution: this will reset your vault distribution!"),
+          title: const Text("Reset vault distribution"),
+          content: const Text("Caution: this will reset your vault distribution!"),
           actions: [
             TextButton(
-              child: Text("Do it!"),
+              child: const Text("Do it!"),
               onPressed: () {
                 Navigator.of(context).pop();
                 setState(() {
                   widget.vaultStatus
                     ..player = null
                     ..spouse = null;
-                  if (widget.vaultStatus.error) {
+                  if (widget.vaultStatus.error!) {
                     widget.vaultStatus.total = widget.lastTransaction.balance;
                   }
                 });
@@ -304,7 +304,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
               },
             ),
             TextButton(
-              child: Text("Oh no!"),
+              child: const Text("Oh no!"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -320,7 +320,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
       // Shares info has been added
     });
 
-    var save = vaultStatusModelToJson(widget.vaultStatus);
+    final save = vaultStatusModelToJson(widget.vaultStatus);
     Prefs().setVaultShareCurrent(save);
   }
 

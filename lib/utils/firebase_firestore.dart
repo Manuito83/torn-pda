@@ -6,7 +6,6 @@ import 'dart:io';
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
@@ -14,21 +13,21 @@ import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-final firestore = _FirestoreHelper();
+final firestore = FirestoreHelper();
 
-class _FirestoreHelper {
+class FirestoreHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;
-  FirebaseUserModel _firebaseUserModel;
+  FirebaseUserModel? _firebaseUserModel;
 
-  String _uid;
+  String? _uid;
   void setUID(String userUID) {
     _uid = userUID;
   }
 
   // Settings, when user initialized after API key validated
-  Future<FirebaseUserModel> uploadUsersProfileDetail(
+  Future<FirebaseUserModel?> uploadUsersProfileDetail(
     OwnProfileBasic profile, {
     bool userTriggered = false,
   }) async {
@@ -39,12 +38,12 @@ class _FirestoreHelper {
 
     // Generate or replace token if it already exists
     // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
-    String token = "";
-    String currentToken = await _messaging.getToken();
+    String? token = "";
+    final String currentToken = (await _messaging.getToken())!;
     if (currentToken.isNotEmpty) {
       await FirebaseMessaging.instance.deleteToken();
     }
-    token = await _messaging.getToken();
+    token = (await _messaging.getToken())!;
     log("FCM token: $token");
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
@@ -57,20 +56,20 @@ class _FirestoreHelper {
         "name": profile.name,
         "level": profile.level,
         "apiKey": profile.userApiKey,
-        "life": profile.life.current,
+        "life": profile.life!.current,
         "playerId": profile.playerId,
-        "energyLastCheckFull": _firebaseUserModel.energyLastCheckFull, // Defaults
-        "nerveLastCheckFull": _firebaseUserModel.nerveLastCheckFull, // Defaults
-        "drugsInfluence": _firebaseUserModel.drugsInfluence, // Defaults
-        "medicalInfluence": _firebaseUserModel.medicalInfluence, // Defaults
-        "boosterInfluence": _firebaseUserModel.boosterInfluence, // Defaults
-        "racingSent": _firebaseUserModel.racingSent, // Defaults
+        "energyLastCheckFull": _firebaseUserModel!.energyLastCheckFull, // Defaults
+        "nerveLastCheckFull": _firebaseUserModel!.nerveLastCheckFull, // Defaults
+        "drugsInfluence": _firebaseUserModel!.drugsInfluence, // Defaults
+        "medicalInfluence": _firebaseUserModel!.medicalInfluence, // Defaults
+        "boosterInfluence": _firebaseUserModel!.boosterInfluence, // Defaults
+        "racingSent": _firebaseUserModel!.racingSent, // Defaults
         "platform": platform,
         "version": appVersion,
-        "faction": profile.faction.factionId,
+        "faction": profile.faction!.factionId,
         // Ensures all users have a refill time after v2.6.0.
-        "refillsTime": _firebaseUserModel.refillsTime, // Defaults to 22 if null (new user)
-        "factionAssistMessage": _firebaseUserModel.factionAssistMessage, // Defaults to true
+        "refillsTime": _firebaseUserModel!.refillsTime, // Defaults to 22 if null (new user)
+        "factionAssistMessage": _firebaseUserModel!.factionAssistMessage, // Defaults to true
 
         // This is a unique identifier to identify this user and target notification
         "token": token,
@@ -88,23 +87,23 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToTravelNotification(bool subscribe) async {
+  Future<void> subscribeToTravelNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "travelNotification": subscribe,
     });
   }
 
-  Future<void> subscribeToEnergyNotification(bool subscribe) async {
+  Future<void> subscribeToEnergyNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "energyNotification": subscribe,
     });
   }
 
-  Future<void> subscribeToForeignRestockNotification(bool subscribe) async {
+  Future<void> subscribeToForeignRestockNotification(bool? subscribe) async {
     // If we had already foreign stocks chosen as alerts, we need to update them to the
     // current timestamp, so that alerts are not sent on first pass (if restocks alerts were off)
     Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
-    var now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now().millisecondsSinceEpoch;
     previous.forEach((key, value) {
       previous[key] = now;
     });
@@ -113,7 +112,7 @@ class _FirestoreHelper {
       "foreignRestockNotification": subscribe,
       "restockActiveAlerts": previous,
     }).then((value) {
-      Prefs().setRestocksNotificationEnabled(subscribe);
+      Prefs().setRestocksNotificationEnabled(subscribe!);
     });
   }
 
@@ -131,7 +130,7 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToNerveNotification(bool subscribe) async {
+  Future<void> subscribeToNerveNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "nerveNotification": subscribe,
       // Nerve was implemented in v1.8.7, so we need to manually create this field and set it
@@ -141,7 +140,7 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToDrugsNotification(bool subscribe) async {
+  Future<void> subscribeToDrugsNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "drugsNotification": subscribe,
       // Same reason for this than in Nerve (see comment)
@@ -149,7 +148,7 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToMedicalNotification(bool subscribe) async {
+  Future<void> subscribeToMedicalNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "medicalNotification": subscribe,
       // Same reason for this than in Nerve (see comment)
@@ -157,7 +156,7 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToBoosterNotification(bool subscribe) async {
+  Future<void> subscribeToBoosterNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "boosterNotification": subscribe,
       // Same reason for this than in Nerve (see comment)
@@ -165,7 +164,7 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToRacingNotification(bool subscribe) async {
+  Future<void> subscribeToRacingNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "racingNotification": subscribe,
       // Same reason for this than in Nerve (see comment)
@@ -173,20 +172,20 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToMessagesNotification(bool subscribe) async {
+  Future<void> subscribeToMessagesNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "messagesNotification": subscribe,
     });
   }
 
-  Future<void> subscribeToEventsNotification(bool subscribe) async {
+  Future<void> subscribeToEventsNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "eventsNotification": subscribe,
     });
   }
 
   Future<void> addToEventsFilter(String filter) async {
-    List currentFilter = _firebaseUserModel.eventsFilter;
+    final List currentFilter = _firebaseUserModel!.eventsFilter;
     currentFilter.add(filter);
     await _firestore.collection("players").doc(_uid).update({
       "eventsFilter": currentFilter,
@@ -194,7 +193,7 @@ class _FirestoreHelper {
   }
 
   Future<void> removeFromEventsFilter(String filter) async {
-    List currentFilter = _firebaseUserModel.eventsFilter;
+    final List currentFilter = _firebaseUserModel!.eventsFilter;
     // Avoid duplicities by removing more than one item if they exist
     currentFilter.removeWhere((element) => element == filter);
     await _firestore.collection("players").doc(_uid).update({
@@ -202,22 +201,22 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToRefillsNotification(bool subscribe) async {
-    int currentRefillsTime = _firebaseUserModel.refillsTime;
+  Future<void> subscribeToRefillsNotification(bool? subscribe) async {
+    int? currentRefillsTime = _firebaseUserModel!.refillsTime;
     await _firestore.collection("players").doc(_uid).update({
       "refillsNotification": subscribe,
       "refillsTime": currentRefillsTime,
     });
   }
 
-  Future<void> setRefillTime(int time) async {
+  Future<void> setRefillTime(int? time) async {
     await _firestore.collection("players").doc(_uid).update({
       "refillsTime": time,
     });
   }
 
   Future<void> addToRefillsRequested(String request) async {
-    List currentRequests = _firebaseUserModel.refillsRequested;
+    final List currentRequests = _firebaseUserModel!.refillsRequested;
     if (!currentRequests.contains(request)) {
       currentRequests.add(request);
     }
@@ -227,7 +226,7 @@ class _FirestoreHelper {
   }
 
   Future<void> removeFromRefillsRequested(String request) async {
-    List currentRequests = _firebaseUserModel.refillsRequested;
+    final List currentRequests = _firebaseUserModel!.refillsRequested;
     // Avoid duplicities by removing more than one item if they exist
     currentRequests.removeWhere((element) => element == request);
     await _firestore.collection("players").doc(_uid).update({
@@ -235,7 +234,7 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToHospitalNotification(bool subscribe) async {
+  Future<void> subscribeToHospitalNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "hospitalNotification": subscribe,
     });
@@ -254,14 +253,14 @@ class _FirestoreHelper {
   }
 
   // Init State in alerts
-  Future<FirebaseUserModel> getUserProfile({bool force = false}) async {
+  Future<FirebaseUserModel?> getUserProfile({bool force = false}) async {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
-    var userReceived = await _firestore.collection("players").doc(_uid).get();
+    final userReceived = await _firestore.collection("players").doc(_uid).get();
     if (userReceived.data() == null) {
       // New user does not return anything, so we use default fields in the model
       return FirebaseUserModel();
     }
-    return _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data());
+    return _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data()!);
   }
 
   Future deleteUserProfile() async {
@@ -269,20 +268,20 @@ class _FirestoreHelper {
     await _firestore.collection("players").doc(_uid).delete();
   }
 
-  Future<void> setVibrationPattern(String pattern) async {
+  Future<void> setVibrationPattern(String? pattern) async {
     await _firestore.collection("players").doc(_uid).update({
       "vibration": pattern,
     });
   }
 
-  Future<void> subscribeToStockMarketNotification(bool subscribe) async {
+  Future<void> subscribeToStockMarketNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "stockMarketNotification": subscribe,
     });
   }
 
-  Future<bool> addStockMarketShare(String ticker, String action) async {
-    List currentStocks = _firebaseUserModel.stockMarketShares;
+  Future<bool> addStockMarketShare(String? ticker, String action) async {
+    final List currentStocks = _firebaseUserModel!.stockMarketShares;
     // Code is ticker-gain-price-loss-price. 'n' for empty.
     // Example: YAZ-G-840-L-n
     // Example to delete: YAZ-remove
@@ -300,7 +299,7 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> toggleFactionAssistMessage(bool active) async {
+  Future<void> toggleFactionAssistMessage(bool? active) async {
     await _firestore.collection("players").doc(_uid).update({
       "factionAssistMessage": active,
     });
@@ -318,26 +317,26 @@ class _FirestoreHelper {
   }
 
   Future<void> toggleNpcAlert({
-    @required String id,
-    @required int level,
-    @required bool active,
+    required String id,
+    required int level,
+    required bool active,
   }) async {
     if (active) {
-      if (!_firebaseUserModel.lootAlerts.contains("$id:$level")) {
-        _firebaseUserModel.lootAlerts.add("$id:$level");
+      if (!_firebaseUserModel!.lootAlerts.contains("$id:$level")) {
+        _firebaseUserModel!.lootAlerts.add("$id:$level");
         await _firestore.collection("players").doc(_uid).update({
-          "lootAlerts": _firebaseUserModel.lootAlerts,
+          "lootAlerts": _firebaseUserModel!.lootAlerts,
         });
       }
     } else {
-      _firebaseUserModel.lootAlerts.remove("$id:$level");
+      _firebaseUserModel!.lootAlerts.remove("$id:$level");
       await _firestore.collection("players").doc(_uid).update({
-        "lootAlerts": _firebaseUserModel.lootAlerts,
+        "lootAlerts": _firebaseUserModel!.lootAlerts,
       });
     }
   }
 
-  Future<void> subscribeToLootRangersNotification(bool subscribe) async {
+  Future<void> subscribeToLootRangersNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "lootRangersNotification": subscribe,
     });

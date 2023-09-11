@@ -6,7 +6,7 @@ import 'package:torn_pda/models/crimes/crime_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class CrimesProvider extends ChangeNotifier {
-  var activeCrimesList = <Crime>[];
+  List<Crime> activeCrimesList = <Crime>[];
 
   CrimesProvider() {
     _loadSavedCrimes();
@@ -14,7 +14,7 @@ class CrimesProvider extends ChangeNotifier {
 
   void activateCrime(Crime newCrime) {
     activeCrimesList.add(newCrime);
-    activeCrimesList.sort((a, b) => a.nerve.compareTo(b.nerve));
+    activeCrimesList.sort((a, b) => a.nerve!.compareTo(b.nerve!));
     _saveListAfterChanges();
     notifyListeners();
   }
@@ -33,9 +33,9 @@ class CrimesProvider extends ChangeNotifier {
   }
 
   void _saveListAfterChanges() {
-    var saveList = <String>[];
-    for (var crime in activeCrimesList) {
-      var save = crimeToJson(crime);
+    final saveList = <String>[];
+    for (final crime in activeCrimesList) {
+      final save = crimeToJson(crime);
       saveList.add(save);
     }
     Prefs().setActiveCrimesList(saveList);
@@ -43,8 +43,8 @@ class CrimesProvider extends ChangeNotifier {
 
   Future<void> _loadSavedCrimes() async {
     // Load crimes from shared preferences
-    var rawLoad = await Prefs().getActiveCrimesList();
-    for (var rawCrime in rawLoad) {
+    final rawLoad = await Prefs().getActiveCrimesList();
+    for (final rawCrime in rawLoad) {
       activeCrimesList.add(crimeFromJson(rawCrime));
     }
     // Notification

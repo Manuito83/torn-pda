@@ -17,15 +17,15 @@ import 'package:torn_pda/widgets/chaining/target_card.dart';
 class TargetsList extends StatefulWidget {
   final List<TargetModel> targets;
 
-  TargetsList({@required this.targets});
+  const TargetsList({required this.targets});
 
   @override
-  State<TargetsList> createState() => _TargetsListState();
+  State<TargetsList> createState() => TargetsListState();
 }
 
-class _TargetsListState extends State<TargetsList> {
-  TargetsProvider _targetsProvider;
-  ChainStatusProvider _chainStatusProvider;
+class TargetsListState extends State<TargetsList> {
+  late TargetsProvider _targetsProvider;
+  late ChainStatusProvider _chainStatusProvider;
 
   @override
   void initState() {
@@ -36,37 +36,36 @@ class _TargetsListState extends State<TargetsList> {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+    if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return ListView.builder(
         shrinkWrap: true,
         itemCount: widget.targets.length,
         itemBuilder: (context, index) {
-          return SlidableCard(index, context);
+          return slidableCard(index, context);
         },
       );
     } else {
       return ListView.builder(
         shrinkWrap: true,
         itemCount: widget.targets.length,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (context, index) {
-          return SlidableCard(index, context);
+          return slidableCard(index, context);
         },
       );
     }
   }
 
-  Widget SlidableCard(int index, BuildContext context) {
-    if (!widget.targets[index].name.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
+  Widget slidableCard(int index, BuildContext context) {
+    if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
         _targetsProvider.currentColorFilterOut.contains(widget.targets[index].personalNoteColor)) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     return Slidable(
       closeOnScroll: false,
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
-        extentRatio: 0.5,
         children: [
           SlidableAction(
             label: 'Remove',
@@ -75,13 +74,13 @@ class _TargetsListState extends State<TargetsList> {
             onPressed: (context) {
               BotToast.showText(
                 text: 'Deleted ${widget.targets[index].name}!',
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.orange[800],
-                duration: Duration(seconds: 5),
-                contentPadding: EdgeInsets.all(10),
+                contentColor: Colors.orange[800]!,
+                duration: const Duration(seconds: 5),
+                contentPadding: const EdgeInsets.all(10),
               );
               _targetsProvider.deleteTarget(widget.targets[index]);
             },
@@ -90,74 +89,74 @@ class _TargetsListState extends State<TargetsList> {
       ),
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
-        extentRatio: 0.5,
         children: [
-          _chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).length == 0
-              ? SlidableAction(
-                  label: 'Add to panic!',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    String message = "Added ${widget.targets[index].name} as a Panic Mode target!";
-                    Color messageColor = Colors.green;
+          if (_chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).isEmpty)
+            SlidableAction(
+              label: 'Add to panic!',
+              backgroundColor: Colors.blue,
+              icon: MdiIcons.alphaPCircleOutline,
+              onPressed: (context) {
+                String message = "Added ${widget.targets[index].name} as a Panic Mode target!";
+                Color? messageColor = Colors.green;
 
-                    if (_chainStatusProvider.panicTargets.length < 10) {
-                      setState(() {
-                        _chainStatusProvider.addPanicTarget(
-                          PanicTargetModel()
-                            ..name = widget.targets[index].name
-                            ..level = widget.targets[index].level
-                            ..id = widget.targets[index].playerId
-                            ..factionName = widget.targets[index].faction.factionName,
-                        );
-                      });
-                    } else {
-                      message = "There are already 10 targets in the Panic Mode list, remove some!";
-                      messageColor = Colors.orange[700];
-                    }
-
-                    BotToast.showText(
-                      text: message,
-                      textStyle: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
+                if (_chainStatusProvider.panicTargets.length < 10) {
+                  setState(() {
+                    _chainStatusProvider.addPanicTarget(
+                      PanicTargetModel()
+                        ..name = widget.targets[index].name
+                        ..level = widget.targets[index].level
+                        ..id = widget.targets[index].playerId
+                        ..factionName = widget.targets[index].faction!.factionName,
                     );
-                  },
-                )
-              : SlidableAction(
-                  label: 'PANIC TARGET',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.alphaPCircleOutline,
-                  onPressed: (context) {
-                    String message = "Removed ${widget.targets[index].name} as a Panic Mode target!";
-                    Color messageColor = Colors.green;
+                  });
+                } else {
+                  message = "There are already 10 targets in the Panic Mode list, remove some!";
+                  messageColor = Colors.orange[700];
+                }
 
-                    setState(() {
-                      _chainStatusProvider.removePanicTarget(
-                        PanicTargetModel()
-                          ..name = widget.targets[index].name
-                          ..level = widget.targets[index].level
-                          ..id = widget.targets[index].playerId
-                          ..factionName = widget.targets[index].faction.factionName,
-                      );
-                    });
+                BotToast.showText(
+                  text: message,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: messageColor!,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            )
+          else
+            SlidableAction(
+              label: 'PANIC TARGET',
+              backgroundColor: Colors.blue,
+              icon: MdiIcons.alphaPCircleOutline,
+              onPressed: (context) {
+                final String message = "Removed ${widget.targets[index].name} as a Panic Mode target!";
+                const Color messageColor = Colors.green;
 
-                    BotToast.showText(
-                      text: message,
-                      textStyle: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
-                    );
-                  },
-                ),
+                setState(() {
+                  _chainStatusProvider.removePanicTarget(
+                    PanicTargetModel()
+                      ..name = widget.targets[index].name
+                      ..level = widget.targets[index].level
+                      ..id = widget.targets[index].playerId
+                      ..factionName = widget.targets[index].faction!.factionName,
+                  );
+                });
+
+                BotToast.showText(
+                  text: message,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: messageColor,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            ),
         ],
       ),
       child: TargetCard(

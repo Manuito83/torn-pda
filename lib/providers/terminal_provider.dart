@@ -12,4 +12,9 @@ class TerminalProvider extends ChangeNotifier {
     _text = "$instruction\n\n$existing";
     notifyListeners();
   }
+
+  void clearTerminal() {
+    _text = "";
+    notifyListeners();
+  }
 }

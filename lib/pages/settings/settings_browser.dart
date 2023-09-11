@@ -24,26 +24,26 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
-  const SettingsBrowserPage({Key key}) : super(key: key);
+  const SettingsBrowserPage({super.key});
 
   @override
-  _SettingsBrowserPageState createState() => _SettingsBrowserPageState();
+  SettingsBrowserPageState createState() => SettingsBrowserPageState();
 }
 
-class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
-  Timer _ticker;
+class SettingsBrowserPageState extends State<SettingsBrowserPage> {
+  Timer? _ticker;
 
-  Future _preferencesRestored;
+  Future? _preferencesRestored;
 
-  bool _highlightChat;
-  Color _highlightColor = Color(0xff7ca900);
+  late bool _highlightChat;
+  Color _highlightColor = const Color(0xff7ca900);
 
-  int _browserStyle = 0;
+  int? _browserStyle = 0;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserScriptsProvider _userScriptsProvider;
-  WebViewProvider _webViewProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserScriptsProvider _userScriptsProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -62,11 +62,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   @override
   Widget build(BuildContext context) {
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
@@ -88,70 +88,70 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 if (snapshot.connectionState == ConnectionState.done) {
                   return GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                    onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                     child: SingleChildScrollView(
                       child: Column(
                         children: <Widget>[
-                          SizedBox(height: 15),
+                          const SizedBox(height: 15),
                           _general(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 15),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 15),
                           _userScripts(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _tabs(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _fullScreen(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _chat(context),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _travel(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _gym(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _profile(),
                           if (Platform.isIOS)
                             Column(
                               children: [
-                                SizedBox(height: 15),
-                                Divider(),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 15),
+                                const Divider(),
+                                const SizedBox(height: 10),
                                 _linkPreview(),
                               ],
                             ),
                           if (Platform.isIOS)
                             Column(
                               children: [
-                                SizedBox(height: 15),
-                                Divider(),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 15),
+                                const Divider(),
+                                const SizedBox(height: 10),
                                 _pinchGesture(),
                                 _iosDisallowOverScroll(),
                               ],
                             ),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _maintenance(),
-                          SizedBox(height: 40),
+                          const SizedBox(height: 40),
                         ],
                       ),
                     ),
                   );
                 } else {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
               },
             ),
@@ -164,7 +164,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _profile() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -180,7 +180,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Extra player information"),
+                  const Text("Extra player information"),
                   Switch(
                     value: _settingsProvider.extraPlayerInformation,
                     onChanged: (value) {
@@ -214,7 +214,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(
+                        const Text(
                           "Show players' stats",
                         ),
                         _profileStatsDropdown(),
@@ -249,18 +249,19 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(
+                        const Text(
                           "Friendly factions",
                         ),
                         IconButton(
-                            icon: Icon(Icons.keyboard_arrow_right_outlined),
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (BuildContext context) => FriendlyFactionsPage(),
-                                ),
-                              );
-                            }),
+                          icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (BuildContext context) => FriendlyFactionsPage(),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -268,7 +269,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
                       'You will see a note if you are visiting the profile of a '
-                      'friendly faction\'s player, or a warning if you are about to attack',
+                      "friendly faction's player, or a warning if you are about to attack",
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 12,
@@ -284,7 +285,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text("Show networth"),
+                    const Text("Show networth"),
                     Switch(
                       value: _settingsProvider.extraPlayerNetworth,
                       onChanged: (value) {
@@ -319,7 +320,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _userScripts() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -335,7 +336,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Enable custom user scripts"),
+                  const Text("Enable custom user scripts"),
                   Switch(
                     value: _userScriptsProvider.userScriptsEnabled,
                     onChanged: (value) {
@@ -369,11 +370,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(
+                        const Text(
                           "Manage scripts",
                         ),
                         IconButton(
-                          icon: Icon(Icons.keyboard_arrow_right_outlined),
+                          icon: const Icon(Icons.keyboard_arrow_right_outlined),
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -396,7 +397,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _linkPreview() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -412,7 +413,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Allow links preview"),
+                  const Text("Allow links preview"),
                   Switch(
                     value: _settingsProvider.iosAllowLinkPreview,
                     onChanged: (value) {
@@ -447,7 +448,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _pinchGesture() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -463,7 +464,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Zoom in/out pinch gestures"),
+                  const Text("Zoom in/out pinch gestures"),
                   Switch(
                     value: _settingsProvider.iosBrowserPinch,
                     onChanged: (value) {
@@ -493,7 +494,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Disallow overscroll"),
+                  const Text("Disallow overscroll"),
                   Switch(
                     value: _settingsProvider.iosDisallowOverscroll,
                     onChanged: (value) {
@@ -529,7 +530,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _maintenance() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -546,7 +547,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Restore session cookie"),
+                  const Text("Restore session cookie"),
                   Switch(
                     value: _settingsProvider.restoreSessionCookie,
                     onChanged: (value) {
@@ -577,9 +578,9 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Browser cache"),
+                  const Text("Browser cache"),
                   ElevatedButton(
-                    child: Text("Clear"),
+                    child: const Text("Clear"),
                     onPressed: () async {
                       _webViewProvider.clearCacheAndTabs();
 
@@ -589,7 +590,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           fontSize: 14,
                           color: Colors.white,
                         ),
-                        contentColor: Colors.grey[600],
+                        contentColor: Colors.grey[600]!,
                         duration: const Duration(seconds: 3),
                         contentPadding: const EdgeInsets.all(10),
                       );
@@ -601,9 +602,9 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Note: this will clear your browser\'s cache and current tabs. It can be '
+                "Note: this will clear your browser's cache and current tabs. It can be "
                 'useful in case of errors (sections not loading correctly, etc.). '
-                'You\'ll be logged-out from Torn and all other sites',
+                "You'll be logged-out from Torn and all other sites",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -620,7 +621,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _travel() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -634,7 +635,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Remove airplane"),
+              const Text("Remove airplane"),
               Switch(
                 value: _settingsProvider.removeAirplane,
                 onChanged: (value) {
@@ -670,7 +671,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _gym() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -684,7 +685,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Warn about chains"),
+              const Text("Warn about chains"),
               Switch(
                 value: _settingsProvider.warnAboutChains,
                 onChanged: (value) {
@@ -701,7 +702,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
-            'If active, you\'ll get a message and a chain icon to the side of '
+            "If active, you'll get a message and a chain icon to the side of "
             'the energy bar, so that you avoid spending energy in the gym or hunting'
             'if you are unaware that your faction is chaining',
             style: TextStyle(
@@ -716,7 +717,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Warn about stacking"),
+              const Text("Warn about stacking"),
               Switch(
                 value: _settingsProvider.warnAboutExcessEnergy,
                 onChanged: (value) {
@@ -733,7 +734,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
-            'If active, you\'ll get a message if your open a browser to the gym or go hunting'
+            "If active, you'll get a message if your open a browser to the gym or go hunting"
             'and your energy is AT OR ABOVE your selected threshold, in case you forgot that '
             'you are stacking',
             style: TextStyle(
@@ -751,7 +752,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text(
+                    const Text(
                       "Threshold",
                       style: TextStyle(
                         fontSize: 12,
@@ -761,7 +762,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       children: [
                         Text(
                           _settingsProvider.warnAboutExcessEnergyThreshold.toString(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                           ),
                         ),
@@ -790,7 +791,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _chat(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -804,7 +805,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Show chat remove icon"),
+              const Text("Show chat remove icon"),
               Switch(
                 value: _settingsProvider.chatRemoveEnabled,
                 onChanged: (value) {
@@ -823,7 +824,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Highlight own name in chat"),
+              const Text("Highlight own name in chat"),
               Switch(
                 value: _settingsProvider.highlightChat,
                 onChanged: (value) {
@@ -850,7 +851,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Text("Choose highlight colour"),
+                      const Text("Choose highlight colour"),
                       Container(
                         width: 25,
                         height: 25,
@@ -863,7 +864,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'The sender\'s name will appear darker '
+                  "The sender's name will appear darker "
                   'to improve readability',
                   style: TextStyle(
                     color: Colors.grey[600],
@@ -875,7 +876,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ],
           )
         else
-          SizedBox.shrink(),
+          const SizedBox.shrink(),
       ],
     );
   }
@@ -883,7 +884,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _general() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -897,7 +898,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Browser style"),
+              const Text("Browser style"),
               _browserStyleDropdown(),
             ],
           ),
@@ -919,7 +920,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Show load bar"),
+              const Text("Show load bar"),
               Switch(
                 value: _settingsProvider.loadBarBrowser,
                 onChanged: (value) {
@@ -938,7 +939,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Refresh method"),
+              const Text("Refresh method"),
               _refreshMethodDropdown(),
             ],
           ),
@@ -947,7 +948,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'The browser has pull to refresh functionality. '
-            'However, you can get an extra refresh icon if it\'s useful for certain situations (e.g. '
+            "However, you can get an extra refresh icon if it's useful for certain situations (e.g. "
             'jail or hospital)',
             style: TextStyle(
               color: Colors.grey[600],
@@ -998,7 +999,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Column _tabs() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -1024,7 +1025,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Use tabs in browser"),
+              const Text("Use tabs in browser"),
               Switch(
                 value: _settingsProvider.useTabsFullBrowser,
                 onChanged: (value) {
@@ -1078,7 +1079,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Text("Only load tabs when used"),
+                          const Text("Only load tabs when used"),
                           Switch(
                             value: _webViewProvider.onlyLoadTabsWhenUsed,
                             onChanged: (value) {
@@ -1112,7 +1113,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Text("Allow hiding tabs"),
+                          const Text("Allow hiding tabs"),
                           Switch(
                             value: _settingsProvider.useTabsHideFeature,
                             onChanged: (value) {
@@ -1160,7 +1161,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text("Choose hide bar colour"),
+                        const Text("Choose hide bar colour"),
                         Container(
                           width: 25,
                           height: 25,
@@ -1192,7 +1193,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -1213,11 +1214,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Full screen removes widgets")),
+              const Flexible(child: Text("Full screen removes widgets")),
               Switch(
                 value: _settingsProvider.fullScreenRemovesWidgets,
                 onChanged: (value) {
@@ -1244,11 +1245,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Full screen removes chat")),
+              const Flexible(child: Text("Full screen removes chat")),
               Switch(
                 value: _settingsProvider.fullScreenRemovesChat,
                 onChanged: (value) {
@@ -1275,11 +1276,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Add reload button to tab bar")),
+              const Flexible(child: Text("Add reload button to tab bar")),
               Switch(
                 value: _settingsProvider.fullScreenExtraReloadButton,
                 onChanged: (value) {
@@ -1305,11 +1306,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Add close button to tab bar")),
+              const Flexible(child: Text("Add close button to tab bar")),
               Switch(
                 value: _settingsProvider.fullScreenExtraCloseButton,
                 onChanged: (value) {
@@ -1335,7 +1336,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
@@ -1345,7 +1346,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ],
         ),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -1355,11 +1356,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Full screen extends to top")),
+              const Flexible(child: Text("Full screen extends to top")),
               Switch(
                 value: _settingsProvider.fullScreenOverNotch,
                 onChanged: (value) {
@@ -1387,11 +1388,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Full screen extends to bottom")),
+              const Flexible(child: Text("Full screen extends to bottom")),
               Switch(
                 value: _settingsProvider.fullScreenOverBottom,
                 onChanged: (value) {
@@ -1418,11 +1419,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Full screen extends to sides")),
+              const Flexible(child: Text("Full screen extends to sides")),
               Switch(
                 value: _settingsProvider.fullScreenOverSides,
                 onChanged: (value) {
@@ -1448,7 +1449,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
@@ -1458,7 +1459,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ],
         ),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -1480,11 +1481,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Short tap opens full screen")),
+              const Flexible(child: Text("Short tap opens full screen")),
               Switch(
                 value: _settingsProvider.fullScreenByShortTap,
                 onChanged: (value) {
@@ -1510,11 +1511,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Long tap opens full screen")),
+              const Flexible(child: Text("Long tap opens full screen")),
               Switch(
                 value: _settingsProvider.fullScreenByLongTap,
                 onChanged: (value) {
@@ -1541,11 +1542,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Short/long tab affect PDA icon")),
+              const Flexible(child: Text("Short/long tab affect PDA icon")),
               Switch(
                 value: _settingsProvider.fullScreenIncludesPDAButtonTap,
                 onChanged: (value) {
@@ -1573,11 +1574,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Notifications open full screen")),
+              const Flexible(child: Text("Notifications open full screen")),
               Switch(
                 value: _settingsProvider.fullScreenByNotificationTap,
                 onChanged: (value) {
@@ -1603,11 +1604,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Deep links open full screen")),
+              const Flexible(child: Text("Deep links open full screen")),
               Switch(
                 value: _settingsProvider.fullScreenByDeepLinkTap,
                 onChanged: (value) {
@@ -1633,11 +1634,11 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(child: Text("Quick items open full screen")),
+              const Flexible(child: Text("Quick items open full screen")),
               Switch(
                 value: _settingsProvider.fullScreenByQuickItemTap,
                 onChanged: (value) {
@@ -1740,17 +1741,17 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
-      title: Text('Browser settings'),
-      leadingWidth: 80,
+      title: const Text('Browser settings'),
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
-          new IconButton(
-            icon: new Icon(Icons.arrow_back),
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
             onPressed: () {
               _goBack();
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
     );
@@ -1765,7 +1766,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Widget _browserStyleDropdown() {
     return DropdownButton<int>(
       value: _browserStyle,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 0,
           child: SizedBox(
@@ -1807,30 +1808,20 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ],
       onChanged: (value) {
-        if ((_browserStyle != 2 && value == 2) || _browserStyle == 2 && value != 2) {
-          // If you go to/from dialog, we will be rebuilding the stackview and therefore the browser will reset
-          // to how it was when the app first launched. To force a reload of the last session, just before the change,
-          // we transform it into a Container and let the provider change it back to a webview with [recallLastSession]
-          _webViewProvider.stackView = Container();
-        }
-
         _browserStyle = value;
 
         switch (value) {
           case 0:
             analytics.setUserProperty(name: "browser_style", value: "default");
             _webViewProvider.bottomBarStyleEnabled = false;
-            break;
           case 1:
             analytics.setUserProperty(name: "browser_style", value: "bottom_bar");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 1;
-            break;
           case 2:
             analytics.setUserProperty(name: "browser_style", value: "dialog");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 2;
-            break;
         }
       },
     );
@@ -1839,7 +1830,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Widget _refreshMethodDropdown() {
     return DropdownButton<BrowserRefreshSetting>(
       value: _settingsProvider.browserRefreshMethod,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: BrowserRefreshSetting.icon,
           child: SizedBox(
@@ -1881,6 +1872,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ],
       onChanged: (value) {
+        if (value == null) return;
         setState(() {
           _settingsProvider.changeBrowserRefreshMethod = value;
           _webViewProvider.updatePullToRefresh(value);
@@ -1892,7 +1884,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   DropdownButton _profileStatsDropdown() {
     return DropdownButton<String>(
       value: _settingsProvider.profileStatsEnabled,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -1942,8 +1934,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Future _restorePreferences() async {
-    var alternativeBrowser = await Prefs().getBrowserBottomBarStyleEnabled();
-    var alternativeType = await Prefs().getBrowserBottomBarStyleType();
+    final alternativeBrowser = await Prefs().getBrowserBottomBarStyleEnabled();
+    final alternativeType = await Prefs().getBrowserBottomBarStyleType();
     var style = 0;
     if (alternativeBrowser) {
       style = alternativeType == 2 ? 2 : 1;

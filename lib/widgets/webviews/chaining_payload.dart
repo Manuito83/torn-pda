@@ -1,12 +1,12 @@
 class ChainingPayload {
-  List<String> attackIdList;
-  List<String> attackNameList;
-  List<String> attackNotesList;
-  List<String> attackNotesColorList;
-  Function(List<String>) attacksCallback;
+  late List<String> attackIdList;
+  late List<String?> attackNameList;
+  late List<String?> attackNotesList;
+  late List<String?> attackNotesColorList;
+  Function(List<String>)? attacksCallback;
   bool war = false;
   bool panic = false;
-  bool showNotes;
-  bool showBlankNotes;
-  bool showOnlineFactionWarning;
+  late bool showNotes;
+  late bool showBlankNotes;
+  late bool showOnlineFactionWarning;
 }

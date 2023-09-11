@@ -16,19 +16,19 @@ class YataTargetsExportModel {
     //this.user,
   });
 
-  Map<String, YataExportTarget> targets;
-  String key;
+  Map<String?, YataExportTarget>? targets;
+  String? key;
   //String user;
 
   factory YataTargetsExportModel.fromJson(Map<String, dynamic> json) => YataTargetsExportModel(
     targets: json["targets"] == null ? null : Map.from(json["targets"]).map((k, v) => MapEntry<String, YataExportTarget>(k, YataExportTarget.fromJson(v))),
-    key: json["key"] == null ? null : json["key"],
+    key: json["key"],
     //user: json["user"] == null ? null : json["user"],
   );
 
   Map<String, dynamic> toJson() => {
-    "targets": targets == null ? null : Map.from(targets).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-    "key": key == null ? null : key,
+    "targets": targets == null ? null : Map.from(targets!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+    "key": key,
     //"user": user == null ? null : user,
   };
 }
@@ -39,17 +39,17 @@ class YataExportTarget {
     this.color,
   });
 
-  String note;
-  int color;
+  String? note;
+  int? color;
 
   factory YataExportTarget.fromJson(Map<String, dynamic> json) => YataExportTarget(
-    note: json["note"] == null ? null : json["note"],
-    color: json["color"] == null ? null : json["color"],
+    note: json["note"],
+    color: json["color"],
   );
 
   Map<String, dynamic> toJson() => {
-    "note": note == null ? null : note,
-    "color": color == null ? null : color,
+    "note": note,
+    "color": color,
   };
 }
 

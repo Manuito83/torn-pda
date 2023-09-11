@@ -1,8 +1,7 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -10,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
-
 // Project imports:
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -21,19 +19,19 @@ import 'package:torn_pda/widgets/quick_items/loadouts_number_dialog.dart';
 class QuickItemsOptions extends StatefulWidget {
   final bool isFaction;
 
-  QuickItemsOptions({@required this.isFaction});
+  const QuickItemsOptions({required this.isFaction});
 
   @override
-  _QuickItemsOptionsState createState() => _QuickItemsOptionsState();
+  QuickItemsOptionsState createState() => QuickItemsOptionsState();
 }
 
-class _QuickItemsOptionsState extends State<QuickItemsOptions> {
-  SettingsProvider _settingsProvider;
-  QuickItemsProvider _itemsProvider;
-  QuickItemsProviderFaction _itemsProviderFaction;
-  ThemeProvider _themeProvider;
+class QuickItemsOptionsState extends State<QuickItemsOptions> {
+  late SettingsProvider _settingsProvider;
+  QuickItemsProvider? _itemsProvider;
+  late QuickItemsProviderFaction _itemsProviderFaction;
+  ThemeProvider? _themeProvider;
 
-  final _searchController = new TextEditingController();
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -44,7 +42,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     _itemsProviderFaction = Provider.of<QuickItemsProviderFaction>(context, listen: false);
 
     if (!widget.isFaction) {
-      _itemsProvider.updateInventoryQuantities(fullUpdate: true);
+      _itemsProvider!.updateInventoryQuantities(fullUpdate: true);
     }
 
     _searchController.addListener(onSearchInputTextChange);
@@ -61,18 +59,18 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
+        color: _themeProvider!.currentTheme == AppTheme.light
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
+                : _themeProvider!.canvas
+            : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
+            backgroundColor: _themeProvider!.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -81,17 +79,17 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   )
                 : null,
             body: Container(
-              color: _themeProvider.canvas,
+              color: _themeProvider!.canvas,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                      const SizedBox(height: 20),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 15),
                         child: SizedBox(
                           width: 200,
                           child: Column(
@@ -99,14 +97,14 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                             children: <Widget>[
                               Text("QUICK ITEMS ACTIVE"),
                               Padding(
-                                padding: const EdgeInsets.only(left: 10),
+                                padding: EdgeInsets.only(left: 10),
                                 child: Text(
                                   'SWIPE TO REMOVE',
                                   style: TextStyle(fontSize: 10),
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(left: 10),
+                                padding: EdgeInsets.only(left: 10),
                                 child: Text(
                                   'LONG-PRESS TO SORT',
                                   style: TextStyle(fontSize: 10),
@@ -116,9 +114,9 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 10),
-                      if ((!widget.isFaction && _itemsProvider.activeQuickItems.length == 0) ||
-                          (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.length == 0))
+                      const SizedBox(height: 10),
+                      if ((!widget.isFaction && _itemsProvider!.activeQuickItems.isEmpty) ||
+                          (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.isEmpty))
                         Padding(
                           padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
                           child: Text(
@@ -132,17 +130,17 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                         )
                       else
                         _activeCardsList(),
-                      SizedBox(height: 40),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                      const SizedBox(height: 40),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 15),
                         child: Text("ALL AVAILABLE ITEMS"),
                       ),
-                      SizedBox(height: 10),
-                      if ((!widget.isFaction && _itemsProvider.fullQuickItems.isEmpty) ||
+                      const SizedBox(height: 10),
+                      if ((!widget.isFaction && _itemsProvider!.fullQuickItems.isEmpty) ||
                           (widget.isFaction && _itemsProviderFaction.fullQuickItemsFaction.isEmpty))
-                        Center(
+                        const Center(
                           child: Padding(
-                            padding: const EdgeInsets.all(50),
+                            padding: EdgeInsets.all(50),
                             child: Column(
                               children: [
                                 Text('Loading available items...'),
@@ -164,7 +162,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                         )
                       else
                         _allCardsList(),
-                      SizedBox(height: 40),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -180,9 +178,9 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: widget.isFaction ? Text("Quick faction items") : Text("Quick items"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: widget.isFaction ? const Text("Quick faction items") : const Text("Quick items"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _willPopCallback();
         },
@@ -200,20 +198,19 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
         IconButton(
           icon: Icon(
             Icons.delete,
-            color: _themeProvider.buttonText,
+            color: _themeProvider!.buttonText,
           ),
           onPressed: () async {
-            if ((!widget.isFaction && _itemsProvider.activeQuickItems.length == 0) ||
-                (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.length == 0)) {
+            if ((!widget.isFaction && _itemsProvider!.activeQuickItems.isEmpty) ||
+                (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.isEmpty)) {
               BotToast.showText(
                 text: 'You have no active quick items, activate some!',
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.orange[800],
-                duration: Duration(seconds: 2),
-                contentPadding: EdgeInsets.all(10),
+                contentColor: Colors.orange[800]!,
+                contentPadding: const EdgeInsets.all(10),
               );
             } else {
               _openWipeDialog();
@@ -230,8 +227,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Consumer<QuickItemsProviderFaction>(
           builder: (context, itemsProviderFaction, child) {
-            var activeItems = <Widget>[];
-            for (var item in itemsProviderFaction.activeQuickItemsFaction) {
+            final activeItems = <Widget>[];
+            for (final item in itemsProviderFaction.activeQuickItemsFaction) {
               activeItems.add(
                 Scrollable(
                   key: UniqueKey(),
@@ -249,24 +246,24 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                         ),
                       ],
                     ),
-                    child: Container(
+                    child: SizedBox(
                       height: 60,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
+                        padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0),
                         child: Card(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.all(2),
-                                  child: item.isEnergyPoints || item.isNervePoints
+                                  padding: const EdgeInsets.all(2),
+                                  child: item.isEnergyPoints! || item.isNervePoints!
                                       ? SizedBox(
                                           width: 25,
                                           child: Icon(
                                             MdiIcons.alphaPCircleOutline,
-                                            color: item.isEnergyPoints ? Colors.green : Colors.red,
+                                            color: item.isEnergyPoints! ? Colors.green : Colors.red,
                                           ),
                                         )
                                       : Image.asset(
@@ -275,7 +272,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           height: 35,
                                         ),
                                 ),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 Flexible(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -286,8 +283,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                item.name,
-                                                style: TextStyle(fontSize: 13),
+                                                item.name!,
+                                                style: const TextStyle(fontSize: 13),
                                               ),
                                             ),
                                           ],
@@ -296,10 +293,10 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 10),
-                                SizedBox(width: 10),
-                                Icon(Icons.reorder),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
+                                const SizedBox(width: 10),
+                                const Icon(Icons.reorder),
+                                const SizedBox(width: 10),
                               ],
                             ),
                           ),
@@ -314,7 +311,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
             return Container(
               child: ReorderableListView(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 onReorder: (int oldIndex, int newIndex) {
                   if (oldIndex < newIndex) {
                     // removing the item at oldIndex will shorten the list by 1
@@ -337,8 +334,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Consumer<QuickItemsProvider>(
           builder: (context, itemsProvider, child) {
-            var activeItems = <Widget>[];
-            for (var item in itemsProvider.activeQuickItems) {
+            final activeItems = <Widget>[];
+            for (final item in itemsProvider.activeQuickItems) {
               activeItems.add(
                 Scrollable(
                   key: UniqueKey(),
@@ -351,32 +348,32 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                           backgroundColor: Colors.red,
                           icon: Icons.remove_circle_outline_outlined,
                           onPressed: (context) {
-                            _itemsProvider.deactivateQuickItem(item);
+                            _itemsProvider!.deactivateQuickItem(item);
                           },
                         ),
                       ],
                     ),
-                    child: Container(
+                    child: SizedBox(
                       height: 60,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
+                        padding: EdgeInsets.symmetric(horizontal: item.isLoadout! ? 20 : 0),
                         child: Card(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.all(2),
+                                  padding: const EdgeInsets.all(2),
                                   child: Image.asset(
-                                    item.isLoadout
+                                    item.isLoadout!
                                         ? 'images/icons/loadout.png'
                                         : 'images/torn_items/small/${item.number}_small.png',
-                                    width: item.isLoadout ? 25 : 35,
-                                    height: item.isLoadout ? 25 : 35,
+                                    width: item.isLoadout! ? 25 : 35,
+                                    height: item.isLoadout! ? 25 : 35,
                                   ),
                                 ),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 Flexible(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -387,55 +384,55 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                item.isLoadout ? item.loadoutName : item.name,
-                                                style: TextStyle(fontSize: 13),
+                                                item.isLoadout! ? item.loadoutName! : item.name!,
+                                                style: const TextStyle(fontSize: 13),
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      if (!item.isLoadout)
+                                      if (!item.isLoadout!)
                                         Text(
                                           "(inv: x${item.inventory})",
-                                          style: TextStyle(fontSize: 10),
+                                          style: const TextStyle(fontSize: 10),
                                         ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(width: 10),
-                                if (!item.isLoadout)
+                                const SizedBox(width: 10),
+                                if (!item.isLoadout!)
                                   GestureDetector(
                                     onTap: () {
                                       BotToast.showText(
                                         text: '${item.name}\n\n${item.description}\n\n'
                                             'You have ${item.inventory} in your inventory',
-                                        textStyle: TextStyle(
+                                        textStyle: const TextStyle(
                                           fontSize: 14,
                                           color: Colors.white,
                                         ),
-                                        contentColor: Colors.green[800],
-                                        duration: Duration(seconds: 5),
-                                        contentPadding: EdgeInsets.all(10),
+                                        contentColor: Colors.green[800]!,
+                                        duration: const Duration(seconds: 5),
+                                        contentPadding: const EdgeInsets.all(10),
                                       );
                                     },
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.info_outline,
                                       size: 19,
                                     ),
                                   )
-                                else if (item.isLoadout)
+                                else if (item.isLoadout!)
                                   GestureDetector(
                                     onTap: () {
                                       _openLoadoutsNameDialog(item);
                                     },
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.edit,
                                       size: 19,
                                     ),
                                   ),
-                                SizedBox(width: 10),
-                                Icon(Icons.reorder),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
+                                const Icon(Icons.reorder),
+                                const SizedBox(width: 10),
                               ],
                             ),
                           ),
@@ -450,13 +447,13 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
             return Container(
               child: ReorderableListView(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 onReorder: (int oldIndex, int newIndex) {
                   if (oldIndex < newIndex) {
                     // removing the item at oldIndex will shorten the list by 1
                     newIndex -= 1;
                   }
-                  _itemsProvider.reorderQuickItem(
+                  _itemsProvider!.reorderQuickItem(
                     itemsProvider.activeQuickItems[oldIndex],
                     oldIndex,
                     newIndex,
@@ -482,7 +479,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               child: TextField(
                 controller: _searchController,
                 maxLength: 30,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   isDense: true,
                   labelText: "Search",
                   counterText: "",
@@ -497,35 +494,35 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
             ),
             Consumer<QuickItemsProviderFaction>(
               builder: (context, itemsProviderFaction, child) {
-                var allQuickItems = <Widget>[];
-                for (var item in itemsProviderFaction.fullQuickItemsFaction) {
-                  if (item.name.toLowerCase().contains(_itemsProviderFaction.searchFilter.toLowerCase())) {
-                    if (item.active) {
+                final allQuickItems = <Widget>[];
+                for (final item in itemsProviderFaction.fullQuickItemsFaction) {
+                  if (item.name!.toLowerCase().contains(_itemsProviderFaction.searchFilter.toLowerCase())) {
+                    if (item.active!) {
                       continue;
                     }
 
                     allQuickItems.add(
                       AnimatedOpacity(
-                        opacity: item.visible ? 1 : 0,
-                        duration: Duration(milliseconds: 300),
-                        child: Container(
+                        opacity: item.visible! ? 1 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: SizedBox(
                           height: 60,
                           child: Padding(
                             padding:
-                                EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
+                                EdgeInsets.symmetric(horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0),
                             child: Card(
                               child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: Row(
                                   children: [
                                     Padding(
-                                      padding: EdgeInsets.all(2),
-                                      child: item.isEnergyPoints || item.isNervePoints
+                                      padding: const EdgeInsets.all(2),
+                                      child: item.isEnergyPoints! || item.isNervePoints!
                                           ? SizedBox(
                                               width: 25,
                                               child: Icon(
                                                 MdiIcons.alphaPCircleOutline,
-                                                color: item.isEnergyPoints ? Colors.green : Colors.red,
+                                                color: item.isEnergyPoints! ? Colors.green : Colors.red,
                                               ),
                                             )
                                           : Image.asset(
@@ -534,7 +531,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               height: 35,
                                             ),
                                     ),
-                                    SizedBox(width: 10),
+                                    const SizedBox(width: 10),
                                     Flexible(
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
@@ -545,8 +542,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               children: [
                                                 Flexible(
                                                   child: Text(
-                                                    item.name,
-                                                    style: TextStyle(fontSize: 13),
+                                                    item.name!,
+                                                    style: const TextStyle(fontSize: 13),
                                                   ),
                                                 ),
                                               ],
@@ -555,27 +552,27 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         ],
                                       ),
                                     ),
-                                    if (!item.isLoadout)
+                                    if (!item.isLoadout!)
                                       GestureDetector(
                                         onTap: () {
                                           BotToast.showText(
                                             text: '${item.name}\n\n${item.description}\n\n',
-                                            textStyle: TextStyle(
+                                            textStyle: const TextStyle(
                                               fontSize: 14,
                                               color: Colors.white,
                                             ),
-                                            contentColor: Colors.green[800],
-                                            duration: Duration(seconds: 5),
-                                            contentPadding: EdgeInsets.all(10),
+                                            contentColor: Colors.green[800]!,
+                                            duration: const Duration(seconds: 5),
+                                            contentPadding: const EdgeInsets.all(10),
                                           );
                                         },
-                                        child: Icon(
+                                        child: const Icon(
                                           Icons.info_outline,
                                           size: 19,
                                         ),
                                       ),
                                     TextButton(
-                                      onPressed: !item.visible
+                                      onPressed: !item.visible!
                                           // Avoid double press
                                           ? null
                                           : () async {
@@ -584,7 +581,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                                 item.visible = false;
                                               });
 
-                                              await Future.delayed(Duration(milliseconds: 300));
+                                              await Future.delayed(const Duration(milliseconds: 300));
 
                                               setState(() {
                                                 itemsProviderFaction.activateQuickItem(item);
@@ -610,7 +607,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                 }
                 return ListView(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   children: allQuickItems,
                 );
               },
@@ -628,7 +625,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               child: TextField(
                 controller: _searchController,
                 maxLength: 30,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   isDense: true,
                   labelText: "Search",
                   counterText: "",
@@ -643,37 +640,38 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
             ),
             Consumer<QuickItemsProvider>(
               builder: (context, itemsProvider, child) {
-                var allQuickItems = <Widget>[];
-                for (var item in itemsProvider.fullQuickItems) {
-                  if (item.name.toLowerCase().contains(_itemsProvider.searchFilter.toLowerCase())) {
-                    if (item.active || (item.isLoadout && item.loadoutNumber > itemsProvider.numberOfLoadoutsToShow)) {
+                final allQuickItems = <Widget>[];
+                for (final item in itemsProvider.fullQuickItems) {
+                  if (item.name!.toLowerCase().contains(_itemsProvider!.searchFilter.toLowerCase())) {
+                    if (item.active! ||
+                        (item.isLoadout! && item.loadoutNumber! > itemsProvider.numberOfLoadoutsToShow)) {
                       continue;
                     }
 
                     allQuickItems.add(
                       AnimatedOpacity(
-                        opacity: item.visible ? 1 : 0,
-                        duration: Duration(milliseconds: 300),
-                        child: Container(
+                        opacity: item.visible! ? 1 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: SizedBox(
                           height: 60,
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
+                            padding: EdgeInsets.symmetric(horizontal: item.isLoadout! ? 20 : 0),
                             child: Card(
                               child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: Row(
                                   children: [
                                     Padding(
-                                      padding: EdgeInsets.all(2),
+                                      padding: const EdgeInsets.all(2),
                                       child: Image.asset(
-                                        item.isLoadout
+                                        item.isLoadout!
                                             ? 'images/icons/loadout.png'
                                             : 'images/torn_items/small/${item.number}_small.png',
-                                        width: item.isLoadout ? 25 : 35,
-                                        height: item.isLoadout ? 25 : 35,
+                                        width: item.isLoadout! ? 25 : 35,
+                                        height: item.isLoadout! ? 25 : 35,
                                       ),
                                     ),
-                                    SizedBox(width: 10),
+                                    const SizedBox(width: 10),
                                     Flexible(
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
@@ -684,43 +682,43 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               children: [
                                                 Flexible(
                                                   child: Text(
-                                                    item.name,
-                                                    style: TextStyle(fontSize: 13),
+                                                    item.name!,
+                                                    style: const TextStyle(fontSize: 13),
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                          if (!item.isLoadout)
+                                          if (!item.isLoadout!)
                                             Text(
                                               "(inv: x${item.inventory})",
-                                              style: TextStyle(fontSize: 10),
+                                              style: const TextStyle(fontSize: 10),
                                             ),
                                         ],
                                       ),
                                     ),
-                                    if (!item.isLoadout)
+                                    if (!item.isLoadout!)
                                       GestureDetector(
                                         onTap: () {
                                           BotToast.showText(
                                             text: '${item.name}\n\n${item.description}\n\n'
                                                 'You have ${item.inventory} in your inventory',
-                                            textStyle: TextStyle(
+                                            textStyle: const TextStyle(
                                               fontSize: 14,
                                               color: Colors.white,
                                             ),
-                                            contentColor: Colors.green[800],
-                                            duration: Duration(seconds: 5),
-                                            contentPadding: EdgeInsets.all(10),
+                                            contentColor: Colors.green[800]!,
+                                            duration: const Duration(seconds: 5),
+                                            contentPadding: const EdgeInsets.all(10),
                                           );
                                         },
-                                        child: Icon(
+                                        child: const Icon(
                                           Icons.info_outline,
                                           size: 19,
                                         ),
                                       ),
                                     TextButton(
-                                      onPressed: !item.visible
+                                      onPressed: !item.visible!
                                           // Avoid double press
                                           ? null
                                           : () async {
@@ -729,7 +727,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                                 item.visible = false;
                                               });
 
-                                              await Future.delayed(Duration(milliseconds: 300));
+                                              await Future.delayed(const Duration(milliseconds: 300));
 
                                               setState(() {
                                                 itemsProvider.activateQuickItem(item);
@@ -755,7 +753,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                 }
                 return ListView(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   children: allQuickItems,
                 );
               },
@@ -782,22 +780,21 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -808,26 +805,26 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                           child: Text(
                             "This will reset all your quick items and order, "
                             "are you sure?",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Reset!"),
+                              child: const Text("Reset!"),
                               onPressed: () {
                                 if (widget.isFaction) {
                                   _itemsProviderFaction.wipeAllQuickItems();
                                 } else {
-                                  _itemsProvider.wipeAllQuickItems();
+                                  _itemsProvider!.wipeAllQuickItems();
                                 }
                                 Navigator.of(context).pop();
                               },
                             ),
                             TextButton(
-                              child: Text("Oh no!"),
+                              child: const Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -843,11 +840,11 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(Icons.delete_forever_outlined),
@@ -894,7 +891,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     if (widget.isFaction) {
       _itemsProviderFaction.setFilterText(_searchController.text);
     } else {
-      _itemsProvider.setFilterText(_searchController.text);
+      _itemsProvider!.setFilterText(_searchController.text);
     }
   }
 

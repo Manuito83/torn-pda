@@ -24,10 +24,10 @@ class TacCard extends StatefulWidget {
   TacCard({@required this.target, @required this.tacProvider, @required Key key}) : super(key: key);
 
   @override
-  _TacCardState createState() => _TacCardState();
+TacCardState createState() => TacCardState();
 }
 
-class _TacCardState extends State<TacCard> {
+class TacCardState extends State<TacCard> {
   TacTarget _target;
 
   SettingsProvider _settingsProvider;
@@ -360,7 +360,7 @@ class _TacCardState extends State<TacCard> {
             style: TextStyle(fontSize: 12),
           ),
           LinearPercentIndicator(
-                    padding: null,
+                    padding: EdgeInsets.all(0),
                               barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 12,

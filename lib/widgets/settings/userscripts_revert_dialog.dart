@@ -13,12 +13,12 @@ import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptsRevertDialog extends StatefulWidget {
   @override
-  _UserScriptsRevertDialogState createState() => _UserScriptsRevertDialogState();
+  UserScriptsRevertDialogState createState() => UserScriptsRevertDialogState();
 }
 
-class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
-  ThemeProvider _themeProvider;
-  UserScriptsProvider _userScriptsProvider;
+class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
+  late ThemeProvider _themeProvider;
+  late UserScriptsProvider _userScriptsProvider;
 
   bool _onlyRestoreNew = true;
   int _missingScripts = 0;
@@ -31,14 +31,14 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
 
     // Get number missing example scripts
-    var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+    final exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
     _missingScripts = exampleScripts.length;
     int overwrite = 0;
-    for (var existing in _userScriptsProvider.userScriptList) {
-      for (var example in exampleScripts) {
+    for (final existing in _userScriptsProvider.userScriptList) {
+      for (final example in exampleScripts) {
         if (existing.exampleCode == example.exampleCode) {
           _missingScripts--;
           overwrite++;
@@ -57,36 +57,35 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
                   color: _themeProvider.secondBackground,
-                  shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min, // To make the card compact
                   children: <Widget>[
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Flexible(
                       child: Text(
                         "This will restore the example scripts that come with Torn PDA by default!",
                         style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Column(
                       children: [
                         Row(
@@ -120,19 +119,19 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Do it!"),
+                          child: const Text("Do it!"),
                           onPressed: () {
                             _userScriptsProvider.restoreExamples(_onlyRestoreNew);
                             Navigator.of(context).pop();
                           },
                         ),
                         TextButton(
-                          child: Text("Better not!"),
+                          child: const Text("Better not!"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -152,7 +151,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                 child: CircleAvatar(
                   backgroundColor: _themeProvider.secondBackground,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 34,
                     width: 34,
                     child: Icon(MdiIcons.backupRestore),

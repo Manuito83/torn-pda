@@ -4,8 +4,8 @@ class AppwidgetExplanationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Home widget"),
-      content: SingleChildScrollView(
+      title: const Text("Home widget"),
+      content: const SingleChildScrollView(
         child: Column(
           children: [
             Text(
@@ -23,7 +23,7 @@ class AppwidgetExplanationDialog extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Awesome!"),
+            child: const Text("Awesome!"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },

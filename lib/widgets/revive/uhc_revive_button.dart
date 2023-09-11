@@ -1,38 +1,37 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UhcReviveButton extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final OwnProfileExtended user;
-  final SettingsProvider settingsProvider;
-  final WebViewProvider webViewProvider;
+  final ThemeProvider? themeProvider;
+  final OwnProfileExtended? user;
+  final SettingsProvider? settingsProvider;
+  final WebViewProvider? webViewProvider;
 
   const UhcReviveButton({
-    @required this.themeProvider,
-    @required this.settingsProvider,
-    @required this.webViewProvider,
+    required this.themeProvider,
+    required this.settingsProvider,
+    required this.webViewProvider,
     this.user,
-    Key key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
-  _UhcReviveButtonState createState() => _UhcReviveButtonState();
+  UhcReviveButtonState createState() => UhcReviveButtonState();
 }
 
-class _UhcReviveButtonState extends State<UhcReviveButton> {
-  OwnProfileExtended _user;
+class UhcReviveButtonState extends State<UhcReviveButton> {
+  OwnProfileExtended? _user;
 
   @override
   void initState() {
@@ -54,8 +53,8 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
             padding: const EdgeInsets.only(right: 13),
             child: Image.asset('images/icons/uhc_revive.png', width: 24),
           ),
-          SizedBox(width: 10),
-          Flexible(child: Text("Request a revive (UHC)")),
+          const SizedBox(width: 10),
+          const Flexible(child: Text("Request a revive (UHC)")),
         ],
       ),
     );
@@ -77,22 +76,21 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: widget.themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: widget.themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -107,7 +105,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                               Flexible(
                                 child: Text(
                                   "REQUEST A REVIVE FROM UHC",
-                                  style: TextStyle(fontSize: 11, color: widget.themeProvider.mainText),
+                                  style: TextStyle(fontSize: 11, color: widget.themeProvider!.mainText),
                                 ),
                               ),
                             ],
@@ -141,7 +139,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                             browserTapType: BrowserTapType.long,
                                           );
                                     },
-                                    child: Text(
+                                    child: const Text(
                                       'forum thread',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -151,43 +149,45 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                     ),
                                   ),
                                 ),
-                                TextSpan(text: ' or in the UHC '),
+                                const TextSpan(text: ' or in the UHC '),
                                 TextSpan(
                                   text: 'Discord server',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blue,
                                     fontSize: 13,
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () async {
-                                      var url = 'https://discord.gg/JJprTpb';
+                                      const url = 'https://discord.gg/JJprTpb';
                                       if (await canLaunchUrl(Uri.parse(url))) {
                                         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                                       }
                                     },
                                 ),
-                                TextSpan(
-                                    text: "\n\nEach revive must be paid directly to the reviver and costs "
-                                        "\$1 million or 1 Xanax. There are special prices for faction contracts "
-                                        "(more information in the forums)."),
-                                TextSpan(
-                                    text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
-                                        "you risk getting blocked from UHC!"),
+                                const TextSpan(
+                                  text: "\n\nEach revive must be paid directly to the reviver and costs "
+                                      "\$1 million or 1 Xanax. There are special prices for faction contracts "
+                                      "(more information in the forums).",
+                                ),
+                                const TextSpan(
+                                  text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
+                                      "you risk getting blocked from UHC!",
+                                ),
                               ],
                             ),
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Medic!"),
+                              child: const Text("Medic!"),
                               onPressed: () async {
                                 // User can be null if we are not accessing from the Profile page
                                 if (widget.user == null) {
-                                  var apiResponse =
+                                  final apiResponse =
                                       await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
                                   if (apiResponse is OwnProfileExtended) {
                                     _user = apiResponse;
@@ -198,44 +198,44 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                   BotToast.showText(
                                     text: 'There was an error contacting Torn API to get your current status, '
                                         'please try again after a while!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentColor: Colors.red[800]!,
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
                                 }
 
-                                if (_user.status.color != 'red' && _user.status.state != "Hospital") {
+                                if (_user!.status!.color != 'red' && _user!.status!.state != "Hospital") {
                                   BotToast.showText(
                                     text: 'According to Torn you are not currently hospitalized, please wait a '
                                         'few seconds and try again!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentColor: Colors.red[800]!,
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
                                 }
 
-                                var uhc = UhcRevive(
-                                  playerId: _user.playerId,
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerFactionId: _user.faction.factionId,
+                                final uhc = UhcRevive(
+                                  playerId: _user!.playerId,
+                                  playerName: _user!.name,
+                                  playerFaction: _user!.faction!.factionName,
+                                  playerFactionId: _user!.faction!.factionId,
                                 );
 
                                 uhc.callMedic().then((value) {
-                                  var resultString = "";
-                                  var resultColor = Colors.transparent;
+                                  String? resultString = "";
+                                  Color? resultColor = Colors.transparent;
 
                                   if (value == "200") {
                                     resultString = "Request received by UHC!\n\n"
@@ -244,7 +244,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                     resultColor = Colors.green[800];
                                   } else if (value == "error") {
                                     resultString = "There was an error contacting UHC, try again later"
-                                        "or contact them through UHC\'s Discord"
+                                        "or contact them through UHC's Discord"
                                         "server!";
                                     resultColor = Colors.red[800];
                                   } else {
@@ -253,14 +253,14 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                                   }
 
                                   BotToast.showText(
-                                    text: resultString,
-                                    textStyle: TextStyle(
+                                    text: resultString!,
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: resultColor,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentColor: resultColor!,
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 });
 
@@ -268,7 +268,7 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                               },
                             ),
                             TextButton(
-                              child: Text("Cancel"),
+                              child: const Text("Cancel"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -284,9 +284,9 @@ class _UhcReviveButtonState extends State<UhcReviveButton> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: widget.themeProvider.secondBackground,
+                    backgroundColor: widget.themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: widget.themeProvider.secondBackground,
+                      backgroundColor: widget.themeProvider!.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,

@@ -12,27 +12,27 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsAndroid extends StatefulWidget {
   final Function callback;
-  final bool lootRangersEnabled;
+  final bool? lootRangersEnabled;
 
-  LootNotificationsAndroid({
-    @required this.callback,
-    @required this.lootRangersEnabled,
+  const LootNotificationsAndroid({
+    required this.callback,
+    required this.lootRangersEnabled,
   });
 
   @override
-  _LootNotificationsAndroidState createState() => _LootNotificationsAndroidState();
+  LootNotificationsAndroidState createState() => LootNotificationsAndroidState();
 }
 
-class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
-  String _lootTypeDropDownValue;
-  String _lootNotificationAheadDropDownValue;
-  String _lootAlarmAheadDropDownValue;
-  String _lootTimerAheadDropDownValue;
+class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
+  String? _lootTypeDropDownValue;
+  String? _lootNotificationAheadDropDownValue;
+  String? _lootAlarmAheadDropDownValue;
+  String? _lootTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -49,10 +49,10 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
@@ -71,7 +71,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
               String message = 'Here you can specify your preferred alerting '
                   'method and launch time before the loot level is reached';
 
-              if (widget.lootRangersEnabled) {
+              if (widget.lootRangersEnabled!) {
                 message += ' (also applies to Loot Rangers, if available)';
               }
 
@@ -79,7 +79,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -92,12 +92,12 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                 child: Text(message),
                               ),
                               _rowsWithTypes(),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -116,9 +116,9 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Loot options"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Loot options"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () => _goBack(),
       ),
     );
@@ -132,10 +132,10 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text('Loot'),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -170,7 +170,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                     ),
                   ],
                 ),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Flexible(
@@ -206,7 +206,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   DropdownButton _lootDropDown() {
     return DropdownButton<String>(
       value: _lootTypeDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -248,7 +248,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootNotificationType(value);
+        Prefs().setLootNotificationType(value!);
         setState(() {
           _lootTypeDropDownValue = value;
         });
@@ -259,7 +259,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   DropdownButton _lootNotificationAheadDropDown() {
     return DropdownButton<String>(
       value: _lootNotificationAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -340,7 +340,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootNotificationAhead(value);
+        Prefs().setLootNotificationAhead(value!);
         setState(() {
           _lootNotificationAheadDropDownValue = value;
         });
@@ -351,7 +351,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   DropdownButton _lootAlarmAheadDropDown() {
     return DropdownButton<String>(
       value: _lootAlarmAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -419,7 +419,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootAlarmAhead(value);
+        Prefs().setLootAlarmAhead(value!);
         setState(() {
           _lootAlarmAheadDropDownValue = value;
         });
@@ -430,7 +430,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   DropdownButton _lootTimerAheadDropDown() {
     return DropdownButton<String>(
       value: _lootTimerAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -511,7 +511,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootTimerAhead(value);
+        Prefs().setLootTimerAhead(value!);
         setState(() {
           _lootTimerAheadDropDownValue = value;
         });
@@ -520,10 +520,10 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   }
 
   Future _restorePreferences() async {
-    var lootType = await Prefs().getLootNotificationType();
-    var lootNotificationAhead = await Prefs().getLootNotificationAhead();
-    var lootAlarmAhead = await Prefs().getLootAlarmAhead();
-    var lootTimerAhead = await Prefs().getLootTimerAhead();
+    final lootType = await Prefs().getLootNotificationType();
+    final lootNotificationAhead = await Prefs().getLootNotificationAhead();
+    final lootAlarmAhead = await Prefs().getLootAlarmAhead();
+    final lootTimerAhead = await Prefs().getLootTimerAhead();
 
     setState(() {
       _lootTypeDropDownValue = lootType;

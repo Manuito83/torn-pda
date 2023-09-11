@@ -10,8 +10,8 @@ String bountiesModelToJson(BountiesModel data) => json.encode(data.toJson());
 
 class BountiesModel {
   BountiesModel({
-    this.levelMax,
-    this.removeRed,
+    this.levelMax = 100,
+    this.removeRed = false,
   });
 
   int levelMax;
@@ -23,7 +23,7 @@ class BountiesModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "levelMax": levelMax == null ? null : levelMax,
-        "removeRed": removeRed == null ? null : removeRed,
+        "levelMax": levelMax,
+        "removeRed": removeRed,
       };
 }

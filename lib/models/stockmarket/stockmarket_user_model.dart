@@ -13,7 +13,7 @@ class StockMarketUserModel {
     this.stocks,
   });
 
-  Map<String, Stock> stocks;
+  Map<String, Stock>? stocks;
 
   factory StockMarketUserModel.fromJson(Map<String, dynamic> json) {
     if (json["stocks"] is List) {
@@ -30,7 +30,7 @@ class StockMarketUserModel {
   }
 
   Map<String, dynamic> toJson() => {
-        "stocks": stocks == null ? null : Map.from(stocks).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "stocks": stocks == null ? null : Map.from(stocks!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -41,24 +41,24 @@ class Stock {
     this.transactions,
   });
 
-  int stockId;
-  int totalShares;
-  Map<String, Transaction> transactions;
+  int? stockId;
+  int? totalShares;
+  Map<String, Transaction>? transactions;
 
   factory Stock.fromJson(Map<String, dynamic> json) => Stock(
-        stockId: json["stock_id"] == null ? null : json["stock_id"],
-        totalShares: json["total_shares"] == null ? null : json["total_shares"],
+        stockId: json["stock_id"],
+        totalShares: json["total_shares"],
         transactions: json["transactions"] == null
             ? null
             : Map.from(json["transactions"]).map((k, v) => MapEntry<String, Transaction>(k, Transaction.fromJson(v))),
       );
 
   Map<String, dynamic> toJson() => {
-        "stock_id": stockId == null ? null : stockId,
-        "total_shares": totalShares == null ? null : totalShares,
+        "stock_id": stockId,
+        "total_shares": totalShares,
         "transactions": transactions == null
             ? null
-            : Map.from(transactions).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+            : Map.from(transactions!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
@@ -69,19 +69,19 @@ class Transaction {
     this.timeBought,
   });
 
-  int shares;
-  double boughtPrice;
-  int timeBought;
+  int? shares;
+  double? boughtPrice;
+  int? timeBought;
 
   factory Transaction.fromJson(Map<String, dynamic> json) => Transaction(
-        shares: json["shares"] == null ? null : json["shares"],
-        boughtPrice: json["bought_price"] == null ? null : json["bought_price"].toDouble(),
-        timeBought: json["time_bought"] == null ? null : json["time_bought"],
+        shares: json["shares"],
+        boughtPrice: json["bought_price"]?.toDouble(),
+        timeBought: json["time_bought"],
       );
 
   Map<String, dynamic> toJson() => {
-        "shares": shares == null ? null : shares,
-        "bought_price": boughtPrice == null ? null : boughtPrice,
-        "time_bought": timeBought == null ? null : timeBought,
+        "shares": shares,
+        "bought_price": boughtPrice,
+        "time_bought": timeBought,
       };
 }

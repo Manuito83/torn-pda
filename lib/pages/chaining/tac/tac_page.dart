@@ -39,10 +39,10 @@ class TacPage extends StatefulWidget {
   const TacPage({Key key, @required this.userKey}) : super(key: key);
 
   @override
-  _TacPageState createState() => _TacPageState();
+TacPageState createState() => TacPageState();
 }
 
-class _TacPageState extends State<TacPage> {
+class TacPageState extends State<TacPage> {
   var _targetCards = <TacCard>[];
 
   Future _preferencesLoaded;
@@ -136,7 +136,7 @@ class _TacPageState extends State<TacPage> {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                  child: MediaQuery.of(context).orientation == Orientation.portrait
+                  child: MediaQuery.orientationOf(context) == Orientation.portrait
                       ? _mainColumn()
                       : SingleChildScrollView(
                           child: _mainColumn(),
@@ -194,7 +194,7 @@ class _TacPageState extends State<TacPage> {
                   child: CircularProgressIndicator(),
                 ),
               )
-            : MediaQuery.of(context).orientation == Orientation.portrait
+            : MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Flexible(child: _targetsListView())
                 : _targetsListView(),
       ],
@@ -805,7 +805,7 @@ class _TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://tornattackcentral.eu/premium.php';
-                await context.read<WebViewProvider>().openBrowserPreference(
+                await _webViewProvider.splitScreenPosition.openBrowserPreference(
                       context: context,
                       url: url,
                       useDialog: _settingsProvider.useQuickBrowser,
@@ -822,7 +822,7 @@ class _TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                await context.read<WebViewProvider>().openBrowserPreference(
+                await _webViewProvider.splitScreenPosition.openBrowserPreference(
                       context: context,
                       url: url,
                       useDialog: _settingsProvider.useQuickBrowser,
@@ -876,7 +876,7 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://tornattackcentral.eu';
-                  await context.read<WebViewProvider>().openBrowserPreference(
+                  await _webViewProvider.splitScreenPosition.openBrowserPreference(
                         context: context,
                         url: url,
                         useDialog: _settingsProvider.useQuickBrowser,
@@ -890,7 +890,7 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                  await context.read<WebViewProvider>().openBrowserPreference(
+                  await _webViewProvider.splitScreenPosition.openBrowserPreference(
                         context: context,
                         url: url,
                         useDialog: _settingsProvider.useQuickBrowser,
@@ -904,7 +904,7 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
-                  await context.read<WebViewProvider>().openBrowserPreference(
+                  await _webViewProvider.splitScreenPosition.openBrowserPreference(
                         context: context,
                         url: url,
                         useDialog: _settingsProvider.useQuickBrowser,

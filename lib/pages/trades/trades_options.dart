@@ -1,11 +1,9 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -13,29 +11,29 @@ import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesOptions extends StatefulWidget {
-  final int playerId;
+  final int? playerId;
   final Function callback;
 
-  TradesOptions({
-    @required this.playerId,
-    @required this.callback,
+  const TradesOptions({
+    required this.playerId,
+    required this.callback,
   });
 
   @override
-  _TradesOptionsState createState() => _TradesOptionsState();
+  TradesOptionsState createState() => TradesOptionsState();
 }
 
-class _TradesOptionsState extends State<TradesOptions> {
+class TradesOptionsState extends State<TradesOptions> {
   static const ttColor = Color(0xffd186cf);
 
   bool _tradeCalculatorEnabled = true;
   bool _awhEnabled = true;
   bool _tornTraderEnabled = true;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   @override
   void initState() {
@@ -49,12 +47,12 @@ class _TradesOptionsState extends State<TradesOptions> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
                 : _themeProvider.canvas
             : _themeProvider.canvas,
@@ -74,7 +72,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                   color: _themeProvider.canvas,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                    onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                     child: FutureBuilder(
                       future: _preferencesLoaded,
                       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -83,13 +81,13 @@ class _TradesOptionsState extends State<TradesOptions> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      Text("Use trade calculator"),
+                                      const Text("Use trade calculator"),
                                       Switch(
                                         value: _tradeCalculatorEnabled,
                                         onChanged: (value) {
@@ -116,13 +114,13 @@ class _TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 20),
+                                const SizedBox(height: 20),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      Row(
+                                      const Row(
                                         children: [
                                           Image(
                                             image: AssetImage('images/icons/awh_logo.png'),
@@ -188,12 +186,12 @@ class _TradesOptionsState extends State<TradesOptions> {
                                   ),
                                 ),
                                 */
-                                SizedBox(height: 50),
+                                const SizedBox(height: 50),
                               ],
                             ),
                           );
                         } else {
-                          return Center(
+                          return const Center(
                             child: CircularProgressIndicator(),
                           );
                         }
@@ -213,9 +211,9 @@ class _TradesOptionsState extends State<TradesOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Trade Calculator"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Trade Calculator"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           widget.callback();
           Navigator.of(context).pop();
@@ -248,50 +246,50 @@ class _TradesOptionsState extends State<TradesOptions> {
       onChanged: _tradeCalculatorEnabled
           ? (activated) async {
               if (activated) {
-                var auth = await TornTraderComm.checkIfUserExists(
+                final auth = await TornTraderComm.checkIfUserExists(
                   widget.playerId,
                 );
 
-                if (auth.error) {
+                if (auth.error!) {
                   BotToast.showText(
                     text: 'There was an issue contacting Torn Trader, please try again later!',
-                    textStyle: TextStyle(
+                    textStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.orange[800],
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
+                    contentColor: Colors.orange[800]!,
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
                   );
                   return;
                 }
 
-                if (auth.allowed) {
+                if (auth.allowed!) {
                   Prefs().setTornTraderEnabled(activated);
                   setState(() {
                     _tornTraderEnabled = true;
                   });
                   BotToast.showText(
                     text: 'User ${widget.playerId} synced successfully!',
-                    textStyle: TextStyle(
+                    textStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.green[500],
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
+                    contentColor: Colors.green[500]!,
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
                   );
                 } else {
                   BotToast.showText(
                     text: 'No user found, please visit torntrader.com and sign up to use '
                         'this functionality!',
-                    textStyle: TextStyle(
+                    textStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.orange[800],
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
+                    contentColor: Colors.orange[800]!,
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
                   );
                 }
               } else {
@@ -306,9 +304,9 @@ class _TradesOptionsState extends State<TradesOptions> {
   }
 
   Future _restorePreferences() async {
-    var tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
-    var awhActive = await Prefs().getAWHEnabled();
-    var tornTraderActive = false; //await Prefs().getTornTraderEnabled();
+    final tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
+    final awhActive = await Prefs().getAWHEnabled();
+    const tornTraderActive = false; //await Prefs().getTornTraderEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;

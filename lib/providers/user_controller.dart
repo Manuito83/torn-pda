@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
 class UserController extends GetxController {
-  String apiKey = "";
+  String? apiKey = "";
 
   // Alternative keys YATA
   bool _alternativeYataKeyEnabled = false;

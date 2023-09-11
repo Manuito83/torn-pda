@@ -5,16 +5,16 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -24,16 +24,38 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
+// Project imports:
+import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/company/employees_model.dart';
+import 'package:torn_pda/models/education_model.dart';
+import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/models/property_model.dart';
+import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
+import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
+import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
+import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
@@ -43,32 +65,8 @@ import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
-import 'package:http/http.dart' as http;
-
-// Project imports:
-import 'package:torn_pda/models/chaining/chain_model.dart';
-import 'package:torn_pda/models/education_model.dart';
-import 'package:torn_pda/models/faction/faction_crimes_model.dart';
-import 'package:torn_pda/models/profile/own_profile_misc.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
-import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/models/property_model.dart';
-import 'package:torn_pda/pages/profile/profile_options_page.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/shortcuts_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
-import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
-import 'package:torn_pda/widgets/profile/event_icons.dart';
-import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import '../main.dart';
 
 enum ProfileNotification {
   travel,
@@ -90,29 +88,22 @@ enum NotificationType {
 }
 
 extension ProfileNotificationExtension on ProfileNotification {
-  String get string {
+  String? get string {
     switch (this) {
       case ProfileNotification.travel:
         return 'travel';
-        break;
       case ProfileNotification.energy:
         return 'energy';
-        break;
       case ProfileNotification.nerve:
         return 'nerve';
-        break;
       case ProfileNotification.life:
         return 'life';
-        break;
       case ProfileNotification.drugs:
         return 'drugs';
-        break;
       case ProfileNotification.medical:
         return 'medical';
-        break;
       case ProfileNotification.booster:
         return 'booster';
-        break;
       default:
         return null;
     }
@@ -123,61 +114,61 @@ class ProfilePage extends StatefulWidget {
   final Function callBackSection;
   final Function disableTravelSection;
 
-  ProfilePage({
-    @required this.callBackSection,
-    @required this.disableTravelSection,
+  const ProfilePage({
+    required this.callBackSection,
+    required this.disableTravelSection,
   });
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
-  Future _apiFetched;
+class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
+  Future? _apiFetched;
   bool _apiGoodData = false;
-  ApiError _apiError = ApiError();
+  ApiError? _apiError = ApiError();
   int _apiRetries = 0;
 
-  OwnProfileExtended _user;
+  OwnProfileExtended? _user;
   List<Event> _events = <Event>[];
 
-  DateTime _serverTime;
+  late DateTime _serverTime;
 
-  Timer _tickerCallApi;
-  Stream _browserHasClosed;
-  StreamSubscription _browserHasClosedSubscription;
+  Timer? _tickerCallApi;
+  late Stream _browserHasClosed;
+  late StreamSubscription _browserHasClosedSubscription;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
-  UserDetailsProvider _userProv;
-  ShortcutsProvider _shortcutsProv;
-  WebViewProvider _webViewProvider;
-  UserController _u = Get.put(UserController());
+  SettingsProvider? _settingsProvider;
+  ThemeProvider? _themeProvider;
+  UserDetailsProvider? _userProv;
+  late ShortcutsProvider _shortcutsProv;
+  late WebViewProvider _webViewProvider;
+  final UserController _u = Get.put(UserController());
 
-  int _travelNotificationAhead;
-  int _travelAlarmAhead;
-  int _travelTimerAhead;
+  late int _travelNotificationAhead;
+  late int _travelAlarmAhead;
+  late int _travelTimerAhead;
 
-  DateTime _travelArrivalTime;
-  DateTime _energyNotificationTime;
-  DateTime _nerveNotificationTime;
-  DateTime _lifeNotificationTime;
-  DateTime _drugsNotificationTime;
-  DateTime _medicalNotificationTime;
-  DateTime _boosterNotificationTime;
-  DateTime _hospitalReleaseTime;
-  DateTime _jailReleaseTime;
-  DateTime _rankedWarTime;
+  late DateTime _travelArrivalTime;
+  DateTime? _energyNotificationTime;
+  DateTime? _nerveNotificationTime;
+  DateTime? _lifeNotificationTime;
+  DateTime? _drugsNotificationTime;
+  DateTime? _medicalNotificationTime;
+  DateTime? _boosterNotificationTime;
+  late DateTime _hospitalReleaseTime;
+  late DateTime _jailReleaseTime;
+  late DateTime _rankedWarTime;
 
-  int _hospitalNotificationAhead;
-  int _hospitalTimerAhead;
-  int _hospitalAlarmAhead;
-  int _jailNotificationAhead;
-  int _jailTimerAhead;
-  int _jailAlarmAhead;
-  int _rankedWarNotificationAhead;
-  int _rankedWarTimerAhead;
-  int _rankedWarAlarmAhead;
+  late int _hospitalNotificationAhead;
+  late int _hospitalTimerAhead;
+  late int _hospitalAlarmAhead;
+  late int _jailNotificationAhead;
+  late int _jailTimerAhead;
+  late int _jailAlarmAhead;
+  late int _rankedWarNotificationAhead;
+  late int _rankedWarTimerAhead;
+  late int _rankedWarAlarmAhead;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -190,45 +181,45 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _jailNotificationsPending = false;
   bool _rankedWarNotificationsPending = false;
 
-  NotificationType _travelNotificationType;
-  NotificationType _energyNotificationType;
-  NotificationType _nerveNotificationType;
-  NotificationType _lifeNotificationType;
-  NotificationType _drugsNotificationType;
-  NotificationType _medicalNotificationType;
-  NotificationType _boosterNotificationType;
-  NotificationType _hospitalNotificationType;
-  NotificationType _jailNotificationType;
-  NotificationType _rankedWarNotificationType;
+  late NotificationType _travelNotificationType;
+  late NotificationType _energyNotificationType;
+  late NotificationType _nerveNotificationType;
+  late NotificationType _lifeNotificationType;
+  late NotificationType _drugsNotificationType;
+  late NotificationType _medicalNotificationType;
+  late NotificationType _boosterNotificationType;
+  late NotificationType _hospitalNotificationType;
+  late NotificationType _jailNotificationType;
+  late NotificationType _rankedWarNotificationType;
 
-  int _customEnergyTrigger;
-  int _customNerveTrigger;
+  int? _customEnergyTrigger;
+  int? _customNerveTrigger;
 
   bool _customEnergyMaxOverride = false;
   bool _customNerveMaxOverride = false;
 
-  IconData _travelNotificationIcon;
-  IconData _energyNotificationIcon;
-  IconData _nerveNotificationIcon;
-  IconData _lifeNotificationIcon;
-  IconData _drugsNotificationIcon;
-  IconData _medicalNotificationIcon;
-  IconData _boosterNotificationIcon;
-  IconData _hospitalNotificationIcon;
-  IconData _jailNotificationIcon;
-  IconData _rankedWarNotificationIcon;
+  IconData? _travelNotificationIcon;
+  IconData? _energyNotificationIcon;
+  IconData? _nerveNotificationIcon;
+  IconData? _lifeNotificationIcon;
+  IconData? _drugsNotificationIcon;
+  IconData? _medicalNotificationIcon;
+  IconData? _boosterNotificationIcon;
+  IconData? _hospitalNotificationIcon;
+  IconData? _jailNotificationIcon;
+  IconData? _rankedWarNotificationIcon;
 
-  bool _alarmSound;
-  bool _alarmVibration;
+  late bool _alarmSound;
+  late bool _alarmVibration;
 
   bool _miscApiFetchedOnce = false;
   DateTime _miscTickLastTime = DateTime.now();
-  OwnProfileMisc _miscModel;
-  TornEducationModel _tornEducationModel;
+  OwnProfileMisc? _miscModel;
+  TornEducationModel? _tornEducationModel;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
-  Widget _rentedPropertiesWidget = SizedBox.shrink();
+  Widget _rentedPropertiesWidget = const SizedBox.shrink();
 
   // We will first try to get the full crimes if we have AA access, in which case
   // we consider it as Complex. Otherwise, with events, it will be Simple.
@@ -253,19 +244,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _showHeaderIcons = false;
   bool _dedicatedTravelCard = false;
 
-  ChainModel _chainModel;
+  late ChainModel _chainModel;
 
-  var _eventsExpController = ExpandableController();
-  var _messagesExpController = ExpandableController();
-  var _basicInfoExpController = ExpandableController();
-  var _networthExpController = ExpandableController();
+  final _eventsExpController = ExpandableController();
+  final _messagesExpController = ExpandableController();
+  final _basicInfoExpController = ExpandableController();
+  final _networthExpController = ExpandableController();
 
-  int _messagesShowNumber = 25;
-  int _eventsShowNumber = 25;
+  int? _messagesShowNumber = 25;
+  int? _eventsShowNumber = 25;
 
-  var _showOne = GlobalKey();
+  final _showOne = GlobalKey();
 
-  var _originalSectionOrder = [
+  final _originalSectionOrder = [
     "Shortcuts",
     "Status",
     "Travel",
@@ -277,7 +268,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     "Misc",
     "Networth",
   ];
-  var _userSectionOrder = <String>[];
+  List<String>? _userSectionOrder = <String>[];
 
   var _sharedEffStrength = "";
   var _sharedEffSpeed = "";
@@ -286,24 +277,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _sharedEffTotal = "";
   var _sharedJobPoints = "";
 
-  StatsChartTornStats _statsChartModel;
-  Future _statsChartDataFetched;
+  StatsChartTornStats? _statsChartModel;
+  Future? _statsChartDataFetched;
 
-  RankedWar _factionRankedWar;
+  RankedWar? _factionRankedWar;
 
-  int _companyAddiction;
+  int? _companyAddiction;
 
   // Showcases
-  GlobalKey _showcaseProfileBars = GlobalKey();
-  GlobalKey _showcaseProfileClock = GlobalKey();
-  GlobalKey _showcasePdaBrowserButton = GlobalKey();
+  final GlobalKey _showcaseProfileBars = GlobalKey();
+  final GlobalKey _showcaseProfileClock = GlobalKey();
+  final GlobalKey _showcasePdaBrowserButton = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    _webViewProvider = context.read<WebViewProvider>();
 
     _retrievePendingNotifications();
 
@@ -318,7 +307,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
     // So that we can 1) refresh the API, 2) start the API timer again
-    _browserHasClosed = _webViewProvider.browserHasClosedStream.stream;
+    _browserHasClosed = context.read<WebViewProvider>().browserHasClosedStream.stream;
     _browserHasClosedSubscription = _browserHasClosed.listen((event) {
       log("Browser has closed in Profile, resuming API calls!");
       _resetApiTimer(initCall: true);
@@ -330,18 +319,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     routeName = "profile`";
   }
 
-  /// Restarts the API timer (to be executed after 20 minutes)
+  /// Restarts the API timer (to be executed after 20 seconds)
   /// If [initCall] is true, a call is placed also at the start
   /// (unless the browser is open)
   void _resetApiTimer({bool initCall = false}) {
-    if (initCall && !_webViewProvider.browserShowInForeground) {
+    if (initCall && (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive)) {
       _apiRefreshPeriodic(forceMisc: true);
     }
 
     _tickerCallApi?.cancel();
-    _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
+    _tickerCallApi = Timer.periodic(const Duration(seconds: 20), (Timer t) {
       // Only refresh if the browser is not open!
-      if (!_webViewProvider.browserShowInForeground) {
+      if (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive) {
         _apiRefreshPeriodic();
       }
     });
@@ -352,7 +341,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _refreshEvents();
 
     // Fetch misc every minute
-    int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
+    final int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
     if (secondsSinceLastMiscFetch > 60 || forceMisc) {
       _miscTickLastTime = DateTime.now();
       _getMiscCardInfo();
@@ -371,7 +360,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       _resetApiTimer(initCall: true);
     } else if (state == AppLifecycleState.paused) {
@@ -381,170 +370,188 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: true);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _shortcutsProv = Provider.of<ShortcutsProvider>(context, listen: true);
+    _settingsProvider = Provider.of<SettingsProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _shortcutsProv = Provider.of<ShortcutsProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return ShowCaseWidget(
-      builder: Builder(builder: (_) {
-        _launchShowCases(_);
-        return Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          drawer: new Drawer(),
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          floatingActionButton: Stack(
-            children: [
-              buildSpeedDial(),
-            ],
-          ),
-          body: Container(
-            color: _themeProvider.canvas,
-            child: FutureBuilder(
-              future: _apiFetched,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (_apiGoodData) {
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        _resetApiTimer(initCall: true);
-                        await Future.delayed(Duration(seconds: 1));
-                      },
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: <Widget>[
-                            _headerIcons(),
-                            Column(
-                              children: _returnSections(),
-                            ),
-                            SizedBox(height: 70),
-                          ],
-                        ),
-                      ),
-                    );
-                  } else {
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        _fetchApi();
-                        await Future.delayed(Duration(seconds: 1));
-                      },
-                      child: SingleChildScrollView(
-                        // Physics so that page can be refreshed even with no scroll
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            SizedBox(height: 50),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              child: _shortcutsCarrousel(),
-                            ),
-                            SizedBox(height: 50),
-                            Text(
-                              'OOPS!',
-                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'There was an error: ${_apiError.errorReason}',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  if (_apiError.pdaErrorDetails.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 20),
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            'Error details:',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          SizedBox(height: 5),
-                                          Text(
-                                            _apiError.pdaErrorDetails,
-                                            style: TextStyle(
-                                              fontStyle: FontStyle.italic,
-                                              fontSize: 10,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  SizedBox(height: 20),
-                                  Text(
-                                    'Torn PDA is retrying automatically. '
-                                    'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  SizedBox(height: 20),
-                                  Text(
-                                    'You can still try to access Torn through shortcuts or the main '
-                                    'menu icon below.',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
+      builder: Builder(
+        builder: (_) {
+          _launchShowCases(_);
+          return Scaffold(
+            backgroundColor: _themeProvider!.canvas,
+            drawer: const Drawer(),
+            appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !_settingsProvider!.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
+                : null,
+            floatingActionButton: Stack(
+              children: [
+                buildSpeedDial(),
+              ],
+            ),
+            body: Container(
+              color: _themeProvider!.canvas,
+              child: FutureBuilder(
+                future: _apiFetched,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (_apiGoodData) {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          _resetApiTimer(initCall: true);
+                          await Future.delayed(const Duration(seconds: 1));
+                        },
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: <Widget>[
+                              _headerIcons(),
+                              Column(
+                                children: _returnSections(),
                               ),
-                            ),
-                            SizedBox(height: 50),
-                          ],
+                              const SizedBox(height: 70),
+                            ],
+                          ),
                         ),
+                      );
+                    } else {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          _fetchApi();
+                          await Future.delayed(const Duration(seconds: 1));
+                        },
+                        child: SingleChildScrollView(
+                          // Physics so that page can be refreshed even with no scroll
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              const SizedBox(height: 50),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: _shortcutsCarrousel(),
+                              ),
+                              const SizedBox(height: 50),
+                              const Text(
+                                'OOPS!',
+                                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'There was an error: ${_apiError!.errorReason}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    if (_apiError!.pdaErrorDetails.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 20),
+                                        child: Column(
+                                          children: [
+                                            if (_apiError!.errorId != 9)
+                                              Column(
+                                                children: [
+                                                  const Text(
+                                                    'Error details:',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                  const SizedBox(height: 5),
+                                                  Text(
+                                                    _apiError!.pdaErrorDetails,
+                                                    style: const TextStyle(
+                                                      fontStyle: FontStyle.italic,
+                                                      fontSize: 10,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ],
+                                              ),
+                                            if (_apiError!.errorId == 9)
+                                              Text(
+                                                "The API has been manually disabled by the developers. "
+                                                "This normally lasts just a few minutes\n\n"
+                                                "Otherwise, you can head to the forums of Discord to see if there "
+                                                "is any more information available.",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(color: Colors.red[700]),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    const SizedBox(height: 20),
+                                    const Text(
+                                      'Torn PDA is retrying automatically. '
+                                      "If you have good Internet connectivity, it might be an issue with Torn's API.",
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    const Text(
+                                      'You can still try to access Torn through shortcuts or the main '
+                                      'menu icon below.',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 50),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  } else {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Text('Fetching data...'),
+                          SizedBox(height: 30),
+                          Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ],
                       ),
                     );
                   }
-                } else {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Text('Fetching data...'),
-                        SizedBox(height: 30),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
+                },
+              ),
             ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 
   void _launchShowCases(BuildContext _) {
-    Future.delayed(Duration(seconds: 1), () async {
-      List showCases = <GlobalKey<State<StatefulWidget>>>[];
+    Future.delayed(const Duration(seconds: 1), () async {
+      final List showCases = <GlobalKey<State<StatefulWidget>>>[];
       // Show tab bar showcases
-      if (!_settingsProvider.showCases.contains("profile_bars")) {
-        _settingsProvider.addShowCase = "profile_bars";
+      if (!_settingsProvider!.showCases.contains("profile_bars")) {
+        _settingsProvider!.addShowCase = "profile_bars";
         showCases.add(_showcaseProfileBars);
       }
 
-      if (!_settingsProvider.showCases.contains("profile_clock")) {
-        _settingsProvider.addShowCase = "profile_clock";
+      if (!_settingsProvider!.showCases.contains("profile_clock")) {
+        _settingsProvider!.addShowCase = "profile_clock";
         showCases.add(_showcaseProfileClock);
       }
 
-      if (!_settingsProvider.showCases.contains("profile_pdaBrowserButton")) {
-        _settingsProvider.addShowCase = "profile_pdaBrowserButton";
+      if (!_settingsProvider!.showCases.contains("profile_pdaBrowserButton")) {
+        _settingsProvider!.addShowCase = "profile_pdaBrowserButton";
         showCases.add(_showcasePdaBrowserButton);
       }
 
       if (showCases.isNotEmpty) {
-        ShowCaseWidget.of(_).startShowCase(showCases);
+        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
@@ -552,39 +559,38 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
       title: Column(
         children: [
-          if (_user?.name != null && _user.name.isNotEmpty)
+          if (_user?.name != null && _user!.name!.isNotEmpty)
             GestureDetector(
               onTap: () {
-                String status = _user.lastAction.status == 'Offline'
-                    ? 'Offline (${_user.lastAction.relative.replaceAll(" ago", "")})'
-                    : _user.lastAction.status == 'Online'
+                final String status = _user!.lastAction!.status == 'Offline'
+                    ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
+                    : _user!.lastAction!.status == 'Online'
                         ? 'Online now'
-                        : 'Online ${_user.lastAction.relative}';
+                        : 'Online ${_user!.lastAction!.relative}';
                 BotToast.showText(
                   text: status,
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
                   contentColor: Colors.blue,
-                  duration: Duration(seconds: 3),
-                  contentPadding: EdgeInsets.all(10),
+                  duration: const Duration(seconds: 3),
+                  contentPadding: const EdgeInsets.all(10),
                 );
               },
               onLongPress: () {
-                Clipboard.setData(ClipboardData(text: _user.playerId.toString()));
+                Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
                 BotToast.showText(
                   text: "ID copied to the clipboard!",
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
                   contentColor: Colors.blue,
-                  duration: Duration(seconds: 2),
-                  contentPadding: EdgeInsets.all(10),
+                  contentPadding: const EdgeInsets.all(10),
                 );
               },
               child: Column(
@@ -596,19 +602,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(right: 5),
-                          child: Text(_user.name),
+                          child: Text(_user!.name!),
                         ),
-                        _user.lastAction.status == "Offline"
-                            ? Icon(Icons.remove_circle, size: 14, color: Colors.grey)
-                            : _user.lastAction.status == "Idle"
-                                ? Icon(Icons.adjust, size: 14, color: Colors.orange)
-                                : Icon(Icons.circle, size: 14, color: Colors.green[400]),
+                        if (_user!.lastAction!.status == "Offline")
+                          const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
+                        else
+                          _user!.lastAction!.status == "Idle"
+                              ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
+                              : Icon(Icons.circle, size: 14, color: Colors.green[400]),
                       ],
                     ),
                   ),
                   Text(
-                    "[${_user.playerId}] - Level ${_user.level}",
-                    style: TextStyle(
+                    "[${_user!.playerId}] - Level ${_user!.level}",
+                    style: const TextStyle(
                       fontSize: 10,
                     ),
                   ),
@@ -616,72 +623,83 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
             )
           else
-            Text("Profile"),
+            const Text("Profile"),
         ],
       ),
-      leadingWidth: 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          Showcase(
-            key: _showcasePdaBrowserButton,
-            title: 'Direct Torn access!',
-            description: '\nUse this PDA button in any section to quickly access Torn.\n\n'
-                'By using this icon, you will immediately resume your Torn browser experience, exactly as you '
-                'left it, with no new tabs reloading.\n\n'
-                'Make sure to visit the Settings and Tips section to learn how you can also configure '
-                'your taps (quick or long) to launch the browser in windowed or full screen modes!',
-            showArrow: false,
-            disableMovingAnimation: true,
-            textColor: _themeProvider.mainText,
-            tooltipBackgroundColor: _themeProvider.secondBackground,
-            descTextStyle: TextStyle(fontSize: 13),
-            tooltipPadding: EdgeInsets.all(20),
-            child: PdaBrowserIcon(),
-          ),
+          if (!_webViewProvider.webViewSplitActive)
+            Showcase(
+              key: _showcasePdaBrowserButton,
+              title: 'Direct Torn access!',
+              description: '\nUse this PDA button in any section to quickly access Torn.\n\n'
+                  'By using this icon, you will immediately resume your Torn browser experience, exactly as you '
+                  'left it, with no new tabs reloading.\n\n'
+                  'Make sure to visit the Settings and Tips section to learn how you can also configure '
+                  'your taps (quick or long) to launch the browser in windowed or full screen modes!',
+              showArrow: false,
+              disableMovingAnimation: true,
+              textColor: _themeProvider!.mainText!,
+              tooltipBackgroundColor: _themeProvider!.secondBackground!,
+              descTextStyle: const TextStyle(fontSize: 13),
+              tooltipPadding: const EdgeInsets.all(20),
+              child: PdaBrowserIcon(),
+            )
+          else
+            Container(),
         ],
       ),
       actions: <Widget>[
-        _apiGoodData
-            ? Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: true);
-                  },
-                  onLongPress: () {
-                    _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: false);
-                  },
-                  child: Showcase(
-                    key: _showcaseProfileClock,
-                    title: 'There is a lot to explore!',
-                    description: '\nAlmost anything in Torn PDA can be interacted with!\n\n'
-                        'Try for yourself, and don\'t forget to visit the Tips section for more '
-                        'information!',
-                    showArrow: false,
-                    disableMovingAnimation: true,
-                    textColor: _themeProvider.mainText,
-                    tooltipBackgroundColor: _themeProvider.secondBackground,
-                    descTextStyle: TextStyle(fontSize: 13),
-                    tooltipPadding: EdgeInsets.all(20),
-                    child: const TctClock(),
-                  ),
-                ),
-              )
-            : SizedBox.shrink(),
+        if (_apiGoodData)
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () {
+                _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: true);
+              },
+              onLongPress: () {
+                _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: false);
+              },
+              child: Showcase(
+                key: _showcaseProfileClock,
+                title: 'There is a lot to explore!',
+                description: '\nAlmost anything in Torn PDA can be interacted with!\n\n'
+                    "Try for yourself, and don't forget to visit the Tips section for more "
+                    'information!',
+                showArrow: false,
+                disableMovingAnimation: true,
+                textColor: _themeProvider!.mainText!,
+                tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                descTextStyle: const TextStyle(fontSize: 13),
+                tooltipPadding: const EdgeInsets.all(20),
+                child: const TctClock(),
+              ),
+            ),
+          )
+        else
+          const SizedBox.shrink(),
         IconButton(
           icon: Icon(
             Icons.settings,
-            color: _themeProvider.buttonText,
+            color: _themeProvider!.buttonText,
           ),
           onPressed: () async {
-            ProfileOptionsReturn newOptions = await Navigator.push(
+            final ProfileOptionsReturn newOptions = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ProfileOptionsPage(
@@ -693,16 +711,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             );
             widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {
-              _warnAboutChains = newOptions.warnAboutChainsEnabled;
-              _showHeaderWallet = newOptions.showHeaderWallet;
-              _showHeaderIcons = newOptions.showHeaderIcons;
-              _dedicatedTravelCard = newOptions.dedicatedTravelCard;
-              _eventsExpController.expanded = newOptions.expandEvents;
+              if (newOptions.warnAboutChainsEnabled != null) {
+                _warnAboutChains = newOptions.warnAboutChainsEnabled!;
+              }
+              if (newOptions.showHeaderWallet != null) {
+                _showHeaderWallet = newOptions.showHeaderWallet!;
+              }
+              if (newOptions.showHeaderIcons != null) {
+                _showHeaderIcons = newOptions.showHeaderIcons!;
+              }
+              if (newOptions.dedicatedTravelCard != null) {
+                _dedicatedTravelCard = newOptions.dedicatedTravelCard!;
+              }
+              _eventsExpController.expanded = newOptions.expandEvents!;
               _messagesShowNumber = newOptions.messagesShowNumber;
               _eventsShowNumber = newOptions.eventsShowNumber;
-              _messagesExpController.expanded = newOptions.expandMessages;
-              _basicInfoExpController.expanded = newOptions.expandBasicInfo;
-              _networthExpController.expanded = newOptions.expandNetworth;
+              _messagesExpController.expanded = newOptions.expandMessages!;
+              _basicInfoExpController.expanded = newOptions.expandBasicInfo!;
+              _networthExpController.expanded = newOptions.expandNetworth!;
               _userSectionOrder = newOptions.sectionSort;
             });
             // If we reactivated faction crimes, they might take up to a minute
@@ -710,7 +736,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             if (newOptions.oCrimesReactivated) {
               _getFactionCrimes();
             }
-            if (_settingsProvider.tornStatsChartDateTime == 0) {
+            if (_settingsProvider!.tornStatsChartDateTime == 0) {
               _getStatsChart();
             }
           },
@@ -723,7 +749,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           if (_showHeaderWallet)
             Padding(
@@ -762,21 +787,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(
                 height: 18,
                 child: Image.asset(
-                  thisShortcut.iconUrl,
+                  thisShortcut.iconUrl!,
                   width: 16,
-                  color: _themeProvider.mainText,
+                  color: _themeProvider!.mainText,
                 ),
               ),
-              SizedBox(height: 3),
+              const SizedBox(height: 3),
               Flexible(
                 child: Container(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: SizedBox(
                       width: 55,
                       child: Text(
-                        thisShortcut.nickname.toUpperCase(),
-                        style: TextStyle(fontSize: 9),
+                        thisShortcut.nickname!.toUpperCase(),
+                        style: const TextStyle(fontSize: 9),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.fade,
                       ),
@@ -791,25 +816,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         tile = SizedBox(
           height: 18,
           child: Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: Image.asset(
-              thisShortcut.iconUrl,
+              thisShortcut.iconUrl!,
               width: 16,
-              color: _themeProvider.mainText,
+              color: _themeProvider!.mainText,
             ),
           ),
         );
       } else {
         // Only text
         tile = Padding(
-          padding: EdgeInsets.all(2),
+          padding: const EdgeInsets.all(2),
           child: SizedBox(
             width: 55,
             child: Center(
               child: Container(
                 child: Text(
-                  thisShortcut.nickname.toUpperCase(),
-                  style: TextStyle(fontSize: 9),
+                  thisShortcut.nickname!.toUpperCase(),
+                  style: const TextStyle(fontSize: 9),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.fade,
                 ),
@@ -821,34 +846,34 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       return InkWell(
         onLongPress: () {
-          String url = thisShortcut.url;
+          String? url = thisShortcut.url;
           if (thisShortcut.addPlayerId != null) {
             // Avoid null objects coming before the introduction of this replacement (v2.9.4)
-            if (thisShortcut.addPlayerId) {
-              url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+            if (thisShortcut.addPlayerId!) {
+              url = url!.replaceAll("##P##", _userProv!.basic!.playerId.toString());
             }
-            if (thisShortcut.addFactionId) {
-              url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+            if (thisShortcut.addFactionId!) {
+              url = url!.replaceAll("##F##", _userProv!.basic!.faction!.factionId.toString());
             }
-            if (thisShortcut.addCompanyId) {
-              url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+            if (thisShortcut.addCompanyId!) {
+              url = url!.replaceAll("##C##", _userProv!.basic!.job!.companyId.toString());
             }
           }
 
           _launchBrowser(url: url, shortTap: false);
         },
         onTap: () async {
-          String url = thisShortcut.url;
+          String? url = thisShortcut.url;
           if (thisShortcut.addPlayerId != null) {
             // Avoid null objects coming before the introduction of this replacement (v2.9.4)
-            if (thisShortcut.addPlayerId) {
-              url = url.replaceAll("##P##", _userProv.basic.playerId.toString());
+            if (thisShortcut.addPlayerId!) {
+              url = url!.replaceAll("##P##", _userProv!.basic!.playerId.toString());
             }
-            if (thisShortcut.addFactionId) {
-              url = url.replaceAll("##F##", _userProv.basic.faction.factionId.toString());
+            if (thisShortcut.addFactionId!) {
+              url = url!.replaceAll("##F##", _userProv!.basic!.faction!.factionId.toString());
             }
-            if (thisShortcut.addCompanyId) {
-              url = url.replaceAll("##C##", _userProv.basic.job.companyId.toString());
+            if (thisShortcut.addCompanyId!) {
+              url = url!.replaceAll("##C##", _userProv!.basic!.job!.companyId.toString());
             }
           }
 
@@ -856,7 +881,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         },
         child: Card(
           shape: RoundedRectangleBorder(
-            side: BorderSide(color: thisShortcut.color, width: 1.5),
+            side: BorderSide(color: thisShortcut.color!, width: 1.5),
             borderRadius: BorderRadius.circular(4.0),
           ),
           elevation: 2,
@@ -872,13 +897,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           scrollDirection: Axis.horizontal,
           itemCount: _shortcutsProv.activeShortcuts.length,
           itemBuilder: (context, index) {
-            var thisShortcut = _shortcutsProv.activeShortcuts[index];
+            final thisShortcut = _shortcutsProv.activeShortcuts[index];
             return shortcutTile(thisShortcut);
           },
         );
       } else {
-        var wrapItems = <Widget>[];
-        for (var thisShortcut in _shortcutsProv.activeShortcuts) {
+        final wrapItems = <Widget>[];
+        for (final thisShortcut in _shortcutsProv.activeShortcuts) {
           double h = 60;
           double w = 70;
           if (_shortcutsProv.shortcutMenu == "grid") {
@@ -892,7 +917,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
           wrapItems.add(
-            Container(height: h, width: w, child: shortcutTile(thisShortcut)),
+            SizedBox(height: h, width: w, child: shortcutTile(thisShortcut)),
           );
         }
         return Wrap(alignment: WrapAlignment.center, children: wrapItems);
@@ -933,15 +958,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
                 GestureDetector(
                   child: IconButton(
-                      icon: const Icon(Icons.switch_access_shortcut_outlined),
-                      color: Colors.orange[900],
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => ShortcutsPage(),
-                          ),
-                        );
-                      }),
+                    icon: const Icon(Icons.switch_access_shortcut_outlined),
+                    color: Colors.orange[900],
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => ShortcutsPage(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             )
@@ -951,65 +977,67 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Card _playerStatus() {
     Widget descriptionWidget() {
-      if (_user.status.state == 'Okay') {
-        return SizedBox.shrink();
+      if (_user!.status!.state == 'Okay') {
+        return const SizedBox.shrink();
       } else {
-        String descriptionText = _user.status.description;
+        String? descriptionText = _user!.status!.description!;
 
         // Is there a detailed description? Add it.
-        if (_user.status.details != '') {
-          descriptionText += '- ${_user.status.details}';
+        if (_user!.status!.details != '') {
+          descriptionText += '- ${_user!.status!.details}';
         }
 
         // Causing player ID (jailed of hospitalized the user)
-        RegExp expHtml = RegExp(r"<[^>]*>");
-        var matches = expHtml.allMatches(descriptionText).map((m) => m[0]);
-        String causingId = '';
-        if (matches.length > 0) {
-          RegExp expId = RegExp(r"(?!XID=)([0-9])+");
-          var id = expId.allMatches(_user.status.details).map((m) => m[0]);
+        final RegExp expHtml = RegExp("<[^>]*>");
+        final matches = expHtml.allMatches(descriptionText).map((m) => m[0]);
+        String? causingId = '';
+        if (matches.isNotEmpty) {
+          final RegExp expId = RegExp("(?!XID=)([0-9])+");
+          final id = expId.allMatches(_user!.status!.details!).map((m) => m[0]);
           causingId = id.first;
         }
 
         // If there is a player causing it, add a span to click and go to the
         // profile, otherwise return just the description text
         Widget detailsWidget;
-        if (_user.status.details != '') {
+        if (_user!.status!.details != '') {
           if (causingId != '') {
             detailsWidget = GestureDetector(
               child: RichText(
-                text: new TextSpan(
+                text: TextSpan(
                   children: [
-                    new TextSpan(
+                    TextSpan(
                       text: HtmlParser.fix(descriptionText),
-                      style: new TextStyle(color: _themeProvider.mainText),
+                      style: TextStyle(color: _themeProvider!.mainText),
                     ),
-                    new TextSpan(
+                    TextSpan(
                       text: ' (',
-                      style: new TextStyle(color: _themeProvider.mainText),
+                      style: TextStyle(color: _themeProvider!.mainText),
                     ),
-                    new TextSpan(
+                    const TextSpan(
                       text: 'profile',
-                      style: new TextStyle(color: Colors.blue),
+                      style: TextStyle(color: Colors.blue),
                     ),
-                    new TextSpan(
+                    TextSpan(
                       text: ')',
-                      style: new TextStyle(color: _themeProvider.mainText),
+                      style: TextStyle(color: _themeProvider!.mainText),
                     ),
                   ],
                 ),
               ),
               onTap: () {
                 _launchBrowser(
-                    url: 'https://www.torn.com/profiles.php?'
-                        'XID=$causingId',
-                    shortTap: true);
+                  url: 'https://www.torn.com/profiles.php?'
+                      'XID=$causingId',
+                  shortTap: true,
+                );
               },
               onLongPress: () {
                 _launchBrowser(
-                    url: 'https://www.torn.com/profiles.php?'
-                        'XID=$causingId',
-                    shortTap: false);
+                  url: 'https://www.torn.com/profiles.php?'
+                      'XID=$causingId',
+                  shortTap: false,
+                );
               },
             );
           } else {
@@ -1020,7 +1048,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             padding: const EdgeInsets.only(top: 8),
             child: Row(
               children: <Widget>[
-                SizedBox(
+                const SizedBox(
                   width: 60,
                   child: Text('Details: '),
                 ),
@@ -1031,35 +1059,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           );
         } else {
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
       }
     }
 
     bool repatriated = false;
 
-    Color stateColor;
-    if (_user.status.color == 'red') {
+    Color? stateColor;
+    if (_user!.status!.color == 'red') {
       stateColor = Colors.red;
-      if (_user.travel.timeLeft > 0) {
+      if (_user!.travel!.timeLeft! > 0) {
         repatriated = true;
       }
-    } else if (_user.status.color == 'green') {
+    } else if (_user!.status!.color == 'green') {
       stateColor = Colors.green;
-    } else if (_user.status.color == 'blue') {
+    } else if (_user!.status!.color == 'blue') {
       stateColor = Colors.blue;
     }
 
     Widget stateBall({bool forceBlue = false}) {
       return Padding(
-        padding: EdgeInsets.only(left: 8),
+        padding: const EdgeInsets.only(left: 8),
         child: Container(
           width: 13,
           height: 13,
           decoration: BoxDecoration(
             color: forceBlue ? Colors.blue : stateColor,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.black),
+            border: Border.all(),
           ),
         ),
       );
@@ -1067,8 +1095,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     bool warInFuture = false;
     if (_factionRankedWar != null) {
-      int ts = DateTime.now().millisecondsSinceEpoch;
-      warInFuture = _factionRankedWar.war.start * 1000 > ts;
+      final int ts = DateTime.now().millisecondsSinceEpoch;
+      warInFuture = _factionRankedWar!.war!.start! * 1000 > ts;
     }
 
     return Card(
@@ -1082,14 +1110,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'STATUS',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (_factionRankedWar != null && _settingsProvider.rankedWarsInProfile)
+                  if (_factionRankedWar != null && _settingsProvider!.rankedWarsInProfile)
                     Row(
                       children: [
                         GestureDetector(
@@ -1105,14 +1133,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           },
                           child: RankedWarMini(
                             rankedWar: _factionRankedWar,
-                            playerFactionName: _user.faction.factionName,
-                            playerFactionTag: _user.faction.factionTag,
+                            playerFactionName: _user!.faction!.factionName,
+                            playerFactionTag: _user!.faction!.factionTag,
                           ),
                         ),
                         if (warInFuture)
                           Row(
                             children: [
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               _notificationIcon(ProfileNotification.rankedWar),
                             ],
                           ),
@@ -1131,17 +1159,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       children: <Widget>[
                         Row(
                           children: [
-                            SizedBox(
+                            const SizedBox(
                               width: 60,
                               child: Text('Status: '),
                             ),
-                            Text(_user.status.state),
+                            Text(_user!.status!.state!),
                             stateBall(),
                           ],
                         ),
-                        if (_user.status.color == 'red' && _user.status.state == "Hospital")
+                        if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
                           _notificationIcon(ProfileNotification.hospital),
-                        if (_user.status.color == 'red' && _user.status.state == "Jail")
+                        if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
                           _notificationIcon(ProfileNotification.jail),
                       ],
                     )
@@ -1154,17 +1182,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           children: <Widget>[
                             Row(
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 60,
                                   child: Text('Status: '),
                                 ),
-                                Text(_user.status.state),
+                                Text(_user!.status!.state!),
                                 stateBall(),
                               ],
                             ),
-                            if (_user.status.color == 'red' && _user.status.state == "Hospital")
+                            if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
                               _notificationIcon(ProfileNotification.hospital),
-                            if (_user.status.color == 'red' && _user.status.state == "Jail")
+                            if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
                               _notificationIcon(ProfileNotification.jail),
                           ],
                         ),
@@ -1173,8 +1201,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           children: <Widget>[
                             Row(
                               children: [
-                                SizedBox(width: 60),
-                                Text("Travel (repatriated)"),
+                                const SizedBox(width: 60),
+                                const Text("Travel (repatriated)"),
                                 stateBall(forceBlue: true),
                               ],
                             ),
@@ -1191,7 +1219,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                   if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
-                  if (_user.status.state == 'Hospital' && _nukeReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _nukeReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: NukeReviveButton(
@@ -1201,7 +1229,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
-                  if (_user.status.state == 'Hospital' && _uhcReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _uhcReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: UhcReviveButton(
@@ -1211,7 +1239,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
-                  if (_user.status.state == 'Hospital' && _helaReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _helaReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: HelaReviveButton(
@@ -1221,7 +1249,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
-                  if (_user.status.state == 'Hospital' && _wtfReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _wtfReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: WtfReviveButton(
@@ -1234,7 +1262,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -1242,7 +1270,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   double _getTravelPercentage(int totalSeconds) {
-    double percentage = 1 - (_user.travel.timeLeft / totalSeconds);
+    final double percentage = 1 - (_user!.travel!.timeLeft! / totalSeconds);
     if (percentage > 1) {
       return 1;
     } else if (percentage < 0) {
@@ -1253,25 +1281,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _travelWidget({bool repatriated = false}) {
-    if (_user.status.state == 'Traveling' || repatriated) {
-      var startTime = _user.travel.departed;
-      var endTime = _user.travel.timestamp;
-      var totalTravelTimeSeconds = endTime - startTime;
+    if (_user!.status!.state == 'Traveling' || repatriated) {
+      final startTime = _user!.travel!.departed!;
+      final endTime = _user!.travel!.timestamp!;
+      final totalTravelTimeSeconds = endTime - startTime;
 
-      var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
-      var timeDifference = dateTimeArrival.difference(DateTime.now());
+      final dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(_user!.travel!.timestamp! * 1000);
+      final timeDifference = dateTimeArrival.difference(DateTime.now());
       String twoDigits(int n) => n.toString().padLeft(2, "0");
-      String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-      String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+      final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+      final String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
-      var formattedTime = TimeFormatter(
+      final formattedTime = TimeFormatter(
         inputTime: dateTimeArrival,
-        timeFormatSetting: _settingsProvider.currentTimeFormat,
-        timeZoneSetting: _settingsProvider.currentTimeZone,
+        timeFormatSetting: _settingsProvider!.currentTimeFormat,
+        timeZoneSetting: _settingsProvider!.currentTimeZone,
       ).formatHour;
 
-      double percentage = _getTravelPercentage(totalTravelTimeSeconds);
-      String ballAssetLocation = _flagBallAsset();
+      final double percentage = _getTravelPercentage(totalTravelTimeSeconds);
+      final String ballAssetLocation = _flagBallAsset();
 
       return Padding(
         padding: const EdgeInsets.only(top: 10),
@@ -1281,7 +1309,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     GestureDetector(
                       onLongPress: () => _launchBrowser(url: 'https://www.torn.com', shortTap: false),
@@ -1289,24 +1316,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         _launchBrowser(url: 'https://www.torn.com', shortTap: true);
                       },
                       child: LinearPercentIndicator(
-                        padding: null,
-                        barRadius: Radius.circular(10),
-                        isRTL: _user.travel.destination == "Torn" ? true : false,
+                        padding: const EdgeInsets.all(0),
+                        barRadius: const Radius.circular(10),
+                        isRTL: _user!.travel!.destination == "Torn" ? true : false,
                         center: Text(
                           diff,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         widgetIndicator: Padding(
-                          padding: _user.travel.destination == "Torn"
+                          padding: _user!.travel!.destination == "Torn"
                               ? const EdgeInsets.only(top: 7, left: 15)
                               : const EdgeInsets.only(top: 7, right: 15),
                           child: Opacity(
                             // Make icon transparent when about to pass over text
                             opacity: percentage < 0.2 || percentage > 0.7 ? 1 : 0.3,
-                            child: _user.travel.destination == "Torn"
+                            child: _user!.travel!.destination == "Torn"
                                 ? Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
                                 : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
                           ),
@@ -1330,19 +1357,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 if (!_dedicatedTravelCard) _notificationIcon(ProfileNotification.travel),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: <Widget>[
                     Flexible(
-                      child: Text('Arriving in ${_user.travel.destination} at $formattedTime'),
+                      child: Text('Arriving in ${_user!.travel!.destination} at $formattedTime'),
                     ),
                   ],
                 ),
                 TravelReturnWidget(
-                  destination: _user.travel.destination,
+                  destination: _user!.travel!.destination,
                   settingsProvider: _settingsProvider,
                   dateTimeArrival: dateTimeArrival,
                 ),
@@ -1352,21 +1379,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   Card _travelCard() {
     Widget header;
     bool repatriated = false;
-    if (_user.status.state == "Traveling") {
+    if (_user!.status!.state == "Traveling") {
       header = _travelWidget();
-    } else if (_user.status.state == "Hospital" && _user.travel.timeLeft > 0) {
+    } else if (_user!.status!.state == "Hospital" && _user!.travel!.timeLeft! > 0) {
       header = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 55),
+          const Padding(
+            padding: EdgeInsets.only(left: 55),
             child: Text(
               "REPATRIATED",
               style: TextStyle(
@@ -1379,7 +1406,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       );
       repatriated = true;
-    } else if (_user.status.state == "Abroad") {
+    } else if (_user!.status!.state == "Abroad") {
       header = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1388,8 +1415,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  backgroundColor: _themeProvider.cardColor,
-                  side: BorderSide(
+                  backgroundColor: _themeProvider!.cardColor,
+                  side: const BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
                   ),
@@ -1399,21 +1426,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   child: Row(
                     children: [
                       _flagImage(),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Column(
                         children: [
                           Text(
                             "VISIT",
                             style: TextStyle(
                               fontSize: 8,
-                              color: _themeProvider.mainText,
+                              color: _themeProvider!.mainText,
                             ),
                           ),
                           Text(
-                            _user.travel.destination.toUpperCase(),
+                            _user!.travel!.destination!.toUpperCase(),
                             style: TextStyle(
                               fontSize: 8,
-                              color: _themeProvider.mainText,
+                              color: _themeProvider!.mainText,
                             ),
                           ),
                         ],
@@ -1425,11 +1452,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   _launchBrowser(url: 'https://www.torn.com', shortTap: false);
                 },
                 onPressed: () async {
-                  var url = 'https://www.torn.com';
+                  const url = 'https://www.torn.com';
                   _launchBrowser(url: url, shortTap: true);
                 },
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               ForeignStockButton(
                 userProv: _userProv,
                 settingsProv: _settingsProvider,
@@ -1439,14 +1466,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ],
           ),
           TravelReturnWidget(
-            destination: _user.travel.destination,
+            destination: _user!.travel!.destination,
             settingsProvider: _settingsProvider,
             dateTimeArrival: DateTime.now(),
           ),
         ],
       );
     } else {
-      Widget ocStatus = SizedBox.shrink();
+      Widget ocStatus = const SizedBox.shrink();
       if ((_ocFinalStringShort.isNotEmpty || _ocSimpleExists) && _ocTime.difference(DateTime.now()).inHours < 10) {
         if (!_ocSimpleExists) {
           ocStatus = Padding(
@@ -1481,7 +1508,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   color: Colors.orange[800],
                 ),
                 onTap: () {
-                  return showDialog(
+                  showDialog(
                     useRootNavigator: false,
                     context: context,
                     barrierDismissible: true,
@@ -1506,8 +1533,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  backgroundColor: _themeProvider.cardColor,
-                  side: BorderSide(
+                  backgroundColor: _themeProvider!.cardColor,
+                  side: const BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
                   ),
@@ -1517,23 +1544,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     Icon(
                       MdiIcons.airport,
                       size: 22,
-                      color: _themeProvider.mainText,
+                      color: _themeProvider!.mainText,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Column(
                       children: [
                         Text(
                           "TRAVEL",
                           style: TextStyle(
                             fontSize: 8,
-                            color: _themeProvider.mainText,
+                            color: _themeProvider!.mainText,
                           ),
                         ),
                         Text(
                           "AGENCY",
                           style: TextStyle(
                             fontSize: 8,
-                            color: _themeProvider.mainText,
+                            color: _themeProvider!.mainText,
                           ),
                         ),
                       ],
@@ -1544,11 +1571,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   _launchBrowser(url: 'https://www.torn.com/travelagency.php', shortTap: false);
                 },
                 onPressed: () async {
-                  var url = 'https://www.torn.com/travelagency.php';
+                  const url = 'https://www.torn.com/travelagency.php';
                   _launchBrowser(url: url, shortTap: true);
                 },
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               ForeignStockButton(
                 userProv: _userProv,
                 settingsProv: _settingsProvider,
@@ -1562,70 +1589,61 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    Widget alertsButton;
+    late Widget alertsButton;
     if (Platform.isAndroid) {
       alertsButton = Row(
         children: [
           RawMaterialButton(
             onPressed: null,
-            elevation: 2.0,
-            constraints: BoxConstraints.expand(width: 32, height: 32),
+            constraints: const BoxConstraints.expand(width: 32, height: 32),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _travelNotificationsPending ? Colors.green : Colors.blueGrey,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(50),
+            ),
             child: _notificationIcon(
               ProfileNotification.travel,
               size: 20,
               forcedTravelIcon: NotificationType.notification,
             ),
-            padding: EdgeInsets.all(0),
+          ),
+          const SizedBox(width: 10),
+          RawMaterialButton(
+            onPressed: null,
+            constraints: const BoxConstraints.expand(width: 32, height: 32),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: _travelNotificationsPending ? Colors.green : Colors.blueGrey,
+              side: const BorderSide(
+                color: Colors.blueGrey,
                 width: 2,
-                style: BorderStyle.solid,
               ),
               borderRadius: BorderRadius.circular(50),
             ),
-          ),
-          SizedBox(width: 10),
-          RawMaterialButton(
-            onPressed: null,
-            elevation: 2.0,
-            constraints: BoxConstraints.expand(width: 32, height: 32),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             child: _notificationIcon(
               ProfileNotification.travel,
               size: 20,
               forcedTravelIcon: NotificationType.alarm,
             ),
-            padding: EdgeInsets.all(0),
+          ),
+          const SizedBox(width: 10),
+          RawMaterialButton(
+            onPressed: null,
+            constraints: const BoxConstraints.expand(width: 32, height: 32),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             shape: RoundedRectangleBorder(
-              side: BorderSide(
+              side: const BorderSide(
                 color: Colors.blueGrey,
                 width: 2,
-                style: BorderStyle.solid,
               ),
               borderRadius: BorderRadius.circular(50),
             ),
-          ),
-          SizedBox(width: 10),
-          RawMaterialButton(
-            onPressed: null,
-            elevation: 2.0,
-            constraints: BoxConstraints.expand(width: 32, height: 32),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             child: _notificationIcon(
               ProfileNotification.travel,
               size: 20,
               forcedTravelIcon: NotificationType.timer,
-            ),
-            padding: EdgeInsets.all(0),
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: Colors.blueGrey,
-                width: 2,
-                style: BorderStyle.solid,
-              ),
-              borderRadius: BorderRadius.circular(50),
             ),
           ),
         ],
@@ -1633,22 +1651,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else if (Platform.isIOS) {
       alertsButton = RawMaterialButton(
         onPressed: null,
-        elevation: 2.0,
-        constraints: BoxConstraints.expand(width: 32, height: 32),
+        constraints: const BoxConstraints.expand(width: 32, height: 32),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        fillColor: _themeProvider.navSelected,
+        fillColor: _themeProvider!.navSelected,
+        shape: const CircleBorder(),
         child: _notificationIcon(
           ProfileNotification.travel,
           size: 20,
         ),
-        padding: EdgeInsets.all(0),
-        shape: CircleBorder(),
       );
     }
 
     Widget buttonsRow;
-    if (_user.status.state == "Traveling" || repatriated) {
-      if (_user.travel.timeLeft > 180) {
+    if (_user!.status!.state == "Traveling" || repatriated) {
+      if (_user!.travel!.timeLeft! > 180) {
         buttonsRow = Padding(
           padding: const EdgeInsets.only(top: 14),
           child: Row(
@@ -1659,7 +1675,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 launchBrowser: _launchBrowser,
                 updateCallback: _updateCallback,
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               alertsButton,
             ],
           ),
@@ -1678,7 +1694,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         );
       }
     } else {
-      buttonsRow = SizedBox.shrink();
+      buttonsRow = const SizedBox.shrink();
     }
 
     return Card(
@@ -1687,8 +1703,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 15),
               child: Text(
                 'TRAVEL',
                 style: TextStyle(
@@ -1712,8 +1728,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 15),
               child: Text(
                 'BARS',
                 style: TextStyle(
@@ -1726,13 +1742,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(left: 8),
               child: Column(
                 children: <Widget>[
-                  if (_warnAboutChains && _chainModel.chain.current > 10 && _chainModel.chain.cooldown == 0)
+                  if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
                     Row(
                       children: [
-                        SizedBox(width: 65),
+                        const SizedBox(width: 65),
                         Text(
-                          'CHAINING (${_chainModel.chain.current}/${_chainModel.chain.max})',
-                          style: TextStyle(
+                          'CHAINING (${_chainModel.chain!.current}/${_chainModel.chain!.max})',
+                          style: const TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
@@ -1741,17 +1757,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ],
                     )
                   else
-                    SizedBox.shrink(),
+                    const SizedBox.shrink(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       Row(
                         children: <Widget>[
-                          SizedBox(
+                          const SizedBox(
                             width: 50,
                             child: Text('Energy'),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           GestureDetector(
                             key: _showOne,
                             onLongPress: () {
@@ -1767,13 +1783,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   'straight to the gym, crimes or items sections!',
                               targetPadding: const EdgeInsets.all(10),
                               disableMovingAnimation: true,
-                              textColor: _themeProvider.mainText,
-                              tooltipBackgroundColor: _themeProvider.secondBackground,
-                              descTextStyle: TextStyle(fontSize: 13),
-                              tooltipPadding: EdgeInsets.all(20),
+                              textColor: _themeProvider!.mainText!,
+                              tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                              descTextStyle: const TextStyle(fontSize: 13),
+                              tooltipPadding: const EdgeInsets.all(20),
                               child: LinearPercentIndicator(
-                                padding: null,
-                                barRadius: Radius.circular(10),
+                                padding: const EdgeInsets.all(0),
+                                barRadius: const Radius.circular(10),
                                 width: 150,
                                 lineHeight: 20,
                                 progressColor: Colors.green,
@@ -1781,17 +1797,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 center: FittedBox(
                                   fit: BoxFit.fitWidth,
                                   child: Text(
-                                    '${_user.energy.current}/${_user.energy.maximum}',
-                                    style: TextStyle(color: Colors.black),
+                                    '${_user!.energy!.current}/${_user!.energy!.maximum}',
+                                    style: const TextStyle(color: Colors.black),
                                   ),
                                 ),
-                                percent: _user.energy.current / _user.energy.maximum > 1.0
+                                percent: _user!.energy!.current! / _user!.energy!.maximum! > 1.0
                                     ? 1.0
-                                    : _user.energy.current / _user.energy.maximum,
+                                    : _user!.energy!.current! / _user!.energy!.maximum!,
                               ),
                             ),
                           ),
-                          if (_warnAboutChains && _chainModel.chain.current > 10 && _chainModel.chain.cooldown == 0)
+                          if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
                             Padding(
                               padding: const EdgeInsets.only(left: 5),
                               child: GestureDetector(
@@ -1799,7 +1815,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   // Open chaining section
                                   widget.callBackSection(2);
                                 },
-                                child: Icon(
+                                child: const Icon(
                                   MdiIcons.linkVariant,
                                   color: Colors.blue,
                                   size: 22,
@@ -1807,7 +1823,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               ),
                             )
                           else
-                            SizedBox.shrink(),
+                            const SizedBox.shrink(),
                         ],
                       ),
                       _notificationIcon(ProfileNotification.energy),
@@ -1817,7 +1833,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Column(
@@ -1827,11 +1843,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     children: <Widget>[
                       Row(
                         children: <Widget>[
-                          SizedBox(
+                          const SizedBox(
                             width: 50,
                             child: Text('Nerve'),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           GestureDetector(
                             onLongPress: () {
                               _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: false);
@@ -1840,8 +1856,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: true);
                             },
                             child: LinearPercentIndicator(
-                              padding: null,
-                              barRadius: Radius.circular(10),
+                              padding: const EdgeInsets.all(0),
+                              barRadius: const Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.redAccent,
@@ -1849,13 +1865,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               center: FittedBox(
                                 fit: BoxFit.fitWidth,
                                 child: Text(
-                                  '${_user.nerve.current}/${_user.nerve.maximum}',
-                                  style: TextStyle(color: Colors.black),
+                                  '${_user!.nerve!.current}/${_user!.nerve!.maximum}',
+                                  style: const TextStyle(color: Colors.black),
                                 ),
                               ),
-                              percent: _user.nerve.current / _user.nerve.maximum > 1.0
+                              percent: _user!.nerve!.current! / _user!.nerve!.maximum! > 1.0
                                   ? 1.0
-                                  : _user.nerve.current / _user.nerve.maximum,
+                                  : _user!.nerve!.current! / _user!.nerve!.maximum!,
                             ),
                           ),
                         ],
@@ -1867,18 +1883,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Column(
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      SizedBox(
+                      const SizedBox(
                         width: 50,
                         child: Text('Happy'),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       GestureDetector(
                         onLongPress: () {
                           _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', shortTap: false);
@@ -1887,8 +1903,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', shortTap: true);
                         },
                         child: LinearPercentIndicator(
-                          padding: null,
-                          barRadius: Radius.circular(10),
+                          padding: const EdgeInsets.all(0),
+                          barRadius: const Radius.circular(10),
                           width: 150,
                           lineHeight: 20,
                           progressColor: Colors.amber,
@@ -1896,13 +1912,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           center: FittedBox(
                             fit: BoxFit.fitWidth,
                             child: Text(
-                              '${_user.happy.current}/${_user.happy.maximum}',
-                              style: TextStyle(color: Colors.black),
+                              '${_user!.happy!.current}/${_user!.happy!.maximum}',
+                              style: const TextStyle(color: Colors.black),
                             ),
                           ),
-                          percent: _user.happy.current / _user.happy.maximum > 1.0
+                          percent: _user!.happy!.current! / _user!.happy!.maximum! > 1.0
                               ? 1.0
-                              : _user.happy.current / _user.happy.maximum,
+                              : _user!.happy!.current! / _user!.happy!.maximum!,
                         ),
                       ),
                     ],
@@ -1911,7 +1927,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Column(
@@ -1922,21 +1938,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          SizedBox(
+                          const SizedBox(
                             width: 50,
                             child: Text('Life'),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           GestureDetector(
                             onLongPress: () {
-                              if (_settingsProvider.lifeBarOption == "ask") {
+                              if (_settingsProvider!.lifeBarOption == "ask") {
                                 _showLifeBarDialog(context, longPress: true);
-                              } else if (_settingsProvider.lifeBarOption == "inventory") {
+                              } else if (_settingsProvider!.lifeBarOption == "inventory") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/item.php#medical-items',
                                   shortTap: false,
                                 );
-                              } else if (_settingsProvider.lifeBarOption == "faction") {
+                              } else if (_settingsProvider!.lifeBarOption == "faction") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical',
                                   shortTap: false,
@@ -1944,14 +1960,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               }
                             },
                             onTap: () async {
-                              if (_settingsProvider.lifeBarOption == "ask") {
-                                _showLifeBarDialog(context, longPress: false);
-                              } else if (_settingsProvider.lifeBarOption == "inventory") {
+                              if (_settingsProvider!.lifeBarOption == "ask") {
+                                _showLifeBarDialog(context);
+                              } else if (_settingsProvider!.lifeBarOption == "inventory") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/item.php#medical-items',
                                   shortTap: true,
                                 );
-                              } else if (_settingsProvider.lifeBarOption == "faction") {
+                              } else if (_settingsProvider!.lifeBarOption == "faction") {
                                 _launchBrowser(
                                   url: 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical',
                                   shortTap: true,
@@ -1959,8 +1975,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               }
                             },
                             child: LinearPercentIndicator(
-                              padding: null,
-                              barRadius: Radius.circular(10),
+                              padding: const EdgeInsets.all(0),
+                              barRadius: const Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.blue,
@@ -1968,22 +1984,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               center: FittedBox(
                                 fit: BoxFit.fitWidth,
                                 child: Text(
-                                  '${_user.life.current}/${_user.life.maximum}',
-                                  style: TextStyle(color: Colors.black),
+                                  '${_user!.life!.current}/${_user!.life!.maximum}',
+                                  style: const TextStyle(color: Colors.black),
                                 ),
                               ),
-                              percent: _user.life.current / _user.life.maximum > 1.0
+                              percent: _user!.life!.current! / _user!.life!.maximum! > 1.0
                                   ? 1.0
-                                  : _user.life.current / _user.life.maximum,
+                                  : _user!.life!.current! / _user!.life!.maximum!,
                             ),
                           ),
-                          _user.status.state == "Hospital"
-                              ? Icon(
-                                  Icons.local_hospital,
-                                  size: 20,
-                                  color: Colors.red,
-                                )
-                              : SizedBox.shrink(),
+                          if (_user!.status!.state == "Hospital")
+                            const Icon(
+                              Icons.local_hospital,
+                              size: 20,
+                              color: Colors.red,
+                            )
+                          else
+                            const SizedBox.shrink(),
                         ],
                       ),
                       _notificationIcon(ProfileNotification.life),
@@ -2002,123 +2019,119 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Widget _barTime(String type) {
     switch (type) {
       case "energy":
-        if (_user.energy.fulltime == 0 || _user.energy.current > _user.energy.maximum) {
-          return SizedBox.shrink();
+        if (_user!.energy!.fulltime == 0 || _user!.energy!.current! > _user!.energy!.maximum!) {
+          return const SizedBox.shrink();
         } else {
-          var time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
-          var timeFormatted = TimeFormatter(
+          final time = _serverTime.add(Duration(seconds: _user!.energy!.fulltime!));
+          final timeFormatted = TimeFormatter(
             inputTime: time,
-            timeFormatSetting: _settingsProvider.currentTimeFormat,
-            timeZoneSetting: _settingsProvider.currentTimeZone,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHour;
           return Row(
             children: <Widget>[
-              SizedBox(width: 65),
+              const SizedBox(width: 65),
               Text('Full at $timeFormatted'),
             ],
           );
         }
-        break;
       case "nerve":
-        if (_user.nerve.fulltime == 0 || _user.nerve.current > _user.nerve.maximum) {
-          return SizedBox.shrink();
+        if (_user!.nerve!.fulltime == 0 || _user!.nerve!.current! > _user!.nerve!.maximum!) {
+          return const SizedBox.shrink();
         } else {
-          var time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
-          var timeFormatted = TimeFormatter(
+          final time = _serverTime.add(Duration(seconds: _user!.nerve!.fulltime!));
+          final timeFormatted = TimeFormatter(
             inputTime: time,
-            timeFormatSetting: _settingsProvider.currentTimeFormat,
-            timeZoneSetting: _settingsProvider.currentTimeZone,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHour;
           return Row(
             children: <Widget>[
-              SizedBox(width: 65),
+              const SizedBox(width: 65),
               Text('Full at $timeFormatted'),
             ],
           );
         }
-        break;
       case "happy":
-        if (_user.happy.fulltime == 0 || _user.happy.current > _user.happy.maximum) {
-          return SizedBox.shrink();
+        if (_user!.happy!.fulltime == 0 || _user!.happy!.current! > _user!.happy!.maximum!) {
+          return const SizedBox.shrink();
         } else {
-          var time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
-          var timeFormatted = TimeFormatter(
+          final time = _serverTime.add(Duration(seconds: _user!.happy!.fulltime!));
+          final timeFormatted = TimeFormatter(
             inputTime: time,
-            timeFormatSetting: _settingsProvider.currentTimeFormat,
-            timeZoneSetting: _settingsProvider.currentTimeZone,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHour;
           return Row(
             children: <Widget>[
-              SizedBox(width: 65),
+              const SizedBox(width: 65),
               Text('Full at $timeFormatted'),
             ],
           );
         }
-        break;
       case "life":
-        if (_user.life.fulltime == 0 || _user.life.current > _user.life.maximum) {
-          return SizedBox.shrink();
+        if (_user!.life!.fulltime == 0 || _user!.life!.current! > _user!.life!.maximum!) {
+          return const SizedBox.shrink();
         } else {
-          var time = _serverTime.add(Duration(seconds: _user.life.fulltime));
-          var timeFormatted = TimeFormatter(
+          final time = _serverTime.add(Duration(seconds: _user!.life!.fulltime!));
+          final timeFormatted = TimeFormatter(
             inputTime: time,
-            timeFormatSetting: _settingsProvider.currentTimeFormat,
-            timeZoneSetting: _settingsProvider.currentTimeZone,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHour;
           return Row(
             children: <Widget>[
-              SizedBox(width: 65),
+              const SizedBox(width: 65),
               Text('Full at $timeFormatted'),
             ],
           );
         }
-        break;
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
   }
 
   Widget _notificationIcon(
     ProfileNotification profileNotification, {
     double size = 22,
-    NotificationType forcedTravelIcon,
+    NotificationType? forcedTravelIcon,
   }) {
-    int secondsToGo = 0;
+    int? secondsToGo = 0;
     bool percentageError = false;
-    bool notificationsPending;
-    String notificationSetString;
-    String notificationCancelString;
-    String alarmSetString;
-    String timerSetString;
-    NotificationType notificationType;
-    IconData notificationIcon;
+    late bool notificationsPending;
+    late String notificationSetString;
+    late String notificationCancelString;
+    late String alarmSetString;
+    late String timerSetString;
+    NotificationType notificationType = NotificationType.notification;
+    IconData? notificationIcon;
 
     switch (profileNotification) {
       case ProfileNotification.travel:
-        _travelArrivalTime = new DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
-        var timeDifference = _travelArrivalTime.difference(DateTime.now());
+        _travelArrivalTime = DateTime.fromMillisecondsSinceEpoch(_user!.travel!.timestamp! * 1000);
+        final timeDifference = _travelArrivalTime.difference(DateTime.now());
         secondsToGo = timeDifference.inSeconds;
         notificationsPending = _travelNotificationsPending;
 
-        var notificationTime = _travelArrivalTime.add(Duration(seconds: -_travelNotificationAhead));
-        var formattedTimeNotification = TimeFormatter(
+        final notificationTime = _travelArrivalTime.add(Duration(seconds: -_travelNotificationAhead));
+        final formattedTimeNotification = TimeFormatter(
           inputTime: notificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
-        var formattedTimeAlarm = TimeFormatter(
+        final alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
+        final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var timerTime = _travelArrivalTime.add(Duration(seconds: -_travelTimerAhead));
-        var formattedTimeTimer = TimeFormatter(
+        final timerTime = _travelArrivalTime.add(Duration(seconds: -_travelTimerAhead));
+        final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
         notificationSetString = 'Travel notification set for $formattedTimeNotification';
@@ -2134,47 +2147,42 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           switch (forcedTravelIcon) {
             case NotificationType.notification:
               notificationIcon = Icons.chat_bubble_outline;
-              break;
             case NotificationType.alarm:
               notificationIcon = Icons.notifications_none;
-              break;
             case NotificationType.timer:
               notificationIcon = Icons.timer;
-              break;
           }
         }
 
-        break;
-
       case ProfileNotification.energy:
-        if (_user.energy.current < _user.energy.maximum) {
-          if (_customEnergyTrigger < _user.energy.maximum) {
-            var energyToGo = _customEnergyTrigger - _user.energy.current;
-            var energyTicksToGo = energyToGo / _user.energy.increment;
+        if (_user!.energy!.current! < _user!.energy!.maximum!) {
+          if (_customEnergyTrigger! < _user!.energy!.maximum!) {
+            final energyToGo = _customEnergyTrigger! - _user!.energy!.current!;
+            final energyTicksToGo = energyToGo / _user!.energy!.increment!;
             // If there is more than 1 tick to go, we multiply ticks times
             // the interval, and decrease for the current tick consumed
             if (energyTicksToGo > 1) {
-              var consumedTick = _user.energy.interval - _user.energy.ticktime;
-              secondsToGo = (energyTicksToGo * _user.energy.interval - consumedTick).floor();
+              final consumedTick = _user!.energy!.interval! - _user!.energy!.ticktime!;
+              secondsToGo = (energyTicksToGo * _user!.energy!.interval! - consumedTick).floor();
             }
             // If we are in the current tick or example in the next one,
             // we just take into consideration the tick time left
             else if (energyTicksToGo > 0 && energyTicksToGo <= 1) {
-              secondsToGo = _user.energy.ticktime;
+              secondsToGo = _user!.energy!.ticktime;
             } else {
               // We'll offer the user the option to go with full time
-              secondsToGo = _user.energy.fulltime;
+              secondsToGo = _user!.energy!.fulltime;
               percentageError = true;
             }
           } else {
-            secondsToGo = _user.energy.fulltime;
+            secondsToGo = _user!.energy!.fulltime;
           }
 
-          _energyNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo));
-          var formattedTime = TimeFormatter(
+          _energyNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo!));
+          final formattedTime = TimeFormatter(
             inputTime: _energyNotificationTime,
-            timeFormatSetting: _settingsProvider.currentTimeFormat,
-            timeZoneSetting: _settingsProvider.currentTimeZone,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHour;
 
           if (!percentageError) {
@@ -2199,37 +2207,36 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           notificationIcon = _energyNotificationIcon;
           notificationsPending = _energyNotificationsPending;
         }
-        break;
 
       case ProfileNotification.nerve:
-        if (_user.nerve.current < _user.nerve.maximum) {
-          if (_customNerveTrigger < _user.nerve.maximum) {
-            var nerveToGo = _customNerveTrigger - _user.nerve.current;
-            var nerveTicksToGo = nerveToGo / _user.nerve.increment;
+        if (_user!.nerve!.current! < _user!.nerve!.maximum!) {
+          if (_customNerveTrigger! < _user!.nerve!.maximum!) {
+            final nerveToGo = _customNerveTrigger! - _user!.nerve!.current!;
+            final nerveTicksToGo = nerveToGo / _user!.nerve!.increment!;
             // If there is more than 1 tick to go, we multiply ticks times
             // the interval, and decrease for the current tick consumed
             if (nerveTicksToGo > 1) {
-              var consumedTick = _user.nerve.interval - _user.nerve.ticktime;
-              secondsToGo = (nerveTicksToGo * _user.nerve.interval - consumedTick).floor();
+              final consumedTick = _user!.nerve!.interval! - _user!.nerve!.ticktime!;
+              secondsToGo = (nerveTicksToGo * _user!.nerve!.interval! - consumedTick).floor();
             }
             // If we are in the current tick or example in the next one,
             // we just take into consideration the tick time left
             else if (nerveTicksToGo > 0 && nerveTicksToGo <= 1) {
-              secondsToGo = _user.nerve.ticktime;
+              secondsToGo = _user!.nerve!.ticktime;
             } else {
               // We'll offer the user the option to go with full time
-              secondsToGo = _user.nerve.fulltime;
+              secondsToGo = _user!.nerve!.fulltime;
               percentageError = true;
             }
           } else {
-            secondsToGo = _user.nerve.fulltime;
+            secondsToGo = _user!.nerve!.fulltime;
           }
 
-          _nerveNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo));
-          var formattedTime = TimeFormatter(
+          _nerveNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo!));
+          final formattedTime = TimeFormatter(
             inputTime: _nerveNotificationTime,
-            timeFormatSetting: _settingsProvider.currentTimeFormat,
-            timeZoneSetting: _settingsProvider.currentTimeZone,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHour;
 
           if (!percentageError) {
@@ -2254,16 +2261,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           notificationIcon = _nerveNotificationIcon;
           notificationsPending = _nerveNotificationsPending;
         }
-        break;
 
       case ProfileNotification.life:
-        secondsToGo = _user.life.fulltime;
+        secondsToGo = _user!.life!.fulltime;
         notificationsPending = _lifeNotificationsPending;
-        _lifeNotificationTime = DateTime.now().add(Duration(seconds: _user.life.fulltime));
-        var formattedTime = TimeFormatter(
+        _lifeNotificationTime = DateTime.now().add(Duration(seconds: _user!.life!.fulltime!));
+        final formattedTime = TimeFormatter(
           inputTime: _lifeNotificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
         notificationSetString = 'Life notification set for $formattedTime';
         notificationCancelString = 'Life notification cancelled!';
@@ -2271,16 +2277,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Life timer set for $formattedTime';
         notificationType = _lifeNotificationType;
         notificationIcon = _lifeNotificationIcon;
-        break;
 
       case ProfileNotification.drugs:
-        secondsToGo = _user.cooldowns.drug;
+        secondsToGo = _user!.cooldowns!.drug;
         notificationsPending = _drugsNotificationsPending;
-        _drugsNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
-        var formattedTime = TimeFormatter(
+        _drugsNotificationTime = DateTime.now().add(Duration(seconds: _user!.cooldowns!.drug!));
+        final formattedTime = TimeFormatter(
           inputTime: _drugsNotificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
         notificationSetString = 'Drugs cooldown notification set for $formattedTime';
         notificationCancelString = 'Drugs cooldown notification cancelled!';
@@ -2288,16 +2293,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Drugs cooldown timer set for $formattedTime';
         notificationType = _drugsNotificationType;
         notificationIcon = _drugsNotificationIcon;
-        break;
 
       case ProfileNotification.medical:
-        secondsToGo = _user.cooldowns.medical;
+        secondsToGo = _user!.cooldowns!.medical;
         notificationsPending = _medicalNotificationsPending;
-        _medicalNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
-        var formattedTime = TimeFormatter(
+        _medicalNotificationTime = DateTime.now().add(Duration(seconds: _user!.cooldowns!.medical!));
+        final formattedTime = TimeFormatter(
           inputTime: _medicalNotificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
         notificationSetString = 'Medical cooldown notification set for $formattedTime';
         notificationCancelString = 'Medical cooldown notification cancelled!';
@@ -2305,16 +2309,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Medical cooldown timer set for $formattedTime';
         notificationType = _medicalNotificationType;
         notificationIcon = _medicalNotificationIcon;
-        break;
 
       case ProfileNotification.booster:
-        secondsToGo = _user.cooldowns.booster;
+        secondsToGo = _user!.cooldowns!.booster;
         notificationsPending = _boosterNotificationsPending;
-        _boosterNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
-        var formattedTime = TimeFormatter(
+        _boosterNotificationTime = DateTime.now().add(Duration(seconds: _user!.cooldowns!.booster!));
+        final formattedTime = TimeFormatter(
           inputTime: _boosterNotificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
         notificationSetString = 'Booster cooldown notification set for $formattedTime';
         notificationCancelString = 'Booster cooldown notification cancelled!';
@@ -2322,32 +2325,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Booster cooldown timer set for $formattedTime';
         notificationType = _boosterNotificationType;
         notificationIcon = _boosterNotificationIcon;
-        break;
 
       case ProfileNotification.hospital:
-        _hospitalReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user.status.until * 1000);
+        _hospitalReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user!.status!.until! * 1000);
         secondsToGo = _hospitalReleaseTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _hospitalNotificationsPending;
 
-        var notificationTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
-        var formattedTime = TimeFormatter(
+        final notificationTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
+        final formattedTime = TimeFormatter(
           inputTime: notificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var alarmTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
-        var formattedTimeAlarm = TimeFormatter(
+        final alarmTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
+        final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var timerTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
-        var formattedTimeTimer = TimeFormatter(
+        final timerTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
+        final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
         notificationSetString = 'Hospital release notification set for $formattedTime';
@@ -2356,32 +2358,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Hospital release timer set for $formattedTimeTimer';
         notificationType = _hospitalNotificationType;
         notificationIcon = _hospitalNotificationIcon;
-        break;
 
       case ProfileNotification.jail:
-        _jailReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user.status.until * 1000);
+        _jailReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user!.status!.until! * 1000);
         secondsToGo = _jailReleaseTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _jailNotificationsPending;
 
-        var notificationTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
-        var formattedTime = TimeFormatter(
+        final notificationTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
+        final formattedTime = TimeFormatter(
           inputTime: notificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var alarmTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
-        var formattedTimeAlarm = TimeFormatter(
+        final alarmTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
+        final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var timerTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
-        var formattedTimeTimer = TimeFormatter(
+        final timerTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
+        final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
         notificationSetString = 'Jail release notification set for $formattedTime';
@@ -2390,32 +2391,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Jail release timer set for $formattedTimeTimer';
         notificationType = _jailNotificationType;
         notificationIcon = _jailNotificationIcon;
-        break;
 
       case ProfileNotification.rankedWar:
-        _rankedWarTime = DateTime.fromMillisecondsSinceEpoch(_factionRankedWar.war.start * 1000);
+        _rankedWarTime = DateTime.fromMillisecondsSinceEpoch(_factionRankedWar!.war!.start! * 1000);
         secondsToGo = _rankedWarTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _rankedWarNotificationsPending;
 
-        var notificationTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
-        var formattedTime = TimeFormatter(
+        final notificationTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        final formattedTime = TimeFormatter(
           inputTime: notificationTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var alarmTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
-        var formattedTimeAlarm = TimeFormatter(
+        final alarmTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
-        var timerTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
-        var formattedTimeTimer = TimeFormatter(
+        final timerTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
+        final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
         notificationSetString = 'Ranked war notification set for $formattedTime';
@@ -2424,20 +2424,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Ranked war  timer set for $formattedTimeTimer';
         notificationType = _rankedWarNotificationType;
         notificationIcon = _rankedWarNotificationIcon;
-        break;
     }
 
     if (secondsToGo == 0 && !percentageError) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     } else {
-      Color thisColor;
+      Color? thisColor;
       if (notificationsPending && notificationType == NotificationType.notification) {
         thisColor = Colors.green;
       } else {
         if (percentageError) {
-          thisColor = Colors.red[400].withOpacity(0.7);
+          thisColor = Colors.red[400]!.withOpacity(0.7);
         } else {
-          thisColor = _themeProvider.mainText;
+          thisColor = _themeProvider!.mainText;
         }
       }
 
@@ -2455,54 +2454,51 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 _scheduleNotification(profileNotification);
                 BotToast.showText(
                   text: notificationSetString,
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
                   contentColor: percentageError ? Colors.red : Colors.green,
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
                 );
               } else if (notificationsPending && notificationType == NotificationType.notification) {
                 _cancelNotifications(profileNotification);
                 BotToast.showText(
                   text: notificationCancelString,
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.orange[800],
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
+                  contentColor: Colors.orange[800]!,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
                 );
               }
-              break;
             case NotificationType.alarm:
               _setAlarm(profileNotification);
               BotToast.showText(
                 text: alarmSetString,
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
                 contentColor: percentageError ? Colors.red : Colors.green,
-                duration: Duration(seconds: 5),
-                contentPadding: EdgeInsets.all(10),
+                duration: const Duration(seconds: 5),
+                contentPadding: const EdgeInsets.all(10),
               );
-              break;
             case NotificationType.timer:
               _setTimer(profileNotification);
               BotToast.showText(
                 text: timerSetString,
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
                 ),
                 contentColor: percentageError ? Colors.red : Colors.green,
-                duration: Duration(seconds: 5),
-                contentPadding: EdgeInsets.all(10),
+                duration: const Duration(seconds: 5),
+                contentPadding: const EdgeInsets.all(10),
               );
-              break;
           }
         },
       );
@@ -2511,97 +2507,100 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Card _coolDowns() {
     Widget cooldownItems;
-    if (_user.cooldowns.drug > 0 || _user.cooldowns.booster > 0 || _user.cooldowns.medical > 0) {
+    if (_user!.cooldowns!.drug! > 0 || _user!.cooldowns!.booster! > 0 || _user!.cooldowns!.medical! > 0) {
       cooldownItems = Padding(
         padding: const EdgeInsets.only(left: 8),
         child: Column(
           children: <Widget>[
-            _user.cooldowns.drug > 0
-                ? Column(
+            if (_user!.cooldowns!.drug! > 0)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _drugIcon(),
+                            const SizedBox(width: 10),
+                            _drugCounter(),
+                          ],
+                        ),
+                      ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _drugIcon(),
-                                SizedBox(width: 10),
-                                _drugCounter(),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _notificationIcon(ProfileNotification.drugs),
-                            ],
-                          ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.drugs),
                         ],
                       ),
-                      SizedBox(height: 10),
                     ],
-                  )
-                : SizedBox.shrink(),
-            _user.cooldowns.medical > 0
-                ? Column(
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
+            if (_user!.cooldowns!.medical! > 0)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _medicalIcon(),
+                            const SizedBox(width: 10),
+                            _medicalCounter(),
+                          ],
+                        ),
+                      ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _medicalIcon(),
-                                SizedBox(width: 10),
-                                _medicalCounter(),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _notificationIcon(ProfileNotification.medical),
-                            ],
-                          ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.medical),
                         ],
                       ),
-                      SizedBox(height: 10),
                     ],
-                  )
-                : SizedBox.shrink(),
-            _user.cooldowns.booster > 0
-                ? Column(
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
+            if (_user!.cooldowns!.booster! > 0)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _boosterIcon(),
+                            const SizedBox(width: 10),
+                            _boosterCounter(),
+                          ],
+                        ),
+                      ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _boosterIcon(),
-                                SizedBox(width: 10),
-                                _boosterCounter(),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _notificationIcon(ProfileNotification.booster),
-                            ],
-                          ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.booster),
                         ],
                       ),
-                      SizedBox(height: 10),
                     ],
-                  )
-                : SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
           ],
         ),
       );
     } else {
-      cooldownItems = Row(
+      cooldownItems = const Row(
         children: <Widget>[
           Padding(
             padding: EdgeInsets.only(left: 10),
@@ -2617,8 +2616,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 15),
               child: Text(
                 'COOLDOWNS',
                 style: TextStyle(
@@ -2628,7 +2627,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
             ),
             cooldownItems,
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -2637,16 +2636,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Image _drugIcon() {
     // 0-10 minutes
-    if (_user.cooldowns.drug > 0 && _user.cooldowns.drug < 600) {
+    if (_user!.cooldowns!.drug! > 0 && _user!.cooldowns!.drug! < 600) {
       return Image.asset('images/icons/cooldowns/drug1.png', width: 20);
     } // 10-60 minutes
-    else if (_user.cooldowns.drug >= 600 && _user.cooldowns.drug < 3600) {
+    else if (_user!.cooldowns!.drug! >= 600 && _user!.cooldowns!.drug! < 3600) {
       return Image.asset('images/icons/cooldowns/drug2.png', width: 20);
     } // 1-2 hours
-    else if (_user.cooldowns.drug >= 3600 && _user.cooldowns.drug < 7200) {
+    else if (_user!.cooldowns!.drug! >= 3600 && _user!.cooldowns!.drug! < 7200) {
       return Image.asset('images/icons/cooldowns/drug3.png', width: 20);
     } // 2-5 hours
-    else if (_user.cooldowns.drug >= 7200 && _user.cooldowns.drug < 18000) {
+    else if (_user!.cooldowns!.drug! >= 7200 && _user!.cooldowns!.drug! < 18000) {
       return Image.asset('images/icons/cooldowns/drug4.png', width: 20);
     } // 5+ hours
     else {
@@ -2656,16 +2655,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _medicalIcon() {
     // 0-90 minutes hours
-    if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 5400) {
+    if (_user!.cooldowns!.medical! > 0 && _user!.cooldowns!.medical! < 5400) {
       return Image.asset('images/icons/cooldowns/medical1.png', width: 20);
     } // 90-180 minutes
-    else if (_user.cooldowns.medical >= 5400 && _user.cooldowns.medical < 10800) {
+    else if (_user!.cooldowns!.medical! >= 5400 && _user!.cooldowns!.medical! < 10800) {
       return Image.asset('images/icons/cooldowns/medical2.png', width: 20);
     } // 180-270 minutes
-    else if (_user.cooldowns.medical >= 10800 && _user.cooldowns.medical < 16200) {
+    else if (_user!.cooldowns!.medical! >= 10800 && _user!.cooldowns!.medical! < 16200) {
       return Image.asset('images/icons/cooldowns/medical3.png', width: 20);
     } // 270-360 minutes
-    else if (_user.cooldowns.medical >= 16200 && _user.cooldowns.medical < 21600) {
+    else if (_user!.cooldowns!.medical! >= 16200 && _user!.cooldowns!.medical! < 21600) {
       return Image.asset('images/icons/cooldowns/medical4.png', width: 20);
     } // 360+ minutes
     else {
@@ -2675,16 +2674,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Image _boosterIcon() {
     // 0-6 hours
-    if (_user.cooldowns.booster > 0 && _user.cooldowns.booster < 21600) {
+    if (_user!.cooldowns!.booster! > 0 && _user!.cooldowns!.booster! < 21600) {
       return Image.asset('images/icons/cooldowns/booster1.png', width: 20);
     } // 6-12 hours
-    else if (_user.cooldowns.booster >= 21600 && _user.cooldowns.booster < 43200) {
+    else if (_user!.cooldowns!.booster! >= 21600 && _user!.cooldowns!.booster! < 43200) {
       return Image.asset('images/icons/cooldowns/booster2.png', width: 20);
     } // 12-18 hours
-    else if (_user.cooldowns.booster >= 43200 && _user.cooldowns.booster < 64800) {
+    else if (_user!.cooldowns!.booster! >= 43200 && _user!.cooldowns!.booster! < 64800) {
       return Image.asset('images/icons/cooldowns/booster3.png', width: 20);
     } // 18-24 hours
-    else if (_user.cooldowns.booster >= 64800 && _user.cooldowns.booster < 86400) {
+    else if (_user!.cooldowns!.booster! >= 64800 && _user!.cooldowns!.booster! < 86400) {
       return Image.asset('images/icons/cooldowns/booster4.png', width: 20);
     } // 24+ hours
     else {
@@ -2693,64 +2692,67 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _drugCounter() {
-    var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.drug));
-    var formattedTime = TimeFormatter(
+    final timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.drug!));
+    final formattedTime = TimeFormatter(
       inputTime: timeEnd,
-      timeFormatSetting: _settingsProvider.currentTimeFormat,
-      timeZoneSetting: _settingsProvider.currentTimeZone,
+      timeFormatSetting: _settingsProvider!.currentTimeFormat,
+      timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHour;
-    String diff = _timeFormatted(timeEnd);
+    final String diff = _timeFormatted(timeEnd);
     return Flexible(
-        child: Padding(
-      padding: const EdgeInsets.only(right: 5),
-      child: Text('@ $formattedTime$diff'),
-    ));
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
   }
 
   Widget _medicalCounter() {
-    var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.medical));
-    var formattedTime = TimeFormatter(
+    final timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.medical!));
+    final formattedTime = TimeFormatter(
       inputTime: timeEnd,
-      timeFormatSetting: _settingsProvider.currentTimeFormat,
-      timeZoneSetting: _settingsProvider.currentTimeZone,
+      timeFormatSetting: _settingsProvider!.currentTimeFormat,
+      timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHour;
-    String diff = _timeFormatted(timeEnd);
+    final String diff = _timeFormatted(timeEnd);
     return Flexible(
-        child: Padding(
-      padding: const EdgeInsets.only(right: 5),
-      child: Text('@ $formattedTime$diff'),
-    ));
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
   }
 
   Widget _boosterCounter() {
-    var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.booster));
-    var formattedTime = TimeFormatter(
+    final timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.booster!));
+    final formattedTime = TimeFormatter(
       inputTime: timeEnd,
-      timeFormatSetting: _settingsProvider.currentTimeFormat,
-      timeZoneSetting: _settingsProvider.currentTimeZone,
+      timeFormatSetting: _settingsProvider!.currentTimeFormat,
+      timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHour;
-    String diff = _timeFormatted(timeEnd);
+    final String diff = _timeFormatted(timeEnd);
     return Flexible(
-        child: Padding(
-      padding: const EdgeInsets.only(right: 5),
-      child: Text('@ $formattedTime$diff'),
-    ));
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
   }
 
   String _timeFormatted(DateTime timeEnd) {
-    var timeDifference = timeEnd.difference(_serverTime);
+    final timeDifference = timeEnd.difference(_serverTime);
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+    final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
     String diff = '';
     if (timeDifference.inMinutes < 1) {
       diff = ', in a few seconds';
     } else if (timeDifference.inMinutes >= 1 && timeDifference.inHours < 24) {
       diff = ', in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
     } else {
-      var dayWeek = TimeFormatter(
+      final dayWeek = TimeFormatter(
         inputTime: timeEnd,
-        timeFormatSetting: _settingsProvider.currentTimeFormat,
-        timeZoneSetting: _settingsProvider.currentTimeZone,
+        timeFormatSetting: _settingsProvider!.currentTimeFormat,
+        timeZoneSetting: _settingsProvider!.currentTimeZone,
       ).formatDayWeek;
       diff = ' $dayWeek, in '
           '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
@@ -2759,17 +2761,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Card _eventsTimeline() {
-    int maxToShow = _eventsShowNumber;
+    int? maxToShow = _eventsShowNumber;
 
-    if (_events.length == 0) {
-      return Card(
+    if (_events.isEmpty) {
+      return const Card(
         child: Row(
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(15.0),
+                  padding: EdgeInsets.all(15.0),
                   child: Text(
                     'EVENTS',
                     style: TextStyle(
@@ -2779,7 +2781,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+                  padding: EdgeInsets.fromLTRB(25, 5, 20, 20),
                   child: Text(
                     "Loading...",
                   ),
@@ -2791,24 +2793,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    var timeline = <Widget>[];
+    final timeline = <Widget>[];
 
-    int unreadCount = 0;
-    if (_user.notifications != null) {
-      unreadCount = _user.notifications.events;
+    int? unreadCount = 0;
+    if (_user!.notifications != null) {
+      unreadCount = _user!.notifications!.events;
     }
 
     int loopCount = 1;
-    int maxCount;
+    int? maxCount;
 
-    if (_events.length > maxToShow) {
+    if (_events.length > maxToShow!) {
       maxCount = maxToShow;
     } else {
       maxCount = _events.length;
       maxToShow = _events.length;
     }
 
-    for (Event e in _events) {
+    for (final Event e in _events) {
       String message = HtmlParser.fix(e.event);
       message = message;
       message = message.replaceAll('View the details here!', '');
@@ -2818,7 +2820,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message = message.replaceAll(' Please click here.', '');
       message = message.replaceAll(' Please click here to collect your funds.', '');
 
-      Widget insideIcon = EventIcons(
+      final Widget insideIcon = EventIcons(
         message: message,
         themeProvider: _themeProvider,
       );
@@ -2835,15 +2837,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 color: Colors.grey,
               ),
             ),
-            shape: BoxShape.rectangle,
           ),
           child: insideIcon,
         ),
       );
 
-      var eventTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp * 1000);
+      final eventTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp! * 1000);
 
-      var event = TimelineTile(
+      final event = TimelineTile(
         isFirst: loopCount == 1 ? true : false,
         isLast: loopCount == maxCount ? true : false,
         alignment: TimelineAlign.manual,
@@ -2856,7 +2857,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               message,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: unreadCount >= loopCount ? FontWeight.bold : FontWeight.normal,
+                fontWeight: unreadCount! >= loopCount ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -2868,7 +2869,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _occurrenceTimeFormatted(eventTime),
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: unreadCount >= loopCount == 0 ? FontWeight.bold : FontWeight.normal,
+                fontWeight: unreadCount >= loopCount ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -2889,7 +2890,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         child: Center(
           child: Text(
             "(Showing last $maxToShow events)",
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
@@ -2910,19 +2911,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return Card(
       child: ExpandablePanel(
         controller: _eventsExpController,
-        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
+        theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
             children: [
-              Text(
+              const Text(
                 'EVENTS',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onLongPress: () {
@@ -2931,8 +2932,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', shortTap: true);
                 },
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 5),
+                child: const Padding(
+                  padding: EdgeInsets.only(right: 5),
                   child: Icon(MdiIcons.openInApp, size: 18),
                 ),
               ),
@@ -2961,23 +2962,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Card _messagesTimeline() {
-    int maxToShow = _messagesShowNumber;
+    int? maxToShow = _messagesShowNumber;
 
     // Some users might an empty messages map. This is why we have the events parameters as dynamic
     // in OwnProfile Model. We need to check if it contains several elements, in which case we
     // create a map in a new variable. Otherwise, we return an empty Card.
-    var messages = Map<String, TornMessage>();
-    if (_user.messages.length > 0) {
-      messages = Map.from(_user.messages).map((k, v) => MapEntry<String, TornMessage>(k, TornMessage.fromJson(v)));
+    var messages = <String, TornMessage>{};
+    if (_user!.messages.length > 0) {
+      messages = Map.from(_user!.messages).map((k, v) => MapEntry<String, TornMessage>(k, TornMessage.fromJson(v)));
     } else {
-      return Card(
+      return const Card(
         child: Row(
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(15.0),
+                  padding: EdgeInsets.all(15.0),
                   child: Text(
                     'MESSAGES',
                     style: TextStyle(
@@ -2987,7 +2988,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+                  padding: EdgeInsets.fromLTRB(25, 5, 20, 20),
                   child: Text(
                     "You have no unread messages",
                     style: TextStyle(color: Colors.green),
@@ -3000,7 +3001,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    var timeline = <Widget>[];
+    final timeline = <Widget>[];
 
     // Get total of unread messages
     int unreadTotalCount = 0;
@@ -3013,9 +3014,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Get unread within limits (only recent)
     int unreadRecentCount = 0;
     int loopCount = 1;
-    int maxCount;
+    int? maxCount;
 
-    if (messages.length > maxToShow) {
+    if (messages.length > maxToShow!) {
       maxCount = maxToShow;
     } else {
       maxCount = messages.length;
@@ -3023,7 +3024,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     for (var i = 0; i < maxToShow; i++) {
-      var msg = messages.values.elementAt(i);
+      final msg = messages.values.elementAt(i);
 
       if (msg.read == 0) {
         unreadRecentCount++;
@@ -3035,8 +3036,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         msg.title = msg.title.toString();
       }
 
-      String title = msg.title;
-      Widget insideIcon = _messagesInsideIconCases(msg.type);
+      final String title = msg.title;
+      final Widget insideIcon = _messagesInsideIconCases(msg.type!);
 
       IndicatorStyle iconBubble;
       iconBubble = IndicatorStyle(
@@ -3050,15 +3051,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 color: Colors.grey,
               ),
             ),
-            shape: BoxShape.rectangle,
           ),
           child: insideIcon,
         ),
       );
 
-      var messageTime = DateTime.fromMillisecondsSinceEpoch(msg.timestamp * 1000);
+      final messageTime = DateTime.fromMillisecondsSinceEpoch(msg.timestamp! * 1000);
 
-      var messageRow = TimelineTile(
+      final messageRow = TimelineTile(
         isFirst: loopCount == 1 ? true : false,
         isLast: loopCount == maxCount ? true : false,
         alignment: TimelineAlign.manual,
@@ -3075,15 +3075,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        msg.name,
-                        style: TextStyle(
+                        msg.name!,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
                         ),
@@ -3091,38 +3091,43 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ],
                   ),
                 ),
-                SizedBox(width: 10),
-                msg.read == 0
-                    ? GestureDetector(
-                        child: Icon(Icons.markunread, color: Colors.green[600]),
-                        onLongPress: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: false);
-                        },
-                        onTap: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: true);
-                        },
-                      )
-                    : GestureDetector(
-                        child: Icon(Icons.mark_as_unread),
-                        onLongPress: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: false);
-                        },
-                        onTap: () {
-                          _launchBrowser(
-                              url: "https://www.torn.com/messages.php#/p=read&ID="
-                                  "${messages.keys.elementAt(i)}&suffix=inbox",
-                              shortTap: true);
-                        },
-                      ),
+                const SizedBox(width: 10),
+                if (msg.read == 0)
+                  GestureDetector(
+                    child: Icon(Icons.markunread, color: Colors.green[600]),
+                    onLongPress: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: false,
+                      );
+                    },
+                    onTap: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: true,
+                      );
+                    },
+                  )
+                else
+                  GestureDetector(
+                    child: const Icon(Icons.mark_as_unread),
+                    onLongPress: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: false,
+                      );
+                    },
+                    onTap: () {
+                      _launchBrowser(
+                        url: "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                        shortTap: true,
+                      );
+                    },
+                  ),
               ],
             ),
           ),
@@ -3155,7 +3160,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         child: Center(
           child: Text(
             "(Showing last $maxToShow messages)",
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
@@ -3174,7 +3179,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     var unreadTotalString = '';
-    var lastMessageDate = DateTime.fromMillisecondsSinceEpoch(messages.values.last.timestamp * 1000);
+    final lastMessageDate = DateTime.fromMillisecondsSinceEpoch(messages.values.last.timestamp! * 1000);
     if (unreadTotalCount == 0) {
       unreadTotalString = 'No unread messages '
           '(since ${_occurrenceTimeFormatted(lastMessageDate)})';
@@ -3188,20 +3193,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
-        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
+        theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
         controller: _messagesExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
             children: [
-              Text(
+              const Text(
                 'MESSAGES',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onLongPress: () {
@@ -3210,8 +3215,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: "https://www.torn.com/messages.php", shortTap: true);
                 },
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 5),
+                child: const Padding(
+                  padding: EdgeInsets.only(right: 5),
                   child: Icon(MdiIcons.openInApp, size: 18),
                 ),
               ),
@@ -3230,11 +3235,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   fontWeight: unreadRecentCount == 0 ? FontWeight.normal : FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               if (unreadTotalCount > 0 && unreadTotalCount > unreadRecentCount)
                 Text(
-                  '$unreadTotalString',
-                  style: TextStyle(
+                  unreadTotalString,
+                  style: const TextStyle(
                     fontSize: 11,
                   ),
                 ),
@@ -3279,7 +3284,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     } else {
       insideIcon = Container(
-        child: Center(
+        child: const Center(
           child: Text(
             'T',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
@@ -3292,7 +3297,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   String _occurrenceTimeFormatted(DateTime occurrenceTime) {
     String diff;
-    var timeDifference = _serverTime.difference(occurrenceTime);
+    final timeDifference = _serverTime.difference(occurrenceTime);
     if (timeDifference.inMinutes < 1) {
       diff = 'Seconds ago';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
@@ -3311,25 +3316,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Card _playerStats() {
     // Currency configuration
-    final decimalFormat = new NumberFormat("#,##0", "en_US");
+    final decimalFormat = NumberFormat("#,##0", "en_US");
 
     // Strength modifiers
     bool strengthModified = false;
     Color strengthColor = Colors.white;
     int strengthModifier = 0;
-    double strengthModifiedTotal = _miscModel.strength.toDouble();
+    double strengthModifiedTotal = _miscModel!.strength!.toDouble();
     String strengthString = '';
-    for (var strengthMod in _miscModel.strengthInfo) {
-      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      var matches = strRaw.allMatches(strengthMod);
-      if (matches.length > 0) {
+    for (final strengthMod in _miscModel!.strengthInfo!) {
+      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      final matches = strRaw.allMatches(strengthMod);
+      if (matches.isNotEmpty) {
         strengthModified = true;
-        for (var match in matches) {
-          var change = match.group(2);
+        for (final match in matches) {
+          final change = match.group(2);
           if (match.group(1) == '-') {
-            strengthModifier -= int.parse(change);
+            strengthModifier -= int.parse(change!);
           } else if (match.group(1) == '+') {
-            strengthModifier += int.parse(change);
+            strengthModifier += int.parse(change!);
           }
         }
       }
@@ -3349,19 +3354,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool defenseModified = false;
     Color defenseColor = Colors.white;
     int defenseModifier = 0;
-    double defenseModifiedTotal = _miscModel.defense.toDouble();
+    double defenseModifiedTotal = _miscModel!.defense!.toDouble();
     String defenseString = '';
-    for (var defenseMod in _miscModel.defenseInfo) {
-      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      var matches = strRaw.allMatches(defenseMod);
-      if (matches.length > 0) {
+    for (final defenseMod in _miscModel!.defenseInfo!) {
+      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      final matches = strRaw.allMatches(defenseMod);
+      if (matches.isNotEmpty) {
         defenseModified = true;
-        for (var match in matches) {
-          var change = match.group(2);
+        for (final match in matches) {
+          final change = match.group(2);
           if (match.group(1) == '-') {
-            defenseModifier -= int.parse(change);
+            defenseModifier -= int.parse(change!);
           } else if (match.group(1) == '+') {
-            defenseModifier += int.parse(change);
+            defenseModifier += int.parse(change!);
           }
         }
       }
@@ -3381,19 +3386,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool speedModified = false;
     Color speedColor = Colors.white;
     int speedModifier = 0;
-    double speedModifiedTotal = _miscModel.speed.toDouble();
+    double speedModifiedTotal = _miscModel!.speed!.toDouble();
     String speedString = '';
-    for (var speedMod in _miscModel.speedInfo) {
-      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      var matches = strRaw.allMatches(speedMod);
-      if (matches.length > 0) {
+    for (final speedMod in _miscModel!.speedInfo!) {
+      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      final matches = strRaw.allMatches(speedMod);
+      if (matches.isNotEmpty) {
         speedModified = true;
-        for (var match in matches) {
-          var change = match.group(2);
+        for (final match in matches) {
+          final change = match.group(2);
           if (match.group(1) == '-') {
-            speedModifier -= int.parse(change);
+            speedModifier -= int.parse(change!);
           } else if (match.group(1) == '+') {
-            speedModifier += int.parse(change);
+            speedModifier += int.parse(change!);
           }
         }
       }
@@ -3413,19 +3418,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool dexModified = false;
     Color dexColor = Colors.white;
     int dexModifier = 0;
-    double dexModifiedTotal = _miscModel.dexterity.toDouble();
+    double dexModifiedTotal = _miscModel!.dexterity!.toDouble();
     String dexString = '';
-    for (var dexMod in _miscModel.dexterityInfo) {
-      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      var matches = strRaw.allMatches(dexMod);
-      if (matches.length > 0) {
+    for (final dexMod in _miscModel!.dexterityInfo!) {
+      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      final matches = strRaw.allMatches(dexMod);
+      if (matches.isNotEmpty) {
         dexModified = true;
-        for (var match in matches) {
-          var change = match.group(2);
+        for (final match in matches) {
+          final change = match.group(2);
           if (match.group(1) == '-') {
-            dexModifier -= int.parse(change);
+            dexModifier -= int.parse(change!);
           } else if (match.group(1) == '+') {
-            dexModifier += int.parse(change);
+            dexModifier += int.parse(change!);
           }
         }
       }
@@ -3441,18 +3446,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
-    double totalEffective = strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal;
+    final double totalEffective = strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal;
 
-    int totalEffectiveModifier = ((totalEffective - _miscModel.total) * 100 / _miscModel.total).round();
+    final int totalEffectiveModifier = ((totalEffective - _miscModel!.total!) * 100 / _miscModel!.total!).round();
 
     // SKILLS
     bool skillsExist = false;
     var hunting = "";
     var racing = "";
     var reviving = "";
-    hunting = _miscModel.hunting ?? "";
-    racing = _miscModel.racing ?? "";
-    reviving = _miscModel.reviving ?? "";
+    hunting = _miscModel!.hunting ?? "";
+    racing = _miscModel!.racing ?? "";
+    reviving = _miscModel!.reviving ?? "";
     if (hunting.isNotEmpty || racing.isNotEmpty || reviving.isNotEmpty) {
       skillsExist = true;
     }
@@ -3465,22 +3470,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
-        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
+        theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
         controller: _basicInfoExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
             children: [
-              Text(
+              const Text(
                 'BASIC INFO',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(width: 5),
+              const SizedBox(width: 5),
               GestureDetector(
-                child: Icon(Icons.copy, size: 14),
+                child: const Icon(Icons.copy, size: 14),
                 onTap: () {
                   _shareMisc();
                 },
@@ -3494,7 +3499,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _cashWallet(dense: false),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Row(
                 children: [
                   GestureDetector(
@@ -3504,22 +3509,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     onTap: () async {
                       _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                     },
-                    child: Icon(
+                    child: const Icon(
                       MdiIcons.alphaPCircleOutline,
                       color: Colors.blueAccent,
                     ),
                   ),
-                  SizedBox(width: 5),
-                  Text('${_miscModel.points}'),
+                  const SizedBox(width: 5),
+                  Text('${_miscModel!.points}'),
                 ],
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               _jobPoints(),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               _companyAddictionWidget(),
-              SizedBox(height: 8),
-              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel.total)}'),
-              SizedBox(height: 2),
+              const SizedBox(height: 8),
+              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
+              const SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
@@ -3530,20 +3535,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   if (totalEffectiveModifier < 0)
                     Text(
                       ' ($totalEffectiveModifier%)',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                       ),
                     )
                   else if (totalEffectiveModifier > 0)
                     Text(
                       ' (+$totalEffectiveModifier%)',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.green,
                       ),
                     )
                 ],
               ),
-              if (_settingsProvider.tornStatsChartEnabled && _settingsProvider.tornStatsChartInCollapsedMiscCard)
+              if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
                 FutureBuilder(
                   future: _statsChartDataFetched,
                   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -3551,26 +3556,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       if (_statsChartModel?.data != null) {
                         return Column(
                           children: [
-                            SizedBox(height: 20),
+                            const SizedBox(height: 20),
                             SizedBox(
                               height: 200,
                               child: StatsChart(
                                 statsData: _statsChartModel,
                               ),
                             ),
-                            SizedBox(height: 40),
+                            const SizedBox(height: 40),
                           ],
                         );
                       }
                     }
-                    return SizedBox(height: 8);
+                    return const SizedBox(height: 8);
                   },
                 )
               else
-                SizedBox(height: 8),
-              SelectableText('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
-              SelectableText('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
-              SelectableText('END: ${decimalFormat.format(_miscModel.endurance)}'),
+                const SizedBox(height: 8),
+              SelectableText('MAN: ${decimalFormat.format(_miscModel!.manualLabor)}'),
+              SelectableText('INT: ${decimalFormat.format(_miscModel!.intelligence)}'),
+              SelectableText('END: ${decimalFormat.format(_miscModel!.endurance)}'),
             ],
           ),
         ),
@@ -3584,12 +3589,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SelectableText('Rank: ${_user.rank}'),
-                    SelectableText('Age: ${_user.age}'),
+                    SelectableText('Rank: ${_user!.rank}'),
+                    SelectableText('Age: ${_user!.age}'),
                   ],
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: _cashWallet(dense: false),
@@ -3605,41 +3610,41 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       onTap: () async {
                         _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                       },
-                      child: Icon(
+                      child: const Icon(
                         MdiIcons.alphaPCircleOutline,
                         color: Colors.blueAccent,
                       ),
                     ),
-                    SizedBox(width: 5),
-                    SelectableText('${_miscModel.points}'),
+                    const SizedBox(width: 5),
+                    SelectableText('${_miscModel!.points}'),
                   ],
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: _jobPoints(),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: _companyAddictionWidget(),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
                   children: [
-                    Text(
+                    const Text(
                       'BATTLE STATS',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 5),
+                    const SizedBox(width: 5),
                     GestureDetector(
-                      child: Icon(Icons.copy, size: 14),
+                      child: const Icon(Icons.copy, size: 14),
                       onTap: () {
                         _shareMisc(shareType: "battle");
                       },
@@ -3654,73 +3659,73 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Strength: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.strength)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.strength)),
                         Text(
-                          " (${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)",
-                          style: TextStyle(fontSize: 12),
+                          " (${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Defense: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.defense)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.defense)),
                         Text(
-                          " (${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)",
-                          style: TextStyle(fontSize: 12),
+                          " (${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Speed: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.speed)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.speed)),
                         Text(
-                          " (${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)",
-                          style: TextStyle(fontSize: 12),
+                          " (${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Dexterity: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.dexterity)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.dexterity)),
                         Text(
-                          " (${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)",
-                          style: TextStyle(fontSize: 12),
+                          " (${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
                     SizedBox(
                       width: 50,
-                      child: Divider(color: _themeProvider.mainText, thickness: 0.5),
+                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Total: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.total)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.total)),
                       ],
                     ),
                   ],
                 ),
               ),
-              if (_settingsProvider.tornStatsChartEnabled)
+              if (_settingsProvider!.tornStatsChartEnabled)
                 FutureBuilder(
                   future: _statsChartDataFetched,
                   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -3728,37 +3733,37 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       if (_statsChartModel?.data != null) {
                         return Column(
                           children: [
-                            SizedBox(height: 40),
+                            const SizedBox(height: 40),
                             SizedBox(
                               height: 200,
                               child: StatsChart(
                                 statsData: _statsChartModel,
                               ),
                             ),
-                            SizedBox(height: 40),
+                            const SizedBox(height: 40),
                           ],
                         );
                       }
                     }
-                    return SizedBox(height: 20);
+                    return const SizedBox(height: 20);
                   },
                 )
               else
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
                   children: [
-                    Text(
+                    const Text(
                       'EFFECTIVE STATS',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 5),
+                    const SizedBox(width: 5),
                     GestureDetector(
-                      child: Icon(Icons.copy, size: 14),
+                      child: const Icon(Icons.copy, size: 14),
                       onTap: () {
                         _shareMisc(shareType: "effective");
                       },
@@ -3773,99 +3778,103 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Strength: '),
                         ),
-                        SelectableText('${decimalFormat.format(strengthModifiedTotal)}'),
-                        strengthModified
-                            ? Text(
-                                " $strengthString",
-                                style: TextStyle(color: strengthColor, fontSize: 12),
-                              )
-                            : SizedBox.shrink(),
+                        SelectableText(decimalFormat.format(strengthModifiedTotal)),
+                        if (strengthModified)
+                          Text(
+                            " $strengthString",
+                            style: TextStyle(color: strengthColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Defense: '),
                         ),
-                        SelectableText('${decimalFormat.format(defenseModifiedTotal)}'),
-                        defenseModified
-                            ? Text(
-                                " $defenseString",
-                                style: TextStyle(color: defenseColor, fontSize: 12),
-                              )
-                            : SizedBox.shrink(),
+                        SelectableText(decimalFormat.format(defenseModifiedTotal)),
+                        if (defenseModified)
+                          Text(
+                            " $defenseString",
+                            style: TextStyle(color: defenseColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Speed: '),
                         ),
-                        SelectableText('${decimalFormat.format(speedModifiedTotal)}'),
-                        speedModified
-                            ? Text(
-                                " $speedString",
-                                style: TextStyle(color: speedColor, fontSize: 12),
-                              )
-                            : SizedBox.shrink(),
+                        SelectableText(decimalFormat.format(speedModifiedTotal)),
+                        if (speedModified)
+                          Text(
+                            " $speedString",
+                            style: TextStyle(color: speedColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text('Dexterity: '),
                         ),
-                        SelectableText('${decimalFormat.format(dexModifiedTotal)}'),
-                        dexModified
-                            ? Text(
-                                " $dexString",
-                                style: TextStyle(color: dexColor, fontSize: 12),
-                              )
-                            : SizedBox.shrink(),
+                        SelectableText(decimalFormat.format(dexModifiedTotal)),
+                        if (dexModified)
+                          Text(
+                            " $dexString",
+                            style: TextStyle(color: dexColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
                       ],
                     ),
                     SizedBox(
                       width: 50,
-                      child: Divider(color: _themeProvider.mainText, thickness: 0.5),
+                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 80,
                           child: Text(
                             'Total: ',
                           ),
                         ),
                         SelectableText(
-                          '${decimalFormat.format(totalEffective)}',
+                          decimalFormat.format(totalEffective),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
                   children: [
-                    Text(
+                    const Text(
                       'WORK STATS',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 5),
+                    const SizedBox(width: 5),
                     GestureDetector(
-                      child: Icon(Icons.copy, size: 14),
+                      child: const Icon(Icons.copy, size: 14),
                       onTap: () {
                         _shareMisc(shareType: "work");
                       },
@@ -3880,29 +3889,29 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 100,
                           child: Text('Manual labor: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.manualLabor)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.manualLabor)),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 100,
                           child: Text('Intelligence: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.intelligence)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.intelligence)),
                       ],
                     ),
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 100,
                           child: Text('Endurance: '),
                         ),
-                        SelectableText('${decimalFormat.format(_miscModel.endurance)}'),
+                        SelectableText(decimalFormat.format(_miscModel!.endurance)),
                       ],
                     ),
                   ],
@@ -3912,21 +3921,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 5),
                       child: Row(
                         children: [
-                          Text(
+                          const Text(
                             'SKILLS',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(width: 5),
+                          const SizedBox(width: 5),
                           GestureDetector(
-                            child: Icon(Icons.copy, size: 14),
+                            child: const Icon(Icons.copy, size: 14),
                             onTap: () {
                               _shareMisc(shareType: "skills");
                             },
@@ -3942,31 +3951,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           if (racing.isNotEmpty)
                             Row(
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 80,
                                   child: Text('Racing: '),
                                 ),
-                                SelectableText('$racing'),
+                                SelectableText(racing),
                               ],
                             ),
                           if (reviving.isNotEmpty)
                             Row(
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 80,
                                   child: Text('Reviving: '),
                                 ),
-                                SelectableText('$reviving'),
+                                SelectableText(reviving),
                               ],
                             ),
                           if (hunting.isNotEmpty)
                             Row(
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 80,
                                   child: Text('Hunting: '),
                                 ),
-                                SelectableText('$hunting'),
+                                SelectableText(hunting),
                               ],
                             ),
                         ],
@@ -3974,7 +3983,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
             ],
           ),
         ),
@@ -3982,35 +3991,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _cashWallet({bool dense}) {
-    if (_user.networth["wallet"] != null) {
-      final moneyFormat = new NumberFormat("#,##0", "en_US");
+  Widget _cashWallet({bool? dense}) {
+    if (_user!.networth!["wallet"] != null) {
+      final moneyFormat = NumberFormat("#,##0", "en_US");
       return Row(
         children: [
           GestureDetector(
             onTap: () async {
               _openWalletDialog();
             },
-            child: dense
-                ? Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
-                : Icon(
+            child: dense!
+                ? const Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
+                : const Icon(
                     MdiIcons.cashUsdOutline,
                     color: Colors.green,
                   ),
           ),
-          SizedBox(width: 5),
+          const SizedBox(width: 5),
           SelectableText(
-            '\$${moneyFormat.format(_user.networth["wallet"])}',
+            '\$${moneyFormat.format(_user!.networth!["wallet"])}',
             style: TextStyle(
               fontSize: dense ? 13 : 14,
               fontWeight: dense ? FontWeight.bold : FontWeight.normal,
-              color: dense ? Colors.green : _themeProvider.mainText,
+              color: dense ? Colors.green : _themeProvider!.mainText,
             ),
           )
         ],
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -4031,44 +4040,44 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // DEBUG ******************************
 
     if (_miscModel == null || _tornEducationModel == null) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     // ADDICTION
-    Widget addictionWidget = SizedBox.shrink();
-    if (_user.icons.icon57 != null ||
-        _user.icons.icon58 != null ||
-        _user.icons.icon59 != null ||
-        _user.icons.icon60 != null ||
-        _user.icons.icon61 != null) {
+    Widget addictionWidget = const SizedBox.shrink();
+    if (_user!.icons.icon57 != null ||
+        _user!.icons.icon58 != null ||
+        _user!.icons.icon59 != null ||
+        _user!.icons.icon60 != null ||
+        _user!.icons.icon61 != null) {
       showMisc = true;
       addictionActive = true;
-      String addictionString;
-      Color brainColor;
-      if (_user.icons.icon57 != null) {
-        addictionString = _user.icons.icon57;
+      String? addictionString;
+      Color? brainColor;
+      if (_user!.icons.icon57 != null) {
+        addictionString = _user!.icons.icon57;
         brainColor = Colors.grey;
-      } else if (_user.icons.icon58 != null) {
-        addictionString = _user.icons.icon58;
+      } else if (_user!.icons.icon58 != null) {
+        addictionString = _user!.icons.icon58;
         brainColor = Colors.brown[300];
-      } else if (_user.icons.icon59 != null) {
-        addictionString = _user.icons.icon59;
+      } else if (_user!.icons.icon59 != null) {
+        addictionString = _user!.icons.icon59;
         brainColor = Colors.deepOrange[700];
-      } else if (_user.icons.icon60 != null) {
-        addictionString = _user.icons.icon60;
+      } else if (_user!.icons.icon60 != null) {
+        addictionString = _user!.icons.icon60;
         brainColor = Colors.amber[900];
-      } else if (_user.icons.icon61 != null) {
-        addictionString = _user.icons.icon61;
+      } else if (_user!.icons.icon61 != null) {
+        addictionString = _user!.icons.icon61;
         brainColor = Colors.red[600];
       }
 
       addictionWidget = Row(
         children: <Widget>[
           Icon(MdiIcons.brain, color: brainColor),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Flexible(
             child: Text(
-              addictionString,
+              addictionString!,
               style: DefaultTextStyle.of(context).style,
             ),
           ),
@@ -4077,29 +4086,29 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     // RACING
-    Widget racingWidget = SizedBox.shrink();
-    if (_user.icons.icon17 != null || _user.icons.icon18 != null) {
+    Widget racingWidget = const SizedBox.shrink();
+    if (_user!.icons.icon17 != null || _user!.icons.icon18 != null) {
       showMisc = true;
       racingActive = true;
-      String racingString;
-      Color gaugeColor;
-      if (_user.icons.icon17 != null) {
-        racingString = _user.icons.icon17.replaceAll("Racing - ", "");
-        racingString = racingString.replaceAll("0 days, 0 hours,", "");
+      String? racingString;
+      Color? gaugeColor;
+      if (_user!.icons.icon17 != null) {
+        racingString = _user!.icons.icon17.replaceAll("Racing - ", "");
+        racingString = racingString!.replaceAll("0 days, 0 hours,", "");
         racingString = racingString.replaceAll("0 days,", "");
         gaugeColor = Colors.green[700];
-      } else if (_user.icons.icon18 != null) {
-        racingString = _user.icons.icon18.replaceAll("Racing - ", '');
+      } else if (_user!.icons.icon18 != null) {
+        racingString = _user!.icons.icon18.replaceAll("Racing - ", '');
         gaugeColor = Colors.red[700];
       }
 
       racingWidget = Row(
         children: <Widget>[
           Icon(MdiIcons.gauge, color: gaugeColor),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Flexible(
             child: Text(
-              racingString,
+              racingString!,
               style: DefaultTextStyle.of(context).style,
             ),
           ),
@@ -4111,8 +4120,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onTap: () {
               _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
             },
-            child: Padding(
-              padding: const EdgeInsets.only(left: 5),
+            child: const Padding(
+              padding: EdgeInsets.only(left: 5),
               child: Icon(MdiIcons.openInApp, size: 18),
             ),
           ),
@@ -4122,13 +4131,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // FACTION CRIMES
     var factionCrimesActive = false;
-    Widget factionCrimes = SizedBox.shrink();
+    Widget factionCrimes = const SizedBox.shrink();
     if (_ocFinalStringLong.isNotEmpty) {
       factionCrimesActive = true;
       factionCrimes = Row(
         children: [
-          Icon(MdiIcons.fingerprint),
-          SizedBox(width: 10),
+          const Icon(MdiIcons.fingerprint),
+          const SizedBox(width: 10),
           Flexible(
             child: Text(
               _ocFinalStringLong,
@@ -4137,7 +4146,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ? _ocComplexPeopleNotReady == 0
                         ? Colors.green
                         : Colors.orange[700]
-                    : _themeProvider.mainText,
+                    : _themeProvider!.mainText,
               ),
             ),
           ),
@@ -4150,8 +4159,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               onTap: () {
                 _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
-              child: Padding(
-                padding: const EdgeInsets.only(right: 5),
+              child: const Padding(
+                padding: EdgeInsets.only(right: 5),
                 child: Icon(MdiIcons.openInApp, size: 18),
               ),
             ),
@@ -4161,12 +4170,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       factionCrimesActive = true;
       factionCrimes = Row(
         children: [
-          Icon(MdiIcons.fingerprint),
-          SizedBox(width: 10),
+          const Icon(MdiIcons.fingerprint),
+          const SizedBox(width: 10),
           Flexible(
             child: Text(
               _ocSimpleStringFinal,
-              style: TextStyle(color: _ocSimpleReady ? Colors.orange[700] : _themeProvider.mainText),
+              style: TextStyle(color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText),
             ),
           ),
           if (_ocComplexReady)
@@ -4178,8 +4187,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               onTap: () {
                 _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
-              child: Padding(
-                padding: const EdgeInsets.only(right: 5),
+              child: const Padding(
+                padding: EdgeInsets.only(right: 5),
                 child: Icon(MdiIcons.openInApp, size: 18),
               ),
             ),
@@ -4187,10 +4196,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: Icon(
               MdiIcons.closeCircleOutline,
               size: 16,
-              color: _ocSimpleReady ? Colors.orange[700] : _themeProvider.mainText,
+              color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText,
             ),
             onTap: () {
-              return showDialog(
+              showDialog(
                 useRootNavigator: false,
                 context: context,
                 barrierDismissible: true,
@@ -4207,14 +4216,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     // BANK
-    Widget bankWidget = SizedBox.shrink();
-    if (_miscModel.cityBank.timeLeft > 0) {
+    Widget bankWidget = const SizedBox.shrink();
+    if (_miscModel!.cityBank!.timeLeft! > 0) {
       showMisc = true;
       bankActive = true;
-      final moneyFormat = new NumberFormat("#,##0", "en_US");
-      var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.cityBank.timeLeft));
-      var timeDifference = timeExpiry.difference(DateTime.now());
-      Color expiryColor = Colors.orange[800];
+      final moneyFormat = NumberFormat("#,##0", "en_US");
+      final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.cityBank!.timeLeft!));
+      final timeDifference = timeExpiry.difference(DateTime.now());
+      Color? expiryColor = Colors.orange[800];
       String expiryString;
       if (timeDifference.inHours < 1) {
         expiryString = 'less than an hour';
@@ -4223,18 +4232,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
         expiryString = '${timeDifference.inHours} hours';
       } else if (timeDifference.inDays == 1) {
-        expiryString = '1 day and ${(_miscModel.cityBank.timeLeft / 60 / 60 % 24).floor()} hours';
-        expiryColor = _themeProvider.mainText;
+        expiryString = '1 day and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
+        expiryColor = _themeProvider!.mainText;
       } else {
         expiryString =
-            '${timeDifference.inDays} days and ${(_miscModel.cityBank.timeLeft / 60 / 60 % 24).floor()} hours';
-        expiryColor = _themeProvider.mainText;
+            '${timeDifference.inDays} days and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
+        expiryColor = _themeProvider!.mainText;
       }
 
       bankWidget = Row(
         children: <Widget>[
-          Icon(MdiIcons.bankOutline),
-          SizedBox(width: 10),
+          const Icon(MdiIcons.bankOutline),
+          const SizedBox(width: 10),
           Flexible(
             child: RichText(
               text: TextSpan(
@@ -4242,14 +4251,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 style: DefaultTextStyle.of(context).style,
                 children: <TextSpan>[
                   TextSpan(
-                    text: "\$${moneyFormat.format(_miscModel.cityBank.amount)}",
-                    style: TextStyle(
+                    text: "\$${moneyFormat.format(_miscModel!.cityBank!.amount)}",
+                    style: const TextStyle(
                       color: Colors.green,
                     ),
                   ),
-                  TextSpan(text: " will expire in "),
+                  const TextSpan(text: " will expire in "),
                   TextSpan(
-                    text: "$expiryString",
+                    text: expiryString,
                     style: TextStyle(color: expiryColor),
                   ),
                 ],
@@ -4261,13 +4270,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     // EDUCATION
-    Widget educationWidget = SizedBox.shrink();
-    if (_miscModel.educationTimeleft > 0) {
+    Widget educationWidget = const SizedBox.shrink();
+    if (_miscModel!.educationTimeleft! > 0) {
       showMisc = true;
       educationActive = true;
-      var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.educationTimeleft));
-      var timeDifference = timeExpiry.difference(DateTime.now());
-      Color expiryColor = Colors.orange[800];
+      final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.educationTimeleft!));
+      final timeDifference = timeExpiry.difference(DateTime.now());
+      Color? expiryColor = Colors.orange[800];
       String expiryString;
       if (timeDifference.inHours < 1) {
         expiryString = 'less than an hour';
@@ -4277,23 +4286,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         expiryString = '${timeDifference.inHours} hours';
       } else if (timeDifference.inDays == 1) {
         expiryString = '1 day';
-        expiryColor = _themeProvider.mainText;
+        expiryColor = _themeProvider!.mainText;
       } else {
         expiryString = '${timeDifference.inDays} days';
-        expiryColor = _themeProvider.mainText;
+        expiryColor = _themeProvider!.mainText;
       }
 
-      String courseName;
-      _tornEducationModel.education.forEach((key, value) {
-        if (key == _miscModel.educationCurrent.toString()) {
+      String? courseName;
+      _tornEducationModel!.education!.forEach((key, value) {
+        if (key == _miscModel!.educationCurrent.toString()) {
           courseName = value.name;
         }
       });
 
       educationWidget = Row(
         children: <Widget>[
-          Icon(MdiIcons.schoolOutline),
-          SizedBox(width: 10),
+          const Icon(MdiIcons.schoolOutline),
+          const SizedBox(width: 10),
           Flexible(
             child: RichText(
               text: TextSpan(
@@ -4308,9 +4317,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     */
                   ),
-                  TextSpan(text: ", will end in "),
+                  const TextSpan(text: ", will end in "),
                   TextSpan(
-                    text: "$expiryString",
+                    text: expiryString,
                     style: TextStyle(color: expiryColor),
                   ),
                 ],
@@ -4324,13 +4333,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     else {
       // If the number of courses studied and available are not the same, we have forgotten
       // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
-      if (_miscModel.educationCompleted.length < _tornEducationModel.education.length - 1) {
+      if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education!.length - 1) {
         showMisc = true;
         educationActive = true;
         educationWidget = Row(
           children: <Widget>[
-            Icon(MdiIcons.schoolOutline),
-            SizedBox(width: 10),
+            const Icon(MdiIcons.schoolOutline),
+            const SizedBox(width: 10),
             Flexible(
               child: Text(
                 "You are not enrolled in any education course!",
@@ -4349,26 +4358,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     // DONATOR
-    Widget donatorWidget = SizedBox.shrink();
-    if (_user.icons.icon3 != null || _user.icons.icon4 != null) {
+    Widget donatorWidget = const SizedBox.shrink();
+    if (_user!.icons.icon3 != null || _user!.icons.icon4 != null) {
       showMisc = true;
       donatorActive = true;
-      String donatorString;
+      String? donatorString;
 
-      if (_user.icons.icon3 != null) {
-        donatorString = _user.icons.icon3;
-      } else if (_user.icons.icon4 != null) {
-        donatorString = _user.icons.icon4.replaceAll("Subscriber - Donator status:", "Donator:");
-        donatorString = donatorString.replaceAll("Donator status:", "Donator:");
+      if (_user!.icons.icon3 != null) {
+        donatorString = _user!.icons.icon3;
+      } else if (_user!.icons.icon4 != null) {
+        donatorString = _user!.icons.icon4.replaceAll("Subscriber - Donator status:", "Donator:");
+        donatorString = donatorString!.replaceAll("Donator status:", "Donator:");
       }
 
       donatorWidget = Row(
         children: <Widget>[
-          Icon(MdiIcons.starOutline),
-          SizedBox(width: 10),
+          const Icon(MdiIcons.starOutline),
+          const SizedBox(width: 10),
           Flexible(
             child: Text(
-              donatorString,
+              donatorString!,
               style: DefaultTextStyle.of(context).style,
             ),
           ),
@@ -4377,7 +4386,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     if (!showMisc) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     } else {
       return Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
@@ -4387,8 +4396,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 15),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 15),
                   child: Text(
                     'MISC',
                     style: TextStyle(
@@ -4442,18 +4451,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Card _netWorth() {
     // Currency configuration
-    final moneyFormat = new NumberFormat("#,##0", "en_US");
+    final moneyFormat = NumberFormat("#,##0", "en_US");
 
     // Total when folded
-    int total;
-    for (var v in _user.networth.entries) {
+    int? total;
+    for (final v in _user!.networth!.entries) {
       if (v.key == 'total') {
-        total = v.value.round();
+        total = v.value!.round();
       }
     }
 
     // List for all sources in column
-    var moneySources = <Widget>[];
+    final moneySources = <Widget>[];
 
     // Total Expanded
     moneySources.add(
@@ -4461,7 +4470,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         padding: const EdgeInsets.only(top: 10, bottom: 10),
         child: Row(
           children: <Widget>[
-            SizedBox(
+            const SizedBox(
               width: 110,
               child: Text(
                 'Total: ',
@@ -4473,7 +4482,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Text(
               '\$${moneyFormat.format(total)}',
               style: TextStyle(
-                color: total < 0 ? Colors.red : Colors.green,
+                color: total! < 0 ? Colors.red : Colors.green,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -4483,7 +4492,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
 
     // Loop all other sources
-    for (var v in _user.networth.entries) {
+    for (final v in _user!.networth!.entries) {
       String source;
       if (v.key == 'total' || v.key == 'parsetime') {
         continue;
@@ -4513,15 +4522,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Text('$source: '),
             ),
             Text(
-              '\$${moneyFormat.format(v.value.round())}',
+              '\$${moneyFormat.format(v.value!.round())}',
               style: TextStyle(
-                color: v.value < 0 ? Colors.red : Colors.green,
+                color: v.value! < 0 ? Colors.red : Colors.green,
               ),
             ),
-            if (v.key == "points" && _miscModel != null && _miscModel.points > 0)
+            if (v.key == "points" && _miscModel != null && _miscModel!.points! > 0)
               Text(
-                "  (@\$${moneyFormat.format((v.value.round()) / _miscModel.points)})",
-                style: TextStyle(
+                "  (@\$${moneyFormat.format((v.value!.round()) / _miscModel!.points!)})",
+                style: const TextStyle(
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
                 ),
@@ -4533,10 +4542,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
-        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
+        theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
         controller: _networthExpController,
-        header: Padding(
-          padding: const EdgeInsets.all(15.0),
+        header: const Padding(
+          padding: EdgeInsets.all(15.0),
           child: Text(
             'NETWORTH',
             style: TextStyle(
@@ -4570,17 +4579,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchApi() async {
+    if (!mounted) return;
+
     // Try to get only as many messages as strictly necessary, as per Torn recommendations
     var limit = 3;
-    if (_messagesShowNumber > limit) limit = _messagesShowNumber;
-    if (_eventsShowNumber > limit) limit = _eventsShowNumber;
+    if (_messagesShowNumber! > limit) limit = _messagesShowNumber!;
+    if (_eventsShowNumber! > limit) limit = _eventsShowNumber!;
 
-    var apiResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: limit);
+    final apiResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: limit);
 
     // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
     // Otherwise, call the API
     dynamic chain;
-    ChainStatusProvider chainProvider = context.read<ChainStatusProvider>();
+    final ChainStatusProvider chainProvider = context.read<ChainStatusProvider>();
     if (chainProvider.chainModel is ChainModel) {
       chain = chainProvider.chainModel;
     } else {
@@ -4592,17 +4603,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (apiResponse is OwnProfileExtended) {
           _apiRetries = 0;
           _user = apiResponse;
-          _serverTime = DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
+          _serverTime = DateTime.fromMillisecondsSinceEpoch(_user!.serverTime! * 1000);
           _apiGoodData = true;
 
           // If max values have decreased or were never initialized
-          if (_customEnergyTrigger > _user.energy.maximum || _customEnergyTrigger == 0) {
-            _customEnergyTrigger = _user.energy.maximum;
-            Prefs().setEnergyNotificationValue(_customEnergyTrigger);
+          if (_customEnergyTrigger! > _user!.energy!.maximum! || _customEnergyTrigger == 0) {
+            _customEnergyTrigger = _user!.energy!.maximum;
+            Prefs().setEnergyNotificationValue(_customEnergyTrigger!);
           }
-          if (_customNerveTrigger > _user.nerve.maximum || _customNerveTrigger == 0) {
-            _customNerveTrigger = _user.nerve.maximum;
-            Prefs().setNerveNotificationValue(_customNerveTrigger);
+          if (_customNerveTrigger! > _user!.nerve!.maximum! || _customNerveTrigger == 0) {
+            _customNerveTrigger = _user!.nerve!.maximum;
+            Prefs().setNerveNotificationValue(_customNerveTrigger!);
           }
 
           if (chain is ChainModel) {
@@ -4619,7 +4630,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _apiRetries++;
           } else {
             _apiGoodData = false;
-            _apiError = apiResponse as ApiError;
+            _apiError = apiResponse as ApiError?;
             _apiRetries = 0;
           }
         }
@@ -4644,18 +4655,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _getMiscCardInfo() async {
-    try {
-      var miscApiResponse = await Get.find<ApiCallerController>().getOwnProfileMisc();
+    if (_user == null) return;
 
-      if (_tornEducationModel == null) {
-        _tornEducationModel = await Get.find<ApiCallerController>().getEducation();
-      }
+    try {
+      final miscApiResponse = await Get.find<ApiCallerController>().getOwnProfileMisc();
+
+      _tornEducationModel ??= await Get.find<ApiCallerController>().getEducation();
 
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
       if (miscApiResponse is OwnProfileMisc && _tornEducationModel is TornEducationModel) {
         // Get this async
-        if (_settingsProvider.oCrimesEnabled) {
+        if (_settingsProvider!.oCrimesEnabled) {
           _getFactionCrimes();
         }
 
@@ -4682,12 +4693,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getStatsChart() async {
     try {
-      if (!_settingsProvider.tornStatsChartEnabled) return;
+      if (!_settingsProvider!.tornStatsChartEnabled) return;
 
-      DateTime lastFetched = DateTime.fromMillisecondsSinceEpoch(_settingsProvider.tornStatsChartDateTime);
+      final DateTime lastFetched = DateTime.fromMillisecondsSinceEpoch(_settingsProvider!.tornStatsChartDateTime);
 
       if (DateTime.now().difference(lastFetched).inHours < 26) {
-        var savedChart = await Prefs().getTornStatsChartSave();
+        final savedChart = await Prefs().getTornStatsChartSave();
         if (savedChart.isNotEmpty) {
           setState(() {
             _statsChartModel = statsChartTornStatsFromJson(savedChart);
@@ -4696,17 +4707,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
 
-      String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/battlestats/graph';
-      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 2));
+      final String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/battlestats/graph';
+      final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 2));
       if (resp.statusCode == 200) {
-        StatsChartTornStats statsJson = statsChartTornStatsFromJson(resp.body);
-        if (statsJson != null && !statsJson.message.contains("ERROR")) {
+        final StatsChartTornStats statsJson = statsChartTornStatsFromJson(resp.body);
+        if (!statsJson.message!.contains("ERROR")) {
           setState(() {
             _statsChartModel = statsJson;
           });
 
           Prefs().setTornStatsChartSave(resp.body);
-          _settingsProvider.setTornStatsChartDateTime = DateTime.now().millisecondsSinceEpoch;
+          _settingsProvider!.setTornStatsChartDateTime = DateTime.now().millisecondsSinceEpoch;
         }
       }
     } catch (e) {
@@ -4715,17 +4726,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _getRankedWars() async {
-    try {
-      if (_user.faction.factionId == 0) return;
-      if (!_settingsProvider.rankedWarsInProfile) return;
+    if (_user == null) return;
 
-      dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
+    try {
+      if (_user!.faction!.factionId == 0) return;
+      if (!_settingsProvider!.rankedWarsInProfile) return;
+
+      final dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
       if (apiResponse is RankedWarsModel) {
-        for (var warMap in apiResponse.rankedwars.entries) {
-          if (warMap.value.factions.keys.contains(_user.faction.factionId.toString())) {
-            int ts = DateTime.now().millisecondsSinceEpoch;
-            bool warInFuture = warMap.value.war.start * 1000 > ts;
-            bool warActive = warMap.value.war.start < ts && warMap.value.war.end == 0;
+        for (final warMap in apiResponse.rankedwars!.entries) {
+          if (warMap.value.factions!.keys.contains(_user!.faction!.factionId.toString())) {
+            final int ts = DateTime.now().millisecondsSinceEpoch;
+            final bool warInFuture = warMap.value.war!.start! * 1000 > ts;
+            final bool warActive = warMap.value.war!.start! < ts && warMap.value.war!.end == 0;
             if (warInFuture || warActive) {
               setState(() {
                 _factionRankedWar = warMap.value;
@@ -4743,41 +4756,43 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _getCompanyAddiction() async {
+    if (_user == null) return;
+
     try {
-      if (_user.job.companyId == 0) return;
+      if (_user!.job!.companyId == 0) return;
 
       final nextFetchTime = await Prefs().getJobAddictionNextCallTime();
 
-      int currentTimeMillis = DateTime.now().toUtc().millisecondsSinceEpoch;
-      bool shouldCallApi = currentTimeMillis >= nextFetchTime;
+      final int currentTimeMillis = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final bool shouldCallApi = currentTimeMillis >= nextFetchTime;
 
       // If we should call the API, fetch the data and update SharedPreferences
       if (shouldCallApi || nextFetchTime == 0) {
         log("Fetching job addiction!");
-        dynamic apiResponse = await Get.find<ApiCallerController>().getCompanyEmployees();
+        final dynamic apiResponse = await Get.find<ApiCallerController>().getCompanyEmployees();
         if (apiResponse is CompanyEmployees) {
-          for (var eMap in apiResponse.companyEmployees.entries) {
+          for (final eMap in apiResponse.companyEmployees!.entries) {
             // Loop until we find the user
-            if (eMap.key != _user.playerId.toString()) continue;
+            if (eMap.key != _user!.playerId.toString()) continue;
 
             // Calculate the next allowed API call time
-            DateTime now = DateTime.now().toUtc();
+            final DateTime now = DateTime.now().toUtc();
             DateTime nextAllowedTime = DateTime.utc(now.year, now.month, now.day, 18, 30);
             if (now.isAfter(nextAllowedTime)) {
-              nextAllowedTime = nextAllowedTime.add(Duration(days: 1));
+              nextAllowedTime = nextAllowedTime.add(const Duration(days: 1));
             }
-            int nextAllowedTimeMillis = nextAllowedTime.millisecondsSinceEpoch;
+            final int nextAllowedTimeMillis = nextAllowedTime.millisecondsSinceEpoch;
 
             Prefs().setJobAddictionNextCallTime(nextAllowedTimeMillis);
-            Prefs().setJobAdditionValue(eMap.value.effectiveness.addiction ?? 0);
+            Prefs().setJobAdditionValue(eMap.value.effectiveness!.addiction ?? 0);
             setState(() {
-              _companyAddiction = eMap.value.effectiveness.addiction ?? 0;
+              _companyAddiction = eMap.value.effectiveness!.addiction ?? 0;
             });
             return;
           }
         }
       } else {
-        int savedAddition = await Prefs().getJobAddictionValue();
+        final int savedAddition = await Prefs().getJobAddictionValue();
         setState(() {
           _companyAddiction = savedAddition;
         });
@@ -4795,27 +4810,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // Get the saved events from shared prefs
       List<Event> eventsSave = <Event>[];
       List<String> save = await Prefs().getEventsSave();
-      for (var s in save) {
+      for (final s in save) {
         eventsSave.add(eventFromJson(s));
       }
 
       // Calculate time difference from last time we obtained events
-      DateTime lastEventsTs = DateTime.fromMillisecondsSinceEpoch(await Prefs().getEventsLastRetrieved());
-      int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
+      final DateTime lastEventsTs = DateTime.fromMillisecondsSinceEpoch(await Prefs().getEventsLastRetrieved());
+      final int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
 
       // If less than 30 minutes have elapse, we'll just query for new events and fill the list
       if (minutesDiff < 30 && eventsSave.isNotEmpty) {
         // Get the last saved event, find out what's the TS
         if (eventsSave.isEmpty) return;
-        int lastTs = eventsSave[0].timestamp;
+        int? lastTs = eventsSave[0].timestamp;
 
         // Get new events after that and add them
-        dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs);
+        final dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs);
         if (newEventsResponse is List<Event>) {
           if (newEventsResponse.isNotEmpty) {
             for (int i = 0; i < newEventsResponse.length; i++) {
               bool repeated = false;
-              for (Event inSave in eventsSave) {
+              for (final Event inSave in eventsSave) {
                 if (newEventsResponse[i].event == inSave.event && newEventsResponse[i].timestamp == inSave.timestamp) {
                   repeated = true;
                   break;
@@ -4828,7 +4843,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
 
             List<String> eventsListToSave = [];
-            for (Event e in eventsSave) {
+            for (final Event e in eventsSave) {
               eventsListToSave.add(eventToJson(e));
             }
             Prefs().setEventsSave(eventsListToSave);
@@ -4839,22 +4854,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         // Refresh events (even if no additions have been made, as we might be starting
         // the app with [_events] with a null value)
-        if (mounted)
+        if (mounted) {
           setState(() {
             _events = List<Event>.from(eventsSave);
           });
+        }
         return;
       }
 
       // If more than 30 minutes elapsed, we get the whole pack
       // Calculate one month ago
       log("Events save elapse more than 30 minutes, getting all events");
-      int monthAgo = ((DateTime.now().subtract(Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
-      dynamic allEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: monthAgo);
+      final int monthAgo = ((DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
+      final dynamic allEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: monthAgo);
       if (allEventsResponse is List<Event>) {
         // Save events and last retrieved timestamp
         List<String> eventsListToSave = [];
-        for (Event e in allEventsResponse) {
+        for (final Event e in allEventsResponse) {
           eventsListToSave.add(eventToJson(e));
         }
         Prefs().setEventsSave(eventsListToSave);
@@ -4866,9 +4882,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         });
       } else {
         // In case of error, return what's saved
-        setState(() {
-          _events = List<Event>.from(eventsSave);
-        });
+        if (mounted) {
+          setState(() {
+            _events = List<Event>.from(eventsSave);
+          });
+        }
       }
     } catch (e, trace) {
       log("Error at Profile Events: $e >> $trace");
@@ -4880,45 +4898,46 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _getFactionCrimes() async {
     try {
       if (_user == null) return;
-      var factionCrimes = await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user.playerId.toString());
+      final factionCrimes =
+          await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user!.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
-        String complexString = "";
+        String? complexString = "";
         DateTime complexTime = DateTime.now();
 
         // Get main crime and time
-        factionCrimes.crimes.forEach((key, crime) {
-          if (crime.initiated == 0 && complexString.isEmpty) {
+        factionCrimes.crimes!.forEach((key, crime) {
+          if (crime.initiated == 0 && complexString!.isEmpty) {
             var participantsNotReady = 0;
-            crime.participants.forEach((participant) {
+            for (final participant in crime.participants!) {
               // There is only one participant, but in another map
               participant.forEach((key, values) {
-                if (values.description != "Okay") {
+                if (values?.description != "Okay") {
                   participantsNotReady++;
                 }
               });
 
-              if (participant.containsKey(_userProv.basic.playerId.toString())) {
+              if (participant.containsKey(_userProv!.basic!.playerId.toString())) {
                 complexString = crime.crimeName;
-                complexTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady * 1000);
+                complexTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady! * 1000);
               }
-            });
+            }
 
             // If found our crime, assign final number of participants not ready
-            if (complexString.isNotEmpty) _ocComplexPeopleNotReady = participantsNotReady;
+            if (complexString!.isNotEmpty) _ocComplexPeopleNotReady = participantsNotReady;
           }
         });
 
         // Calculate time and final string for widgets
-        if (complexString.isNotEmpty) {
+        if (complexString!.isNotEmpty) {
           bool complexReady = false;
           String complexTimeString = "";
           if (complexTime.isAfter(DateTime.now())) {
-            var formattedTime = TimeFormatter(
+            final formattedTime = TimeFormatter(
               inputTime: complexTime,
-              timeFormatSetting: _settingsProvider.currentTimeFormat,
-              timeZoneSetting: _settingsProvider.currentTimeZone,
+              timeFormatSetting: _settingsProvider!.currentTimeFormat,
+              timeZoneSetting: _settingsProvider!.currentTimeZone,
             ).formatHour;
             complexTimeString = "OC will be ready @ $formattedTime${_timeFormatted(complexTime)}";
           } else {
@@ -4936,7 +4955,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
           setState(() {
             _ocFinalStringLong = "$complexString $complexTimeString";
-            _ocFinalStringShort = "$complexTimeString";
+            _ocFinalStringShort = complexTimeString;
             _ocComplexReady = complexReady;
             _ocTime = complexTime;
           });
@@ -4957,10 +4976,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             simpleReady = true;
             simpleString = "A faction organized crime might be ready!";
           } else {
-            var formattedTime = TimeFormatter(
+            final formattedTime = TimeFormatter(
               inputTime: simpleTime,
-              timeFormatSetting: _settingsProvider.currentTimeFormat,
-              timeZoneSetting: _settingsProvider.currentTimeZone,
+              timeFormatSetting: _settingsProvider!.currentTimeFormat,
+              timeZoneSetting: _settingsProvider!.currentTimeZone,
             ).formatHour;
             simpleString = "A faction organized crime will be ready @ "
                 "$formattedTime${_timeFormatted(simpleTime)}";
@@ -4974,23 +4993,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         // Try to find our crime by reviewing the last 100 events. The first one we
         // can find is the one that counts
-        for (Event e in _events) {
+        for (final Event e in _events) {
           if (!foundExpired && !foundProgress && !error) {
-            if (e.event.contains("You and your team") ||
-                (e.event.contains("canceled the") && e.event.contains("that you were selected for"))) {
+            if (e.event!.contains("You and your team") ||
+                (e.event!.contains("canceled the") && e.event!.contains("that you were selected for"))) {
               foundExpired = true;
-            } else if (e.event.contains("You have been selected")) {
-              RegExp strRaw = RegExp(r"([0-9]+) hours");
-              var matches = strRaw.allMatches(e.event);
-              if (matches.length > 0) {
-                for (var match in matches) {
-                  var hoursString = match.group(1);
+            } else if (e.event!.contains("You have been selected")) {
+              final RegExp strRaw = RegExp("([0-9]+) hours");
+              final matches = strRaw.allMatches(e.event!);
+              if (matches.isNotEmpty) {
+                for (final match in matches) {
+                  final hoursString = match.group(1)!;
                   try {
-                    var hours = int.parse(hoursString);
-                    simpleTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp * 1000).add(Duration(hours: hours));
+                    final hours = int.parse(hoursString);
+                    simpleTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp! * 1000).add(Duration(hours: hours));
                     foundProgress = true;
                     simpleExists = true;
-                    _settingsProvider.changeOCrimeLastKnown = simpleTime.millisecondsSinceEpoch;
+                    _settingsProvider!.changeOCrimeLastKnown = simpleTime.millisecondsSinceEpoch;
                     calculateSimpleReadiness();
                   } catch (e) {
                     foundExpired = false;
@@ -5007,7 +5026,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
         // take place after 8 days). If that's the case, show that one anyway.
         if (!foundProgress && !foundExpired && !error) {
-          var lastKnown = DateTime.fromMillisecondsSinceEpoch(_settingsProvider.oCrimeLastKnown);
+          final lastKnown = DateTime.fromMillisecondsSinceEpoch(_settingsProvider!.oCrimeLastKnown);
           if (DateTime.now().isBefore(lastKnown)) {
             simpleExists = true;
             simpleTime = lastKnown;
@@ -5018,7 +5037,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         // Check if we were disregarding this crime before (in which case we don't show it)
         if (foundProgress) {
-          if (_settingsProvider.oCrimeDisregarded == simpleTime.millisecondsSinceEpoch) {
+          if (_settingsProvider!.oCrimeDisregarded == simpleTime.millisecondsSinceEpoch) {
             simpleExists = false;
             _ocSimpleStringFinal = "";
           }
@@ -5035,57 +5054,41 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // Don't fill anything
-      log(e);
+      log(e.toString());
     }
   }
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      animationDuration: Duration(milliseconds: 0),
+      animationDuration: const Duration(),
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
+          MediaQuery.orientationOf(context) == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
-      child: Container(
-        width: 58,
-        height: 58,
-        decoration: new BoxDecoration(
-          border: Border.all(
-            color: Colors.grey[800],
-            width: 2,
-          ),
-          shape: BoxShape.circle,
-          image: new DecorationImage(
-            fit: BoxFit.fill,
-            image: AssetImage("images/icons/torn_t_logo.png"),
-          ),
-        ),
-      ),
-      visible: true,
       curve: Curves.bounceIn,
       children: [
         SpeedDialChild(
           onTap: () async {
             // Trying to get rid of errors switching to the browser
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: true);
           },
           onLongPress: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/city.php', shortTap: false);
           },
           child: Container(
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: Icon(
+            child: const Icon(
               MdiIcons.cityVariantOutline,
               color: Colors.black,
             ),
           ),
           backgroundColor: Colors.purple[500],
           label: 'CITY',
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
@@ -5093,25 +5096,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: true);
           },
           onLongPress: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/trade.php', shortTap: false);
           },
           child: Container(
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: Icon(
+            child: const Icon(
               MdiIcons.accountSwitchOutline,
               color: Colors.black,
             ),
           ),
           backgroundColor: Colors.yellow[800],
           label: 'TRADES',
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
@@ -5119,25 +5122,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: true);
           },
           onLongPress: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/item.php', shortTap: false);
           },
           child: Container(
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: Icon(
+            child: const Icon(
               Icons.card_giftcard,
               color: Colors.black,
             ),
           ),
           backgroundColor: Colors.blue[400],
           label: 'ITEMS',
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
@@ -5145,11 +5148,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: true);
           },
           onLongPress: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', shortTap: false);
           },
           child: Container(
@@ -5167,7 +5170,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           backgroundColor: Colors.deepOrange[400],
           label: 'CRIMES',
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
@@ -5175,25 +5178,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
           },
           onLongPress: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
           },
           child: Container(
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: Icon(
+            child: const Icon(
               Icons.fitness_center,
               color: Colors.black,
             ),
           ),
           backgroundColor: Colors.green[400],
           label: 'GYM',
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
@@ -5201,35 +5204,52 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com', shortTap: true);
           },
           onLongPress: () async {
-            await Future.delayed(Duration(milliseconds: 200));
+            await Future.delayed(const Duration(milliseconds: 200));
             _launchBrowser(url: 'https://www.torn.com', shortTap: false);
           },
           child: Container(
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: Icon(
+            child: const Icon(
               Icons.home_outlined,
               color: Colors.black,
             ),
           ),
           backgroundColor: Colors.grey[400],
           label: 'HOME',
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
           labelBackgroundColor: Colors.grey[400],
         ),
       ],
+      child: Container(
+        width: 58,
+        height: 58,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.grey[800]!,
+            width: 2,
+          ),
+          shape: BoxShape.circle,
+          image: const DecorationImage(
+            fit: BoxFit.fill,
+            image: AssetImage("images/icons/torn_t_logo.png"),
+          ),
+        ),
+      ),
     );
   }
 
-  void _launchBrowser({@required String url, @required bool shortTap, bool recallLastSession = false}) async {
+  Future<void> _launchBrowser({required String? url, required bool? shortTap, bool recallLastSession = false}) async {
+    if (url == null || shortTap == null) return;
+
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
@@ -5242,24 +5262,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Even if this implies calling the app twice, it enhances player
     // experience as the bars are updated quickly after a change
     // In turn, we only call the API every 30 seconds with the timer
-    await Future.delayed(Duration(seconds: 5));
+    await Future.delayed(const Duration(seconds: 5));
     if (mounted) {
       _fetchApi();
     }
-    await Future.delayed(Duration(seconds: 10));
+    await Future.delayed(const Duration(seconds: 10));
     if (mounted) {
       _fetchApi();
     }
   }
 
-  void _scheduleNotification(ProfileNotification profileNotification) async {
-    int secondsToNotification;
-    String channelTitle;
-    String channelSubtitle;
-    String channelDescription;
-    String notificationTitle;
-    String notificationSubtitle;
-    int notificationId;
+  Future<void> _scheduleNotification(ProfileNotification profileNotification) async {
+    int? secondsToNotification;
+    late String channelTitle;
+    String? channelSubtitle;
+    String? channelDescription;
+    String? notificationTitle;
+    String? notificationSubtitle;
+    int? notificationId;
     String notificationIconAndroid = "notification_icon";
     Color notificationIconColor = Colors.grey;
 
@@ -5273,121 +5293,111 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
-        notificationTitle = _settingsProvider.discreteNotifications ? "T" : await Prefs().getTravelNotificationTitle();
+        notificationTitle = _settingsProvider!.discreteNotifications ? "T" : await Prefs().getTravelNotificationTitle();
         notificationSubtitle =
-            _settingsProvider.discreteNotifications ? " " : await Prefs().getTravelNotificationBody();
+            _settingsProvider!.discreteNotifications ? " " : await Prefs().getTravelNotificationBody();
         notificationPayload += 'travel';
         notificationIconAndroid = "notification_travel";
         notificationIconColor = Colors.blue;
-        break;
       case ProfileNotification.energy:
         notificationId = 101;
-        secondsToNotification = _energyNotificationTime.difference(DateTime.now()).inSeconds;
+        secondsToNotification = _energyNotificationTime!.difference(DateTime.now()).inSeconds;
         channelTitle = 'Manual energy';
         channelSubtitle = 'Manual energy';
         channelDescription = 'Manual notifications for energy';
-        notificationTitle = _settingsProvider.discreteNotifications ? "E" : 'Energy bar';
-        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your energy reminder!';
-        var myTimeStamp = (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
+        notificationTitle = _settingsProvider!.discreteNotifications ? "E" : 'Energy bar';
+        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Full" : 'Here is your energy reminder!';
+        final myTimeStamp = (_energyNotificationTime!.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_energy";
         notificationIconColor = Colors.green;
-        break;
       case ProfileNotification.nerve:
         notificationId = 102;
-        secondsToNotification = _nerveNotificationTime.difference(DateTime.now()).inSeconds;
+        secondsToNotification = _nerveNotificationTime!.difference(DateTime.now()).inSeconds;
         channelTitle = 'Manual nerve';
         channelSubtitle = 'Manual nerve';
         channelDescription = 'Manual notifications for nerve';
-        notificationTitle = _settingsProvider.discreteNotifications ? "N" : 'Nerve bar';
-        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your nerve reminder!';
-        var myTimeStamp = (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
+        notificationTitle = _settingsProvider!.discreteNotifications ? "N" : 'Nerve bar';
+        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Full" : 'Here is your nerve reminder!';
+        final myTimeStamp = (_nerveNotificationTime!.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_nerve";
         notificationIconColor = Colors.red;
-        break;
       case ProfileNotification.life:
         notificationId = 103;
-        secondsToNotification = _user.life.fulltime;
+        secondsToNotification = _user!.life!.fulltime;
         channelTitle = 'Manual life';
         channelSubtitle = 'Manual life';
         channelDescription = 'Manual notifications for life';
-        notificationTitle = _settingsProvider.discreteNotifications ? "Lf" : 'Life bar';
-        notificationSubtitle = _settingsProvider.discreteNotifications ? "Full" : 'Here is your life reminder!';
-        var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.life.fulltime;
+        notificationTitle = _settingsProvider!.discreteNotifications ? "Lf" : 'Life bar';
+        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Full" : 'Here is your life reminder!';
+        final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.life!.fulltime!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
-        break;
       case ProfileNotification.drugs:
         notificationId = 104;
-        secondsToNotification = _user.cooldowns.drug;
+        secondsToNotification = _user!.cooldowns!.drug;
         channelTitle = 'Manual drugs';
         channelSubtitle = 'Manual drugs';
         channelDescription = 'Manual notifications for drugs';
-        notificationTitle = _settingsProvider.discreteNotifications ? "D" : 'Drug Cooldown';
+        notificationTitle = _settingsProvider!.discreteNotifications ? "D" : 'Drug Cooldown';
         notificationSubtitle =
-            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your drugs cooldown reminder!';
-        var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.drug;
+            _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your drugs cooldown reminder!';
+        final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.drug!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
-        break;
       case ProfileNotification.medical:
         notificationId = 105;
-        secondsToNotification = _user.cooldowns.medical;
+        secondsToNotification = _user!.cooldowns!.medical;
         channelTitle = 'Manual medical';
         channelSubtitle = 'Manual medical';
         channelDescription = 'Manual notifications for medical';
-        notificationTitle = _settingsProvider.discreteNotifications ? "Med" : 'Medical Cooldown';
+        notificationTitle = _settingsProvider!.discreteNotifications ? "Med" : 'Medical Cooldown';
         notificationSubtitle =
-            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your medical cooldown reminder!';
-        var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.medical;
+            _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your medical cooldown reminder!';
+        final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.medical!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
-        break;
       case ProfileNotification.booster:
         notificationId = 106;
-        secondsToNotification = _user.cooldowns.booster;
+        secondsToNotification = _user!.cooldowns!.booster;
         channelTitle = 'Manual booster';
         channelSubtitle = 'Manual booster';
         channelDescription = 'Manual notifications for booster';
-        notificationTitle = _settingsProvider.discreteNotifications ? "B" : 'Booster Cooldown';
+        notificationTitle = _settingsProvider!.discreteNotifications ? "B" : 'Booster Cooldown';
         notificationSubtitle =
-            _settingsProvider.discreteNotifications ? "Exp" : 'Here is your booster cooldown reminder!';
-        var myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.booster;
+            _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your booster cooldown reminder!';
+        final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.booster!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
-        break;
       case ProfileNotification.hospital:
         notificationId = 107;
         secondsToNotification = _hospitalReleaseTime.difference(DateTime.now()).inSeconds - _hospitalNotificationAhead;
         channelTitle = 'Manual hospital';
         channelSubtitle = 'Manual hospital';
         channelDescription = 'Manual notifications for hospital';
-        notificationTitle = _settingsProvider.discreteNotifications ? "H" : 'Hospital release';
+        notificationTitle = _settingsProvider!.discreteNotifications ? "H" : 'Hospital release';
         notificationSubtitle =
-            _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from hospital!';
+            _settingsProvider!.discreteNotifications ? "App" : 'You are about to be released from hospital!';
         notificationPayload += 'hospital';
-        break;
       case ProfileNotification.jail:
         notificationId = 108;
         secondsToNotification = _jailReleaseTime.difference(DateTime.now()).inSeconds - _jailNotificationAhead;
         channelTitle = 'Manual jail';
         channelSubtitle = 'Manual jail';
         channelDescription = 'Manual notifications for jail';
-        notificationTitle = _settingsProvider.discreteNotifications ? "J" : 'Jail release';
+        notificationTitle = _settingsProvider!.discreteNotifications ? "J" : 'Jail release';
         notificationSubtitle =
-            _settingsProvider.discreteNotifications ? "App" : 'You are about to be released from jail!';
+            _settingsProvider!.discreteNotifications ? "App" : 'You are about to be released from jail!';
         notificationPayload += 'jail';
-        break;
       case ProfileNotification.rankedWar:
         notificationId = 109;
         secondsToNotification = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarNotificationAhead;
         channelTitle = 'Manual war';
         channelSubtitle = 'Manual war';
         channelDescription = 'Manual notifications for war';
-        notificationTitle = _settingsProvider.discreteNotifications ? "W" : 'Ranked War';
-        notificationSubtitle = _settingsProvider.discreteNotifications ? "App" : 'Ranked war is about to start!';
+        notificationTitle = _settingsProvider!.discreteNotifications ? "W" : 'Ranked War';
+        notificationSubtitle = _settingsProvider!.discreteNotifications ? "App" : 'Ranked war is about to start!';
         notificationPayload += 'war';
-        break;
     }
 
-    var modifier = await getNotificationChannelsModifiers();
+    final modifier = await getNotificationChannelsModifiers();
 
     // Add s for custom sounds
     if (channelTitle.contains("travel")) {
@@ -5398,7 +5408,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       channelSubtitle = "$channelSubtitle ${modifier.channelIdModifier}";
     }
 
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    final androidPlatformChannelSpecifics = AndroidNotificationDetails(
       channelTitle,
       channelSubtitle,
       channelDescription: channelDescription,
@@ -5411,12 +5421,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
+    var iOSPlatformChannelSpecifics =
+        const DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
     if (notificationId == 201) {
-      iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
+      iOSPlatformChannelSpecifics =
+          const DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
     }
 
-    var platformChannelSpecifics = NotificationDetails(
+    final platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
     );
@@ -5426,7 +5438,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       notificationTitle,
       notificationSubtitle,
       //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)), // DEBUG
-      tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification)),
+      tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification!)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
@@ -5452,29 +5464,29 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool jail = false;
     bool war = false;
 
-    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
-    if (pendingNotificationRequests.length > 0) {
-      for (var notification in pendingNotificationRequests) {
-        if (notification.payload.contains('travel')) {
+    if (pendingNotificationRequests.isNotEmpty) {
+      for (final notification in pendingNotificationRequests) {
+        if (notification.payload!.contains('travel')) {
           travel = true;
-        } else if (notification.payload.contains('energy')) {
+        } else if (notification.payload!.contains('energy')) {
           energy = true;
-        } else if (notification.payload.contains('nerve')) {
+        } else if (notification.payload!.contains('nerve')) {
           nerve = true;
-        } else if (notification.payload.contains('life')) {
+        } else if (notification.payload!.contains('life')) {
           life = true;
-        } else if (notification.payload.contains('drugs')) {
+        } else if (notification.payload!.contains('drugs')) {
           drugs = true;
-        } else if (notification.payload.contains('medical')) {
+        } else if (notification.payload!.contains('medical')) {
           medical = true;
-        } else if (notification.payload.contains('booster')) {
+        } else if (notification.payload!.contains('booster')) {
           booster = true;
-        } else if (notification.payload.contains('hospital')) {
+        } else if (notification.payload!.contains('hospital')) {
           hospital = true;
-        } else if (notification.payload.contains('jail')) {
+        } else if (notification.payload!.contains('jail')) {
           jail = true;
-        } else if (notification.payload.contains('war')) {
+        } else if (notification.payload!.contains('war')) {
           war = true;
         }
       }
@@ -5500,233 +5512,225 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     switch (profileNotification) {
       case ProfileNotification.travel:
         await flutterLocalNotificationsPlugin.cancel(201);
-        break;
       case ProfileNotification.energy:
         await flutterLocalNotificationsPlugin.cancel(101);
-        break;
       case ProfileNotification.nerve:
         await flutterLocalNotificationsPlugin.cancel(102);
-        break;
       case ProfileNotification.life:
         await flutterLocalNotificationsPlugin.cancel(103);
-        break;
       case ProfileNotification.drugs:
         await flutterLocalNotificationsPlugin.cancel(104);
-        break;
       case ProfileNotification.medical:
         await flutterLocalNotificationsPlugin.cancel(105);
-        break;
       case ProfileNotification.booster:
         await flutterLocalNotificationsPlugin.cancel(106);
-        break;
       case ProfileNotification.hospital:
         await flutterLocalNotificationsPlugin.cancel(107);
-        break;
       case ProfileNotification.jail:
         await flutterLocalNotificationsPlugin.cancel(108);
-        break;
       case ProfileNotification.rankedWar:
         await flutterLocalNotificationsPlugin.cancel(109);
-        break;
     }
 
     _retrievePendingNotifications();
   }
 
-  void _checkIfNotificationsAreCurrent() async {
-    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+  Future<void> _checkIfNotificationsAreCurrent() async {
+    final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
-    if (pendingNotificationRequests.length == 0) {
+    if (pendingNotificationRequests.isEmpty) {
       return;
     }
 
     bool triggered = false;
-    var updatedTypes = <String>[];
-    var updatedTimes = <String>[];
-    var formatter = new DateFormat('HH:mm');
+    final updatedTypes = <String>[];
+    final updatedTimes = <String>[];
+    final formatter = DateFormat('HH:mm');
 
-    for (var notification in pendingNotificationRequests) {
+    for (final notification in pendingNotificationRequests) {
       // Don't take into account notifications that don't split this way
       // Using this instead of try/catch
-      var splitPayload = notification.payload.split('-');
+      final splitPayload = notification.payload!.split('-');
       if (splitPayload.length < 2) {
         continue;
       }
-      var stringTs = splitPayload[1];
-      var oldTimeStamp = int.tryParse(stringTs);
+      final stringTs = splitPayload[1];
+      final oldTimeStamp = int.tryParse(stringTs);
       if (oldTimeStamp == null) {
         continue;
       }
 
       // ENERGY
-      if (notification.payload.contains('energy')) {
-        var customTriggerRoundedUp = _customEnergyTrigger + 4;
-        if (_user.energy.current >= _user.energy.maximum ||
-            (!_customEnergyMaxOverride && _user.energy.current > customTriggerRoundedUp)) {
+      if (notification.payload!.contains('energy')) {
+        final customTriggerRoundedUp = _customEnergyTrigger! + 4;
+        if (_user!.energy!.current! >= _user!.energy!.maximum! ||
+            (!_customEnergyMaxOverride && _user!.energy!.current! > customTriggerRoundedUp)) {
           _cancelNotifications(ProfileNotification.energy);
           BotToast.showText(
             text: 'Energy notification expired, removing!',
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[700],
-            duration: Duration(seconds: 5),
-            contentPadding: EdgeInsets.all(10),
+            contentColor: Colors.grey[700]!,
+            duration: const Duration(seconds: 5),
+            contentPadding: const EdgeInsets.all(10),
           );
           continue;
         }
         // If override and still below it, we compare with full
-        if (_customEnergyMaxOverride && _customEnergyTrigger < _user.energy.current) {
-          var newCalculation =
-              DateTime.now().add(Duration(seconds: _user.energy.fulltime)).millisecondsSinceEpoch / 1000;
-          var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (_customEnergyMaxOverride && _customEnergyTrigger! < _user!.energy!.current!) {
+          final newCalculation =
+              DateTime.now().add(Duration(seconds: _user!.energy!.fulltime!)).millisecondsSinceEpoch / 1000;
+          final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.energy);
             _scheduleNotification(ProfileNotification.energy);
             triggered = true;
             updatedTypes.add('energy');
-            var energyCurrentSchedule = DateTime.now().add(Duration(seconds: _user.energy.fulltime));
+            final energyCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.energy!.fulltime!));
             updatedTimes.add(formatter.format(energyCurrentSchedule));
           }
         }
         // If no override, we take whatever value it is
         else {
-          var newSecondsToGo = 0;
-          if (_customEnergyTrigger == _user.energy.maximum) {
-            newSecondsToGo = _user.energy.fulltime;
+          int? newSecondsToGo = 0;
+          if (_customEnergyTrigger == _user!.energy!.maximum) {
+            newSecondsToGo = _user!.energy!.fulltime;
           } else {
-            var energyToGo = _customEnergyTrigger - _user.energy.current;
-            var energyTicksToGo = energyToGo / _user.energy.increment;
+            final energyToGo = _customEnergyTrigger! - _user!.energy!.current!;
+            final energyTicksToGo = energyToGo / _user!.energy!.increment!;
             if (energyTicksToGo > 1) {
-              var consumedTick = _user.energy.interval - _user.energy.ticktime;
-              newSecondsToGo = (energyTicksToGo * _user.energy.interval - consumedTick).floor();
+              final consumedTick = _user!.energy!.interval! - _user!.energy!.ticktime!;
+              newSecondsToGo = (energyTicksToGo * _user!.energy!.interval! - consumedTick).floor();
             } else if (energyTicksToGo > 0 && energyTicksToGo <= 1) {
-              newSecondsToGo = _user.energy.ticktime;
+              newSecondsToGo = _user!.energy!.ticktime;
             }
           }
 
-          var newCalculation = DateTime.now().add(Duration(seconds: newSecondsToGo)).millisecondsSinceEpoch / 1000;
+          final newCalculation = DateTime.now().add(Duration(seconds: newSecondsToGo!)).millisecondsSinceEpoch / 1000;
 
-          var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+          final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.energy);
             _energyNotificationTime = DateTime.now().add(Duration(seconds: newSecondsToGo));
             _scheduleNotification(ProfileNotification.energy);
             triggered = true;
             updatedTypes.add('energy');
-            var energyCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
+            final energyCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
             updatedTimes.add(formatter.format(energyCurrentSchedule));
           }
         }
         // NERVE
-      } else if (notification.payload.contains('nerve')) {
-        if (_user.nerve.current >= _user.nerve.maximum ||
-            (!_customNerveMaxOverride && _user.nerve.current > _customNerveTrigger)) {
+      } else if (notification.payload!.contains('nerve')) {
+        if (_user!.nerve!.current! >= _user!.nerve!.maximum! ||
+            (!_customNerveMaxOverride && _user!.nerve!.current! > _customNerveTrigger!)) {
           _cancelNotifications(ProfileNotification.nerve);
           BotToast.showText(
             text: 'Nerve notification expired, removing!',
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.grey[700],
-            duration: Duration(seconds: 5),
-            contentPadding: EdgeInsets.all(10),
+            contentColor: Colors.grey[700]!,
+            duration: const Duration(seconds: 5),
+            contentPadding: const EdgeInsets.all(10),
           );
           continue;
         }
         // If override and still below it, we compare with full
-        if (_customNerveMaxOverride && _customNerveTrigger < _user.nerve.current) {
-          var newCalculation =
-              DateTime.now().add(Duration(seconds: _user.nerve.fulltime)).millisecondsSinceEpoch / 1000;
-          var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (_customNerveMaxOverride && _customNerveTrigger! < _user!.nerve!.current!) {
+          final newCalculation =
+              DateTime.now().add(Duration(seconds: _user!.nerve!.fulltime!)).millisecondsSinceEpoch / 1000;
+          final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.nerve);
             _scheduleNotification(ProfileNotification.nerve);
             triggered = true;
             updatedTypes.add('nerve');
-            var nerveCurrentSchedule = DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+            final nerveCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.nerve!.fulltime!));
             updatedTimes.add(formatter.format(nerveCurrentSchedule));
           }
         }
         // If no override, we take whatever value it is
         else {
-          var newSecondsToGo = 0;
-          if (_customNerveTrigger == _user.nerve.maximum) {
-            newSecondsToGo = _user.nerve.fulltime;
+          int? newSecondsToGo = 0;
+          if (_customNerveTrigger == _user!.nerve!.maximum) {
+            newSecondsToGo = _user!.nerve!.fulltime;
           } else {
-            var nerveToGo = _customNerveTrigger - _user.nerve.current;
-            var nerveTicksToGo = nerveToGo / _user.nerve.increment;
+            final nerveToGo = _customNerveTrigger! - _user!.nerve!.current!;
+            final nerveTicksToGo = nerveToGo / _user!.nerve!.increment!;
             if (nerveTicksToGo > 1) {
-              var consumedTick = _user.nerve.interval - _user.nerve.ticktime;
-              newSecondsToGo = (nerveTicksToGo * _user.nerve.interval - consumedTick).floor();
+              final consumedTick = _user!.nerve!.interval! - _user!.nerve!.ticktime!;
+              newSecondsToGo = (nerveTicksToGo * _user!.nerve!.interval! - consumedTick).floor();
             } else if (nerveTicksToGo > 0 && nerveTicksToGo <= 1) {
-              newSecondsToGo = _user.nerve.ticktime;
+              newSecondsToGo = _user!.nerve!.ticktime;
             }
           }
 
-          var newCalculation = DateTime.now().add(Duration(seconds: newSecondsToGo)).millisecondsSinceEpoch / 1000;
+          final newCalculation = DateTime.now().add(Duration(seconds: newSecondsToGo!)).millisecondsSinceEpoch / 1000;
 
-          var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+          final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.nerve);
             _nerveNotificationTime = DateTime.now().add(Duration(seconds: newSecondsToGo));
             _scheduleNotification(ProfileNotification.nerve);
             triggered = true;
             updatedTypes.add('nerve');
-            var nerveCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
+            final nerveCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
             updatedTimes.add(formatter.format(nerveCurrentSchedule));
           }
         }
         // LIFE
-      } else if (notification.payload.contains('life')) {
-        var newCalculation = DateTime.now().add(Duration(seconds: _user.life.fulltime)).millisecondsSinceEpoch / 1000;
-        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+      } else if (notification.payload!.contains('life')) {
+        final newCalculation =
+            DateTime.now().add(Duration(seconds: _user!.life!.fulltime!)).millisecondsSinceEpoch / 1000;
+        final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.life);
           _scheduleNotification(ProfileNotification.life);
           triggered = true;
           updatedTypes.add('life');
-          var lifeCurrentSchedule = DateTime.now().add(Duration(seconds: _user.life.fulltime));
+          final lifeCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.life!.fulltime!));
           updatedTimes.add(formatter.format(lifeCurrentSchedule));
         }
         // DRUGS
-      } else if (notification.payload.contains('drugs')) {
-        var newCalculation = DateTime.now().add(Duration(seconds: _user.cooldowns.drug)).millisecondsSinceEpoch / 1000;
-        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+      } else if (notification.payload!.contains('drugs')) {
+        final newCalculation =
+            DateTime.now().add(Duration(seconds: _user!.cooldowns!.drug!)).millisecondsSinceEpoch / 1000;
+        final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.drugs);
           _scheduleNotification(ProfileNotification.drugs);
           triggered = true;
           updatedTypes.add('drugs');
-          var drugsCurrentSchedule = DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+          final drugsCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.cooldowns!.drug!));
           updatedTimes.add(formatter.format(drugsCurrentSchedule));
         }
         // MEDICAL
-      } else if (notification.payload.contains('medical')) {
-        var newCalculation =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.medical)).millisecondsSinceEpoch / 1000;
-        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+      } else if (notification.payload!.contains('medical')) {
+        final newCalculation =
+            DateTime.now().add(Duration(seconds: _user!.cooldowns!.medical!)).millisecondsSinceEpoch / 1000;
+        final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.medical);
           _scheduleNotification(ProfileNotification.medical);
           triggered = true;
           updatedTypes.add('medical');
-          var medicalCurrentSchedule = DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
+          final medicalCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.cooldowns!.medical!));
           updatedTimes.add(formatter.format(medicalCurrentSchedule));
         }
         // BOOSTER
-      } else if (notification.payload.contains('booster')) {
-        var newCalculation =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.booster)).millisecondsSinceEpoch / 1000;
-        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+      } else if (notification.payload!.contains('booster')) {
+        final newCalculation =
+            DateTime.now().add(Duration(seconds: _user!.cooldowns!.booster!)).millisecondsSinceEpoch / 1000;
+        final compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.booster);
           _scheduleNotification(ProfileNotification.booster);
           triggered = true;
           updatedTypes.add('booster');
-          var boosterCurrentSchedule = DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
+          final boosterCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.cooldowns!.booster!));
           updatedTimes.add(formatter.format(boosterCurrentSchedule));
         }
       }
@@ -5738,9 +5742,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         thoseUpdated += updatedTypes[i];
         thoseUpdated += ' (at ${updatedTimes[i]}';
         if (updatedTypes[i] == 'energy') {
-          thoseUpdated += ' for E${_customEnergyTrigger.floor()})';
+          thoseUpdated += ' for E${_customEnergyTrigger!})';
         } else if (updatedTypes[i] == 'nerve') {
-          thoseUpdated += ' for N${_customNerveTrigger.floor()})';
+          thoseUpdated += ' for N${_customNerveTrigger!})';
         } else {
           thoseUpdated += ')';
         }
@@ -5751,33 +5755,33 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       BotToast.showText(
         text: 'Some notifications have been updated: $thoseUpdated',
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.grey[700],
-        duration: Duration(seconds: 5),
-        contentPadding: EdgeInsets.all(10),
+        contentColor: Colors.grey[700]!,
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
       );
     }
   }
 
-  void _shareMisc({String shareType}) {
-    final decimalFormat = new NumberFormat("#,##0", "en_US");
-    var playerString = "${_user.name} [${_user.playerId}]";
+  void _shareMisc({String? shareType}) {
+    final decimalFormat = NumberFormat("#,##0", "en_US");
+    var playerString = "${_user!.name} [${_user!.playerId}]";
 
     String getBattle() {
       var battleString = "\n\nBATTLE STATS";
-      battleString += '\nStrength: ${decimalFormat.format(_miscModel.strength)} '
-          '(${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)';
-      battleString += '\nDefense: ${decimalFormat.format(_miscModel.defense)} '
-          '(${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)';
-      battleString += '\nSpeed: ${decimalFormat.format(_miscModel.speed)} '
-          '(${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)';
-      battleString += '\nDexterity: ${decimalFormat.format(_miscModel.dexterity)} '
-          '(${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)';
+      battleString += '\nStrength: ${decimalFormat.format(_miscModel!.strength)} '
+          '(${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)';
+      battleString += '\nDefense: ${decimalFormat.format(_miscModel!.defense)} '
+          '(${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)';
+      battleString += '\nSpeed: ${decimalFormat.format(_miscModel!.speed)} '
+          '(${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)';
+      battleString += '\nDexterity: ${decimalFormat.format(_miscModel!.dexterity)} '
+          '(${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)';
       battleString += '\n-------';
-      battleString += '\nTotal: ${decimalFormat.format(_miscModel.total)}';
+      battleString += '\nTotal: ${decimalFormat.format(_miscModel!.total)}';
       return battleString;
     }
 
@@ -5794,25 +5798,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     String getWork() {
       var workString = "\n\nWORK STATS";
-      workString += '\nManual labor: ${decimalFormat.format(_miscModel.manualLabor)}';
-      workString += '\nIntelligence: ${decimalFormat.format(_miscModel.intelligence)}';
-      workString += '\nEndurance: ${decimalFormat.format(_miscModel.endurance)}';
+      workString += '\nManual labor: ${decimalFormat.format(_miscModel!.manualLabor)}';
+      workString += '\nIntelligence: ${decimalFormat.format(_miscModel!.intelligence)}';
+      workString += '\nEndurance: ${decimalFormat.format(_miscModel!.endurance)}';
       return workString;
     }
 
     String getSkills() {
       var skillExist = false;
       var skillsString = "\n\nSKILLS";
-      if (_miscModel.hunting != null) {
-        skillsString += '\nRacing: ${_miscModel.racing}';
+      if (_miscModel!.hunting != null) {
+        skillsString += '\nRacing: ${_miscModel!.racing}';
         skillExist = true;
       }
-      if (_miscModel.reviving != null) {
-        skillsString += '\nReviving: ${_miscModel.reviving}';
+      if (_miscModel!.reviving != null) {
+        skillsString += '\nReviving: ${_miscModel!.reviving}';
         skillExist = true;
       }
-      if (_miscModel.hunting != null) {
-        skillsString += '\nHunting: ${_miscModel.hunting}';
+      if (_miscModel!.hunting != null) {
+        skillsString += '\nHunting: ${_miscModel!.hunting}';
         skillExist = true;
       }
       if (!skillExist) skillsString = "";
@@ -5821,29 +5825,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     switch (shareType) {
       case "battle":
-        var battle = playerString += getBattle();
+        final battle = playerString += getBattle();
         Share.share(battle);
-        //print(battle);
-        break;
+      //print(battle);
       case "effective":
-        var effective = playerString += getEffective();
+        final effective = playerString += getEffective();
         Share.share(effective);
-        //print(effective);
-        break;
+      //print(effective);
       case "work":
-        var work = playerString += getWork();
+        final work = playerString += getWork();
         Share.share(work);
-        //print(work);
-        break;
+      //print(work);
       case "skills":
-        var skills = playerString += getSkills();
+        final skills = playerString += getSkills();
         Share.share(skills);
-        //print(skills);
-        break;
+      //print(skills);
       default:
         var all = playerString;
-        all += "\n\nCash: ${decimalFormat.format(_user.networth["wallet"])}";
-        all += "\nPoints: ${_miscModel.points}";
+        all += "\n\nCash: ${decimalFormat.format(_user!.networth!["wallet"])}";
+        all += "\nPoints: ${_miscModel!.points}";
         all += "\n$_sharedJobPoints";
         all += getBattle();
         all += getEffective();
@@ -5859,7 +5859,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //SharedPreferencesModel().setProfileSectionOrder([]);
 
     // SECTION ORDER
-    var savedUserOrder = await Prefs().getProfileSectionOrder();
+    final savedUserOrder = await Prefs().getProfileSectionOrder();
     // Ensures that new sections are added as high as possible
     bool sectionsModified = false;
     for (var i = 0; i < _originalSectionOrder.length; i++) {
@@ -5873,10 +5873,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     // TRAVEL
-    var travel = await Prefs().getTravelNotificationType();
-    var travelNotificationAhead = await Prefs().getTravelNotificationAhead();
-    var travelAlarmAhead = await Prefs().getTravelAlarmAhead();
-    var travelTimerAhead = await Prefs().getTravelTimerAhead();
+    final travel = await Prefs().getTravelNotificationType();
+    final travelNotificationAhead = await Prefs().getTravelNotificationAhead();
+    final travelAlarmAhead = await Prefs().getTravelAlarmAhead();
+    final travelTimerAhead = await Prefs().getTravelTimerAhead();
 
     if (travelNotificationAhead == '0') {
       _travelNotificationAhead = 20;
@@ -5917,30 +5917,30 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
     // TRAVEL ENDS
 
-    var energy = await Prefs().getEnergyNotificationType();
+    final energy = await Prefs().getEnergyNotificationType();
     _customEnergyTrigger = await Prefs().getEnergyNotificationValue();
     _customEnergyMaxOverride = await Prefs().getEnergyPercentageOverride();
 
-    var nerve = await Prefs().getNerveNotificationType();
+    final nerve = await Prefs().getNerveNotificationType();
     _customNerveTrigger = await Prefs().getNerveNotificationValue();
     _customNerveMaxOverride = await Prefs().getNervePercentageOverride();
 
-    var life = await Prefs().getLifeNotificationType();
-    var drugs = await Prefs().getDrugNotificationType();
-    var medical = await Prefs().getMedicalNotificationType();
-    var booster = await Prefs().getBoosterNotificationType();
+    final life = await Prefs().getLifeNotificationType();
+    final drugs = await Prefs().getDrugNotificationType();
+    final medical = await Prefs().getMedicalNotificationType();
+    final booster = await Prefs().getBoosterNotificationType();
 
-    var hospital = await Prefs().getHospitalNotificationType();
+    final hospital = await Prefs().getHospitalNotificationType();
     _hospitalNotificationAhead = await Prefs().getHospitalNotificationAhead();
     _hospitalAlarmAhead = await Prefs().getHospitalAlarmAhead();
     _hospitalTimerAhead = await Prefs().getHospitalTimerAhead();
 
-    var jail = await Prefs().getJailNotificationType();
+    final jail = await Prefs().getJailNotificationType();
     _jailNotificationAhead = await Prefs().getJailNotificationAhead();
     _jailAlarmAhead = await Prefs().getJailAlarmAhead();
     _jailTimerAhead = await Prefs().getJailTimerAhead();
 
-    var rankedWar = await Prefs().getRankedWarNotificationType();
+    final rankedWar = await Prefs().getRankedWarNotificationType();
     _rankedWarNotificationAhead = await Prefs().getRankedWarNotificationAhead();
     _rankedWarAlarmAhead = await Prefs().getRankedWarAlarmAhead();
     _rankedWarTimerAhead = await Prefs().getRankedWarTimerAhead();
@@ -5958,12 +5958,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _showHeaderIcons = await Prefs().getShowHeaderIcons();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
 
-    var expandEvents = await Prefs().getExpandEvents();
-    var eventsNumber = await Prefs().getEventsShowNumber();
-    var expandMessages = await Prefs().getExpandMessages();
-    var messagesNumber = await Prefs().getMessagesShowNumber();
-    var expandBasicInfo = await Prefs().getExpandBasicInfo();
-    var expandNetworth = await Prefs().getExpandNetworth();
+    final expandEvents = await Prefs().getExpandEvents();
+    final eventsNumber = await Prefs().getEventsShowNumber();
+    final expandMessages = await Prefs().getExpandMessages();
+    final messagesNumber = await Prefs().getMessagesShowNumber();
+    final expandBasicInfo = await Prefs().getExpandBasicInfo();
+    final expandNetworth = await Prefs().getExpandNetworth();
 
     setState(() {
       _userSectionOrder = savedUserOrder;
@@ -6088,65 +6088,55 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _setAlarm(ProfileNotification profileNotification) {
-    int hour;
-    int minute;
-    String message;
+    int? hour;
+    int? minute;
+    String? message;
 
     switch (profileNotification) {
       case ProfileNotification.travel:
-        var alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
+        final alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Travel';
-        break;
       case ProfileNotification.energy:
-        hour = _energyNotificationTime.hour;
-        minute = _energyNotificationTime.minute;
+        hour = _energyNotificationTime!.hour;
+        minute = _energyNotificationTime!.minute;
         message = 'Torn PDA Energy';
-        break;
       case ProfileNotification.nerve:
-        hour = _nerveNotificationTime.hour;
-        minute = _nerveNotificationTime.minute;
+        hour = _nerveNotificationTime!.hour;
+        minute = _nerveNotificationTime!.minute;
         message = 'Torn PDA Nerve';
-        break;
       case ProfileNotification.life:
-        hour = _lifeNotificationTime.hour;
-        minute = _lifeNotificationTime.minute;
+        hour = _lifeNotificationTime!.hour;
+        minute = _lifeNotificationTime!.minute;
         message = 'Torn PDA Life';
-        break;
       case ProfileNotification.drugs:
-        hour = _drugsNotificationTime.hour;
-        minute = _drugsNotificationTime.minute;
+        hour = _drugsNotificationTime!.hour;
+        minute = _drugsNotificationTime!.minute;
         message = 'Torn PDA Drugs';
-        break;
       case ProfileNotification.medical:
-        hour = _medicalNotificationTime.hour;
-        minute = _medicalNotificationTime.minute;
+        hour = _medicalNotificationTime!.hour;
+        minute = _medicalNotificationTime!.minute;
         message = 'Torn PDA Medical';
-        break;
       case ProfileNotification.booster:
-        hour = _boosterNotificationTime.hour;
-        minute = _boosterNotificationTime.minute;
+        hour = _boosterNotificationTime!.hour;
+        minute = _boosterNotificationTime!.minute;
         message = 'Torn PDA Booster';
-        break;
       case ProfileNotification.hospital:
-        var alarmTime = _hospitalReleaseTime.add(Duration(minutes: -_hospitalAlarmAhead));
+        final alarmTime = _hospitalReleaseTime.add(Duration(minutes: -_hospitalAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Hospital';
-        break;
       case ProfileNotification.jail:
-        var alarmTime = _jailReleaseTime.add(Duration(minutes: -_jailAlarmAhead));
+        final alarmTime = _jailReleaseTime.add(Duration(minutes: -_jailAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Jail';
-        break;
       case ProfileNotification.rankedWar:
-        var alarmTime = _rankedWarTime.add(Duration(minutes: -_rankedWarAlarmAhead));
+        final alarmTime = _rankedWarTime.add(Duration(minutes: -_rankedWarAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA War';
-        break;
     }
 
     // Travel sound and vibration is configured from the travel section
@@ -6180,7 +6170,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
-    AndroidIntent intent = AndroidIntent(
+    final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.HOUR': hour,
@@ -6195,53 +6185,43 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _setTimer(ProfileNotification profileNotification) {
-    int totalSeconds;
-    String message;
+    int? totalSeconds;
+    String? message;
 
     switch (profileNotification) {
       case ProfileNotification.travel:
         totalSeconds = _travelArrivalTime.difference(DateTime.now()).inSeconds - _travelTimerAhead;
         message = 'Torn PDA Travel';
-        break;
       case ProfileNotification.energy:
-        totalSeconds = _energyNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _energyNotificationTime!.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Energy';
-        break;
       case ProfileNotification.nerve:
-        totalSeconds = _nerveNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _nerveNotificationTime!.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Nerve';
-        break;
       case ProfileNotification.life:
-        totalSeconds = _lifeNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _lifeNotificationTime!.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Life';
-        break;
       case ProfileNotification.drugs:
-        totalSeconds = _drugsNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _drugsNotificationTime!.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Drugs';
-        break;
       case ProfileNotification.medical:
-        totalSeconds = _medicalNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _medicalNotificationTime!.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Medical';
-        break;
       case ProfileNotification.booster:
-        totalSeconds = _boosterNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _boosterNotificationTime!.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Booster';
-        break;
       case ProfileNotification.hospital:
         totalSeconds = _hospitalReleaseTime.difference(DateTime.now()).inSeconds - _hospitalTimerAhead;
         message = 'Torn PDA Hospital';
-        break;
       case ProfileNotification.jail:
         totalSeconds = _jailReleaseTime.difference(DateTime.now()).inSeconds - _jailTimerAhead;
         message = 'Torn PDA Jail';
-        break;
       case ProfileNotification.rankedWar:
         totalSeconds = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarTimerAhead;
         message = 'Torn PDA War';
-        break;
     }
 
-    AndroidIntent intent = AndroidIntent(
+    final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.LENGTH': totalSeconds,
@@ -6252,7 +6232,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     intent.launch();
   }
 
-  void _callBackFromNotificationOptions() async {
+  Future<void> _callBackFromNotificationOptions() async {
     await _loadPreferences();
     _checkIfNotificationsAreCurrent();
   }
@@ -6260,7 +6240,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _openWalletDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -6273,132 +6252,128 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                      padding: EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: EdgeInsets.only(top: 15),
-                      decoration: new BoxDecoration(
-                        color: _themeProvider.secondBackground,
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: const Offset(0.0, 10.0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Image.asset(
-                                    'images/icons/home/vault.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  SizedBox(width: 15),
-                                  Text("Personal vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: true);
-                              },
-                              onLongPress: () async {
-                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: false);
-                              },
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider!.secondBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/home/vault.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Personal vault"),
+                              ],
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Image.asset(
-                                    'images/icons/faction.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  SizedBox(width: 15),
-                                  Text("Faction vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: true);
-                              },
-                              onLongPress: () async {
-                                var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: false);
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Image.asset(
-                                    'images/icons/home/job.png',
-                                    width: 15,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  SizedBox(width: 15),
-                                  Text("Company vault"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                var url = 'https://www.torn.com/companies.php#/option=funds';
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: true);
-                              },
-                              onLongPress: () async {
-                                var url = "https://www.torn.com/companies.php#/option=funds";
-                                Navigator.of(context).pop();
-                                _launchBrowser(url: url, shortTap: false);
-                              },
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          TextButton(
-                            child: Text("Cancel"),
-                            onPressed: () {
+                            onPressed: () async {
+                              const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                               Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: true);
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: false);
                             },
                           ),
-                        ],
-                      )),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/faction.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Faction vault"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: true);
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: false);
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/home/job.png',
+                                  width: 15,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Company vault"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url = 'https://www.torn.com/companies.php#/option=funds';
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: true);
+                            },
+                            onLongPress: () async {
+                              const url = "https://www.torn.com/companies.php#/option=funds";
+                              Navigator.of(context).pop();
+                              _launchBrowser(url: url, shortTap: false);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextButton(
+                          child: const Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: 16,
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(
@@ -6420,7 +6395,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _showLifeBarDialog(BuildContext _, {bool longPress = false}) {
     return showDialog<void>(
       context: _,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -6433,100 +6407,97 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                      padding: EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: EdgeInsets.only(top: 15),
-                      decoration: new BoxDecoration(
-                        color: _themeProvider.secondBackground,
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: const Offset(0.0, 10.0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Icon(Icons.person),
-                                  SizedBox(width: 15),
-                                  Text("Inventory"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                var url = "https://www.torn.com/item.php#medical-items";
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: false);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: true);
-                                }
-                              },
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider!.secondBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: const Row(
+                              children: [
+                                Icon(Icons.person),
+                                SizedBox(width: 15),
+                                Text("Inventory"),
+                              ],
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: ElevatedButton(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Image.asset(
-                                    'images/icons/faction.png',
-                                    width: 25,
-                                    height: 15,
-                                    color: Colors.white70,
-                                  ),
-                                  SizedBox(width: 15),
-                                  Text("Faction"),
-                                ],
-                              ),
-                              onPressed: () async {
-                                var url =
-                                    'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: false);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, shortTap: true);
-                                }
-                              },
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          TextButton(
-                            child: Text("Cancel"),
-                            onPressed: () {
-                              Navigator.of(context).pop();
+                            onPressed: () async {
+                              const url = "https://www.torn.com/item.php#medical-items";
+                              if (longPress) {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: false);
+                              } else {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: true);
+                              }
                             },
                           ),
-                        ],
-                      )),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: ElevatedButton(
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'images/icons/faction.png',
+                                  width: 25,
+                                  height: 15,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 15),
+                                const Text("Faction"),
+                              ],
+                            ),
+                            onPressed: () async {
+                              const url =
+                                  'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
+                              if (longPress) {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: false);
+                              } else {
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, shortTap: true);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextButton(
+                          child: const Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: 16,
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(
@@ -6547,37 +6518,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _jobPoints() {
     try {
-      int currentPoints = 0;
+      int? currentPoints = 0;
       bool unemployed = false;
 
-      if (_user.job.companyId == 0) {
-        if (_user.job.job == "None") {
+      if (_user!.job!.companyId == 0) {
+        if (_user!.job!.job == "None") {
           unemployed = true;
         }
 
-        switch (_user.job.job.toLowerCase()) {
+        switch (_user!.job!.job!.toLowerCase()) {
           case "army":
-            currentPoints = _miscModel.jobpoints.jobs.army;
-            break;
+            currentPoints = _miscModel!.jobpoints!.jobs!.army;
           case "medical":
-            currentPoints = _miscModel.jobpoints.jobs.medical;
-            break;
+            currentPoints = _miscModel!.jobpoints!.jobs!.medical;
           case "casino":
-            currentPoints = _miscModel.jobpoints.jobs.casino;
-            break;
+            currentPoints = _miscModel!.jobpoints!.jobs!.casino;
           case "education":
-            currentPoints = _miscModel.jobpoints.jobs.education;
-            break;
+            currentPoints = _miscModel!.jobpoints!.jobs!.education;
           case "law":
-            currentPoints = _miscModel.jobpoints.jobs.law;
-            break;
+            currentPoints = _miscModel!.jobpoints!.jobs!.law;
           case "grocer":
-            currentPoints = _miscModel.jobpoints.jobs.grocer;
-            break;
+            currentPoints = _miscModel!.jobpoints!.jobs!.grocer;
         }
       } else {
-        _miscModel.jobpoints.companies.forEach((type, details) {
-          if (type == _user.job.companyType.toString()) {
+        _miscModel!.jobpoints!.companies!.forEach((type, details) {
+          if (type == _user!.job!.companyType.toString()) {
             currentPoints = details.jobpoints;
           }
         });
@@ -6605,9 +6570,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               size: 23,
             ),
           ),
-          SizedBox(width: 6),
+          const SizedBox(width: 6),
           SelectableText(headerString),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           GestureDetector(
             onTap: () async {
               return showDialog(
@@ -6616,16 +6581,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 barrierDismissible: true,
                 builder: (BuildContext context) {
                   return JobPointsDialog(
-                    currentType: _user.job.companyType,
+                    currentType: _user!.job!.companyType,
                     currentPoints: currentPoints,
-                    jobpoints: _miscModel.jobpoints,
-                    job: _user.job,
+                    jobpoints: _miscModel!.jobpoints,
+                    job: _user!.job,
                     unemployed: unemployed,
                   );
                 },
               );
             },
-            child: Icon(
+            child: const Icon(
               Icons.info_outline,
               size: 20,
             ),
@@ -6633,17 +6598,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       );
     } catch (e) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   Widget _companyAddictionWidget() {
     try {
-      if (_companyAddiction == null) return SizedBox.shrink();
+      if (_companyAddiction == null) return const SizedBox.shrink();
 
-      Color c = _themeProvider.mainText;
-      if (_companyAddiction < -1) c = Colors.orange[700];
-      if (_companyAddiction < -12) c = Colors.red[700];
+      Color? c = _themeProvider!.mainText;
+      if (_companyAddiction! < -1) c = Colors.orange[700];
+      if (_companyAddiction! < -12) c = Colors.red[700];
 
       return Padding(
         padding: const EdgeInsets.only(left: 2),
@@ -6654,8 +6619,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               height: 18,
               color: Colors.brown[300],
             ),
-            SizedBox(width: 9),
-            Text("Company Addiction: "),
+            const SizedBox(width: 9),
+            const Text("Company Addiction: "),
             Text(
               "$_companyAddiction",
               style: TextStyle(color: c),
@@ -6664,51 +6629,39 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
     } catch (e) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   Widget _flagImage() {
     String flagFile;
-    switch (_user.travel.destination) {
+    switch (_user!.travel!.destination) {
       case "Torn":
         flagFile = 'images/flags/travel/torn.png';
-        break;
       case "Argentina":
         flagFile = 'images/flags/stock/argentina.png';
-        break;
       case "Canada":
         flagFile = 'images/flags/stock/canada.png';
-        break;
       case "Cayman Islands":
         flagFile = 'images/flags/stock/cayman.png';
-        break;
       case "China":
         flagFile = 'images/flags/stock/china.png';
-        break;
       case "Hawaii":
         flagFile = 'images/flags/stock/hawaii.png';
-        break;
       case "Japan":
         flagFile = 'images/flags/stock/japan.png';
-        break;
       case "Mexico":
         flagFile = 'images/flags/stock/mexico.png';
-        break;
       case "South Africa":
         flagFile = 'images/flags/stock/south-africa.png';
-        break;
       case "Switzerland":
         flagFile = 'images/flags/stock/switzerland.png';
-        break;
       case "UAE":
         flagFile = 'images/flags/stock/uae.png';
-        break;
       case "United Kingdom":
         flagFile = 'images/flags/stock/uk.png';
-        break;
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
 
     return Image(
@@ -6719,75 +6672,64 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   String _flagBallAsset() {
-    switch (_user.travel.destination) {
+    switch (_user!.travel!.destination) {
       case "Torn":
-        if (_user.status.description.contains("to Torn from Argentina"))
+        if (_user!.status!.description!.contains("to Torn from Argentina")) {
           return 'images/flags/ball/ball_argentina.png';
-        else if (_user.status.description.contains("to Torn from Canada"))
+        } else if (_user!.status!.description!.contains("to Torn from Canada")) {
           return 'images/flags/ball/ball_canada.png';
-        else if (_user.status.description.contains("to Torn from Cayman Islands"))
+        } else if (_user!.status!.description!.contains("to Torn from Cayman Islands")) {
           return 'images/flags/ball/ball_cayman.png';
-        else if (_user.status.description.contains("to Torn from China"))
+        } else if (_user!.status!.description!.contains("to Torn from China")) {
           return 'images/flags/ball/ball_china.png';
-        else if (_user.status.description.contains("to Torn from Hawaii"))
+        } else if (_user!.status!.description!.contains("to Torn from Hawaii")) {
           return 'images/flags/ball/ball_hawaii.png';
-        else if (_user.status.description.contains("to Torn from Japan"))
+        } else if (_user!.status!.description!.contains("to Torn from Japan")) {
           return 'images/flags/ball/ball_japan.png';
-        else if (_user.status.description.contains("to Torn from Mexico"))
+        } else if (_user!.status!.description!.contains("to Torn from Mexico")) {
           return 'images/flags/ball/ball_mexico.png';
-        else if (_user.status.description.contains("to Torn from South Africa"))
+        } else if (_user!.status!.description!.contains("to Torn from South Africa")) {
           return 'images/flags/ball/ball_south-africa.png';
-        else if (_user.status.description.contains("to Torn from Switzerland"))
+        } else if (_user!.status!.description!.contains("to Torn from Switzerland")) {
           return 'images/flags/ball/ball_switzerland.png';
-        else if (_user.status.description.contains("to Torn from UAE"))
+        } else if (_user!.status!.description!.contains("to Torn from UAE")) {
           return 'images/flags/ball/ball_uae.png';
-        else if (_user.status.description.contains("to Torn from United Kingdom"))
+        } else if (_user!.status!.description!.contains("to Torn from United Kingdom")) {
           return 'images/flags/ball/ball_uk.png';
-        else
+        } else {
           return '';
-        break;
+        }
       case "Argentina":
         return 'images/flags/ball/ball_argentina.png';
-        break;
       case "Canada":
         return 'images/flags/ball/ball_canada.png';
-        break;
       case "Cayman Islands":
         return 'images/flags/ball/ball_cayman.png';
-        break;
       case "China":
         return 'images/flags/ball/ball_china.png';
-        break;
       case "Hawaii":
         return 'images/flags/ball/ball_hawaii.png';
-        break;
       case "Japan":
         return 'images/flags/ball/ball_japan.png';
-        break;
       case "Mexico":
         return 'images/flags/ball/ball_mexico.png';
-        break;
       case "South Africa":
         return 'images/flags/ball/ball_south-africa.png';
-        break;
       case "Switzerland":
         return 'images/flags/ball/ball_switzerland.png';
-        break;
       case "UAE":
         return 'images/flags/ball/ball_uae.png';
-        break;
       case "United Kingdom":
         return 'images/flags/ball/ball_uk.png';
-        break;
     }
     return '';
   }
 
   List<Widget> _returnSections() {
-    var sectionSort = <Widget>[];
+    final sectionSort = <Widget>[];
 
-    for (var section in _userSectionOrder) {
-      if (section == "Shortcuts" && _settingsProvider.shortcutsEnabledProfile) {
+    for (final section in _userSectionOrder!) {
+      if (section == "Shortcuts" && _settingsProvider!.shortcutsEnabledProfile) {
         sectionSort.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
@@ -6859,13 +6801,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return sectionSort;
   }
 
-  void _checkProperties(OwnProfileMisc miscApiResponse) async {
+  Future<void> _checkProperties(OwnProfileMisc miscApiResponse) async {
     // Get the properties we are renting into a map
-    var thisRented = Map<String, Map<String, String>>();
-    var propertyModel = miscApiResponse.properties;
+    final thisRented = <String, Map<String, String>>{};
+    final propertyModel = miscApiResponse.properties!;
 
-    var keys = [];
-    var details = [];
+    final keys = [];
+    final details = [];
     propertyModel.forEach((key, value) {
       if (value.status == "Currently being rented") {
         keys.add(key);
@@ -6874,12 +6816,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     int number = 0;
-    await Future.forEach(keys, (element) async {
-      var rentDetails = await Get.find<ApiCallerController>().getProperty(propertyId: element.toString());
+    await Future.forEach(keys, (dynamic element) async {
+      final rentDetails = await Get.find<ApiCallerController>().getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
-        var timeLeft = rentDetails.property.rented.daysLeft;
-        var daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
+        final timeLeft = rentDetails.property!.rented!.daysLeft!;
+        final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
         // Was 7, now shows always
         if (timeLeft > 0) {
           thisRented.addAll({
@@ -6895,29 +6837,30 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     // Convert to a widget
-    var propertyLines = <Widget>[];
+    final propertyLines = <Widget>[];
     var currentItem = 0;
     thisRented.forEach((key, value) {
-      int numberDays = int.parse(value["time"]);
-      Widget prop = Row(
+      final int numberDays = int.parse(value["time"]!);
+      final Widget prop = Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
             child: Row(
               children: [
-                Icon(Icons.house_outlined),
-                SizedBox(width: 10),
+                const Icon(Icons.house_outlined),
+                const SizedBox(width: 10),
                 Flexible(
-                    child: Text(
-                  value["text"],
-                  style: TextStyle(
-                    color: numberDays <= 5
-                        ? numberDays <= 2
-                            ? Colors.red[500]
-                            : Colors.orange[800]
-                        : _themeProvider.mainText,
+                  child: Text(
+                    value["text"]!,
+                    style: TextStyle(
+                      color: numberDays <= 5
+                          ? numberDays <= 2
+                              ? Colors.red[500]
+                              : Colors.orange[800]
+                          : _themeProvider!.mainText,
+                    ),
                   ),
-                )),
+                ),
               ],
             ),
           ),
@@ -6925,14 +6868,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: false);
+                url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize',
+                shortTap: false,
+              );
             },
             onTap: () {
               _launchBrowser(
-                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', shortTap: true);
+                url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize',
+                shortTap: true,
+              );
             },
-            child: Padding(
-              padding: const EdgeInsets.only(left: 5),
+            child: const Padding(
+              padding: EdgeInsets.only(left: 5),
               child: Icon(MdiIcons.openInApp, size: 18),
             ),
           ),
@@ -6944,7 +6891,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // Add some space if we have more properties
       if (currentItem + 1 < thisRented.length) {
-        propertyLines.add(SizedBox(height: 10));
+        propertyLines.add(const SizedBox(height: 10));
       }
       currentItem++;
     });
@@ -6965,6 +6912,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _ocSimpleStringFinal = "";
     });
     // Afterwards, ensure that it does not show again if it's the same one
-    _settingsProvider.changeOCrimeDisregarded = _ocTime.millisecondsSinceEpoch;
+    _settingsProvider!.changeOCrimeDisregarded = _ocTime.millisecondsSinceEpoch;
   }
 }

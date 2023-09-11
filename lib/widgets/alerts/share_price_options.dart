@@ -6,17 +6,17 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class SharePriceOptions extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final SettingsProvider settingsProvider;
+  final ThemeProvider? themeProvider;
+  final SettingsProvider? settingsProvider;
   final Function stockMarketInMenuCallback;
 
-  SharePriceOptions(this.themeProvider, this.settingsProvider, this.stockMarketInMenuCallback);
+  const SharePriceOptions(this.themeProvider, this.settingsProvider, this.stockMarketInMenuCallback);
 
   @override
-  _SharePriceOptionsState createState() => _SharePriceOptionsState();
+  SharePriceOptionsState createState() => SharePriceOptionsState();
 }
 
-class _SharePriceOptionsState extends State<SharePriceOptions> {
+class SharePriceOptionsState extends State<SharePriceOptions> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -30,47 +30,45 @@ class _SharePriceOptionsState extends State<SharePriceOptions> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
-                  color: widget.themeProvider.secondBackground,
-                  shape: BoxShape.rectangle,
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
+                  color: widget.themeProvider!.secondBackground,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Text(
+                      const Text(
                         'OPTIONS',
                         style: TextStyle(
                           fontSize: 12,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Row(
                         children: [
-                          Flexible(
+                          const Flexible(
                             child: Text(
                               "Add stock market to main app menu",
                               style: TextStyle(fontSize: 12),
                             ),
                           ),
                           Switch(
-                            value: widget.settingsProvider.stockExchangeInMenu,
+                            value: widget.settingsProvider!.stockExchangeInMenu,
                             onChanged: (enabled) {
                               setState(() {
                                 widget.stockMarketInMenuCallback(enabled);
@@ -79,9 +77,9 @@ class _SharePriceOptionsState extends State<SharePriceOptions> {
                           ),
                         ],
                       ),
-                      Divider(),
+                      const Divider(),
                       TextButton(
-                        child: Text(
+                        child: const Text(
                           "Close",
                           style: TextStyle(
                             fontSize: 13,
@@ -101,11 +99,11 @@ class _SharePriceOptionsState extends State<SharePriceOptions> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.secondBackground,
+                backgroundColor: widget.themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: widget.themeProvider.secondBackground,
+                  backgroundColor: widget.themeProvider!.secondBackground,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 34,
                     width: 34,
                     child: Icon(Icons.settings),

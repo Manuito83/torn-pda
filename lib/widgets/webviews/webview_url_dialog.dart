@@ -3,28 +3,26 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// Package imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
-
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -34,35 +32,36 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewUrlDialog extends StatefulWidget {
-  final Function callFindInPage;
-  final String title;
+  final Function? callFindInPage;
+  final String? title;
   final String url;
-  final InAppWebViewController inAppWebview;
-  final WebViewController stockWebView;
-  final UserDetailsProvider userProvider;
+  final InAppWebViewController? inAppWebview;
+  final WebViewController? stockWebView;
+  final UserDetailsProvider? userProvider;
 
-  WebviewUrlDialog(
-      {this.callFindInPage,
-      @required this.title,
-      @required this.url,
-      this.inAppWebview,
-      this.stockWebView,
-      @required this.userProvider});
+  const WebviewUrlDialog({
+    this.callFindInPage,
+    required this.title,
+    required this.url,
+    this.inAppWebview,
+    this.stockWebView,
+    required this.userProvider,
+  });
 
   @override
-  _WebviewUrlDialogState createState() => _WebviewUrlDialogState();
+  WebviewUrlDialogState createState() => WebviewUrlDialogState();
 }
 
-class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
-  ThemeProvider _themeProvider;
-  ShortcutsProvider _shortcutsProvider;
-  SettingsProvider _settingsProvider;
+class WebviewUrlDialogState extends State<WebviewUrlDialog> {
+  ThemeProvider? _themeProvider;
+  late ShortcutsProvider _shortcutsProvider;
+  late SettingsProvider _settingsProvider;
 
-  final _customURLController = new TextEditingController();
-  var _customURLKey = GlobalKey<FormState>();
+  final _customURLController = TextEditingController();
+  final _customURLKey = GlobalKey<FormState>();
 
-  String _currentUrl;
-  String _pageTitle;
+  String? _currentUrl;
+  String? _pageTitle;
 
   @override
   void initState() {
@@ -89,22 +88,21 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
-                  color: _themeProvider.secondBackground,
-                  shape: BoxShape.rectangle,
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
+                  color: _themeProvider!.secondBackground,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
@@ -114,21 +112,20 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     Flexible(
                       child: Text(
                         "OPTIONS",
-                        style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
-                        widget.userProvider.basic.faction.factionId != 0)
+                        widget.userProvider!.basic!.faction!.factionId != 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            primary: Colors.red,
-                            onPrimary: Colors.white,
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
+                          child: const Row(
                             children: [
                               Icon(MdiIcons.fencing, size: 20),
                               SizedBox(width: 5),
@@ -143,32 +140,30 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           ),
                           onPressed: () async {
                             BotToast.showText(
-                              onlyOne: true,
                               text: "Requesting assistance from faction members!",
-                              textStyle: TextStyle(
+                              textStyle: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
                               contentColor: Colors.green,
-                              duration: Duration(seconds: 2),
-                              contentPadding: EdgeInsets.all(10),
+                              contentPadding: const EdgeInsets.all(10),
                             );
 
                             Navigator.of(context).pop();
 
-                            String attackId = widget.url.split("user2ID=")[1];
-                            var t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
+                            final String attackId = widget.url.split("user2ID=")[1];
+                            final t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
 
                             // Get stats from YATA
                             var spyModel = YataSpyModel();
                             var spyFoundInYata = false;
                             try {
-                              UserController _u = Get.put(UserController());
-                              String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=${_u.alternativeYataKey}';
-                              var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
+                              final UserController u = Get.put(UserController());
+                              final String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=${u.alternativeYataKey}';
+                              final resp = await http.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 15));
                               if (resp.statusCode == 200) {
-                                var spyJson = json.decode(resp.body);
-                                var spiedStats = spyJson["spies"]["$attackId"];
+                                final spyJson = json.decode(resp.body);
+                                final spiedStats = spyJson["spies"][attackId];
                                 if (spiedStats != null) {
                                   spyModel = yataSpyModelFromJson(json.encode(spiedStats));
                                   spyFoundInYata = true;
@@ -184,24 +179,24 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               String exactStats = "";
                               String estimatedStats = "";
                               if (spyFoundInYata) {
-                                String total = formatBigNumbers(spyModel.total);
-                                String str = formatBigNumbers(spyModel.strength);
-                                String spd = formatBigNumbers(spyModel.speed);
-                                String def = formatBigNumbers(spyModel.defense);
-                                String dex = formatBigNumbers(spyModel.dexterity);
-                                exactStats = "${total} (STR $str, SPD $spd, DEF $def, DEX $dex), "
-                                    "updated ${readTimestamp(spyModel.update)}";
+                                final String total = formatBigNumbers(spyModel.total!);
+                                final String str = formatBigNumbers(spyModel.strength!);
+                                final String spd = formatBigNumbers(spyModel.speed!);
+                                final String def = formatBigNumbers(spyModel.defense!);
+                                final String dex = formatBigNumbers(spyModel.dexterity!);
+                                exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
+                                    "updated ${readTimestamp(spyModel.update!)}";
                               } else {
                                 estimatedStats = StatsCalculator.calculateStats(
-                                  criminalRecordTotal: t.criminalrecord.total,
+                                  criminalRecordTotal: t.criminalrecord!.total,
                                   level: t.level,
-                                  networth: t.personalstats.networth,
+                                  networth: t.personalstats!.networth,
                                   rank: t.rank,
                                 );
 
-                                estimatedStats += "\n- Xanax: ${t.personalstats.xantaken}";
-                                estimatedStats += "\n- Refills (E): ${t.personalstats.refills}";
-                                estimatedStats += "\n- Drinks (E): ${t.personalstats.energydrinkused}";
+                                estimatedStats += "\n- Xanax: ${t.personalstats!.xantaken}";
+                                estimatedStats += "\n- Refills (E): ${t.personalstats!.refills}";
+                                estimatedStats += "\n- Drinks (E): ${t.personalstats!.energydrinkused}";
                                 estimatedStats += "\n(tap to get a comparison with you)";
                               }
 
@@ -209,13 +204,13 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 attackId: attackId,
                                 attackName: t.name,
                                 attackLevel: t.level.toString(),
-                                attackLife: "${t.life.current}/${t.life.maximum}",
+                                attackLife: "${t.life!.current}/${t.life!.maximum}",
                                 attackAge: t.age.toString(),
                                 estimatedStats: estimatedStats,
                                 exactStats: exactStats,
-                                xanax: t.personalstats.xantaken.toString(),
-                                refills: t.personalstats.refills.toString(),
-                                drinks: t.personalstats.energydrinkused.toString(),
+                                xanax: t.personalstats!.xantaken.toString(),
+                                refills: t.personalstats!.refills.toString(),
+                                drinks: t.personalstats!.energydrinkused.toString(),
                               );
                             } else {
                               membersNotified = await firebaseFunctions.sendAttackAssistMessage(
@@ -225,7 +220,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
                             String membersMessage = "$membersNotified faction member${membersNotified == 1 ? "" : "s"} "
                                 "${membersNotified == 1 ? "has" : "have"} been notified!";
-                            Color membersColor = Colors.green;
+                            Color? membersColor = Colors.green;
 
                             if (membersNotified == 0) {
                               membersMessage = "No faction member could be notified (not using Torn PDA or "
@@ -237,20 +232,19 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             }
 
                             BotToast.showText(
-                              onlyOne: true,
                               text: membersMessage,
-                              textStyle: TextStyle(
+                              textStyle: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
-                              contentColor: membersColor,
-                              duration: Duration(seconds: 5),
-                              contentPadding: EdgeInsets.all(10),
+                              contentColor: membersColor!,
+                              duration: const Duration(seconds: 5),
+                              contentPadding: const EdgeInsets.all(10),
                             );
                           },
                         ),
                       ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       children: [
                         Flexible(
@@ -262,16 +256,15 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 TextFormField(
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: _themeProvider.mainText,
+                                    color: _themeProvider!.mainText,
                                   ),
                                   controller: _customURLController,
                                   maxLength: 300,
-                                  maxLines: 1,
                                   textInputAction: TextInputAction.go,
                                   onFieldSubmitted: (value) {
                                     onCustomURLSubmitted();
                                   },
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     counterText: "",
                                     isDense: true,
                                     border: OutlineInputBorder(),
@@ -279,7 +272,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     labelStyle: TextStyle(fontSize: 12),
                                   ),
                                   validator: (value) {
-                                    if (value.replaceAll(' ', '').isEmpty) {
+                                    if (value!.replaceAll(' ', '').isEmpty) {
                                       return "Cannot be empty!";
                                     }
                                     return null;
@@ -290,34 +283,34 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.double_arrow_outlined),
+                          icon: const Icon(Icons.double_arrow_outlined),
                           onPressed: () async {
                             onCustomURLSubmitted();
                           },
                         ),
                       ],
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.home, size: 20),
                             SizedBox(width: 5),
                             Flexible(
-                                child: Text(
-                              'Torn Home',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            )),
+                              child: Text(
+                                'Torn Home',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () {
                           Navigator.of(context).pop();
-                          widget.inAppWebview.loadUrl(
+                          widget.inAppWebview!.loadUrl(
                             urlRequest: URLRequest(
                               url: WebUri("https://www.torn.com"),
                             ),
@@ -328,40 +321,37 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.copy, size: 20),
                             SizedBox(width: 5),
                             Flexible(
-                                child: Text(
-                              'Copy URL',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            )),
+                              child: Text(
+                                'Copy URL',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(text: _currentUrl));
+                          String input = _currentUrl ?? "null";
+                          Clipboard.setData(ClipboardData(text: input));
 
-                          // Avoid copying _currentUrl directly unless we await,
-                          // otherwise we can change _currentUrl while the copy
-                          // is being performed and hang the app
-                          var copied = _currentUrl;
-                          if (_currentUrl.length > 60) {
-                            copied = _currentUrl.substring(0, 60) + "...";
+                          if (input.length > 60) {
+                            input = "${input.substring(0, 60)}...";
                           }
 
                           BotToast.showText(
-                            text: "Link copied! [$copied]",
-                            textStyle: TextStyle(
+                            text: "Link copied! [$input]",
+                            textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                             ),
                             contentColor: Colors.green,
-                            duration: Duration(milliseconds: 1500),
-                            contentPadding: EdgeInsets.all(10),
+                            duration: const Duration(milliseconds: 1500),
+                            contentPadding: const EdgeInsets.all(10),
                           );
                           _customURLController.text = "";
                           Navigator.of(context).pop();
@@ -371,37 +361,37 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'images/icons/heart.png',
-                                width: 20,
-                                color: _shortcutsProvider.activeShortcuts.length > 0 ? Colors.white : Colors.grey,
-                              ),
-                              SizedBox(width: 5),
-                              Flexible(
-                                  child: Text(
+                        onPressed: _shortcutsProvider.activeShortcuts.isNotEmpty
+                            ? () {
+                                Navigator.of(context).pop();
+                                _openShortcutsDialog();
+                                _customURLController.text = "";
+                              }
+                            : null,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'images/icons/heart.png',
+                              width: 20,
+                              color: _shortcutsProvider.activeShortcuts.isNotEmpty ? Colors.white : Colors.grey,
+                            ),
+                            const SizedBox(width: 5),
+                            const Flexible(
+                              child: Text(
                                 'Browse shortcuts',
                                 style: TextStyle(fontSize: 12),
                                 textAlign: TextAlign.center,
-                              )),
-                            ],
-                          ),
-                          onPressed: _shortcutsProvider.activeShortcuts.length > 0
-                              ? () {
-                                  Navigator.of(context).pop();
-                                  _openShortcutsDialog();
-                                  _customURLController.text = "";
-                                }
-                              : null),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
                         child: Row(
-                          mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
@@ -409,13 +399,14 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               width: 20,
                               color: Colors.white,
                             ),
-                            SizedBox(width: 8),
-                            Flexible(
-                                child: Text(
-                              'Save as shortcut',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            )),
+                            const SizedBox(width: 8),
+                            const Flexible(
+                              child: Text(
+                                'Save as shortcut',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () {
@@ -429,47 +420,47 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: ElevatedButton(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.search, size: 20),
                               SizedBox(width: 8),
                               Flexible(
-                                  child: Text(
-                                'Find in page',
-                                style: TextStyle(fontSize: 12),
-                                textAlign: TextAlign.center,
-                              )),
+                                child: Text(
+                                  'Find in page',
+                                  style: TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ],
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
-                            widget.callFindInPage();
+                            widget.callFindInPage!();
                           },
                         ),
                       ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: ElevatedButton(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.open_in_browser_outlined, size: 20),
                             SizedBox(width: 8),
                             Flexible(
-                                child: Text(
-                              'External browser',
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.center,
-                            )),
+                              child: Text(
+                                'External browser',
+                                style: TextStyle(fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                         onPressed: () async {
                           Navigator.of(context).pop();
-                          if (await canLaunchUrl(Uri.parse(_currentUrl))) {
-                            await launchUrl(Uri.parse(_currentUrl), mode: LaunchMode.externalApplication);
+                          if (await canLaunchUrl(Uri.parse(_currentUrl!))) {
+                            await launchUrl(Uri.parse(_currentUrl!), mode: LaunchMode.externalApplication);
                           }
                         },
                       ),
@@ -479,8 +470,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         padding: const EdgeInsets.only(top: 5),
                         child: Column(
                           children: [
-                            Divider(),
-                            Row(
+                            const Divider(),
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
@@ -494,51 +485,56 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.minus),
+                                    child: const Icon(MdiIcons.minus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
-                                        if (newOptions.android.initialScale == 0) {
-                                          newOptions.android.initialScale = 350;
-                                        } else if (newOptions.android.initialScale > 100) {
-                                          newOptions.android.initialScale -= 5;
+                                        final InAppWebViewSettings newOptions =
+                                            (await widget.inAppWebview!.getSettings())!;
+                                        if (newOptions.initialScale == 0) {
+                                          newOptions.initialScale = 350;
+                                        } else if (newOptions.initialScale != null) {
+                                          if (newOptions.initialScale! > 100) {
+                                            newOptions.initialScale = newOptions.initialScale! - 5;
+                                          }
                                         }
-                                        widget.inAppWebview.setOptions(options: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                        widget.inAppWebview!.setSettings(settings: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.initialScale ?? 0;
                                       }
                                     },
                                   ),
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.refresh),
+                                    child: const Icon(MdiIcons.refresh),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
-                                        newOptions.android.initialScale = 0;
-                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        final InAppWebViewSettings newOptions =
+                                            (await widget.inAppWebview!.getSettings())!;
+                                        newOptions.initialScale = 0;
+                                        widget.inAppWebview!.setSettings(settings: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = 0;
                                       }
                                     },
                                   ),
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.plus),
+                                    child: const Icon(MdiIcons.plus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
-                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
-                                        if (newOptions.android.initialScale == 0) {
-                                          newOptions.android.initialScale = 100;
-                                        } else if (newOptions.android.initialScale < 350) {
-                                          newOptions.android.initialScale += 5;
+                                        final InAppWebViewSettings newSettings =
+                                            (await widget.inAppWebview!.getSettings())!;
+                                        if (newSettings.initialScale == 0) {
+                                          newSettings.initialScale = 100;
+                                        } else if (newSettings.initialScale! < 350) {
+                                          newSettings.initialScale = newSettings.initialScale! + 5;
                                         }
-                                        widget.inAppWebview.setOptions(options: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                        widget.inAppWebview!.setSettings(settings: newSettings);
+                                        _settingsProvider.setAndroidBrowserScale = newSettings.initialScale!;
                                       }
                                     },
                                   ),
@@ -553,8 +549,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         padding: const EdgeInsets.only(top: 5),
                         child: Column(
                           children: [
-                            Divider(),
-                            Row(
+                            const Divider(),
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
@@ -570,7 +566,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      Text("Show terminal", style: TextStyle(fontSize: 12)),
+                                      const Text("Show terminal", style: TextStyle(fontSize: 12)),
                                       Switch(
                                         value: _settingsProvider.terminalEnabled,
                                         onChanged: (value) {
@@ -589,9 +585,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           ],
                         ),
                       ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     TextButton(
-                      child: Text("Close"),
+                      child: const Text("Close"),
                       onPressed: () {
                         _customURLController.text = "";
                         Navigator.of(context).pop();
@@ -606,9 +602,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: _themeProvider.secondBackground,
+                backgroundColor: _themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: _themeProvider.secondBackground,
+                  backgroundColor: _themeProvider!.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 25,
@@ -617,7 +613,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       "images/icons/pda_icon.png",
                       width: 18,
                       height: 18,
-                      color: _themeProvider.mainText,
+                      color: _themeProvider!.mainText,
                     ),
                   ),
                 ),
@@ -630,22 +626,22 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
   }
 
   void onCustomURLSubmitted() {
-    if (_customURLKey.currentState.validate()) {
+    if (_customURLKey.currentState!.validate()) {
       String url = _customURLController.text.replaceAll(" ", "");
       if (!url.toLowerCase().contains("https://") && !url.toLowerCase().contains("http://")) {
-        url = 'https://' + url;
+        url = 'https://$url';
       } else if (url.toLowerCase().contains("http://")) {
         url = url.replaceAll("http://", "https://");
       }
 
       if (widget.inAppWebview != null) {
-        widget.inAppWebview.loadUrl(
+        widget.inAppWebview!.loadUrl(
           urlRequest: URLRequest(
             url: WebUri(url),
           ),
         );
       } else {
-        widget.stockWebView.loadUrl(
+        widget.stockWebView!.loadUrl(
           _customURLController.text,
         );
       }
@@ -655,7 +651,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
     }
   }
 
-  Future<void> _openCustomShortcutDialog(String title, String url) {
+  Future<void> _openCustomShortcutDialog(String? title, String? url) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -689,37 +685,37 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 }
 
 class CustomShortcutDialog extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final String title;
-  final String url;
+  final ThemeProvider? themeProvider;
+  final String? title;
+  final String? url;
 
   const CustomShortcutDialog({
-    @required this.themeProvider,
-    @required this.title,
-    @required this.url,
-    Key key,
-  }) : super(key: key);
+    required this.themeProvider,
+    required this.title,
+    required this.url,
+    super.key,
+  });
 
   @override
-  State<CustomShortcutDialog> createState() => _CustomShortcutDialogState();
+  State<CustomShortcutDialog> createState() => CustomShortcutDialogState();
 }
 
-class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
-  ShortcutsProvider _shortcutsProvider;
+class CustomShortcutDialogState extends State<CustomShortcutDialog> {
+  late ShortcutsProvider _shortcutsProvider;
 
-  final _customURLController = new TextEditingController();
-  final _customShortcutNameController = new TextEditingController();
-  final _customShortcutURLController = new TextEditingController();
-  var _customShortcutNameKey = GlobalKey<FormState>();
-  var _customShortcutURLKey = GlobalKey<FormState>();
+  final _customURLController = TextEditingController();
+  final _customShortcutNameController = TextEditingController();
+  final _customShortcutURLController = TextEditingController();
+  final _customShortcutNameKey = GlobalKey<FormState>();
+  final _customShortcutURLKey = GlobalKey<FormState>();
 
   @override
   @override
   void initState() {
     super.initState();
     _shortcutsProvider = context.read<ShortcutsProvider>();
-    _customShortcutNameController.text = widget.title;
-    _customShortcutURLController.text = widget.url;
+    _customShortcutNameController.text = widget.title!;
+    _customShortcutURLController.text = widget.url!;
   }
 
   @override
@@ -735,22 +731,21 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
-                  color: widget.themeProvider.secondBackground,
-                  shape: BoxShape.rectangle,
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
+                  color: widget.themeProvider!.secondBackground,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
@@ -761,10 +756,10 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                       child: Text(
                         "Add a name and URL for your custom shortcut. Note: "
                         "ensure URL begins with 'https://'",
-                        style: TextStyle(fontSize: 12, color: widget.themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: widget.themeProvider!.mainText),
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     Form(
                       key: _customShortcutNameKey,
                       child: Column(
@@ -773,20 +768,19 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                           TextFormField(
                             style: TextStyle(
                               fontSize: 14,
-                              color: widget.themeProvider.mainText,
+                              color: widget.themeProvider!.mainText,
                             ),
                             textCapitalization: TextCapitalization.sentences,
                             controller: _customShortcutNameController,
                             maxLength: 30,
-                            maxLines: 1,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               counterText: "",
                               isDense: true,
                               border: OutlineInputBorder(),
                               labelText: 'Name',
                             ),
                             validator: (value) {
-                              if (value.replaceAll(' ', '').isEmpty) {
+                              if (value!.replaceAll(' ', '').isEmpty) {
                                 return "Cannot be empty!";
                               }
                               return null;
@@ -795,7 +789,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     Row(
                       children: [
                         Flexible(
@@ -807,19 +801,18 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                                 TextFormField(
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: widget.themeProvider.mainText,
+                                    color: widget.themeProvider!.mainText,
                                   ),
                                   controller: _customShortcutURLController,
                                   maxLength: 300,
-                                  maxLines: 1,
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     counterText: "",
                                     isDense: true,
                                     border: OutlineInputBorder(),
                                     labelText: 'URL',
                                   ),
                                   validator: (value) {
-                                    if (value.replaceAll(' ', '').isEmpty) {
+                                    if (value!.replaceAll(' ', '').isEmpty) {
                                       return "Cannot be empty!";
                                     }
                                     if (!value.toLowerCase().contains('https://')) {
@@ -836,21 +829,21 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Add"),
+                          child: const Text("Add"),
                           onPressed: () {
-                            if (!_customShortcutURLKey.currentState.validate()) {
+                            if (!_customShortcutURLKey.currentState!.validate()) {
                               return;
                             }
-                            if (!_customShortcutNameKey.currentState.validate()) {
+                            if (!_customShortcutNameKey.currentState!.validate()) {
                               return;
                             }
 
-                            var customShortcut = Shortcut()
+                            final customShortcut = Shortcut()
                               ..name = _customShortcutNameController.text
                               ..nickname = _customShortcutNameController.text
                               ..url = _customShortcutURLController.text
@@ -865,7 +858,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                           },
                         ),
                         TextButton(
-                          child: Text("Close"),
+                          child: const Text("Close"),
                           onPressed: () {
                             Navigator.of(context).pop();
                             _customShortcutNameController.text = '';
@@ -883,9 +876,9 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.secondBackground,
+                backgroundColor: widget.themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: widget.themeProvider.secondBackground,
+                  backgroundColor: widget.themeProvider!.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 25,
@@ -894,7 +887,7 @@ class _CustomShortcutDialogState extends State<CustomShortcutDialog> {
                       "images/icons/pda_icon.png",
                       width: 18,
                       height: 18,
-                      color: widget.themeProvider.mainText,
+                      color: widget.themeProvider!.mainText,
                     ),
                   ),
                 ),

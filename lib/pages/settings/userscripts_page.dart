@@ -1,38 +1,37 @@
 // Flutter imports:
 import 'dart:io';
 
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
+import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserScriptsPage extends StatefulWidget {
   @override
-  _UserScriptsPageState createState() => _UserScriptsPageState();
+  UserScriptsPageState createState() => UserScriptsPageState();
 }
 
-class _UserScriptsPageState extends State<UserScriptsPage> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  UserScriptsProvider _userScriptsProvider;
+class UserScriptsPageState extends State<UserScriptsPage> {
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late UserScriptsProvider _userScriptsProvider;
+  late WebViewProvider _webViewProvider;
 
   bool _firstTimeNotAccepted = false;
 
@@ -61,7 +60,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           _goBack();
         }
       } else {
-        if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatInjectionTimeShown)
+        if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatInjectionTimeShown) {
           await showDialog(
             useRootNavigator: false,
             context: context,
@@ -70,6 +69,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
               return _injectionTimeDialog();
             },
           );
+        }
         _userScriptsProvider.changeFeatInjectionTimeShown(true);
       }
     });
@@ -83,109 +83,106 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    WebViewProvider webviewProvider = Provider.of<WebViewProvider>(context, listen: true);
-    return Visibility(
-      visible: !webviewProvider.browserShowInForeground,
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.canvas,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: BorderSide(width: 2, color: Colors.blueGrey),
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
+              ? Colors.blueGrey
+              : _themeProvider.canvas
+          : _themeProvider.canvas,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.canvas,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: Column(
+                children: <Widget>[
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      ButtonTheme(
+                        minWidth: 1.0,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
+                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: const BorderSide(width: 2, color: Colors.blueGrey),
+                              ),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 20,
+                            color: _themeProvider.mainText,
+                          ),
+                          onPressed: () {
+                            _showAddDialog(context);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      ButtonTheme(
+                        minWidth: 1.0,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
+                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                side: const BorderSide(
+                                  width: 2,
+                                  color: Colors.blueGrey,
                                 ),
                               ),
                             ),
-                            child: Icon(
-                              Icons.add,
-                              size: 20,
-                              color: _themeProvider.mainText,
-                            ),
-                            onPressed: () {
-                              _showAddDialog(context);
-                            },
                           ),
-                        ),
-                        SizedBox(width: 15),
-                        ButtonTheme(
-                          minWidth: 1.0,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: BorderSide(
-                                    width: 2,
-                                    color: Colors.blueGrey,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: _themeProvider.mainText,
-                            ),
-                            onPressed: () {
-                              _openWipeDialog();
-                            },
+                          child: Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: _themeProvider.mainText,
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Preexisting scripts might require modifications to work with Torn PDA. '
-                        'Please ensure that you use scripts responsibly and '
-                        'understand the hazards. Tap the exclamation mark for more information.',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                          onPressed: () {
+                            _openWipeDialog();
+                          },
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Flexible(
-                      child: Consumer<UserScriptsProvider>(
-                        builder: (context, settingsProvider, child) => scriptsCards(),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Preexisting scripts might require modifications to work with Torn PDA. '
+                      'Please ensure that you use scripts responsibly and '
+                      'understand the hazards. Tap the exclamation mark for more information.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  Flexible(
+                    child: Consumer<UserScriptsProvider>(
+                      builder: (context, settingsProvider, child) => scriptsCards(),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -195,12 +192,12 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   }
 
   ListView scriptsCards() {
-    var scriptList = <Widget>[];
-    for (var script in _userScriptsProvider.userScriptList) {
+    final scriptList = <Widget>[];
+    for (final script in _userScriptsProvider.userScriptList) {
       var exampleUpdatable = false;
       var custom = false;
-      if (script.exampleCode > 0) {
-        if (script.edited != null && !script.edited) {
+      if (script.exampleCode! > 0) {
+        if (script.edited != null && !script.edited!) {
           exampleUpdatable = true;
         }
       } else {
@@ -222,7 +219,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         height: 20,
                         width: 60,
                         child: Switch(
-                          value: script.enabled,
+                          value: script.enabled!,
                           activeTrackColor: Colors.green[100],
                           activeColor: Colors.green,
                           inactiveThumbColor: Colors.red[100],
@@ -231,81 +228,81 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                           },
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Flexible(child: Text(script.name, style: TextStyle(fontSize: 13))),
+                      const SizedBox(width: 10),
+                      Flexible(child: Text(script.name!, style: const TextStyle(fontSize: 13))),
                     ],
                   ),
                 ),
                 Row(
                   children: [
-                    custom
-                        ? GestureDetector(
-                            child: Icon(
-                              MdiIcons.alphaC,
-                              color: Colors.grey,
-                              size: 20,
+                    if (custom)
+                      GestureDetector(
+                        child: const Icon(
+                          MdiIcons.alphaC,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
+                        onTap: () async {
+                          BotToast.showText(
+                            text: 'This is a custom script',
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
                             ),
-                            onTap: () async {
-                              BotToast.showText(
-                                text: 'This is a custom script',
-                                textStyle: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.grey[800],
-                                duration: Duration(seconds: 2),
-                                contentPadding: EdgeInsets.all(10),
-                              );
-                            },
-                          )
-                        : exampleUpdatable
-                            ? GestureDetector(
-                                child: Icon(
-                                  Icons.update,
-                                  color: Colors.green,
-                                  size: 20,
-                                ),
-                                onTap: () async {
-                                  BotToast.showText(
-                                    text: 'This is an example script that has not been edited and will be updated '
-                                        'automatically with each release of Torn PDA!',
-                                    textStyle: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.green[800],
-                                    duration: Duration(seconds: 4),
-                                    contentPadding: EdgeInsets.all(10),
-                                  );
-                                },
-                              )
-                            : GestureDetector(
-                                child: Icon(
-                                  Icons.update,
-                                  color: Colors.grey,
-                                  size: 20,
-                                ),
-                                onTap: () async {
-                                  BotToast.showText(
-                                    text: 'This is an example script that has been edited in the past and will not be '
-                                        'automatically updated.'
-                                        '\n\nIf you wish to activate auto updates, remove it and then '
-                                        'load the missing example scripts again!',
-                                    textStyle: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.grey[800],
-                                    duration: Duration(seconds: 7),
-                                    contentPadding: EdgeInsets.all(10),
-                                  );
-                                },
+                            contentColor: Colors.grey[800]!,
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                        },
+                      )
+                    else
+                      exampleUpdatable
+                          ? GestureDetector(
+                              child: const Icon(
+                                Icons.update,
+                                color: Colors.green,
+                                size: 20,
                               ),
-                    SizedBox(width: 12),
+                              onTap: () async {
+                                BotToast.showText(
+                                  text: 'This is an example script that has not been edited and will be updated '
+                                      'automatically with each release of Torn PDA!',
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.green[800]!,
+                                  duration: const Duration(seconds: 4),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              },
+                            )
+                          : GestureDetector(
+                              child: const Icon(
+                                Icons.update,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
+                              onTap: () async {
+                                BotToast.showText(
+                                  text: 'This is an example script that has been edited in the past and will not be '
+                                      'automatically updated.'
+                                      '\n\nIf you wish to activate auto updates, remove it and then '
+                                      'load the missing example scripts again!',
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.grey[800]!,
+                                  duration: const Duration(seconds: 7),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              },
+                            ),
+                    const SizedBox(width: 12),
                     GestureDetector(
-                      child: Icon(Icons.edit, size: 20),
+                      child: const Icon(Icons.edit, size: 20),
                       onTap: () {
-                        return showDialog<void>(
+                        showDialog<void>(
                           context: context,
                           barrierDismissible: false, // user must tap button!
                           builder: (BuildContext context) {
@@ -317,7 +314,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         );
                       },
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     GestureDetector(
                       child: Icon(
                         Icons.delete_outlined,
@@ -347,22 +344,22 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      title: Text('User scripts'),
-      leadingWidth: 80,
+      title: const Text('User scripts'),
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
-          new IconButton(
-            icon: new Icon(Icons.arrow_back),
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
             onPressed: () {
               _goBack();
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon() else Container(),
         ],
       ),
       actions: [
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             MdiIcons.backupRestore,
           ),
           onPressed: () async {
@@ -393,7 +390,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       context: _,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return UserScriptsAddDialog(editExisting: false);
+        return const UserScriptsAddDialog(editExisting: false);
       },
     );
   }
@@ -414,61 +411,60 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
-                        Flexible(
+                        const Flexible(
                           child: Text(
                             "CAUTION",
                             style: TextStyle(fontSize: 13, color: Colors.red),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "This will remove all user scripts!",
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Do it!"),
+                              child: const Text("Do it!"),
                               onPressed: () {
                                 _userScriptsProvider.wipe();
                                 Navigator.of(context).pop();
                               },
                             ),
                             TextButton(
-                              child: Text("Oh no!"),
+                              child: const Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -488,7 +484,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(Icons.delete_forever_outlined),
@@ -520,22 +516,21 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -548,19 +543,19 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Do it!"),
+                              child: const Text("Do it!"),
                               onPressed: () {
                                 _userScriptsProvider.removeUserScript(script);
                                 Navigator.of(context).pop();
                               },
                             ),
                             TextButton(
-                              child: Text("Oh no!"),
+                              child: const Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -580,7 +575,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(Icons.delete_forever_outlined),
@@ -606,9 +601,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  _disclaimerDialog() {
+  AlertDialog _disclaimerDialog() {
     return AlertDialog(
-      title: Text("DISCLAIMER"),
+      title: const Text("DISCLAIMER"),
       content: Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
@@ -617,7 +612,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "User scripts are small programs written in JavaScript that enhance the browser's "
                   "functionalities. Be careful when using them and ensure that you understand the code "
                   "and what the script accomplishes; otherwise, ensure they come from a reliable "
@@ -628,12 +623,12 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 25),
-                Text(
+                const SizedBox(height: 25),
+                const Text(
                   "TIPS",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 EasyRichText(
                   "Join our Discord server if you need help or are willing to contribute with new userscripts ideas or working code. "
                   "There is a list of tested userscripts in our GitHub repository.",
@@ -646,64 +641,65 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () async {
-                          var url = 'https://discord.gg/vyP23kJ';
+                          const url = 'https://discord.gg/vyP23kJ';
                           if (await canLaunchUrl(Uri.parse(url))) {
                             await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                           }
                         },
                     ),
                     EasyRichTextPattern(
-                        targetString: 'list of tested userscripts',
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          color: Colors.blue[400],
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            var url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
-                            await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  browserTapType: BrowserTapType.short,
-                                );
-                          }),
+                      targetString: 'list of tested userscripts',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Colors.blue[400],
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          const url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
+                          await context.read<WebViewProvider>().openBrowserPreference(
+                                context: context,
+                                url: url,
+                                browserTapType: BrowserTapType.short,
+                              );
+                        },
+                    ),
                   ],
                   defaultStyle: TextStyle(
                     fontSize: 13,
                     color: _themeProvider.mainText,
                   ),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   "Activation URLs starting with '@match' in the header are supported; however, wildcards (*) will be ignored. "
                   "Instead, you can use full URLs or just a part of them (e.g. 'profile.php' or 'torn.com').",
                   style: TextStyle(
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
                   "Torn PDA will replace it with your API key in runtime.",
                   style: TextStyle(
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   "User scripts are isolated from one another on runtime and executed inside anonymous functions. "
                   "There is no need for you to adapt them this way.",
                   style: TextStyle(
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 25),
-                Text(
+                const SizedBox(height: 25),
+                const Text(
                   "TROUBLESHOOTING",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
                   "code changes to work with Torn PDA if external libraries were used.\n\n"
                   "If a script does not work as intended after changing its code in Torn PDA, please "
@@ -712,13 +708,13 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 25),
-                Text(
+                const SizedBox(height: 25),
+                const Text(
                   "INJECTION CONSTRAINTS",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
                   "as much as possible with script injection times and URLs. However, due to the different limitations "
                   "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
@@ -733,13 +729,13 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 25),
-                Text(
+                const SizedBox(height: 25),
+                const Text(
                   "SCRIPT INJECTION TIME",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
-                Text.rich(
+                const SizedBox(height: 10),
+                const Text.rich(
                   TextSpan(
                     text: "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
                         "loads (START) and after the load has been completed (END). The user can select when each "
@@ -812,9 +808,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 25),
+                const SizedBox(height: 25),
                 if (Platform.isIOS)
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -836,24 +832,24 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       SizedBox(height: 25),
                     ],
                   ),
-                Text(
+                const Text(
                   "CROSS-ORIGIN REQUESTS (ADVANCED)",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text.rich(
                   TextSpan(
                     text: "Torn limits cross-origin requests via the content-security-policy header. In order to "
                         "allow other APIs to be called from within the browser (though an userscript), Torn PDA "
                         "incorporates its own JavasScript API.\n\n"
                         "For more information regarding GET and POST calls, please visit the ",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
                     ),
                     children: [
                       TextSpan(
                         text: "JavasScript API implementation",
-                        style: TextStyle(
+                        style: const TextStyle(
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: TapGestureRecognizer()
@@ -865,18 +861,18 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                             }
                           },
                       ),
-                      TextSpan(
+                      const TextSpan(
                         text: ".",
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 25),
-                Text(
+                const SizedBox(height: 25),
+                const Text(
                   "JAVASCRIPT HANDLER (ADVANCED)",
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text.rich(
                   TextSpan(
                     text: "Torn limits the use of the eval() function in javascript via the content-security-policy "
@@ -884,13 +880,13 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         " Torn PDA incorporates a handler through which source code can be passed which is then "
                         "evaluated directly from the app.\n\n"
                         "For more information, please visit the ",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
                     ),
                     children: [
                       TextSpan(
                         text: "EvaluateJavascript Handler implementation",
-                        style: TextStyle(
+                        style: const TextStyle(
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: TapGestureRecognizer()
@@ -902,7 +898,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                             }
                           },
                       ),
-                      TextSpan(
+                      const TextSpan(
                         text: ".",
                       ),
                     ],
@@ -917,7 +913,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Understood"),
+            child: const Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },
@@ -927,12 +923,12 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  _firstTimeDialog() {
+  WillPopScope _firstTimeDialog() {
     return WillPopScope(
       onWillPop: () async => false,
       child: AlertDialog(
-        title: Text("CAUTION"),
-        content: SingleChildScrollView(
+        title: const Text("CAUTION"),
+        content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -968,7 +964,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              child: Text("Yes, I promise!"),
+              child: const Text("Yes, I promise!"),
               onPressed: () {
                 _userScriptsProvider.changeScriptsFirstTime(false);
                 Navigator.of(context).pop('exit');
@@ -978,18 +974,17 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              child: Text("What?!"),
+              child: const Text("What?!"),
               onPressed: () {
                 _firstTimeNotAccepted = true;
                 BotToast.showText(
                   text: 'Returning...!',
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.orange[800],
-                  duration: Duration(seconds: 2),
-                  contentPadding: EdgeInsets.all(10),
+                  contentColor: Colors.orange[800]!,
+                  contentPadding: const EdgeInsets.all(10),
                 );
                 Navigator.of(context).pop('exit');
               },
@@ -1000,14 +995,14 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  _injectionTimeDialog() {
+  AlertDialog _injectionTimeDialog() {
     return AlertDialog(
-      title: Text("SCRIPT INJECTION TIME"),
-      content: Scrollbar(
+      title: const Text("SCRIPT INJECTION TIME"),
+      content: const Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1098,7 +1093,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Understood"),
+            child: const Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },

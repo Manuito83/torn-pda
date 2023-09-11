@@ -1,17 +1,14 @@
 // Dart imports:
 import 'dart:async';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
-
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
@@ -21,6 +18,7 @@ import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/yata_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/awards/award_card.dart';
@@ -30,51 +28,52 @@ import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AwardsHeaderInfo {
-  var headerInfo = Map<String, String>();
-  double playerScore = 0;
-  int achievedAwards = 0;
-  int totalAwards = 0;
-  int achievedHonors = 0;
-  int totalHonors = 0;
-  int achievedMedals = 0;
-  int totalMedals = 0;
+  Map<String, String> headerInfo = <String, String>{};
+  double? playerScore = 0;
+  int? achievedAwards = 0;
+  int? totalAwards = 0;
+  int? achievedHonors = 0;
+  int? totalHonors = 0;
+  int? achievedMedals = 0;
+  int? totalMedals = 0;
 }
 
 class AwardsPage extends StatefulWidget {
   @override
-  _AwardsPageState createState() => _AwardsPageState();
+  AwardsPageState createState() => AwardsPageState();
 }
 
-class _AwardsPageState extends State<AwardsPage> {
+class AwardsPageState extends State<AwardsPage> {
   // Main list with all awards
-  var _allAwards = <Award>[];
+  final _allAwards = <Award>[];
   var _allAwardsCards = <Widget>[];
-  var _allCategories = Map<String, String>();
-  List<dynamic> _allAwardsGraphs;
+  final _allCategories = <String?, String>{};
+  List<dynamic>? _allAwardsGraphs;
 
   // Active categories
-  var _hiddenCategories = <String>[];
+  var _hiddenCategories = <String?>[];
 
-  Future _getAwardsPayload;
+  Future? _getAwardsPayload;
   bool _apiSuccess = false;
-  String _errorReason = "";
+  String? _errorReason = "";
 
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ThemeProvider _themeProvider;
-  AwardsProvider _pinProvider;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late ThemeProvider _themeProvider;
+  late AwardsProvider _pinProvider;
+  late WebViewProvider _webViewProvider;
 
-  PanelController _pc = new PanelController();
+  final PanelController _pc = PanelController();
   final double _initFabHeight = 25.0;
-  double _fabHeight;
-  double _panelHeightOpen = 360;
-  double _panelHeightClosed = 75.0;
+  double? _fabHeight;
+  final double _panelHeightOpen = 360;
+  final double _panelHeightClosed = 75.0;
 
   // Saved prefs
   String _savedSort = "";
   bool _showAchievedAwards = false;
 
-  var _headerInfo = AwardsHeaderInfo();
+  final _headerInfo = AwardsHeaderInfo();
 
   final _popupSortChoices = <AwardsSort>[
     AwardsSort(type: AwardsSortType.percentageDes),
@@ -106,7 +105,9 @@ class _AwardsPageState extends State<AwardsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -144,8 +145,8 @@ class _AwardsPageState extends State<AwardsPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Text('Calling YATA...'),
-                        SizedBox(height: 30),
+                        const Text('Calling YATA...'),
+                        const SizedBox(height: 30),
                         FlippingYata(),
                       ],
                     ),
@@ -169,7 +170,7 @@ class _AwardsPageState extends State<AwardsPage> {
                       parallaxEnabled: true,
                       parallaxOffset: .5,
                       panelBuilder: (sc) => _bottomPanel(sc),
-                      borderRadius: BorderRadius.only(
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(18.0),
                         topRight: Radius.circular(18.0),
                       ),
@@ -178,10 +179,10 @@ class _AwardsPageState extends State<AwardsPage> {
                       }),
                     );
                   } else {
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   }
                 } else {
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 }
               },
             ),
@@ -196,8 +197,8 @@ class _AwardsPageState extends State<AwardsPage> {
                       right: 35.0,
                       bottom: _fabHeight,
                       child: FloatingActionButton.extended(
-                        icon: Icon(Icons.filter_list),
-                        label: Text("Filter"),
+                        icon: const Icon(Icons.filter_list),
+                        label: const Text("Filter"),
                         elevation: 4,
                         onPressed: () {
                           _pc.isPanelOpen ? _pc.close() : _pc.open();
@@ -206,10 +207,10 @@ class _AwardsPageState extends State<AwardsPage> {
                       ),
                     );
                   } else {
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   }
                 } else {
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 }
               },
             ),
@@ -220,8 +221,8 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   Widget _header() {
-    var pinnedCards = <Widget>[];
-    for (var pinned in _pinProvider.pinnedAwards) {
+    final pinnedCards = <Widget>[];
+    for (final pinned in _pinProvider.pinnedAwards) {
       pinnedCards.add(
         AwardCardPin(
           award: pinned,
@@ -230,7 +231,7 @@ class _AwardsPageState extends State<AwardsPage> {
       );
     }
 
-    Widget pinnedSection = Column(children: pinnedCards);
+    final Widget pinnedSection = Column(children: pinnedCards);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -242,11 +243,11 @@ class _AwardsPageState extends State<AwardsPage> {
             child: Row(
               children: [
                 Text('Your rarity score: '
-                    '${double.parse((_headerInfo.playerScore / 10000).toStringAsFixed(2))}'),
-                SizedBox(width: 8),
+                    '${double.parse((_headerInfo.playerScore! / 10000).toStringAsFixed(2))}'),
+                const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
-                    String achievement = "Achieved ${_headerInfo.achievedAwards}"
+                    final String achievement = "Achieved ${_headerInfo.achievedAwards}"
                         "/${_headerInfo.totalAwards} awards\n\n"
                         "Medals ${_headerInfo.achievedMedals}"
                         "/${_headerInfo.totalMedals}\n"
@@ -255,16 +256,16 @@ class _AwardsPageState extends State<AwardsPage> {
 
                     BotToast.showText(
                       text: achievement,
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         fontSize: 13,
                         color: Colors.white,
                       ),
-                      contentColor: Colors.green[700],
-                      duration: Duration(seconds: 6),
-                      contentPadding: EdgeInsets.all(10),
+                      contentColor: Colors.green[700]!,
+                      duration: const Duration(seconds: 6),
+                      contentPadding: const EdgeInsets.all(10),
                     );
                   },
-                  child: Icon(
+                  child: const Icon(
                     Icons.info_outline,
                     size: 19,
                   ),
@@ -272,19 +273,19 @@ class _AwardsPageState extends State<AwardsPage> {
               ],
             ),
           ),
-          if (_pinProvider.pinnedAwards.length > 0)
+          if (_pinProvider.pinnedAwards.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20),
-                Text('PINNED AWARDS', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
+                const SizedBox(height: 20),
+                const Text('PINNED AWARDS', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
                 pinnedSection,
               ],
             ),
-          SizedBox(height: 20),
-          Text('AWARDS LIST', style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(height: 4),
+          const SizedBox(height: 20),
+          const Text('AWARDS LIST', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
         ],
       ),
     );
@@ -302,15 +303,15 @@ class _AwardsPageState extends State<AwardsPage> {
           // We need to decrease _allAwards by 1, because the header moves the
           // list one position compared to the _allAwardsCards list
 
-          if (!_showAchievedAwards && _allAwards[index - 1].achieve * 100.truncate() == 100) {
-            return SizedBox.shrink();
+          if (!_showAchievedAwards && _allAwards[index - 1].achieve! * 100 == 100) {
+            return const SizedBox.shrink();
           }
 
           if (!_hiddenCategories.contains(_allAwards[index - 1].category)) {
             return _allAwardsCards[index];
           }
 
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
         // This return is for the header and footer
         return _allAwardsCards[index];
@@ -321,18 +322,19 @@ class _AwardsPageState extends State<AwardsPage> {
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
-          color: _themeProvider.secondBackground,
-          borderRadius: BorderRadius.all(Radius.circular(24.0)),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 2.0,
-              color: Colors.orange[800],
-            ),
-          ]),
+        color: _themeProvider.secondBackground,
+        borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 2.0,
+            color: Colors.orange[800]!,
+          ),
+        ],
+      ),
       margin: const EdgeInsets.all(24.0),
       child: Column(
         children: <Widget>[
-          SizedBox(
+          const SizedBox(
             height: 12.0,
           ),
           Row(
@@ -342,11 +344,11 @@ class _AwardsPageState extends State<AwardsPage> {
                 width: 30,
                 height: 5,
                 decoration:
-                    BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                    BoxDecoration(color: Colors.grey[400], borderRadius: const BorderRadius.all(Radius.circular(12.0))),
               ),
             ],
           ),
-          SizedBox(height: 40.0),
+          const SizedBox(height: 40.0),
           Padding(
             padding: const EdgeInsets.only(left: 20, right: 20),
             child: Row(
@@ -354,7 +356,7 @@ class _AwardsPageState extends State<AwardsPage> {
               children: <Widget>[
                 Row(
                   children: [
-                    Text("Show achieved"),
+                    const Text("Show achieved"),
                     Switch(
                       value: _showAchievedAwards,
                       onChanged: (value) {
@@ -369,13 +371,12 @@ class _AwardsPageState extends State<AwardsPage> {
                   ],
                 ),
                 RawChip(
-                  showCheckmark: true,
                   selected: _hiddenCategories.isEmpty ? true : false,
-                  side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600], width: 1.5),
+                  side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600]!, width: 1.5),
                   avatar: CircleAvatar(
                     backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
                   ),
-                  label: Text(
+                  label: const Text(
                     "ALL",
                     style: TextStyle(
                       fontSize: 12,
@@ -389,12 +390,12 @@ class _AwardsPageState extends State<AwardsPage> {
                         _hiddenCategories.clear();
                       });
                     } else {
-                      var fullList = [];
-                      for (var cat in _allCategories.keys) {
+                      final fullList = [];
+                      for (final cat in _allCategories.keys) {
                         fullList.add(cat);
                       }
                       setState(() {
-                        _hiddenCategories = List<String>.from(fullList);
+                        _hiddenCategories = List<String?>.from(fullList);
                       });
                     }
                     Prefs().setHiddenAwardCategories(_hiddenCategories);
@@ -418,90 +419,100 @@ class _AwardsPageState extends State<AwardsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Row(
         children: [
-          Text('Awards'),
-          SizedBox(width: 8),
+          const Text('Awards'),
+          const SizedBox(width: 8),
           GestureDetector(
-              onTap: () {
-                BotToast.showText(
-                  text: "This section is part of YATA's mobile interface, all details "
-                      "information and actions are directly linked to your YATA account.",
-                  textStyle: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green[800],
-                  duration: Duration(seconds: 6),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
-              child: Image.asset('images/icons/yata_logo.png', height: 28)),
+            onTap: () {
+              BotToast.showText(
+                text: "This section is part of YATA's mobile interface, all details "
+                    "information and actions are directly linked to your YATA account.",
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green[800]!,
+                duration: const Duration(seconds: 6),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            },
+            child: Image.asset('images/icons/yata_logo.png', height: 28),
+          ),
         ],
       ),
-      leadingWidth: 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: [
-        _apiSuccess
-            ? IconButton(
-                icon: Icon(
-                  Icons.bar_chart_outlined,
-                  color: _themeProvider.buttonText,
-                ),
-                onPressed: () async {
-                  // Only pass awards that are being shown in the active list
-                  var graphsToPass = <dynamic>[];
-                  for (var awardGraph in _allAwardsGraphs) {
-                    for (var award in _allAwards) {
-                      if (awardGraph[0] == award.name) {
-                        if (!_hiddenCategories.contains(award.category)) {
-                          graphsToPass.add(awardGraph);
-                        }
-                      }
+        if (_apiSuccess)
+          IconButton(
+            icon: Icon(
+              Icons.bar_chart_outlined,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () async {
+              // Only pass awards that are being shown in the active list
+              final graphsToPass = <dynamic>[];
+              for (final awardGraph in _allAwardsGraphs!) {
+                for (final award in _allAwards) {
+                  if (awardGraph[0] == award.name) {
+                    if (!_hiddenCategories.contains(award.category)) {
+                      graphsToPass.add(awardGraph);
                     }
                   }
+                }
+              }
 
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AwardsGraphs(
-                        graphInfo: graphsToPass,
-                      ),
-                    ),
-                  );
-                },
-              )
-            : SizedBox.shrink(),
-        _apiSuccess
-            ? PopupMenuButton<AwardsSort>(
-                icon: Icon(
-                  Icons.sort,
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AwardsGraphs(
+                    graphInfo: graphsToPass,
+                  ),
                 ),
-                onSelected: _sortAwards,
-                itemBuilder: (BuildContext context) {
-                  return _popupSortChoices.map((AwardsSort choice) {
-                    return PopupMenuItem<AwardsSort>(
-                      value: choice,
-                      child: Text(
-                        choice.description,
-                        style: TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                    );
-                  }).toList();
-                },
-              )
-            : SizedBox.shrink(),
+              );
+            },
+          )
+        else
+          const SizedBox.shrink(),
+        if (_apiSuccess)
+          PopupMenuButton<AwardsSort>(
+            icon: const Icon(
+              Icons.sort,
+            ),
+            onSelected: _sortAwards,
+            itemBuilder: (BuildContext context) {
+              return _popupSortChoices.map((AwardsSort choice) {
+                return PopupMenuItem<AwardsSort>(
+                  value: choice,
+                  child: Text(
+                    choice.description,
+                    style: const TextStyle(
+                      fontSize: 13,
+                    ),
+                  ),
+                );
+              }).toList();
+            },
+          )
+        else
+          const SizedBox.shrink(),
       ],
     );
   }
@@ -514,21 +525,21 @@ class _AwardsPageState extends State<AwardsPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
+            const Text(
               'There was an error with YATA!',
               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Please make sure you have a valid account with YATA in order to '
               'use this section. ',
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               children: [
                 GestureDetector(
                   onTap: () async {
-                    var url = 'https://yata.yt';
+                    const url = 'https://yata.yt';
                     await context.read<WebViewProvider>().openBrowserPreference(
                           context: context,
                           url: url,
@@ -537,19 +548,19 @@ class _AwardsPageState extends State<AwardsPage> {
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),
-                SizedBox(width: 10),
-                Flexible(
-                  child: Text('Don\'t have one? Have you changed your API key recently? '
+                const SizedBox(width: 10),
+                const Flexible(
+                  child: Text("Don't have one? Have you changed your API key recently? "
                       'Login here with YATA (tap the icon) and then reload this section!'),
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.refresh),
@@ -565,15 +576,15 @@ class _AwardsPageState extends State<AwardsPage> {
                 ),
               ],
             ),
-            SizedBox(height: 30),
-            Text('Otherwise, there might be a problem signing in with YATA, please '
+            const SizedBox(height: 30),
+            const Text('Otherwise, there might be a problem signing in with YATA, please '
                 'try again later!'),
           ],
         ),
       );
     } else {
-      return Padding(
-        padding: const EdgeInsets.all(30),
+      return const Padding(
+        padding: EdgeInsets.all(30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,10 +606,10 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   Widget _categoryFilterWrap() {
-    var catChips = <Widget>[];
-    for (var cat in _allCategories.keys) {
-      Widget catIcon = SizedBox.shrink();
-      String catStats = _allCategories[cat];
+    final catChips = <Widget>[];
+    for (final cat in _allCategories.keys) {
+      Widget catIcon = const SizedBox.shrink();
+      String? catStats = _allCategories[cat];
       switch (cat) {
         case "crimes":
           catIcon = Image.asset(
@@ -606,86 +617,74 @@ class _AwardsPageState extends State<AwardsPage> {
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "drugs":
           catIcon = Image.asset(
             'images/awards/categories/cannabis.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "attacks":
           catIcon = Image.asset(
             'images/awards/categories/crosshair.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "faction":
           catIcon = Image.asset(
             'images/awards/categories/fist.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "items":
           catIcon = Image.asset(
             'images/awards/categories/toilet_paper.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "travel":
           catIcon = Image.asset(
             'images/awards/categories/plane.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "work":
           catIcon = Image.asset(
             'images/awards/categories/graduate.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "gym":
           catIcon = Image.asset(
             'images/awards/categories/dumbbell.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "money":
           catIcon = Image.asset(
             'images/awards/categories/piggy_bank.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "competitions":
           catIcon = Image.asset(
             'images/awards/trophy.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "commitment":
           catIcon = Image.asset(
             'images/awards/categories/hourglass.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         case "miscellaneous":
           catIcon = Image.asset(
             'images/awards/categories/checkered_flag.png',
             height: 15,
             color: _themeProvider.mainText,
           );
-          break;
         default:
-          catIcon = Text(
+          catIcon = const Text(
             'T',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
           );
@@ -697,9 +696,9 @@ class _AwardsPageState extends State<AwardsPage> {
         RawChip(
           showCheckmark: false,
           selected: _hiddenCategories.contains(cat) ? false : true,
-          side: BorderSide(color: _hiddenCategories.contains(cat) ? Colors.grey[600] : Colors.green, width: 1.5),
+          side: BorderSide(color: _hiddenCategories.contains(cat) ? Colors.grey[600]! : Colors.green, width: 1.5),
           avatar: catIcon,
-          label: Text(catStats, style: TextStyle(fontSize: 12)),
+          label: Text(catStats!, style: const TextStyle(fontSize: 12)),
           selectedColor: Colors.transparent,
           disabledColor: Colors.grey,
           onSelected: (bool isSelected) {
@@ -719,13 +718,12 @@ class _AwardsPageState extends State<AwardsPage> {
 
             BotToast.showText(
               text: action,
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 13,
                 color: Colors.white,
               ),
-              contentColor: Colors.green[800],
-              duration: Duration(seconds: 2),
-              contentPadding: EdgeInsets.all(10),
+              contentColor: Colors.green[800]!,
+              contentPadding: const EdgeInsets.all(10),
             );
           },
         ),
@@ -741,7 +739,7 @@ class _AwardsPageState extends State<AwardsPage> {
   Future _fetchYataAndPopulate() async {
     await _restorePrefs();
 
-    var reply = await YataComm.getAwards(_userProvider.basic.userApiKey);
+    final reply = await YataComm.getAwards(_userProvider.basic!.userApiKey);
     if (reply is YataError) {
       _errorReason = reply.reason;
     } else {
@@ -757,16 +755,16 @@ class _AwardsPageState extends State<AwardsPage> {
     _allAwardsGraphs = awardsJson["graph"];
 
     // Check for pinned awards
-    var pinMap = awardsJson["pinnedAwards"];
+    final pinMap = awardsJson["pinnedAwards"];
     // In case something mixed up, we'll rebuild the list later
     _pinProvider.pinnedAwards.clear();
     _pinProvider.pinnedNames.clear();
 
     // Populate all awards
-    var awardsMap = awardsJson["awards"];
+    final awardsMap = awardsJson["awards"];
 
     awardsMap.forEach((awardsSubcategory, awardValues) {
-      var awardsMap = awardValues as Map;
+      final awardsMap = awardValues as Map;
 
       awardsMap.forEach((key, value) {
         try {
@@ -777,9 +775,9 @@ class _AwardsPageState extends State<AwardsPage> {
               errorBuilder: (
                 BuildContext context,
                 Object exception,
-                StackTrace stackTrace,
+                StackTrace? stackTrace,
               ) {
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               },
             );
           } else {
@@ -788,9 +786,9 @@ class _AwardsPageState extends State<AwardsPage> {
               errorBuilder: (
                 BuildContext context,
                 Object exception,
-                StackTrace stackTrace,
+                StackTrace? stackTrace,
               ) {
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               },
             );
           }
@@ -802,22 +800,26 @@ class _AwardsPageState extends State<AwardsPage> {
             }
           });
 
-          var singleAward = Award(
+          final singleAward = Award(
             awardKey: key,
             category: value["category"],
             subCategory: awardsSubcategory,
             name: value["name"],
             description: value["description"],
             type: value["awardType"],
-            image: image,
+            image: image as Image?,
             achieve: value["achieve"].toDouble(),
-            circulation: value["circulation"].toDouble(),
+            circulation: value["circulation"] == null ? 0 : value["circulation"].toDouble(),
             rScore: value["rScore"] == null ? 0 : value["rScore"].toDouble(),
             rarity: value["rarity"],
             // Goal might be null sometimes (e.g. travel awards for < level 15)
             goal: value["goal"] == null ? 0 : value["goal"].toDouble(),
-            current: value["current"].toDouble(),
-            dateAwarded: value["awarded_time"].toDouble(),
+            current: value["current"] == null
+                ? 0
+                : value["current"] is String
+                    ? double.parse(value["current"])
+                    : value["current"].toDouble(),
+            dateAwarded: value["awarded_time"] == null ? 0 : value["awarded_time"].toDouble(),
             daysLeft: value["left"] == null
                 ? -99 // Means no time
                 : value["left"] is String
@@ -826,9 +828,9 @@ class _AwardsPageState extends State<AwardsPage> {
             // Avoid lists in comments (due to bug in imports from YATA)
             comment: value["comment"] is List<dynamic> ? "" : value["comment"],
             pinned: isPinned,
-            doubleMerit: value["double"] ?? null,
-            tripleMerit: value["triple"] ?? null,
-            nextCrime: value["next"] ?? null,
+            doubleMerit: value["double"],
+            tripleMerit: value["triple"],
+            nextCrime: value["next"],
           );
 
           // Assign maxFinite so that they appear first if sorted by days left
@@ -844,7 +846,7 @@ class _AwardsPageState extends State<AwardsPage> {
           }
 
           // Add to pinned list
-          if (singleAward.pinned) {
+          if (singleAward.pinned!) {
             _pinProvider.pinnedAwards.add(singleAward);
             _pinProvider.pinnedNames.add(singleAward.name);
           }
@@ -865,41 +867,30 @@ class _AwardsPageState extends State<AwardsPage> {
     _buildAwardsWidgetList();
 
     // Sort for the first time
-    var awardsSort = AwardsSort();
+    final awardsSort = AwardsSort();
     switch (_savedSort) {
       case '':
         awardsSort.type = AwardsSortType.nameAsc;
-        break;
       case 'percentageDes':
         awardsSort.type = AwardsSortType.percentageDes;
-        break;
       case 'percentageAsc':
         awardsSort.type = AwardsSortType.percentageAsc;
-        break;
       case 'categoryDes':
         awardsSort.type = AwardsSortType.categoryDes;
-        break;
       case 'categoryAsc':
         awardsSort.type = AwardsSortType.categoryAsc;
-        break;
       case 'nameDes':
         awardsSort.type = AwardsSortType.nameDes;
-        break;
       case 'nameAsc':
         awardsSort.type = AwardsSortType.nameAsc;
-        break;
       case 'rarityAsc':
         awardsSort.type = AwardsSortType.rarityAsc;
-        break;
       case 'rarityDesc':
         awardsSort.type = AwardsSortType.rarityDesc;
-        break;
       case 'daysAsc':
         awardsSort.type = AwardsSortType.daysAsc;
-        break;
       case 'daysDes':
         awardsSort.type = AwardsSortType.daysDes;
-        break;
     }
     _sortAwards(awardsSort, initialLoad: true);
   }
@@ -909,13 +900,13 @@ class _AwardsPageState extends State<AwardsPage> {
   /// _allAwardsCards list based on the _allAwards (models) list, plus we
   /// add an extra header and footer (first and last items)
   void _buildAwardsWidgetList() {
-    Widget header = _header();
-    Widget footer = SizedBox(height: 90);
+    final Widget header = _header();
+    const Widget footer = SizedBox(height: 90);
 
-    var newList = <Widget>[];
+    final newList = <Widget>[];
     newList.add(header);
 
-    for (var award in _allAwards) {
+    for (final award in _allAwards) {
       newList.add(
         AwardCard(
           award: award,
@@ -942,16 +933,16 @@ class _AwardsPageState extends State<AwardsPage> {
       ..totalMedals = catJson['AllMedals']['nAwards'];
 
     // Then fill rest of categories in _allCategories list
-    var statModel = Map<String, String>();
-    for (var stats in catJson.entries) {
-      var catName = stats.key;
-      var catStats = "${stats.value["nAwarded"]}\/${stats.value["nAwards"]}";
+    final statModel = <String, String>{};
+    for (final stats in catJson.entries) {
+      final catName = stats.key;
+      final catStats = "${stats.value["nAwarded"]}/${stats.value["nAwards"]}";
       statModel.addAll({catName: catStats});
     }
 
     _allCategories.forEach((key, value) {
-      for (var catStats in statModel.entries) {
-        if (key.toLowerCase() == catStats.key.toLowerCase()) {
+      for (final catStats in statModel.entries) {
+        if (key!.toLowerCase() == catStats.key.toLowerCase()) {
           _allCategories.update(key, (value) => catStats.value);
         }
       }
@@ -959,54 +950,47 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   void _sortAwards(AwardsSort choice, {bool initialLoad = false}) {
-    String sortToSave;
-    switch (choice.type) {
+    late String sortToSave;
+    if (choice.type == null) return;
+    switch (choice.type!) {
       case AwardsSortType.percentageDes:
-        _allAwards.sort((a, b) => b.achieve.compareTo(a.achieve));
+        _allAwards.sort((a, b) => b.achieve!.compareTo(a.achieve!));
         _buildAwardsWidgetList();
         sortToSave = 'percentageDes';
-        break;
       case AwardsSortType.percentageAsc:
-        _allAwards.sort((a, b) => a.achieve.compareTo(b.achieve));
+        _allAwards.sort((a, b) => a.achieve!.compareTo(b.achieve!));
         _buildAwardsWidgetList();
         sortToSave = 'percentageAsc';
-        break;
       case AwardsSortType.categoryDes:
         _allAwards.sort((a, b) => b.subCategory.compareTo(a.subCategory));
         _buildAwardsWidgetList();
         sortToSave = 'categoryDes';
-        break;
       case AwardsSortType.categoryAsc:
         _allAwards.sort((a, b) => a.subCategory.compareTo(b.subCategory));
         _buildAwardsWidgetList();
         sortToSave = 'categoryAsc';
-        break;
       case AwardsSortType.nameDes:
-        _allAwards.sort((a, b) => b.name.trim().compareTo(a.name.trim()));
+        _allAwards.sort((a, b) => b.name!.trim().compareTo(a.name!.trim()));
         _buildAwardsWidgetList();
         sortToSave = 'nameDes';
-        break;
       case AwardsSortType.nameAsc:
-        _allAwards.sort((a, b) => a.name.trim().compareTo(b.name.trim()));
+        _allAwards.sort((a, b) => a.name!.trim().compareTo(b.name!.trim()));
         _buildAwardsWidgetList();
         sortToSave = 'nameAsc';
-        break;
       case AwardsSortType.rarityAsc:
-        _allAwards.sort((a, b) => b.rarity.compareTo(a.rarity));
+        _allAwards.sort((a, b) => b.rarity!.compareTo(a.rarity!));
         _buildAwardsWidgetList();
         sortToSave = 'rarityAsc';
-        break;
       case AwardsSortType.rarityDesc:
-        _allAwards.sort((a, b) => a.rarity.compareTo(b.rarity));
+        _allAwards.sort((a, b) => a.rarity!.compareTo(b.rarity!));
         _buildAwardsWidgetList();
         sortToSave = 'rarityDesc';
-        break;
       case AwardsSortType.daysAsc:
-        _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+        _allAwards.sort((a, b) => a.daysLeft!.compareTo(b.daysLeft!));
         // As there are some awards with daysLeft = -99 that would go first in list
         // (which makes no sense, as daysLeft cannot be accounted for these), we have
         // to take them out from the beginning and add them to the end before rebuilding the list
-        var noTimeAwards = <Award>[];
+        final noTimeAwards = <Award>[];
         for (var i = 0; i < _allAwards.length; i++) {
           if (_allAwards[i].daysLeft == -99) {
             noTimeAwards.add(_allAwards[i]);
@@ -1014,18 +998,16 @@ class _AwardsPageState extends State<AwardsPage> {
             break;
           }
         }
-        for (var noTime in noTimeAwards) {
+        for (final noTime in noTimeAwards) {
           _allAwards.remove(noTime);
         }
         _allAwards.addAll(noTimeAwards);
         _buildAwardsWidgetList();
         sortToSave = 'daysAsc';
-        break;
       case AwardsSortType.daysDes:
-        _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
+        _allAwards.sort((a, b) => b.daysLeft!.compareTo(a.daysLeft!));
         _buildAwardsWidgetList();
         sortToSave = 'daysDes';
-        break;
     }
     // Only save if we are not loading from shared prefs on init
     if (!initialLoad) {

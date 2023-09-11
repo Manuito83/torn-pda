@@ -1,14 +1,14 @@
 // Flutter imports:
+// ignore: unused_import
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:get/get.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/pages/chaining/retals_page.dart';
@@ -23,29 +23,27 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/bounce_tabbar.dart';
-
-import '../main.dart';
 //import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ChainingPage extends StatefulWidget {
   final bool retalsRedirection;
 
-  ChainingPage({@required this.retalsRedirection});
+  const ChainingPage({required this.retalsRedirection});
 
   @override
-  _ChainingPageState createState() => _ChainingPageState();
+  ChainingPageState createState() => ChainingPageState();
 }
 
-class _ChainingPageState extends State<ChainingPage> {
-  ThemeProvider _themeProvider;
-  ChainStatusProvider _chainStatusProvider;
-  Future _preferencesLoaded;
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  RetalsController _r;
+class ChainingPageState extends State<ChainingPage> {
+  ThemeProvider? _themeProvider;
+  late ChainStatusProvider _chainStatusProvider;
+  Future? _preferencesLoaded;
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late RetalsController _r;
 
   int _currentPage = 0;
-  bool _isAppBarTop;
+  late bool _isAppBarTop;
 
   bool _retaliationEnabled = true;
 
@@ -66,12 +64,12 @@ class _ChainingPageState extends State<ChainingPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    final bool isThemeLight = _themeProvider.currentTheme == AppTheme.light || false;
+    final bool isThemeLight = _themeProvider!.currentTheme == AppTheme.light || false;
     final double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
     return Scaffold(
-      backgroundColor: _themeProvider.canvas,
+      backgroundColor: _themeProvider!.canvas,
       extendBody: true,
       body: FutureBuilder(
         future: _preferencesLoaded,
@@ -89,9 +87,9 @@ class _ChainingPageState extends State<ChainingPage> {
                         retaliationCallback: _retaliationCallback,
                         //tabCallback: _tabCallback,
                       ),
-                      AttacksPage(),
-                      WarPage(),
-                      if (_userProvider.basic.faction.factionId != 0 && _retaliationEnabled) RetalsPage(),
+                      const AttacksPage(),
+                      const WarPage(),
+                      if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled) const RetalsPage(),
                       /*
                       TacPage(
                         userKey: _myCurrentKey,
@@ -116,22 +114,22 @@ class _ChainingPageState extends State<ChainingPage> {
                           items: [
                             Image.asset(
                               'images/icons/ic_target_account_black_48dp.png',
-                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                              color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                               width: 28,
                             ),
                             Icon(
                               Icons.people,
-                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                              color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                             ),
                             Image.asset(
                               'images/icons/faction.png',
                               width: 17,
-                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                              color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                             ),
-                            if (_userProvider.basic.faction.factionId != 0 && _retaliationEnabled)
+                            if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
                               FaIcon(
                                 FontAwesomeIcons.personWalkingArrowLoopLeft,
-                                color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                                color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                                 size: 18,
                               ),
                             // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
@@ -139,7 +137,7 @@ class _ChainingPageState extends State<ChainingPage> {
                           locationTop: true,
                         );
                       } else {
-                        return SizedBox.shrink();
+                        return const SizedBox.shrink();
                       }
                     },
                   ),
@@ -167,22 +165,22 @@ class _ChainingPageState extends State<ChainingPage> {
                     items: [
                       Image.asset(
                         'images/icons/ic_target_account_black_48dp.png',
-                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                        color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                         width: 28,
                       ),
                       Icon(
                         Icons.people,
-                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                        color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                       ),
                       Image.asset(
                         'images/icons/faction.png',
                         width: 17,
-                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                        color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                       ),
-                      if (_userProvider.basic.faction.factionId != 0 && _retaliationEnabled)
+                      if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
                         FaIcon(
                           FontAwesomeIcons.personWalkingArrowLoopLeft,
-                          color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                          color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                           size: 18,
                         ),
                       // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
@@ -190,7 +188,7 @@ class _ChainingPageState extends State<ChainingPage> {
                     locationTop: false,
                   );
                 } else {
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 }
               },
             )
@@ -211,7 +209,7 @@ class _ChainingPageState extends State<ChainingPage> {
       await _chainStatusProvider.loadPreferences();
     }
 
-    if (widget.retalsRedirection && (_userProvider.basic.faction.factionId != 0 || !_retaliationEnabled)) {
+    if (widget.retalsRedirection && (_userProvider.basic!.faction!.factionId != 0 || !_retaliationEnabled)) {
       _currentPage = 3;
     } else {
       _currentPage = await Prefs().getChainingCurrentPage();
@@ -223,23 +221,19 @@ class _ChainingPageState extends State<ChainingPage> {
     switch (_currentPage) {
       case 0:
         analytics.setCurrentScreen(screenName: 'targets');
-        break;
       case 1:
         analytics.setCurrentScreen(screenName: 'attacks');
-        break;
       case 2:
         analytics.setCurrentScreen(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
-          Get.put(WarController()).launchShowCaseAddFaction();
+          Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
-        break;
       case 3:
-        if (_userProvider.basic.faction.factionId != 0 && _retaliationEnabled) {
+        if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled) {
           analytics.setCurrentScreen(screenName: 'retals');
           _r.retrieveRetals(context);
         }
-        break;
     }
   }
 
@@ -253,24 +247,20 @@ class _ChainingPageState extends State<ChainingPage> {
       case 0:
         analytics.setCurrentScreen(screenName: 'targets');
         Prefs().setChainingCurrentPage(_currentPage);
-        break;
       case 1:
         analytics.setCurrentScreen(screenName: 'attacks');
         Prefs().setChainingCurrentPage(_currentPage);
-        break;
       case 2:
         analytics.setCurrentScreen(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
-          Get.put(WarController()).launchShowCaseAddFaction();
+          Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
         Prefs().setChainingCurrentPage(_currentPage);
-        break;
       case 3:
         analytics.setCurrentScreen(screenName: 'retals');
         Prefs().setChainingCurrentPage(_currentPage);
         _r.retrieveRetals(context);
-        break;
     }
   }
 }

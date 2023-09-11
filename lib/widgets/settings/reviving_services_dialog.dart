@@ -6,11 +6,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class RevivingServicesDialog extends StatefulWidget {
   @override
-  _RevivingServicesDialogState createState() => _RevivingServicesDialogState();
+  RevivingServicesDialogState createState() => RevivingServicesDialogState();
 }
 
-class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
-  Future _preferencesLoaded;
+class RevivingServicesDialogState extends State<RevivingServicesDialog> {
+  Future? _preferencesLoaded;
   bool _nukeReviveEnabled = true;
   bool _uhcReviveEnabled = true;
   bool _helaReviveEnabled = true;
@@ -25,17 +25,17 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Reviving services"),
+      title: const Text("Reviving services"),
       content: FutureBuilder(
         future: _preferencesLoaded,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) return SizedBox.shrink();
+          if (snapshot.connectionState != ConnectionState.done) return const SizedBox.shrink();
           return SingleChildScrollView(
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Choose which reviving services you might want to use. "
-                  "If enabled, when you are in hospital you\'ll have the option to call "
+                  "If enabled, when you are in hospital you'll have the option to call "
                   "one of their revivers from several places (e.g. Profile and Chaining sections).",
                   style: TextStyle(
                     fontSize: 12,
@@ -46,7 +46,7 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "Nuke Reviving Services",
                           style: TextStyle(
@@ -73,7 +73,7 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "UHC Reviving Services",
                           style: TextStyle(
@@ -100,7 +100,7 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "HeLa Reviving Services",
                           style: TextStyle(
@@ -127,7 +127,7 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "WTF Reviving Services",
                           style: TextStyle(
@@ -149,8 +149,8 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
                     ],
                   ),
                 ),
-                SizedBox(height: 15),
-                Text(
+                const SizedBox(height: 15),
+                const Text(
                   "NOTE: Torn PDA is not affiliated to any of these services in any form",
                   style: TextStyle(
                     fontSize: 12,
@@ -165,7 +165,7 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
         Padding(
           padding: const EdgeInsets.only(right: 15),
           child: TextButton(
-            child: Text("Close"),
+            child: const Text("Close"),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -176,15 +176,15 @@ class _RevivingServicesDialogState extends State<RevivingServicesDialog> {
   }
 
   Future _restorePreferences() async {
-    var prefs = Prefs();
-    var futures = [
+    final prefs = Prefs();
+    final futures = [
       prefs.getUseNukeRevive(),
       prefs.getUseUhcRevive(),
       prefs.getUseHelaRevive(),
       prefs.getUseWtfRevive(),
     ];
 
-    var results = await Future.wait(futures);
+    final results = await Future.wait(futures);
 
     setState(() {
       _nukeReviveEnabled = results[0];

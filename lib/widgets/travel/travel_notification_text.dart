@@ -1,10 +1,8 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 // Project imports:
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -13,22 +11,22 @@ class TravelNotificationTextDialog extends StatefulWidget {
   final String title;
   final String body;
 
-  TravelNotificationTextDialog({
-    @required this.title,
-    @required this.body,
+  const TravelNotificationTextDialog({
+    required this.title,
+    required this.body,
   });
 
   @override
-  _TravelNotificationTextDialogState createState() => _TravelNotificationTextDialogState();
+  TravelNotificationTextDialogState createState() => TravelNotificationTextDialogState();
 }
 
-class _TravelNotificationTextDialogState extends State<TravelNotificationTextDialog> {
-  ThemeProvider _themeProvider;
+class TravelNotificationTextDialogState extends State<TravelNotificationTextDialog> {
+  late ThemeProvider _themeProvider;
 
-  final _notificationTitleController = new TextEditingController();
-  final _notificationBodyController = new TextEditingController();
+  final _notificationTitleController = TextEditingController();
+  final _notificationBodyController = TextEditingController();
 
-  var _notificationFormKey = GlobalKey<FormState>();
+  final _notificationFormKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -39,28 +37,27 @@ class _TravelNotificationTextDialogState extends State<TravelNotificationTextDia
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return SingleChildScrollView(
       child: Stack(
         children: <Widget>[
           SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: 45,
                 bottom: 16,
                 left: 16,
                 right: 16,
               ),
-              margin: EdgeInsets.only(top: 30),
-              decoration: new BoxDecoration(
+              margin: const EdgeInsets.only(top: 30),
+              decoration: BoxDecoration(
                 color: _themeProvider.secondBackground,
-                shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
                     blurRadius: 10.0,
-                    offset: const Offset(0.0, 10.0),
+                    offset: Offset(0.0, 10.0),
                   ),
                 ],
               ),
@@ -70,57 +67,56 @@ class _TravelNotificationTextDialogState extends State<TravelNotificationTextDia
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 3),
                       child: Text('Notification title'),
                     ),
                     TextFormField(
-                      style: TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14),
                       controller: _notificationTitleController,
                       maxLength: 15,
                       minLines: 1,
-                      maxLines: 1,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         counterText: "",
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return "Cannot be empty!";
                         }
                         return null;
                       },
                     ),
-                    SizedBox(height: 16.0),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
+                    const SizedBox(height: 16.0),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 3),
                       child: Text('Notification description'),
                     ),
                     TextFormField(
-                      style: TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14),
                       controller: _notificationBodyController,
                       maxLength: 50,
                       minLines: 1,
                       maxLines: 2,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         counterText: "",
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return "Cannot be empty!";
                         }
                         return null;
                       },
                     ),
-                    SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Change"),
+                          child: const Text("Change"),
                           onPressed: () async {
-                            if (_notificationFormKey.currentState.validate()) {
+                            if (_notificationFormKey.currentState!.validate()) {
                               // Get rid of dialog first, so that it can't
                               // be pressed twice
                               Navigator.of(context).pop();
@@ -132,20 +128,20 @@ class _TravelNotificationTextDialogState extends State<TravelNotificationTextDia
 
                               BotToast.showText(
                                 text: "Notification details changed!",
-                                textStyle: TextStyle(
+                                textStyle: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
                                 contentColor: Colors.green,
-                                duration: Duration(seconds: 3),
-                                contentPadding: EdgeInsets.all(10),
+                                duration: const Duration(seconds: 3),
+                                contentPadding: const EdgeInsets.all(10),
                               );
                             }
                           },
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         TextButton(
-                          child: Text("Cancel"),
+                          child: const Text("Cancel"),
                           onPressed: () {
                             Navigator.of(context).pop();
                             _notificationTitleController.text = '';

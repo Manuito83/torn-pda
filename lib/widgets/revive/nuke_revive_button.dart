@@ -1,38 +1,37 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/external/nuke_revive.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NukeReviveButton extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final OwnProfileExtended user;
-  final SettingsProvider settingsProvider;
-  final WebViewProvider webViewProvider;
+  final ThemeProvider? themeProvider;
+  final OwnProfileExtended? user;
+  final SettingsProvider? settingsProvider;
+  final WebViewProvider? webViewProvider;
 
   const NukeReviveButton({
-    @required this.themeProvider,
-    @required this.settingsProvider,
-    @required this.webViewProvider,
+    required this.themeProvider,
+    required this.settingsProvider,
+    required this.webViewProvider,
     this.user,
-    Key key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
-  _NukeReviveButtonState createState() => _NukeReviveButtonState();
+  NukeReviveButtonState createState() => NukeReviveButtonState();
 }
 
-class _NukeReviveButtonState extends State<NukeReviveButton> {
-  OwnProfileExtended _user;
+class NukeReviveButtonState extends State<NukeReviveButton> {
+  OwnProfileExtended? _user;
 
   @override
   void initState() {
@@ -54,8 +53,8 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
             padding: const EdgeInsets.only(right: 13),
             child: Image.asset('images/icons/nuke-revive.png', width: 24),
           ),
-          SizedBox(width: 10),
-          Flexible(child: Text("Request a revive (Nuke)")),
+          const SizedBox(width: 10),
+          const Flexible(child: Text("Request a revive (Nuke)")),
         ],
       ),
     );
@@ -77,22 +76,21 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: widget.themeProvider.secondBackground,
-                      shape: BoxShape.rectangle,
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: widget.themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -107,7 +105,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                               Flexible(
                                 child: Text(
                                   "REQUEST A REVIVE FROM NUKE",
-                                  style: TextStyle(fontSize: 11, color: widget.themeProvider.mainText),
+                                  style: TextStyle(fontSize: 11, color: widget.themeProvider!.mainText),
                                 ),
                               ),
                             ],
@@ -141,7 +139,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                             browserTapType: BrowserTapType.long,
                                           );
                                     },
-                                    child: Text(
+                                    child: const Text(
                                       'forum thread',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -151,42 +149,44 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                     ),
                                   ),
                                 ),
-                                TextSpan(text: ' or in the Central Hospital '),
+                                const TextSpan(text: ' or in the Central Hospital '),
                                 TextSpan(
                                   text: 'Discord server',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blue,
                                     fontSize: 13,
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () async {
-                                      var url = 'https://discord.gg/qSHjTXx';
+                                      const url = 'https://discord.gg/qSHjTXx';
                                       if (await canLaunchUrl(Uri.parse(url))) {
                                         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                                       }
                                     },
                                 ),
-                                TextSpan(
-                                    text: "\n\nEach revive must be paid directly to the reviver (unless under a "
-                                        "contract with Nuke) and costs \$1 million or 1 Xanax."),
-                                TextSpan(
-                                    text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
-                                        "you risk getting blocked from Nuke!"),
+                                const TextSpan(
+                                  text: "\n\nEach revive must be paid directly to the reviver (unless under a "
+                                      "contract with Nuke) and costs \$1 million or 1 Xanax.",
+                                ),
+                                const TextSpan(
+                                  text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
+                                      "you risk getting blocked from Nuke!",
+                                ),
                               ],
                             ),
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Medic!"),
+                              child: const Text("Medic!"),
                               onPressed: () async {
                                 // User can be null if we are not accessing from the Profile page
                                 if (widget.user == null) {
-                                  var apiResponse =
+                                  final apiResponse =
                                       await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
                                   if (apiResponse is OwnProfileExtended) {
                                     _user = apiResponse;
@@ -197,65 +197,65 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                                   BotToast.showText(
                                     text: 'There was an error contacting Torn API to get your current status, '
                                         'please try again after a while!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentColor: Colors.red[800]!,
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
                                 }
 
-                                if (_user.status.color != 'red' && _user.status.state != "Hospital") {
+                                if (_user!.status!.color != 'red' && _user!.status!.state != "Hospital") {
                                   BotToast.showText(
                                     text: 'According to Torn you are not currently hospitalized, please wait a '
                                         'few seconds and try again!',
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 13,
                                       color: Colors.white,
                                     ),
-                                    contentColor: Colors.red[800],
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentColor: Colors.red[800]!,
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                   Navigator.of(context).pop();
                                   return;
                                 }
 
-                                var nuke = NukeRevive(
-                                  playerId: _user.playerId.toString(),
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerLocation: _user.travel.destination,
+                                final nuke = NukeRevive(
+                                  playerId: _user!.playerId.toString(),
+                                  playerName: _user!.name,
+                                  playerFaction: _user!.faction!.factionName,
+                                  playerLocation: _user!.travel!.destination,
                                 );
 
                                 nuke.callMedic().then((value) {
                                   if (value.isNotEmpty) {
                                     BotToast.showText(
                                       text: value,
-                                      textStyle: TextStyle(
+                                      textStyle: const TextStyle(
                                         fontSize: 13,
                                         color: Colors.white,
                                       ),
-                                      contentColor: Colors.green[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
+                                      contentColor: Colors.green[800]!,
+                                      duration: const Duration(seconds: 5),
+                                      contentPadding: const EdgeInsets.all(10),
                                     );
                                   } else {
                                     BotToast.showText(
                                       text: 'There was an error contacting Nuke, try again later '
-                                          'or contact them through Central Hospital\'s Discord '
+                                          "or contact them through Central Hospital's Discord "
                                           'server!',
-                                      textStyle: TextStyle(
+                                      textStyle: const TextStyle(
                                         fontSize: 13,
                                         color: Colors.white,
                                       ),
-                                      contentColor: Colors.red[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
+                                      contentColor: Colors.red[800]!,
+                                      duration: const Duration(seconds: 5),
+                                      contentPadding: const EdgeInsets.all(10),
                                     );
                                   }
                                 });
@@ -263,7 +263,7 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                               },
                             ),
                             TextButton(
-                              child: Text("Cancel"),
+                              child: const Text("Cancel"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -279,9 +279,9 @@ class _NukeReviveButtonState extends State<NukeReviveButton> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: widget.themeProvider.secondBackground,
+                    backgroundColor: widget.themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: widget.themeProvider.secondBackground,
+                      backgroundColor: widget.themeProvider!.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,

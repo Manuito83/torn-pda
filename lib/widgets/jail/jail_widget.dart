@@ -11,22 +11,22 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/jail/jail_record_dialog.dart';
 
 class JailWidget extends StatefulWidget {
-  final InAppWebViewController webview;
+  final InAppWebViewController? webview;
   final Function fireScriptCallback;
   final String playerName;
 
   const JailWidget({
-    @required this.webview,
-    @required this.fireScriptCallback,
-    @required this.playerName,
-    Key key,
-  }) : super(key: key);
+    required this.webview,
+    required this.fireScriptCallback,
+    required this.playerName,
+    super.key,
+  });
 
   @override
-  _JailWidgetState createState() => _JailWidgetState();
+  JailWidgetState createState() => JailWidgetState();
 }
 
-class _JailWidgetState extends State<JailWidget> {
+class JailWidgetState extends State<JailWidget> {
   // Log scale setup
   // Position will be between 0 and 1000
   final _minp = 0;
@@ -38,9 +38,9 @@ class _JailWidgetState extends State<JailWidget> {
   final _scrollController = ScrollController();
   final _expandableController = ExpandableController();
 
-  Future _getPreferences;
+  Future? _getPreferences;
 
-  JailModel _jailModel;
+  late JailModel _jailModel;
   bool _panelExpanded = false;
 
   @override
@@ -121,7 +121,7 @@ class _JailWidgetState extends State<JailWidget> {
                   SizedBox(
                     width: 80,
                     child: Column(
-                      children: const [
+                      children: [
                         Text(
                           'JAIL',
                           style: TextStyle(color: Colors.orange, fontSize: 12),
@@ -129,6 +129,10 @@ class _JailWidgetState extends State<JailWidget> {
                         Text(
                           '(tap to expand)',
                           style: TextStyle(color: Colors.orange, fontSize: 9),
+                        ),
+                        Text(
+                          _jailModel.filtersEnabled ? '' : 'FILTERS DISABLED',
+                          style: TextStyle(color: Colors.red, fontSize: 9),
                         ),
                       ],
                     ),
@@ -165,7 +169,7 @@ class _JailWidgetState extends State<JailWidget> {
                     ),
                 ],
               ),
-              collapsed: null,
+              collapsed: Container(),
               expanded: Padding(
                 padding: const EdgeInsets.all(5),
                 child: _vaultExpanded(),
@@ -185,11 +189,22 @@ class _JailWidgetState extends State<JailWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _bailEnabled(),
-            _bustEnabler(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _filtersEnabled(),
+                _excludeSelf(),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _bailEnabled(),
+                _bustEnabler(),
+              ],
+            ),
           ],
         ),
-        _excludeSelf(),
         _timeSlider(),
         _levelSlider(),
         _scoreSlider(),
@@ -255,11 +270,40 @@ class _JailWidgetState extends State<JailWidget> {
     );
   }
 
+  Row _filtersEnabled() {
+    return Row(
+      children: [
+        const Text(
+          "Filters enabled",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Switch(
+          value: _jailModel.filtersEnabled,
+          activeColor: Colors.green,
+          activeTrackColor: Colors.green[200],
+          inactiveThumbColor: Colors.red,
+          inactiveTrackColor: Colors.red[200],
+          onChanged: (enabled) {
+            setState(() {
+              _jailModel.filtersEnabled = enabled;
+            });
+            widget.fireScriptCallback(_jailModel);
+            _saveModel();
+          },
+        )
+      ],
+    );
+  }
+
   Row _excludeSelf() {
     return Row(
       children: [
         const Text(
-          "Always show oneself",
+          "Always show self",
           style: TextStyle(
             color: Colors.white,
             fontSize: 12,
@@ -288,8 +332,8 @@ class _JailWidgetState extends State<JailWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: const Text(
+        const Flexible(
+          child: Text(
             "Time (h)",
             style: TextStyle(
               color: Colors.white,
@@ -297,7 +341,7 @@ class _JailWidgetState extends State<JailWidget> {
             ),
           ),
         ),
-        SizedBox(width: 5),
+        const SizedBox(width: 5),
         Row(
           children: [
             Text(
@@ -340,8 +384,8 @@ class _JailWidgetState extends State<JailWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: const Text(
+        const Flexible(
+          child: Text(
             "Level",
             style: TextStyle(
               color: Colors.white,
@@ -349,7 +393,7 @@ class _JailWidgetState extends State<JailWidget> {
             ),
           ),
         ),
-        SizedBox(width: 5),
+        const SizedBox(width: 5),
         Row(
           children: [
             Text(
@@ -389,17 +433,6 @@ class _JailWidgetState extends State<JailWidget> {
     );
   }
 
-  RangeValues _values = RangeValues(0, 250000);
-  double _valueToPercent(double value) {
-    if (value <= 40000) {
-      return value * 0.5 / 40000;
-    } else if (value <= 175000) {
-      return 0.5 + (value - 40000) * 0.4 / (175000 - 40000);
-    } else {
-      return 0.9 + (value - 175000) * 0.1 / (250000 - 175000);
-    }
-  }
-
   /// From 0-40000, travel 50%
   /// From 40000-175000 travel 40%
   /// From 175000 to 250000 travel 10%
@@ -431,14 +464,14 @@ class _JailWidgetState extends State<JailWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Score Min ${_jailModel.scoreMin.toString()}",
+              "Score Min ${_jailModel.scoreMin}",
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
               ),
             ),
             Text(
-              "Score Max ${_jailModel.scoreMax.toString()}",
+              "Score Max ${_jailModel.scoreMax}",
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
@@ -455,15 +488,15 @@ class _JailWidgetState extends State<JailWidget> {
                 child: FlutterSlider(
                   min: 0,
                   max: 1,
-                  step: FlutterSliderStep(step: 0.01),
+                  step: const FlutterSliderStep(step: 0.01),
                   values: [
                     customScoreReverseMapping(_jailModel.scoreMin.toDouble()),
                     customScoreReverseMapping(_jailModel.scoreMax.toDouble()),
                   ],
                   rangeSlider: true,
                   onDragging: (handlerIndex, lower, upper) {
-                    double lowerActualValue = customScoreMapping(lower);
-                    double upperActualValue = customScoreMapping(upper);
+                    final double lowerActualValue = customScoreMapping(lower);
+                    final double upperActualValue = customScoreMapping(upper);
                     setState(() {
                       _jailModel.scoreMin = lowerActualValue.toInt();
                       _jailModel.scoreMax = upperActualValue.toInt();
@@ -474,7 +507,7 @@ class _JailWidgetState extends State<JailWidget> {
                     _saveModel();
                   },
                   handler: FlutterSliderHandler(
-                    decoration: BoxDecoration(),
+                    decoration: const BoxDecoration(),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
@@ -485,7 +518,7 @@ class _JailWidgetState extends State<JailWidget> {
                     ),
                   ),
                   rightHandler: FlutterSliderHandler(
-                    decoration: BoxDecoration(),
+                    decoration: const BoxDecoration(),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
@@ -512,16 +545,16 @@ class _JailWidgetState extends State<JailWidget> {
                   tooltip: FlutterSliderTooltip(
                     disabled: false,
                     custom: (value) {
-                      double actualValue = customScoreMapping(value);
+                      final double actualValue = customScoreMapping(value);
                       return Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(5),
                           color: Colors.black,
                         ),
                         child: Text(
                           actualValue.toStringAsFixed(0),
-                          style: TextStyle(fontSize: 12, color: Colors.white),
+                          style: const TextStyle(fontSize: 12, color: Colors.white),
                         ),
                       );
                     },
@@ -534,7 +567,6 @@ class _JailWidgetState extends State<JailWidget> {
               onTap: () {
                 showDialog<void>(
                   context: context,
-                  barrierDismissible: true,
                   builder: (BuildContext context) {
                     return JailRecordDialog(
                       currentRecord: _jailModel.scoreMax,
@@ -596,6 +628,7 @@ class _JailWidgetState extends State<JailWidget> {
 
   void _saveModel() {
     _jailModel
+      ..filtersEnabled = _jailModel.filtersEnabled
       ..levelMin = _jailModel.levelMin
       ..levelMax = _jailModel.levelMax
       ..timeMin = _jailModel.timeMin

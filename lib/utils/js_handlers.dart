@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 String handler_flutterPlatformReady() {
   return '''
     // Initialize event listener for other handlers

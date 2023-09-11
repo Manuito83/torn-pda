@@ -7,26 +7,26 @@ import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class BountiesWidget extends StatefulWidget {
-  final InAppWebViewController webview;
+  final InAppWebViewController? webview;
   final Function fireScriptCallback;
 
   const BountiesWidget({
-    @required this.webview,
-    @required this.fireScriptCallback,
-    Key key,
-  }) : super(key: key);
+    required this.webview,
+    required this.fireScriptCallback,
+    super.key,
+  });
 
   @override
-  _BountiesWidgetState createState() => _BountiesWidgetState();
+  BountiesWidgetState createState() => BountiesWidgetState();
 }
 
-class _BountiesWidgetState extends State<BountiesWidget> {
+class BountiesWidgetState extends State<BountiesWidget> {
   final _scrollController = ScrollController();
   final _expandableController = ExpandableController();
 
-  Future _getPreferences;
+  Future? _getPreferences;
 
-  BountiesModel _bountiesModel;
+  late BountiesModel _bountiesModel;
   bool _panelExpanded = false;
 
   @override
@@ -90,10 +90,10 @@ class _BountiesWidgetState extends State<BountiesWidget> {
                         ],
                       ),
                     ),
-                  SizedBox(
+                  const SizedBox(
                     width: 80,
                     child: Column(
-                      children: const [
+                      children: [
                         Text(
                           'BOUNTIES',
                           style: TextStyle(color: Colors.orange, fontSize: 12),
@@ -123,7 +123,7 @@ class _BountiesWidgetState extends State<BountiesWidget> {
                     ),
                 ],
               ),
-              collapsed: null,
+              collapsed: Container(),
               expanded: Padding(
                 padding: const EdgeInsets.all(5),
                 child: _vaultExpanded(),
@@ -150,8 +150,8 @@ class _BountiesWidgetState extends State<BountiesWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Flexible(
-          child: const Text(
+        const Flexible(
+          child: Text(
             "Max level",
             style: TextStyle(
               color: Colors.white,
@@ -159,7 +159,7 @@ class _BountiesWidgetState extends State<BountiesWidget> {
             ),
           ),
         ),
-        SizedBox(width: 5),
+        const SizedBox(width: 5),
         Row(
           children: [
             Slider(
@@ -216,8 +216,8 @@ class _BountiesWidgetState extends State<BountiesWidget> {
               },
             ),
             Text(
-              "${_bountiesModel.removeRed ? "Hide" : "Show"}",
-              style: TextStyle(
+              _bountiesModel.removeRed ? "Hide" : "Show",
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
               ),

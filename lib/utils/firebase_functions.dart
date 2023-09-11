@@ -1,12 +1,11 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:flutter/material.dart';
 
 final firebaseFunctions = _FirebaseFunctions();
 
 class _FirebaseFunctions {
   Future<int> sendAttackAssistMessage({
-    @required String attackId,
-    String attackName = "",
+    required String attackId,
+    String? attackName = "",
     String attackLevel = "",
     String attackLife = "",
     String attackAge = "",
@@ -16,13 +15,13 @@ class _FirebaseFunctions {
     String drinks = "unk",
     String exactStats = "",
   }) async {
-    HttpsCallable callable = FirebaseFunctions.instanceFor(
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
       region: 'us-east4',
     ).httpsCallable(
       'factionAssist-sendAssistMessage',
     );
 
-    HttpsCallableResult results = await callable.call(<String, dynamic>{
+    final HttpsCallableResult results = await callable.call(<String, dynamic>{
       'attackId': attackId,
       'attackName': attackName,
       'attackLevel': attackLevel,

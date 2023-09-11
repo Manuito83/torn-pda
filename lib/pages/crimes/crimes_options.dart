@@ -1,13 +1,11 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
+import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/models/crimes/crime_model.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
@@ -36,17 +34,17 @@ Map crimesCategories = {
 
 class CrimesOptions extends StatefulWidget {
   @override
-  _CrimesOptionsState createState() => _CrimesOptionsState();
+  CrimesOptionsState createState() => CrimesOptionsState();
 }
 
-class _CrimesOptionsState extends State<CrimesOptions> {
-  var _mainCrimeList = <Crime>[];
-  var _titleCrimeString = <String>[];
+class CrimesOptionsState extends State<CrimesOptions> {
+  final _mainCrimeList = <Crime>[];
+  final _titleCrimeString = <String>[];
 
-  CrimesProvider _crimesProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
-  Future _preferencesLoaded;
+  late CrimesProvider _crimesProvider;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  Future? _preferencesLoaded;
 
   @override
   void initState() {
@@ -62,10 +60,10 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
@@ -87,7 +85,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -98,18 +96,18 @@ class _CrimesOptionsState extends State<CrimesOptions> {
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: _titleCrimeString.length > 0
+                                child: _titleCrimeString.isNotEmpty
                                     ? Text('Active crimes: '
                                         '${_titleCrimeString.join(', ')}')
-                                    : Text('No active crimes'),
+                                    : const Text('No active crimes'),
                               ),
                               _crimesCards(),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -128,35 +126,35 @@ class _CrimesOptionsState extends State<CrimesOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Quick Crimes"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Quick Crimes"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           Navigator.of(context).pop();
         },
       ),
       actions: <Widget>[
         IconButton(
-          icon: Icon(Icons.delete_outline),
+          icon: const Icon(Icons.delete_outline),
           onPressed: () {
             _crimesProvider.deactivateAllCrimes();
             setState(() {
               _titleCrimeString.clear();
-              for (var crime in _mainCrimeList) {
-                if (crime.active) {
+              for (final crime in _mainCrimeList) {
+                if (crime.active!) {
                   crime.active = false;
                 }
               }
             });
             BotToast.showText(
               text: 'All crimes deactivated!',
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
-              duration: Duration(seconds: 3),
-              contentColor: Colors.grey[700],
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 3),
+              contentColor: Colors.grey[700]!,
+              contentPadding: const EdgeInsets.all(10),
             );
           },
         ),
@@ -165,18 +163,18 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   }
 
   Widget _crimesCards() {
-    var cardList = <Card>[];
+    final cardList = <Card>[];
     // Loop all categories and fill in cards
     crimesCategories.forEach((catNerve, catName) {
       // If nerve are equal, add children crimes
-      var thisCrimesList = <Crime>[];
-      _mainCrimeList.forEach((crime) {
+      final thisCrimesList = <Crime>[];
+      for (final crime in _mainCrimeList) {
         if (crime.nerve == catNerve) {
           thisCrimesList.add(crime);
         }
-      });
+      }
 
-      var crimesRows = <Widget>[];
+      final crimesRows = <Widget>[];
       for (var i = 0; i < thisCrimesList.length; i++) {
         crimesRows.add(
           Row(
@@ -190,18 +188,18 @@ class _CrimesOptionsState extends State<CrimesOptions> {
                       '${thisCrimesList[i].fullName}',
                       style: TextStyle(
                         fontSize: 13,
-                        color: thisCrimesList[i].active ? Colors.green : null,
-                        fontWeight: thisCrimesList[i].active ? FontWeight.bold : FontWeight.normal,
+                        color: thisCrimesList[i].active! ? Colors.green : null,
+                        fontWeight: thisCrimesList[i].active! ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],
                 ),
               ),
               Switch(
-                value: thisCrimesList[i].active,
+                value: thisCrimesList[i].active!,
                 onChanged: (bool value) {
                   setState(() {
-                    if (thisCrimesList[i].active) {
+                    if (thisCrimesList[i].active!) {
                       _deactivateCrime(thisCrimesList, i);
                     } else {
                       _activateCrime(thisCrimesList, i);
@@ -218,15 +216,15 @@ class _CrimesOptionsState extends State<CrimesOptions> {
       cardList.add(
         Card(
           child: ExpandablePanel(
-            collapsed: null,
+            collapsed: Container(),
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Row(
                 children: <Widget>[
-                  Icon(MdiIcons.fingerprint),
-                  SizedBox(width: 10),
+                  const Icon(MdiIcons.fingerprint),
+                  const SizedBox(width: 10),
                   Text('$catName'),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text('(-$catNerve nerve)'),
                 ],
               ),
@@ -262,18 +260,18 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   void _updateTitleString() {
     // We clear the list and create again, so that crimes come sorted from origin
     _titleCrimeString.clear();
-    for (var crime in _crimesProvider.activeCrimesList) {
+    for (final crime in _crimesProvider.activeCrimesList) {
       _titleCrimeString.add('${crime.shortName} (-${crime.nerve})');
     }
   }
 
   Future _restorePreferences() async {
     // Load crimes from shared preferences
-    var activeCrimeList = _crimesProvider.activeCrimesList;
-    for (var activeCrime in activeCrimeList) {
+    final activeCrimeList = _crimesProvider.activeCrimesList;
+    for (final activeCrime in activeCrimeList) {
       // For every existing crime, if we can find a match with out loaded
       // crimes, we activate that crime
-      for (var mainCrime in _mainCrimeList) {
+      for (final mainCrime in _mainCrimeList) {
         if (activeCrime.fullName == mainCrime.fullName) {
           mainCrime.active = true;
           _titleCrimeString.add('${activeCrime.shortName} '

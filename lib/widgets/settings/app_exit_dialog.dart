@@ -10,10 +10,10 @@ import 'package:torn_pda/providers/settings_provider.dart';
 
 class OnAppExitDialog extends StatefulWidget {
   @override
-  _OnAppExitDialogState createState() => _OnAppExitDialogState();
+OnAppExitDialogState createState() => OnAppExitDialogState();
 }
 
-class _OnAppExitDialogState extends State<OnAppExitDialog> {
+class OnAppExitDialogState extends State<OnAppExitDialog> {
   SettingsProvider _settingsProvider;
 
   bool _remember = false;

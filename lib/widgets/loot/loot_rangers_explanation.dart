@@ -6,24 +6,23 @@ import 'package:url_launcher/url_launcher.dart';
 
 class LootRangersExplanationDialog extends StatelessWidget {
   const LootRangersExplanationDialog({
-    @required ThemeProvider themeProvider,
-    Key key,
-  })  : _themeProvider = themeProvider,
-        super(key: key);
+    required ThemeProvider? themeProvider,
+    super.key,
+  })  : _themeProvider = themeProvider;
 
-  final ThemeProvider _themeProvider;
+  final ThemeProvider? _themeProvider;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Loot Rangers"),
+      title: const Text("Loot Rangers"),
       content: SingleChildScrollView(
         child: EasyRichText(
           "The Loot Rangers Discord server is a community of Torn City players who come together to "
           "schedule attacks on the NPCs.\n\nThe group works to coordinate attack times that are most likely "
           "to be successful, taking into account the time zones of Torn players.\n\n"
           "For more details, join the Loot Rangers!",
-          defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+          defaultStyle: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
           patternList: [
             EasyRichTextPattern(
               targetString: 'join the Loot Rangers',
@@ -34,7 +33,7 @@ class LootRangersExplanationDialog extends StatelessWidget {
                     await launchUrl(Uri.parse("https://discord.gg/guQ6kvK9rs"), mode: LaunchMode.externalApplication);
                   }
                 },
-              style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
+              style: const TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
           ],
         ),
@@ -43,7 +42,7 @@ class LootRangersExplanationDialog extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Awesome!"),
+            child: const Text("Awesome!"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },

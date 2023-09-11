@@ -2,22 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import '../../providers/stakeouts_controller.dart';
+import 'package:torn_pda/providers/stakeouts_controller.dart';
 
 class StakeoutsInfoDialog extends StatefulWidget {
   const StakeoutsInfoDialog({
-    Key key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
-  State<StakeoutsInfoDialog> createState() => _StakeoutsInfoDialogState();
+  State<StakeoutsInfoDialog> createState() => StakeoutsInfoDialogState();
 }
 
-class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
+class StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
   final _maxDelayController = TextEditingController();
   final _maxDelayFormState = GlobalKey<FormState>();
 
-  bool _firstLoad = true;
+  final bool _firstLoad = true;
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +27,9 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
           _maxDelayController.text = s.fetchMinutesDelayLimit.toString();
         }
         return GestureDetector(
-          onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
           child: AlertDialog(
-            title: Text("Stakeouts...?"),
+            title: const Text("Stakeouts...?"),
             content: Scrollbar(
               thumbVisibility: true,
               child: SingleChildScrollView(
@@ -39,12 +39,12 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "GENERAL",
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 10),
-                      Text.rich(
+                      const SizedBox(height: 10),
+                      const Text.rich(
                         TextSpan(
                           text:
                               "The Stakeouts section allows you configure specific alerts for players of your choice.\n\n"
@@ -76,7 +76,7 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
-                            Flexible(
+                            const Flexible(
                               child: Text(
                                 "Max alert delay (minutes)",
                                 style: TextStyle(fontSize: 13),
@@ -88,14 +88,13 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                                 child: SizedBox(
                                   width: 150,
                                   child: TextFormField(
-                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                                     controller: _maxDelayController,
                                     maxLength: 4,
                                     minLines: 1,
-                                    maxLines: 1,
-                                    keyboardType: TextInputType.numberWithOptions(decimal: false),
+                                    keyboardType: const TextInputType.numberWithOptions(),
                                     textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                       counterText: "",
                                       isDense: true,
                                       enabledBorder: UnderlineInputBorder(
@@ -115,14 +114,14 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                                       )
                                     ],
                                     validator: (value) {
-                                      if (value.isEmpty) {
+                                      if (value!.isEmpty) {
                                         return "Cannot be empty!";
                                       }
                                       final n = num.tryParse(value);
                                       if (n == null) {
                                         return '$value is not a number!';
                                       }
-                                      int number = n as int;
+                                      final int number = n as int;
                                       if (number > 2880) {
                                         return 'Max 2 days (2880)!';
                                       } else if (number < 1) {
@@ -132,17 +131,17 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                                       return null;
                                     },
                                     onEditingComplete: () {
-                                      if (_maxDelayFormState.currentState.validate()) {
-                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text);
+                                      if (_maxDelayFormState.currentState!.validate()) {
+                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text)!;
                                       }
-                                      FocusScopeNode currentFocus = FocusScope.of(context);
+                                      final FocusScopeNode currentFocus = FocusScope.of(context);
                                       if (!currentFocus.hasPrimaryFocus) {
                                         currentFocus.unfocus();
                                       }
                                     },
                                     onTapOutside: (value) {
-                                      if (_maxDelayFormState.currentState.validate()) {
-                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text);
+                                      if (_maxDelayFormState.currentState!.validate()) {
+                                        s.fetchMinutesDelayLimit = int.tryParse(_maxDelayController.text)!;
                                       }
                                     },
                                   ),
@@ -161,7 +160,7 @@ class _StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: TextButton(
-                  child: Text("Sounds good!"),
+                  child: const Text("Sounds good!"),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },

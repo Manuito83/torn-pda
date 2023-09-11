@@ -6,16 +6,16 @@ import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 
 class RefillsRequestedDialog extends StatefulWidget {
-  final FirebaseUserModel userModel;
+  final FirebaseUserModel? userModel;
 
-  RefillsRequestedDialog({@required this.userModel});
+  const RefillsRequestedDialog({required this.userModel});
 
   @override
-  _RefillsRequestedDialogState createState() => _RefillsRequestedDialogState();
+  RefillsRequestedDialogState createState() => RefillsRequestedDialogState();
 }
 
-class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
-  FirebaseUserModel _firebaseUserModel;
+class RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
+  FirebaseUserModel? _firebaseUserModel;
 
   @override
   void initState() {
@@ -26,11 +26,11 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Choose refills"),
+      title: const Text("Choose refills"),
       content: SingleChildScrollView(
         child: Column(
           children: [
-            Text(
+            const Text(
               "Choose which unused refills types you'd "
               "like to be alerted about a couple of hours before the "
               "end of day in Torn",
@@ -43,9 +43,9 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Energy"),
+                  const Text("Energy"),
                   Switch(
-                    value: _firebaseUserModel.refillsRequested.contains('energy'),
+                    value: _firebaseUserModel!.refillsRequested.contains('energy'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
@@ -66,9 +66,9 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Nerve"),
+                  const Text("Nerve"),
                   Switch(
-                    value: _firebaseUserModel.refillsRequested.contains('nerve'),
+                    value: _firebaseUserModel!.refillsRequested.contains('nerve'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
@@ -89,9 +89,9 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text("Casino tokens"),
+                  const Text("Casino tokens"),
                   Switch(
-                    value: _firebaseUserModel.refillsRequested.contains('token'),
+                    value: _firebaseUserModel!.refillsRequested.contains('token'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
@@ -114,7 +114,7 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
         Padding(
           padding: const EdgeInsets.only(right: 15),
           child: TextButton(
-            child: Text("Close"),
+            child: const Text("Close"),
             onPressed: () {
               Navigator.of(context).pop();
             },

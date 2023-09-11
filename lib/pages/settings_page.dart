@@ -7,98 +7,97 @@ import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dart_ping/dart_ping.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+// Project imports:
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/pages/settings/settings_browser.dart';
+import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
-import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
+import 'package:torn_pda/utils/firebase_auth.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
+import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
 
-// Project imports:
-import 'package:torn_pda/main.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/pages/settings/settings_browser.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
-import 'package:torn_pda/utils/firebase_auth.dart';
-import 'package:torn_pda/utils/firebase_firestore.dart';
-import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
-
 class SettingsPage extends StatefulWidget {
   final Function changeUID;
   final StatsController statsController;
 
-  SettingsPage({
-    @required this.changeUID,
-    @required this.statsController,
-    Key key,
-  }) : super(key: key);
+  const SettingsPage({
+    required this.changeUID,
+    required this.statsController,
+    super.key,
+  });
 
   @override
-  _SettingsPageState createState() => _SettingsPageState();
+  SettingsPageState createState() => SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class SettingsPageState extends State<SettingsPage> {
   final _formKey = GlobalKey<FormState>();
-  Timer _ticker;
+  Timer? _ticker;
 
-  String _myCurrentKey = '';
+  String? _myCurrentKey = '';
   bool _userToLoad = false;
   bool _apiError = false;
   String _errorReason = '';
   String _errorDetails = '';
   bool _apiIsLoading = false;
-  OwnProfileBasic _userProfile;
+  late OwnProfileBasic _userProfile;
 
-  Future _preferencesRestored;
+  Future? _preferencesRestored;
 
-  String _openSectionValue;
-  String _onAppExitValue;
-  String _openBrowserValue;
-  String _timeFormatValue;
-  String _timeZoneValue;
-  String _vibrationValue;
-  bool _manualAlarmSound;
-  bool _manualAlarmVibration;
-  bool _removeNotificationsLaunch;
+  String? _openSectionValue;
+  String? _onAppExitValue;
+  String? _openBrowserValue;
+  String? _timeFormatValue;
+  String? _timeZoneValue;
+  String? _vibrationValue;
+  late bool _manualAlarmSound;
+  late bool _manualAlarmVibration;
+  late bool _removeNotificationsLaunch;
 
-  SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
-  ThemeProvider _themeProvider;
-  ShortcutsProvider _shortcutsProvider;
-  ApiCallerController _apiController = Get.find<ApiCallerController>();
+  late SettingsProvider _settingsProvider;
+  late UserDetailsProvider _userProvider;
+  late ThemeProvider _themeProvider;
+  late ShortcutsProvider _shortcutsProvider;
+  late WebViewProvider _webViewProvider;
+  final ApiCallerController _apiController = Get.find<ApiCallerController>();
 
-  var _expandableController = ExpandableController();
+  final _expandableController = ExpandableController();
 
-  var _apiKeyInputController = TextEditingController();
+  final _apiKeyInputController = TextEditingController();
 
-  String _appBarPosition = "top";
+  String? _appBarPosition = "top";
 
   int _androidSdk = 0;
 
@@ -110,8 +109,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
-    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _ticker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     analytics.setCurrentScreen(screenName: 'settings');
 
     routeWithDrawer = true;
@@ -120,10 +120,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
-      drawer: new Drawer(),
+      drawer: const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -139,77 +141,81 @@ class _SettingsPageState extends State<SettingsPage> {
             if (snapshot.connectionState == ConnectionState.done) {
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                 child: SingleChildScrollView(
                   child: Column(
                     children: <Widget>[
                       SizedBox(height: _extraMargin),
                       _apiKeyWidget(),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       if (_userToLoad)
-                        Column(
+                        const Column(
                           children: [
                             NativeLoginWidget(),
                             SizedBox(height: 15),
                           ],
                         ),
                       _browserSection(context),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _shortcutsSection(context),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _timeSection(),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _notificationsSection(context),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       if (Platform.isAndroid)
                         Column(
                           children: [
                             _appWidgetSection(context),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 5),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
                           ],
                         ),
                       _spiesSection(),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _ocSection(),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _revivingServicesSection(context),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      _screenConfigurationSection(),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _miscSection(),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _externalPartnersSection(context),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _apiRateSection(),
-                      SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _troubleshootingSection(),
-                      SizedBox(height: 50),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
               );
             } else {
-              return Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             }
           },
         ),
@@ -220,7 +226,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _browserSection(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -230,20 +236,20 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 10),
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Flexible(
+                  const Flexible(
                     child: Text(
                       "Web browser",
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.info_outline),
+                    icon: const Icon(Icons.info_outline),
                     onPressed: () {
                       showDialog(
                         useRootNavigator: false,
@@ -256,7 +262,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ],
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -271,18 +277,19 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text(
+                const Text(
                   "Advanced browser settings",
                 ),
                 IconButton(
-                    icon: Icon(Icons.keyboard_arrow_right_outlined),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (BuildContext context) => SettingsBrowserPage(),
-                        ),
-                      );
-                    }),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => const SettingsBrowserPage(),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -293,7 +300,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _timeSection() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -303,16 +310,16 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 5),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Time format",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -326,12 +333,12 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Time zone",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -342,11 +349,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Show date in clock",
                 ),
@@ -377,11 +384,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Seconds in clock",
                 ),
@@ -400,7 +407,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _spiesSection() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -410,16 +417,16 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Spies source",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -448,7 +455,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _ocSection() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -458,16 +465,16 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Nerve bar source",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -496,7 +503,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _apiRateSection() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -588,7 +595,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _troubleshootingSection() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -602,26 +609,26 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Test API",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               ElevatedButton(
-                child: Text("PING"),
+                child: const Text("PING"),
                 onPressed: () async {
                   BotToast.showText(
                     text: "Please wait...",
-                    textStyle: TextStyle(
+                    textStyle: const TextStyle(
                       fontSize: 14,
                       color: Colors.white,
                     ),
                     contentColor: Colors.blue,
-                    duration: Duration(seconds: 1),
-                    contentPadding: EdgeInsets.all(10),
+                    duration: const Duration(seconds: 1),
+                    contentPadding: const EdgeInsets.all(10),
                   );
                   final ping = Ping('api.torn.com', count: 4);
                   ping.stream.listen((event) {
@@ -630,7 +637,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       if (event.error != null) {
                         message = "CONNECTION PROBLEM\n\n${event.error}";
                       } else {
-                        if (event.summary.transmitted == event.summary.received) {
+                        if (event.summary!.transmitted == event.summary!.received) {
                           message = "SUCCESS\n\n${event.summary}";
                         } else {
                           message = "CONNECTION PROBLEM\n\n${event.summary}";
@@ -640,13 +647,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       BotToast.showText(
                         clickClose: true,
                         text: message,
-                        textStyle: TextStyle(
+                        textStyle: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
                         ),
                         contentColor: Colors.blue,
-                        duration: Duration(seconds: 10),
-                        contentPadding: EdgeInsets.all(10),
+                        duration: const Duration(seconds: 10),
+                        contentPadding: const EdgeInsets.all(10),
                       );
                     }
                   });
@@ -711,16 +718,16 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Clear tutorials",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               ElevatedButton(
-                child: Text("CLEAR"),
+                child: const Text("CLEAR"),
                 onPressed: () async {
                   _settingsProvider.clearShowCases();
                 },
@@ -747,7 +754,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _externalPartnersSection(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -761,18 +768,19 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text(
+              const Text(
                 "Alternative API keys",
               ),
               IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => AlternativeKeysPage(),
-                      ),
-                    );
-                  }),
+                icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => const AlternativeKeysPage(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -796,7 +804,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _shortcutsSection(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -806,13 +814,13 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Configure shortcuts"),
+              const Text("Configure shortcuts"),
               IconButton(
-                icon: Icon(Icons.switch_access_shortcut_outlined),
+                icon: const Icon(Icons.switch_access_shortcut_outlined),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -825,11 +833,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Use Profile section shortcuts"),
+              const Text("Use Profile section shortcuts"),
               Switch(
                 value: _settingsProvider.shortcutsEnabledProfile,
                 onChanged: (value) {
@@ -858,34 +866,32 @@ class _SettingsPageState extends State<SettingsPage> {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 30, top: 0, right: 20, bottom: 0),
+                padding: const EdgeInsets.only(left: 30, right: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Flexible(
+                    const Flexible(
                       child: Text(
                         "Profile shortcuts menu",
                       ),
                     ),
                     Flexible(
-                      flex: 1,
                       child: _shortcutMenuDropdown(),
                     ),
                   ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 30, top: 0, right: 20, bottom: 0),
+                padding: const EdgeInsets.only(left: 30, right: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Flexible(
+                    const Flexible(
                       child: Text(
                         "Profile tile type",
                       ),
                     ),
                     Flexible(
-                      flex: 1,
                       child: _shortcutTileDropdown(),
                     ),
                   ],
@@ -897,10 +903,120 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Column _screenConfigurationSection() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'SCREEN CONFIGURATION',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Allow auto rotation",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.allowScreenRotation,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.changeAllowScreenRotation = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
+            'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
+            'to be manually scrolled and some elements might look too big)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Split screen",
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: _splitScreenDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'If enabled, the device screen will be splitted to show the main app the the browser at the same time. '
+            'A minimum width (800 dpi) is needed for this to be allowed',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Split reverts to",
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: _splitScreenRevertionDropdown(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'When the split screen condition is no longer active (e.g.: if the device is rotated and the width is '
+            'loweer than 800 dpi), this option dictates whether the webview or the app should remain in the foreground',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Column _miscSection() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -939,7 +1055,7 @@ class _SettingsPageState extends State<SettingsPage> {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                padding: const EdgeInsets.only(left: 20, right: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
@@ -969,16 +1085,16 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "App bar position",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -1005,12 +1121,12 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Default launch section",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -1020,11 +1136,11 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Allow auto rotation",
                 ),
@@ -1055,18 +1171,18 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "On app exit",
                 ),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -1095,7 +1211,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _revivingServicesSection(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -1109,11 +1225,11 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text(
+              const Text(
                 "Choose reviving providers",
               ),
               IconButton(
-                icon: Icon(Icons.keyboard_arrow_right_outlined),
+                icon: const Icon(Icons.keyboard_arrow_right_outlined),
                 onPressed: () {
                   showDialog(
                     useRootNavigator: false,
@@ -1131,7 +1247,7 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             "Choose which reviving services you might want to use. "
-            "If enabled, when you are in hospital you\'ll have the option to call "
+            "If enabled, when you are in hospital you'll have the option to call "
             "one of their revivers from several places (e.g. Profile and Chaining sections).",
             style: TextStyle(
               color: Colors.grey[600],
@@ -1147,7 +1263,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _notificationsSection(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -1156,22 +1272,22 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Flexible(
                 child: Row(
                   children: [
-                    Flexible(
+                    const Flexible(
                       child: Text(
                         "Discrete notifications",
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.info_outline),
+                      icon: const Icon(Icons.info_outline),
                       onPressed: () {
                         showDialog(
                           useRootNavigator: false,
@@ -1203,11 +1319,11 @@ class _SettingsPageState extends State<SettingsPage> {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                padding: const EdgeInsets.only(left: 20, right: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Flexible(
+                    const Flexible(
                       child: Text(
                         "Remove notifications on launch",
                       ),
@@ -1239,18 +1355,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               Padding(
                 padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Flexible(
+                    const Flexible(
                       child: Text(
                         "Alerts vibration",
                       ),
                     ),
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.only(left: 20),
                     ),
                     Flexible(
@@ -1272,13 +1388,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text("Manual alarm sound"),
+                    const Text("Manual alarm sound"),
                     Switch(
                       value: _manualAlarmSound,
                       onChanged: (value) {
@@ -1298,7 +1414,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text("Manual alarm vibration"),
+                    const Text("Manual alarm vibration"),
                     Switch(
                       value: _manualAlarmVibration,
                       onChanged: (value) {
@@ -1330,11 +1446,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     children: <TextSpan>[
                       TextSpan(
-                        text: 'Google\'s Clock application',
-                        style: TextStyle(color: Colors.blue),
+                        text: "Google's Clock application",
+                        style: const TextStyle(color: Colors.blue),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () async {
-                            AndroidIntent intent = AndroidIntent(
+                            const AndroidIntent intent = AndroidIntent(
                               action: 'action_view',
                               data: 'https://play.google.com/store'
                                   '/apps/details?id=com.google.android.deskclock',
@@ -1355,7 +1471,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Column _appWidgetSection(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
@@ -1364,13 +1480,13 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Dark mode",
                 ),
@@ -1389,13 +1505,13 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text(
                   "Show wallet money",
                 ),
@@ -1434,18 +1550,25 @@ class _SettingsPageState extends State<SettingsPage> {
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      title: Text('Settings'),
-      leadingWidth: 80,
+      title: const Text('Settings'),
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
     );
@@ -1461,7 +1584,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _apiKeyWidget() {
     if (_apiIsLoading) {
-      return Padding(
+      return const Padding(
         padding: EdgeInsets.all(40),
         child: CircularProgressIndicator(),
       );
@@ -1472,13 +1595,13 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
         child: Card(
           child: ExpandablePanel(
-            collapsed: null,
+            collapsed: Container(),
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
+                  const Row(
                     children: <Widget>[
                       Text(
                         "TORN API USER LOADED",
@@ -1489,12 +1612,12 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: Text(
                       "${_userProfile.name} [${_userProfile.playerId}]",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1505,44 +1628,42 @@ class _SettingsPageState extends State<SettingsPage> {
             expanded: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: SingleChildScrollView(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           _apiKeyForm(enabled: false),
-                          Padding(
+                          const Padding(
                             padding: EdgeInsetsDirectional.only(top: 10),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               ElevatedButton(
-                                child: Text("Copy"),
+                                child: const Text("Copy"),
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: _userProfile.userApiKey.toString()));
                                   BotToast.showText(
                                     text: "API key copied to the clipboard, be careful!",
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
                                     contentColor: Colors.blue,
-                                    duration: Duration(seconds: 4),
-                                    contentPadding: EdgeInsets.all(10),
+                                    duration: const Duration(seconds: 4),
+                                    contentPadding: const EdgeInsets.all(10),
                                   );
                                 },
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(left: 10),
                                 child: ElevatedButton(
-                                  child: Text("Reload"),
+                                  child: const Text("Reload"),
                                   onPressed: () {
-                                    FocusScope.of(context).requestFocus(new FocusNode());
-                                    if (_formKey.currentState.validate()) {
+                                    FocusScope.of(context).requestFocus(FocusNode());
+                                    if (_formKey.currentState!.validate()) {
                                       _myCurrentKey = _apiKeyInputController.text.trim();
                                       _getApiDetails(userTriggered: true, reload: true);
                                     }
@@ -1552,11 +1673,11 @@ class _SettingsPageState extends State<SettingsPage> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 10),
                                 child: ElevatedButton(
-                                  child: Text("Remove"),
+                                  child: const Text("Remove"),
                                   onPressed: () async {
-                                    FocusScope.of(context).requestFocus(new FocusNode());
+                                    FocusScope.of(context).requestFocus(FocusNode());
                                     // Removes the form error
-                                    _formKey.currentState.reset();
+                                    _formKey.currentState!.reset();
                                     _apiKeyInputController.clear();
                                     _myCurrentKey = '';
                                     _userProvider.removeUser();
@@ -1590,10 +1711,10 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
         child: Card(
           child: ExpandablePanel(
-            collapsed: null,
+            collapsed: Container(),
             controller: _expandableController,
-            header: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
+            header: const Padding(
+              padding: EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -1610,7 +1731,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   SizedBox(height: 10),
                   Padding(
-                    padding: const EdgeInsets.only(left: 10),
+                    padding: EdgeInsets.only(left: 10),
                     child: Text(
                       "(expand for details)",
                       style: TextStyle(
@@ -1624,26 +1745,24 @@ class _SettingsPageState extends State<SettingsPage> {
             expanded: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: SingleChildScrollView(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           _apiKeyForm(enabled: true),
-                          Padding(
+                          const Padding(
                             padding: EdgeInsetsDirectional.only(top: 10),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               ElevatedButton(
-                                child: Text("Load"),
+                                child: const Text("Load"),
                                 onPressed: () {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
-                                  if (_formKey.currentState.validate()) {
+                                  FocusScope.of(context).requestFocus(FocusNode());
+                                  if (_formKey.currentState!.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text.trim();
                                     _getApiDetails(userTriggered: true);
                                   }
@@ -1665,7 +1784,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  SizedBox _apiKeyForm({@required bool enabled}) {
+  SizedBox _apiKeyForm({required bool enabled}) {
     return SizedBox(
       width: 300,
       child: Form(
@@ -1673,31 +1792,30 @@ class _SettingsPageState extends State<SettingsPage> {
         child: TextFormField(
           enabled: enabled,
           validator: (value) {
-            if (value.isEmpty) {
+            if (value!.isEmpty) {
               return "The API Key is empty!";
             }
             return null;
           },
           controller: _apiKeyInputController,
           maxLength: 30,
-          style: TextStyle(fontSize: 14),
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Please insert your Torn API Key',
-            hintStyle: TextStyle(fontSize: 14),
+            hintStyle: const TextStyle(fontSize: 14),
             counterText: "",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(5.0),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: Colors.amber,
-                style: BorderStyle.solid,
               ),
             ),
           ),
           // This is here in case the user submits from the keyboard and not
           // hitting the "Load" button
           onEditingComplete: () {
-            FocusScope.of(context).requestFocus(new FocusNode());
-            if (_formKey.currentState.validate()) {
+            FocusScope.of(context).requestFocus(FocusNode());
+            if (_formKey.currentState!.validate()) {
               _myCurrentKey = _apiKeyInputController.text.trim();
               _getApiDetails(userTriggered: true);
             }
@@ -1713,7 +1831,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.only(top: 25),
         child: Column(
           children: <Widget>[
-            Padding(
+            const Padding(
               padding: EdgeInsetsDirectional.only(bottom: 15),
               child: Text(
                 "ERROR LOADING USER",
@@ -1728,9 +1846,9 @@ class _SettingsPageState extends State<SettingsPage> {
               Padding(
                 padding: const EdgeInsets.only(top: 5),
                 child: Text(
-                  "$_errorDetails",
+                  _errorDetails,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontStyle: FontStyle.italic,
                   ),
@@ -1741,11 +1859,11 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     } else if (_myCurrentKey == '') {
       return Padding(
-        padding: EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
+        padding: const EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
         child: Column(
           children: <Widget>[
-            Text(
-              'Torn PDA needs your API Key to obtain your user\'s '
+            const Text(
+              "Torn PDA needs your API Key to obtain your user's "
               'information. The key is protected in the app and will not '
               'be shared under any circumstances.',
               style: TextStyle(
@@ -1754,13 +1872,13 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             Row(
               children: [
-                Icon(Icons.info_outline, color: Colors.blue),
-                SizedBox(width: 10),
+                const Icon(Icons.info_outline, color: Colors.blue),
+                const SizedBox(width: 10),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "\nYou can get your API key in the Torn website by tapping your profile picture (upper right corner)"
                         " and going to Settings, API Keys. Torn PDA only needs a Limited Access key.\n",
                       ),
@@ -1771,7 +1889,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             WidgetSpan(
                               child: GestureDetector(
                                 onTap: () {
-                                  var url = 'https://www.torn.com/preferences.php#tab=api';
+                                  const url = 'https://www.torn.com/preferences.php#tab=api';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -1779,14 +1897,14 @@ class _SettingsPageState extends State<SettingsPage> {
                                       );
                                 },
                                 onLongPress: () {
-                                  var url = 'https://www.torn.com/preferences.php#tab=api';
+                                  const url = 'https://www.torn.com/preferences.php#tab=api';
                                   context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: Text(
+                                child: const Text(
                                   'Tap here',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
@@ -1804,10 +1922,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
-            Text('\nIn any case, please make sure to '
-                'follow Torn\'s staff recommendations on how to protect your key '
+            const Text('\nIn any case, please make sure to '
+                "follow Torn's staff recommendations on how to protect your key "
                 'from any malicious use.'),
-            Text('\nYou can always remove it from the '
+            const Text('\nYou can always remove it from the '
                 'app or reset it in your Torn preferences page.'),
           ],
         ),
@@ -1819,15 +1937,15 @@ class _SettingsPageState extends State<SettingsPage> {
           children: <Widget>[
             Text(
               "${_userProfile.name} [${_userProfile.playerId}]",
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text("Gender: ${_userProfile.gender}"),
             Text("Level: ${_userProfile.level}"),
-            Text("Life: ${_userProfile.life.current}"),
-            Text("Status: ${_userProfile.status.description}"),
-            Text("Last action: ${_userProfile.lastAction.relative}"),
+            Text("Life: ${_userProfile.life!.current}"),
+            Text("Status: ${_userProfile.status!.description}"),
+            Text("Last action: ${_userProfile.lastAction!.relative}"),
             Text("Rank: ${_userProfile.rank}"),
           ],
         ),
@@ -1835,10 +1953,107 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  DropdownButton _splitScreenDropdown() {
+    return DropdownButton<WebViewSplitPosition>(
+      value: _webViewProvider.splitScreenPosition,
+      items: const [
+        DropdownMenuItem(
+          value: WebViewSplitPosition.off,
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Off",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: WebViewSplitPosition.left,
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Browser left",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: WebViewSplitPosition.right,
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Browser right",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _webViewProvider.splitScreenPosition = value!;
+          if (value == WebViewSplitPosition.off) {
+            _webViewProvider.browserShowInForeground = false;
+          } else {
+            if (MediaQuery.sizeOf(context).width > 800) {
+              _webViewProvider.webViewSplitActive = true;
+
+              // Force stackview convertion from Container if it still hasn't happened
+              _webViewProvider.browserForegroundWithSplitTransition();
+            }
+          }
+        });
+      },
+    );
+  }
+
+  DropdownButton _splitScreenRevertionDropdown() {
+    return DropdownButton<bool>(
+      value: _webViewProvider.splitScreenRevertsToApp,
+      items: const [
+        DropdownMenuItem(
+          value: true,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "App",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: false,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Browser",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _webViewProvider.splitScreenRevertsToApp = value!;
+        });
+      },
+    );
+  }
+
   DropdownButton _openSectionDropdown() {
     return DropdownButton<String>(
       value: _openSectionValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "browser",
           child: SizedBox(
@@ -1944,7 +2159,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         // TODO: use settings provider for this?
-        Prefs().setDefaultSection(value);
+        Prefs().setDefaultSection(value!);
         setState(() {
           _openSectionValue = value;
         });
@@ -1955,7 +2170,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _appExitDropdown() {
     return DropdownButton<String>(
       value: _onAppExitValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "stay",
           child: SizedBox(
@@ -1995,7 +2210,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _openBrowserDropdown() {
     return DropdownButton<String>(
       value: _openBrowserValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -2039,7 +2254,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _timeFormatDropdown() {
     return DropdownButton<String>(
       value: _timeFormatValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -2083,7 +2298,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _timeZoneDropdown() {
     return DropdownButton<String>(
       value: _timeZoneValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -2127,7 +2342,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _dateInClockDropdown() {
     return DropdownButton<String>(
       value: _settingsProvider.showDateInClock,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "off",
           child: SizedBox(
@@ -2170,7 +2385,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _settingsProvider.changeShowDateInClock = value;
+          _settingsProvider.changeShowDateInClock = value!;
         });
       },
     );
@@ -2179,7 +2394,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _secondsInClockDropdown() {
     return DropdownButton<bool>(
       value: _settingsProvider.showSecondsInClock,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: true,
           child: SizedBox(
@@ -2209,7 +2424,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _settingsProvider.changeShowSecondsInClock = value;
+          _settingsProvider.changeShowSecondsInClock = value!;
         });
       },
     );
@@ -2217,7 +2432,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _vibrationDropdown() {
     if (_androidSdk < 26) {
-      return Text(
+      return const Text(
         'This functionality is only available in Android 8 (API 26 - Oreo) or higher, sorry!',
         style: TextStyle(
           color: Colors.red,
@@ -2228,7 +2443,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return DropdownButton<String>(
       value: _vibrationValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "no-vib",
           child: SizedBox(
@@ -2287,12 +2502,12 @@ class _SettingsPageState extends State<SettingsPage> {
         reconfigureNotificationChannels(mod: value);
         // Update channel preferences
         firestore.setVibrationPattern(value);
-        Prefs().setVibrationPattern(value);
+        Prefs().setVibrationPattern(value!);
         setState(() {
           _vibrationValue = value;
         });
 
-        if (await Vibration.hasVibrator()) {
+        if ((await Vibration.hasVibrator())!) {
           if (value == 'short') {
             Vibration.vibrate(pattern: [0, 400]);
           } else if (value == 'medium') {
@@ -2308,7 +2523,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _spiesSourceDropdown() {
     return DropdownButton<SpiesSource>(
       value: _settingsProvider.spiesSource,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: SpiesSource.yata,
           child: SizedBox(
@@ -2351,7 +2566,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _naturalNerveBarSourceDropdown() {
     return DropdownButton<NaturalNerveBarSource>(
       value: _settingsProvider.naturalNerveBarSource,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: NaturalNerveBarSource.off,
           child: SizedBox(
@@ -2449,7 +2664,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _appBarPositionDropdown() {
     return DropdownButton<String>(
       value: _appBarPosition,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "top",
           child: SizedBox(
@@ -2493,13 +2708,13 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _getApiDetails({@required bool userTriggered, bool reload = false}) async {
+  Future<void> _getApiDetails({required bool userTriggered, bool reload = false}) async {
     try {
       setState(() {
         _apiIsLoading = true;
       });
 
-      dynamic myProfile = await _apiController.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
+      final dynamic myProfile = await _apiController.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
@@ -2515,16 +2730,16 @@ class _SettingsPageState extends State<SettingsPage> {
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
-          var user = await firebaseAuth.getUID();
+          final user = await firebaseAuth.getUID();
           // Only sign in if there is currently no user registered (to avoid duplicates)
           if (user == null || (user is User && user.uid.isEmpty)) {
-            User mFirebaseUser = await firebaseAuth.signInAnon();
+            final User mFirebaseUser = await (firebaseAuth.signInAnon());
             firestore.setUID(mFirebaseUser.uid);
             // Returns UID to Drawer so that it can be passed to settings
             widget.changeUID(mFirebaseUser.uid);
             log("Settings: signed in with UID ${mFirebaseUser.uid}");
           } else {
-            log("Settings: existing user UID ${user}");
+            log("Settings: existing user UID $user");
           }
 
           await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
@@ -2568,8 +2783,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future _restorePreferences() async {
     if (Platform.isAndroid) {
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
       _androidSdk = androidInfo.version.sdkInt;
     }
 
@@ -2579,74 +2794,65 @@ class _SettingsPageState extends State<SettingsPage> {
       });
     });
 
-    if (_userProvider.basic.userApiKeyValid) {
+    if (_userProvider.basic!.userApiKeyValid!) {
       setState(() {
-        _apiKeyInputController.text = _userProvider.basic.userApiKey;
-        _myCurrentKey = _userProvider.basic.userApiKey;
+        _apiKeyInputController.text = _userProvider.basic!.userApiKey!;
+        _myCurrentKey = _userProvider.basic!.userApiKey;
         _apiIsLoading = true;
       });
       _getApiDetails(userTriggered: false);
     }
 
-    var onAppExit = _settingsProvider.onAppExit;
+    final onAppExit = _settingsProvider.onAppExit;
     setState(() {
       switch (onAppExit) {
         case 'ask':
           _onAppExitValue = 'stay'; // Fix after removing "ask" option
-          break;
         case 'exit':
           _onAppExitValue = 'exit';
-          break;
         case 'stay':
           _onAppExitValue = 'stay';
-          break;
       }
     });
 
-    var browser = _settingsProvider.currentBrowser;
+    final browser = _settingsProvider.currentBrowser;
     setState(() {
       switch (browser) {
         case BrowserSetting.app:
           _openBrowserValue = '0';
-          break;
         case BrowserSetting.external:
           _openBrowserValue = '1';
-          break;
       }
     });
 
-    var timeFormat = _settingsProvider.currentTimeFormat;
+    final timeFormat = _settingsProvider.currentTimeFormat;
     setState(() {
       switch (timeFormat) {
         case TimeFormatSetting.h24:
           _timeFormatValue = '0';
-          break;
         case TimeFormatSetting.h12:
           _timeFormatValue = '1';
-          break;
       }
     });
 
-    var timeZone = _settingsProvider.currentTimeZone;
+    final timeZone = _settingsProvider.currentTimeZone;
     setState(() {
       switch (timeZone) {
         case TimeZoneSetting.localTime:
           _timeZoneValue = '0';
-          break;
         case TimeZoneSetting.tornTime:
           _timeZoneValue = '1';
-          break;
       }
     });
 
-    var appBarPosition = _settingsProvider.appBarTop;
+    final appBarPosition = _settingsProvider.appBarTop;
     setState(() {
       appBarPosition ? _appBarPosition = 'top' : _appBarPosition = 'bottom';
     });
 
-    var alertsVibration = await Prefs().getVibrationPattern();
-    var manualAlarmSound = await Prefs().getManualAlarmSound();
-    var manualAlarmVibration = await Prefs().getManualAlarmVibration();
+    final alertsVibration = await Prefs().getVibrationPattern();
+    final manualAlarmSound = await Prefs().getManualAlarmSound();
+    final manualAlarmVibration = await Prefs().getManualAlarmVibration();
 
     setState(() {
       _removeNotificationsLaunch = _settingsProvider.removeNotificationsOnLaunch;
@@ -2665,7 +2871,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _shortcutTileDropdown() {
     return DropdownButton<String>(
       value: _shortcutsProvider.shortcutTile,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "both",
           child: SizedBox(
@@ -2708,7 +2914,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _shortcutsProvider.changeShortcutTile(value);
+          _shortcutsProvider.changeShortcutTile(value!);
         });
       },
     );
@@ -2717,7 +2923,7 @@ class _SettingsPageState extends State<SettingsPage> {
   DropdownButton _shortcutMenuDropdown() {
     return DropdownButton<String>(
       value: _shortcutsProvider.shortcutMenu,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "carousel",
           child: SizedBox(
@@ -2747,7 +2953,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _shortcutsProvider.changeShortcutMenu(value);
+          _shortcutsProvider.changeShortcutMenu(value!);
         });
       },
     );

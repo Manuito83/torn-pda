@@ -5,35 +5,35 @@ import 'package:torn_pda/utils/travel/travel_times.dart';
 
 class TravelReturnWidget extends StatelessWidget {
   const TravelReturnWidget({
-    Key key,
-    @required this.destination,
-    @required this.settingsProvider,
-    @required this.dateTimeArrival,
-  }) : super(key: key);
+    super.key,
+    required this.destination,
+    required this.settingsProvider,
+    required this.dateTimeArrival,
+  });
 
-  final String destination;
-  final SettingsProvider settingsProvider;
-  final DateTime dateTimeArrival;
+  final String? destination;
+  final SettingsProvider? settingsProvider;
+  final DateTime? dateTimeArrival;
 
   @override
   Widget build(BuildContext context) {
     // Return time line
-    String formattedReturn = "";
-    Widget returnWidget = SizedBox.shrink();
+    String? formattedReturn = "";
+    Widget returnWidget = const SizedBox.shrink();
     if (destination != "Torn") {
-      int tornBackMinutes = TravelTimes.travelTimeMinutesOneWay(
-        countryName: destination,
-        ticket: settingsProvider.travelTicket,
+      final int tornBackMinutes = TravelTimes.travelTimeMinutesOneWay(
+        countryName: destination!,
+        ticket: settingsProvider!.travelTicket,
       );
-      DateTime returnTime = dateTimeArrival.add(Duration(minutes: tornBackMinutes));
+      final DateTime returnTime = dateTimeArrival!.add(Duration(minutes: tornBackMinutes));
       formattedReturn = TimeFormatter(
         inputTime: returnTime,
-        timeFormatSetting: settingsProvider.currentTimeFormat,
-        timeZoneSetting: settingsProvider.currentTimeZone,
+        timeFormatSetting: settingsProvider!.currentTimeFormat,
+        timeZoneSetting: settingsProvider!.currentTimeZone,
       ).formatHour;
       returnWidget = Text(
         '(earliest return ~$formattedReturn)',
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11.5,
         ),
       );

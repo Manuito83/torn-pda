@@ -1,44 +1,41 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;
 
-  AttackCard({@required this.attackModel});
+  const AttackCard({required this.attackModel});
 
   @override
-  _AttackCardState createState() => _AttackCardState();
+  AttackCardState createState() => AttackCardState();
 }
 
-class _AttackCardState extends State<AttackCard> {
-  Attack _attack;
-  ThemeProvider _themeProvider;
-  UserDetailsProvider _userProvider;
+class AttackCardState extends State<AttackCard> {
+  late Attack _attack;
+  late ThemeProvider _themeProvider;
+  late UserDetailsProvider _userProvider;
 
   bool _addButtonActive = true;
 
   @override
   Widget build(BuildContext context) {
     _attack = widget.attackModel;
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4.0),
@@ -49,24 +46,23 @@ class _AttackCardState extends State<AttackCard> {
           children: <Widget>[
             // LINE 1
             Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
               child: Row(
                 children: <Widget>[
                   Row(
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
                       SizedBox(
                         height: 20,
-                        width: _attack.targetName.isNotEmpty ? 20 : 0,
-                        child: _attack.targetName.isNotEmpty
+                        width: _attack.targetName!.isNotEmpty ? 20 : 0,
+                        child: _attack.targetName!.isNotEmpty
                             ? GestureDetector(
-                                child: Icon(
+                                child: const Icon(
                                   Icons.remove_red_eye,
                                   size: 20,
                                 ),
                                 onTap: () async {
-                                  var url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
+                                  final url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
                                   await context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -74,7 +70,7 @@ class _AttackCardState extends State<AttackCard> {
                                       );
                                 },
                                 onLongPress: () async {
-                                  var url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
+                                  final url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
                                   await context.read<WebViewProvider>().openBrowserPreference(
                                         context: context,
                                         url: url,
@@ -82,19 +78,19 @@ class _AttackCardState extends State<AttackCard> {
                                       );
                                 },
                               )
-                            : SizedBox.shrink(),
+                            : const SizedBox.shrink(),
                       ),
-                      Padding(
+                      const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 5),
                       ),
                       SizedBox(
-                        width: _attack.targetName.isNotEmpty ? 70 : 175,
+                        width: _attack.targetName!.isNotEmpty ? 70 : 175,
                         child: Text(
-                          _attack.targetName.isNotEmpty ? '${_attack.targetName}' : "anonymous",
+                          _attack.targetName!.isNotEmpty ? '${_attack.targetName}' : "anonymous",
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontWeight: _attack.targetName.isNotEmpty ? FontWeight.bold : FontWeight.normal,
-                            fontStyle: _attack.targetName.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                            fontWeight: _attack.targetName!.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                            fontStyle: _attack.targetName!.isNotEmpty ? FontStyle.normal : FontStyle.italic,
                           ),
                         ),
                       ),
@@ -103,13 +99,12 @@ class _AttackCardState extends State<AttackCard> {
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
                         SizedBox(
-                          width: _attack.targetName.isNotEmpty ? 85 : 0,
+                          width: _attack.targetName!.isNotEmpty ? 85 : 0,
                           child: Text(
-                            _attack.targetName.isNotEmpty ? ' [${_attack.targetId}]' : "",
-                            style: TextStyle(
+                            _attack.targetName!.isNotEmpty ? ' [${_attack.targetId}]' : "",
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -123,11 +118,12 @@ class _AttackCardState extends State<AttackCard> {
                               width: 20,
                               child: _factionIcon(),
                             ),
-                            SizedBox(width: 5),
+                            const SizedBox(width: 5),
                             SizedBox(
                               height: 20,
                               width: 20,
-                              child: _attack.targetName.isNotEmpty ? _returnAddTargetButton() : SizedBox.shrink(),
+                              child:
+                                  _attack.targetName!.isNotEmpty ? _returnAddTargetButton() : const SizedBox.shrink(),
                             ),
                           ],
                         ),
@@ -139,7 +135,7 @@ class _AttackCardState extends State<AttackCard> {
             ),
             // LINE 2
             Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -150,13 +146,13 @@ class _AttackCardState extends State<AttackCard> {
             ),
             // LINE 3
             Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Row(
                     children: [
-                      Text('Last results: '),
+                      const Text('Last results: '),
                       _returnLastResults(),
                     ],
                   ),
@@ -164,7 +160,7 @@ class _AttackCardState extends State<AttackCard> {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -174,9 +170,9 @@ class _AttackCardState extends State<AttackCard> {
   Widget _returnAddTargetButton() {
     bool existingTarget = false;
 
-    var targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
-    var targetList = targetsProvider.allTargets;
-    for (var tar in targetList) {
+    final targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    final targetList = targetsProvider.allTargets;
+    for (final tar in targetList) {
       if (tar.playerId.toString() == _attack.targetId) {
         existingTarget = true;
       }
@@ -184,9 +180,9 @@ class _AttackCardState extends State<AttackCard> {
 
     if (existingTarget) {
       return IconButton(
-        padding: EdgeInsets.all(0.0),
+        padding: const EdgeInsets.all(0.0),
         iconSize: 20,
-        icon: Icon(
+        icon: const Icon(
           Icons.remove_circle_outline,
           color: Colors.red,
         ),
@@ -194,13 +190,13 @@ class _AttackCardState extends State<AttackCard> {
           targetsProvider.deleteTargetById(_attack.targetId);
           BotToast.showText(
             text: HtmlParser.fix('Removed ${_attack.targetName}!'),
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
-            contentColor: Colors.orange[900],
-            duration: Duration(seconds: 5),
-            contentPadding: EdgeInsets.all(10),
+            contentColor: Colors.orange[900]!,
+            duration: const Duration(seconds: 5),
+            contentPadding: const EdgeInsets.all(10),
           );
           // Update the button
           setState(() {});
@@ -208,14 +204,14 @@ class _AttackCardState extends State<AttackCard> {
       );
     } else {
       return IconButton(
-        padding: EdgeInsets.all(0.0),
+        padding: const EdgeInsets.all(0.0),
         iconSize: 20,
         icon: _addButtonActive
-            ? Icon(
+            ? const Icon(
                 Icons.add_circle_outline,
                 color: Colors.green,
               )
-            : SizedBox(
+            : const SizedBox(
                 height: 15,
                 width: 15,
                 child: CircularProgressIndicator(),
@@ -225,20 +221,20 @@ class _AttackCardState extends State<AttackCard> {
             _addButtonActive = false;
           });
 
-          AddTargetResult tryAddTarget = await targetsProvider.addTarget(
+          final AddTargetResult tryAddTarget = await targetsProvider.addTarget(
             targetId: _attack.targetId,
             attacks: await targetsProvider.getAttacks(),
           );
           if (tryAddTarget.success) {
             BotToast.showText(
               text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'),
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.green[700],
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
+              contentColor: Colors.green[700]!,
+              duration: const Duration(seconds: 5),
+              contentPadding: const EdgeInsets.all(10),
             );
             // Update the button
             if (mounted) {
@@ -249,13 +245,13 @@ class _AttackCardState extends State<AttackCard> {
           } else if (!tryAddTarget.success) {
             BotToast.showText(
               text: HtmlParser.fix('Error adding ${_attack.targetId}. ${tryAddTarget.errorReason}'),
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.red[900],
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
+              contentColor: Colors.red[900]!,
+              duration: const Duration(seconds: 5),
+              contentPadding: const EdgeInsets.all(10),
             );
           }
         },
@@ -268,21 +264,25 @@ class _AttackCardState extends State<AttackCard> {
       if (_attack.attackWon) {
         return Text('Level ${_attack.targetLevel}');
       } else {
-        return Text('[lost]',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.red,
-            ));
+        return const Text(
+          '[lost]',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.red,
+          ),
+        );
       }
     } else {
       if (_attack.attackWon) {
-        return Text('[lost]',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.red,
-            ));
+        return const Text(
+          '[lost]',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.red,
+          ),
+        );
       } else {
-        return Text(
+        return const Text(
           '[defended]',
           style: TextStyle(fontSize: 13),
         );
@@ -291,8 +291,8 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   String _returnDateFormatted() {
-    var date = new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
-    var formatter = new DateFormat('dd MMMM HH:mm');
+    final date = DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded! * 1000);
+    final formatter = DateFormat('dd MMMM HH:mm');
     return formatter.format(date);
   }
 
@@ -306,7 +306,7 @@ class _AttackCardState extends State<AttackCard> {
     if ((_attack.attackInitiated && !_attack.attackWon) || (!_attack.attackInitiated && _attack.attackWon)) {
       // If we attacked and lost, or someone attacked us and won
       // we just show '0' but in red to indicate that we lost
-      respectSpan = TextSpan(
+      respectSpan = const TextSpan(
         text: '0',
         style: TextStyle(
           color: Colors.red,
@@ -349,7 +349,7 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   Widget _returnFairFight() {
-    dynamic ff = _attack.modifiers.fairFight;
+    dynamic ff = _attack.modifiers!.fairFight;
     if (ff is String) {
       ff = double.parse(ff);
     }
@@ -386,17 +386,18 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   Widget _returnLastResults() {
-    var results = <Widget>[];
+    final results = <Widget>[];
 
-    Widget firstResult = Padding(
-      padding: EdgeInsets.only(left: 3, right: 8, top: 1),
+    final Widget firstResult = Padding(
+      padding: const EdgeInsets.only(left: 3, right: 8, top: 1),
       child: Container(
         width: 13,
         height: 13,
         decoration: BoxDecoration(
-            color: _attack.attackSeriesGreen[0] ? Colors.green : Colors.red,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.black)),
+          color: _attack.attackSeriesGreen[0] ? Colors.green : Colors.red,
+          shape: BoxShape.circle,
+          border: Border.all(),
+        ),
       ),
     );
 
@@ -408,15 +409,16 @@ class _AttackCardState extends State<AttackCard> {
           break;
         }
 
-        Widget anotherResult = Padding(
-          padding: EdgeInsets.only(right: 5, top: 2),
+        final Widget anotherResult = Padding(
+          padding: const EdgeInsets.only(right: 5, top: 2),
           child: Container(
             width: 11,
             height: 11,
             decoration: BoxDecoration(
-                color: _attack.attackSeriesGreen[i] ? Colors.green : Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.black)),
+              color: _attack.attackSeriesGreen[i] ? Colors.green : Colors.red,
+              shape: BoxShape.circle,
+              border: Border.all(),
+            ),
           ),
         );
 
@@ -428,62 +430,62 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   Widget _factionIcon() {
-    String factionName = "";
-    int factionId = 0;
+    String? factionName = "";
+    int? factionId = 0;
     if (_attack.attackInitiated) {
       if (_attack.defenderFactionname != null && _attack.defenderFactionname != "") {
         factionName = _attack.defenderFactionname;
         factionId = _attack.defenderFaction;
       } else {
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
       }
     } else {
       if (_attack.attackerFactionname != null && _attack.attackerFactionname != "") {
         factionName = _attack.attackerFactionname;
         factionId = _attack.attackerFaction;
       } else {
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
       }
     }
 
-    Color borderColor = Colors.transparent;
-    Color iconColor = _themeProvider.mainText;
-    if (factionId == _userProvider.basic.faction.factionId) {
+    Color? borderColor = Colors.transparent;
+    Color? iconColor = _themeProvider.mainText;
+    if (factionId == _userProvider.basic!.faction!.factionId) {
       borderColor = iconColor = Colors.green[500];
     }
 
     void showFactionToast() {
-      if (factionId == _userProvider.basic.faction.factionId) {
+      if (factionId == _userProvider.basic!.faction!.factionId) {
         BotToast.showText(
           text: HtmlParser.fix("${_attack.targetName} belongs to your same faction ($factionName)"),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.green,
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
         );
       } else {
         BotToast.showText(
           text: HtmlParser.fix("${_attack.targetName} belongs to faction $factionName"),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
+          contentColor: Colors.grey[600]!,
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
         );
       }
     }
 
-    Widget factionIcon = Material(
+    final Widget factionIcon = Material(
       type: MaterialType.transparency,
       child: Ink(
         decoration: BoxDecoration(
           border: Border.all(
-            color: borderColor,
+            color: borderColor!,
             width: 1.5,
           ),
           shape: BoxShape.circle,
@@ -494,9 +496,9 @@ class _AttackCardState extends State<AttackCard> {
             showFactionToast();
           },
           child: Padding(
-            padding: EdgeInsets.all(2),
+            padding: const EdgeInsets.all(2),
             child: ImageIcon(
-              AssetImage('images/icons/faction.png'),
+              const AssetImage('images/icons/faction.png'),
               size: 12,
               color: iconColor,
             ),

@@ -20,32 +20,32 @@ class TacFilters {
     this.useOptimal = false,
   });
 
-  int minLevel;
-  int maxLevel;
-  int maxLife;
-  int battleStats;
-  int rank;
-  int optimalLevel;
-  bool useOptimal;
+  int? minLevel;
+  int? maxLevel;
+  int? maxLife;
+  int? battleStats;
+  int? rank;
+  int? optimalLevel;
+  bool? useOptimal;
 
   factory TacFilters.fromJson(Map<String, dynamic> json) => TacFilters(
-    minLevel: json["minLevel"] == null ? null : json["minLevel"],
-    maxLevel: json["maxLevel"] == null ? null : json["maxLevel"],
-    maxLife: json["maxLife"] == null ? null : json["maxLife"],
-    battleStats: json["battleStats"] == null ? null : json["battleStats"],
-    rank: json["rank"] == null ? null : json["rank"],
-    optimalLevel: json["optimalLevel"] == null ? null : json["optimalLevel"],
-    useOptimal: json["useOptimal"] == null ? null : json["useOptimal"],
+    minLevel: json["minLevel"],
+    maxLevel: json["maxLevel"],
+    maxLife: json["maxLife"],
+    battleStats: json["battleStats"],
+    rank: json["rank"],
+    optimalLevel: json["optimalLevel"],
+    useOptimal: json["useOptimal"],
   );
 
   Map<String, dynamic> toJson() => {
-    "minLevel": minLevel == null ? null : minLevel,
-    "maxLevel": maxLevel == null ? null : maxLevel,
-    "maxLife": maxLife == null ? null : maxLife,
-    "battleStats": battleStats == null ? null : battleStats,
-    "rank": rank == null ? null : rank,
-    "optimalLevel": optimalLevel == null ? null : optimalLevel,
-    "useOptimal": useOptimal == null ? null : useOptimal,
+    "minLevel": minLevel,
+    "maxLevel": maxLevel,
+    "maxLife": maxLife,
+    "battleStats": battleStats,
+    "rank": rank,
+    "optimalLevel": optimalLevel,
+    "useOptimal": useOptimal,
   };
 
 }

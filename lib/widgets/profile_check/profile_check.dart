@@ -2,27 +2,25 @@
 import 'dart:convert';
 import 'dart:developer';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:expandable/expandable.dart';
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spy_model.dart';
-
 // Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
@@ -40,37 +38,37 @@ enum SpiesSource {
 
 class ProfileAttackCheckWidget extends StatefulWidget {
   final int profileId;
-  final String apiKey;
+  final String? apiKey;
   final ProfileCheckType profileCheckType;
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
 
-  ProfileAttackCheckWidget({
-    @required this.profileId,
-    @required this.apiKey,
-    @required this.profileCheckType,
-    @required Key key,
-    @required this.themeProvider,
+  const ProfileAttackCheckWidget({
+    required this.profileId,
+    required this.apiKey,
+    required this.profileCheckType,
+    required Key key,
+    required this.themeProvider,
   }) : super(key: key);
 
   @override
-  _ProfileAttackCheckWidgetState createState() => _ProfileAttackCheckWidgetState();
+  ProfileAttackCheckWidgetState createState() => ProfileAttackCheckWidgetState();
 }
 
-class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
+class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   final navigatorKey = GlobalKey<NavigatorState>();
 
-  Future _checkedPerson;
+  Future? _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
 
-  SettingsProvider _settingsProvider;
-  UserController _u = Get.put(UserController());
+  late SettingsProvider _settingsProvider;
+  final UserController _u = Get.put(UserController());
 
-  UserDetailsProvider _userDetails;
-  var _expandableController = ExpandableController();
+  late UserDetailsProvider _userDetails;
+  final _expandableController = ExpandableController();
 
-  Widget _statsWidget; // Has to be null at the beginning
-  Widget _errorDetailsWidget = SizedBox.shrink();
+  Widget? _statsWidget; // Has to be null at the beginning
+  Widget _errorDetailsWidget = const SizedBox.shrink();
 
   var _isTornPda = false;
   var _isPartner = false;
@@ -84,19 +82,19 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   // own faction and lastly friendly faction)
   var _networthWidgetEnabled = false;
 
-  String _playerName = "Player";
-  String _factionName = "Faction";
-  int _factionId = 0;
+  String? _playerName = "Player";
+  String? _factionName = "Faction";
+  int? _factionId = 0;
 
-  Widget _tornPdaWidget = SizedBox.shrink();
-  Widget _partnerWidget = SizedBox.shrink();
-  Widget _friendsWidget = SizedBox.shrink();
-  Widget _friendlyFactionWidget = SizedBox.shrink();
-  Widget _workColleagueWidget = SizedBox.shrink();
-  Widget _playerOrFactionWidget = SizedBox.shrink();
-  Widget _networthWidget = SizedBox.shrink();
+  Widget _tornPdaWidget = const SizedBox.shrink();
+  Widget _partnerWidget = const SizedBox.shrink();
+  Widget _friendsWidget = const SizedBox.shrink();
+  Widget _friendlyFactionWidget = const SizedBox.shrink();
+  Widget _workColleagueWidget = const SizedBox.shrink();
+  Widget _playerOrFactionWidget = const SizedBox.shrink();
+  Widget _networthWidget = const SizedBox.shrink();
 
-  Color _backgroundColor = Colors.grey[900];
+  Color? _backgroundColor = Colors.grey[900];
 
   @override
   void initState() {
@@ -114,21 +112,21 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         if (snapshot.connectionState == ConnectionState.done) {
           if (_infoToShow) {
             return ExpandablePanel(
-              collapsed: null,
+              collapsed: Container(),
               controller: _expandableController,
               expanded: mainWidgetBox(),
             );
           } else if (_errorToShow) {
             return ExpandablePanel(
-              collapsed: null,
+              collapsed: Container(),
               controller: _expandableController,
               expanded: _errorDetailsWidget,
             );
           } else {
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
         }
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
       },
     );
   }
@@ -143,7 +141,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             child: Row(
               children: [
                 Expanded(
-                  child: _statsWidget,
+                  child: _statsWidget!,
                 ),
                 ProfileCheckAddButton(
                   profileId: widget.profileId,
@@ -159,7 +157,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Container(
           color: _backgroundColor,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
             child: Column(
               children: [
                 if (_isPartner)
@@ -194,7 +192,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     _isOwnFaction ||
                     _isPartner ||
                     _isOwnPlayer)
-                  SizedBox(height: 2)
+                  const SizedBox(height: 2)
               ],
             ),
           ),
@@ -204,23 +202,23 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    var otherProfile =
+    final otherProfile =
         await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: widget.profileId.toString());
 
     // FRIEND CHECK
     if (!mounted) return; // We could be unmounted when rapidly skipping the first target
-    var friendsProv = context.read<FriendsProvider>();
+    final friendsProv = context.read<FriendsProvider>();
     if (!friendsProv.initialized) {
       await friendsProv.initFriends();
     }
-    for (var friend in friendsProv.allFriends) {
+    for (final friend in friendsProv.allFriends) {
       if (friend.playerId == widget.profileId) _isFriend = true;
     }
 
     if (otherProfile is OtherProfileModel) {
       _playerName = otherProfile.name;
-      _factionName = otherProfile.faction.factionName;
-      _factionId = otherProfile.faction.factionId;
+      _factionName = otherProfile.faction!.factionName;
+      _factionId = otherProfile.faction!.factionId;
 
       // Estimated stats is not awaited, since it can take a few seconds
       // to contact YATA and decide what we show
@@ -230,30 +228,30 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _isTornPda = true;
       }
 
-      if (otherProfile.married.spouseId == _userDetails.basic.playerId) {
+      if (otherProfile.married!.spouseId == _userDetails.basic!.playerId) {
         _isPartner = true;
       }
 
-      if (otherProfile.playerId == _userDetails.basic.playerId) {
+      if (otherProfile.playerId == _userDetails.basic!.playerId) {
         _isOwnPlayer = true;
       }
 
-      if (_userDetails.basic.faction.factionId != 0 &&
-          otherProfile.faction.factionId == _userDetails.basic.faction.factionId) {
+      if (_userDetails.basic!.faction!.factionId != 0 &&
+          otherProfile.faction!.factionId == _userDetails.basic!.faction!.factionId) {
         _isOwnFaction = true;
       }
 
-      var settingsProvider = context.read<SettingsProvider>();
-      for (var fact in settingsProvider.friendlyFactions) {
-        if (otherProfile.faction.factionId == fact.id) {
+      final settingsProvider = context.read<SettingsProvider>();
+      for (final fact in settingsProvider.friendlyFactions) {
+        if (otherProfile.faction!.factionId == fact.id) {
           _isFriendlyFaction = true;
           break;
         }
       }
 
       if (!_isOwnPlayer &&
-          otherProfile.job.companyId != 0 &&
-          otherProfile.job.companyId == _userDetails.basic.job.companyId) {
+          otherProfile.job!.companyId != 0 &&
+          otherProfile.job!.companyId == _userDetails.basic!.job!.companyId) {
         _isWorkColleague = true;
       }
 
@@ -263,9 +261,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _tornPdaWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
+            padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Image.asset(
                   'images/icons/torn_pda.png',
@@ -273,8 +270,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   height: 16,
                   //color: Colors.brown[400],
                 ),
-                SizedBox(width: 10),
-                Flexible(
+                const SizedBox(width: 10),
+                const Flexible(
                   child: Text(
                     "Hi! Thank you for using Torn PDA!",
                     style: TextStyle(
@@ -298,14 +295,13 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           _backgroundColor = Colors.red;
         }
         _friendsWidget = Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Icon(
               Icons.people,
               color: friendTextColor,
               size: 15,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Flexible(
               child: Text(
                 friendText,
@@ -321,7 +317,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       }
 
       if (_isOwnPlayer) {
-        _playerOrFactionWidget = Row(
+        _playerOrFactionWidget = const Row(
           children: [
             Icon(
               MdiIcons.heart,
@@ -342,7 +338,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
       } else if (_isOwnFaction) {
         String factionText = "This is a fellow faction member "
-            "(${otherProfile.faction.position})!";
+            "(${otherProfile.faction!.position})!";
         Color factionColor = Colors.green;
         if (widget.profileCheckType == ProfileCheckType.attack) {
           factionColor = Colors.black;
@@ -357,7 +353,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               height: 12,
               color: factionColor,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Flexible(
               child: Text(
                 factionText,
@@ -372,7 +368,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
       } else if (_isFriendlyFaction) {
         String factionText = "This is an allied faction member "
-            "(${otherProfile.faction.factionName})!";
+            "(${otherProfile.faction!.factionName})!";
         Color factionColor = Colors.green;
         if (widget.profileCheckType == ProfileCheckType.attack) {
           factionColor = Colors.black;
@@ -388,7 +384,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               height: 12,
               color: factionColor,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Flexible(
               child: Text(
                 factionText,
@@ -423,7 +419,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               color: partnerColor,
               size: 16,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Flexible(
               child: Text(
                 partnerText,
@@ -439,7 +435,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       }
 
       if (_isWorkColleague) {
-        Color colleagueTextColor = Colors.brown[300];
+        Color? colleagueTextColor = Colors.brown[300];
         String colleagueText = "This is a work colleague!";
         if (widget.profileCheckType == ProfileCheckType.attack) {
           colleagueTextColor = Colors.black;
@@ -447,14 +443,13 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           _backgroundColor = Colors.red;
         }
         _workColleagueWidget = Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Icon(
               Icons.work,
               color: colleagueTextColor,
               size: 15,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Flexible(
               child: Text(
                 colleagueText,
@@ -471,32 +466,33 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       if (_networthWidgetEnabled) {
         int bazaar = 0;
-        if (otherProfile.bazaar.isNotEmpty) {
-          for (var b in otherProfile.bazaar) {
+        if (otherProfile.bazaar!.isNotEmpty) {
+          for (final b in otherProfile.bazaar!) {
             if (b.marketPrice is double) {
               b.marketPrice = b.marketPrice.round();
             }
 
-            bazaar += b.marketPrice * b.quantity;
+            var itemCost = b.marketPrice * b.quantity;
+            bazaar += itemCost as int;
           }
         }
 
         _networthWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
+            padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   MdiIcons.currencyUsdCircleOutline,
                   color: Colors.green,
                   size: 17,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Flexible(
                   child: Text(
-                    "${formatBigNumbers(otherProfile.personalstats.networth)}",
-                    style: TextStyle(
+                    formatBigNumbers(otherProfile.personalstats!.networth!),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
                     ),
@@ -505,19 +501,18 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 if (bazaar > 0)
                   Flexible(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        SizedBox(width: 30),
+                        const SizedBox(width: 30),
                         Image.asset(
                           "images/icons/inventory/bazaar.png",
                           color: Colors.green,
                           width: 14,
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Flexible(
                           child: Text(
-                            "${formatBigNumbers(bazaar)}",
-                            style: TextStyle(
+                            formatBigNumbers(bazaar),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11,
                             ),
@@ -536,7 +531,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       _expandableController.expanded = true;
     } else {
       _errorDetailsWidget = Container(
-        child: Padding(
+        child: const Padding(
           padding: EdgeInsets.fromLTRB(15, 5, 15, 5),
           child: Text(
             "Error contacting API (no details available)",
@@ -560,24 +555,24 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     // 2 is only if spies
 
     if (_settingsProvider.profileStatsEnabled == "0" || _settingsProvider.profileStatsEnabled == "2") {
-      int strength = 0;
-      int defense = 0;
-      int speed = 0;
-      int dexterity = 0;
-      int total = 0;
-      int timestamp = 0;
+      int? strength = 0;
+      int? defense = 0;
+      int? speed = 0;
+      int? dexterity = 0;
+      int? total = 0;
+      int? timestamp = 0;
       bool spyFound = false;
-      SpiesSource spiesSource;
+      SpiesSource? spiesSource;
 
       try {
         if (_settingsProvider.spiesSource == SpiesSource.yata) {
-          String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_u.alternativeYataKey}';
-          var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 15));
+          final String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_u.alternativeYataKey}';
+          final resp = await http.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 15));
           if (resp.statusCode == 200) {
-            var spyJson = json.decode(resp.body);
-            var spiedStats = spyJson["spies"]["${otherProfile.playerId}"];
+            final spyJson = json.decode(resp.body);
+            final spiedStats = spyJson["spies"]["${otherProfile.playerId}"];
             if (spiedStats != null) {
-              var spyModel = yataSpyModelFromJson(json.encode(spiedStats));
+              final spyModel = yataSpyModelFromJson(json.encode(spiedStats));
               spiesSource = SpiesSource.yata;
               strength = spyModel.strength;
               defense = spyModel.defense;
@@ -589,22 +584,20 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             }
           }
         } else {
-          String tornStatsURL =
+          final String tornStatsURL =
               'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/spy/${otherProfile.playerId}';
-          var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 5));
+          final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 5));
           if (resp.statusCode == 200) {
-            TornStatsSpyModel spyJson = tornStatsSpyModelFromJson(resp.body);
-            if (spyJson != null) {
-              if (!spyJson.message.contains("ERROR") && !spyJson.spy.message.contains("not found")) {
-                spiesSource = SpiesSource.tornStats;
-                strength = spyJson.spy.strength;
-                defense = spyJson.spy.defense;
-                speed = spyJson.spy.speed;
-                dexterity = spyJson.spy.dexterity;
-                total = spyJson.spy.total;
-                timestamp = spyJson.spy.timestamp;
-                spyFound = true;
-              }
+            final TornStatsSpyModel spyJson = tornStatsSpyModelFromJson(resp.body);
+            if (!spyJson.message!.contains("ERROR") && !spyJson.spy!.message!.contains("not found")) {
+              spiesSource = SpiesSource.tornStats;
+              strength = spyJson.spy!.strength;
+              defense = spyJson.spy!.defense;
+              speed = spyJson.spy!.speed;
+              dexterity = spyJson.spy!.dexterity;
+              total = spyJson.spy!.total;
+              timestamp = spyJson.spy!.timestamp;
+              spyFound = true;
             }
           }
         }
@@ -615,38 +608,38 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       if (spyFound) {
         // Stats spans
-        var statsSpans = <TextSpan>[];
+        final statsSpans = <TextSpan>[];
         // STR
         var strColor = Colors.white;
         if (strength != -1) {
-          if (_userDetails.basic.strength >= strength) {
+          if (_userDetails.basic!.strength! >= strength!) {
             strColor = Colors.green;
-          } else if (_userDetails.basic.strength * 1.15 > strength) {
+          } else if (_userDetails.basic!.strength! * 1.15 > strength) {
             strColor = Colors.orange;
           } else {
             strColor = Colors.red;
           }
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "STR ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(strength)}",
+              text: formatBigNumbers(strength),
               style: TextStyle(color: strColor, fontSize: 11),
             ),
           );
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: ", ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
         } else {
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "STR ?, ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
@@ -655,34 +648,34 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // SPD
         var spdColor = Colors.white;
         if (speed != -1) {
-          if (_userDetails.basic.speed >= speed) {
+          if (_userDetails.basic!.speed! >= speed!) {
             spdColor = Colors.green;
-          } else if (_userDetails.basic.speed * 1.15 > speed) {
+          } else if (_userDetails.basic!.speed! * 1.15 > speed) {
             spdColor = Colors.orange;
           } else {
             spdColor = Colors.red;
           }
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "SPD ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(speed)}",
+              text: formatBigNumbers(speed),
               style: TextStyle(color: spdColor, fontSize: 11),
             ),
           );
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: ", ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
         } else {
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "SPD ?, ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
@@ -691,34 +684,34 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // DEF
         var defColor = Colors.white;
         if (defense != -1) {
-          if (_userDetails.basic.defense >= defense) {
+          if (_userDetails.basic!.defense! >= defense!) {
             defColor = Colors.green;
-          } else if (_userDetails.basic.defense * 1.15 > defense) {
+          } else if (_userDetails.basic!.defense! * 1.15 > defense) {
             defColor = Colors.orange;
           } else {
             defColor = Colors.red;
           }
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "DEF ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(defense)}",
+              text: formatBigNumbers(defense),
               style: TextStyle(color: defColor, fontSize: 11),
             ),
           );
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: ", ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
         } else {
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "DEF ?, ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
@@ -727,46 +720,47 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // DEX
         var dexColor = Colors.white;
         if (dexterity != -1) {
-          if (_userDetails.basic.dexterity >= dexterity) {
+          if (_userDetails.basic!.dexterity! >= dexterity!) {
             dexColor = Colors.green;
-          } else if (_userDetails.basic.dexterity * 1.15 > dexterity) {
+          } else if (_userDetails.basic!.dexterity! * 1.15 > dexterity) {
             dexColor = Colors.orange;
           } else {
             dexColor = Colors.red;
           }
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "DEX ",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(dexterity)}",
+              text: formatBigNumbers(dexterity),
               style: TextStyle(color: dexColor, fontSize: 11),
             ),
           );
         } else {
           statsSpans.add(
-            TextSpan(
+            const TextSpan(
               text: "DEX ?",
               style: TextStyle(color: Colors.white, fontSize: 11),
             ),
           );
         }
 
-        Widget onlineStatus = Row(
+        final Widget onlineStatus = Row(
           children: [
-            otherProfile.lastAction.status == "Offline"
-                ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
-                : otherProfile.lastAction.status == "Idle"
-                    ? Icon(Icons.adjust, size: 12, color: Colors.orange)
-                    : Icon(Icons.circle, size: 12, color: Colors.green),
-            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+            if (otherProfile.lastAction!.status == "Offline")
+              const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+            else
+              otherProfile.lastAction!.status == "Idle"
+                  ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
+                  : const Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
               Padding(
                 padding: const EdgeInsets.only(left: 2),
                 child: Text(
-                  otherProfile.lastAction.relative
+                  otherProfile.lastAction!.relative!
                       .replaceAll("minute ago", "m")
                       .replaceAll("minutes ago", "m")
                       .replaceAll("hour ago", "h")
@@ -775,7 +769,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                       .replaceAll("days ago", "d"),
                   style: TextStyle(
                     fontSize: 11,
-                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                    color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
                   ),
                 ),
               ),
@@ -785,9 +779,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Color infoColorStats = Colors.white;
         if (total != -1) {
           infoColorStats = Colors.red;
-          if (_userDetails.basic.total >= total) {
+          if (_userDetails.basic!.total! >= total!) {
             infoColorStats = Colors.green;
-          } else if (_userDetails.basic.total * 1.15 > total) {
+          } else if (_userDetails.basic!.total! * 1.15 > total) {
             infoColorStats = Colors.orange;
           }
         }
@@ -795,15 +789,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 4, 8, 4),
+            padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
             child: Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Image.asset(
-                    spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
-                    height: 18),
-                SizedBox(width: 8),
+                  spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                  height: 18,
+                ),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -848,7 +841,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
       } else if (!spyFound && _settingsProvider.profileStatsEnabled == "0") {
         // Even if we have no YATA spy, but we want to show estimated stats
-        var npcs = [4, 10, 15, 17, 19, 20];
+        final npcs = [4, 10, 15, 17, 19, 20];
         String estimatedStats = "";
         bool npc = false;
         if (npcs.contains(otherProfile.playerId)) {
@@ -857,9 +850,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         } else {
           try {
             estimatedStats = StatsCalculator.calculateStats(
-              criminalRecordTotal: otherProfile.criminalrecord.total,
+              criminalRecordTotal: otherProfile.criminalrecord!.total,
               level: otherProfile.level,
-              networth: otherProfile.personalstats.networth,
+              networth: otherProfile.personalstats!.networth,
               rank: otherProfile.rank,
             );
           } catch (e) {
@@ -878,29 +871,29 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Color cansColor = Colors.orange;
         Color sslColor = Colors.green;
         bool sslProb = true;
-        int ecstasy = 0;
-        int lsd = 0;
+        int? ecstasy = 0;
+        int? lsd = 0;
 
         List<Widget> additional = <Widget>[];
-        var own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+        final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
         if (own is OwnPersonalStatsModel) {
           // XANAX
-          int otherXanax = otherProfile.personalstats.xantaken;
-          int myXanax = own.personalstats.xantaken;
+          final int otherXanax = otherProfile.personalstats!.xantaken!;
+          final int myXanax = own.personalstats!.xantaken!;
           xanaxComparison = otherXanax - myXanax;
           if (xanaxComparison < -10) {
             xanaxColor = Colors.green;
           } else if (xanaxComparison > 10) {
             xanaxColor = Colors.red;
           }
-          Text xanaxText = Text(
+          final Text xanaxText = Text(
             "XAN",
             style: TextStyle(color: xanaxColor, fontSize: 11),
           );
 
           // REFILLS
-          int otherRefill = otherProfile.personalstats.refills;
-          int myRefill = own.personalstats.refills;
+          final int otherRefill = otherProfile.personalstats!.refills!;
+          final int myRefill = own.personalstats!.refills!;
           refillComparison = otherRefill - myRefill;
           refillColor = Colors.orange;
           if (refillComparison < -10) {
@@ -908,35 +901,35 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           } else if (refillComparison > 10) {
             refillColor = Colors.red;
           }
-          Text refillText = Text(
+          final Text refillText = Text(
             "RFL",
             style: TextStyle(color: refillColor, fontSize: 11),
           );
 
           // ENHANCEMENT
-          int otherEnhancement = otherProfile.personalstats.statenhancersused;
-          int myEnhancement = own.personalstats.statenhancersused;
+          final int otherEnhancement = otherProfile.personalstats!.statenhancersused!;
+          final int myEnhancement = own.personalstats!.statenhancersused!;
           enhancementComparison = otherEnhancement - myEnhancement;
           if (enhancementComparison < 0) {
             enhancementColor = Colors.green;
           } else if (enhancementComparison > 0) {
             enhancementColor = Colors.red;
           }
-          Text enhancementText = Text(
+          final Text enhancementText = Text(
             "ENH",
             style: TextStyle(color: enhancementColor, fontSize: 11),
           );
 
           // CANS
-          int otherCans = otherProfile.personalstats.energydrinkused;
-          int myCans = own.personalstats.energydrinkused;
+          final int otherCans = otherProfile.personalstats!.energydrinkused!;
+          final int myCans = own.personalstats!.energydrinkused!;
           cansComparison = otherCans - myCans;
           if (cansComparison < 0) {
             cansColor = Colors.green;
           } else if (cansComparison > 0) {
             cansColor = Colors.red;
           }
-          Text cansText = Text(
+          final Text cansText = Text(
             "CAN",
             style: TextStyle(color: cansColor, fontSize: 11),
           );
@@ -946,14 +939,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           /// if (esc + xan) < 150 & LSD < 50, SSL is green;
           /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
           /// if (esc + xan) < 150 & LSD > 100 SSL is red
-          Widget sslWidget = SizedBox.shrink();
+          Widget sslWidget = const SizedBox.shrink();
           sslColor = Colors.green;
-          ecstasy = otherProfile.personalstats.exttaken;
-          lsd = otherProfile.personalstats.lsdtaken;
-          if (otherXanax + ecstasy > 150) {
+          ecstasy = otherProfile.personalstats!.exttaken;
+          lsd = otherProfile.personalstats!.lsdtaken;
+          if (otherXanax + ecstasy! > 150) {
             sslProb = false;
           } else {
-            if (lsd > 50 && lsd < 50) {
+            if (lsd! > 50 && lsd < 50) {
               sslColor = Colors.orange;
             } else if (lsd > 100) {
               sslColor = Colors.red;
@@ -968,30 +961,31 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           }
 
           additional.add(xanaxText);
-          additional.add(SizedBox(width: 5));
+          additional.add(const SizedBox(width: 5));
           additional.add(refillText);
-          additional.add(SizedBox(width: 5));
+          additional.add(const SizedBox(width: 5));
           additional.add(enhancementText);
-          additional.add(SizedBox(width: 5));
+          additional.add(const SizedBox(width: 5));
           additional.add(cansText);
-          additional.add(SizedBox(width: 5));
+          additional.add(const SizedBox(width: 5));
           additional.add(sslWidget);
-          additional.add(SizedBox(width: 5));
+          additional.add(const SizedBox(width: 5));
         }
 
         // ONLINE STATUS
-        Widget onlineStatus = Row(
+        final Widget onlineStatus = Row(
           children: [
-            otherProfile.lastAction.status == "Offline"
-                ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
-                : otherProfile.lastAction.status == "Idle"
-                    ? Icon(Icons.adjust, size: 12, color: Colors.orange)
-                    : Icon(Icons.circle, size: 12, color: Colors.green),
-            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+            if (otherProfile.lastAction!.status == "Offline")
+              const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+            else
+              otherProfile.lastAction!.status == "Idle"
+                  ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
+                  : const Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
               Padding(
                 padding: const EdgeInsets.only(left: 2),
                 child: Text(
-                  otherProfile.lastAction.relative
+                  otherProfile.lastAction!.relative!
                       .replaceAll("minute ago", "m")
                       .replaceAll("minutes ago", "m")
                       .replaceAll("hour ago", "h")
@@ -1000,7 +994,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                       .replaceAll("days ago", "d"),
                   style: TextStyle(
                     fontSize: 11,
-                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                    color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
                   ),
                 ),
               ),
@@ -1010,7 +1004,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 4, 8, 4),
+            padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1019,12 +1013,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     children: [
                       Text(
                         npc ? "" : "(EST)",
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
                         ),
                       ),
-                      SizedBox(width: 5),
+                      const SizedBox(width: 5),
                       Text(
                         estimatedStats,
                         style: TextStyle(
@@ -1033,7 +1027,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
                         ),
                       ),
-                      SizedBox(width: 5),
+                      const SizedBox(width: 5),
                       if (!npc)
                         Expanded(
                           child: Wrap(
@@ -1048,7 +1042,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   Padding(
                     padding: const EdgeInsets.only(left: 2),
                     child: GestureDetector(
-                      child: Icon(
+                      child: const Icon(
                         Icons.info_outline,
                         color: Colors.white,
                         size: 18,
@@ -1085,31 +1079,31 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   void _showSpiedDetailsDialog({
-    @required int strength,
-    @required int defense,
-    @required int speed,
-    @required int dexterity,
-    @required int total,
-    @required int update,
-    @required String name,
-    @required String factionName,
-    @required SpiesSource spiesSource,
+    required int? strength,
+    required int? defense,
+    required int? speed,
+    required int? dexterity,
+    required int? total,
+    required int? update,
+    required String? name,
+    required String? factionName,
+    required SpiesSource? spiesSource,
   }) {
     String lastUpdated = "";
     if (update != 0) {
-      lastUpdated = readTimestamp(update);
+      lastUpdated = readTimestamp(update!);
     }
 
     Widget strWidget;
     if (strength == -1) {
-      strWidget = Text(
+      strWidget = const Text(
         "Strength: unknown",
         style: TextStyle(fontSize: 12),
       );
     } else {
       var strDiff = "";
       Color strColor;
-      var result = _userDetails.basic.strength - strength;
+      final result = _userDetails.basic!.strength! - strength!;
       if (result == 0) {
         strDiff = "Same as you";
         strColor = Colors.orange;
@@ -1126,7 +1120,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         children: [
           Text(
             "Strength: ${formatBigNumbers(strength)}",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
           Text(
             strDiff,
@@ -1138,14 +1132,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     Widget spdWidget;
     if (speed == -1) {
-      spdWidget = Text(
+      spdWidget = const Text(
         "Speed: unknown",
         style: TextStyle(fontSize: 12),
       );
     } else {
       var spdDiff = "";
       Color spdColor;
-      var result = _userDetails.basic.speed - speed;
+      final result = _userDetails.basic!.speed! - speed!;
       if (result == 0) {
         spdDiff = "Same as you";
         spdColor = Colors.orange;
@@ -1162,7 +1156,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         children: [
           Text(
             "Speed: ${formatBigNumbers(speed)}",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
           Text(
             spdDiff,
@@ -1174,14 +1168,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     Widget defWidget;
     if (defense == -1) {
-      defWidget = Text(
+      defWidget = const Text(
         "Defense: unknown",
         style: TextStyle(fontSize: 12),
       );
     } else {
       var defDiff = "";
       Color defColor;
-      var result = _userDetails.basic.defense - defense;
+      final result = _userDetails.basic!.defense! - defense!;
       if (result == 0) {
         defDiff = "Same as you";
         defColor = Colors.orange;
@@ -1198,7 +1192,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         children: [
           Text(
             "Defense: ${formatBigNumbers(defense)}",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
           Text(
             defDiff,
@@ -1210,14 +1204,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     Widget dexWidget;
     if (dexterity == -1) {
-      dexWidget = Text(
+      dexWidget = const Text(
         "Dexterity: unknown",
         style: TextStyle(fontSize: 12),
       );
     } else {
       var dexDiff = "";
       Color dexColor;
-      var result = _userDetails.basic.dexterity - dexterity;
+      final result = _userDetails.basic!.dexterity! - dexterity!;
       if (result == 0) {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
@@ -1234,7 +1228,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         children: [
           Text(
             "Dexterity: ${formatBigNumbers(dexterity)}",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
           Text(
             dexDiff,
@@ -1246,14 +1240,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     Widget totalWidget;
     if (total == -1) {
-      totalWidget = Text(
+      totalWidget = const Text(
         "TOTAL: unknown",
         style: TextStyle(fontSize: 12),
       );
     } else {
       var totalDiff = "";
       Color totalColor;
-      var result = _userDetails.basic.total - total;
+      final result = _userDetails.basic!.total! - total!;
       if (result == 0) {
         totalDiff = "Same as you";
         totalColor = Colors.orange;
@@ -1270,7 +1264,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         children: [
           Text(
             "TOTAL: ${formatBigNumbers(total)}",
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
           Text(
             totalDiff,
@@ -1280,11 +1274,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
     }
 
-    Widget sourceWidget = SizedBox.shrink();
+    Widget sourceWidget = const SizedBox.shrink();
     if (spiesSource != null) {
       sourceWidget = Row(
         children: [
-          Text(
+          const Text(
             "Source: ",
             style: TextStyle(fontSize: 12),
           ),
@@ -1301,22 +1295,21 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: name.isNotEmpty ? Text(name) : Text("Spied stats"),
+          title: name!.isNotEmpty ? Text(name) : const Text("Spied stats"),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (factionName != "0" && factionName.isNotEmpty)
+                if (factionName != "0" && factionName!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(4),
                     child: Text(
-                      "Faction: ${factionName}",
-                      style: TextStyle(fontSize: 12),
+                      "Faction: $factionName",
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 if (lastUpdated.isNotEmpty)
@@ -1324,7 +1317,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     padding: const EdgeInsets.all(4),
                     child: Text(
                       "Updated: $lastUpdated",
-                      style: TextStyle(fontSize: 12),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 Padding(
@@ -1373,7 +1366,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     int refillCompare,
     Color refillColor,
     int enhancementCompare,
-    Color enhancementColor,
+    Color? enhancementColor,
     int cansCompare,
     Color cansColor,
     Color sslColor,
@@ -1388,21 +1381,20 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       xanaxRelative = "${xanaxCompare.abs()} LESS than you";
     }
-    Widget xanaxWidget = Row(
+    final Widget xanaxWidget = Row(
       children: [
-        Text(
+        const Text(
           "> Xanax: ",
           style: TextStyle(fontSize: 14),
         ),
         Flexible(
           child: Text(
-            "$xanaxRelative",
+            xanaxRelative,
             style: TextStyle(color: xanaxColor, fontSize: 14),
           ),
         ),
       ],
     );
-    ;
 
     String refillRelative = "";
     if (refillCompare > 0) {
@@ -1412,15 +1404,15 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       refillRelative = "${refillCompare.abs()} LESS than you";
     }
-    Widget refillWidget = Row(
+    final Widget refillWidget = Row(
       children: [
-        Text(
+        const Text(
           "> (E) Refills: ",
           style: TextStyle(fontSize: 14),
         ),
         Flexible(
           child: Text(
-            "$refillRelative",
+            refillRelative,
             style: TextStyle(color: refillColor, fontSize: 14),
           ),
         ),
@@ -1428,7 +1420,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
 
     String enhancementRelative = "";
-    if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider.mainText;
+    if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider!.mainText;
     if (enhancementCompare > 0) {
       enhancementRelative = "${enhancementCompare.abs()} MORE than you";
     } else if (enhancementCompare == 0) {
@@ -1436,15 +1428,15 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else if (enhancementCompare < 0) {
       enhancementRelative = "${enhancementCompare.abs()} LESS than you";
     }
-    Widget enhancementWidget = Row(
+    final Widget enhancementWidget = Row(
       children: [
-        Text(
+        const Text(
           "> Enhancer(s): ",
           style: TextStyle(fontSize: 14),
         ),
         Flexible(
           child: Text(
-            "$enhancementRelative",
+            enhancementRelative,
             style: TextStyle(color: enhancementColor, fontSize: 14),
           ),
         ),
@@ -1459,32 +1451,38 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else if (cansCompare < 0) {
       cansRelative = "${cansCompare.abs()} LESS than you";
     }
-    Widget cansWidget = Row(
+    final Widget cansWidget = Row(
       children: [
-        Text(
+        const Text(
           "> Cans: ",
           style: TextStyle(fontSize: 14),
         ),
         Flexible(
           child: Text(
-            "$cansRelative",
+            cansRelative,
             style: TextStyle(color: cansColor, fontSize: 14),
           ),
         ),
       ],
     );
 
-    Widget sslWidget = Column(
+    final Widget sslWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text(
+            const Text(
               "> SSL probability: ",
               style: TextStyle(fontSize: 14),
             ),
             Text(
-              "${!sslProb ? "none" : sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
+              !sslProb
+                  ? "none"
+                  : sslColor == Colors.green
+                      ? "low"
+                      : sslColor == Colors.orange
+                          ? "med"
+                          : "high",
               style: TextStyle(
                 color: sslColor,
                 fontSize: 14,
@@ -1492,8 +1490,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 12),
+        const Padding(
+          padding: EdgeInsets.only(left: 12),
           child: Text(
             "[Sports Science Lab Gym]",
             style: TextStyle(fontSize: 9),
@@ -1505,16 +1503,16 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Xanax: ${otherProfile.personalstats.xantaken}",
-                style: TextStyle(fontSize: 12),
+                "Xanax: ${otherProfile.personalstats!.xantaken}",
+                style: const TextStyle(fontSize: 12),
               ),
               Text(
-                "Ecstasy: ${otherProfile.personalstats.exttaken}",
-                style: TextStyle(fontSize: 12),
+                "Ecstasy: ${otherProfile.personalstats!.exttaken}",
+                style: const TextStyle(fontSize: 12),
               ),
               Text(
-                "LSD: ${otherProfile.personalstats.lsdtaken}",
-                style: TextStyle(fontSize: 12),
+                "LSD: ${otherProfile.personalstats!.lsdtaken}",
+                style: const TextStyle(fontSize: 12),
               ),
             ],
           ),
@@ -1529,46 +1527,46 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       builder: (_) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Text(otherProfile.name),
+          title: Text(otherProfile.name!),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (otherProfile.faction.factionName != "0")
+                if (otherProfile.faction!.factionName != "0")
                   Padding(
                     padding: const EdgeInsets.all(2),
                     child: Text(
-                      "Faction: ${otherProfile.faction.factionName}",
-                      style: TextStyle(fontSize: 12),
+                      "Faction: ${otherProfile.faction!.factionName}",
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
-                if (otherProfile.lastAction.relative.isNotEmpty)
+                if (otherProfile.lastAction!.relative!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(2),
                     child: Text(
-                      "Online: ${otherProfile.lastAction.relative.replaceAll(RegExp('0 minutes ago'), "now")}",
-                      style: TextStyle(fontSize: 12),
+                      "Online: ${otherProfile.lastAction!.relative!.replaceAll(RegExp('0 minutes ago'), "now")}",
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  padding: const EdgeInsets.only(top: 20, left: 4),
                   child: xanaxWidget,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  padding: const EdgeInsets.only(top: 20, left: 4),
                   child: refillWidget,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  padding: const EdgeInsets.only(top: 20, left: 4),
                   child: enhancementWidget,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  padding: const EdgeInsets.only(top: 20, left: 4),
                   child: cansWidget,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+                  padding: const EdgeInsets.only(top: 20, left: 4),
                   child: sslWidget,
                 ),
               ],

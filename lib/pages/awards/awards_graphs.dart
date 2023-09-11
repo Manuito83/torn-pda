@@ -1,40 +1,38 @@
 // Dart imports:
 import 'dart:math';
 
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:fl_chart/fl_chart.dart';
 // Flutter imports:
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// Package imports:
-import 'package:bot_toast/bot_toast.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class AwardsGraphs extends StatefulWidget {
-  AwardsGraphs({@required this.graphInfo});
+  const AwardsGraphs({required this.graphInfo});
 
   final List<dynamic> graphInfo;
 
   @override
-  _AwardsGraphsState createState() => _AwardsGraphsState();
+  AwardsGraphsState createState() => AwardsGraphsState();
 }
 
-class _AwardsGraphsState extends State<AwardsGraphs> {
+class AwardsGraphsState extends State<AwardsGraphs> {
   final Color barBackgroundColor = const Color(0xff72d8bf);
 
-  int _touchedIndex;
+  int? _touchedIndex;
 
   bool _landScape = false;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -50,10 +48,10 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
@@ -75,8 +73,6 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
               padding: const EdgeInsets.all(30),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
                   /*
                   Text(
@@ -116,27 +112,28 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Row(
         children: [
-          Text('Awards graph'),
-          SizedBox(width: 8),
+          const Text('Awards graph'),
+          const SizedBox(width: 8),
           GestureDetector(
-              onTap: () {
-                BotToast.showText(
-                  text: "This section is part of YATA's mobile interface, all details "
-                      "information and actions are directly linked to your YATA account.",
-                  textStyle: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green[800],
-                  duration: Duration(seconds: 6),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
-              child: Image.asset('images/icons/yata_logo.png', height: 28)),
+            onTap: () {
+              BotToast.showText(
+                text: "This section is part of YATA's mobile interface, all details "
+                    "information and actions are directly linked to your YATA account.",
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green[800]!,
+                duration: const Duration(seconds: 6),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            },
+            child: Image.asset('images/icons/yata_logo.png', height: 28),
+          ),
         ],
       ),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -172,28 +169,29 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
     return BarChartData(
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-            tooltipBgColor: Colors.blueGrey,
-            fitInsideVertically: true,
-            fitInsideHorizontally: true,
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final decimalFormat = new NumberFormat("#,##0", "en_US");
-              var achieved = widget.graphInfo[group.x][2] == 0 ? "NOT ACHIEVED" : "ACHIEVED";
-              return BarTooltipItem(
-                "${widget.graphInfo[group.x][0]}\n"
-                "Circulation ${decimalFormat.format(widget.graphInfo[group.x][1])}\n"
-                "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}\n\n"
-                "$achieved",
-                TextStyle(color: Colors.yellow, fontSize: 12),
-              );
-            }),
+          tooltipBgColor: Colors.blueGrey,
+          fitInsideVertically: true,
+          fitInsideHorizontally: true,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            final decimalFormat = NumberFormat("#,##0", "en_US");
+            final achieved = widget.graphInfo[group.x][2] == 0 ? "NOT ACHIEVED" : "ACHIEVED";
+            return BarTooltipItem(
+              "${widget.graphInfo[group.x][0]}\n"
+              "Circulation ${decimalFormat.format(widget.graphInfo[group.x][1])}\n"
+              "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}\n\n"
+              "$achieved",
+              const TextStyle(color: Colors.yellow, fontSize: 12),
+            );
+          },
+        ),
         // Threshold so that the smallest bars can be selected as well
-        touchExtraThreshold: EdgeInsets.only(top: 30),
+        touchExtraThreshold: const EdgeInsets.only(top: 30),
         touchCallback: (flTouchEvent, barTouchResponse) {
           setState(() {
             if (barTouchResponse?.spot != null &&
                 barTouchResponse is! PointerUpEvent &&
                 barTouchResponse is! PointerExitEvent) {
-              _touchedIndex = barTouchResponse.spot.touchedBarGroupIndex;
+              _touchedIndex = barTouchResponse!.spot!.touchedBarGroupIndex;
             } else {
               _touchedIndex = -1;
             }
@@ -224,7 +222,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
             showTitles: true,
             getTitlesWidget: (value, titleMeta) {
               // Antilogarithm
-              int yValue = pow(10, value).round();
+              final int yValue = pow(10, value).round();
               String yString = yValue.toString();
               if (yValue == 1) {
                 yString = "0";
@@ -251,19 +249,19 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   }
 
   List<BarChartGroupData> showingGroups() {
-    double width = MediaQuery.of(context).size.width;
+    final double width = MediaQuery.sizeOf(context).width;
     var pixelPerBar = (width - 200) / widget.graphInfo.length;
     if (pixelPerBar < 1) {
       pixelPerBar = 1;
     }
 
-    var awardBarList = <BarChartGroupData>[];
+    final awardBarList = <BarChartGroupData>[];
     for (var i = 0; i < widget.graphInfo.length; i++) {
       awardBarList.add(
         makeGroupData(
           x: i,
           //y: widget.graphInfo[i][1].toDouble(),
-          y: log(widget.graphInfo[i][1]) / ln10.toDouble(),
+          y: log(widget.graphInfo[i][1]) / ln10,
           isTouched: i == _touchedIndex,
           barColor: widget.graphInfo[i][2] == 0 ? Colors.red : Colors.green,
           width: pixelPerBar,
@@ -275,8 +273,8 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   }
 
   BarChartGroupData makeGroupData({
-    int x,
-    double y,
+    required int x,
+    required double y,
     bool isTouched = false,
     Color barColor = Colors.white,
     double width = 2,

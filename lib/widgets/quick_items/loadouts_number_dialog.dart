@@ -3,16 +3,16 @@ import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class LoadoutsNumberDialog extends StatefulWidget {
-  final ThemeProvider themeProvider;
-  final QuickItemsProvider itemsProvider;
+  final ThemeProvider? themeProvider;
+  final QuickItemsProvider? itemsProvider;
 
-  LoadoutsNumberDialog({@required this.themeProvider, @required this.itemsProvider, Key key}) : super(key: key);
+  const LoadoutsNumberDialog({required this.themeProvider, required this.itemsProvider, super.key});
 
   @override
-  _LoadoutsNumberDialogState createState() => _LoadoutsNumberDialogState();
+  LoadoutsNumberDialogState createState() => LoadoutsNumberDialogState();
 }
 
-class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
+class LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -26,22 +26,21 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
-                  color: widget.themeProvider.secondBackground,
-                  shape: BoxShape.rectangle,
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
+                  color: widget.themeProvider!.secondBackground,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
@@ -51,23 +50,23 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
                     Flexible(
                       child: Text(
                         "Number of loadouts to show:",
-                        style: TextStyle(fontSize: 12, color: widget.themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: widget.themeProvider!.mainText),
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(widget.itemsProvider.numberOfLoadoutsToShow.toString()),
+                    const SizedBox(height: 8),
+                    Text(widget.itemsProvider!.numberOfLoadoutsToShow.toString()),
                     Slider(
-                      value: widget.itemsProvider.numberOfLoadoutsToShow.toDouble(),
+                      value: widget.itemsProvider!.numberOfLoadoutsToShow.toDouble(),
                       min: 2,
                       max: 9,
                       divisions: 7,
                       onChanged: (value) {
                         setState(() {
-                          widget.itemsProvider.setNumberOfLoadoutsToShow(value.toInt());
+                          widget.itemsProvider!.setNumberOfLoadoutsToShow(value.toInt());
                         });
                       },
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
@@ -80,12 +79,12 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Close"),
+                          child: const Text("Close"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -101,9 +100,9 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.secondBackground,
+                backgroundColor: widget.themeProvider!.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: widget.themeProvider.secondBackground,
+                  backgroundColor: widget.themeProvider!.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 34,

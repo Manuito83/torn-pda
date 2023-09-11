@@ -4,11 +4,10 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
@@ -16,18 +15,17 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
-
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -36,34 +34,35 @@ import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class TravelPage extends StatefulWidget {
-  TravelPage({Key key}) : super(key: key);
+  const TravelPage({super.key});
 
   @override
-  _TravelPageState createState() => _TravelPageState();
+  TravelPageState createState() => TravelPageState();
 }
 
-class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
+class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   TravelModel _travelModel = TravelModel();
-  Timer _ticker;
+  Timer? _ticker;
 
   int _apiRetries = 0;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  SettingsProvider? _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   bool _notificationsPending = false;
   bool _alarmSound = false;
   bool _alarmVibration = true;
 
-  int _travelNotificationAhead;
-  int _travelAlarmAhead;
-  int _travelTimerAhead;
+  late int _travelNotificationAhead;
+  late int _travelAlarmAhead;
+  late int _travelTimerAhead;
 
-  String _myCurrentKey = '';
+  String? _myCurrentKey = '';
   bool _apiError = true;
   String _errorReason = '';
 
-  Future _finishedLoadingPreferences;
+  Future? _finishedLoadingPreferences;
 
   @override
   void initState() {
@@ -72,7 +71,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
-    _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
+    _ticker = Timer.periodic(const Duration(seconds: 10), (Timer t) => _updateInformation());
     analytics.setCurrentScreen(screenName: 'travel');
 
     routeWithDrawer = true;
@@ -87,7 +86,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       _updateInformation();
     }
@@ -95,12 +94,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
-      drawer: Drawer(),
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
+      drawer: const Drawer(),
+      appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider!.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
               child: buildAppBar(),
@@ -118,7 +119,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     children: _travelMain(),
                   );
                 } else {
-                  return Padding(
+                  return const Padding(
                     padding: EdgeInsets.all(10),
                     child: CircularProgressIndicator(),
                   );
@@ -129,7 +130,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         ),
       ),
       floatingActionButtonAnimator: FabOverrideAnimation(),
-      floatingActionButtonLocation: MediaQuery.of(context).orientation == Orientation.landscape
+      floatingActionButtonLocation: MediaQuery.orientationOf(context) == Orientation.landscape
           ? FloatingActionButtonLocation.endFloat
           : _travelModel.abroad
               ? FloatingActionButtonLocation.endFloat
@@ -142,7 +143,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               return buildSpeedDial();
             } else {
               return OpenContainer(
-                transitionDuration: Duration(seconds: 1),
+                transitionDuration: const Duration(seconds: 1),
                 transitionType: ContainerTransitionType.fadeThrough,
                 openBuilder: (BuildContext context, VoidCallback _) {
                   return ForeignStockPage(apiKey: _myCurrentKey);
@@ -153,9 +154,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     Radius.circular(56 / 2),
                   ),
                 ),
-                onClosed: (ReturnFlagPressed returnFlag) async {
-                  if (returnFlag.flagPressed) {
-                    var url = 'https://www.torn.com/travelagency.php';
+                onClosed: (ReturnFlagPressed? returnFlag) async {
+                  if (returnFlag!.flagPressed) {
+                    const url = 'https://www.torn.com/travelagency.php';
                     await context.read<WebViewProvider>().openBrowserPreference(
                           context: context,
                           url: url,
@@ -165,7 +166,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   }
                 },
                 closedColor: Colors.orange,
-                openColor: _themeProvider.canvas,
+                openColor: _themeProvider.canvas!,
                 closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
                     height: 56,
@@ -181,7 +182,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               );
             }
           } else {
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
         },
       ),
@@ -191,21 +192,28 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
-      leadingWidth: 80,
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
-      title: Text('Travel'),
+      title: const Text('Travel'),
       actions: <Widget>[
         IconButton(
           icon: Icon(
@@ -216,13 +224,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             _updateInformation();
             BotToast.showText(
               text: "Refreshing",
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.grey[700],
-              duration: Duration(milliseconds: 500),
-              contentPadding: EdgeInsets.all(10),
+              contentColor: Colors.grey[700]!,
+              duration: const Duration(milliseconds: 500),
+              contentPadding: const EdgeInsets.all(10),
             );
           },
         ),
@@ -265,17 +273,17 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             },
           )
         else
-          SizedBox.shrink(),
+          const SizedBox.shrink(),
       ],
     );
   }
 
   SpeedDial buildSpeedDial() {
-    var dials = <SpeedDialChild>[];
+    final dials = <SpeedDialChild>[];
 
-    var dialStocks = SpeedDialChild(
+    final dialStocks = SpeedDialChild(
       label: 'STOCKS',
-      labelStyle: TextStyle(
+      labelStyle: const TextStyle(
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
@@ -304,37 +312,37 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       ),
     );
 
-    var dialNotificationSet = SpeedDialChild(
-      child: Icon(
+    final dialNotificationSet = SpeedDialChild(
+      child: const Icon(
         Icons.chat_bubble_outline,
         color: Colors.black,
       ),
       backgroundColor: Colors.green,
       onTap: () async {
         await _scheduleNotification().then((value) {
-          String formattedTime = _formatTime(value);
+          String? formattedTime = _formatTime(value);
           BotToast.showText(
             text: "Notification set for $formattedTime",
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.green,
-            duration: Duration(seconds: 3),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
           );
         });
       },
       label: 'Set notification',
-      labelStyle: TextStyle(
+      labelStyle: const TextStyle(
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
       labelBackgroundColor: Colors.green,
     );
 
-    var dialNotificationCancel = SpeedDialChild(
-      child: Icon(
+    final dialNotificationCancel = SpeedDialChild(
+      child: const Icon(
         Icons.chat_bubble_outline,
         color: Colors.black,
       ),
@@ -343,75 +351,75 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         await _cancelTravelNotification();
         BotToast.showText(
           text: "Notification cancelled!",
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.black,
           ),
-          contentColor: Colors.orange[700],
-          duration: Duration(seconds: 3),
-          contentPadding: EdgeInsets.all(10),
+          contentColor: Colors.orange[700]!,
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(10),
         );
       },
       label: 'Cancel notification',
-      labelStyle: TextStyle(
+      labelStyle: const TextStyle(
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
       labelBackgroundColor: Colors.red,
     );
 
-    var dialAlarm = SpeedDialChild(
-      child: Icon(
+    final dialAlarm = SpeedDialChild(
+      child: const Icon(
         Icons.notifications_none,
         color: Colors.black,
       ),
       backgroundColor: Colors.grey[400],
       onTap: () async {
         await _setAlarm().then((value) {
-          String formattedTime = _formatTime(value);
+          String? formattedTime = _formatTime(value);
           BotToast.showText(
             text: 'Alarm set for $formattedTime!',
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.green,
-            duration: Duration(seconds: 3),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
           );
         });
       },
       label: 'Set alarm',
-      labelStyle: TextStyle(
+      labelStyle: const TextStyle(
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
       labelBackgroundColor: Colors.grey[400],
     );
 
-    var dialTimer = SpeedDialChild(
-      child: Icon(
+    final dialTimer = SpeedDialChild(
+      child: const Icon(
         Icons.timer,
         color: Colors.black,
       ),
       backgroundColor: Colors.grey[400],
       onTap: () async {
         await _setTimer().then((value) {
-          String formattedTime = _formatTime(value);
+          String? formattedTime = _formatTime(value);
           BotToast.showText(
             text: "Timer set for $formattedTime",
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.green,
-            duration: Duration(seconds: 3),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
           );
         });
       },
       label: 'Set timer',
-      labelStyle: TextStyle(
+      labelStyle: const TextStyle(
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
@@ -421,7 +429,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     // We always add stocks
     dials.add(dialStocks);
 
-    if (_travelModel.abroad && _travelModel.timeLeft > 120) {
+    if (_travelModel.abroad && _travelModel.timeLeft! > 120) {
       if (_notificationsPending) {
         dials.add(dialNotificationCancel);
       } else {
@@ -436,34 +444,33 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     return SpeedDial(
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
+          MediaQuery.orientationOf(context) == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       elevation: 2,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
+      curve: Curves.bounceIn,
+      children: dials,
       child: Container(
-        child: Icon(
+        width: 58,
+        height: 58,
+        decoration: const BoxDecoration(
+          color: Colors.orange,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
           Icons.airplanemode_active,
           color: Colors.black,
           size: 30,
         ),
-        width: 58,
-        height: 58,
-        decoration: new BoxDecoration(
-          color: Colors.orange,
-          shape: BoxShape.circle,
-        ),
       ),
-      visible: true,
-      curve: Curves.bounceIn,
-      children: dials,
     );
   }
 
-  _onStocksPageClosed(ReturnFlagPressed returnFlag) async {
+  Future<void> _onStocksPageClosed(ReturnFlagPressed? returnFlag) async {
     if (_travelModel.abroad) return;
 
-    if (returnFlag.flagPressed) {
-      var url = 'https://www.torn.com/travelagency.php';
+    if (returnFlag!.flagPressed) {
+      const url = 'https://www.torn.com/travelagency.php';
 
       await context.read<WebViewProvider>().openBrowserPreference(
             context: context,
@@ -478,7 +485,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     // We detected no api key loaded in preferences
     if (_myCurrentKey == '') {
       return <Widget>[
-        Text(
+        const Text(
           'Torn API Key not found!',
           style: TextStyle(
             color: Colors.red,
@@ -486,8 +493,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             fontWeight: FontWeight.bold,
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 30),
           child: Text(
             'Please go to the Settings section and configure your '
             'Torn API Key properly.',
@@ -502,7 +509,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           padding: const EdgeInsets.all(30),
           child: Column(
             children: <Widget>[
-              Padding(
+              const Padding(
                 padding: EdgeInsetsDirectional.only(bottom: 15),
                 child: Text(
                   "ERROR CONTACTING TORN",
@@ -513,9 +520,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 ),
               ),
               Text("Error: $_errorReason"),
-              SizedBox(height: 40),
-              Text("You can still try to visit the website:"),
-              SizedBox(height: 10),
+              const SizedBox(height: 40),
+              const Text("You can still try to visit the website:"),
+              const SizedBox(height: 10),
               _travelAgencyButton(),
             ],
           ),
@@ -525,17 +532,17 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     // API was correct: are we travelling or not?
     if (_travelModel.abroad) {
       // If we have reached another country
-      if (_travelModel.destination != 'Torn' && _travelModel.timeLeft < 15) {
+      if (_travelModel.destination != 'Torn' && _travelModel.timeLeft! < 15) {
         return <Widget>[
           Padding(
-            padding: EdgeInsetsDirectional.only(bottom: 60),
+            padding: const EdgeInsetsDirectional.only(bottom: 60),
             child: _flagImage(),
           ),
           Padding(
-            padding: EdgeInsetsDirectional.only(bottom: 10),
+            padding: const EdgeInsetsDirectional.only(bottom: 10),
             child: Text(
               'Arrived in ${_travelModel.destination}!',
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.orange,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -550,7 +557,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           Padding(
             padding: const EdgeInsets.only(top: 20),
             child: ElevatedButton(
-              child: Text("Go visit!"),
+              child: const Text("Go visit!"),
               onPressed: () async {
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
@@ -570,7 +577,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             ),
           ),
         ];
-      } else if (_travelModel.timeLeft > 0 && _travelModel.timeLeft < 120) {
+      } else if (_travelModel.timeLeft! > 0 && _travelModel.timeLeft! < 120) {
         // We are about to reach another country
         return <Widget>[
           Padding(
@@ -582,7 +589,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           Text(
             'Approaching ${_travelModel.destination}!',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.orange,
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -597,7 +604,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             ),
           ),
           ElevatedButton(
-            child: Icon(Icons.local_airport),
+            child: const Icon(Icons.local_airport),
             onPressed: () async {
               await context.read<WebViewProvider>().openBrowserPreference(
                     context: context,
@@ -620,30 +627,30 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         // We are flying somewhere (another country or TORN)
 
         // Time formatting
-        var formattedTime = TimeFormatter(
+        final formattedTime = TimeFormatter(
           inputTime: _travelModel.timeArrival,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHour;
 
         // Calculations for travel bar
-        var startTime = _travelModel.departed;
-        var endTime = _travelModel.timeStamp;
-        var totalTravelTimeSeconds = endTime - startTime;
-        var dateTimeArrival = _travelModel.timeArrival;
-        var timeDifference = dateTimeArrival.difference(DateTime.now());
+        final startTime = _travelModel.departed!;
+        final endTime = _travelModel.timeStamp!;
+        final totalTravelTimeSeconds = endTime - startTime;
+        final dateTimeArrival = _travelModel.timeArrival!;
+        final timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
-        String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-        String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+        final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+        final String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
-        double percentage = _getTravelPercentage(totalTravelTimeSeconds);
+        final double percentage = _getTravelPercentage(totalTravelTimeSeconds);
 
         return <Widget>[
           Padding(
-            padding: EdgeInsetsDirectional.only(bottom: 30),
+            padding: const EdgeInsetsDirectional.only(bottom: 30),
             child: _flagImage(),
           ),
-          Padding(
+          const Padding(
             padding: EdgeInsetsDirectional.only(bottom: 30),
             child: Text(
               'TRAVELLING',
@@ -684,12 +691,12 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   _updateInformation();
                 },
                 child: LinearPercentIndicator(
-                  padding: null,
-                  barRadius: Radius.circular(10),
+                  padding: const EdgeInsets.all(0),
+                  barRadius: const Radius.circular(10),
                   isRTL: _travelModel.destination == "Torn" ? true : false,
                   center: Text(
                     diff,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                     ),
@@ -739,14 +746,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 width: 150,
               ),
             ),
-            Text(
+            const Text(
               'NO TRAVEL DETECTED',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Padding(
+            const Padding(
               padding: EdgeInsetsDirectional.only(top: 8, bottom: 40),
               child: Text(
                 '(auto refreshing)',
@@ -764,7 +771,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   double _getTravelPercentage(int totalSeconds) {
-    double percentage = 1 - (_travelModel.timeLeft / totalSeconds);
+    final double percentage = 1 - (_travelModel.timeLeft! / totalSeconds);
     if (percentage > 1) {
       return 1;
     } else if (percentage < 0) {
@@ -776,7 +783,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   ElevatedButton _travelAgencyButton() {
     return ElevatedButton(
-      child: Text("Travel Agency"),
+      child: const Text("Travel Agency"),
       onPressed: () async {
         await context.read<WebViewProvider>().openBrowserPreference(
               context: context,
@@ -801,42 +808,30 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     switch (_travelModel.destination) {
       case "Torn":
         flagFile = 'images/flags/travel/torn.png';
-        break;
       case "Argentina":
         flagFile = 'images/flags/travel/argentina.png';
-        break;
       case "Canada":
         flagFile = 'images/flags/travel/canada.png';
-        break;
       case "Cayman Islands":
         flagFile = 'images/flags/travel/cayman_islands.png';
-        break;
       case "China":
         flagFile = 'images/flags/travel/china.png';
-        break;
       case "Hawaii":
         flagFile = 'images/flags/travel/hawaii.png';
-        break;
       case "Japan":
         flagFile = 'images/flags/travel/japan.png';
-        break;
       case "Mexico":
         flagFile = 'images/flags/travel/mexico.png';
-        break;
       case "South Africa":
         flagFile = 'images/flags/travel/south_africa.png';
-        break;
       case "Switzerland":
         flagFile = 'images/flags/travel/switzerland.png';
-        break;
       case "UAE":
         flagFile = 'images/flags/travel/uae.png';
-        break;
       case "United Kingdom":
         flagFile = 'images/flags/travel/uk.png';
-        break;
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
     return Image(
       image: AssetImage(flagFile),
@@ -845,24 +840,24 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   void _updateInformation() {
-    DateTime now = DateTime.now();
+    final DateTime now = DateTime.now();
     // We avoid calling the API unnecessarily
-    if (now.isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
+    if (now.isAfter(_travelModel.timeArrival!.subtract(const Duration(seconds: 120)))) {
       _fetchTornApi();
     }
     _retrievePendingNotifications();
 
     // Update timeLeft so that the percentage indicator and timer set time work correctly
-    if (_travelModel.timeArrival.isAfter(DateTime.now())) {
+    if (_travelModel.timeArrival!.isAfter(DateTime.now())) {
       setState(() {
-        var diff = _travelModel.timeArrival.difference(DateTime.now());
+        final diff = _travelModel.timeArrival!.difference(DateTime.now());
         _travelModel.timeLeft = diff.inSeconds;
       });
     }
   }
 
   Future<void> _fetchTornApi() async {
-    var myTravel = await Get.find<ApiCallerController>().getTravel();
+    final myTravel = await Get.find<ApiCallerController>().getTravel();
     if (myTravel is TravelModel) {
       _apiRetries = 0;
       setState(() {
@@ -883,10 +878,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    var scheduledNotificationDateTime = _travelModel.timeArrival.subtract(Duration(seconds: _travelNotificationAhead));
+    final scheduledNotificationDateTime =
+        _travelModel.timeArrival!.subtract(Duration(seconds: _travelNotificationAhead));
 
-    var modifier = await getNotificationChannelsModifiers();
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    final modifier = await getNotificationChannelsModifiers();
+    final androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'Manual travel ${modifier.channelIdModifier} s',
       'Manual travel ${modifier.channelIdModifier} s',
       channelDescription: 'Manual notifications for travel',
@@ -899,12 +895,12 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       presentSound: true,
       sound: 'aircraft_seatbelt.aiff',
     );
 
-    var platformChannelSpecifics = NotificationDetails(
+    final platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
     );
@@ -912,7 +908,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var notificationTitle = await Prefs().getTravelNotificationTitle();
     var notificationSubtitle = await Prefs().getTravelNotificationBody();
 
-    if (_settingsProvider.discreteNotifications) {
+    if (_settingsProvider!.discreteNotifications) {
       notificationTitle = "T";
       notificationSubtitle = " ";
     }
@@ -943,11 +939,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<void> _retrievePendingNotifications() async {
-    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     var pending = false;
-    if (pendingNotificationRequests.length > 0) {
-      for (var notification in pendingNotificationRequests) {
+    if (pendingNotificationRequests.isNotEmpty) {
+      for (final notification in pendingNotificationRequests) {
         if (notification.payload == 'travel') {
           pending = true;
           break;
@@ -961,9 +957,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setAlarm() async {
-    var alarmTime = _travelModel.timeArrival.add(Duration(minutes: -_travelAlarmAhead));
-    int hour = alarmTime.hour;
-    int minute = alarmTime.minute;
+    final alarmTime = _travelModel.timeArrival!.add(Duration(minutes: -_travelAlarmAhead));
+    final int hour = alarmTime.hour;
+    final int minute = alarmTime.minute;
 
     String thisSound;
     if (_alarmSound) {
@@ -971,7 +967,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     } else {
       thisSound = 'silent';
     }
-    AndroidIntent intent = AndroidIntent(
+    final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.HOUR': hour,
@@ -988,10 +984,10 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setTimer() async {
-    AndroidIntent intent = AndroidIntent(
+    final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - _travelTimerAhead,
+        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft! - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
@@ -999,12 +995,12 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
     intent.launch();
 
-    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft - _travelTimerAhead));
+    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft! - _travelTimerAhead));
   }
 
   Future _restorePreferences() async {
-    var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
-    _myCurrentKey = userDetails.basic.userApiKey;
+    final userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    _myCurrentKey = userDetails.basic!.userApiKey;
     if (_myCurrentKey != '') {
       await _fetchTornApi();
     }
@@ -1013,9 +1009,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _alarmVibration = await Prefs().getManualAlarmVibration();
 
     // Ahead timers
-    var notificationAhead = await Prefs().getTravelNotificationAhead();
-    var alarmAhead = await Prefs().getTravelAlarmAhead();
-    var timerAhead = await Prefs().getTravelTimerAhead();
+    final notificationAhead = await Prefs().getTravelNotificationAhead();
+    final alarmAhead = await Prefs().getTravelAlarmAhead();
+    final timerAhead = await Prefs().getTravelTimerAhead();
 
     if (notificationAhead == '0') {
       _travelNotificationAhead = 20;
@@ -1056,11 +1052,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     }
   }
 
-  String _formatTime(DateTime inputTime) {
+  String? _formatTime(DateTime inputTime) {
     return TimeFormatter(
       inputTime: inputTime,
-      timeFormatSetting: _settingsProvider.currentTimeFormat,
-      timeZoneSetting: _settingsProvider.currentTimeZone,
+      timeFormatSetting: _settingsProvider!.currentTimeFormat,
+      timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHour;
   }
 
@@ -1071,17 +1067,17 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
 class FabOverrideAnimation extends FloatingActionButtonAnimator {
   @override
-  Offset getOffset({Offset begin, Offset end, double progress}) {
+  Offset getOffset({Offset? begin, required Offset end, double? progress}) {
     return Offset(end.dx, end.dy);
   }
 
   @override
-  Animation<double> getRotationAnimation({Animation<double> parent}) {
+  Animation<double> getRotationAnimation({required Animation<double> parent}) {
     return Tween<double>(begin: 1.0, end: 1.0).animate(parent);
   }
 
   @override
-  Animation<double> getScaleAnimation({Animation<double> parent}) {
+  Animation<double> getScaleAnimation({required Animation<double> parent}) {
     return Tween<double>(begin: 1.0, end: 1.0).animate(parent);
   }
 }

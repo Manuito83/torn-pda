@@ -1,10 +1,7 @@
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 String easyCrimesJS({
-  @required String nerve,
-  @required String crime,
-  @required String doCrime,
+  required String nerve,
+  required String? crime,
+  required String doCrime,
 }) {
   return '''
     var first_load = true;
@@ -560,8 +557,8 @@ String restoreChatJS() {
   ''';
 }
 
-String quickItemsJS({@required String item, bool faction = false, bool eRefill = false, bool nRefill = false}) {
-  String timeRegex =
+String quickItemsJS({required String item, bool faction = false, bool? eRefill = false, bool? nRefill = false}) {
+  const String timeRegex =
       r'/<span class="counter-wrap[\s=\-"a-zA-Z0-9]*data-time="[0-9]+"[\s=\-"a-zA-Z0-9]*>[0-9:]*<\/span>/g';
 
   return '''
@@ -767,15 +764,15 @@ String quickItemsJS({@required String item, bool faction = false, bool eRefill =
   ''';
 }
 
-String changeLoadOutJS({@required String item, @required bool attackWebview}) {
+String changeLoadOutJS({required String item, required bool attackWebview}) {
   return '''
-    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=${item}';
+    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=$item';
     
     ajaxWrapper({
       url: action,
       type: 'GET',
       oncomplete: function(resp) {
-        if (${attackWebview}) {
+        if ($attackWebview) {
           window.loadoutChangeHandler.postMessage(resp.responseText);
         } else {
           window.flutter_inappwebview.callHandler('loadoutChangeHandler', resp.responseText);
@@ -791,7 +788,7 @@ String changeLoadOutJS({@required String item, @required bool attackWebview}) {
   ''';
 }
 
-String chatHighlightJS({@required String highlightMap}) {
+String chatHighlightJS({required String highlightMap}) {
   return '''
     // Credit: Torn Tools
     
@@ -889,16 +886,17 @@ String chatHighlightJS({@required String highlightMap}) {
 }
 
 String jailJS({
-  @required int levelMin,
-  @required int levelMax,
-  @required int timeMin,
-  @required int timeMax,
-  @required int scoreMin,
-  @required int scoreMax,
-  @required bool bailTicked,
-  @required bool bustTicked,
-  @required bool excludeSelf,
-  @required String excludeName,
+  required bool? filtersEnabled,
+  required int? levelMin,
+  required int? levelMax,
+  required int? timeMin,
+  required int? timeMax,
+  required int? scoreMin,
+  required int? scoreMax,
+  required bool? bailTicked,
+  required bool? bustTicked,
+  required bool? excludeSelf,
+  required String? excludeName,
 }) {
   return '''
     // Credit to TornTools for implementation logic
@@ -941,6 +939,8 @@ String jailJS({
 
       // FILTERS
       for (var player of doc.querySelectorAll(".users-list > li")) {
+
+        
         var shouldHide = false;
 
         var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
@@ -963,14 +963,14 @@ String jailJS({
         
         // Exclude own player
         var name = player.querySelector(".user.name").innerText;
-        if ($excludeSelf && name === "$excludeName" && shouldHide) {
+        if ($excludeSelf && name.toUpperCase() === "$excludeName" && shouldHide) {
           shouldHide = false;
         }
                 
-        if (shouldHide) {
+        if (shouldHide && $filtersEnabled) {
           //player.hidden = true; // Not allowed with new user agent on iOS
           player.style.display = "none"; 
-        } else {
+        } else if (!shouldHide || !$filtersEnabled) {
           //player.hidden = false; // Not allowed with new user agent on iOS
           player.style.display = ""; 
         }
@@ -1098,7 +1098,7 @@ String jailJS({
 
 // Not required any longer with inAppWebView PR #1042
 // (otherwise, two tabs will open)
-String MiniProfiles() {
+String miniProfiles() {
   return '''
     \$(document).on("click","[class*=profile-mini-_userWrap]", async function(e){
         window.flutter_inappwebview.callHandler('handlerMiniProfiles', e.target.href);
@@ -1114,8 +1114,8 @@ String MiniProfiles() {
 }
 
 String bountiesJS({
-  @required int levelMax,
-  @required bool removeNotAvailable,
+  required int? levelMax,
+  required bool? removeNotAvailable,
 }) {
   return '''
     // Credit to TornTools for implementation logic
@@ -1188,7 +1188,7 @@ String bountiesJS({
   ''';
 }
 
-String ocNNB({@required String members}) {
+String ocNNB({required String members}) {
   return '''
     // Credits: some functions and logic thanks to Torn Tools
 
@@ -1436,10 +1436,21 @@ String barsDoubleClickRedirect() {
         function onNerveClick(event) {
           window.open("https://www.torn.com/crimes.php", "_self");
         }
-          
+        
         var savedFound = document.querySelector(".pdaListenerBarsDoubleClick") !== null;
-        var energyBar = document.querySelector(`[id*="barEnergy"]`);
-        var nerveBar = document.querySelector(`[id*="barNerve"]`);
+
+        // Get all bar elements
+        let barElements = Array.from(document.querySelectorAll('[class^="bar___"]'));
+
+        // Find the first barElement that contains a class with 'energy___' and 'bar-'
+        let energyBar = barElements.find(el => 
+          el.className.includes('energy___') && el.className.includes('bar-')
+        );
+        
+        // Find the first barElement that contains a class with 'energy___' and 'bar-'
+        let nerveBar = barElements.find(el => 
+          el.className.includes('nerve___') && el.className.includes('bar-')
+        );
         
         if (!savedFound && energyBar !== null && nerveBar !== null) {
           var save = document.querySelector(".content-wrapper");
@@ -1451,7 +1462,7 @@ String barsDoubleClickRedirect() {
 
       let pass = 0;
       let waitForBarsAndRun = setInterval(() => {
-        if (document.querySelector(`[id*="barEnergy"]`)) {
+        if (document.querySelector('[class^="bar___"]')) {
           addBarsListener();
           return clearInterval(waitForBarsAndRun);
         } else {

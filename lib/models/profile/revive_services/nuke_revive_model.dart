@@ -18,25 +18,25 @@ class NukeReviveModel {
     this.appInfo,
   });
 
-  String uid;
-  String player;
-  String faction;
-  String country;
-  String appInfo;
+  String? uid;
+  String? player;
+  String? faction;
+  String? country;
+  String? appInfo;
 
   factory NukeReviveModel.fromJson(Map<String, dynamic> json) => NukeReviveModel(
-    uid: json["uid"] == null ? null : json["uid"],
-    player: json["Player"] == null ? null : json["Player"],
-    faction: json["Faction"] == null ? null : json["Faction"],
-    country: json["Country"] == null ? null : json["Country"],
-    appInfo: json["AppInfo"] == null ? null : json["AppInfo"],
+    uid: json["uid"],
+    player: json["Player"],
+    faction: json["Faction"],
+    country: json["Country"],
+    appInfo: json["AppInfo"],
   );
 
   Map<String, dynamic> toJson() => {
-    "uid": uid == null ? null : uid,
-    "Player": player == null ? null : player,
-    "Faction": faction == null ? null : faction,
-    "Country": country == null ? null : country,
-    "AppInfo": appInfo == null ? null : appInfo,
+    "uid": uid,
+    "Player": player,
+    "Faction": faction,
+    "Country": country,
+    "AppInfo": appInfo,
   };
 }

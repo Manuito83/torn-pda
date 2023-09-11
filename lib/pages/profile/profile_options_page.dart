@@ -17,35 +17,35 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
-  bool warnAboutChainsEnabled;
-  bool warnAboutExcessEnergyEnabled;
-  bool shortcutsEnabled;
-  bool showHeaderWallet;
-  bool showHeaderIcons;
-  bool dedicatedTravelCard;
-  bool disableTravelSection;
-  bool expandEvents;
-  int eventsShowNumber;
-  bool expandMessages;
-  int messagesShowNumber;
-  bool expandBasicInfo;
-  bool expandNetworth;
-  List<String> sectionSort;
-  bool oCrimesReactivated;
+  bool? warnAboutChainsEnabled;
+  bool? warnAboutExcessEnergyEnabled;
+  bool? shortcutsEnabled;
+  bool? showHeaderWallet;
+  bool? showHeaderIcons;
+  bool? dedicatedTravelCard;
+  bool? disableTravelSection;
+  bool? expandEvents;
+  int? eventsShowNumber;
+  bool? expandMessages;
+  int? messagesShowNumber;
+  bool? expandBasicInfo;
+  bool? expandNetworth;
+  List<String>? sectionSort;
+  late bool oCrimesReactivated;
 }
 
 class ProfileOptionsPage extends StatefulWidget {
-  ProfileOptionsPage({@required this.apiValid, @required this.user, @required this.callBackTimings});
+  const ProfileOptionsPage({required this.apiValid, required this.user, required this.callBackTimings});
 
   final bool apiValid;
-  final OwnProfileExtended user;
+  final OwnProfileExtended? user;
   final Function callBackTimings;
 
   @override
-  _ProfileOptionsPageState createState() => _ProfileOptionsPageState();
+  ProfileOptionsPageState createState() => ProfileOptionsPageState();
 }
 
-class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
+class ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _warnAboutChainsEnabled = true;
   bool _showHeaderWallet = true;
   bool _showHeaderIcons = true;
@@ -57,15 +57,15 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _expandNetworth = false;
   bool _oCrimesReactivated = false;
 
-  List<String> _sectionList;
+  List<String>? _sectionList;
 
   int _messagesNumber = 25;
   int _eventsNumber = 25;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
+  SettingsProvider? _settingsProvider;
 
   @override
   void initState() {
@@ -75,25 +75,25 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
     routeWithDrawer = false;
     routeName = "profile_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
       if (mounted && routeName == "profile_options") _goBack();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
+          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider!.appBarTop
               ? SizedBox(
                   height: AppBar().preferredSize.height,
                   child: buildAppBar(),
@@ -105,7 +105,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -114,8 +114,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              SizedBox(height: 15),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -124,7 +124,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 10),
+                              const SizedBox(height: 10),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
@@ -137,7 +137,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                       ),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.keyboard_arrow_right_outlined),
+                                      icon: const Icon(Icons.keyboard_arrow_right_outlined),
                                       onPressed: widget.apiValid
                                           ? () {
                                               Navigator.push(
@@ -146,14 +146,14 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                   builder: (context) {
                                                     if (Platform.isAndroid) {
                                                       return ProfileNotificationsAndroid(
-                                                        energyMax: widget.user.energy.maximum,
-                                                        nerveMax: widget.user.nerve.maximum,
+                                                        energyMax: widget.user!.energy!.maximum,
+                                                        nerveMax: widget.user!.nerve!.maximum,
                                                         callback: widget.callBackTimings,
                                                       );
                                                     } else {
                                                       return ProfileNotificationsIOS(
-                                                        energyMax: widget.user.energy.maximum,
-                                                        nerveMax: widget.user.nerve.maximum,
+                                                        energyMax: widget.user!.energy!.maximum,
+                                                        nerveMax: widget.user!.nerve!.maximum,
                                                         callback: widget.callBackTimings,
                                                       );
                                                     }
@@ -166,10 +166,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -183,7 +183,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Show wallet"),
+                                    const Text("Show wallet"),
                                     Switch(
                                       value: _showHeaderWallet,
                                       onChanged: (value) {
@@ -216,7 +216,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
-                                        Text("Show main icons"),
+                                        const Text("Show main icons"),
                                         Switch(
                                           value: _showHeaderIcons,
                                           onChanged: (value) {
@@ -249,29 +249,30 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
-                                          Text("Filter icons"),
+                                          const Text("Filter icons"),
                                           IconButton(
-                                              icon: Icon(Icons.keyboard_arrow_right_outlined),
-                                              onPressed: () {
-                                                showDialog(
-                                                  useRootNavigator: false,
-                                                  context: context,
-                                                  builder: (BuildContext context) {
-                                                    return IconsFilterPage(
-                                                      settingsProvider: _settingsProvider,
-                                                    );
-                                                  },
-                                                );
-                                              }),
+                                            icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                                            onPressed: () {
+                                              showDialog(
+                                                useRootNavigator: false,
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return IconsFilterPage(
+                                                    settingsProvider: _settingsProvider,
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          ),
                                         ],
                                       ),
                                     ),
                                 ],
                               ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -285,7 +286,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Dedicated Travel card"),
+                                    const Text("Dedicated Travel card"),
                                     Switch(
                                       value: _dedicatedTravelCard,
                                       onChanged: (value) {
@@ -308,9 +309,9 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
-                                  'If active, you\'ll get an extra card for travel information, '
+                                  "If active, you'll get an extra card for travel information, "
                                   'access to foreign stocks and notifications (reduced version of the '
-                                  'Travel section). If inactive, you\'ll still have basic travel information '
+                                  "Travel section). If inactive, you'll still have basic travel information "
                                   'in the Status card',
                                   style: TextStyle(
                                     color: Colors.grey[600],
@@ -327,7 +328,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
-                                          Text("Disable Travel Section"),
+                                          const Text("Disable Travel Section"),
                                           Switch(
                                             value: _disableTravelSection,
                                             onChanged: (value) {
@@ -345,7 +346,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 15),
                                       child: Text(
-                                        'If using the dedicated travel card, you can optionally disable the app\'s '
+                                        "If using the dedicated travel card, you can optionally disable the app's "
                                         'Travel section entirely, as the same information is shown in both',
                                         style: TextStyle(
                                           color: Colors.grey[600],
@@ -356,10 +357,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     ),
                                   ],
                                 ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -373,12 +374,12 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Show next Ranked War"),
+                                    const Text("Show next Ranked War"),
                                     Switch(
-                                      value: _settingsProvider.rankedWarsInProfile,
+                                      value: _settingsProvider!.rankedWarsInProfile,
                                       onChanged: (value) {
                                         setState(() {
-                                          _settingsProvider.changeRankedWarsInProfile = value;
+                                          _settingsProvider!.changeRankedWarsInProfile = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -400,10 +401,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -413,16 +414,16 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                                padding: const EdgeInsets.only(left: 20, right: 20),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Flexible(
+                                    const Flexible(
                                       child: Text(
                                         "Life bar",
                                       ),
                                     ),
-                                    Padding(
+                                    const Padding(
                                       padding: EdgeInsets.only(left: 20),
                                     ),
                                     Flexible(
@@ -444,10 +445,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -461,13 +462,13 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Show organized crimes"),
+                                    const Text("Show organized crimes"),
                                     Switch(
-                                      value: _settingsProvider.oCrimesEnabled,
+                                      value: _settingsProvider!.oCrimesEnabled,
                                       onChanged: (value) {
                                         _oCrimesReactivated = value;
                                         setState(() {
-                                          _settingsProvider.changeOCrimesEnabled = value;
+                                          _settingsProvider!.changeOCrimesEnabled = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -481,7 +482,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Text(
                                   'Shown in the miscellaneous card and in status when the time approaches. '
                                   'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
-                                  'the participants\' status. Otherwise, it will be calculated based on received events',
+                                  "the participants' status. Otherwise, it will be calculated based on received events",
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -489,10 +490,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -506,14 +507,14 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Show stats chart"),
+                                    const Text("Show stats chart"),
                                     Switch(
-                                      value: _settingsProvider.tornStatsChartEnabled,
+                                      value: _settingsProvider!.tornStatsChartEnabled,
                                       onChanged: (value) {
                                         setState(() {
-                                          _settingsProvider.setTornStatsChartEnabled = value;
+                                          _settingsProvider!.setTornStatsChartEnabled = value;
                                           if (!value) {
-                                            _settingsProvider.setTornStatsChartDateTime = 0;
+                                            _settingsProvider!.setTornStatsChartDateTime = 0;
                                           }
                                         });
                                       },
@@ -536,7 +537,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
-                              if (_settingsProvider.tornStatsChartEnabled)
+                              if (_settingsProvider!.tornStatsChartEnabled)
                                 Column(
                                   children: [
                                     Padding(
@@ -544,12 +545,12 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
-                                          Text("Show with card collapsed"),
+                                          const Text("Show with card collapsed"),
                                           Switch(
-                                            value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
+                                            value: _settingsProvider!.tornStatsChartInCollapsedMiscCard,
                                             onChanged: (value) {
                                               setState(() {
-                                                _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
+                                                _settingsProvider!.setTornStatsChartInCollapsedMiscCard = value;
                                               });
                                             },
                                             activeTrackColor: Colors.lightGreenAccent,
@@ -572,10 +573,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     ),
                                   ],
                                 ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -584,7 +585,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
@@ -603,7 +604,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Expand events"),
+                                    const Text("Expand events"),
                                     Switch(
                                       value: _expandEvents,
                                       onChanged: (value) {
@@ -623,10 +624,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Flexible(
+                                    const Flexible(
                                       child: Text("Events to show"),
                                     ),
-                                    Padding(
+                                    const Padding(
                                       padding: EdgeInsets.only(left: 20),
                                     ),
                                     Flexible(
@@ -640,7 +641,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Expand messages"),
+                                    const Text("Expand messages"),
                                     Switch(
                                       value: _expandMessages,
                                       onChanged: (value) {
@@ -660,10 +661,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Flexible(
+                                    const Flexible(
                                       child: Text("Messages to show"),
                                     ),
-                                    Padding(
+                                    const Padding(
                                       padding: EdgeInsets.only(left: 20),
                                     ),
                                     Flexible(
@@ -677,7 +678,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Expand basic info"),
+                                    const Text("Expand basic info"),
                                     Switch(
                                       value: _expandBasicInfo,
                                       onChanged: (value) {
@@ -697,7 +698,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Expand networth"),
+                                    const Text("Expand networth"),
                                     Switch(
                                       value: _expandNetworth,
                                       onChanged: (value) {
@@ -712,10 +713,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
@@ -724,31 +725,31 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 5),
+                              const SizedBox(height: 5),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                                child: Container(
-                                  height: _sectionList.length * 40.0 + 40,
+                                child: SizedBox(
+                                  height: _sectionList!.length * 40.0 + 40,
                                   child: ReorderableListView(
                                     shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
+                                    physics: const NeverScrollableScrollPhysics(),
                                     onReorder: (int oldIndex, int newIndex) {
                                       if (oldIndex < newIndex) {
                                         // removing the item at oldIndex will shorten the list by 1
                                         newIndex -= 1;
                                       }
-                                      var oldItem = _sectionList[oldIndex];
+                                      final oldItem = _sectionList![oldIndex];
                                       setState(() {
-                                        _sectionList.removeAt(oldIndex);
-                                        _sectionList.insert(newIndex, oldItem);
+                                        _sectionList!.removeAt(oldIndex);
+                                        _sectionList!.insert(newIndex, oldItem);
                                       });
-                                      Prefs().setProfileSectionOrder(_sectionList);
+                                      Prefs().setProfileSectionOrder(_sectionList!);
                                     },
                                     children: _currentSectionSort(),
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 5),
+                              const SizedBox(height: 5),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
@@ -761,12 +762,12 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -784,10 +785,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   AppBar buildAppBar() {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
-      elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Profile Options"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      elevation: _settingsProvider!.appBarTop ? 2 : 0,
+      title: const Text("Profile Options"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -798,7 +799,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   DropdownButton _eventsNumberDropdown() {
     return DropdownButton<String>(
       value: _eventsNumber.toString(),
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "3",
           child: SizedBox(
@@ -879,7 +880,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setEventsShowNumber(int.parse(value));
+        Prefs().setEventsShowNumber(int.parse(value!));
         setState(() {
           _eventsNumber = int.parse(value);
         });
@@ -890,7 +891,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   DropdownButton _messagesNumberDropdown() {
     return DropdownButton<String>(
       value: _messagesNumber.toString(),
-      items: [
+      items: const [
         DropdownMenuItem(
           value: "3",
           child: SizedBox(
@@ -971,7 +972,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setMessagesShowNumber(int.parse(value));
+        Prefs().setMessagesShowNumber(int.parse(value!));
         setState(() {
           _messagesNumber = int.parse(value);
         });
@@ -980,18 +981,18 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   }
 
   Future _restorePreferences() async {
-    var warnChains = await Prefs().getWarnAboutChains();
-    var headerWallet = await Prefs().getShowHeaderWallet();
-    var headerIcons = await Prefs().getShowHeaderIcons();
-    var dedTravel = await Prefs().getDedicatedTravelCard();
-    var disableTravel = await Prefs().getDisableTravelSection();
-    var expandEvents = await Prefs().getExpandEvents();
-    var eventsNumber = await Prefs().getEventsShowNumber();
-    var expandMessages = await Prefs().getExpandMessages();
-    var messagesNumber = await Prefs().getMessagesShowNumber();
-    var expandBasicInfo = await Prefs().getExpandBasicInfo();
-    var expandNetworth = await Prefs().getExpandNetworth();
-    var sectionList = await Prefs().getProfileSectionOrder();
+    final warnChains = await Prefs().getWarnAboutChains();
+    final headerWallet = await Prefs().getShowHeaderWallet();
+    final headerIcons = await Prefs().getShowHeaderIcons();
+    final dedTravel = await Prefs().getDedicatedTravelCard();
+    final disableTravel = await Prefs().getDisableTravelSection();
+    final expandEvents = await Prefs().getExpandEvents();
+    final eventsNumber = await Prefs().getEventsShowNumber();
+    final expandMessages = await Prefs().getExpandMessages();
+    final messagesNumber = await Prefs().getMessagesShowNumber();
+    final expandBasicInfo = await Prefs().getExpandBasicInfo();
+    final expandNetworth = await Prefs().getExpandNetworth();
+    final sectionList = await Prefs().getProfileSectionOrder();
 
     setState(() {
       _warnAboutChainsEnabled = warnChains;
@@ -1030,8 +1031,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   }
 
   List<Widget> _currentSectionSort() {
-    var myList = <Widget>[];
-    for (var section in _sectionList) {
+    final myList = <Widget>[];
+    for (final section in _sectionList!) {
       myList.add(
         SizedBox(
           height: 40,
@@ -1046,11 +1047,11 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                   children: [
                     Text(
                       section,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                       ),
                     ),
-                    Icon(Icons.menu, size: 16),
+                    const Icon(Icons.menu, size: 16),
                   ],
                 ),
               ),
@@ -1064,8 +1065,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   DropdownButton _lifeBarDropdown() {
     return DropdownButton<String>(
-      value: _settingsProvider.lifeBarOption,
-      items: [
+      value: _settingsProvider!.lifeBarOption,
+      items: const [
         DropdownMenuItem(
           value: "ask",
           child: SizedBox(
@@ -1108,7 +1109,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _settingsProvider.changeLifeBarOption = value;
+          _settingsProvider!.changeLifeBarOption = value;
         });
       },
     );

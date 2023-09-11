@@ -6,27 +6,26 @@ import 'package:flutter/material.dart';
 
 class FlippingYata extends StatefulWidget {
   @override
-  _FlippingYataState createState() => _FlippingYataState();
+  FlippingYataState createState() => FlippingYataState();
 }
 
-class _FlippingYataState extends State<FlippingYata>
-    with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-  Animation _flipAnim;
+class FlippingYataState extends State<FlippingYata> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation _flipAnim;
 
   @override
   void initState() {
     super.initState();
 
     _controller = AnimationController(
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
 
     _flipAnim = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(0.0, 1, curve: Curves.linear),
+        curve: const Interval(0.0, 1),
       ),
     );
 
@@ -44,7 +43,7 @@ class _FlippingYataState extends State<FlippingYata>
     return Center(
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (BuildContext context, Widget child) {
+        builder: (BuildContext context, Widget? child) {
           return Center(
             child: Container(
               child: Transform(

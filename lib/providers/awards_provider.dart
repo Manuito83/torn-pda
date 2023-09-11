@@ -6,17 +6,17 @@ import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/utils/external/yata_comm.dart';
 
 class AwardsProvider extends ChangeNotifier {
-  var pinnedAwards = <Award>[];
-  var pinnedNames = <String>[];
+  List<Award> pinnedAwards = <Award>[];
+  List<String?> pinnedNames = <String?>[];
 
   Future<bool> addPinned (Award newPin) async {
-    var result = await YataComm.getPin(newPin.awardKey);
+    final result = await YataComm.getPin(newPin.awardKey);
     if (result is YataError) {
       return false;
     }
 
-    var currentAwards = result as Map<String, dynamic>;
-    for (var aw in currentAwards["pinnedAwards"]) {
+    final currentAwards = result as Map<String, dynamic>;
+    for (final aw in currentAwards["pinnedAwards"]) {
       if (aw == newPin.awardKey) {
         pinnedAwards.add(newPin);
         pinnedNames.add(newPin.name);
@@ -29,17 +29,17 @@ class AwardsProvider extends ChangeNotifier {
   }
 
   Future<bool> removePinned (Award removedPin) async {
-    var result = await YataComm.getPin(removedPin.awardKey);
+    final result = await YataComm.getPin(removedPin.awardKey);
     if (result is YataError) {
       return false;
     }
 
-    var currentAwards = result as Map<String, dynamic>;
-    for (var aw in currentAwards["pinnedAwards"]) {
+    final currentAwards = result as Map<String, dynamic>;
+    for (final aw in currentAwards["pinnedAwards"]) {
       if (aw == removedPin.awardKey) return false;
     }
 
-    for (var existing in pinnedAwards) {
+    for (final existing in pinnedAwards) {
       if (existing.name == removedPin.name) {
         pinnedAwards.remove(existing);
         pinnedNames.remove(existing.name);

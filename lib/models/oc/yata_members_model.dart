@@ -14,8 +14,8 @@ class YataMembersModel {
     this.timestamp,
   });
 
-  Map<String, Member> members;
-  int timestamp;
+  Map<String, Member>? members;
+  int? timestamp;
 
   factory YataMembersModel.fromJson(Map<String, dynamic> json) => YataMembersModel(
         members: Map.from(json["members"]).map((k, v) => MapEntry<String, Member>(k, Member.fromJson(v))),
@@ -23,7 +23,7 @@ class YataMembersModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "members": Map.from(members).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "members": Map.from(members!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
         "timestamp": timestamp,
       };
 }
@@ -53,27 +53,27 @@ class Member {
     this.statsTotal,
   });
 
-  int id;
-  String name;
-  Status status;
-  int lastAction;
-  int dif;
-  int crimesRank;
-  int bonusScore;
-  int nnbShare;
-  int nnb;
-  int energyShare;
-  int energy;
-  bool refill;
-  int drugCd;
-  bool revive;
-  int carnage;
-  int statsShare;
-  int statsDexterity;
-  int statsDefense;
-  int statsSpeed;
-  int statsStrength;
-  int statsTotal;
+  int? id;
+  String? name;
+  Status? status;
+  int? lastAction;
+  int? dif;
+  int? crimesRank;
+  int? bonusScore;
+  int? nnbShare;
+  int? nnb;
+  int? energyShare;
+  int? energy;
+  bool? refill;
+  int? drugCd;
+  bool? revive;
+  int? carnage;
+  int? statsShare;
+  int? statsDexterity;
+  int? statsDefense;
+  int? statsSpeed;
+  int? statsStrength;
+  int? statsTotal;
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
         id: json["id"],
@@ -102,7 +102,7 @@ class Member {
   Map<String, dynamic> toJson() => {
         "id": id,
         "name": name,
-        "status": statusValues.reverse[status],
+        "status": statusValues.reverse![status],
         "last_action": lastAction,
         "dif": dif,
         "crimes_rank": crimesRank,
@@ -130,14 +130,12 @@ final statusValues = EnumValues({"Idle": Status.IDLE, "Offline": Status.OFFLINE,
 
 class EnumValues<T> {
   Map<String, T> map;
-  Map<T, String> reverseMap;
+  Map<T, String>? reverseMap;
 
   EnumValues(this.map);
 
-  Map<T, String> get reverse {
-    if (reverseMap == null) {
-      reverseMap = map.map((k, v) => new MapEntry(v, k));
-    }
+  Map<T, String>? get reverse {
+    reverseMap ??= map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
 }

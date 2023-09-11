@@ -12,7 +12,7 @@ String attackModelToJson(AttackModel data) => json.encode(data.toJson());
 /// This attack model has 100 results and is used to get more details. It is
 /// used in the Attacks Page to build the cards
 class AttackModel {
-  Map<String, Attack> attacks;
+  Map<String, Attack>? attacks;
 
   AttackModel({
     this.attacks,
@@ -25,36 +25,36 @@ class AttackModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "attacks": attacks == null ? null : Map.from(attacks).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "attacks": attacks == null ? null : Map.from(attacks!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
 }
 
 class Attack {
   // External (caution: not in 'toJson')
-  String targetName;
-  String targetId;
-  int targetLevel;
-  bool attackWon;
-  bool attackInitiated;
-  var attackSeriesGreen = <bool>[];
+  String? targetName;
+  String? targetId;
+  late int targetLevel;
+  late bool attackWon;
+  late bool attackInitiated;
+  List<bool> attackSeriesGreen = <bool>[];
 
   // From Torn API
-  String code;
-  int timestampStarted;
-  int timestampEnded;
+  String? code;
+  int? timestampStarted;
+  int? timestampEnded;
   dynamic attackerId;
-  String attackerName;
+  String? attackerName;
   dynamic attackerFaction;
-  String attackerFactionname;
-  int defenderId;
-  String defenderName;
-  int defenderFaction;
-  String defenderFactionname;
-  Result result;
-  int stealthed;
+  String? attackerFactionname;
+  int? defenderId;
+  String? defenderName;
+  int? defenderFaction;
+  String? defenderFactionname;
+  Result? result;
+  int? stealthed;
   dynamic respectGain;
-  int chain;
-  Modifiers modifiers;
+  int? chain;
+  Modifiers? modifiers;
 
   Attack({
     this.code,
@@ -76,52 +76,52 @@ class Attack {
   });
 
   factory Attack.fromJson(Map<String, dynamic> json) => Attack(
-        code: json["code"] == null ? null : json["code"].toString(), // If code is all number, it comes as double
-        timestampStarted: json["timestamp_started"] == null ? null : json["timestamp_started"],
-        timestampEnded: json["timestamp_ended"] == null ? null : json["timestamp_ended"],
+        code: json["code"]?.toString(), // If code is all number, it comes as double
+        timestampStarted: json["timestamp_started"],
+        timestampEnded: json["timestamp_ended"],
         attackerId: json["attacker_id"],
-        attackerName: json["attacker_name"] == null ? null : json["attacker_name"],
+        attackerName: json["attacker_name"],
         attackerFaction: json["attacker_faction"],
-        attackerFactionname: json["attacker_factionname"] == null ? null : json["attacker_factionname"],
-        defenderId: json["defender_id"] == null ? null : json["defender_id"],
-        defenderName: json["defender_name"] == null ? null : json["defender_name"],
-        defenderFaction: json["defender_faction"] == null ? null : json["defender_faction"],
-        defenderFactionname: json["defender_factionname"] == null ? null : json["defender_factionname"],
+        attackerFactionname: json["attacker_factionname"],
+        defenderId: json["defender_id"],
+        defenderName: json["defender_name"],
+        defenderFaction: json["defender_faction"],
+        defenderFactionname: json["defender_factionname"],
         result: json["result"] == null ? null : resultValues.map[json["result"]],
-        stealthed: json["stealthed"] == null ? null : json["stealthed"],
+        stealthed: json["stealthed"],
         respectGain: json["respect_gain"],
-        chain: json["chain"] == null ? null : json["chain"],
+        chain: json["chain"],
         modifiers: json["modifiers"] == null ? null : Modifiers.fromJson(json["modifiers"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "code": code == null ? null : code,
-        "timestamp_started": timestampStarted == null ? null : timestampStarted,
-        "timestamp_ended": timestampEnded == null ? null : timestampEnded,
+        "code": code,
+        "timestamp_started": timestampStarted,
+        "timestamp_ended": timestampEnded,
         "attacker_id": attackerId,
-        "attacker_name": attackerName == null ? null : attackerName,
+        "attacker_name": attackerName,
         "attacker_faction": attackerFaction,
-        "attacker_factionname": attackerFactionname == null ? null : attackerFactionname,
-        "defender_id": defenderId == null ? null : defenderId,
-        "defender_name": defenderName == null ? null : defenderName,
-        "defender_faction": defenderFaction == null ? null : defenderFaction,
-        "defender_factionname": defenderFactionname == null ? null : defenderFactionname,
-        "result": result == null ? null : resultValues.reverse[result],
-        "stealthed": stealthed == null ? null : stealthed,
+        "attacker_factionname": attackerFactionname,
+        "defender_id": defenderId,
+        "defender_name": defenderName,
+        "defender_faction": defenderFaction,
+        "defender_factionname": defenderFactionname,
+        "result": result == null ? null : resultValues.reverse![result],
+        "stealthed": stealthed,
         "respect_gain": respectGain,
-        "chain": chain == null ? null : chain,
-        "modifiers": modifiers == null ? null : modifiers.toJson(),
+        "chain": chain,
+        "modifiers": modifiers == null ? null : modifiers!.toJson(),
       };
 }
 
 class Modifiers {
-  double fairFight;
-  double war;
-  double retaliation;
-  double groupAttack;
-  double overseas;
-  double chainBonus;
-  double warlordBonus;
+  double? fairFight;
+  double? war;
+  double? retaliation;
+  double? groupAttack;
+  double? overseas;
+  double? chainBonus;
+  double? warlordBonus;
 
   Modifiers({
     this.fairFight,
@@ -136,7 +136,7 @@ class Modifiers {
   double get getTotalModifier => _calculateTotalModifier();
 
   double _calculateTotalModifier() {
-    return 1.0 * fairFight * war * retaliation * groupAttack * overseas * chainBonus * warlordBonus;
+    return 1.0 * fairFight! * war! * retaliation! * groupAttack! * overseas! * chainBonus! * warlordBonus!;
   }
 
   factory Modifiers.fromJson(Map<String, dynamic> json) => Modifiers(
@@ -205,14 +205,12 @@ final resultValues = EnumValues({
 
 class EnumValues<T> {
   Map<String, T> map;
-  Map<T, String> reverseMap;
+  Map<T, String>? reverseMap;
 
   EnumValues(this.map);
 
-  Map<T, String> get reverse {
-    if (reverseMap == null) {
-      reverseMap = map.map((k, v) => new MapEntry(v, k));
-    }
+  Map<T, String>? get reverse {
+    reverseMap ??= map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
 }

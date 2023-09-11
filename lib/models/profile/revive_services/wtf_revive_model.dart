@@ -9,11 +9,11 @@ WtfReviveModel wtfReviveModelFromJson(String str) => WtfReviveModel.fromJson(jso
 String wtfReviveModelToJson(WtfReviveModel data) => json.encode(data.toJson());
 
 class WtfReviveModel {
-  String userId;
-  String userName;
-  String faction;
-  String country;
-  String requestChannel;
+  String? userId;
+  String? userName;
+  String? faction;
+  String? country;
+  String? requestChannel;
 
   WtfReviveModel({
     this.userId,

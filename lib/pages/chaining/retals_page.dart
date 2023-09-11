@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,27 +9,26 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/retal_model.dart';
+import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/retals_controller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class WarOptions {
-  String description;
-  IconData iconData;
+  String? description;
+  IconData? iconData;
 
   WarOptions({this.description}) {
     switch (description) {
       case "Toggle chain widget":
         iconData = MdiIcons.linkVariant;
-        break;
       case "Hidden targets":
         iconData = Icons.undo_outlined;
-        break;
       case "Nuke revive":
         // Own icon in widget
         break;
@@ -43,20 +43,21 @@ class RetalsPage extends StatefulWidget {
   //final Function tabCallback;
 
   const RetalsPage({
-    Key key,
+    super.key,
     //@required this.tabCallback,
-  }) : super(key: key);
+  });
 
   @override
-  _RetalsPageState createState() => _RetalsPageState();
+  RetalsPageState createState() => RetalsPageState();
 }
 
-class _RetalsPageState extends State<RetalsPage> {
+class RetalsPageState extends State<RetalsPage> {
   final _chainWidgetKey = GlobalKey();
 
-  RetalsController _r;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+  RetalsController? _r;
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
@@ -75,11 +76,11 @@ class _RetalsPageState extends State<RetalsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_r == null) {
-      _r = Get.put(RetalsController());
-    }
+    _r ??= Get.put(RetalsController());
 
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
+
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
@@ -96,7 +97,7 @@ class _RetalsPageState extends State<RetalsPage> {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-            child: MediaQuery.of(context).orientation == Orientation.portrait
+            child: MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Column(
                     children: [
                       _topWidgets(r),
@@ -132,22 +133,23 @@ class _RetalsPageState extends State<RetalsPage> {
           alwaysDarkBackground: false,
           callBackOptions: _callBackChainOptions,
         ),
-        r.updating
-            ? CircularProgressIndicator()
-            : Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Next update in "),
-                    Countdown(
-                      seconds: 20,
-                      callback: _updateRetal,
-                    ),
-                    Text(" seconds"),
-                  ],
+        if (r.updating)
+          const CircularProgressIndicator()
+        else
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Next update in "),
+                Countdown(
+                  seconds: 20,
+                  callback: _updateRetal,
                 ),
-              ),
+                const Text(" seconds"),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -156,28 +158,29 @@ class _RetalsPageState extends State<RetalsPage> {
     return Column(
       children: <Widget>[
         const SizedBox(height: 5),
-        r.retaliationList.isEmpty
-            ? Flexible(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 100),
-                      child: Text("No retaliation targets found!"),
-                    ),
-                  ],
+        if (r.retaliationList.isEmpty)
+          const Flexible(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 100),
+                  child: Text("No retaliation targets found!"),
                 ),
-              )
-            : context.orientation == Orientation.portrait
-                ? Flexible(
-                    child: RetalsTargetsList(
-                      retalsController: r,
-                    ),
-                  )
-                : RetalsTargetsList(
+              ],
+            ),
+          )
+        else
+          context.orientation == Orientation.portrait
+              ? Flexible(
+                  child: RetalsTargetsList(
                     retalsController: r,
                   ),
-        if (_settingsProvider.appBarTop) SizedBox(height: 50),
+                )
+              : RetalsTargetsList(
+                  retalsController: r,
+                ),
+        if (_settingsProvider.appBarTop) const SizedBox(height: 50),
       ],
     );
   }
@@ -188,17 +191,24 @@ class _RetalsPageState extends State<RetalsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Retaliation"),
-      leadingWidth: 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [
           IconButton(
-            icon: new Icon(Icons.menu),
+            icon: const Icon(Icons.menu),
             onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
+              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+              if (scaffoldState != null) {
+                if (_webViewProvider.webViewSplitActive &&
+                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  scaffoldState.openEndDrawer();
+                } else {
+                  scaffoldState.openDrawer();
+                }
+              }
             },
           ),
-          PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -209,7 +219,7 @@ class _RetalsPageState extends State<RetalsPage> {
               return Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: GestureDetector(
-                  child: Icon(Icons.info_outline_rounded),
+                  child: const Icon(Icons.info_outline_rounded),
                   // Quick update
                   onTap: () async {
                     await showDialog(
@@ -232,12 +242,12 @@ class _RetalsPageState extends State<RetalsPage> {
               return Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: GestureDetector(
-                  child: Icon(Icons.refresh),
                   onTap: r.updating
                       ? null
                       : () {
                           r.retrieveRetals(context);
                         },
+                  child: const Icon(Icons.refresh),
                 ),
               );
             },
@@ -253,19 +263,19 @@ class _RetalsPageState extends State<RetalsPage> {
     });
   }
 
-  _updateRetal() {
-    if (_r.browserIsOpen) return;
-    _r.retrieveRetals(context);
+  void _updateRetal() {
+    if (_r!.browserIsOpen) return;
+    _r!.retrieveRetals(context);
   }
 
-  _disclaimerDialog() {
+  AlertDialog _disclaimerDialog() {
     return AlertDialog(
-      title: Text("Retaliation"),
-      content: Scrollbar(
+      title: const Text("Retaliation"),
+      content: const Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -281,21 +291,21 @@ class _RetalsPageState extends State<RetalsPage> {
                   style: TextStyle(fontSize: 13),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.only(left: 8),
                   child: Text(
                     "- Attacked your faction in the last 5 minutes",
                     style: TextStyle(fontSize: 13),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.only(left: 8),
                   child: Text(
                     "- Won the attack",
                     style: TextStyle(fontSize: 13),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.only(left: 8),
                   child: Text(
                     "- Have not been retaliated yet",
                     style: TextStyle(fontSize: 13),
@@ -323,7 +333,7 @@ class _RetalsPageState extends State<RetalsPage> {
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: TextButton(
-            child: Text("Understood"),
+            child: const Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
             },
@@ -335,24 +345,24 @@ class _RetalsPageState extends State<RetalsPage> {
 }
 
 class RetalsTargetsList extends StatelessWidget {
-  RetalsTargetsList({
-    @required this.retalsController,
+  const RetalsTargetsList({
+    required this.retalsController,
   });
 
   final RetalsController retalsController;
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+    if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return ListView(
         shrinkWrap: true,
         children: getChildrenTargets(),
       );
     } else {
       return ListView(
-        children: getChildrenTargets(),
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
+        children: getChildrenTargets(),
       );
     }
   }
@@ -360,7 +370,7 @@ class RetalsTargetsList extends StatelessWidget {
   List<Widget> getChildrenTargets() {
     List<RetalCard> filteredCards = <RetalCard>[];
 
-    for (Retal thisRetal in retalsController.retaliationList) {
+    for (final Retal thisRetal in retalsController.retaliationList) {
       filteredCards.add(
         RetalCard(
           key: UniqueKey(),
@@ -374,7 +384,7 @@ class RetalsTargetsList extends StatelessWidget {
 
     retalsController.orderedCardsDetails.clear();
     for (int i = 0; i < filteredCards.length; i++) {
-      RetalsCardDetails details = RetalsCardDetails()
+      final RetalsCardDetails details = RetalsCardDetails()
         ..cardPosition = i + 1
         ..retalId = filteredCards[i].retalModel.retalId
         ..name = filteredCards[i].retalModel.name

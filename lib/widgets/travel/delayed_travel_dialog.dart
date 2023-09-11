@@ -3,14 +3,12 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
-
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -21,32 +19,32 @@ import 'package:torn_pda/utils/time_formatter.dart';
 
 class DelayedTravelDialog extends StatefulWidget {
   final DateTime boardingTime;
-  final String country;
+  final String? country;
   final String stockCodeName;
-  final String stockName;
-  final int itemId;
+  final String? stockName;
+  final int? itemId;
   final int countryId;
 
-  DelayedTravelDialog({
-    @required this.boardingTime,
-    @required this.country,
-    @required this.stockCodeName,
-    @required this.stockName,
-    @required this.itemId,
-    @required this.countryId,
+  const DelayedTravelDialog({
+    required this.boardingTime,
+    required this.country,
+    required this.stockCodeName,
+    required this.stockName,
+    required this.itemId,
+    required this.countryId,
   });
 
   @override
-  _DelayedTravelDialogState createState() => _DelayedTravelDialogState();
+  DelayedTravelDialogState createState() => DelayedTravelDialogState();
 }
 
-class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+class DelayedTravelDialogState extends State<DelayedTravelDialog> {
+  late ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
 
   bool _notificationActive = false;
 
-  var _delayMinutes = 0;
+  int? _delayMinutes = 0;
 
   bool _alarmSound = true;
   bool _alarmVibration = true;
@@ -67,22 +65,21 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
         children: <Widget>[
           SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: 45,
                 bottom: 16,
                 left: 16,
                 right: 16,
               ),
-              margin: EdgeInsets.only(top: 30),
-              decoration: new BoxDecoration(
+              margin: const EdgeInsets.only(top: 30),
+              decoration: BoxDecoration(
                 color: _themeProvider.secondBackground,
-                shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
                     blurRadius: 10.0,
-                    offset: const Offset(0.0, 10.0),
+                    offset: Offset(0.0, 10.0),
                   ),
                 ],
               ),
@@ -94,7 +91,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             "Departure notification",
                             style: TextStyle(
                               fontSize: 13,
@@ -112,11 +109,11 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(width: 5),
+                          const SizedBox(width: 5),
                           ActionChip(
                             label: Icon(
                               Icons.chat_bubble_outline,
@@ -127,74 +124,74 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 _cancelNotifications();
                                 BotToast.showText(
                                   text: 'Notification cancelled!',
-                                  textStyle: TextStyle(
+                                  textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.orange[700],
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
+                                  contentColor: Colors.orange[700]!,
+                                  duration: const Duration(seconds: 5),
+                                  contentPadding: const EdgeInsets.all(10),
                                 );
                               } else {
                                 _scheduleNotification();
                                 Navigator.of(context).pop();
                                 BotToast.showText(
                                   text: 'Boarding call notification set for '
-                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
-                                  textStyle: TextStyle(
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
+                                  textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.green[700],
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
+                                  contentColor: Colors.green[700]!,
+                                  duration: const Duration(seconds: 5),
+                                  contentPadding: const EdgeInsets.all(10),
                                 );
                               }
                             },
                           ),
-                          SizedBox(width: 5),
+                          const SizedBox(width: 5),
                           if (Platform.isAndroid)
                             ActionChip(
-                              label: Icon(
+                              label: const Icon(
                                 Icons.notifications_none,
                               ),
                               onPressed: () {
                                 _setAlarm();
                                 BotToast.showText(
                                   text: 'Boarding call alarm set for '
-                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
-                                  textStyle: TextStyle(
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
+                                  textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.green[700],
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
+                                  contentColor: Colors.green[700]!,
+                                  duration: const Duration(seconds: 5),
+                                  contentPadding: const EdgeInsets.all(10),
                                 );
                               },
                             ),
-                          SizedBox(width: 5),
+                          const SizedBox(width: 5),
                           if (Platform.isAndroid)
                             ActionChip(
-                              label: Icon(
+                              label: const Icon(
                                 Icons.timer,
                               ),
                               onPressed: () {
                                 _setTimer();
                                 BotToast.showText(
                                   text: 'Boarding call timer set for '
-                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
-                                  textStyle: TextStyle(
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
+                                  textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: Colors.green[700],
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
+                                  contentColor: Colors.green[700]!,
+                                  duration: const Duration(seconds: 5),
+                                  contentPadding: const EdgeInsets.all(10),
                                 );
                               },
                             ),
-                          SizedBox(width: 5),
+                          const SizedBox(width: 5),
                         ],
                       ),
                     ],
@@ -205,7 +202,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: Text("Close"),
+                          child: const Text("Close"),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -245,7 +242,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   DropdownButton _timeDropdown() {
     return DropdownButton<int>(
       value: _delayMinutes,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 0,
           child: SizedBox(
@@ -320,21 +317,21 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     );
   }
 
-  void _scheduleNotification() async {
-    String channelTitle = 'Manual flight departure';
-    String channelSubtitle = 'Manual flight departure';
-    String channelDescription = 'Manual notifications for delayed flight departure';
+  Future<void> _scheduleNotification() async {
+    const String channelTitle = 'Manual flight departure';
+    const String channelSubtitle = 'Manual flight departure';
+    const String channelDescription = 'Manual notifications for delayed flight departure';
     String notificationTitle = "You flight to ${widget.country} is ready for boarding!";
     String notificationSubtitle = "Remember to bring you ${widget.stockName} import papers!";
-    int notificationId = int.parse("211${widget.countryId}${widget.itemId}");
+    final int notificationId = int.parse("211${widget.countryId}${widget.itemId}");
 
     if (_settingsProvider.discreteNotifications) {
       notificationTitle = "Scheduled";
       notificationSubtitle = "Departure";
     }
 
-    var modifier = await getNotificationChannelsModifiers();
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    final modifier = await getNotificationChannelsModifiers();
+    final androidPlatformChannelSpecifics = AndroidNotificationDetails(
       "$channelTitle ${modifier.channelIdModifier}",
       "$channelSubtitle ${modifier.channelIdModifier}",
       channelDescription: channelDescription,
@@ -347,33 +344,34 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       presentSound: true,
       sound: 'aircraft_seatbelt.aiff',
     );
 
-    var platformChannelSpecifics = NotificationDetails(
+    final platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-        notificationId,
-        notificationTitle,
-        notificationSubtitle,
-        //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-        tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes)),
-        platformChannelSpecifics,
-        payload: '211',
-        androidAllowWhileIdle: true, // Deliver at exact time
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
+      notificationId,
+      notificationTitle,
+      notificationSubtitle,
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes!)),
+      platformChannelSpecifics,
+      payload: '211',
+      androidAllowWhileIdle: true, // Deliver at exact time
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
   }
 
   Future _retrievePendingNotifications() async {
-    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
-    for (var not in pendingNotificationRequests) {
-      var id = not.id.toString();
+    for (final not in pendingNotificationRequests) {
+      final id = not.id.toString();
       if (id == "211${widget.countryId}${widget.itemId}") {
         setState(() {
           _notificationActive = true;
@@ -382,7 +380,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     }
   }
 
-  void _cancelNotifications() async {
+  Future<void> _cancelNotifications() async {
     await flutterLocalNotificationsPlugin.cancel(int.parse("211${widget.countryId}${widget.itemId}"));
     setState(() {
       _notificationActive = false;
@@ -397,12 +395,12 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
       thisSound = 'silent';
     }
 
-    var alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes));
-    var hour = alarmTime.hour;
-    var minute = alarmTime.minute;
-    var message = 'Flight Boarding - ${widget.stockName}';
+    final alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes!));
+    final hour = alarmTime.hour;
+    final minute = alarmTime.minute;
+    final message = 'Flight Boarding - ${widget.stockName}';
 
-    AndroidIntent intent = AndroidIntent(
+    final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.HOUR': hour,
@@ -417,10 +415,10 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   }
 
   void _setTimer() {
-    var totalSeconds = widget.boardingTime.difference(DateTime.now()).inSeconds + _delayMinutes * 60;
-    var message = 'Flight Boarding - ${widget.stockName}';
+    final totalSeconds = widget.boardingTime.difference(DateTime.now()).inSeconds + _delayMinutes! * 60;
+    final message = 'Flight Boarding - ${widget.stockName}';
 
-    AndroidIntent intent = AndroidIntent(
+    final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.LENGTH': totalSeconds,
@@ -431,7 +429,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     intent.launch();
   }
 
-  String _timeFormatter(DateTime time) {
+  String? _timeFormatter(DateTime time) {
     return TimeFormatter(
       inputTime: time,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -439,7 +437,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     ).formatHour;
   }
 
-  void _restorePreferences() async {
+  Future<void> _restorePreferences() async {
     _alarmSound = await Prefs().getManualAlarmSound();
     _alarmVibration = await Prefs().getManualAlarmVibration();
   }

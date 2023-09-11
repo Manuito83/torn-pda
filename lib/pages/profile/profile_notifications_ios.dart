@@ -20,32 +20,32 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileNotificationsIOS extends StatefulWidget {
   final Function callback;
-  final int energyMax;
-  final int nerveMax;
+  final int? energyMax;
+  final int? nerveMax;
 
-  ProfileNotificationsIOS({
-    @required this.callback,
-    @required this.energyMax,
-    @required this.nerveMax,
+  const ProfileNotificationsIOS({
+    required this.callback,
+    required this.energyMax,
+    required this.nerveMax,
   });
 
   @override
-  _ProfileNotificationsIOSState createState() => _ProfileNotificationsIOSState();
+  ProfileNotificationsIOSState createState() => ProfileNotificationsIOSState();
 }
 
-class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
+class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 
-  int _energyDivisions;
+  int? _energyDivisions;
 
-  double _energyTrigger;
-  double _nerveTrigger;
+  late double _energyTrigger;
+  late double _nerveTrigger;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -62,10 +62,10 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
@@ -85,7 +85,7 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -93,25 +93,25 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(20.0),
+                              const Padding(
+                                padding: EdgeInsets.all(20.0),
                                 child: Text('Here you can specify your preferred alerting '
                                     'values for each type of event.'),
                               ),
                               _rowsWithTypes(),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
+                              const Padding(
+                                padding: EdgeInsets.symmetric(
                                   horizontal: 50,
                                   vertical: 20,
                                 ),
                                 child: Divider(),
                               ),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -130,9 +130,9 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Notification options"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Notification options"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _goBack();
         },
@@ -141,8 +141,8 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   }
 
   Widget _rowsWithTypes() {
-    var types = <Widget>[];
-    ProfileNotification.values.forEach((element) {
+    final types = <Widget>[];
+    for (final element in ProfileNotification.values) {
       if (element == ProfileNotification.travel) {
         types.add(
           Padding(
@@ -150,16 +150,16 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Travel timings & text"),
+                const Text("Travel timings & text"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     if (Platform.isAndroid) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return TravelOptionsAndroid();
+                            return const TravelOptionsAndroid();
                           },
                         ),
                       );
@@ -168,7 +168,7 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return TravelOptionsIOS();
+                            return const TravelOptionsIOS();
                           },
                         ),
                       );
@@ -179,7 +179,7 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
 
       if (element == ProfileNotification.energy) {
@@ -189,17 +189,17 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Energy'),
-                Padding(
+                const Text('Energy'),
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
                     Text('E${_energyTrigger.floor()}'),
                     Slider(
-                      value: _energyTrigger.toDouble(),
+                      value: _energyTrigger,
                       min: _energyMin,
-                      max: widget.energyMax.toDouble(),
+                      max: widget.energyMax!.toDouble(),
                       divisions: _energyDivisions,
                       onChanged: (double newValue) {
                         setState(() {
@@ -225,17 +225,17 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Nerve'),
-                Padding(
+                const Text('Nerve'),
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
                     Text('N${_nerveTrigger.floor()}'),
                     Slider(
-                      value: _nerveTrigger.toDouble(),
+                      value: _nerveTrigger,
                       min: _nerveMin,
-                      max: widget.nerveMax.toDouble(),
+                      max: widget.nerveMax!.toDouble(),
                       onChanged: (double newValue) {
                         setState(() {
                           _nerveTrigger = newValue;
@@ -260,15 +260,15 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Hospital notification timings"),
+                const Text("Hospital notification timings"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return HospitalAheadOptions();
+                          return const HospitalAheadOptions();
                         },
                       ),
                     );
@@ -278,7 +278,7 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
 
       if (element == ProfileNotification.jail) {
@@ -288,15 +288,15 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Jail notification timings"),
+                const Text("Jail notification timings"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return JailAheadOptions();
+                          return const JailAheadOptions();
                         },
                       ),
                     );
@@ -306,7 +306,7 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
 
       if (element == ProfileNotification.rankedWar) {
@@ -316,15 +316,15 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Ranked War notification timings"),
+                const Text("Ranked War notification timings"),
                 IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return JailAheadOptions();
+                          return const JailAheadOptions();
                         },
                       ),
                     );
@@ -334,9 +334,9 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             ),
           ),
         );
-        types.add(SizedBox(height: 10));
+        types.add(const SizedBox(height: 10));
       }
-    });
+    }
 
     return Column(
       children: types,
@@ -346,27 +346,25 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   Future _restorePreferences() async {
     var energyTrigger = await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
-      energyTrigger = widget.energyMax;
+    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax!) {
+      energyTrigger = widget.energyMax!;
     }
 
     var nerveTrigger = await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
-      nerveTrigger = widget.nerveMax;
+    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax!) {
+      nerveTrigger = widget.nerveMax!;
     }
 
     setState(() {
-      _energyDivisions = ((widget.energyMax - _energyMin) / 5).floor();
+      _energyDivisions = ((widget.energyMax! - _energyMin) / 5).floor();
       _energyTrigger = energyTrigger.toDouble();
       _nerveTrigger = nerveTrigger.toDouble();
     });
   }
 
   _goBack() async {
-    if (widget.callback != null) {
-      widget.callback();
-    }
+    widget.callback();
     routeName = "profile_options";
     routeWithDrawer = false;
     Navigator.of(context).pop();

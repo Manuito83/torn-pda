@@ -14,8 +14,8 @@ class MarketItemModel {
     this.itemmarket,
   });
 
-  List<Bazaar> bazaar;
-  List<Bazaar> itemmarket;
+  List<Bazaar>? bazaar;
+  List<Bazaar>? itemmarket;
 
   factory MarketItemModel.fromJson(Map<String, dynamic> json) => MarketItemModel(
         bazaar: json["bazaar"] == null ? null : List<Bazaar>.from(json["bazaar"].map((x) => Bazaar.fromJson(x))),
@@ -24,8 +24,8 @@ class MarketItemModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "bazaar": bazaar == null ? null : List<dynamic>.from(bazaar.map((x) => x.toJson())),
-        "itemmarket": itemmarket == null ? null : List<dynamic>.from(itemmarket.map((x) => x.toJson())),
+        "bazaar": bazaar == null ? null : List<dynamic>.from(bazaar!.map((x) => x.toJson())),
+        "itemmarket": itemmarket == null ? null : List<dynamic>.from(itemmarket!.map((x) => x.toJson())),
       };
 }
 
@@ -36,19 +36,19 @@ class Bazaar {
     this.quantity,
   });
 
-  int id;
-  int cost;
-  int quantity;
+  int? id;
+  int? cost;
+  int? quantity;
 
   factory Bazaar.fromJson(Map<String, dynamic> json) => Bazaar(
-        id: json["ID"] == null ? null : json["ID"],
-        cost: json["cost"] == null ? null : json["cost"],
-        quantity: json["quantity"] == null ? null : json["quantity"],
+        id: json["ID"],
+        cost: json["cost"],
+        quantity: json["quantity"],
       );
 
   Map<String, dynamic> toJson() => {
-        "ID": id == null ? null : id,
-        "cost": cost == null ? null : cost,
-        "quantity": quantity == null ? null : quantity,
+        "ID": id,
+        "cost": cost,
+        "quantity": quantity,
       };
 }

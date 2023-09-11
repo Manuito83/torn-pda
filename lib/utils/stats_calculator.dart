@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class StatsCalculator {
   static final statsLevelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
   static final statsCrimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
@@ -45,22 +43,22 @@ class StatsCalculator {
   ];
 
   static String calculateStats({
-    @required int level,
-    @required int criminalRecordTotal,
-    @required int networth,
-    @required String rank,
+    required int? level,
+    required int? criminalRecordTotal,
+    required int? networth,
+    required String? rank,
   }) {
-    var levelIndex = statsLevelTriggers.lastIndexWhere((x) => x <= level) + 1;
-    var crimeIndex = statsCrimesTriggers.lastIndexWhere((x) => x <= criminalRecordTotal) + 1;
-    var networthIndex = statsNetworthTriggers.lastIndexWhere((x) => x <= networth) + 1;
+    final levelIndex = statsLevelTriggers.lastIndexWhere((x) => x <= level!) + 1;
+    final crimeIndex = statsCrimesTriggers.lastIndexWhere((x) => x <= criminalRecordTotal!) + 1;
+    final networthIndex = statsNetworthTriggers.lastIndexWhere((x) => x <= networth!) + 1;
     var rankIndex = 0;
     statsRanksTriggers.forEach((tornRank, index) {
-      if (rank.contains(tornRank)) {
+      if (rank!.contains(tornRank)) {
         rankIndex = index;
       }
     });
 
-    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
+    final finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
     if (finalIndex >= 0 && finalIndex <= 6) {
       return statsResults[finalIndex];
     }

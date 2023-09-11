@@ -10,10 +10,10 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ShortcutsProvider extends ChangeNotifier {
-  List<Shortcut> _allShortcuts = [];
+  final List<Shortcut> _allShortcuts = [];
   UnmodifiableListView<Shortcut> get allShortcuts => UnmodifiableListView(_allShortcuts);
 
-  List<Shortcut> _activeShortcuts = [];
+  final List<Shortcut> _activeShortcuts = [];
   UnmodifiableListView<Shortcut> get activeShortcuts => UnmodifiableListView(_activeShortcuts);
 
   String _shortcutTile = 'both';
@@ -52,7 +52,7 @@ class ShortcutsProvider extends ChangeNotifier {
   }
 
   void editShortcut(Shortcut edited) {
-    var existing = _activeShortcuts.firstWhere((element) => element == edited);
+    final existing = _activeShortcuts.firstWhere((element) => element == edited);
     existing.name = edited.name;
     existing.nickname = edited.name;
     existing.url = edited.url;
@@ -61,7 +61,7 @@ class ShortcutsProvider extends ChangeNotifier {
   }
 
   void wipeAllShortcuts() {
-    for (var short in activeShortcuts) {
+    for (final short in activeShortcuts) {
       short.active = false;
       short.name = short.originalName;
       short.nickname = short.originalNickname;
@@ -92,9 +92,9 @@ class ShortcutsProvider extends ChangeNotifier {
   }
 
   void _saveListAfterChanges() {
-    var saveList = <String>[];
-    for (var short in activeShortcuts) {
-      var save = shortcutToJson(short);
+    final saveList = <String>[];
+    for (final short in activeShortcuts) {
+      final save = shortcutToJson(short);
       saveList.add(save);
     }
     Prefs().setActiveShortcutsList(saveList);
@@ -109,14 +109,14 @@ class ShortcutsProvider extends ChangeNotifier {
     // In order to properly reconnect saved shortcuts with the stock ones (so that
     // one is a reference of the other), once we load from shared preferences,
     // we look for the stock counterpart and activate it from scratch
-    var savedLoad = await Prefs().getActiveShortcutsList();
-    for (var savedShortRaw in savedLoad) {
+    final savedLoad = await Prefs().getActiveShortcutsList();
+    for (final savedShortRaw in savedLoad) {
       try {
-        var savedShort = shortcutFromJson(savedShortRaw);
-        if (savedShort.isCustom) {
+        final savedShort = shortcutFromJson(savedShortRaw);
+        if (savedShort.isCustom!) {
           activateSavedShortcut(savedShort);
         } else {
-          for (var stockShort in _allShortcuts) {
+          for (final stockShort in _allShortcuts) {
             if (savedShort.originalName == stockShort.originalName) {
               stockShort
                 ..name = savedShort.name

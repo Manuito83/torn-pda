@@ -4,51 +4,49 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-
+import 'package:torn_pda/providers/api_caller.dart';
 // Project imports:
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 
 class ChainWidgetOptions extends StatefulWidget {
-  final Function callBackOptions;
+  final Function? callBackOptions;
 
-  ChainWidgetOptions({this.callBackOptions});
+  const ChainWidgetOptions({this.callBackOptions});
 
   @override
-  _ChainWidgetOptionsState createState() => _ChainWidgetOptionsState();
+  ChainWidgetOptionsState createState() => ChainWidgetOptionsState();
 }
 
-class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
-  ChainStatusProvider _chainStatusProvider;
-  ThemeProvider _themeProvider;
-  SettingsProvider _settingsProvider;
+class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
+  late ChainStatusProvider _chainStatusProvider;
+  ThemeProvider? _themeProvider;
+  late SettingsProvider _settingsProvider;
 
-  AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
+        color: _themeProvider!.currentTheme == AppTheme.light
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider.canvas
-            : _themeProvider.canvas,
+                : _themeProvider!.canvas
+            : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
+            backgroundColor: _themeProvider!.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -58,45 +56,44 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 : null,
             body: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      SizedBox(height: 15),
-                      Text("GENERAL SETTINGS", style: TextStyle(fontSize: 11)),
+                      const SizedBox(height: 15),
+                      const Text("GENERAL SETTINGS", style: TextStyle(fontSize: 11)),
                       _generalSettings(),
-                      Divider(),
-                      SizedBox(height: 5),
-                      Text("PANIC MODE", style: TextStyle(fontSize: 11)),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      const Text("PANIC MODE", style: TextStyle(fontSize: 11)),
                       _panicMode(),
-                      Divider(),
-                      SizedBox(height: 5),
-                      Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      const Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
                       _greenLevel2(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _orangeLevel1(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _orangeLevel2(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _redLevel1(),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 100),
                         child: Divider(),
                       ),
                       _redLevel2(),
-                      SizedBox(height: 50),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
@@ -112,16 +109,16 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Chain Watcher"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Chain Watcher"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () {
           _willPopCallback();
         },
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.restore),
+          icon: const Icon(Icons.restore),
           onPressed: () {
             _openRestoreDialog();
           },
@@ -136,7 +133,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Sound alerts"),
+            const Text("Sound alerts"),
             Switch(
               value: _chainStatusProvider.soundEnabled,
               onChanged: (value) {
@@ -150,7 +147,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Vibration"),
+            const Text("Vibration"),
             Switch(
               value: _chainStatusProvider.vibrationEnabled,
               onChanged: (value) {
@@ -164,7 +161,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Notification"),
+            const Text("Notification"),
             Switch(
               value: _chainStatusProvider.notificationsEnabled,
               onChanged: (value) {
@@ -187,9 +184,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Enable Panic Mode"),
+                const Text("Enable Panic Mode"),
                 IconButton(
-                  icon: Icon(Icons.info_outline, size: 20),
+                  icon: const Icon(Icons.info_outline, size: 20),
                   onPressed: () {
                     _openPanicModeInfoDialog();
                   },
@@ -213,12 +210,12 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             children: [
               Row(
                 children: <Widget>[
-                  Icon(
+                  const Icon(
                     Icons.alarm,
                     size: 18,
                   ),
-                  SizedBox(width: 10),
-                  Text(
+                  const SizedBox(width: 10),
+                  const Text(
                     "00:00",
                     style: TextStyle(
                       fontSize: 12,
@@ -236,8 +233,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                   ),
                   Text(
-                    "${_printDuration(Duration(seconds: _chainStatusProvider.panicValue.toInt()))}",
-                    style: TextStyle(
+                    _printDuration(Duration(seconds: _chainStatusProvider.panicValue.toInt())),
+                    style: const TextStyle(
                       fontSize: 12,
                     ),
                   ),
@@ -251,20 +248,19 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                       Image.asset(
                         'images/awards/categories/crosshair.png',
                         height: 15,
-                        color: _themeProvider.mainText,
+                        color: _themeProvider!.mainText,
                       ),
-                      SizedBox(width: 10),
-                      Text(
+                      const SizedBox(width: 10),
+                      const Text(
                         "Targets",
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: Icon(Icons.keyboard_arrow_right_outlined),
+                    icon: const Icon(Icons.keyboard_arrow_right_outlined),
                     onPressed: () {
-                      return showDialog<void>(
+                      showDialog<void>(
                         context: context,
-                        barrierDismissible: true,
                         builder: (BuildContext context) {
                           return AddChainTargetDialog(
                             themeProvider: _themeProvider,
@@ -308,7 +304,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             Text(
               "Green pulse",
               style: TextStyle(
-                color: _chainStatusProvider.green2Enabled ? _themeProvider.mainText : Colors.grey,
+                color: _chainStatusProvider.green2Enabled ? _themeProvider!.mainText : Colors.grey,
               ),
             ),
             Switch(
@@ -332,14 +328,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.green2Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.green2Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -360,8 +356,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.green2Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.green2Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -386,7 +382,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Text(
                       "Orange pulse + ",
                       style: TextStyle(
-                        color: _chainStatusProvider.orange1Enabled ? _themeProvider.mainText : Colors.grey,
+                        color: _chainStatusProvider.orange1Enabled ? _themeProvider!.mainText : Colors.grey,
                       ),
                     ),
                     GestureDetector(
@@ -394,7 +390,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Icons.chat_bubble_outline,
                         size: 18,
                         color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.notificationsEnabled
-                            ? _themeProvider.mainText
+                            ? _themeProvider!.mainText
                             : Colors.grey,
                       ),
                       onTap: () {
@@ -404,14 +400,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Text(
                       " + ",
                       style: TextStyle(
-                        color: _chainStatusProvider.orange1Enabled ? _themeProvider.mainText : Colors.grey,
+                        color: _chainStatusProvider.orange1Enabled ? _themeProvider!.mainText : Colors.grey,
                       ),
                     ),
                     Text(
                       " caution ",
                       style: TextStyle(
                         color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.soundEnabled
-                            ? _themeProvider.mainText
+                            ? _themeProvider!.mainText
                             : Colors.grey,
                       ),
                     ),
@@ -420,7 +416,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Icons.volume_up,
                         size: 20,
                         color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.soundEnabled
-                            ? _themeProvider.mainText
+                            ? _themeProvider!.mainText
                             : Colors.grey,
                       ),
                       onTap: () {
@@ -452,14 +448,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange1Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange1Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -480,8 +476,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange1Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange1Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -503,7 +499,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   "Orange pulse + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.orange2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.orange2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 GestureDetector(
@@ -511,7 +507,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.chat_bubble_outline,
                     size: 18,
                     color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.notificationsEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -521,14 +517,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   " + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.orange2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.orange2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 Text(
                   " warning ",
                   style: TextStyle(
                     color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                 ),
@@ -537,7 +533,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.volume_up,
                     size: 20,
                     color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -567,14 +563,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange2Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange2Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -595,8 +591,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.orange2Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.orange2Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -618,7 +614,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   "Red pulse + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red1Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red1Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 GestureDetector(
@@ -626,7 +622,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.chat_bubble_outline,
                     size: 18,
                     color: _chainStatusProvider.red1Enabled && _chainStatusProvider.notificationsEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -636,14 +632,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   " + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red1Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red1Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 Text(
                   " caution ",
                   style: TextStyle(
                     color: _chainStatusProvider.red1Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                 ),
@@ -652,7 +648,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.volume_up,
                     size: 20,
                     color: _chainStatusProvider.red1Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -682,14 +678,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red1Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red1Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -710,8 +706,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red1Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red1Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -733,7 +729,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   "Red pulse + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 GestureDetector(
@@ -741,7 +737,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.chat_bubble_outline,
                     size: 18,
                     color: _chainStatusProvider.red2Enabled && _chainStatusProvider.notificationsEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -751,14 +747,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 Text(
                   " + ",
                   style: TextStyle(
-                    color: _chainStatusProvider.red2Enabled ? _themeProvider.mainText : Colors.grey,
+                    color: _chainStatusProvider.red2Enabled ? _themeProvider!.mainText : Colors.grey,
                   ),
                 ),
                 Text(
                   " warning ",
                   style: TextStyle(
                     color: _chainStatusProvider.red2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                 ),
@@ -767,7 +763,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Icons.volume_up,
                     size: 20,
                     color: _chainStatusProvider.red2Enabled && _chainStatusProvider.soundEnabled
-                        ? _themeProvider.mainText
+                        ? _themeProvider!.mainText
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -797,14 +793,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                Icon(
+                const Icon(
                   Icons.alarm,
                   size: 18,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red2Min.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red2Min.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -825,8 +821,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                 ),
                 Text(
-                  "${_printDuration(Duration(seconds: _chainStatusProvider.red2Max.toInt()))}",
-                  style: TextStyle(
+                  _printDuration(Duration(seconds: _chainStatusProvider.red2Max.toInt())),
+                  style: const TextStyle(
                     fontSize: 12,
                   ),
                 ),
@@ -839,13 +835,13 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
 
   String _printDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    final String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    final String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
     return "$twoDigitMinutes:$twoDigitSeconds";
   }
 
   Future<bool> _willPopCallback() async {
-    widget.callBackOptions();
+    widget.callBackOptions!();
     Navigator.of(context).pop();
     return true;
   }
@@ -858,7 +854,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         fontSize: 13,
         color: Colors.white,
       ),
-      contentColor: Colors.red[800],
+      contentColor: Colors.red[800]!,
       duration: const Duration(seconds: 5),
       contentPadding: const EdgeInsets.all(10),
     );
@@ -867,7 +863,6 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   Future<void> _openRestoreDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -888,7 +883,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.secondBackground,
+                      color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -904,14 +899,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Flexible(
                           child: Text(
                             "Reset",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Flexible(
                           child: Text(
                             "This will reactivate and reset all warning levels to their default values.",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -942,9 +937,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -965,7 +960,6 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   Future<void> _openPanicModeInfoDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -986,7 +980,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.secondBackground,
+                      color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -1002,7 +996,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         Flexible(
                           child: Text(
                             "Panic Mode",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -1018,7 +1012,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                             "with the screen active, for the Panic Mode to work as well.\n\n"
                             "NOTE: the browser used by Panic Mode does not contain any of the features (widgets, etc.) "
                             "of the standard browser, as it is designed to load as quickly as possible.",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -1042,9 +1036,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: _themeProvider!.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.secondBackground,
+                      backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -1064,19 +1058,19 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
 }
 
 class AddChainTargetDialog extends StatefulWidget {
-  AddChainTargetDialog({
-    Key key,
-    @required this.themeProvider,
-  }) : super(key: key);
+  const AddChainTargetDialog({
+    super.key,
+    required this.themeProvider,
+  });
 
-  final ThemeProvider themeProvider;
+  final ThemeProvider? themeProvider;
 
   @override
-  _AddChainTargetDialogState createState() => _AddChainTargetDialogState();
+  AddChainTargetDialogState createState() => AddChainTargetDialogState();
 }
 
-class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
-  ChainStatusProvider _chainProvider;
+class AddChainTargetDialogState extends State<AddChainTargetDialog> {
+  late ChainStatusProvider _chainProvider;
   final _addIdController = TextEditingController();
   final _addFormKey = GlobalKey<FormState>();
 
@@ -1088,159 +1082,159 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _chainProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    _chainProvider = Provider.of<ChainStatusProvider>(context);
 
     return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 0.0,
+      backgroundColor: Colors.transparent,
+      content: Container(
+        width: double.maxFinite,
+        padding: const EdgeInsets.only(
+          top: 45,
+          bottom: 16,
+          left: 16,
+          right: 16,
         ),
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        content: Container(
-          width: double.maxFinite,
-          padding: const EdgeInsets.only(
-            top: 45,
-            bottom: 16,
-            left: 16,
-            right: 16,
-          ),
-          margin: const EdgeInsets.only(top: 30),
-          decoration: BoxDecoration(
-            color: widget.themeProvider.secondBackground,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10.0,
-                offset: Offset(0.0, 10.0),
+        margin: const EdgeInsets.only(top: 30),
+        decoration: BoxDecoration(
+          color: widget.themeProvider!.secondBackground,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10.0,
+              offset: Offset(0.0, 10.0),
+            ),
+          ],
+        ),
+        child: Form(
+          key: _addFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // To make the card compact
+            children: <Widget>[
+              const Text(
+                "Panic Mode Targets",
+                style: TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Flexible(
+                    child: TextFormField(
+                      style: const TextStyle(fontSize: 14),
+                      controller: _addIdController,
+                      maxLength: 10,
+                      minLines: 1,
+                      maxLines: 2,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        counterText: "",
+                        border: OutlineInputBorder(),
+                        labelText: 'Insert user ID',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Cannot be empty!";
+                        }
+                        if (_chainProvider.panicTargets.length >= 10) {
+                          return "Maximum 10 targets!";
+                        }
+
+                        final n = num.tryParse(value);
+                        if (_chainProvider.panicTargets.where((t) => t.id.toString() == value).isNotEmpty) {
+                          return "Already in the list!";
+                        }
+                        if (n == null) {
+                          return '$value is not a valid ID!';
+                        }
+                        _addIdController.text = value.trim();
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+              Expanded(child: panicCards()),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  TextButton(
+                    child: const Text("Add"),
+                    onPressed: () async {
+                      if (_addFormKey.currentState!.validate()) {
+                        final FocusScopeNode currentFocus = FocusScope.of(context);
+                        if (!currentFocus.hasPrimaryFocus) {
+                          currentFocus.unfocus();
+                        }
+                        // Copy controller's text ot local variable
+                        // early and delete the global, so that text
+                        // does not appear again in case of failure
+                        String inputId = _addIdController.text;
+                        _addIdController.text = '';
+
+                        final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+                        String message = "";
+                        Color? messageColor = Colors.green[700];
+                        if (target is TargetModel) {
+                          inputId = target.faction!.factionId.toString();
+                          _chainProvider.addPanicTarget(
+                            PanicTargetModel()
+                              ..name = target.name
+                              ..level = target.level
+                              ..id = target.playerId
+                              ..factionName = target.faction!.factionName,
+                          );
+                          message = "Added ${target.name}!";
+                        } else {
+                          message = "Can't locate the given target!";
+                          messageColor = Colors.orange[700];
+                        }
+
+                        BotToast.showText(
+                          text: message,
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: messageColor!,
+                          duration: const Duration(seconds: 3),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                        return;
+                      }
+                    },
+                  ),
+                  TextButton(
+                    child: const Text("Close"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _addIdController.text = '';
+                    },
+                  ),
+                ],
               ),
             ],
           ),
-          child: Form(
-            key: _addFormKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // To make the card compact
-              children: <Widget>[
-                Text(
-                  "Panic Mode Targets",
-                  style: const TextStyle(fontSize: 15),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  children: [
-                    Flexible(
-                      child: TextFormField(
-                        style: const TextStyle(fontSize: 14),
-                        controller: _addIdController,
-                        maxLength: 10,
-                        minLines: 1,
-                        maxLines: 2,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          counterText: "",
-                          border: OutlineInputBorder(),
-                          labelText: 'Insert user ID',
-                        ),
-                        validator: (value) {
-                          if (value.isEmpty) {
-                            return "Cannot be empty!";
-                          }
-                          if (_chainProvider.panicTargets.length >= 10) {
-                            return "Maximum 10 targets!";
-                          }
-
-                          final n = num.tryParse(value);
-                          if (_chainProvider.panicTargets.where((t) => t.id.toString() == value).length > 0) {
-                            return "Already in the list!";
-                          }
-                          if (n == null) {
-                            return '$value is not a valid ID!';
-                          }
-                          _addIdController.text = value.trim();
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Expanded(child: panicCards()),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
-                      child: const Text("Add"),
-                      onPressed: () async {
-                        if (_addFormKey.currentState.validate()) {
-                          FocusScopeNode currentFocus = FocusScope.of(context);
-                          if (!currentFocus.hasPrimaryFocus) {
-                            currentFocus.unfocus();
-                          }
-                          // Copy controller's text ot local variable
-                          // early and delete the global, so that text
-                          // does not appear again in case of failure
-                          String inputId = _addIdController.text;
-                          _addIdController.text = '';
-
-                          dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
-                          String message = "";
-                          Color messageColor = Colors.green[700];
-                          if (target is TargetModel) {
-                            inputId = target.faction.factionId.toString();
-                            _chainProvider.addPanicTarget(
-                              PanicTargetModel()
-                                ..name = target.name
-                                ..level = target.level
-                                ..id = target.playerId
-                                ..factionName = target.faction.factionName,
-                            );
-                            message = "Added ${target.name}!";
-                          } else {
-                            message = "Can't locate the given target!";
-                            messageColor = Colors.orange[700];
-                          }
-
-                          BotToast.showText(
-                            text: message,
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: messageColor,
-                            duration: const Duration(seconds: 3),
-                            contentPadding: const EdgeInsets.all(10),
-                          );
-                          return;
-                        }
-                      },
-                    ),
-                    TextButton(
-                      child: const Text("Close"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _addIdController.text = '';
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget panicCards() {
     List<Widget> panicCards = <Widget>[];
-    for (PanicTargetModel target in _chainProvider.panicTargets) {
+    for (final PanicTargetModel target in _chainProvider.panicTargets) {
       panicCards.add(
         Row(
           key: UniqueKey(),
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 30,
               child: Icon(
                 Icons.menu,
@@ -1248,20 +1242,20 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
             ),
             Flexible(
               child: Card(
-                color: widget.themeProvider.cardColor,
+                color: widget.themeProvider!.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     children: [
                       Text(
                         "${target.name} [${target.id}]",
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                       Text(
                         "${target.factionName != "None" ? '(${target.factionName}) - ' : ''}L${target.level}",
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 10),
+                        style: const TextStyle(fontSize: 10),
                       ),
                     ],
                   ),
@@ -1274,7 +1268,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                 onTap: () {
                   _chainProvider.removePanicTarget(target);
                 },
-                child: Icon(Icons.delete_forever_outlined),
+                child: const Icon(Icons.delete_forever_outlined),
               ),
             ),
           ],

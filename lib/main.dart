@@ -2,13 +2,10 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui' as ui;
+
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-
 // Useful for functions debugging
-// ignore: unused_import
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -23,14 +20,10 @@ import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:torn_pda/firebase_options.dart';
-import 'package:torn_pda/providers/api_caller.dart';
-import 'package:torn_pda/utils/appwidget/pda_widget.dart';
-import 'package:torn_pda/utils/http_overrides.dart';
-import 'package:workmanager/workmanager.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/firebase_options.dart';
+import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
@@ -47,15 +40,19 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
+import 'package:torn_pda/utils/appwidget/pda_widget.dart';
+import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.1.4';
-const String androidCompilation = '331';
-const String iosCompilation = '331';
+const String appVersion = '3.1.5';
+const String androidCompilation = '337';
+const String iosCompilation = '337';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -64,14 +61,14 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
     StreamController<ReceivedNotification>.broadcast();
 
-final StreamController<String> selectNotificationStream = StreamController<String>.broadcast();
+final StreamController<String?> selectNotificationStream = StreamController<String?>.broadcast();
 
 class ReceivedNotification {
   ReceivedNotification({
-    @required this.id,
-    @required this.title,
-    @required this.body,
-    @required this.payload,
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.payload,
   });
 
   final int id;
@@ -88,9 +85,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       final oldData = await Prefs().getDataStockMarket();
       var newData = "";
       if (oldData.isNotEmpty) {
-        newData = "$oldData\n${message.notification.body}";
+        newData = "$oldData\n${message.notification!.body}";
       } else {
-        newData = "$oldData${message.notification.body}";
+        newData = "$oldData${message.notification!.body}";
       }
       Prefs().setDataStockMarket(newData);
     }
@@ -105,12 +102,12 @@ Future<void> main() async {
 
   // Initialise Workmanager for app widget
   // [isInDebugMode] sends notifications each time a task is performed
-  Workmanager().initialize(pdaWidget_backgroundUpdate, isInDebugMode: false);
+  Workmanager().initialize(pdaWidget_backgroundUpdate);
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {
-    final AndroidFlutterLocalNotificationsPlugin androidImplementation =
-        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
     await androidImplementation.requestPermission();
   }
 
@@ -126,7 +123,7 @@ Future<void> main() async {
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-      final String payload = notificationResponse.payload;
+      final String? payload = notificationResponse.payload;
       if (notificationResponse.payload != null) {
         log('Notification payload: $payload');
         selectNotificationStream.add(payload);
@@ -165,6 +162,7 @@ Future<void> main() async {
   }
 
   Get.put(ApiCallerController(), permanent: true);
+  Get.put(WarController(), permanent: true);
 
   HttpOverrides.global = MyHttpOverrides();
 
@@ -174,11 +172,7 @@ Future<void> main() async {
         // UserDetailsProvider has to go first to initialize the others!
         ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
         ChangeNotifierProvider<TargetsProvider>(create: (context) => TargetsProvider()),
-        ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
-          create: (context) => AttacksProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider, AttacksProvider attacksProvider) =>
-              AttacksProvider(userProvider.basic),
-        ),
+        ChangeNotifierProvider<AttacksProvider>(create: (context) => AttacksProvider()),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProvider<FriendsProvider>(
@@ -229,16 +223,19 @@ Future<void> main() async {
 
 class MyApp extends StatefulWidget {
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<MyApp> createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  ThemeProvider _themeProvider;
-  WebViewProvider _webViewProvider;
+class MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  late ThemeProvider _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
     // Handle home widget
     if (Platform.isAndroid) {
@@ -257,10 +254,41 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+  void didChangeMetrics() async {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      final bool splitNowActive = _webViewProvider.webViewSplitActive;
+      final bool splitUserEnabled = _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
+      final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
 
-    ThemeData theme = ThemeData(
+      if (!splitNowActive && splitUserEnabled && screenIsWide) {
+        _webViewProvider.webViewSplitActive = true;
+        _webViewProvider.browserForegroundWithSplitTransition();
+      } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
+        _webViewProvider.webViewSplitActive = false;
+        if (_webViewProvider.splitScreenRevertsToApp) {
+          _webViewProvider.browserShowInForeground = false;
+        } else {
+          _webViewProvider.browserShowInForeground = true;
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
+
+    // https://github.com/flutter/flutter/issues/126585
+    MediaQuery.viewInsetsOf(context).bottom;
+
+    final ThemeData theme = ThemeData(
       cardColor: _themeProvider.cardColor,
       appBarTheme: AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.light,
@@ -270,81 +298,118 @@ class _MyAppState extends State<MyApp> {
       brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
     );
 
-    MediaQuery mq = MediaQuery(
-      data: MediaQueryData.fromWindow(ui.window),
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: MaterialApp(
-          title: 'Torn PDA',
-          theme: theme,
-          debugShowCheckedModeBanner: false,
-          builder: BotToastInit(),
-          navigatorObservers: [BotToastNavigatorObserver()],
-          home: WillPopScope(
-            onWillPop: () async {
-              WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: _themeProvider.statusBar,
+        systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
+            ? _themeProvider.canvas
+            : _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
+            ? _themeProvider.currentTheme == AppTheme.light
+                ? Brightness.dark
+                : Brightness.light
+            : Brightness.light,
+        statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
+                ? Brightness.dark
+                : Brightness.light
+            : Brightness.dark,
+        statusBarIconBrightness:
+            MediaQuery.orientationOf(context) == Orientation.portrait ? Brightness.light : Brightness.light,
+      ),
+    );
 
-              if (w.browserShowInForeground) {
-                // Browser is in front, delegate the call
-                w.tryGoBack();
-                return false;
-              } else {
-                // App is in front
-                //_webViewProvider.willPopCallbackStream.add(true);
-                bool shouldPop = await _willPopFromApp();
-                if (shouldPop) return true;
-                return false;
-              }
-            },
-            child: Stack(
+    return MaterialApp(
+      title: 'Torn PDA',
+      theme: theme,
+      debugShowCheckedModeBanner: false,
+      builder: BotToastInit(),
+      navigatorObservers: [BotToastNavigatorObserver()],
+      home: WillPopScope(
+        onWillPop: () async {
+          final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+
+          if (w.browserShowInForeground) {
+            // Browser is in front, delegate the call
+            w.tryGoBack();
+            return false;
+          } else {
+            // App is in front
+            //_webViewProvider.willPopCallbackStream.add(true);
+            final bool shouldPop = await _willPopFromApp();
+            if (shouldPop) return true;
+            return false;
+          }
+        },
+        child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
+          if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
+              _webViewProvider.webViewSplitActive &&
+              screenIsWide) {
+            return Stack(
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: GetMaterialApp(
+                        debugShowCheckedModeBanner: false,
+                        theme: theme,
+                        home: DrawerPage(),
+                      ),
+                    ),
+                    Flexible(
+                      child: wProvider.stackView,
+                    ),
+                  ],
+                ),
+                const AppBorder(),
+              ],
+            );
+          } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+              _webViewProvider.webViewSplitActive &&
+              screenIsWide) {
+            return Stack(
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: wProvider.stackView,
+                    ),
+                    Flexible(
+                      child: GetMaterialApp(
+                        debugShowCheckedModeBanner: false,
+                        theme: theme,
+                        home: DrawerPage(),
+                      ),
+                    ),
+                  ],
+                ),
+                const AppBorder(),
+              ],
+            );
+          } else {
+            return Stack(
               children: [
                 GetMaterialApp(
                   debugShowCheckedModeBanner: false,
                   theme: theme,
                   home: DrawerPage(),
                 ),
-                Consumer<WebViewProvider>(
-                  builder: (context, wProvider, child) {
-                    return Visibility(
-                      maintainState: true,
-                      visible: wProvider.browserShowInForeground,
-                      child: wProvider.stackView,
-                    );
-                  },
+                Visibility(
+                  maintainState: true,
+                  visible: wProvider.browserShowInForeground,
+                  child: wProvider.stackView,
                 ),
                 const AppBorder(),
               ],
-            ),
-          ),
-        ),
+            );
+          }
+        }),
       ),
     );
-
-    var orientation = mq.data.orientation;
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: _themeProvider.statusBar,
-        systemNavigationBarColor:
-            orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
-        systemNavigationBarIconBrightness: orientation == Orientation.landscape
-            ? _themeProvider.currentTheme == AppTheme.light
-                ? Brightness.dark
-                : Brightness.light
-            : Brightness.light,
-        statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
-            ? orientation == Orientation.portrait
-                ? Brightness.dark
-                : Brightness.light
-            : Brightness.dark,
-        statusBarIconBrightness: orientation == Orientation.portrait ? Brightness.light : Brightness.light,
-      ),
-    );
-
-    return mq;
   }
 
   Future<bool> _willPopFromApp() async {
-    SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
+    final SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
     final appExit = s.onAppExit;
     if (appExit == 'exit') {
       return true;
@@ -362,16 +427,16 @@ class _MyAppState extends State<MyApp> {
 }
 
 class AppBorder extends StatefulWidget {
-  const AppBorder({Key key}) : super(key: key);
+  const AppBorder({super.key});
 
   @override
-  _AppBorderState createState() => _AppBorderState();
+  AppBorderState createState() => AppBorderState();
 }
 
-class _AppBorderState extends State<AppBorder> {
+class AppBorderState extends State<AppBorder> {
   @override
   Widget build(BuildContext context) {
-    final _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    final chainStatusProvider = Provider.of<ChainStatusProvider>(context);
     return IgnorePointer(
       child: Column(
         children: [
@@ -379,8 +444,8 @@ class _AppBorderState extends State<AppBorder> {
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  width: _chainStatusProvider.watcherActive ? 3 : 0,
-                  color: _chainStatusProvider.borderColor,
+                  width: chainStatusProvider.watcherActive ? 3 : 0,
+                  color: chainStatusProvider.borderColor,
                 ),
               ),
             ),

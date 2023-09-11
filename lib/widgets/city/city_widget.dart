@@ -1,32 +1,30 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:expandable/expandable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
-
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 
 class CityWidget extends StatefulWidget {
-  final InAppWebViewController controller;
+  final InAppWebViewController? controller;
   final List<Item> cityItems;
   final bool error;
 
-  CityWidget({
-    @required this.controller,
-    @required this.cityItems,
-    @required this.error,
+  const CityWidget({
+    required this.controller,
+    required this.cityItems,
+    required this.error,
   });
 
   @override
-  _CityWidgetState createState() => _CityWidgetState();
+  CityWidgetState createState() => CityWidgetState();
 }
 
-class _CityWidgetState extends State<CityWidget> {
+class CityWidgetState extends State<CityWidget> {
   final _scrollController = ScrollController();
-  final _moneyFormat = new NumberFormat("#,##0", "en_US");
+  final _moneyFormat = NumberFormat("#,##0", "en_US");
 
   @override
   void dispose() {
@@ -39,16 +37,15 @@ class _CityWidgetState extends State<CityWidget> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
-        theme: ExpandableThemeData(
+        theme: const ExpandableThemeData(
           hasIcon: false,
           iconColor: Colors.grey,
           tapBodyToExpand: true,
           tapHeaderToExpand: true,
           tapBodyToCollapse: true,
         ),
-        header: Row(
+        header: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
           children: [
             Column(
               children: [
@@ -79,11 +76,11 @@ class _CityWidgetState extends State<CityWidget> {
         ),
         expanded: ConstrainedBox(
           constraints: BoxConstraints.loose(
-              Size.fromHeight((MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
-                  3),
+            Size.fromHeight(MediaQuery.sizeOf(context).height - kToolbarHeight - AppBar().preferredSize.height) / 3,
+          ),
           child: Scrollbar(
             controller: _scrollController,
-            isAlwaysShown: true,
+            thumbVisibility: true,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 5),
               child: SingleChildScrollView(
@@ -103,7 +100,7 @@ class _CityWidgetState extends State<CityWidget> {
   }
 
   List<Widget> _returnItems(bool onlyTitle) {
-    var itemList = <Widget>[];
+    final itemList = <Widget>[];
 
     // Empty text
     if (widget.cityItems.isEmpty) {
@@ -119,7 +116,7 @@ class _CityWidgetState extends State<CityWidget> {
               Flexible(
                 child: Text(
                   noFoundText,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.orange,
                     fontSize: 12,
                   ),
@@ -151,10 +148,10 @@ class _CityWidgetState extends State<CityWidget> {
         ),
       );
     } else {
-      var itemQuantity = widget.cityItems.length;
+      final itemQuantity = widget.cityItems.length;
       var totalPrice = 0;
-      for (var item in widget.cityItems) {
-        totalPrice += item.marketValue;
+      for (final item in widget.cityItems) {
+        totalPrice += item.marketValue!;
       }
       itemList.add(
         Padding(
@@ -186,7 +183,7 @@ class _CityWidgetState extends State<CityWidget> {
     }
 
     // Item rows
-    for (var item in widget.cityItems) {
+    for (final item in widget.cityItems) {
       itemList.add(
         Padding(
           padding: const EdgeInsets.fromLTRB(10, 3, 0, 0),
@@ -194,14 +191,14 @@ class _CityWidgetState extends State<CityWidget> {
             children: <Widget>[
               Text(
                 "${item.name}: ",
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   color: Colors.white,
                 ),
               ),
               Text(
                 "\$${_moneyFormat.format(item.marketValue)}",
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   color: Colors.green,
                 ),

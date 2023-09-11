@@ -1,6 +1,3 @@
-// Flutter imports:
-import 'package:flutter/material.dart';
-
 // Package imports:
 import 'package:http/http.dart' as http;
 
@@ -10,29 +7,29 @@ import 'package:torn_pda/models/profile/revive_services/nuke_revive_model.dart';
 
 class NukeRevive {
   String playerId;
-  String playerName;
-  String playerFaction;
-  String playerLocation;
+  String? playerName;
+  String? playerFaction;
+  String? playerLocation;
 
   NukeRevive({
-    @required this.playerId,
-    @required this.playerName,
-    @required this.playerFaction,
-    @required this.playerLocation,
+    required this.playerId,
+    required this.playerName,
+    required this.playerFaction,
+    required this.playerLocation,
   });
 
   Future<String> callMedic() async {
-    var modelOut = NukeReviveModel()
+    final modelOut = NukeReviveModel()
       ..uid = playerId
       ..player = "$playerName [$playerId]"
       ..faction = playerFaction
       ..country = playerLocation
       ..appInfo = "Torn PDA v$appVersion";
 
-    var bodyOut = nukeReviveModelToJson(modelOut);
+    final bodyOut = nukeReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post(
+      final response = await http.post(
         Uri.parse('https://www.nukefamily.org/dev/reviveme.php'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',

@@ -14,25 +14,25 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class HospitalAheadOptions extends StatefulWidget {
-  final Function callback;
+  final Function? callback;
 
-  HospitalAheadOptions({
+  const HospitalAheadOptions({
     this.callback,
   });
 
   @override
-  _HospitalAheadOptionsState createState() => _HospitalAheadOptionsState();
+  HospitalAheadOptionsState createState() => HospitalAheadOptionsState();
 }
 
-class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
-  int _hospitalNotificationAheadValue;
-  int _hospitalAlarmAheadDropDownValue;
-  int _hospitalTimerAheadDropDownValue;
+class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
+  int? _hospitalNotificationAheadValue;
+  int? _hospitalAlarmAheadDropDownValue;
+  int? _hospitalTimerAheadDropDownValue;
 
-  Future _preferencesLoaded;
+  Future? _preferencesLoaded;
 
-  SettingsProvider _settingsProvider;
-  ThemeProvider _themeProvider;
+  late SettingsProvider _settingsProvider;
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -49,10 +49,10 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
+          ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
@@ -72,7 +72,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                 color: _themeProvider.canvas,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -80,18 +80,18 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(20.0),
+                              const Padding(
+                                padding: EdgeInsets.all(20.0),
                                 child: Text('Here you can specify your preferred notification '
                                     'trigger time before hospital release'),
                               ),
                               _rowsWithTypes(),
-                              SizedBox(height: 50),
+                              const SizedBox(height: 50),
                             ],
                           ),
                         );
                       } else {
-                        return Center(
+                        return const Center(
                           child: CircularProgressIndicator(),
                         );
                       }
@@ -110,9 +110,9 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Hospital notification"),
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+      title: const Text("Hospital notification"),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
         onPressed: () => _goBack(),
       ),
     );
@@ -126,10 +126,10 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Flexible(
+              const Flexible(
                 child: Text('Notification'),
               ),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
@@ -144,10 +144,10 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                const Flexible(
                   child: Text('Alarm'),
                 ),
-                Padding(
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Flexible(
@@ -162,7 +162,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                           ),
                         ],
                       ),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           Flexible(
@@ -188,10 +188,10 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Flexible(
+                const Flexible(
                   child: Text('Timer'),
                 ),
-                Padding(
+                const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Flexible(
@@ -207,7 +207,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   DropdownButton _hospitalNotificationAheadDropDown() {
     return DropdownButton<int>(
       value: _hospitalNotificationAheadValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 20,
           child: SizedBox(
@@ -275,7 +275,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalNotificationAhead(value);
+        Prefs().setHospitalNotificationAhead(value!);
         setState(() {
           _hospitalNotificationAheadValue = value;
         });
@@ -286,7 +286,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   DropdownButton _hospitalAlarmAheadDropDown() {
     return DropdownButton<int>(
       value: _hospitalAlarmAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 0,
           child: SizedBox(
@@ -341,7 +341,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalAlarmAhead(value);
+        Prefs().setHospitalAlarmAhead(value!);
         setState(() {
           _hospitalAlarmAheadDropDownValue = value;
         });
@@ -352,7 +352,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   DropdownButton _hospitalTimerAheadDropDown() {
     return DropdownButton<int>(
       value: _hospitalTimerAheadDropDownValue,
-      items: [
+      items: const [
         DropdownMenuItem(
           value: 20,
           child: SizedBox(
@@ -420,7 +420,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalTimerAhead(value);
+        Prefs().setHospitalTimerAhead(value!);
         setState(() {
           _hospitalTimerAheadDropDownValue = value;
         });
@@ -429,9 +429,9 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   }
 
   Future _restorePreferences() async {
-    var hospitalNotificationAhead = await Prefs().getHospitalNotificationAhead();
-    var hospitalAlarmAhead = await Prefs().getHospitalAlarmAhead();
-    var hospitalTimerAhead = await Prefs().getHospitalTimerAhead();
+    final hospitalNotificationAhead = await Prefs().getHospitalNotificationAhead();
+    final hospitalAlarmAhead = await Prefs().getHospitalAlarmAhead();
+    final hospitalTimerAhead = await Prefs().getHospitalTimerAhead();
 
     setState(() {
       _hospitalNotificationAheadValue = hospitalNotificationAhead;
@@ -442,7 +442,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
 
   _goBack() {
     if (widget.callback != null) {
-      widget.callback();
+      widget.callback!();
     }
     routeWithDrawer = false;
     routeName = "profile_notifications";

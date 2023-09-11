@@ -15,7 +15,7 @@ class TabSaveModel {
     this.tabsSave,
   });
 
-  List<TabsSave> tabsSave;
+  List<TabsSave>? tabsSave;
 
   factory TabSaveModel.fromJson(Map<String, dynamic> json) => TabSaveModel(
         tabsSave:
@@ -23,7 +23,7 @@ class TabSaveModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "tabsSave": tabsSave == null ? null : List<dynamic>.from(tabsSave.map((x) => x.toJson())),
+        "tabsSave": tabsSave == null ? null : List<dynamic>.from(tabsSave!.map((x) => x.toJson())),
       };
 }
 
@@ -37,28 +37,28 @@ class TabsSave {
     this.historyForward,
   });
 
-  GlobalKey tabKey;
-  String url;
-  String pageTitle;
-  bool chatRemovalActive;
-  List<String> historyBack;
-  List<String> historyForward;
+  GlobalKey? tabKey;
+  String? url;
+  String? pageTitle;
+  bool? chatRemovalActive;
+  List<String?>? historyBack;
+  List<String?>? historyForward;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
-        tabKey: json["tabKey"] == null ? null : json["tabKey"],
-        url: json["url"] == null ? null : json["url"],
-        pageTitle: json["pageTitle"] == null ? null : json["pageTitle"],
-        chatRemovalActive: json["chat"] == null ? null : json["chat"],
+        tabKey: json["tabKey"],
+        url: json["url"],
+        pageTitle: json["pageTitle"],
+        chatRemovalActive: json["chat"],
         historyBack: json["historyBack"] == null ? null : List<String>.from(json["historyBack"].map((x) => x)),
         historyForward: json["historyForward"] == null ? null : List<String>.from(json["historyForward"].map((x) => x)),
       );
 
   Map<String, dynamic> toJson() => {
-        "tabKey": tabKey == null ? null : tabKey,
-        "url": url == null ? null : url,
-        "pageTitle": pageTitle == null ? null : pageTitle,
-        "chat": chatRemovalActive == null ? null : chatRemovalActive,
-        "historyBack": historyBack == null ? null : List<dynamic>.from(historyBack.map((x) => x)),
-        "historyForward": historyForward == null ? null : List<dynamic>.from(historyForward.map((x) => x)),
+        "tabKey": tabKey,
+        "url": url,
+        "pageTitle": pageTitle,
+        "chat": chatRemovalActive,
+        "historyBack": historyBack == null ? null : List<dynamic>.from(historyBack!.map((x) => x)),
+        "historyForward": historyForward == null ? null : List<dynamic>.from(historyForward!.map((x) => x)),
       };
 }

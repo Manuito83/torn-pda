@@ -11,26 +11,26 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class JobPointsDialog extends StatefulWidget {
-  final int currentType;
-  final int currentPoints;
-  final Jobpoints jobpoints;
-  final Job job;
+  final int? currentType;
+  final int? currentPoints;
+  final Jobpoints? jobpoints;
+  final Job? job;
   final bool unemployed;
 
-  JobPointsDialog({
-    @required this.currentType,
-    @required this.currentPoints,
-    @required this.jobpoints,
-    @required this.job,
-    @required this.unemployed,
+  const JobPointsDialog({
+    required this.currentType,
+    required this.currentPoints,
+    required this.jobpoints,
+    required this.job,
+    required this.unemployed,
   });
 
   @override
-  _JobPointsDialogState createState() => _JobPointsDialogState();
+  JobPointsDialogState createState() => JobPointsDialogState();
 }
 
-class _JobPointsDialogState extends State<JobPointsDialog> {
-  ThemeProvider _themeProvider;
+class JobPointsDialogState extends State<JobPointsDialog> {
+  late ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -51,44 +51,42 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
+                padding: const EdgeInsets.only(
                   top: 45,
                   bottom: 16,
                   left: 16,
                   right: 16,
                 ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
+                margin: const EdgeInsets.only(top: 15),
+                decoration: BoxDecoration(
                   color: _themeProvider.secondBackground,
-                  shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
+                      offset: Offset(0.0, 10.0),
                     ),
                   ],
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Text(
+                      const Text(
                         'JOB POINTS',
                         style: TextStyle(
                           fontSize: 12,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       _currentPoints(),
-                      Divider(),
+                      const Divider(),
                       _jopPoints(),
                       _companyPoints(),
-                      Divider(),
+                      const Divider(),
                       TextButton(
-                        child: Text(
+                        child: const Text(
                           "Close",
                           style: TextStyle(
                             fontSize: 13,
@@ -131,7 +129,7 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
 
   Widget _currentPoints() {
     if (widget.unemployed) {
-      return Text(
+      return const Text(
         'You are unemployed!',
         style: TextStyle(
           fontWeight: FontWeight.bold,
@@ -146,15 +144,15 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
         Column(
           children: [
             Text(
-              widget.job.companyName == 'None' ? widget.job.job : HtmlParser.fix(widget.job.companyName),
-              style: TextStyle(
+              widget.job!.companyName == 'None' ? widget.job!.job! : HtmlParser.fix(widget.job!.companyName),
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
             ),
             Text(
               '${widget.currentPoints} points',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
               ),
             ),
@@ -165,8 +163,8 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
   }
 
   Widget _jopPoints() {
-    if (widget.jobpoints.jobs == null) {
-      return Text(
+    if (widget.jobpoints!.jobs == null) {
+      return const Text(
         'No starter-job points found!',
         style: TextStyle(
           fontSize: 12,
@@ -177,38 +175,38 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
     return Column(
       children: [
         Text(
-          'Army: ${widget.jobpoints.jobs.army}',
-          style: TextStyle(
+          'Army: ${widget.jobpoints!.jobs!.army}',
+          style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Casino: ${widget.jobpoints.jobs.casino}',
-          style: TextStyle(
+          'Casino: ${widget.jobpoints!.jobs!.casino}',
+          style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Education: ${widget.jobpoints.jobs.education}',
-          style: TextStyle(
+          'Education: ${widget.jobpoints!.jobs!.education}',
+          style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Grocer: ${widget.jobpoints.jobs.grocer}',
-          style: TextStyle(
+          'Grocer: ${widget.jobpoints!.jobs!.grocer}',
+          style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Law: ${widget.jobpoints.jobs.law}',
-          style: TextStyle(
+          'Law: ${widget.jobpoints!.jobs!.law}',
+          style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Medical: ${widget.jobpoints.jobs.medical}',
-          style: TextStyle(
+          'Medical: ${widget.jobpoints!.jobs!.medical}',
+          style: const TextStyle(
             fontSize: 12,
           ),
         ),
@@ -217,15 +215,15 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
   }
 
   Widget _companyPoints() {
-    var jobs = <Widget>[];
+    final jobs = <Widget>[];
 
-    if (widget.jobpoints.companies != null) {
-      jobs.add(Divider());
-      widget.jobpoints.companies.forEach((type, details) {
+    if (widget.jobpoints!.companies != null) {
+      jobs.add(const Divider());
+      widget.jobpoints!.companies!.forEach((type, details) {
         jobs.add(
           Text(
             '${details.name}: ${details.jobpoints}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
             ),
           ),

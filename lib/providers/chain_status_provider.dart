@@ -32,7 +32,7 @@ enum WatchDefcon {
 }
 
 class ChainStatusProvider extends ChangeNotifier {
-  List<PanicTargetModel> _panicTargets = <PanicTargetModel>[];
+  final List<PanicTargetModel> _panicTargets = <PanicTargetModel>[];
   List<PanicTargetModel> get panicTargets {
     return _panicTargets;
   }
@@ -77,8 +77,8 @@ class ChainStatusProvider extends ChangeNotifier {
 
   int _accumulatedErrors = 0;
 
-  ChainModel _chainModel;
-  ChainModel get chainModel {
+  ChainModel? _chainModel;
+  ChainModel? get chainModel {
     return _chainModel;
   }
 
@@ -129,15 +129,15 @@ class ChainStatusProvider extends ChangeNotifier {
 
   bool widgetVisible = false;
 
-  AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   int _lastChainCount = 0;
   bool _wereWeChaining = false;
 
-  Timer _tickerDecreaseCount;
+  Timer? _tickerDecreaseCount;
 
   int _currentApiCallPeriod = 10;
-  Timer _tickerCallChainApi;
+  Timer? _tickerCallChainApi;
 
   Future activateStatus() async {
     if (_statusActive) return;
@@ -148,9 +148,9 @@ class ChainStatusProvider extends ChangeNotifier {
     // Activate timers
     _tickerCallChainApi?.cancel();
     _tickerDecreaseCount?.cancel();
-    _tickerCallChainApi = new Timer.periodic(Duration(seconds: _currentApiCallPeriod), (Timer t) => _getAllStatus());
-    _tickerDecreaseCount = new Timer.periodic(
-      Duration(seconds: 1),
+    _tickerCallChainApi = Timer.periodic(Duration(seconds: _currentApiCallPeriod), (Timer t) => _getAllStatus());
+    _tickerDecreaseCount = Timer.periodic(
+      const Duration(seconds: 1),
       (Timer t) {
         _decreaseTimer();
         if (_watcherActive) {
@@ -218,7 +218,7 @@ class ChainStatusProvider extends ChangeNotifier {
       // removing the item at oldIndex will shorten the list by 1
       newIndex -= 1;
     }
-    var oldItem = panicTargets[oldIndex];
+    final oldItem = panicTargets[oldIndex];
     panicTargets.removeAt(oldIndex);
     panicTargets.insert(newIndex, oldItem);
     notifyListeners();
@@ -226,7 +226,7 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   void _refreshChainClock(int secondsRemaining) {
-    Duration timeOut = Duration(seconds: secondsRemaining);
+    final Duration timeOut = Duration(seconds: secondsRemaining);
     String timeOutMin = timeOut.inMinutes.remainder(60).toString();
     if (timeOut.inMinutes.remainder(60) < 10) {
       timeOutMin = '0$timeOutMin';
@@ -240,7 +240,7 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   void _refreshCooldownClock(int secondsRemaining) {
-    Duration timeOut = Duration(seconds: secondsRemaining);
+    final Duration timeOut = Duration(seconds: secondsRemaining);
     String timeOutHours = timeOut.inHours.toString();
     String timeOutMin = timeOut.inMinutes.remainder(60).toString();
     String timeOutSec = timeOut.inSeconds.remainder(60).toString();
@@ -262,7 +262,7 @@ class ChainStatusProvider extends ChangeNotifier {
       _currentSecondsCounter--;
     }
     if (!_modelError) {
-      if (chainModel.chain.cooldown > 0) {
+      if (chainModel!.chain!.cooldown! > 0) {
         _refreshCooldownClock(currentSecondsCounter);
       } else {
         _refreshChainClock(currentSecondsCounter);
@@ -271,16 +271,18 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   Future _getAllStatus() async {
+    if (chainModel == null) return;
+
     // Adapt API calls depending on the Chain count
-    if ((chainModel.chain.current < 10 || chainModel.chain.cooldown > 0) && _currentApiCallPeriod != 30) {
+    if ((chainModel!.chain!.current! < 10 || chainModel!.chain!.cooldown! > 0) && _currentApiCallPeriod != 30) {
       _tickerCallChainApi?.cancel();
       _currentApiCallPeriod = 30;
-      _tickerCallChainApi = new Timer.periodic(Duration(seconds: 30), (Timer t) => _getAllStatus());
+      _tickerCallChainApi = Timer.periodic(const Duration(seconds: 30), (Timer t) => _getAllStatus());
       log("Decreasing Chain Status calls to every 30 seconds");
-    } else if (chainModel.chain.current >= 10 && _currentApiCallPeriod != 10) {
+    } else if (chainModel!.chain!.current! >= 10 && _currentApiCallPeriod != 10) {
       _tickerCallChainApi?.cancel();
       _currentApiCallPeriod = 10;
-      _tickerCallChainApi = new Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
+      _tickerCallChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
       log("Increasing Chain Status calls to every 10 seconds");
     }
 
@@ -289,13 +291,13 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   Future<void> getEnergy() async {
-    dynamic myBars = await Get.find<ApiCallerController>().getBars();
+    final dynamic myBars = await Get.find<ApiCallerController>().getBars();
     _barsModel = myBars;
     notifyListeners();
   }
 
   Future<void> getChainStatus() async {
-    var chainResponse = await Get.find<ApiCallerController>().getChainStatus();
+    final chainResponse = await Get.find<ApiCallerController>().getChainStatus();
 
     if (chainResponse is ChainModel) {
       _accumulatedErrors = 0;
@@ -317,56 +319,56 @@ class ChainStatusProvider extends ChangeNotifier {
       tryToDeactivateStatus();
 
       // OPTION 1, NOT CHAINING
-      if ((chainModel.chain.current == 0 || chainModel.chain.timeout == 0) && chainModel.chain.cooldown == 0) {
+      if ((chainModel!.chain!.current == 0 || chainModel!.chain!.timeout == 0) && chainModel!.chain!.cooldown == 0) {
         // If we are not chaining, reset everything
         _lastChainCount = 0;
         _currentSecondsCounter = 0;
         _refreshChainClock(currentSecondsCounter);
-      } else if (chainModel.chain.cooldown > 0) {
+      } else if (chainModel!.chain!.cooldown! > 0) {
         // OPTION 2, WE ARE WITH COOLDOWN
         // If current seconds is zero, is because we are entering the app,
         // so, perform an update
         if (currentSecondsCounter == 0) {
-          _currentSecondsCounter = chainModel.chain.cooldown;
-          _refreshCooldownClock(chainModel.chain.cooldown);
+          _currentSecondsCounter = chainModel!.chain!.cooldown!;
+          _refreshCooldownClock(chainModel!.chain!.cooldown!);
         }
         // Thereafter, only update if what we get from the API is below the
         // current automatic timer, or the last thing we have is chaining
-        if (chainModel.chain.cooldown < currentSecondsCounter || _wereWeChaining) {
-          _currentSecondsCounter = chainModel.chain.cooldown;
-          _refreshCooldownClock(chainModel.chain.cooldown);
+        if (chainModel!.chain!.cooldown! < currentSecondsCounter || _wereWeChaining) {
+          _currentSecondsCounter = chainModel!.chain!.cooldown!;
+          _refreshCooldownClock(chainModel!.chain!.cooldown!);
           _wereWeChaining = false;
         }
-      } else if (chainModel.chain.current < 10) {
+      } else if (chainModel!.chain!.current! < 10) {
         // OPTION 3, CHAIN UNDER 10
         // Update if for some reason the count in the app is delayed
         // and the real timer is less in Torn
-        if (chainModel.chain.timeout < currentSecondsCounter) {
-          _currentSecondsCounter = chainModel.chain.timeout;
+        if (chainModel!.chain!.timeout! < currentSecondsCounter) {
+          _currentSecondsCounter = chainModel!.chain!.timeout!;
           _refreshChainClock(currentSecondsCounter);
         }
         // Below 10, update count but only update timer if it was at 0
         // at the beginning (otherwise count won't start)
-        if (chainModel.chain.current > _lastChainCount) {
+        if (chainModel!.chain!.current! > _lastChainCount) {
           if (currentSecondsCounter == 0) {
-            _currentSecondsCounter = chainModel.chain.timeout;
+            _currentSecondsCounter = chainModel!.chain!.timeout!;
           }
-          _lastChainCount = chainModel.chain.current;
+          _lastChainCount = chainModel!.chain!.current!;
           _refreshChainClock(currentSecondsCounter);
         }
       } else {
         // OPTION 4, CHAIN OF 10 OR MORE
         // Check if counts are different
         _wereWeChaining = true;
-        if (chainModel.chain.current > _lastChainCount) {
-          _currentSecondsCounter = chainModel.chain.timeout;
-          _lastChainCount = chainModel.chain.current;
+        if (chainModel!.chain!.current! > _lastChainCount) {
+          _currentSecondsCounter = chainModel!.chain!.timeout!;
+          _lastChainCount = chainModel!.chain!.current!;
           _refreshChainClock(currentSecondsCounter);
         } else {
           // Else, even if the count has not changed,
           // take a look at the timer, in case it's delayed and update
-          if (chainModel.chain.timeout < currentSecondsCounter) {
-            _currentSecondsCounter = chainModel.chain.timeout;
+          if (chainModel!.chain!.timeout! < currentSecondsCounter) {
+            _currentSecondsCounter = chainModel!.chain!.timeout!;
             _refreshChainClock(currentSecondsCounter);
           }
         }
@@ -394,16 +396,16 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     // If under cooldown, apply blue color and return
-    if (chainModel.chain.cooldown > 0) {
+    if (chainModel!.chain!.cooldown! > 0) {
       if (_chainWatcherDefcon != WatchDefcon.cooldown) {
         _chainWatcherDefcon = WatchDefcon.cooldown;
-        _borderColor = Colors.lightBlue[300];
+        _borderColor = Colors.lightBlue[300]!;
         notifyListeners();
       }
       return;
     }
 
-    if (chainModel.chain.current >= 10 && currentSecondsCounter > 1) {
+    if (chainModel!.chain!.current! >= 10 && currentSecondsCounter > 1) {
       if (panicModeActive) {
         // PANIC MODE LEVEL
         if (currentSecondsCounter <= _panicValue) {
@@ -416,14 +418,14 @@ class ChainStatusProvider extends ChangeNotifier {
               _vibrate(3);
             }
             if (_notificationsEnabled) {
-              showNotification(555, "", "CHAIN PANIC ALERT!", "Less than ${_currentChainTimeString} remaining!");
+              showNotification(555, "", "CHAIN PANIC ALERT!", "Less than $_currentChainTimeString remaining!");
             }
             if (panicTargets.isNotEmpty) {
               List<String> attacksIds = <String>[];
-              List<String> attacksNames = <String>[];
+              List<String?> attacksNames = <String?>[];
               List<String> attackNotesColorList = <String>[];
               List<String> attackNotesList = <String>[];
-              for (var tar in panicTargets) {
+              for (final tar in panicTargets) {
                 attacksIds.add(tar.id.toString());
                 attacksNames.add(tar.name);
                 attackNotesColorList.add('z');
@@ -461,7 +463,7 @@ class ChainStatusProvider extends ChangeNotifier {
               _vibrate(3);
             }
             if (_notificationsEnabled) {
-              showNotification(555, "", "RED CHAIN ALERT!", "Less than ${_currentChainTimeString} remaining!");
+              showNotification(555, "", "RED CHAIN ALERT!", "Less than $_currentChainTimeString remaining!");
             }
           } else {
             _borderColor == Colors.transparent ? _borderColor = Colors.red : _borderColor = Colors.transparent;
@@ -478,7 +480,7 @@ class ChainStatusProvider extends ChangeNotifier {
               _vibrate(3);
             }
             if (_notificationsEnabled) {
-              showNotification(555, "", "RED CHAIN CAUTION!", "Less than ${_currentChainTimeString} remaining!");
+              showNotification(555, "", "RED CHAIN CAUTION!", "Less than $_currentChainTimeString remaining!");
             }
           } else {
             _borderColor = Colors.red;
@@ -536,10 +538,10 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   _vibrate(int times) async {
-    if (await Vibration.hasVibrator()) {
+    if ((await Vibration.hasVibrator())!) {
       for (var i = 0; i < times; i++) {
         Vibration.vibrate();
-        await Future.delayed(Duration(milliseconds: 1000));
+        await Future.delayed(const Duration(milliseconds: 1000));
       }
     }
   }
@@ -566,9 +568,9 @@ class ChainStatusProvider extends ChangeNotifier {
     _vibrationEnabled = await Prefs().getChainWatcherVibration();
     _notificationsEnabled = await Prefs().getChainWatcherNotificationsEnabled();
 
-    String savedSettings = await Prefs().getChainWatcherSettings();
+    final String savedSettings = await Prefs().getChainWatcherSettings();
     if (savedSettings.isNotEmpty) {
-      ChainWatcherSettings model = chainWatcherModelFromJson(savedSettings);
+      final ChainWatcherSettings model = chainWatcherModelFromJson(savedSettings);
       _green2Enabled = model.green2Enabled;
       _green2Max = model.green2Max;
       _green2Min = model.green2Min;
@@ -589,27 +591,27 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     List<String> savedPanicTargets = await Prefs().getChainWatcherPanicTargets();
-    for (String p in savedPanicTargets) {
+    for (final String p in savedPanicTargets) {
       panicTargets.add(panicTargetModelFromJson(p));
     }
   }
 
-  void showNotification(
+  Future<void> showNotification(
     int id,
     String payload,
     String title,
     String subtitle,
   ) async {
-    String channelTitle = 'Manual chain';
-    String channelSubtitle = 'Manual chain';
-    String channelDescription = 'Manual notifications for chain';
-    String notificationTitle = title;
-    String notificationSubtitle = subtitle;
-    int notificationId = id;
-    String notificationPayload = payload;
+    const String channelTitle = 'Manual chain';
+    const String channelSubtitle = 'Manual chain';
+    const String channelDescription = 'Manual notifications for chain';
+    final String notificationTitle = title;
+    final String notificationSubtitle = subtitle;
+    final int notificationId = id;
+    final String notificationPayload = payload;
 
-    var modifier = await getNotificationChannelsModifiers();
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    final modifier = await getNotificationChannelsModifiers();
+    final androidPlatformChannelSpecifics = AndroidNotificationDetails(
       "$channelTitle ${modifier.channelIdModifier}",
       "$channelSubtitle ${modifier.channelIdModifier}",
       channelDescription: channelDescription,
@@ -622,12 +624,12 @@ class ChainStatusProvider extends ChangeNotifier {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       presentSound: true,
       sound: 'slow_spring_board.aiff',
     );
 
-    var platformChannelSpecifics = NotificationDetails(
+    final platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
     );
@@ -791,7 +793,7 @@ class ChainStatusProvider extends ChangeNotifier {
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.green2);
+        final double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.green2);
         if (_green2Min < lowestPossibleValue) _green2Min = lowestPossibleValue;
 
         // Only move the other values around if we are really moving this bar
@@ -812,7 +814,6 @@ class ChainStatusProvider extends ChangeNotifier {
         if (!_checkIfAnyActiveBelow(WatchDefcon.green2)) {
           _green2Min = 0;
         }
-        break;
       case WatchDefcon.orange1:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != orange1Min && range.start > orange1Max - 20) {
@@ -841,17 +842,16 @@ class ChainStatusProvider extends ChangeNotifier {
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.orange1);
+        final double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.orange1);
         if (_orange1Min < lowestPossibleValue) _orange1Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.orange1);
+        final double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.orange1);
         if (_orange1Max > highestPossibleValue) _orange1Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
         if (!_checkIfAnyActiveBelow(WatchDefcon.orange1)) {
           _orange1Min = 0;
         }
-        break;
       case WatchDefcon.orange2:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != orange2Min && range.start > orange2Max - 20) {
@@ -880,17 +880,16 @@ class ChainStatusProvider extends ChangeNotifier {
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.orange2);
+        final double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.orange2);
         if (_orange2Min < lowestPossibleValue) _orange2Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.orange2);
+        final double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.orange2);
         if (_orange2Max > highestPossibleValue) _orange2Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
         if (!_checkIfAnyActiveBelow(WatchDefcon.orange2)) {
           _orange2Min = 0;
         }
-        break;
       case WatchDefcon.red1:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != red1Min && range.start > red1Max - 20) {
@@ -919,17 +918,16 @@ class ChainStatusProvider extends ChangeNotifier {
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.red1);
+        final double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.red1);
         if (_red1Min < lowestPossibleValue) _red1Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.red1);
+        final double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.red1);
         if (_red1Max > highestPossibleValue) _red1Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
         if (!_checkIfAnyActiveBelow(WatchDefcon.red1)) {
           _red1Min = 0;
         }
-        break;
       case WatchDefcon.red2:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != red2Min && range.start > red2Max - 20) {
@@ -956,17 +954,16 @@ class ChainStatusProvider extends ChangeNotifier {
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.red2);
+        final double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.red2);
         if (_red2Min < lowestPossibleValue) _red2Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.red2);
+        final double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.red2);
         if (_red2Max > highestPossibleValue) _red2Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
         if (!_checkIfAnyActiveBelow(WatchDefcon.red2)) {
           _red2Min = 0;
         }
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -985,7 +982,7 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.green2:
         // Try to make room to the left, find that's the first gap
-        WatchDefcon gapOwnerBelow;
+        WatchDefcon? gapOwnerBelow;
         if (orange1Enabled && orange1Max - orange1Min >= 40) {
           gapOwnerBelow = WatchDefcon.orange1;
         } else if (orange2Enabled && orange2Max - orange2Min >= 40) {
@@ -1014,7 +1011,7 @@ class ChainStatusProvider extends ChangeNotifier {
             _shrinkLeft(WatchDefcon.orange1);
           }
 
-          double lowerValue = _findLowerDefconMaxValue(defcon);
+          final double lowerValue = _findLowerDefconMaxValue(defcon);
           _green2Min = lowerValue;
           _green2Max = lowerValue + 20;
         }
@@ -1044,11 +1041,10 @@ class ChainStatusProvider extends ChangeNotifier {
 
         // Activate
         _green2Enabled = true;
-        break;
 
       case WatchDefcon.orange1:
         // Try to make room to the left, find that's the first gap
-        WatchDefcon gapOwnerBelow;
+        WatchDefcon? gapOwnerBelow;
         if (orange2Enabled && orange2Max - orange2Min >= 40) {
           gapOwnerBelow = WatchDefcon.orange2;
         } else if (red1Enabled && red1Max - red1Min >= 40) {
@@ -1072,14 +1068,14 @@ class ChainStatusProvider extends ChangeNotifier {
             _shrinkLeft(WatchDefcon.orange2);
           }
 
-          double lowerValue = _findLowerDefconMaxValue(defcon);
+          final double lowerValue = _findLowerDefconMaxValue(defcon);
           _orange1Min = lowerValue;
           _orange1Max = lowerValue + 20;
         }
 
         // If we could not make space to the left by shrinking or displacing, try to the right
         if (gapOwnerBelow == null) {
-          WatchDefcon gapOwnerAbove;
+          WatchDefcon? gapOwnerAbove;
           if (green2Enabled && green2Max - green2Min >= 40) {
             gapOwnerAbove = WatchDefcon.green2;
           }
@@ -1095,8 +1091,8 @@ class ChainStatusProvider extends ChangeNotifier {
           }
 
           // Determine actual limits up and down
-          double lowerValue = _findLowerDefconMaxValue(defcon);
-          double upperValue = _findUpperDefconMinValue(defcon);
+          double? lowerValue = _findLowerDefconMaxValue(defcon);
+          double? upperValue = _findUpperDefconMinValue(defcon);
           // Handle to special cases when there is nothing above the value
           if (lowerValue == 0 && upperValue == 270) {
             // If it's the only value in existence, limit it from 00:00 to the default one
@@ -1117,11 +1113,10 @@ class ChainStatusProvider extends ChangeNotifier {
 
         // Activate
         _orange1Enabled = true;
-        break;
 
       case WatchDefcon.orange2:
         // Try to make room to the left, find that's the first gap
-        WatchDefcon gapOwnerBelow;
+        WatchDefcon? gapOwnerBelow;
         if (red1Enabled && red1Max - red1Min >= 40) {
           gapOwnerBelow = WatchDefcon.red1;
         } else if (red2Enabled && red2Max - red2Min >= 40) {
@@ -1137,14 +1132,14 @@ class ChainStatusProvider extends ChangeNotifier {
             _shrinkLeft(WatchDefcon.red1);
           }
 
-          double lowerValue = _findLowerDefconMaxValue(defcon);
+          final double lowerValue = _findLowerDefconMaxValue(defcon);
           _orange2Min = lowerValue;
           _orange2Max = lowerValue + 20;
         }
 
         // If we could not make space to the left by shrinking or displacing, try to the right
         if (gapOwnerBelow == null) {
-          WatchDefcon gapOwnerAbove;
+          WatchDefcon? gapOwnerAbove;
           if (orange1Enabled && orange1Max - orange1Min >= 40) {
             gapOwnerAbove = WatchDefcon.orange1;
           } else if (green2Enabled && green2Max - green2Min >= 40) {
@@ -1166,8 +1161,8 @@ class ChainStatusProvider extends ChangeNotifier {
           }
 
           // Determine actual limits up and down
-          double lowerValue = _findLowerDefconMaxValue(defcon);
-          double upperValue = _findUpperDefconMinValue(defcon);
+          double? lowerValue = _findLowerDefconMaxValue(defcon);
+          double? upperValue = _findUpperDefconMinValue(defcon);
           // Handle to special cases when there is nothing above the value
           if (lowerValue == 0 && upperValue == 270) {
             // If it's the only value in existence, limit it from 00:00 to the default one
@@ -1188,11 +1183,10 @@ class ChainStatusProvider extends ChangeNotifier {
 
         // Activate
         _orange2Enabled = true;
-        break;
 
       case WatchDefcon.red1:
         // Try to make room to the left, find that's the first gap
-        WatchDefcon gapOwnerBelow;
+        WatchDefcon? gapOwnerBelow;
         if (red2Enabled && red2Max - red2Min >= 40) {
           gapOwnerBelow = WatchDefcon.red2;
         }
@@ -1201,14 +1195,14 @@ class ChainStatusProvider extends ChangeNotifier {
         if (gapOwnerBelow != null) {
           _shrinkLeft(WatchDefcon.red2);
 
-          double lowerValue = _findLowerDefconMaxValue(defcon);
+          final double lowerValue = _findLowerDefconMaxValue(defcon);
           _red1Min = lowerValue;
           _red1Max = lowerValue + 20;
         }
 
         // If we could not make space to the left by shrinking or displacing, try to the right
         if (gapOwnerBelow == null) {
-          WatchDefcon gapOwnerAbove;
+          WatchDefcon? gapOwnerAbove;
           if (orange2Enabled && orange2Max - orange2Min >= 40) {
             gapOwnerAbove = WatchDefcon.orange2;
           } else if (orange1Enabled && orange1Max - orange1Min >= 40) {
@@ -1237,8 +1231,8 @@ class ChainStatusProvider extends ChangeNotifier {
           }
 
           // Determine actual limits up and down
-          double lowerValue = _findLowerDefconMaxValue(defcon);
-          double upperValue = _findUpperDefconMinValue(defcon);
+          double? lowerValue = _findLowerDefconMaxValue(defcon);
+          double? upperValue = _findUpperDefconMinValue(defcon);
           // Handle to special cases when there is nothing above the value
           if (lowerValue == 0 && upperValue == 270) {
             // If it's the only value in existence, limit it from 00:00 to the default one
@@ -1259,13 +1253,12 @@ class ChainStatusProvider extends ChangeNotifier {
 
         // Activate
         _red1Enabled = true;
-        break;
 
       case WatchDefcon.red2:
         // In Red 2 we can only make room above
 
         // If there was a gap, use it by shrinking
-        WatchDefcon gapOwnerAbove;
+        WatchDefcon? gapOwnerAbove;
         if (red1Enabled && red1Max - red1Min >= 40) {
           gapOwnerAbove = WatchDefcon.red1;
         } else if (orange2Enabled && orange2Max - orange2Min >= 40) {
@@ -1305,8 +1298,8 @@ class ChainStatusProvider extends ChangeNotifier {
         }
 
         // Determine actual limits up and down
-        double lowerValue = _findLowerDefconMaxValue(defcon);
-        double upperValue = _findUpperDefconMinValue(defcon);
+        double? lowerValue = _findLowerDefconMaxValue(defcon);
+        double? upperValue = _findUpperDefconMinValue(defcon);
         // Handle to special cases when there is nothing above the value
         if (lowerValue == 0 && upperValue == 270) {
           // If it's the only value in existence, limit it from 00:00 to the default one
@@ -1326,7 +1319,6 @@ class ChainStatusProvider extends ChangeNotifier {
 
         // Activate
         _red2Enabled = true;
-        break;
 
       case WatchDefcon.off:
         break;
@@ -1345,19 +1337,14 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.green2:
         _green2Max -= 20;
-        break;
       case WatchDefcon.orange1:
         _orange1Max -= 20;
-        break;
       case WatchDefcon.orange2:
         _orange2Max -= 20;
-        break;
       case WatchDefcon.red1:
         _red1Max -= 20;
-        break;
       case WatchDefcon.red2:
         _red2Max -= 20;
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1373,19 +1360,14 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.green2:
         _green2Min += 20;
-        break;
       case WatchDefcon.orange1:
         _orange1Min += 20;
-        break;
       case WatchDefcon.orange2:
         _orange2Min += 20;
-        break;
       case WatchDefcon.red1:
         _red1Min += 20;
-        break;
       case WatchDefcon.red2:
         _red2Min += 20;
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1402,23 +1384,18 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.green2:
         _green2Min -= 20;
         _green2Max -= 20;
-        break;
       case WatchDefcon.orange1:
         _orange1Min -= 20;
         _orange1Max -= 20;
-        break;
       case WatchDefcon.orange2:
         _orange2Min -= 20;
         _orange2Max -= 20;
-        break;
       case WatchDefcon.red1:
         _red1Min -= 20;
         _red1Max -= 20;
-        break;
       case WatchDefcon.red2:
         _red2Min -= 20;
         _red2Max -= 20;
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1435,23 +1412,18 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.green2:
         _green2Min += 20;
         _green2Max += 20;
-        break;
       case WatchDefcon.orange1:
         _orange1Min += 20;
         _orange1Max += 20;
-        break;
       case WatchDefcon.orange2:
         _orange2Min += 20;
         _orange2Max += 20;
-        break;
       case WatchDefcon.red1:
         _red1Min += 20;
         _red1Max += 20;
-        break;
       case WatchDefcon.red2:
         _red2Min += 20;
         _red2Max += 20;
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1460,7 +1432,7 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   void deactivateDefcon(WatchDefcon defcon) {
-    double upper = _findUpperDefconMinValue(defcon);
+    double? upper = _findUpperDefconMinValue(defcon);
 
     switch (defcon) {
       case WatchDefcon.cooldown:
@@ -1469,7 +1441,6 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.green2:
         _green2Enabled = false;
-        break;
       case WatchDefcon.orange1:
         _orange1Enabled = false;
         if (upper == 270) break;
@@ -1485,7 +1456,6 @@ class ChainStatusProvider extends ChangeNotifier {
             _green2Min = 0;
           }
         }
-        break;
       case WatchDefcon.orange2:
         _orange2Enabled = false;
         if (upper == 270) break;
@@ -1501,7 +1471,6 @@ class ChainStatusProvider extends ChangeNotifier {
             _green2Min = 0;
           }
         }
-        break;
       case WatchDefcon.red1:
         _red1Enabled = false;
         if (upper == 270) break;
@@ -1517,7 +1486,6 @@ class ChainStatusProvider extends ChangeNotifier {
             _green2Min = 0;
           }
         }
-        break;
       case WatchDefcon.red2:
         _red2Enabled = false;
         // Ensure that we always reach the bottom
@@ -1530,7 +1498,6 @@ class ChainStatusProvider extends ChangeNotifier {
         } else if (green2Enabled) {
           _green2Min = 0;
         }
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1549,16 +1516,12 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.green2:
         if (_orange1Enabled || orange2Enabled || red1Enabled || red2Enabled) return true;
-        break;
       case WatchDefcon.orange1:
         if (orange2Enabled || red1Enabled || red2Enabled) return true;
-        break;
       case WatchDefcon.orange2:
         if (red1Enabled || red2Enabled) return true;
-        break;
       case WatchDefcon.red1:
         if (red2Enabled) return true;
-        break;
       case WatchDefcon.red2:
         break;
       case WatchDefcon.off:
@@ -1587,7 +1550,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return _red2Min + 20;
         }
         return 0;
-        break;
       case WatchDefcon.orange1:
         if (_orange2Enabled) {
           return _orange2Min + 20;
@@ -1597,19 +1559,16 @@ class ChainStatusProvider extends ChangeNotifier {
           return _red2Min + 20;
         }
         return 0;
-        break;
       case WatchDefcon.orange2:
         if (_red1Enabled) {
           return _red1Min + 20;
         } else if (_red2Enabled) {
           return _red2Min + 20;
         }
-        break;
       case WatchDefcon.red1:
         if (_red2Enabled) {
           return _red2Min + 20;
         }
-        break;
       case WatchDefcon.red2:
         break;
       case WatchDefcon.off:
@@ -1629,11 +1588,9 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.green2:
         return 270;
-        break;
       case WatchDefcon.orange1:
         if (_green2Enabled) return _green2Max - 20;
         return 270;
-        break;
       case WatchDefcon.orange2:
         if (_orange1Enabled) {
           return _orange1Max - 20;
@@ -1641,7 +1598,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return _green2Max - 20;
         }
         return 270;
-        break;
       case WatchDefcon.red1:
         if (_orange2Enabled) {
           return _orange2Max - 20;
@@ -1651,7 +1607,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return _green2Max - 20;
         }
         return 270;
-        break;
       case WatchDefcon.red2:
         if (_red1Enabled) {
           return _red1Max - 20;
@@ -1663,7 +1618,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return _green2Max - 20;
         }
         return 270;
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1681,11 +1635,9 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.green2:
         return 270;
-        break;
       case WatchDefcon.orange1:
         if (_green2Enabled) return _green2Min;
         return 270;
-        break;
       case WatchDefcon.orange2:
         if (_orange1Enabled) {
           return _orange1Min;
@@ -1693,7 +1645,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return _green2Min;
         }
         return 270;
-        break;
       case WatchDefcon.red1:
         if (_orange2Enabled) {
           return _orange2Min;
@@ -1703,7 +1654,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return _green2Min;
         }
         return 270;
-        break;
       case WatchDefcon.red2:
         if (_red1Enabled) {
           return _red1Min;
@@ -1715,7 +1665,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return _green2Min;
         }
         return 270;
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1742,7 +1691,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return red2Max;
         }
         return 0;
-        break;
       case WatchDefcon.orange1:
         if (orange2Enabled) {
           return orange2Max;
@@ -1752,7 +1700,6 @@ class ChainStatusProvider extends ChangeNotifier {
           return red2Max;
         }
         return 0;
-        break;
       case WatchDefcon.orange2:
         if (red1Enabled) {
           return red1Max;
@@ -1760,16 +1707,13 @@ class ChainStatusProvider extends ChangeNotifier {
           return red2Max;
         }
         return 0;
-        break;
       case WatchDefcon.red1:
         if (red2Enabled) {
           return red2Max;
         }
         return 0;
-        break;
       case WatchDefcon.red2:
         return 0;
-        break;
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
@@ -1783,7 +1727,7 @@ class ChainStatusProvider extends ChangeNotifier {
     Prefs().setChainWatcherVibration(_vibrationEnabled);
     Prefs().setChainWatcherNotificationsEnabled(_notificationsEnabled);
 
-    ChainWatcherSettings model = ChainWatcherSettings()
+    final ChainWatcherSettings model = ChainWatcherSettings()
       ..green2Enabled = green2Enabled
       ..green2Max = _green2Max
       ..green2Min = _green2Min
@@ -1804,7 +1748,7 @@ class ChainStatusProvider extends ChangeNotifier {
     Prefs().setChainWatcherSettings(chainWatcherModelToJson(model));
 
     List<String> panicTargetsModel = <String>[];
-    for (PanicTargetModel p in panicTargets) {
+    for (final PanicTargetModel p in panicTargets) {
       panicTargetsModel.add(panicTargetModelToJson(p));
     }
     Prefs().setChainWatcherPanicTargets(panicTargetsModel);
@@ -1816,7 +1760,8 @@ class ChainStatusProvider extends ChangeNotifier {
     if (chainModel == null ||
         (!widgetVisible &&
             !watcherActive &&
-            ((chainModel.chain.current == 0 && chainModel.chain.timeout == 0) || _chainModel.chain.cooldown > 0))) {
+            ((chainModel!.chain!.current == 0 && chainModel!.chain!.timeout == 0) ||
+                _chainModel!.chain!.cooldown! > 0))) {
       deactivateStatus();
     }
   }

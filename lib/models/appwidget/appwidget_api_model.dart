@@ -56,48 +56,48 @@ class AppWidgetApiModel {
     this.cityBank,
   });
 
-  String rank;
-  int level;
-  String gender;
-  String property;
-  DateTime signup;
-  int awards;
-  int friends;
-  int enemies;
-  int forumPosts;
-  int karma;
-  int age;
-  String role;
-  int donator;
-  int playerId;
-  String name;
-  int propertyId;
+  String? rank;
+  int? level;
+  String? gender;
+  String? property;
+  DateTime? signup;
+  int? awards;
+  int? friends;
+  int? enemies;
+  int? forumPosts;
+  int? karma;
+  int? age;
+  String? role;
+  int? donator;
+  int? playerId;
+  String? name;
+  int? propertyId;
   dynamic competition;
-  int revivable;
-  int serverTime;
-  int points;
-  int caymanBank;
-  int vaultAmount;
-  int companyFunds;
-  int dailyNetworth;
-  int moneyOnhand;
-  Energy life;
-  Status status;
-  Job job;
-  Faction faction;
-  Married married;
-  States states;
-  LastAction lastAction;
-  TornIcons icons;
-  Energy happy;
-  Energy energy;
-  Energy nerve;
-  Chain chain;
-  Cooldowns cooldowns;
+  int? revivable;
+  int? serverTime;
+  int? points;
+  int? caymanBank;
+  int? vaultAmount;
+  int? companyFunds;
+  int? dailyNetworth;
+  int? moneyOnhand;
+  Energy? life;
+  Status? status;
+  Job? job;
+  Faction? faction;
+  Married? married;
+  States? states;
+  LastAction? lastAction;
+  TornIcons? icons;
+  Energy? happy;
+  Energy? energy;
+  Energy? nerve;
+  Chain? chain;
+  Cooldowns? cooldowns;
   dynamic messages;
   dynamic events;
-  Travel travel;
-  CityBank cityBank;
+  Travel? travel;
+  CityBank? cityBank;
 
   factory AppWidgetApiModel.fromJson(Map<String, dynamic> json) => AppWidgetApiModel(
         rank: json["rank"],
@@ -156,7 +156,7 @@ class AppWidgetApiModel {
         "level": level,
         "gender": gender,
         "property": property,
-        "signup": signup.toIso8601String(),
+        "signup": signup!.toIso8601String(),
         "awards": awards,
         "friends": friends,
         "enemies": enemies,
@@ -177,23 +177,23 @@ class AppWidgetApiModel {
         "company_funds": companyFunds,
         "daily_networth": dailyNetworth,
         "money_onhand": moneyOnhand,
-        "life": life.toJson(),
-        "status": status.toJson(),
-        "job": job.toJson(),
-        "faction": faction.toJson(),
-        "married": married.toJson(),
-        "states": states.toJson(),
-        "last_action": lastAction.toJson(),
-        "icons": icons.toJson(),
-        "happy": happy.toJson(),
-        "energy": energy.toJson(),
-        "nerve": nerve.toJson(),
-        "chain": chain.toJson(),
-        "cooldowns": cooldowns.toJson(),
+        "life": life!.toJson(),
+        "status": status!.toJson(),
+        "job": job!.toJson(),
+        "faction": faction!.toJson(),
+        "married": married!.toJson(),
+        "states": states!.toJson(),
+        "last_action": lastAction!.toJson(),
+        "icons": icons!.toJson(),
+        "happy": happy!.toJson(),
+        "energy": energy!.toJson(),
+        "nerve": nerve!.toJson(),
+        "chain": chain!.toJson(),
+        "cooldowns": cooldowns!.toJson(),
         "events": events,
         "messages": messages,
-        "travel": travel.toJson(),
-        "city_bank": cityBank.toJson(),
+        "travel": travel!.toJson(),
+        "city_bank": cityBank!.toJson(),
       };
 }
 
@@ -206,11 +206,11 @@ class Chain {
     this.cooldown,
   });
 
-  int current;
-  int maximum;
-  int timeout;
-  double modifier;
-  int cooldown;
+  int? current;
+  int? maximum;
+  int? timeout;
+  double? modifier;
+  int? cooldown;
 
   factory Chain.fromJson(Map<String, dynamic> json) => Chain(
         current: json["current"],
@@ -235,8 +235,8 @@ class CityBank {
     this.timeLeft,
   });
 
-  int amount;
-  int timeLeft;
+  int? amount;
+  int? timeLeft;
 
   factory CityBank.fromJson(Map<String, dynamic> json) => CityBank(
         amount: json["amount"],
@@ -256,9 +256,9 @@ class Cooldowns {
     this.booster,
   });
 
-  int drug;
-  int medical;
-  int booster;
+  int? drug;
+  int? medical;
+  int? booster;
 
   factory Cooldowns.fromJson(Map<String, dynamic> json) => Cooldowns(
         drug: json["drug"],
@@ -283,12 +283,12 @@ class Energy {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Energy.fromJson(Map<String, dynamic> json) => Energy(
         current: json["current"],
@@ -312,7 +312,7 @@ class Energy {
 class Events {
   Events();
 
-  factory Events.fromJson(Map<String, dynamic> json) => Events();
+  factory Events.fromJson() => Events();
 
   Map<String, dynamic> toJson() => {};
 }
@@ -326,11 +326,11 @@ class Faction {
     this.factionTag,
   });
 
-  String position;
-  int factionId;
-  int daysInFaction;
-  String factionName;
-  String factionTag;
+  String? position;
+  int? factionId;
+  int? daysInFaction;
+  String? factionName;
+  String? factionTag;
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
         position: json["position"],
@@ -358,11 +358,11 @@ class Job {
     this.companyType,
   });
 
-  String job;
-  String position;
-  int companyId;
-  String companyName;
-  int companyType;
+  String? job;
+  String? position;
+  int? companyId;
+  String? companyName;
+  int? companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         job: json["job"],
@@ -388,9 +388,9 @@ class LastAction {
     this.relative,
   });
 
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
         status: json["status"],
@@ -412,9 +412,9 @@ class Married {
     this.duration,
   });
 
-  int spouseId;
-  String spouseName;
-  int duration;
+  int? spouseId;
+  String? spouseName;
+  int? duration;
 
   factory Married.fromJson(Map<String, dynamic> json) => Married(
         spouseId: json["spouse_id"],
@@ -435,8 +435,8 @@ class States {
     this.jailTimestamp,
   });
 
-  int hospitalTimestamp;
-  int jailTimestamp;
+  int? hospitalTimestamp;
+  int? jailTimestamp;
 
   factory States.fromJson(Map<String, dynamic> json) => States(
         hospitalTimestamp: json["hospital_timestamp"],
@@ -458,11 +458,11 @@ class Status {
     this.until,
   });
 
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
+  String? description;
+  String? details;
+  String? state;
+  String? color;
+  int? until;
 
   factory Status.fromJson(Map<String, dynamic> json) => Status(
         description: json["description"],
@@ -490,11 +490,11 @@ class Travel {
     this.timeLeft,
   });
 
-  String destination;
-  String method;
-  int timestamp;
-  int departed;
-  int timeLeft;
+  String? destination;
+  String? method;
+  int? timestamp;
+  int? departed;
+  int? timeLeft;
 
   factory Travel.fromJson(Map<String, dynamic> json) => Travel(
         destination: json["destination"],

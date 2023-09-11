@@ -5,7 +5,7 @@
 // Dart imports:
 import 'dart:convert';
 
-import 'own_profile_basic.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
 OtherProfileModel otherProfileModelFromJson(String str) => OtherProfileModel.fromJson(json.decode(str));
 
@@ -43,52 +43,52 @@ class OtherProfileModel {
     this.bazaar,
   });
 
-  String rank;
-  int level;
-  String gender;
-  String property;
-  String signup;
-  int awards;
-  int friends;
-  int enemies;
-  int forumPosts;
-  int karma;
-  int age;
-  String role;
-  int donator;
-  int playerId;
-  String name;
-  int propertyId;
+  String? rank;
+  int? level;
+  String? gender;
+  String? property;
+  String? signup;
+  int? awards;
+  int? friends;
+  int? enemies;
+  int? forumPosts;
+  int? karma;
+  int? age;
+  String? role;
+  int? donator;
+  int? playerId;
+  String? name;
+  int? propertyId;
   dynamic competition;
-  Life life;
-  Status status;
-  Job job;
-  Faction faction;
-  Married married;
+  Life? life;
+  Status? status;
+  Job? job;
+  Faction? faction;
+  Married? married;
   //Basicicons basicicons;
-  States states;
-  LastAction lastAction;
-  Criminalrecord criminalrecord;
-  Personalstats personalstats;
-  List<Bazaar> bazaar;
+  States? states;
+  LastAction? lastAction;
+  Criminalrecord? criminalrecord;
+  Personalstats? personalstats;
+  List<Bazaar>? bazaar;
 
   factory OtherProfileModel.fromJson(Map<String, dynamic> json) => OtherProfileModel(
-        rank: json["rank"] == null ? null : json["rank"],
-        level: json["level"] == null ? null : json["level"],
-        gender: json["gender"] == null ? null : json["gender"],
-        property: json["property"] == null ? null : json["property"],
-        signup: json["signup"] == null ? null : json["signup"],
-        awards: json["awards"] == null ? null : json["awards"],
-        friends: json["friends"] == null ? null : json["friends"],
-        enemies: json["enemies"] == null ? null : json["enemies"],
-        forumPosts: json["forum_posts"] == null ? null : json["forum_posts"],
-        karma: json["karma"] == null ? null : json["karma"],
-        age: json["age"] == null ? null : json["age"],
-        role: json["role"] == null ? null : json["role"],
-        donator: json["donator"] == null ? null : json["donator"],
-        playerId: json["player_id"] == null ? null : json["player_id"],
-        name: json["name"] == null ? null : json["name"],
-        propertyId: json["property_id"] == null ? null : json["property_id"],
+        rank: json["rank"],
+        level: json["level"],
+        gender: json["gender"],
+        property: json["property"],
+        signup: json["signup"],
+        awards: json["awards"],
+        friends: json["friends"],
+        enemies: json["enemies"],
+        forumPosts: json["forum_posts"],
+        karma: json["karma"],
+        age: json["age"],
+        role: json["role"],
+        donator: json["donator"],
+        playerId: json["player_id"],
+        name: json["name"],
+        propertyId: json["property_id"],
         competition: json["competition"],
         life: json["life"] == null ? null : Life.fromJson(json["life"]),
         status: json["status"] == null ? null : Status.fromJson(json["status"]),
@@ -104,34 +104,34 @@ class OtherProfileModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "rank": rank == null ? null : rank,
-        "level": level == null ? null : level,
-        "gender": gender == null ? null : gender,
-        "property": property == null ? null : property,
-        "signup": signup == null ? null : signup,
-        "awards": awards == null ? null : awards,
-        "friends": friends == null ? null : friends,
-        "enemies": enemies == null ? null : enemies,
-        "forum_posts": forumPosts == null ? null : forumPosts,
-        "karma": karma == null ? null : karma,
-        "age": age == null ? null : age,
-        "role": role == null ? null : role,
-        "donator": donator == null ? null : donator,
-        "player_id": playerId == null ? null : playerId,
-        "name": name == null ? null : name,
-        "property_id": propertyId == null ? null : propertyId,
+        "rank": rank,
+        "level": level,
+        "gender": gender,
+        "property": property,
+        "signup": signup,
+        "awards": awards,
+        "friends": friends,
+        "enemies": enemies,
+        "forum_posts": forumPosts,
+        "karma": karma,
+        "age": age,
+        "role": role,
+        "donator": donator,
+        "player_id": playerId,
+        "name": name,
+        "property_id": propertyId,
         "competition": competition,
-        "life": life == null ? null : life.toJson(),
-        "status": status == null ? null : status.toJson(),
-        "job": job == null ? null : job.toJson(),
-        "faction": faction == null ? null : faction.toJson(),
-        "married": married == null ? null : married.toJson(),
+        "life": life == null ? null : life!.toJson(),
+        "status": status == null ? null : status!.toJson(),
+        "job": job == null ? null : job!.toJson(),
+        "faction": faction == null ? null : faction!.toJson(),
+        "married": married == null ? null : married!.toJson(),
         //"basicicons": basicicons == null ? null : basicicons.toJson(),
-        "states": states == null ? null : states.toJson(),
-        "last_action": lastAction == null ? null : lastAction.toJson(),
-        "criminalrecord": criminalrecord == null ? null : criminalrecord.toJson(),
-        "personalstats": personalstats == null ? null : personalstats.toJson(),
-        "bazaar": bazaar == null ? null : List<dynamic>.from(bazaar.map((x) => x.toJson())),
+        "states": states == null ? null : states!.toJson(),
+        "last_action": lastAction == null ? null : lastAction!.toJson(),
+        "criminalrecord": criminalrecord == null ? null : criminalrecord!.toJson(),
+        "personalstats": personalstats == null ? null : personalstats!.toJson(),
+        "bazaar": bazaar == null ? null : List<dynamic>.from(bazaar!.map((x) => x.toJson())),
       };
 }
 
@@ -179,29 +179,29 @@ class Bazaar {
     this.marketPrice,
   });
 
-  int id;
-  String name;
-  String type;
-  int quantity;
+  int? id;
+  String? name;
+  String? type;
+  int? quantity;
   dynamic price; // Sometimes returns a double (?)
   dynamic marketPrice;
 
   factory Bazaar.fromJson(Map<String, dynamic> json) => Bazaar(
-        id: json["ID"] == null ? null : json["ID"],
-        name: json["name"] == null ? null : json["name"],
-        type: json["type"] == null ? null : json["type"],
-        quantity: json["quantity"] == null ? null : json["quantity"],
-        price: json["price"] == null ? null : json["price"],
-        marketPrice: json["market_price"] == null ? null : json["market_price"],
+        id: json["ID"],
+        name: json["name"],
+        type: json["type"],
+        quantity: json["quantity"],
+        price: json["price"],
+        marketPrice: json["market_price"],
       );
 
   Map<String, dynamic> toJson() => {
-        "ID": id == null ? null : id,
-        "name": name == null ? null : name,
-        "type": type == null ? null : type,
-        "quantity": quantity == null ? null : quantity,
-        "price": price == null ? null : price,
-        "market_price": marketPrice == null ? null : marketPrice,
+        "ID": id,
+        "name": name,
+        "type": type,
+        "quantity": quantity,
+        "price": price,
+        "market_price": marketPrice,
       };
 }
 
@@ -218,38 +218,38 @@ class Criminalrecord {
     this.total,
   });
 
-  int sellingIllegalProducts;
-  int theft;
-  int autoTheft;
-  int drugDeals;
-  int computerCrimes;
-  int murder;
-  int fraudCrimes;
-  int other;
-  int total;
+  int? sellingIllegalProducts;
+  int? theft;
+  int? autoTheft;
+  int? drugDeals;
+  int? computerCrimes;
+  int? murder;
+  int? fraudCrimes;
+  int? other;
+  int? total;
 
   factory Criminalrecord.fromJson(Map<String, dynamic> json) => Criminalrecord(
-        sellingIllegalProducts: json["selling_illegal_products"] == null ? null : json["selling_illegal_products"],
-        theft: json["theft"] == null ? null : json["theft"],
-        autoTheft: json["auto_theft"] == null ? null : json["auto_theft"],
-        drugDeals: json["drug_deals"] == null ? null : json["drug_deals"],
-        computerCrimes: json["computer_crimes"] == null ? null : json["computer_crimes"],
-        murder: json["murder"] == null ? null : json["murder"],
-        fraudCrimes: json["fraud_crimes"] == null ? null : json["fraud_crimes"],
-        other: json["other"] == null ? null : json["other"],
-        total: json["total"] == null ? null : json["total"],
+        sellingIllegalProducts: json["selling_illegal_products"],
+        theft: json["theft"],
+        autoTheft: json["auto_theft"],
+        drugDeals: json["drug_deals"],
+        computerCrimes: json["computer_crimes"],
+        murder: json["murder"],
+        fraudCrimes: json["fraud_crimes"],
+        other: json["other"],
+        total: json["total"],
       );
 
   Map<String, dynamic> toJson() => {
-        "selling_illegal_products": sellingIllegalProducts == null ? null : sellingIllegalProducts,
-        "theft": theft == null ? null : theft,
-        "auto_theft": autoTheft == null ? null : autoTheft,
-        "drug_deals": drugDeals == null ? null : drugDeals,
-        "computer_crimes": computerCrimes == null ? null : computerCrimes,
-        "murder": murder == null ? null : murder,
-        "fraud_crimes": fraudCrimes == null ? null : fraudCrimes,
-        "other": other == null ? null : other,
-        "total": total == null ? null : total,
+        "selling_illegal_products": sellingIllegalProducts,
+        "theft": theft,
+        "auto_theft": autoTheft,
+        "drug_deals": drugDeals,
+        "computer_crimes": computerCrimes,
+        "murder": murder,
+        "fraud_crimes": fraudCrimes,
+        "other": other,
+        "total": total,
       };
 }
 
@@ -262,26 +262,26 @@ class Faction {
     this.factionTag,
   });
 
-  String position;
-  int factionId;
-  int daysInFaction;
-  String factionName;
-  String factionTag;
+  String? position;
+  int? factionId;
+  int? daysInFaction;
+  String? factionName;
+  String? factionTag;
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
-        position: json["position"] == null ? null : json["position"],
-        factionId: json["faction_id"] == null ? null : json["faction_id"],
-        daysInFaction: json["days_in_faction"] == null ? null : json["days_in_faction"],
-        factionName: json["faction_name"] == null ? null : json["faction_name"],
-        factionTag: json["faction_tag"] == null ? null : json["faction_tag"],
+        position: json["position"],
+        factionId: json["faction_id"],
+        daysInFaction: json["days_in_faction"],
+        factionName: json["faction_name"],
+        factionTag: json["faction_tag"],
       );
 
   Map<String, dynamic> toJson() => {
-        "position": position == null ? null : position,
-        "faction_id": factionId == null ? null : factionId,
-        "days_in_faction": daysInFaction == null ? null : daysInFaction,
-        "faction_name": factionName == null ? null : factionName,
-        "faction_tag": factionTag == null ? null : factionTag,
+        "position": position,
+        "faction_id": factionId,
+        "days_in_faction": daysInFaction,
+        "faction_name": factionName,
+        "faction_tag": factionTag,
       };
 }
 
@@ -294,26 +294,26 @@ class Job {
     this.companyType,
   });
 
-  String job;
-  String position;
-  int companyId;
-  String companyName;
-  int companyType;
+  String? job;
+  String? position;
+  int? companyId;
+  String? companyName;
+  int? companyType;
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
-        job: json["job"] == null ? null : json["job"],
-        position: json["position"] == null ? null : json["position"],
-        companyId: json["company_id"] == null ? null : json["company_id"],
-        companyName: json["company_name"] == null ? null : json["company_name"].toString(),
-        companyType: json["company_type"] == null ? null : json["company_type"],
+        job: json["job"],
+        position: json["position"],
+        companyId: json["company_id"],
+        companyName: json["company_name"]?.toString(),
+        companyType: json["company_type"],
       );
 
   Map<String, dynamic> toJson() => {
-        "job": job == null ? null : job,
-        "position": position == null ? null : position,
-        "company_id": companyId == null ? null : companyId,
-        "company_name": companyName == null ? null : companyName,
-        "company_type": companyType == null ? null : companyType,
+        "job": job,
+        "position": position,
+        "company_id": companyId,
+        "company_name": companyName,
+        "company_type": companyType,
       };
 }
 
@@ -324,20 +324,20 @@ class LastAction {
     this.relative,
   });
 
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
-        status: json["status"] == null ? null : json["status"],
-        timestamp: json["timestamp"] == null ? null : json["timestamp"],
-        relative: json["relative"] == null ? null : json["relative"],
+        status: json["status"],
+        timestamp: json["timestamp"],
+        relative: json["relative"],
       );
 
   Map<String, dynamic> toJson() => {
-        "status": status == null ? null : status,
-        "timestamp": timestamp == null ? null : timestamp,
-        "relative": relative == null ? null : relative,
+        "status": status,
+        "timestamp": timestamp,
+        "relative": relative,
       };
 }
 
@@ -351,29 +351,29 @@ class Life {
     this.fulltime,
   });
 
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   factory Life.fromJson(Map<String, dynamic> json) => Life(
-        current: json["current"] == null ? null : json["current"],
-        maximum: json["maximum"] == null ? null : json["maximum"],
-        increment: json["increment"] == null ? null : json["increment"],
-        interval: json["interval"] == null ? null : json["interval"],
-        ticktime: json["ticktime"] == null ? null : json["ticktime"],
-        fulltime: json["fulltime"] == null ? null : json["fulltime"],
+        current: json["current"],
+        maximum: json["maximum"],
+        increment: json["increment"],
+        interval: json["interval"],
+        ticktime: json["ticktime"],
+        fulltime: json["fulltime"],
       );
 
   Map<String, dynamic> toJson() => {
-        "current": current == null ? null : current,
-        "maximum": maximum == null ? null : maximum,
-        "increment": increment == null ? null : increment,
-        "interval": interval == null ? null : interval,
-        "ticktime": ticktime == null ? null : ticktime,
-        "fulltime": fulltime == null ? null : fulltime,
+        "current": current,
+        "maximum": maximum,
+        "increment": increment,
+        "interval": interval,
+        "ticktime": ticktime,
+        "fulltime": fulltime,
       };
 }
 
@@ -384,20 +384,20 @@ class Married {
     this.duration,
   });
 
-  int spouseId;
-  String spouseName;
-  int duration;
+  int? spouseId;
+  String? spouseName;
+  int? duration;
 
   factory Married.fromJson(Map<String, dynamic> json) => Married(
-        spouseId: json["spouse_id"] == null ? null : json["spouse_id"],
-        spouseName: json["spouse_name"] == null ? null : json["spouse_name"],
-        duration: json["duration"] == null ? null : json["duration"],
+        spouseId: json["spouse_id"],
+        spouseName: json["spouse_name"],
+        duration: json["duration"],
       );
 
   Map<String, dynamic> toJson() => {
-        "spouse_id": spouseId == null ? null : spouseId,
-        "spouse_name": spouseName == null ? null : spouseName,
-        "duration": duration == null ? null : duration,
+        "spouse_id": spouseId,
+        "spouse_name": spouseName,
+        "duration": duration,
       };
 }
 
@@ -544,428 +544,428 @@ class Personalstats {
     this.jobpointsused,
   });
 
-  int useractivity;
-  int itemsbought;
-  int pointsbought;
-  int itemsboughtabroad;
-  int weaponsbought;
-  int itemssent;
-  int auctionswon;
-  int auctionsells;
-  int attackswon;
-  int attackslost;
-  int attacksdraw;
-  int bestkillstreak;
-  int moneymugged;
-  int attacksstealthed;
-  int attackhits;
-  int attackmisses;
-  int attackdamage;
-  int attackcriticalhits;
-  int respectforfaction;
-  int onehitkills;
-  int defendswon;
-  int defendslost;
-  int defendsstalemated;
-  int bestdamage;
-  int roundsfired;
-  int yourunaway;
-  int theyrunaway;
-  int highestbeaten;
-  int peoplebusted;
-  int failedbusts;
-  int peoplebought;
-  int peopleboughtspent;
-  int virusescoded;
-  int cityfinds;
-  int traveltimes;
-  int bountiesplaced;
-  int bountiesreceived;
-  int bountiescollected;
-  int totalbountyreward;
-  int revives;
-  int revivesreceived;
-  int medicalitemsused;
-  int statenhancersused;
-  int refills;
-  int trainsreceived;
-  int totalbountyspent;
-  int drugsused;
-  int overdosed;
-  int meritsbought;
-  int timesloggedin;
-  int personalsplaced;
-  int classifiedadsplaced;
-  int mailssent;
-  int friendmailssent;
-  int factionmailssent;
-  int companymailssent;
-  int spousemailssent;
-  int largestmug;
-  int cantaken;
-  int exttaken;
-  int kettaken;
-  int lsdtaken;
-  int opitaken;
-  int shrtaken;
-  int spetaken;
-  int pcptaken;
-  int xantaken;
-  int victaken;
-  int chahits;
-  int heahits;
-  int axehits;
-  int grehits;
-  int machits;
-  int pishits;
-  int rifhits;
-  int shohits;
-  int smghits;
-  int piehits;
-  int slahits;
-  int argtravel;
-  int mextravel;
-  int dubtravel;
-  int hawtravel;
-  int japtravel;
-  int lontravel;
-  int soutravel;
-  int switravel;
-  int chitravel;
-  int cantravel;
-  int dumpfinds;
-  int dumpsearches;
-  int itemsdumped;
-  int daysbeendonator;
-  int caytravel;
-  int jailed;
-  int hospital;
-  int attacksassisted;
-  int bloodwithdrawn;
-  int networth;
-  int missionscompleted;
-  int contractscompleted;
-  int dukecontractscompleted;
-  int missioncreditsearned;
-  int consumablesused;
-  int candyused;
-  int alcoholused;
-  int energydrinkused;
-  int nerverefills;
-  int unarmoredwon;
-  int h2Hhits;
-  int organisedcrimes;
-  int territorytime;
-  int territoryjoins;
-  int arrestsmade;
-  int tokenrefills;
-  int booksread;
-  int traveltime;
-  int boostersused;
-  int rehabs;
-  int rehabcost;
-  int awards;
-  int receivedbountyvalue;
-  int raceswon;
-  int racesentered;
-  int racingpointsearned;
-  int specialammoused;
-  int cityitemsbought;
-  int hollowammoused;
-  int tracerammoused;
-  int piercingammoused;
-  int incendiaryammoused;
-  int attackswonabroad;
-  int defendslostabroad;
-  int retals;
-  int elo;
-  int reviveskill;
-  int activestreak;
-  int bestactivestreak;
-  int jobpointsused;
+  int? useractivity;
+  int? itemsbought;
+  int? pointsbought;
+  int? itemsboughtabroad;
+  int? weaponsbought;
+  int? itemssent;
+  int? auctionswon;
+  int? auctionsells;
+  int? attackswon;
+  int? attackslost;
+  int? attacksdraw;
+  int? bestkillstreak;
+  int? moneymugged;
+  int? attacksstealthed;
+  int? attackhits;
+  int? attackmisses;
+  int? attackdamage;
+  int? attackcriticalhits;
+  int? respectforfaction;
+  int? onehitkills;
+  int? defendswon;
+  int? defendslost;
+  int? defendsstalemated;
+  int? bestdamage;
+  int? roundsfired;
+  int? yourunaway;
+  int? theyrunaway;
+  int? highestbeaten;
+  int? peoplebusted;
+  int? failedbusts;
+  int? peoplebought;
+  int? peopleboughtspent;
+  int? virusescoded;
+  int? cityfinds;
+  int? traveltimes;
+  int? bountiesplaced;
+  int? bountiesreceived;
+  int? bountiescollected;
+  int? totalbountyreward;
+  int? revives;
+  int? revivesreceived;
+  int? medicalitemsused;
+  int? statenhancersused;
+  int? refills;
+  int? trainsreceived;
+  int? totalbountyspent;
+  int? drugsused;
+  int? overdosed;
+  int? meritsbought;
+  int? timesloggedin;
+  int? personalsplaced;
+  int? classifiedadsplaced;
+  int? mailssent;
+  int? friendmailssent;
+  int? factionmailssent;
+  int? companymailssent;
+  int? spousemailssent;
+  int? largestmug;
+  int? cantaken;
+  int? exttaken;
+  int? kettaken;
+  int? lsdtaken;
+  int? opitaken;
+  int? shrtaken;
+  int? spetaken;
+  int? pcptaken;
+  int? xantaken;
+  int? victaken;
+  int? chahits;
+  int? heahits;
+  int? axehits;
+  int? grehits;
+  int? machits;
+  int? pishits;
+  int? rifhits;
+  int? shohits;
+  int? smghits;
+  int? piehits;
+  int? slahits;
+  int? argtravel;
+  int? mextravel;
+  int? dubtravel;
+  int? hawtravel;
+  int? japtravel;
+  int? lontravel;
+  int? soutravel;
+  int? switravel;
+  int? chitravel;
+  int? cantravel;
+  int? dumpfinds;
+  int? dumpsearches;
+  int? itemsdumped;
+  int? daysbeendonator;
+  int? caytravel;
+  int? jailed;
+  int? hospital;
+  int? attacksassisted;
+  int? bloodwithdrawn;
+  int? networth;
+  int? missionscompleted;
+  int? contractscompleted;
+  int? dukecontractscompleted;
+  int? missioncreditsearned;
+  int? consumablesused;
+  int? candyused;
+  int? alcoholused;
+  int? energydrinkused;
+  int? nerverefills;
+  int? unarmoredwon;
+  int? h2Hhits;
+  int? organisedcrimes;
+  int? territorytime;
+  int? territoryjoins;
+  int? arrestsmade;
+  int? tokenrefills;
+  int? booksread;
+  int? traveltime;
+  int? boostersused;
+  int? rehabs;
+  int? rehabcost;
+  int? awards;
+  int? receivedbountyvalue;
+  int? raceswon;
+  int? racesentered;
+  int? racingpointsearned;
+  int? specialammoused;
+  int? cityitemsbought;
+  int? hollowammoused;
+  int? tracerammoused;
+  int? piercingammoused;
+  int? incendiaryammoused;
+  int? attackswonabroad;
+  int? defendslostabroad;
+  int? retals;
+  int? elo;
+  int? reviveskill;
+  int? activestreak;
+  int? bestactivestreak;
+  int? jobpointsused;
 
   factory Personalstats.fromJson(Map<String, dynamic> json) => Personalstats(
-        useractivity: json["useractivity"] == null ? null : json["useractivity"],
-        itemsbought: json["itemsbought"] == null ? null : json["itemsbought"],
-        pointsbought: json["pointsbought"] == null ? null : json["pointsbought"],
-        itemsboughtabroad: json["itemsboughtabroad"] == null ? null : json["itemsboughtabroad"],
-        weaponsbought: json["weaponsbought"] == null ? null : json["weaponsbought"],
-        itemssent: json["itemssent"] == null ? null : json["itemssent"],
-        auctionswon: json["auctionswon"] == null ? null : json["auctionswon"],
-        auctionsells: json["auctionsells"] == null ? null : json["auctionsells"],
-        attackswon: json["attackswon"] == null ? null : json["attackswon"],
-        attackslost: json["attackslost"] == null ? null : json["attackslost"],
-        attacksdraw: json["attacksdraw"] == null ? null : json["attacksdraw"],
-        bestkillstreak: json["bestkillstreak"] == null ? null : json["bestkillstreak"],
-        moneymugged: json["moneymugged"] == null ? null : json["moneymugged"],
-        attacksstealthed: json["attacksstealthed"] == null ? null : json["attacksstealthed"],
-        attackhits: json["attackhits"] == null ? null : json["attackhits"],
-        attackmisses: json["attackmisses"] == null ? null : json["attackmisses"],
-        attackdamage: json["attackdamage"] == null ? null : json["attackdamage"],
-        attackcriticalhits: json["attackcriticalhits"] == null ? null : json["attackcriticalhits"],
-        respectforfaction: json["respectforfaction"] == null ? null : json["respectforfaction"],
-        onehitkills: json["onehitkills"] == null ? null : json["onehitkills"],
-        defendswon: json["defendswon"] == null ? null : json["defendswon"],
-        defendslost: json["defendslost"] == null ? null : json["defendslost"],
-        defendsstalemated: json["defendsstalemated"] == null ? null : json["defendsstalemated"],
-        bestdamage: json["bestdamage"] == null ? null : json["bestdamage"],
-        roundsfired: json["roundsfired"] == null ? null : json["roundsfired"],
-        yourunaway: json["yourunaway"] == null ? null : json["yourunaway"],
-        theyrunaway: json["theyrunaway"] == null ? null : json["theyrunaway"],
-        highestbeaten: json["highestbeaten"] == null ? null : json["highestbeaten"],
-        peoplebusted: json["peoplebusted"] == null ? null : json["peoplebusted"],
-        failedbusts: json["failedbusts"] == null ? null : json["failedbusts"],
-        peoplebought: json["peoplebought"] == null ? null : json["peoplebought"],
-        peopleboughtspent: json["peopleboughtspent"] == null ? null : json["peopleboughtspent"],
-        virusescoded: json["virusescoded"] == null ? null : json["virusescoded"],
-        cityfinds: json["cityfinds"] == null ? null : json["cityfinds"],
-        traveltimes: json["traveltimes"] == null ? null : json["traveltimes"],
-        bountiesplaced: json["bountiesplaced"] == null ? null : json["bountiesplaced"],
-        bountiesreceived: json["bountiesreceived"] == null ? null : json["bountiesreceived"],
-        bountiescollected: json["bountiescollected"] == null ? null : json["bountiescollected"],
-        totalbountyreward: json["totalbountyreward"] == null ? null : json["totalbountyreward"],
-        revives: json["revives"] == null ? null : json["revives"],
-        revivesreceived: json["revivesreceived"] == null ? null : json["revivesreceived"],
-        medicalitemsused: json["medicalitemsused"] == null ? null : json["medicalitemsused"],
-        statenhancersused: json["statenhancersused"] == null ? null : json["statenhancersused"],
-        refills: json["refills"] == null ? null : json["refills"],
-        trainsreceived: json["trainsreceived"] == null ? null : json["trainsreceived"],
-        totalbountyspent: json["totalbountyspent"] == null ? null : json["totalbountyspent"],
-        drugsused: json["drugsused"] == null ? null : json["drugsused"],
-        overdosed: json["overdosed"] == null ? null : json["overdosed"],
-        meritsbought: json["meritsbought"] == null ? null : json["meritsbought"],
-        timesloggedin: json["timesloggedin"] == null ? null : json["timesloggedin"],
-        personalsplaced: json["personalsplaced"] == null ? null : json["personalsplaced"],
-        classifiedadsplaced: json["classifiedadsplaced"] == null ? null : json["classifiedadsplaced"],
-        mailssent: json["mailssent"] == null ? null : json["mailssent"],
-        friendmailssent: json["friendmailssent"] == null ? null : json["friendmailssent"],
-        factionmailssent: json["factionmailssent"] == null ? null : json["factionmailssent"],
-        companymailssent: json["companymailssent"] == null ? null : json["companymailssent"],
-        spousemailssent: json["spousemailssent"] == null ? null : json["spousemailssent"],
-        largestmug: json["largestmug"] == null ? null : json["largestmug"],
-        cantaken: json["cantaken"] == null ? null : json["cantaken"],
-        exttaken: json["exttaken"] == null ? null : json["exttaken"],
-        kettaken: json["kettaken"] == null ? null : json["kettaken"],
-        lsdtaken: json["lsdtaken"] == null ? null : json["lsdtaken"],
-        opitaken: json["opitaken"] == null ? null : json["opitaken"],
-        shrtaken: json["shrtaken"] == null ? null : json["shrtaken"],
-        spetaken: json["spetaken"] == null ? null : json["spetaken"],
-        pcptaken: json["pcptaken"] == null ? null : json["pcptaken"],
-        xantaken: json["xantaken"] == null ? null : json["xantaken"],
-        victaken: json["victaken"] == null ? null : json["victaken"],
-        chahits: json["chahits"] == null ? null : json["chahits"],
-        heahits: json["heahits"] == null ? null : json["heahits"],
-        axehits: json["axehits"] == null ? null : json["axehits"],
-        grehits: json["grehits"] == null ? null : json["grehits"],
-        machits: json["machits"] == null ? null : json["machits"],
-        pishits: json["pishits"] == null ? null : json["pishits"],
-        rifhits: json["rifhits"] == null ? null : json["rifhits"],
-        shohits: json["shohits"] == null ? null : json["shohits"],
-        smghits: json["smghits"] == null ? null : json["smghits"],
-        piehits: json["piehits"] == null ? null : json["piehits"],
-        slahits: json["slahits"] == null ? null : json["slahits"],
-        argtravel: json["argtravel"] == null ? null : json["argtravel"],
-        mextravel: json["mextravel"] == null ? null : json["mextravel"],
-        dubtravel: json["dubtravel"] == null ? null : json["dubtravel"],
-        hawtravel: json["hawtravel"] == null ? null : json["hawtravel"],
-        japtravel: json["japtravel"] == null ? null : json["japtravel"],
-        lontravel: json["lontravel"] == null ? null : json["lontravel"],
-        soutravel: json["soutravel"] == null ? null : json["soutravel"],
-        switravel: json["switravel"] == null ? null : json["switravel"],
-        chitravel: json["chitravel"] == null ? null : json["chitravel"],
-        cantravel: json["cantravel"] == null ? null : json["cantravel"],
-        dumpfinds: json["dumpfinds"] == null ? null : json["dumpfinds"],
-        dumpsearches: json["dumpsearches"] == null ? null : json["dumpsearches"],
-        itemsdumped: json["itemsdumped"] == null ? null : json["itemsdumped"],
-        daysbeendonator: json["daysbeendonator"] == null ? null : json["daysbeendonator"],
-        caytravel: json["caytravel"] == null ? null : json["caytravel"],
-        jailed: json["jailed"] == null ? null : json["jailed"],
-        hospital: json["hospital"] == null ? null : json["hospital"],
-        attacksassisted: json["attacksassisted"] == null ? null : json["attacksassisted"],
-        bloodwithdrawn: json["bloodwithdrawn"] == null ? null : json["bloodwithdrawn"],
-        networth: json["networth"] == null ? null : json["networth"],
-        missionscompleted: json["missionscompleted"] == null ? null : json["missionscompleted"],
-        contractscompleted: json["contractscompleted"] == null ? null : json["contractscompleted"],
-        dukecontractscompleted: json["dukecontractscompleted"] == null ? null : json["dukecontractscompleted"],
-        missioncreditsearned: json["missioncreditsearned"] == null ? null : json["missioncreditsearned"],
-        consumablesused: json["consumablesused"] == null ? null : json["consumablesused"],
-        candyused: json["candyused"] == null ? null : json["candyused"],
-        alcoholused: json["alcoholused"] == null ? null : json["alcoholused"],
-        energydrinkused: json["energydrinkused"] == null ? null : json["energydrinkused"],
-        nerverefills: json["nerverefills"] == null ? null : json["nerverefills"],
-        unarmoredwon: json["unarmoredwon"] == null ? null : json["unarmoredwon"],
-        h2Hhits: json["h2hhits"] == null ? null : json["h2hhits"],
-        organisedcrimes: json["organisedcrimes"] == null ? null : json["organisedcrimes"],
-        territorytime: json["territorytime"] == null ? null : json["territorytime"],
-        territoryjoins: json["territoryjoins"] == null ? null : json["territoryjoins"],
-        arrestsmade: json["arrestsmade"] == null ? null : json["arrestsmade"],
-        tokenrefills: json["tokenrefills"] == null ? null : json["tokenrefills"],
-        booksread: json["booksread"] == null ? null : json["booksread"],
-        traveltime: json["traveltime"] == null ? null : json["traveltime"],
-        boostersused: json["boostersused"] == null ? null : json["boostersused"],
-        rehabs: json["rehabs"] == null ? null : json["rehabs"],
-        rehabcost: json["rehabcost"] == null ? null : json["rehabcost"],
-        awards: json["awards"] == null ? null : json["awards"],
-        receivedbountyvalue: json["receivedbountyvalue"] == null ? null : json["receivedbountyvalue"],
-        raceswon: json["raceswon"] == null ? null : json["raceswon"],
-        racesentered: json["racesentered"] == null ? null : json["racesentered"],
-        racingpointsearned: json["racingpointsearned"] == null ? null : json["racingpointsearned"],
-        specialammoused: json["specialammoused"] == null ? null : json["specialammoused"],
-        cityitemsbought: json["cityitemsbought"] == null ? null : json["cityitemsbought"],
-        hollowammoused: json["hollowammoused"] == null ? null : json["hollowammoused"],
-        tracerammoused: json["tracerammoused"] == null ? null : json["tracerammoused"],
-        piercingammoused: json["piercingammoused"] == null ? null : json["piercingammoused"],
-        incendiaryammoused: json["incendiaryammoused"] == null ? null : json["incendiaryammoused"],
-        attackswonabroad: json["attackswonabroad"] == null ? null : json["attackswonabroad"],
-        defendslostabroad: json["defendslostabroad"] == null ? null : json["defendslostabroad"],
-        retals: json["retals"] == null ? null : json["retals"],
-        elo: json["elo"] == null ? null : json["elo"],
-        reviveskill: json["reviveskill"] == null ? null : json["reviveskill"],
-        activestreak: json["activestreak"] == null ? null : json["activestreak"],
-        bestactivestreak: json["bestactivestreak"] == null ? null : json["bestactivestreak"],
-        jobpointsused: json["jobpointsused"] == null ? null : json["jobpointsused"],
+        useractivity: json["useractivity"],
+        itemsbought: json["itemsbought"],
+        pointsbought: json["pointsbought"],
+        itemsboughtabroad: json["itemsboughtabroad"],
+        weaponsbought: json["weaponsbought"],
+        itemssent: json["itemssent"],
+        auctionswon: json["auctionswon"],
+        auctionsells: json["auctionsells"],
+        attackswon: json["attackswon"],
+        attackslost: json["attackslost"],
+        attacksdraw: json["attacksdraw"],
+        bestkillstreak: json["bestkillstreak"],
+        moneymugged: json["moneymugged"],
+        attacksstealthed: json["attacksstealthed"],
+        attackhits: json["attackhits"],
+        attackmisses: json["attackmisses"],
+        attackdamage: json["attackdamage"],
+        attackcriticalhits: json["attackcriticalhits"],
+        respectforfaction: json["respectforfaction"],
+        onehitkills: json["onehitkills"],
+        defendswon: json["defendswon"],
+        defendslost: json["defendslost"],
+        defendsstalemated: json["defendsstalemated"],
+        bestdamage: json["bestdamage"],
+        roundsfired: json["roundsfired"],
+        yourunaway: json["yourunaway"],
+        theyrunaway: json["theyrunaway"],
+        highestbeaten: json["highestbeaten"],
+        peoplebusted: json["peoplebusted"],
+        failedbusts: json["failedbusts"],
+        peoplebought: json["peoplebought"],
+        peopleboughtspent: json["peopleboughtspent"],
+        virusescoded: json["virusescoded"],
+        cityfinds: json["cityfinds"],
+        traveltimes: json["traveltimes"],
+        bountiesplaced: json["bountiesplaced"],
+        bountiesreceived: json["bountiesreceived"],
+        bountiescollected: json["bountiescollected"],
+        totalbountyreward: json["totalbountyreward"],
+        revives: json["revives"],
+        revivesreceived: json["revivesreceived"],
+        medicalitemsused: json["medicalitemsused"],
+        statenhancersused: json["statenhancersused"],
+        refills: json["refills"],
+        trainsreceived: json["trainsreceived"],
+        totalbountyspent: json["totalbountyspent"],
+        drugsused: json["drugsused"],
+        overdosed: json["overdosed"],
+        meritsbought: json["meritsbought"],
+        timesloggedin: json["timesloggedin"],
+        personalsplaced: json["personalsplaced"],
+        classifiedadsplaced: json["classifiedadsplaced"],
+        mailssent: json["mailssent"],
+        friendmailssent: json["friendmailssent"],
+        factionmailssent: json["factionmailssent"],
+        companymailssent: json["companymailssent"],
+        spousemailssent: json["spousemailssent"],
+        largestmug: json["largestmug"],
+        cantaken: json["cantaken"],
+        exttaken: json["exttaken"],
+        kettaken: json["kettaken"],
+        lsdtaken: json["lsdtaken"],
+        opitaken: json["opitaken"],
+        shrtaken: json["shrtaken"],
+        spetaken: json["spetaken"],
+        pcptaken: json["pcptaken"],
+        xantaken: json["xantaken"],
+        victaken: json["victaken"],
+        chahits: json["chahits"],
+        heahits: json["heahits"],
+        axehits: json["axehits"],
+        grehits: json["grehits"],
+        machits: json["machits"],
+        pishits: json["pishits"],
+        rifhits: json["rifhits"],
+        shohits: json["shohits"],
+        smghits: json["smghits"],
+        piehits: json["piehits"],
+        slahits: json["slahits"],
+        argtravel: json["argtravel"],
+        mextravel: json["mextravel"],
+        dubtravel: json["dubtravel"],
+        hawtravel: json["hawtravel"],
+        japtravel: json["japtravel"],
+        lontravel: json["lontravel"],
+        soutravel: json["soutravel"],
+        switravel: json["switravel"],
+        chitravel: json["chitravel"],
+        cantravel: json["cantravel"],
+        dumpfinds: json["dumpfinds"],
+        dumpsearches: json["dumpsearches"],
+        itemsdumped: json["itemsdumped"],
+        daysbeendonator: json["daysbeendonator"],
+        caytravel: json["caytravel"],
+        jailed: json["jailed"],
+        hospital: json["hospital"],
+        attacksassisted: json["attacksassisted"],
+        bloodwithdrawn: json["bloodwithdrawn"],
+        networth: json["networth"],
+        missionscompleted: json["missionscompleted"],
+        contractscompleted: json["contractscompleted"],
+        dukecontractscompleted: json["dukecontractscompleted"],
+        missioncreditsearned: json["missioncreditsearned"],
+        consumablesused: json["consumablesused"],
+        candyused: json["candyused"],
+        alcoholused: json["alcoholused"],
+        energydrinkused: json["energydrinkused"],
+        nerverefills: json["nerverefills"],
+        unarmoredwon: json["unarmoredwon"],
+        h2Hhits: json["h2hhits"],
+        organisedcrimes: json["organisedcrimes"],
+        territorytime: json["territorytime"],
+        territoryjoins: json["territoryjoins"],
+        arrestsmade: json["arrestsmade"],
+        tokenrefills: json["tokenrefills"],
+        booksread: json["booksread"],
+        traveltime: json["traveltime"],
+        boostersused: json["boostersused"],
+        rehabs: json["rehabs"],
+        rehabcost: json["rehabcost"],
+        awards: json["awards"],
+        receivedbountyvalue: json["receivedbountyvalue"],
+        raceswon: json["raceswon"],
+        racesentered: json["racesentered"],
+        racingpointsearned: json["racingpointsearned"],
+        specialammoused: json["specialammoused"],
+        cityitemsbought: json["cityitemsbought"],
+        hollowammoused: json["hollowammoused"],
+        tracerammoused: json["tracerammoused"],
+        piercingammoused: json["piercingammoused"],
+        incendiaryammoused: json["incendiaryammoused"],
+        attackswonabroad: json["attackswonabroad"],
+        defendslostabroad: json["defendslostabroad"],
+        retals: json["retals"],
+        elo: json["elo"],
+        reviveskill: json["reviveskill"],
+        activestreak: json["activestreak"],
+        bestactivestreak: json["bestactivestreak"],
+        jobpointsused: json["jobpointsused"],
       );
 
   Map<String, dynamic> toJson() => {
-        "useractivity": useractivity == null ? null : useractivity,
-        "itemsbought": itemsbought == null ? null : itemsbought,
-        "pointsbought": pointsbought == null ? null : pointsbought,
-        "itemsboughtabroad": itemsboughtabroad == null ? null : itemsboughtabroad,
-        "weaponsbought": weaponsbought == null ? null : weaponsbought,
-        "itemssent": itemssent == null ? null : itemssent,
-        "auctionswon": auctionswon == null ? null : auctionswon,
-        "auctionsells": auctionsells == null ? null : auctionsells,
-        "attackswon": attackswon == null ? null : attackswon,
-        "attackslost": attackslost == null ? null : attackslost,
-        "attacksdraw": attacksdraw == null ? null : attacksdraw,
-        "bestkillstreak": bestkillstreak == null ? null : bestkillstreak,
-        "moneymugged": moneymugged == null ? null : moneymugged,
-        "attacksstealthed": attacksstealthed == null ? null : attacksstealthed,
-        "attackhits": attackhits == null ? null : attackhits,
-        "attackmisses": attackmisses == null ? null : attackmisses,
-        "attackdamage": attackdamage == null ? null : attackdamage,
-        "attackcriticalhits": attackcriticalhits == null ? null : attackcriticalhits,
-        "respectforfaction": respectforfaction == null ? null : respectforfaction,
-        "onehitkills": onehitkills == null ? null : onehitkills,
-        "defendswon": defendswon == null ? null : defendswon,
-        "defendslost": defendslost == null ? null : defendslost,
-        "defendsstalemated": defendsstalemated == null ? null : defendsstalemated,
-        "bestdamage": bestdamage == null ? null : bestdamage,
-        "roundsfired": roundsfired == null ? null : roundsfired,
-        "yourunaway": yourunaway == null ? null : yourunaway,
-        "theyrunaway": theyrunaway == null ? null : theyrunaway,
-        "highestbeaten": highestbeaten == null ? null : highestbeaten,
-        "peoplebusted": peoplebusted == null ? null : peoplebusted,
-        "failedbusts": failedbusts == null ? null : failedbusts,
-        "peoplebought": peoplebought == null ? null : peoplebought,
-        "peopleboughtspent": peopleboughtspent == null ? null : peopleboughtspent,
-        "virusescoded": virusescoded == null ? null : virusescoded,
-        "cityfinds": cityfinds == null ? null : cityfinds,
-        "traveltimes": traveltimes == null ? null : traveltimes,
-        "bountiesplaced": bountiesplaced == null ? null : bountiesplaced,
-        "bountiesreceived": bountiesreceived == null ? null : bountiesreceived,
-        "bountiescollected": bountiescollected == null ? null : bountiescollected,
-        "totalbountyreward": totalbountyreward == null ? null : totalbountyreward,
-        "revives": revives == null ? null : revives,
-        "revivesreceived": revivesreceived == null ? null : revivesreceived,
-        "medicalitemsused": medicalitemsused == null ? null : medicalitemsused,
-        "statenhancersused": statenhancersused == null ? null : statenhancersused,
-        "refills": refills == null ? null : refills,
-        "trainsreceived": trainsreceived == null ? null : trainsreceived,
-        "totalbountyspent": totalbountyspent == null ? null : totalbountyspent,
-        "drugsused": drugsused == null ? null : drugsused,
-        "overdosed": overdosed == null ? null : overdosed,
-        "meritsbought": meritsbought == null ? null : meritsbought,
-        "timesloggedin": timesloggedin == null ? null : timesloggedin,
-        "personalsplaced": personalsplaced == null ? null : personalsplaced,
-        "classifiedadsplaced": classifiedadsplaced == null ? null : classifiedadsplaced,
-        "mailssent": mailssent == null ? null : mailssent,
-        "friendmailssent": friendmailssent == null ? null : friendmailssent,
-        "factionmailssent": factionmailssent == null ? null : factionmailssent,
-        "companymailssent": companymailssent == null ? null : companymailssent,
-        "spousemailssent": spousemailssent == null ? null : spousemailssent,
-        "largestmug": largestmug == null ? null : largestmug,
-        "cantaken": cantaken == null ? null : cantaken,
-        "exttaken": exttaken == null ? null : exttaken,
-        "kettaken": kettaken == null ? null : kettaken,
-        "lsdtaken": lsdtaken == null ? null : lsdtaken,
-        "opitaken": opitaken == null ? null : opitaken,
-        "shrtaken": shrtaken == null ? null : shrtaken,
-        "spetaken": spetaken == null ? null : spetaken,
-        "pcptaken": pcptaken == null ? null : pcptaken,
-        "xantaken": xantaken == null ? null : xantaken,
-        "victaken": victaken == null ? null : victaken,
-        "chahits": chahits == null ? null : chahits,
-        "heahits": heahits == null ? null : heahits,
-        "axehits": axehits == null ? null : axehits,
-        "grehits": grehits == null ? null : grehits,
-        "machits": machits == null ? null : machits,
-        "pishits": pishits == null ? null : pishits,
-        "rifhits": rifhits == null ? null : rifhits,
-        "shohits": shohits == null ? null : shohits,
-        "smghits": smghits == null ? null : smghits,
-        "piehits": piehits == null ? null : piehits,
-        "slahits": slahits == null ? null : slahits,
-        "argtravel": argtravel == null ? null : argtravel,
-        "mextravel": mextravel == null ? null : mextravel,
-        "dubtravel": dubtravel == null ? null : dubtravel,
-        "hawtravel": hawtravel == null ? null : hawtravel,
-        "japtravel": japtravel == null ? null : japtravel,
-        "lontravel": lontravel == null ? null : lontravel,
-        "soutravel": soutravel == null ? null : soutravel,
-        "switravel": switravel == null ? null : switravel,
-        "chitravel": chitravel == null ? null : chitravel,
-        "cantravel": cantravel == null ? null : cantravel,
-        "dumpfinds": dumpfinds == null ? null : dumpfinds,
-        "dumpsearches": dumpsearches == null ? null : dumpsearches,
-        "itemsdumped": itemsdumped == null ? null : itemsdumped,
-        "daysbeendonator": daysbeendonator == null ? null : daysbeendonator,
-        "caytravel": caytravel == null ? null : caytravel,
-        "jailed": jailed == null ? null : jailed,
-        "hospital": hospital == null ? null : hospital,
-        "attacksassisted": attacksassisted == null ? null : attacksassisted,
-        "bloodwithdrawn": bloodwithdrawn == null ? null : bloodwithdrawn,
-        "networth": networth == null ? null : networth,
-        "missionscompleted": missionscompleted == null ? null : missionscompleted,
-        "contractscompleted": contractscompleted == null ? null : contractscompleted,
-        "dukecontractscompleted": dukecontractscompleted == null ? null : dukecontractscompleted,
-        "missioncreditsearned": missioncreditsearned == null ? null : missioncreditsearned,
-        "consumablesused": consumablesused == null ? null : consumablesused,
-        "candyused": candyused == null ? null : candyused,
-        "alcoholused": alcoholused == null ? null : alcoholused,
-        "energydrinkused": energydrinkused == null ? null : energydrinkused,
-        "nerverefills": nerverefills == null ? null : nerverefills,
-        "unarmoredwon": unarmoredwon == null ? null : unarmoredwon,
-        "h2hhits": h2Hhits == null ? null : h2Hhits,
-        "organisedcrimes": organisedcrimes == null ? null : organisedcrimes,
-        "territorytime": territorytime == null ? null : territorytime,
-        "territoryjoins": territoryjoins == null ? null : territoryjoins,
-        "arrestsmade": arrestsmade == null ? null : arrestsmade,
-        "tokenrefills": tokenrefills == null ? null : tokenrefills,
-        "booksread": booksread == null ? null : booksread,
-        "traveltime": traveltime == null ? null : traveltime,
-        "boostersused": boostersused == null ? null : boostersused,
-        "rehabs": rehabs == null ? null : rehabs,
-        "rehabcost": rehabcost == null ? null : rehabcost,
-        "awards": awards == null ? null : awards,
-        "receivedbountyvalue": receivedbountyvalue == null ? null : receivedbountyvalue,
-        "raceswon": raceswon == null ? null : raceswon,
-        "racesentered": racesentered == null ? null : racesentered,
-        "racingpointsearned": racingpointsearned == null ? null : racingpointsearned,
-        "specialammoused": specialammoused == null ? null : specialammoused,
-        "cityitemsbought": cityitemsbought == null ? null : cityitemsbought,
-        "hollowammoused": hollowammoused == null ? null : hollowammoused,
-        "tracerammoused": tracerammoused == null ? null : tracerammoused,
-        "piercingammoused": piercingammoused == null ? null : piercingammoused,
-        "incendiaryammoused": incendiaryammoused == null ? null : incendiaryammoused,
-        "attackswonabroad": attackswonabroad == null ? null : attackswonabroad,
-        "defendslostabroad": defendslostabroad == null ? null : defendslostabroad,
-        "retals": retals == null ? null : retals,
-        "elo": elo == null ? null : elo,
-        "reviveskill": reviveskill == null ? null : reviveskill,
-        "activestreak": activestreak == null ? null : activestreak,
-        "bestactivestreak": bestactivestreak == null ? null : bestactivestreak,
-        "jobpointsused": jobpointsused == null ? null : jobpointsused,
+        "useractivity": useractivity,
+        "itemsbought": itemsbought,
+        "pointsbought": pointsbought,
+        "itemsboughtabroad": itemsboughtabroad,
+        "weaponsbought": weaponsbought,
+        "itemssent": itemssent,
+        "auctionswon": auctionswon,
+        "auctionsells": auctionsells,
+        "attackswon": attackswon,
+        "attackslost": attackslost,
+        "attacksdraw": attacksdraw,
+        "bestkillstreak": bestkillstreak,
+        "moneymugged": moneymugged,
+        "attacksstealthed": attacksstealthed,
+        "attackhits": attackhits,
+        "attackmisses": attackmisses,
+        "attackdamage": attackdamage,
+        "attackcriticalhits": attackcriticalhits,
+        "respectforfaction": respectforfaction,
+        "onehitkills": onehitkills,
+        "defendswon": defendswon,
+        "defendslost": defendslost,
+        "defendsstalemated": defendsstalemated,
+        "bestdamage": bestdamage,
+        "roundsfired": roundsfired,
+        "yourunaway": yourunaway,
+        "theyrunaway": theyrunaway,
+        "highestbeaten": highestbeaten,
+        "peoplebusted": peoplebusted,
+        "failedbusts": failedbusts,
+        "peoplebought": peoplebought,
+        "peopleboughtspent": peopleboughtspent,
+        "virusescoded": virusescoded,
+        "cityfinds": cityfinds,
+        "traveltimes": traveltimes,
+        "bountiesplaced": bountiesplaced,
+        "bountiesreceived": bountiesreceived,
+        "bountiescollected": bountiescollected,
+        "totalbountyreward": totalbountyreward,
+        "revives": revives,
+        "revivesreceived": revivesreceived,
+        "medicalitemsused": medicalitemsused,
+        "statenhancersused": statenhancersused,
+        "refills": refills,
+        "trainsreceived": trainsreceived,
+        "totalbountyspent": totalbountyspent,
+        "drugsused": drugsused,
+        "overdosed": overdosed,
+        "meritsbought": meritsbought,
+        "timesloggedin": timesloggedin,
+        "personalsplaced": personalsplaced,
+        "classifiedadsplaced": classifiedadsplaced,
+        "mailssent": mailssent,
+        "friendmailssent": friendmailssent,
+        "factionmailssent": factionmailssent,
+        "companymailssent": companymailssent,
+        "spousemailssent": spousemailssent,
+        "largestmug": largestmug,
+        "cantaken": cantaken,
+        "exttaken": exttaken,
+        "kettaken": kettaken,
+        "lsdtaken": lsdtaken,
+        "opitaken": opitaken,
+        "shrtaken": shrtaken,
+        "spetaken": spetaken,
+        "pcptaken": pcptaken,
+        "xantaken": xantaken,
+        "victaken": victaken,
+        "chahits": chahits,
+        "heahits": heahits,
+        "axehits": axehits,
+        "grehits": grehits,
+        "machits": machits,
+        "pishits": pishits,
+        "rifhits": rifhits,
+        "shohits": shohits,
+        "smghits": smghits,
+        "piehits": piehits,
+        "slahits": slahits,
+        "argtravel": argtravel,
+        "mextravel": mextravel,
+        "dubtravel": dubtravel,
+        "hawtravel": hawtravel,
+        "japtravel": japtravel,
+        "lontravel": lontravel,
+        "soutravel": soutravel,
+        "switravel": switravel,
+        "chitravel": chitravel,
+        "cantravel": cantravel,
+        "dumpfinds": dumpfinds,
+        "dumpsearches": dumpsearches,
+        "itemsdumped": itemsdumped,
+        "daysbeendonator": daysbeendonator,
+        "caytravel": caytravel,
+        "jailed": jailed,
+        "hospital": hospital,
+        "attacksassisted": attacksassisted,
+        "bloodwithdrawn": bloodwithdrawn,
+        "networth": networth,
+        "missionscompleted": missionscompleted,
+        "contractscompleted": contractscompleted,
+        "dukecontractscompleted": dukecontractscompleted,
+        "missioncreditsearned": missioncreditsearned,
+        "consumablesused": consumablesused,
+        "candyused": candyused,
+        "alcoholused": alcoholused,
+        "energydrinkused": energydrinkused,
+        "nerverefills": nerverefills,
+        "unarmoredwon": unarmoredwon,
+        "h2hhits": h2Hhits,
+        "organisedcrimes": organisedcrimes,
+        "territorytime": territorytime,
+        "territoryjoins": territoryjoins,
+        "arrestsmade": arrestsmade,
+        "tokenrefills": tokenrefills,
+        "booksread": booksread,
+        "traveltime": traveltime,
+        "boostersused": boostersused,
+        "rehabs": rehabs,
+        "rehabcost": rehabcost,
+        "awards": awards,
+        "receivedbountyvalue": receivedbountyvalue,
+        "raceswon": raceswon,
+        "racesentered": racesentered,
+        "racingpointsearned": racingpointsearned,
+        "specialammoused": specialammoused,
+        "cityitemsbought": cityitemsbought,
+        "hollowammoused": hollowammoused,
+        "tracerammoused": tracerammoused,
+        "piercingammoused": piercingammoused,
+        "incendiaryammoused": incendiaryammoused,
+        "attackswonabroad": attackswonabroad,
+        "defendslostabroad": defendslostabroad,
+        "retals": retals,
+        "elo": elo,
+        "reviveskill": reviveskill,
+        "activestreak": activestreak,
+        "bestactivestreak": bestactivestreak,
+        "jobpointsused": jobpointsused,
       };
 }
 
@@ -975,16 +975,16 @@ class States {
     this.jailTimestamp,
   });
 
-  int hospitalTimestamp;
-  int jailTimestamp;
+  int? hospitalTimestamp;
+  int? jailTimestamp;
 
   factory States.fromJson(Map<String, dynamic> json) => States(
-        hospitalTimestamp: json["hospital_timestamp"] == null ? null : json["hospital_timestamp"],
-        jailTimestamp: json["jail_timestamp"] == null ? null : json["jail_timestamp"],
+        hospitalTimestamp: json["hospital_timestamp"],
+        jailTimestamp: json["jail_timestamp"],
       );
 
   Map<String, dynamic> toJson() => {
-        "hospital_timestamp": hospitalTimestamp == null ? null : hospitalTimestamp,
-        "jail_timestamp": jailTimestamp == null ? null : jailTimestamp,
+        "hospital_timestamp": hospitalTimestamp,
+        "jail_timestamp": jailTimestamp,
       };
 }
