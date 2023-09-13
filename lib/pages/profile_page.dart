@@ -3075,11 +3075,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        msg.name!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        msg.name ?? "Torn Staff", // Torn staff might send messages with null sender!
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: msg.name == null ? FontStyle.italic : FontStyle.normal),
                       ),
                       Text(
                         title,
