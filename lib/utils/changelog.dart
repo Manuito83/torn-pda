@@ -39,34 +39,35 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 337 - 08/09/2023
+    // Build 338 - 12/09/2023
 
     // VERSION 3.1.5
-    final v3_1_5 = ChangeLogItem();
-    v3_1_5.version = 'Torn PDA v3.1.5';
-    v3_1_5.date = '15 SEP 2023';
-    const String feat3_1_5_1 = "Added split screen mode between browser and app";
-    const String feat3_1_5_2 = "Browser: long press in title opens shortcuts (default style)";
-    const String feat3_1_5_3 = "Browser: the terminal can now be cleared";
-    const String feat3_1_5_4 = "Jail widget: added option to disable filters";
-    const String feat3_1_5_5 = "Added support for longer Torn Stats API keys";
-    const String feat3_1_5_6 = "Fixed double tap in energy and nerve bars";
-    const String feat3_1_5_7 = "Fixed issues when adding or updating targets and friends";
-    const String feat3_1_5_8 = "Fixed retalation alerts (re-enable if still not working)";
-    const String feat3_1_5_9 = "Fixed show oneself and score dialog settings in jail widget";
-    const String feat3_1_5_10 = "Fixed JS handlers (get, post, inject) for scripts";
-    const String feat3_1_5_11 = "Update packages";
-    v3_1_5.features.add(feat3_1_5_1);
-    v3_1_5.features.add(feat3_1_5_2);
-    v3_1_5.features.add(feat3_1_5_3);
-    v3_1_5.features.add(feat3_1_5_4);
-    v3_1_5.features.add(feat3_1_5_5);
-    v3_1_5.features.add(feat3_1_5_6);
-    v3_1_5.features.add(feat3_1_5_7);
-    v3_1_5.features.add(feat3_1_5_8);
-    v3_1_5.features.add(feat3_1_5_9);
-    v3_1_5.features.add(feat3_1_5_10);
-    v3_1_5.features.add(feat3_1_5_11);
+    final v3_1_6 = ChangeLogItem();
+    v3_1_6.version = 'Torn PDA v3.1.6';
+    v3_1_6.date = '15 SEP 2023';
+    v3_1_6.infoString = 'Hotfix to address blank screen issues';
+    const String feat3_1_6_1 = "Added split screen mode between browser and app";
+    const String feat3_1_6_2 = "Browser: long press in title opens shortcuts (default style)";
+    const String feat3_1_6_3 = "Browser: the terminal can now be cleared";
+    const String feat3_1_6_4 = "Jail widget: added option to disable filters";
+    const String feat3_1_6_5 = "Added support for longer Torn Stats API keys";
+    const String feat3_1_6_6 = "Fixed double tap in energy and nerve bars";
+    const String feat3_1_6_7 = "Fixed issues when adding or updating targets and friends";
+    const String feat3_1_6_8 = "Fixed retalation alerts (re-enable if still not working)";
+    const String feat3_1_6_9 = "Fixed show oneself and score dialog settings in jail widget";
+    const String feat3_1_6_10 = "Fixed JS handlers (get, post, inject) for scripts";
+    const String feat3_1_6_11 = "Update packages";
+    v3_1_6.features.add(feat3_1_6_1);
+    v3_1_6.features.add(feat3_1_6_2);
+    v3_1_6.features.add(feat3_1_6_3);
+    v3_1_6.features.add(feat3_1_6_4);
+    v3_1_6.features.add(feat3_1_6_5);
+    v3_1_6.features.add(feat3_1_6_6);
+    v3_1_6.features.add(feat3_1_6_7);
+    v3_1_6.features.add(feat3_1_6_8);
+    v3_1_6.features.add(feat3_1_6_9);
+    v3_1_6.features.add(feat3_1_6_10);
+    v3_1_6.features.add(feat3_1_6_11);
 
     // VERSION 3.1.4
     final v3_1_4 = ChangeLogItem();
@@ -1502,7 +1503,7 @@ class ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v3_1_5);
+    itemList.add(v3_1_6);
     itemList.add(v3_1_4);
     itemList.add(v3_1_3);
     itemList.add(v3_1_2);
