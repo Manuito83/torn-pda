@@ -41,12 +41,14 @@ class ChangeLogState extends State<ChangeLog> {
 
     // Build 338 - 12/09/2023
 
-    // VERSION 3.1.5
+    // VERSION 3.1.7
     final v3_1_7 = ChangeLogItem();
     v3_1_7.version = 'Torn PDA v3.1.7';
     v3_1_7.date = '16 SEP 2023';
-    const String feat3_1_7_1 = "Fixed City Finder widget";
+    const String feat3_1_7_1 = "Fixed city finder widget";
+    const String feat3_1_7_2 = "Fixed recent attacks (incorrectly classified)";
     v3_1_7.features.add(feat3_1_7_1);
+    v3_1_7.features.add(feat3_1_7_2);
 
     // VERSION 3.1.5 + HOTFIX (3.1.6)
     final v3_1_6 = ChangeLogItem();

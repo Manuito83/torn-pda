@@ -208,7 +208,7 @@ class AttacksProvider extends ChangeNotifier {
 
   Future<void> restoreSharedPreferences() async {
     // User key
-    _ownId = _u.apiKey!;
+    _ownId = _u.playerId.toString();
 
     // Attack sort
     final String attackSort = await Prefs().getAttackSort();

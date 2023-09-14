@@ -47,6 +47,9 @@ class UserDetailsProvider extends ChangeNotifier {
       // Set API key in the controller, in case API is down
       _u.apiKey = basic!.userApiKey;
 
+      // Set Player ID in the controller, so that certain providers can use it while avoiding multi-providers
+      _u.playerId = basic!.playerId ?? 0;
+
       final bool alternativeYataKey = await Prefs().getAlternativeYataKeyEnabled();
       if (alternativeYataKey) {
         _u.alternativeYataKeyEnabled = true;
