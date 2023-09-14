@@ -238,7 +238,7 @@ String highlightCityItemsJS() {
       // Find items
       for(let el of document.querySelectorAll("#map .leaflet-marker-pane *")){
         let src = el.getAttribute("src");
-        if(src.indexOf("https://www.torn.com/images/items/") > -1){
+        if(src.indexOf("/images/items/") > -1){
           el.classList.add("pdaCityItem");
         }
       }

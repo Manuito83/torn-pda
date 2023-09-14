@@ -3093,7 +3093,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final mapItemsList = <String>[];
     for (final mapFind in query) {
       mapFind.attributes.forEach((key, value) {
-        if (key == "src" && value.contains("https://www.torn.com/images/items/")) {
+        if (key == "src" && value.contains("/images/items/")) {
           mapItemsList.add(value.split("items/")[1].split("/")[0]);
         }
       });
