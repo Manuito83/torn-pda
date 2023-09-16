@@ -37,18 +37,18 @@ enum TipClass {
 
 abstract class TipTextBuilder {
   TipTextBuilder({
-    this.headerValue,
-    this.isExpanded,
+    this.headerValue = "",
+    this.isExpanded = false,
   });
 
-  String? headerValue;
-  bool? isExpanded;
+  String headerValue;
+  bool isExpanded;
 
   Text? buildExpandedText();
 
   Text buildHeaderText() {
     return Text(
-      headerValue!,
+      headerValue,
       style: const TextStyle(
         fontSize: 15,
       ),
@@ -57,7 +57,7 @@ abstract class TipTextBuilder {
 }
 
 class ExpandableTip extends TipTextBuilder {
-  ExpandableTip({this.expandedValue, super.headerValue, bool super.isExpanded = false});
+  ExpandableTip({this.expandedValue, super.headerValue, super.isExpanded});
 
   String? expandedValue;
 
@@ -73,7 +73,7 @@ class ExpandableTip extends TipTextBuilder {
 }
 
 class ComplexExpandableTip extends TipTextBuilder {
-  ComplexExpandableTip({Text Function()? buildExpandedText, super.headerValue, bool super.isExpanded = false}) {
+  ComplexExpandableTip({Text Function()? buildExpandedText, super.headerValue, super.isExpanded}) {
     _buildExpandedTextFn = buildExpandedText;
   }
 
@@ -286,7 +286,7 @@ class TipsPageState extends State<TipsPage> {
       expandedHeaderPadding: const EdgeInsets.all(0),
       expansionCallback: (int index, bool isExpanded) {
         setState(() {
-          listToShow[index].isExpanded = !isExpanded;
+          listToShow[index].isExpanded = isExpanded;
         });
       },
       children: listToShow.map<ExpansionPanel>((TipTextBuilder tip) {
@@ -299,7 +299,7 @@ class TipsPageState extends State<TipsPage> {
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 15),
             child: ListTile(title: tip.buildExpandedText()),
           ),
-          isExpanded: tip.isExpanded!,
+          isExpanded: tip.isExpanded,
         );
       }).toList(),
     );
