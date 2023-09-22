@@ -12,7 +12,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 
 class SharePriceDialog extends StatefulWidget {
   final StockMarketStock stock;
-  final Function callbackPrices;
+  final Function(double?, double?) callbackPrices;
 
   const SharePriceDialog({
     required this.stock,
@@ -442,8 +442,8 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                             bool success = false;
 
                             // Might be passed as null if we are removing
-                            late double gain;
-                            late double loss;
+                            double? gain;
+                            double? loss;
 
                             try {
                               if (_formKey.currentState!.validate()) {

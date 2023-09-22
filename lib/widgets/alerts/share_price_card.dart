@@ -197,10 +197,14 @@ class SharePriceCardState extends State<SharePriceCard> {
     );
   }
 
-  void onCallbackPrices(double gain, double loss) {
+  void onCallbackPrices(double? gain, double? loss) {
     setState(() {
-      widget.stock.alertGain = gain;
-      widget.stock.alertLoss = loss;
+      if (gain != null) {
+        widget.stock.alertGain = gain;
+      }
+      if (loss != null) {
+        widget.stock.alertLoss = loss;
+      }
     });
   }
 

@@ -46,7 +46,9 @@ class ChangeLogState extends State<ChangeLog> {
     v3_1_8.version = 'Torn PDA v3.1.8';
     v3_1_8.date = '20 SEP 2023';
     const String feat3_1_8_1 = "Fixed Tips section";
+    const String feat3_1_8_2 = "Fixed stock market price dialog";
     v3_1_8.features.add(feat3_1_8_1);
+    v3_1_8.features.add(feat3_1_8_2);
 
     // VERSION 3.1.7
     final v3_1_7 = ChangeLogItem();
