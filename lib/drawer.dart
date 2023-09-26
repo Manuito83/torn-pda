@@ -1724,23 +1724,25 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _updateLastActiveTime() async {
-    // Prevents update on first load
-    final api = _userProvider?.basic?.userApiKey;
-    if (api == null || api.isEmpty) return;
+    _preferencesCompleter.future.whenComplete(() async {
+      // Prevents update on first load
+      final api = _userProvider?.basic?.userApiKey;
+      if (api == null || api.isEmpty) return;
 
-    // Calculate difference between last recorded use and current time
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final dTimeStamp = now - _settingsProvider.lastAppUse;
-    final duration = Duration(milliseconds: dTimeStamp);
+      // Calculate difference between last recorded use and current time
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final dTimeStamp = now - _settingsProvider.lastAppUse;
+      final duration = Duration(milliseconds: dTimeStamp);
 
-    // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
-    // retries, even if Firebase makes inactive at 7 days (2 days here + 5 advertised)
-    // Also update full user in case something is missing!
-    if (duration.inDays > 2 || _forceFireUserReload) {
-      await _updateFirebaseDetails();
-      // This is triggered to true if the changelog activates.
-      _forceFireUserReload = false;
-    }
+      // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
+      // retries, even if Firebase makes inactive at 7 days (2 days here + 5 advertised)
+      // Also update full user in case something is missing!
+      if (duration.inDays > 2 || _forceFireUserReload) {
+        await _updateFirebaseDetails();
+        // This is triggered to true if the changelog activates.
+        _forceFireUserReload = false;
+      }
+    });
   }
 
   Future<void> _updateFirebaseDetails() async {
