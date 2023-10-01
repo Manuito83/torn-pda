@@ -89,7 +89,15 @@ export const lootRangersGroup = {
         let orderArray = [];
         const npcArray = lrJson.order;
         for (var id of npcArray) {
-          orderArray.push(`${lrJson.npcs[id].name}[${id}]`);
+          // If [clear] is false, the NPC won't participate in this attack
+          if (lrJson.npcs[id].clear) {
+            orderArray.push(`${lrJson.npcs[id].name}[${id}]`);
+          }
+        }
+
+        if (orderArray.length === 0) {
+          console.log("No NPCs cleared to attack!");
+          return;
         }
 
         let title = `Loot Rangers attack shortly: ${timeString} TCT!`;
