@@ -107,7 +107,7 @@ class StatsChart extends StatelessWidget {
       lineBarsData: [
         LineChartBarData(
           spots: _strengthSpots,
-          isCurved: true,
+          isCurved: false,
           barWidth: 2,
           color: Colors.blue,
           dotData: FlDotData(
@@ -116,7 +116,7 @@ class StatsChart extends StatelessWidget {
         ),
         LineChartBarData(
           spots: _speedSpots,
-          isCurved: true,
+          isCurved: false,
           barWidth: 2,
           color: Colors.red,
           dotData: FlDotData(
@@ -125,7 +125,7 @@ class StatsChart extends StatelessWidget {
         ),
         LineChartBarData(
           spots: _defenseSpots,
-          isCurved: true,
+          isCurved: false,
           barWidth: 2,
           color: Colors.orange,
           dotData: FlDotData(
@@ -134,7 +134,7 @@ class StatsChart extends StatelessWidget {
         ),
         LineChartBarData(
           spots: _dexteritySpots,
-          isCurved: true,
+          isCurved: false,
           barWidth: 2,
           color: Colors.green,
           dotData: FlDotData(
@@ -154,58 +154,67 @@ class StatsChart extends StatelessWidget {
       ),
       lineTouchData: LineTouchData(
         touchTooltipData: LineTouchTooltipData(
-            fitInsideHorizontally: true,
-            fitInsideVertically: false,
-            tooltipBgColor: Colors.blueGrey.withOpacity(1),
-            getTooltipItems: (value) {
-              final tooltips = <LineTooltipItem>[];
-              int thisX = value[0].x.toInt();
+          fitInsideHorizontally: true,
+          fitInsideVertically: false,
+          tooltipBgColor: Colors.blueGrey.withOpacity(1),
+          getTooltipItems: (value) {
+            final tooltips = <LineTooltipItem>[];
+            int thisX = value[0].x.toInt();
 
-              final NumberFormat f = NumberFormat("###,###", "en_US");
+            final NumberFormat f = NumberFormat("###,###", "en_US");
 
-              // Get time comparing position in x with timestamps
-              var ts = 0;
-              final timesList = [];
-              for (final e in _timestamps) {
-                timesList.add("$e");
-              }
-              if (thisX > timesList.length) {
-                thisX = timesList.length;
-              }
-              ts = int.parse(timesList[thisX]);
-              final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-              final DateFormat formatter = DateFormat('d LLL yyyy');
+            // Get time comparing position in x with timestamps
+            var ts = 0;
+            final timesList = [];
+            for (final e in _timestamps) {
+              timesList.add("$e");
+            }
+            if (thisX > timesList.length) {
+              thisX = timesList.length;
+            }
+            ts = int.parse(timesList[thisX]);
+            final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+            final DateFormat formatter = DateFormat('d LLL yyyy');
 
-              // The first line (STR) will be preceded by date
-              final String strLine = formatter.format(date);
+            // The first line (STR) will be preceded by date
+            final String strLine = formatter.format(date);
 
-              // Configure the last line to show totals
-              double total = 0;
-              for (final stat in value) {
-                total += stat.y;
-              }
-              final String dexLine = "TOTAL ${f.format(total.toInt())}";
+            // Configure the last line to show totals
+            double total = 0;
+            for (final stat in value) {
+              total += stat.y;
+            }
+            final String dexLine = "TOTAL ${f.format(total.toInt())}";
 
-              // Values come unsorted, we sort them here to our liking
-              tooltips.add(LineTooltipItem(
+            // Values come unsorted, we sort them here to our liking
+            tooltips.add(
+              LineTooltipItem(
                 "$strLine\n\nSTR: ${f.format(statsData!.data![thisX].strength)}",
                 const TextStyle(fontSize: 10),
-              ),);
-              tooltips.add(LineTooltipItem(
+              ),
+            );
+            tooltips.add(
+              LineTooltipItem(
                 "DEF: ${f.format(statsData!.data![thisX].defense)}",
                 const TextStyle(fontSize: 10),
-              ),);
-              tooltips.add(LineTooltipItem(
+              ),
+            );
+            tooltips.add(
+              LineTooltipItem(
                 "SPD: ${f.format(statsData!.data![thisX].speed)}",
                 const TextStyle(fontSize: 10),
-              ),);
-              tooltips.add(LineTooltipItem(
+              ),
+            );
+            tooltips.add(
+              LineTooltipItem(
                 "DEX: ${f.format(statsData!.data![thisX].dexterity)}\n\n$dexLine",
                 const TextStyle(fontSize: 10),
-              ),);
+              ),
+            );
 
-              return tooltips;
-            },),
+            return tooltips;
+          },
+        ),
       ),
       titlesData: FlTitlesData(
         show: true,
