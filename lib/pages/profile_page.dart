@@ -3452,13 +3452,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // SKILLS
     bool skillsExist = false;
+    bool crimesExist = false;
+
     var hunting = "";
     var racing = "";
     var reviving = "";
+    var searchForCash = "";
+    var bootlegging = "";
+    var graffiti = "";
+    var burglary = "";
+    var shoplifting = "";
+    var cardSkimming = "";
     hunting = _miscModel!.hunting ?? "";
     racing = _miscModel!.racing ?? "";
     reviving = _miscModel!.reviving ?? "";
-    if (hunting.isNotEmpty || racing.isNotEmpty || reviving.isNotEmpty) {
+    searchForCash = _miscModel!.searchForCash ?? "";
+    bootlegging = _miscModel!.bootlegging ?? "";
+    graffiti = _miscModel!.graffiti ?? "";
+    burglary = _miscModel!.burglary ?? "";
+    shoplifting = _miscModel!.shoplifting ?? "";
+    cardSkimming = _miscModel!.cardSkimming ?? "";
+
+    if (searchForCash.isNotEmpty ||
+        bootlegging.isNotEmpty ||
+        graffiti.isNotEmpty ||
+        burglary.isNotEmpty ||
+        shoplifting.isNotEmpty ||
+        cardSkimming.isNotEmpty) {
+      crimesExist = true;
+    }
+
+    if (hunting.isNotEmpty || racing.isNotEmpty || reviving.isNotEmpty || crimesExist) {
       skillsExist = true;
     }
 
@@ -3976,6 +4000,74 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   child: Text('Hunting: '),
                                 ),
                                 SelectableText(hunting),
+                              ],
+                            ),
+                          if (crimesExist)
+                            if (searchForCash.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 10, 0, 5),
+                                child: Text(
+                                  'CRIMES',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                              ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 130,
+                                child: Text('Search for Cash: '),
+                              ),
+                              SelectableText(searchForCash),
+                            ],
+                          ),
+                          if (bootlegging.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Bootlegging: '),
+                                ),
+                                SelectableText(bootlegging),
+                              ],
+                            ),
+                          if (graffiti.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Graffiti: '),
+                                ),
+                                SelectableText(graffiti),
+                              ],
+                            ),
+                          if (shoplifting.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Shoplifting: '),
+                                ),
+                                SelectableText(shoplifting),
+                              ],
+                            ),
+                          if (cardSkimming.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Card Skimming: '),
+                                ),
+                                SelectableText(cardSkimming),
+                              ],
+                            ),
+                          if (burglary.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Burglary: '),
+                                ),
+                                SelectableText(burglary),
                               ],
                             ),
                         ],

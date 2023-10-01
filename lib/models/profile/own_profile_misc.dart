@@ -32,9 +32,17 @@ class OwnProfileMisc {
     this.defenseModifier,
     this.speedModifier,
     this.dexterityModifier,
+    // Crimes
     this.hunting,
     this.racing,
     this.reviving,
+    this.searchForCash,
+    this.bootlegging,
+    this.graffiti,
+    this.burglary,
+    this.shoplifting,
+    this.cardSkimming,
+    //
     this.cityBank,
     this.educationCompleted,
     this.strengthInfo,
@@ -65,9 +73,17 @@ class OwnProfileMisc {
   int? defenseModifier;
   int? speedModifier;
   int? dexterityModifier;
+  // Skills
   String? hunting;
   String? racing;
   String? reviving;
+  String? searchForCash;
+  String? bootlegging;
+  String? graffiti;
+  String? burglary;
+  String? shoplifting;
+  String? cardSkimming;
+  //
   CityBank? cityBank;
   List<int>? educationCompleted;
   List<String>? strengthInfo;
@@ -101,6 +117,12 @@ class OwnProfileMisc {
         hunting: json["hunting"],
         racing: json["racing"],
         reviving: json["reviving"],
+        searchForCash: json["search_for_cash"],
+        bootlegging: json["bootlegging"],
+        graffiti: json["graffiti"],
+        burglary: json["burglary"],
+        shoplifting: json["shoplifting"],
+        cardSkimming: json["card_skimming"],
         cityBank: json["city_bank"] == null ? null : CityBank.fromJson(json["city_bank"]),
         educationCompleted:
             json["education_completed"] == null ? null : List<int>.from(json["education_completed"].map((x) => x)),
@@ -138,8 +160,15 @@ class OwnProfileMisc {
         "hunting": hunting,
         "racing": racing,
         "reviving": reviving,
+        "search_for_cash": searchForCash,
+        "bootlegging": bootlegging,
+        "graffiti": graffiti,
+        "burglary": burglary,
+        "shoplifting": shoplifting,
+        "card_skimming": cardSkimming,
         "city_bank": cityBank == null ? null : cityBank!.toJson(),
-        "education_completed": educationCompleted == null ? null : List<dynamic>.from(educationCompleted!.map((x) => x)),
+        "education_completed":
+            educationCompleted == null ? null : List<dynamic>.from(educationCompleted!.map((x) => x)),
         "strength_info": strengthInfo == null ? null : List<dynamic>.from(strengthInfo!.map((x) => x)),
         "defense_info": defenseInfo == null ? null : List<dynamic>.from(defenseInfo!.map((x) => x)),
         "speed_info": speedInfo == null ? null : List<dynamic>.from(speedInfo!.map((x) => x)),
