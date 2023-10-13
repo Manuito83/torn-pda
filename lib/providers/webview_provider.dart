@@ -102,6 +102,14 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _browserBottomBarStylePlaceTabsAtBottom = false;
+  bool get browserBottomBarStylePlaceTabsAtBottom => _browserBottomBarStylePlaceTabsAtBottom;
+  set browserBottomBarStylePlaceTabsAtBottom(bool value) {
+    _browserBottomBarStylePlaceTabsAtBottom = value;
+    Prefs().setBrowserBottomBarStylePlaceTabsAtBottom(value);
+    notifyListeners();
+  }
+
   /// Changes browser visibility
   bool _isBrowserForeground = false;
   bool get browserShowInForeground => _isBrowserForeground;
@@ -356,6 +364,7 @@ class WebViewProvider extends ChangeNotifier {
 
     _bottomBarStyleEnabled = await Prefs().getBrowserBottomBarStyleEnabled();
     _bottomBarStyleType = await Prefs().getBrowserBottomBarStyleType();
+    _browserBottomBarStylePlaceTabsAtBottom = await Prefs().getBrowserBottomBarStylePlaceTabsAtBottom();
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();

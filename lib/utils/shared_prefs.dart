@@ -79,6 +79,7 @@ class Prefs {
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserStyleBottomBarEnabled = "pda_browserStyleAlternativeEnabled";
   final String _kBrowserStyleBottomBarType = "pda_browserStyleAlternativeType";
+  final String _kBrowserBottomBarStylePlaceTabsAtBottom = "pda_browserBottomBarStylePlaceTabsAtBottom";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
@@ -896,6 +897,16 @@ class Prefs {
   Future<bool> setBrowserBottomBarStyleType(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kBrowserStyleBottomBarType, value);
+  }
+
+  Future<bool> getBrowserBottomBarStylePlaceTabsAtBottom() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserBottomBarStylePlaceTabsAtBottom) ?? false;
+  }
+
+  Future<bool> setBrowserBottomBarStylePlaceTabsAtBottom(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserBottomBarStylePlaceTabsAtBottom, value);
   }
 
   Future<String> getTMenuButtonLongPressBrowser() async {

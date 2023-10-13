@@ -130,6 +130,7 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: 50,
           onTap: () {
+            if (!mounted) return;
             multiTapDetector.onTap((numTaps) {
               if (numTaps == 1) {
                 // Single tap

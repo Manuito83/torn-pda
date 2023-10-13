@@ -533,6 +533,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               child: Column(
                 children: [
                   Expanded(child: mainWebViewColumn()),
+                  if (_webViewProvider.currentUiMode == UiMode.window &&
+                      _webViewProvider.bottomBarStyleEnabled &&
+                      _webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
+                    _bottomBarStyleBottomBar(),
                   SizedBox(
                     height: !_webViewProvider.bottomBarStyleEnabled
                         ? 0
@@ -540,7 +544,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             ? 0
                             : 40,
                   ),
-                  if (_webViewProvider.currentUiMode == UiMode.window && _webViewProvider.bottomBarStyleEnabled)
+                  if (_webViewProvider.currentUiMode == UiMode.window &&
+                      _webViewProvider.bottomBarStyleEnabled &&
+                      !_webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
                     _bottomBarStyleBottomBar(),
                 ],
               ),

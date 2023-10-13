@@ -915,6 +915,42 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        if (_webViewProvider.bottomBarStyleEnabled)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Text("Tabs below navigation bar"),
+                    Switch(
+                      value: _webViewProvider.browserBottomBarStylePlaceTabsAtBottom,
+                      onChanged: (value) {
+                        setState(() {
+                          _webViewProvider.browserBottomBarStylePlaceTabsAtBottom = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'If enabled, browser tabs will be placed at the very bottom of the browser window (below the "close"'
+                  'button and navigation controls)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(

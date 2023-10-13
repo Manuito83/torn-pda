@@ -122,6 +122,7 @@ class CircularMenuFixedState extends State<CircularMenuFixed> with SingleTickerP
           color: widget.toggleButtonColor ?? Theme.of(context).primaryColor,
           padding: 50,
           onTap: () async {
+            if (!mounted) return;
             // Opens the menu
             if (_animationController.status == AnimationStatus.dismissed) {
               widget.webViewProvider!.verticalMenuOpen();

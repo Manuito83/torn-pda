@@ -39,20 +39,22 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 340 - 16/09/2023
+    // Build 341 - 13/10/2023
 
     // VERSION 3.1.8
     final v3_1_8 = ChangeLogItem();
     v3_1_8.version = 'Torn PDA v3.1.8';
-    v3_1_8.date = '20 SEP 2023';
+    v3_1_8.date = '18 OCT 2023';
     const String feat3_1_8_1 = "Added crimes to Basic Info card in Profile";
-    const String feat3_1_8_2 = "Fixed Tips section";
-    const String feat3_1_8_3 = "Fixed stock market price dialog";
-    const String feat3_1_8_4 = "Fixed stats chart rounding";
+    const String feat3_1_8_2 = "Browser tabs can be now positioned below the navigation bar in bottom-bar styles";
+    const String feat3_1_8_3 = "Fixed Tips section";
+    const String feat3_1_8_4 = "Fixed stock market price dialog";
+    const String feat3_1_8_5 = "Fixed stats chart rounding";
     v3_1_8.features.add(feat3_1_8_1);
     v3_1_8.features.add(feat3_1_8_2);
     v3_1_8.features.add(feat3_1_8_3);
     v3_1_8.features.add(feat3_1_8_4);
+    v3_1_8.features.add(feat3_1_8_5);
 
     // VERSION 3.1.7
     final v3_1_7 = ChangeLogItem();
