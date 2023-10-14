@@ -596,6 +596,47 @@ class AboutPageState extends State<AboutPage> {
                   ],
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 15, 30, 10),
+                child: Row(
+                  children: <Widget>[
+                    Flexible(
+                      child: RichText(
+                        text: TextSpan(
+                          text: "See Torn PDA's ",
+                          style: DefaultTextStyle.of(context).style,
+                          children: <InlineSpan>[
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
+                                  const url = 'https://info.tornpda.com/pda-privacy.html';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
+                                onLongPress: () {
+                                  const url = 'https://info.tornpda.com/pda-privacy.html';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: const Text(
+                                  'privacy policy',
+                                  style: TextStyle(color: Colors.blue),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 60),
             ],
           ),
