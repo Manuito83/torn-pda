@@ -1590,9 +1590,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
             final bool isImageAnchorType = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
             final bool notProfileLink = !result.extra!.contains("https://www.torn.com/profiles.php?XID=");
+            // Awards and honors have a native popup
             final bool notAwardImage = !result.extra!.contains("awardimages");
+            // Also, honors might open quick profiles in Torn (native)
+            final bool notHonorImage = !result.extra!.contains("images/honors");
 
-            if (notCurrentUrl && ((isAnchorType && notProfileLink) || (isImageAnchorType && notAwardImage))) {
+            if (notCurrentUrl &&
+                ((isAnchorType && notProfileLink) || (isImageAnchorType && notAwardImage && notHonorImage))) {
               final focus = (await controller.requestFocusNodeHref())!;
               if (focus.url != null) {
                 _showLongPressCard(focus.src, focus.url);

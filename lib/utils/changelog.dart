@@ -41,6 +41,13 @@ class ChangeLogState extends State<ChangeLog> {
 
     // Build 342 - 14/10/2023
 
+    // VERSION 3.1.9
+    final v3_1_9 = ChangeLogItem();
+    v3_1_9.version = 'Torn PDA v3.1.9';
+    v3_1_9.date = '30 OCT 2023';
+    const String feat3_1_9_1 = "Fixed long tap in quick profiles";
+    v3_1_9.features.add(feat3_1_9_1);
+
     // VERSION 3.1.8
     final v3_1_8 = ChangeLogItem();
     v3_1_8.version = 'Torn PDA v3.1.8';
@@ -1527,6 +1534,7 @@ class ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_1_9);
     itemList.add(v3_1_8);
     itemList.add(v3_1_7);
     itemList.add(v3_1_6);
