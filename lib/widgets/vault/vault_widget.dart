@@ -1,5 +1,3 @@
-// Flutter imports:
-import 'package:animations/animations.dart';
 // Package imports:
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
@@ -249,8 +247,7 @@ class VaultWidgetState extends State<VaultWidget> {
         final date = format.parse("$day $hour", true);
 
         var playerTransaction = false;
-        final String name =
-            trans.querySelector(".user.t-overflow > .d-hide > .user.name > span")?.attributes["title"] ?? "";
+        final String name = trans.querySelector(".user.t-overflow > .d-hide > .user.name")?.attributes["title"] ?? "";
         if (name.contains("[${widget.playerId}]")) {
           playerTransaction = true;
         }
@@ -362,31 +359,27 @@ class VaultWidgetState extends State<VaultWidget> {
       }
     }
 
-    return OpenContainer(
-      transitionDuration: const Duration(milliseconds: 500),
-      transitionType: ContainerTransitionType.fadeThrough,
-      openBuilder: (BuildContext context, VoidCallback _) {
-        return VaultConfigurationPage(
-          callback: _configurationCallback,
-          userProvider: widget.userProvider,
-          vaultStatus: _vaultStatus,
-          lastTransaction: _lastTransaction,
-        );
-      },
-      closedElevation: 0,
-      closedShape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(
-          Radius.circular(56 / 2),
+    return GestureDetector(
+      child: Padding(
+        padding: EdgeInsets.only(right: 5),
+        child: SizedBox(
+          height: 20,
+          width: 20,
+          child: Icon(Icons.settings, size: 16, color: Colors.orange),
         ),
       ),
-      closedColor: Colors.transparent,
-      closedBuilder: (BuildContext context, VoidCallback openContainer) {
-        return const Padding(
-          padding: EdgeInsets.only(right: 5),
-          child: SizedBox(
-            height: 20,
-            width: 20,
-            child: Icon(Icons.settings, size: 16, color: Colors.orange),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return VaultConfigurationPage(
+                callback: _configurationCallback,
+                userProvider: widget.userProvider,
+                vaultStatus: _vaultStatus,
+                lastTransaction: _lastTransaction,
+              );
+            },
           ),
         );
       },
@@ -396,11 +389,11 @@ class VaultWidgetState extends State<VaultWidget> {
   _configurationCallback() {
     if (_vaultStatus.player == null) {
       setState(() {
-        _firstUse = false;
+        _firstUse = true;
       });
     } else {
       setState(() {
-        _firstUse = true;
+        _firstUse = false;
         _vaultStatus.error = false;
       });
     }
