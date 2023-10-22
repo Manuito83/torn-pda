@@ -500,6 +500,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future _deepLinksStreamSub() async {
     try {
       _deepLinkSub = linkStream.listen((String? link) {
+        if (_settingsProvider.debugMessages) {
+          BotToast.showText(
+            text: "Deep link launch\n\n$link",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue[700]!,
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
         _deepLinkHandle(link);
       });
     } catch (e) {
@@ -526,13 +538,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       if (showError) {
         BotToast.showText(
-          text: "Incorrect link!",
+          text: "Incorrect deep link!\n\n$url",
           textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
           contentColor: Colors.orange[700]!,
-          duration: const Duration(seconds: 1),
+          duration: const Duration(seconds: 4),
           contentPadding: const EdgeInsets.all(10),
         );
       } else {
@@ -552,6 +564,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     } catch (e) {
       print(e);
+      if (_settingsProvider.debugMessages) {
+        BotToast.showText(
+          text: "Deep link error\n\n$e",
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.orange[700]!,
+          duration: const Duration(seconds: 4),
+          contentPadding: const EdgeInsets.all(10),
+        );
+      }
     }
   }
   // ## END Deep links
