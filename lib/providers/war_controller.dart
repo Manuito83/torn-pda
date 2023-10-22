@@ -61,6 +61,8 @@ class WarController extends GetxController {
 
   bool nukeReviveActive = false;
   bool uhcReviveActive = false;
+  bool helaReviveActive = false;
+  bool wtfReviveActive = false;
 
   bool toggleAddUserActive = false;
 
@@ -728,6 +730,8 @@ class WarController extends GetxController {
 
     nukeReviveActive = await Prefs().getUseNukeRevive();
     uhcReviveActive = await Prefs().getUseUhcRevive();
+    helaReviveActive = await Prefs().getUseHelaRevive();
+    wtfReviveActive = await Prefs().getUseWtfRevive();
 
     // Get sorting
     final String targetSort = await Prefs().getWarMembersSort();
@@ -918,7 +922,6 @@ class WarController extends GetxController {
       }
     } catch (e) {
       // Returns null
-      print(e);
     }
     return _tornStatsSpies = null;
   }

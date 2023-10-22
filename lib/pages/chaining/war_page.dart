@@ -31,8 +31,10 @@ import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
+import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
+import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class WarOptions {
@@ -49,6 +51,12 @@ class WarOptions {
         // Own icon in widget
         break;
       case "UHC revive":
+        // Own icon in widget
+        break;
+      case "HeLa revive":
+        // Own icon in widget
+        break;
+      case "WTF revive":
         // Own icon in widget
         break;
     }
@@ -109,6 +117,8 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "Hidden targets"),
     WarOptions(description: "Nuke revive"),
     WarOptions(description: "UHC revive"),
+    WarOptions(description: "HeLa revive"),
+    WarOptions(description: "WTF revive"),
   ];
 
   @override
@@ -724,49 +734,98 @@ class WarPageState extends State<WarPage> {
           icon: const Icon(Icons.settings),
           onSelected: (selection) {
             switch (selection.description) {
-              /*
-              case "Toggle chain widget":
-                _w.toggleChainWidget();
-                break;
-              */
               case "Hidden targets":
                 _showHiddenMembersDialogs(context);
-              case "Nuke revive":
-                // Gesture not activated
                 break;
+              case "Nuke revive":
+                openNukeReviveDialog(context, _themeProvider!, null);
+              case "UHC revive":
+                openUhcReviveDialog(context, _themeProvider!, null);
+              case "HeLa revive":
+                openHelaReviveDialog(context, _themeProvider!, null);
+              case "WTF revive":
+                openWtfReviveDialog(context, _themeProvider!, null);
             }
           },
           itemBuilder: (BuildContext context) {
-            return _popupOptionsChoices.map((WarOptions choice) {
+            return _popupOptionsChoices.where((WarOptions choice) {
               // Don't return hidden members option if there is none
               if (choice.description!.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
-                return null;
+                return false;
               }
-              // Nuke revive
+              // Revives
+              if (choice.description!.contains("Nuke") && !_w.nukeReviveActive) {
+                return false;
+              }
+              if (choice.description!.contains("UHC") && !_w.uhcReviveActive) {
+                return false;
+              }
+              if (choice.description!.contains("HeLa") && !_w.helaReviveActive) {
+                return false;
+              }
+              if (choice.description!.contains("WTF") && !_w.wtfReviveActive) {
+                return false;
+              }
+              return true;
+            }).map((WarOptions choice) {
+              // Reviving services
               if (choice.description!.contains("Nuke")) {
-                if (!_w.nukeReviveActive) {
-                  return null;
-                }
                 return PopupMenuItem<WarOptions>(
                   value: choice,
-                  child: NukeReviveButton(
-                    themeProvider: _themeProvider,
-                    settingsProvider: _settingsProvider,
-                    webViewProvider: _webViewProvider,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Image.asset('images/icons/nuke-revive.png', width: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Request a revive (Nuke)")),
+                    ],
                   ),
                 );
               }
-              // UHC revive
               if (choice.description!.contains("UHC")) {
-                if (!_w.uhcReviveActive) {
-                  return null;
-                }
                 return PopupMenuItem<WarOptions>(
                   value: choice,
-                  child: UhcReviveButton(
-                    themeProvider: _themeProvider,
-                    settingsProvider: _settingsProvider,
-                    webViewProvider: _webViewProvider,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Image.asset('images/icons/uhc_revive.png', width: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Request a revive (UHC)")),
+                    ],
+                  ),
+                );
+              }
+              if (choice.description!.contains("HeLa")) {
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Image.asset('images/icons/hela_revive.png', width: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Request a revive (HeLa)")),
+                    ],
+                  ),
+                );
+              }
+              if (choice.description!.contains("WTF")) {
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Image.asset('images/icons/wtf_revive.png', width: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Request a revive (WTF)")),
+                    ],
                   ),
                 );
               }
@@ -781,7 +840,7 @@ class WarPageState extends State<WarPage> {
                   ],
                 ),
               );
-            }).toList() as List<PopupMenuEntry<WarOptions>>;
+            }).toList();
           },
         ),
         IconButton(
@@ -792,7 +851,6 @@ class WarPageState extends State<WarPage> {
                 builder: (BuildContext context) => const RankedWarsPage(),
               ),
             );
-            //Get.to(() => RankedWarsPage());
           },
         ),
       ],
