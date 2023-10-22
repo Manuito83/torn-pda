@@ -1577,7 +1577,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("has been blocked by CORS policy") &&
                   !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
-                  !consoleMessage.message.contains("Error with Permissions-Policy header")) {
+                  !consoleMessage.message.contains("Error with Permissions-Policy header") &&
+                  !consoleMessage.message.contains("srcset") &&
+                  !consoleMessage.message.contains("Missed ID for Quote saving")) {
                 _terminalProvider.addInstruction(consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
