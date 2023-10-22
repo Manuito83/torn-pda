@@ -8,11 +8,13 @@ class JailRecordDialog extends StatelessWidget {
   JailRecordDialog({
     required this.recordCallback,
     required this.currentRecord,
+    required this.minimumScore,
     super.key,
   });
 
   final Function recordCallback;
-  final int? currentRecord;
+  final int currentRecord;
+  final int minimumScore;
 
   static final formKey = GlobalKey<FormState>();
 
@@ -92,8 +94,8 @@ class JailRecordDialog extends StatelessWidget {
                           if (n == null) {
                             return 'Invalid value!';
                           } else {
-                            if (n < 0) {
-                              return 'Min is 0!';
+                            if (n <= minimumScore) {
+                              return 'Min score is $minimumScore!';
                             } else if (n > 250000) {
                               return 'Max is 250000!';
                             }

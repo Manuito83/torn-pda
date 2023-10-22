@@ -571,6 +571,7 @@ class JailWidgetState extends State<JailWidget> {
                     return JailRecordDialog(
                       currentRecord: _jailModel.scoreMax,
                       recordCallback: recordFormCallback,
+                      minimumScore: _jailModel.scoreMin,
                     );
                   },
                 );
@@ -621,6 +622,16 @@ class JailWidgetState extends State<JailWidget> {
         ..excludeSelf = false
         ..excludeName = widget.playerName.toUpperCase();
       //widget.playerName;
+    }
+
+    // Prevent errors from previous versions
+    if (_jailModel.scoreMax <= _jailModel.scoreMin) {
+      if (_jailModel.scoreMin > 249900) {
+        _jailModel.scoreMin = 249900;
+        _jailModel.scoreMax = 250000;
+      } else {
+        _jailModel.scoreMax = _jailModel.scoreMin + 1;
+      }
     }
 
     widget.fireScriptCallback(_jailModel);
