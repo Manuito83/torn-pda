@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 342 - 14/10/2023
+    // Build 343 - 22/10/2023
 
     // VERSION 3.1.9
     final v3_1_9 = ChangeLogItem();
