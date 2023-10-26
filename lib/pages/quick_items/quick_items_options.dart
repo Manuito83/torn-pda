@@ -391,7 +391,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           ],
                                         ),
                                       ),
-                                      if (!item.isLoadout!)
+                                      if (!item.isLoadout! && item.inventory != null)
                                         Text(
                                           "(inv: x${item.inventory})",
                                           style: const TextStyle(fontSize: 10),
@@ -689,7 +689,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               ],
                                             ),
                                           ),
-                                          if (!item.isLoadout!)
+                                          if (!item.isLoadout! && item.inventory != null)
                                             Text(
                                               "(inv: x${item.inventory})",
                                               style: const TextStyle(fontSize: 10),

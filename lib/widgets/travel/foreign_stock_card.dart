@@ -614,7 +614,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
               width: 100,
               child: Text(stock.name!),
             ),
-            if (widget.inventoryEnabled)
+            if (widget.inventoryEnabled && _invQuantity != null)
               SizedBox(
                 width: 100,
                 child: Text(

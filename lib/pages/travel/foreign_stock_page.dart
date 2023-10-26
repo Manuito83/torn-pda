@@ -900,30 +900,34 @@ class ForeignStockPageState extends State<ForeignStockPage> {
             ),
           );
 
-          int invQty = 0;
-          for (final invItem in _inventory!.inventory!) {
-            if (invItem.id == stock.id) {
-              invQty = invItem.quantity!;
-              break;
+          int? invQty;
+          if (_inventory?.inventory != null && _inventory?.display != null) {
+            invQty = 0;
+            for (final invItem in _inventory!.inventory!) {
+              if (invItem.id == stock.id) {
+                invQty = invItem.quantity!;
+                break;
+              }
+            }
+            for (final displayItem in _inventory!.display!) {
+              if (displayItem.id == stock.id) {
+                invQty = invQty! + displayItem.quantity!;
+              }
             }
           }
-          for (final displayItem in _inventory!.display!) {
-            if (displayItem.id == stock.id) {
-              invQty += displayItem.quantity!;
-            }
-          }
+
           stock.inventoryQuantity = invQty;
         }
       });
 
       // This will trigger a filter by flags, types and also sorting
       _filterAndSortTopLists();
-    } catch (e) {
+    } catch (e, t) {
       _apiSuccess = false;
 
       if (_settingsProvider!.debugMessages) {
         BotToast.showText(
-          text: "YATA debug catch: $e",
+          text: "YATA debug catch: $e, $t",
           textStyle: const TextStyle(
             fontSize: 13,
             color: Colors.white,
@@ -1022,6 +1026,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Future inventory() async {
+    return null;
+
+    // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+    /*
     dynamic inventoryResponse = await Get.find<ApiCallerController>().getInventory();
 
     String error = "";
@@ -1062,6 +1070,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     _inventory = inventoryResponse;
+    */
   }
 
   Future profileMisc() async {

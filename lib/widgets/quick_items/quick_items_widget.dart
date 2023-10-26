@@ -103,15 +103,20 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       }
 
       double qtyFontSize = 12;
-      var itemQty = item.inventory.toString();
+      String? itemQty;
       if (!item.isLoadout! && !widget.faction) {
-        if (item.inventory! > 999 && item.inventory! < 100000) {
-          itemQty = "${(item.inventory! / 1000).truncate().toStringAsFixed(0)}K";
-        } else if (item.inventory! >= 100000) {
-          itemQty = "∞";
-        }
-        if (item.inventory! >= 10000 && item.inventory! < 100000) {
-          qtyFontSize = 11;
+        if (item.inventory == null) {
+          itemQty = null;
+        } else {
+          itemQty = item.inventory.toString();
+          if (item.inventory! > 999 && item.inventory! < 100000) {
+            itemQty = "${(item.inventory! / 1000).truncate().toStringAsFixed(0)}K";
+          } else if (item.inventory! >= 100000) {
+            itemQty = "∞";
+          }
+          if (item.inventory! >= 10000 && item.inventory! < 100000) {
+            qtyFontSize = 11;
+          }
         }
       }
 
@@ -128,6 +133,10 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                 ? const BorderSide(color: Colors.blue)
                 : null,
             avatar: item.isLoadout!
+                    // Personal inventory was removed from the API, so add a check until it's restored
+                    // https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+                    ||
+                    (!item.isLoadout! && !widget.faction && itemQty == null)
                 ? null
                 : widget.faction
                     ? item.isEnergyPoints! || item.isNervePoints!
@@ -144,7 +153,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                           )
                     : CircleAvatar(
                         child: Text(
-                          itemQty,
+                          itemQty!,
                           style: TextStyle(
                             fontSize: qtyFontSize,
                             color: qtyColor,

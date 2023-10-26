@@ -160,10 +160,11 @@ class ItemCardState extends State<ItemCard> {
                                     height: 14,
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    widget.inventorySuccess ? "inv: x${widget.item.inventoryOwned}" : "inv: error",
-                                    style: const TextStyle(fontSize: 9),
-                                  ),
+                                  if (widget.inventorySuccess)
+                                    Text(
+                                      "inv: x${widget.item.inventoryOwned}",
+                                      style: const TextStyle(fontSize: 9),
+                                    ),
                                   if (widget.item.totalValue > 0)
                                     Text(
                                       "\$${formatBigNumbers(widget.item.totalValue)}",

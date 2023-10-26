@@ -29,7 +29,7 @@ import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
-import 'package:torn_pda/models/inventory_model.dart';
+//import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
 import 'package:torn_pda/models/perks/user_perks_model.dart';
@@ -600,6 +600,7 @@ class ApiCallerController extends GetxController {
     }
   }
 
+  /*
   Future<dynamic> getInventory() async {
     dynamic apiResult;
     await enqueueApiCall(apiSelection: ApiSelection.inventory).then((value) {
@@ -616,6 +617,7 @@ class ApiCallerController extends GetxController {
       return apiResult;
     }
   }
+  */
 
   Future<dynamic> getEducation() async {
     dynamic apiResult;

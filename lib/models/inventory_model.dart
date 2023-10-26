@@ -22,7 +22,7 @@ class InventoryModel {
         display: json["display"] == null
             ? null
             : List<DisplayCabinet>.from(json["display"].map((x) => DisplayCabinet.fromJson(x))),
-        inventory: json["inventory"] == null
+        inventory: json["inventory"] == null || json["inventory"] is String
             ? null
             : List<InventoryItem>.from(json["inventory"].map((x) => InventoryItem.fromJson(x))),
       );

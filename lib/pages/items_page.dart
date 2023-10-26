@@ -543,7 +543,9 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   Future _getAllItems() async {
     // First get all Torn items
     final apiItems = await Get.find<ApiCallerController>().getItems();
-    final apiInventory = await Get.find<ApiCallerController>().getInventory();
+
+    // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+    final apiInventory = null; // = await Get.find<ApiCallerController>().getInventory();
 
     if (apiItems is! ItemsModel) {
       final ApiError error = apiItems as ApiError;

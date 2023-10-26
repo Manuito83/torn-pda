@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 // Project imports:
-import 'package:torn_pda/models/inventory_model.dart';
+//import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
@@ -223,6 +223,13 @@ class QuickItemsProvider extends ChangeNotifier {
   /// [fullUpdate] is true, it will also update the inactive/stock items, which are not
   /// visible in the widget. Only makes sense if entering the options page
   Future updateInventoryQuantities({bool fullUpdate = false}) async {
+    // Items removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+    for (final quickItem in _fullQuickItemsList) {
+      quickItem.inventory = null;
+    }
+    return true;
+
+    /*
     final inventoryItems = await Get.find<ApiCallerController>().getInventory();
     if (inventoryItems is InventoryModel) {
       if (fullUpdate) {
@@ -260,5 +267,6 @@ class QuickItemsProvider extends ChangeNotifier {
       return true;
     }
     return false;
+    */
   }
 }
