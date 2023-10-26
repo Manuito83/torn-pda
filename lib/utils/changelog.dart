@@ -39,20 +39,22 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 343 - 22/10/2023
+    // Build 344 - 26/10/2023
 
     // VERSION 3.1.9
     final v3_1_9 = ChangeLogItem();
     v3_1_9.version = 'Torn PDA v3.1.9';
     v3_1_9.date = '30 OCT 2023';
-    const String feat3_1_9_1 = "Fixed property vault widget assignments";
-    const String feat3_1_9_2 = "Fixed long tap menu in quick profiles";
-    const String feat3_1_9_3 = "Fixed War options menu and reviving providers";
-    const String feat3_1_9_4 = "Fixed jail widget max score dialog";
+    const String feat3_1_9_1 = "Fixed sections affected by API changes in inventory";
+    const String feat3_1_9_2 = "Fixed property vault widget assignments";
+    const String feat3_1_9_3 = "Fixed long tap menu in quick profiles";
+    const String feat3_1_9_4 = "Fixed War options menu and reviving providers";
+    const String feat3_1_9_5 = "Fixed jail widget max score dialog";
     v3_1_9.features.add(feat3_1_9_1);
     v3_1_9.features.add(feat3_1_9_2);
     v3_1_9.features.add(feat3_1_9_3);
     v3_1_9.features.add(feat3_1_9_4);
+    v3_1_9.features.add(feat3_1_9_5);
 
     // VERSION 3.1.8
     final v3_1_8 = ChangeLogItem();
