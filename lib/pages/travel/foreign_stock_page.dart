@@ -130,7 +130,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.name),
     StockSort(type: StockSortType.type),
     StockSort(type: StockSortType.quantity),
-    StockSort(type: StockSortType.inventoryQuantity),
+    //StockSort(type: StockSortType.inventoryQuantity),
     StockSort(type: StockSortType.price),
     StockSort(type: StockSortType.value),
     StockSort(type: StockSortType.profit),
@@ -1293,9 +1293,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         case StockSortType.arrivalTime:
           _filteredStocksCards.sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
           Prefs().setStockSort('arrivalTime');
+        /*
         case StockSortType.inventoryQuantity:
           _filteredStocksCards.sort((a, b) => b.inventoryQuantity!.compareTo(a.inventoryQuantity!));
           Prefs().setStockSort('inventoryQuantity');
+        */
         default:
           _filteredStocksCards.sort((a, b) => a.name!.compareTo(b.name!));
           Prefs().setStockSort('name');
@@ -1336,7 +1338,9 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     } else if (sortString == 'arrivalTime') {
       sortType = StockSortType.arrivalTime;
     } else if (sortString == 'inventoryQuantity') {
-      sortType = StockSortType.inventoryQuantity;
+      // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+      //sortType = StockSortType.inventoryQuantity;
+      sortType = StockSortType.country;
     }
     _currentSort = StockSort(type: sortType);
 

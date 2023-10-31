@@ -22,8 +22,10 @@ class StockSort {
         description = 'Sort by profit';
       case StockSortType.arrivalTime:
         description = 'Sort by arrival time';
+      /*
       case StockSortType.inventoryQuantity:
         description = 'Sort by quantity (inventory)';
+      */
       default:
         description = 'Sort by name';
         break;

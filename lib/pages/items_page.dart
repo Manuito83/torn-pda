@@ -71,8 +71,10 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     ItemsSort(type: ItemsSortType.nameDes),
     ItemsSort(type: ItemsSortType.categoryAsc),
     ItemsSort(type: ItemsSortType.categoryDes),
+    /*
     ItemsSort(type: ItemsSortType.ownedAsc),
     ItemsSort(type: ItemsSortType.ownedDes),
+    */
     ItemsSort(type: ItemsSortType.valueAsc),
     ItemsSort(type: ItemsSortType.valueDes),
     ItemsSort(type: ItemsSortType.totalValueAsc),
@@ -650,9 +652,13 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       case 'totalValueDes':
         itemSort.type = ItemsSortType.totalValueDes;
       case 'ownedAsc':
-        itemSort.type = ItemsSortType.ownedAsc;
+        // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+        //itemSort.type = ItemsSortType.ownedAsc;
+        itemSort.type = ItemsSortType.nameAsc;
       case 'ownedDes':
-        itemSort.type = ItemsSortType.ownedDes;
+        // Removed as above
+        //itemSort.type = ItemsSortType.ownedDes;
+        itemSort.type = ItemsSortType.nameAsc;
       case 'circulationAsc':
         itemSort.type = ItemsSortType.circulationAsc;
       case 'circulationDes':
@@ -741,6 +747,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           _pinnedItems.sort((a, b) => a.totalValue.compareTo(b.totalValue));
         });
         sortToSave = 'totalValueAsc';
+      /*
       case ItemsSortType.ownedDes:
         setState(() {
           _allItems.sort((a, b) => b.inventoryOwned.compareTo(a.inventoryOwned));
@@ -753,6 +760,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           _pinnedItems.sort((a, b) => a.inventoryOwned.compareTo(b.inventoryOwned));
         });
         sortToSave = 'ownedAsc';
+      */
       case ItemsSortType.circulationDes:
         setState(() {
           _allItems.sort((a, b) => b.circulation!.compareTo(a.circulation!));

@@ -3,8 +3,8 @@ enum ItemsSortType {
   nameAsc,
   categoryDes,
   categoryAsc,
-  ownedDes,
-  ownedAsc,
+  //ownedDes,
+  //ownedAsc,
   valueDes,
   valueAsc,
   totalValueDes,
@@ -29,10 +29,12 @@ class ItemsSort {
         description = 'Sort by category (des)';
       case ItemsSortType.categoryAsc:
         description = 'Sort by category (asc)';
+      /*
       case ItemsSortType.ownedDes:
         description = 'Sort by inventory (des)';
       case ItemsSortType.ownedAsc:
         description = 'Sort by inventory (asc)';
+      */
       case ItemsSortType.valueDes:
         description = 'Sort by value (des)';
       case ItemsSortType.valueAsc:
