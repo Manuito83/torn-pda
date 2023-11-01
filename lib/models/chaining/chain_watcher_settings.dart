@@ -27,6 +27,8 @@ class ChainWatcherSettings {
     this.red2Min = 0,
     this.panicEnabled = false,
     this.panicValue = 40,
+    this.apiFailureAlert = true,
+    this.apiFailurePanic = true,
   });
 
   bool green2Enabled;
@@ -46,6 +48,8 @@ class ChainWatcherSettings {
   double red2Min;
   bool panicEnabled;
   double panicValue;
+  bool apiFailureAlert;
+  bool apiFailurePanic;
 
   factory ChainWatcherSettings.fromJson(Map<String, dynamic> json) => ChainWatcherSettings(
         green2Enabled: json["green2Enabled"] ?? true,
@@ -65,6 +69,8 @@ class ChainWatcherSettings {
         red2Min: json["red2Min"] ?? 0,
         panicEnabled: json["panicEnabled"] ?? true,
         panicValue: json["panicValue"] ?? 40,
+        apiFailureAlert: json["apiFailureAlert"] ?? true,
+        apiFailurePanic: json["apiFailurePanic"] ?? true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -85,5 +91,7 @@ class ChainWatcherSettings {
         "red2Min": red2Min,
         "panicEnabled": panicEnabled,
         "panicValue": panicValue,
+        "apiFailureAlert": apiFailureAlert,
+        "apiFailurePanic": apiFailurePanic,
       };
 }

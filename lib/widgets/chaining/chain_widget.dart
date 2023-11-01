@@ -81,7 +81,9 @@ class ChainWidgetState extends State<ChainWidget> {
                 const SizedBox(width: 35), // Centers the widget without P icon
               SizedBox(
                 width: 30,
-                child: !_chainStatusProvider.modelError
+                child: !_chainStatusProvider.modelError ||
+                        (_chainStatusProvider.modelError &&
+                            _chainStatusProvider.chainWatcherDefcon == WatchDefcon.apiFail)
                     ? GestureDetector(
                         child: Icon(
                           MdiIcons.eyeOutline,
@@ -187,6 +189,31 @@ class ChainWidgetState extends State<ChainWidget> {
                             ],
                           );
                         } else {
+                          if (_chainStatusProvider.watcherActive &&
+                              _chainStatusProvider.chainWatcherDefcon == WatchDefcon.apiFail) {
+                            return Column(
+                              children: [
+                                Text(
+                                  'API FAILED UNDER WATCH!',
+                                  style: TextStyle(
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.purple[600],
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Last check @${_chainStatusProvider.currentChainTimeString}',
+                                  style: TextStyle(
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.purple[600],
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
                           return Text(
                             'Cannot retrieve chain details!',
                             style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange[800]),
@@ -307,6 +334,8 @@ class ChainWidgetState extends State<ChainWidget> {
       case WatchDefcon.off:
         return 0.0;
       case WatchDefcon.panic:
+        return 20.0;
+      case WatchDefcon.apiFail:
         return 20.0;
     }
   }

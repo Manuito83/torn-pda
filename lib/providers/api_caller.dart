@@ -893,6 +893,9 @@ class ApiCallerController extends GetxController {
     }
     url += '&key=${apiKey!.trim()}&comment=PDA-App&limit=$limit${from != null ? "&from=$from" : ""}';
 
+    // DEBUG
+    //return ApiError(errorId: 0);
+
     try {
       final response = await http.get(
         Uri.parse(url),

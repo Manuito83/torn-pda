@@ -29,6 +29,7 @@ enum WatchDefcon {
   red2,
   panic,
   off,
+  apiFail,
 }
 
 class ChainStatusProvider extends ChangeNotifier {
@@ -388,8 +389,40 @@ class ChainStatusProvider extends ChangeNotifier {
   Future<void> _chainWatchCheck() async {
     // Return if there is an error with the model
     if (_modelError) {
-      if (_chainWatcherDefcon != WatchDefcon.off) {
+      if (_apiFailureAlert) {
+        if (_chainWatcherDefcon != WatchDefcon.apiFail && _chainWatcherDefcon != WatchDefcon.off && _watcherActive) {
+          _chainWatcherDefcon = WatchDefcon.apiFail;
+          _borderColor = Colors.purple[600]!;
+          if (_soundEnabled) {
+            _audioPlayer.play(AssetSource('../sounds/alerts/connection.wav'));
+          }
+          if (_vibrationEnabled) {
+            _vibrate(3);
+          }
+          if (_notificationsEnabled) {
+            showNotification(
+              555,
+              "",
+              "API FAILED UNDER WATCH!",
+              "Last positive check was at $_currentChainTimeString remaining!",
+            );
+          }
+          if (_panicModeActive && _apiFailurePanic) {
+            _tryLaunchPanicAttack();
+          }
+          notifyListeners();
+          return;
+        } else if (_chainWatcherDefcon == WatchDefcon.apiFail && _watcherActive) {
+          _borderColor == Colors.transparent ? _borderColor = Colors.purple[600]! : _borderColor = Colors.transparent;
+          notifyListeners();
+          return;
+        }
+      }
+
+      if ((_chainWatcherDefcon != WatchDefcon.off && _chainWatcherDefcon != WatchDefcon.apiFail) ||
+          (_chainWatcherDefcon == WatchDefcon.apiFail && !_apiFailureAlert)) {
         _chainWatcherDefcon = WatchDefcon.off;
+        _borderColor = Colors.transparent;
         notifyListeners();
       }
       return;
@@ -420,30 +453,7 @@ class ChainStatusProvider extends ChangeNotifier {
             if (_notificationsEnabled) {
               showNotification(555, "", "CHAIN PANIC ALERT!", "Less than $_currentChainTimeString remaining!");
             }
-            if (panicTargets.isNotEmpty) {
-              List<String> attacksIds = <String>[];
-              List<String?> attacksNames = <String?>[];
-              List<String> attackNotesColorList = <String>[];
-              List<String> attackNotesList = <String>[];
-              for (final tar in panicTargets) {
-                attacksIds.add(tar.id.toString());
-                attacksNames.add(tar.name);
-                attackNotesColorList.add('z');
-                attackNotesList.add('');
-              }
-              Get.to(
-                WebViewPanic(
-                  attackIdList: attacksIds,
-                  attackNameList: attacksNames,
-                  attackNotesColorList: attackNotesColorList,
-                  attackNotesList: attackNotesList,
-                  panic: true, // This will skip first target if red/blue regardless of user preferences
-                  showNotes: await Prefs().getShowTargetsNotes(),
-                  showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
-                  showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
-                ),
-              );
-            }
+            _tryLaunchPanicAttack();
           } else {
             _borderColor == Colors.black ? _borderColor = Colors.yellow : _borderColor = Colors.black;
           }
@@ -535,6 +545,33 @@ class ChainStatusProvider extends ChangeNotifier {
       _borderColor = Colors.green;
     }
     notifyListeners();
+  }
+
+  Future<void> _tryLaunchPanicAttack() async {
+    if (panicTargets.isNotEmpty) {
+      List<String> attacksIds = <String>[];
+      List<String?> attacksNames = <String?>[];
+      List<String> attackNotesColorList = <String>[];
+      List<String> attackNotesList = <String>[];
+      for (final tar in panicTargets) {
+        attacksIds.add(tar.id.toString());
+        attacksNames.add(tar.name);
+        attackNotesColorList.add('z');
+        attackNotesList.add('');
+      }
+      Get.to(
+        WebViewPanic(
+          attackIdList: attacksIds,
+          attackNameList: attacksNames,
+          attackNotesColorList: attackNotesColorList,
+          attackNotesList: attackNotesList,
+          panic: true, // This will skip first target if red/blue regardless of user preferences
+          showNotes: await Prefs().getShowTargetsNotes(),
+          showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
+          showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
+        ),
+      );
+    }
   }
 
   _vibrate(int times) async {
@@ -671,6 +708,25 @@ class ChainStatusProvider extends ChangeNotifier {
 
   void setPanicValue(double value) {
     _panicValue = value;
+    notifyListeners();
+  }
+
+  /// ####################
+  /// API FAILURE SETTINGS
+  /// ####################
+  bool _apiFailureAlert = true;
+  bool get apiFailureAlert => _apiFailureAlert;
+  set apiFailureAlert(bool value) {
+    _apiFailureAlert = value;
+    _saveSettings();
+    notifyListeners();
+  }
+
+  bool _apiFailurePanic = true;
+  bool get apiFailurePanic => _apiFailurePanic;
+  set apiFailurePanic(bool value) {
+    _apiFailurePanic = value;
+    _saveSettings();
     notifyListeners();
   }
 
@@ -967,6 +1023,8 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
+        break;
+      case WatchDefcon.apiFail:
         break;
     }
 
@@ -1324,6 +1382,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.panic:
         break;
+      case WatchDefcon.apiFail:
+        break;
     }
     notifyListeners();
     _saveSettings();
@@ -1349,6 +1409,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.panic:
         break;
+      case WatchDefcon.apiFail:
+        break;
     }
   }
 
@@ -1371,6 +1433,8 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
+        break;
+      case WatchDefcon.apiFail:
         break;
     }
   }
@@ -1400,6 +1464,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.panic:
         break;
+      case WatchDefcon.apiFail:
+        break;
     }
   }
 
@@ -1427,6 +1493,8 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
+        break;
+      case WatchDefcon.apiFail:
         break;
     }
   }
@@ -1502,6 +1570,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.panic:
         break;
+      case WatchDefcon.apiFail:
+        break;
     }
 
     notifyListeners();
@@ -1527,6 +1597,8 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
+        break;
+      case WatchDefcon.apiFail:
         break;
     }
     return false;
@@ -1575,6 +1647,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.panic:
         break;
+      case WatchDefcon.apiFail:
+        break;
     }
     return 0;
   }
@@ -1622,6 +1696,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.panic:
         break;
+      case WatchDefcon.apiFail:
+        break;
     }
     return 270;
   }
@@ -1668,6 +1744,8 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.off:
         break;
       case WatchDefcon.panic:
+        break;
+      case WatchDefcon.apiFail:
         break;
     }
     return 270;
@@ -1718,6 +1796,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.panic:
         break;
+      case WatchDefcon.apiFail:
+        break;
     }
     return 0;
   }
@@ -1744,7 +1824,9 @@ class ChainStatusProvider extends ChangeNotifier {
       ..red2Max = _red2Max
       ..red2Min = _red2Min
       ..panicEnabled = _panicModeEnabled
-      ..panicValue = _panicValue;
+      ..panicValue = _panicValue
+      ..apiFailureAlert = _apiFailureAlert
+      ..apiFailurePanic = _apiFailurePanic;
     Prefs().setChainWatcherSettings(chainWatcherModelToJson(model));
 
     List<String> panicTargetsModel = <String>[];

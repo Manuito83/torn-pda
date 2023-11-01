@@ -39,7 +39,16 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 344 - 26/10/2023
+    // Build 345 - 01/11/2023
+
+    // VERSION 3.2.0
+    final v3_2_0 = ChangeLogItem();
+    v3_2_0.version = 'Torn PDA v3.2.0';
+    v3_2_0.date = '15 NOV 2023';
+    const String feat3_2_0_1 = "Added Chain Watcher alert if API fails under watch";
+    const String feat3_2_0_2 = "Fixed several issues caused by inventory details removal by Torn";
+    v3_2_0.features.add(feat3_2_0_1);
+    v3_2_0.features.add(feat3_2_0_2);
 
     // VERSION 3.1.9
     final v3_1_9 = ChangeLogItem();

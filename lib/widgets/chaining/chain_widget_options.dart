@@ -71,6 +71,10 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                       _panicMode(),
                       const Divider(),
                       const SizedBox(height: 5),
+                      const Text("API FAILURE", style: TextStyle(fontSize: 11)),
+                      _apiFailure(),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       const Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
                       _greenLevel2(),
                       const Padding(
@@ -272,13 +276,104 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 25, right: 20, bottom: 10),
+                padding: const EdgeInsets.only(left: 0, right: 20, bottom: 10),
                 child: Row(
                   children: [
                     Flexible(
                       child: Text(
                         "You can also add targets to this list by swiping a target's card left in the Targets or "
                         "War sections.",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Column _apiFailure() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Row(
+              children: [
+                const Text("API failure check"),
+                SizedBox(width: 10),
+                GestureDetector(
+                  child: Icon(
+                    Icons.volume_up,
+                    size: 20,
+                    color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.soundEnabled
+                        ? _themeProvider!.mainText
+                        : Colors.grey,
+                  ),
+                  onTap: () {
+                    _audioPlayer.play(AssetSource('../sounds/alerts/connection.wav'));
+                  },
+                ),
+              ],
+            ),
+            Switch(
+              value: _chainStatusProvider.apiFailureAlert,
+              onChanged: (enabled) {
+                _chainStatusProvider.apiFailureAlert = enabled;
+              },
+              activeTrackColor: Colors.lightGreenAccent,
+              activeColor: Colors.green,
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 0, right: 20, bottom: 10),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  "In case that Torn API fails and the watcher is active, an alert will trigger",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_chainStatusProvider.apiFailureAlert)
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Trigger panic attack"),
+                  Switch(
+                    value: _chainStatusProvider.apiFailurePanic,
+                    onChanged: (value) {
+                      _chainStatusProvider.apiFailurePanic = value;
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 0, right: 20, bottom: 10),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        "If panic mode is active, dictates if an API failure should trigger an inmediate attack",
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,
