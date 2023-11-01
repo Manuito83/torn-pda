@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -650,36 +651,47 @@ class LootPageState extends State<LootPage> {
 
       final Widget npcWidget = Column(children: npcBoxes);
       return npcWidget;
-    } catch (e) {
+    } catch (e, t) {
       BotToast.showText(text: "Error loading @npcCards: $e");
+      FirebaseCrashlytics.instance.log("PDA Crash @npcCards");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
       return const SizedBox.shrink();
     }
   }
 
   Future _getLootRangers() async {
-    final response = await http.get(Uri.parse("https://api.lzpt.io/loot"));
-    if (response.statusCode == 200) {
-      final lrJson = lootRangersFromJson(response.body);
+    try {
+      final response = await http.get(Uri.parse("https://api.lzpt.io/loot"));
+      if (response.statusCode == 200) {
+        final lrJson = lootRangersFromJson(response.body);
 
-      if (lrJson.time!.clear == 0) {
-        _lootRangersTime = 0;
-      } else {
-        _lootRangersTime = lrJson.time!.clear! * 1000;
-      }
+        if (lrJson.time!.clear == 0) {
+          _lootRangersTime = 0;
+        } else {
+          _lootRangersTime = lrJson.time!.clear! * 1000;
+        }
 
-      _lootRangersNameOrder.clear();
-      for (int i = 0; i < lrJson.order!.length; i++) {
-        final id = lrJson.order![i];
-        lrJson.npcs!.forEach((key, value) {
-          // If [clear] is false, the NPC won't participate in this attack
-          if (value.clear!) {
-            if (key == id.toString()) {
-              _lootRangersNameOrder.add(value.name);
-              _lootRangersIdOrder.add(key);
+        _lootRangersNameOrder.clear();
+        for (int i = 0; i < lrJson.order!.length; i++) {
+          final id = lrJson.order![i];
+          lrJson.npcs!.forEach((key, value) {
+            // If [clear] is false, the NPC won't participate in this attack
+            if (value.clear!) {
+              if (key == id.toString()) {
+                _lootRangersNameOrder.add(value.name);
+                _lootRangersIdOrder.add(key);
+              }
             }
-          }
-        });
+          });
+        }
       }
+    } catch (e, t) {
+      BotToast.showText(text: "Error loading @lootRangers: $e");
+      FirebaseCrashlytics.instance.log("PDA Crash @lootRangers");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      _lootRangersTime = 0;
+      _lootRangersIdOrder.clear();
+      _lootRangersNameOrder.clear();
     }
   }
 

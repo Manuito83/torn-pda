@@ -387,6 +387,7 @@ class VaultWidgetState extends State<VaultWidget> {
   }
 
   _configurationCallback() {
+    if (!mounted) return;
     if (_vaultStatus.player == null) {
       setState(() {
         _firstUse = true;
