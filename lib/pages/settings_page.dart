@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
@@ -30,6 +31,7 @@ import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -41,9 +43,9 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
-import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
+import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
@@ -92,6 +94,7 @@ class SettingsPageState extends State<SettingsPage> {
   late ShortcutsProvider _shortcutsProvider;
   late WebViewProvider _webViewProvider;
   final ApiCallerController _apiController = Get.find<ApiCallerController>();
+  final SpiesController _spy = Get.find<SpiesController>();
 
   final _expandableController = ExpandableController();
 
@@ -262,9 +265,6 @@ class SettingsPageState extends State<SettingsPage> {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
               Flexible(
                 child: _openBrowserDropdown(),
               ),
@@ -319,9 +319,6 @@ class SettingsPageState extends State<SettingsPage> {
                   "Time format",
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
               Flexible(
                 child: _timeFormatDropdown(),
               ),
@@ -337,9 +334,6 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "Time zone",
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
                 flex: 2,
@@ -426,9 +420,6 @@ class SettingsPageState extends State<SettingsPage> {
                   "Spies source",
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
               Flexible(
                 flex: 2,
                 child: _spiesSourceDropdown(),
@@ -446,6 +437,91 @@ class SettingsPageState extends State<SettingsPage> {
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
+          ),
+        ),
+        GetBuilder<SpiesController>(
+          builder: (s) {
+            String lastUpdated = "Never updated";
+            int lastUpdatedTs = 0;
+
+            if (_spy.spiesSource == SpiesSource.yata && _spy.yataSpiesTime != null) {
+              lastUpdatedTs = _spy.yataSpiesTime!.millisecondsSinceEpoch;
+              if (lastUpdatedTs > 0) {
+                lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+              }
+            } else if (_spy.spiesSource == SpiesSource.tornStats && _spy.tornStatsSpiesTime != null) {
+              lastUpdatedTs = _spy.tornStatsSpiesTime!.millisecondsSinceEpoch;
+              if (lastUpdatedTs > 0) {
+                lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+              }
+            }
+
+            Color spiesUpdateColor = Colors.blue;
+            if (lastUpdatedTs > 0) {
+              final currentTime = DateTime.now().millisecondsSinceEpoch;
+              final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
+              spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : context.read<ThemeProvider>().mainText!;
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(top: 15, left: 40),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(MdiIcons.accountMultipleOutline, size: 18),
+                      ),
+                      Text(
+                        "${s.spiesSource == SpiesSource.yata ? 'YATA' : 'Torn Stats'} database: "
+                        "${s.spiesSource == SpiesSource.yata ? s.yataSpies.length : s.tornStatsSpies.spies.length} spies",
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(MdiIcons.clockOutline, size: 18),
+                      ),
+                      Text(
+                        lastUpdated,
+                        style: TextStyle(color: spiesUpdateColor),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Manage spies",
+                ),
+              ),
+              IconButton(
+                icon: const Icon(MdiIcons.incognito),
+                onPressed: () {
+                  showDialog(
+                    useRootNavigator: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return SpiesManagementDialog();
+                    },
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -473,9 +549,6 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "Nerve bar source",
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
                 flex: 2,
@@ -522,9 +595,6 @@ class SettingsPageState extends State<SettingsPage> {
                   "Display API call rate",
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
               Switch(
                 value: _apiController.showApiRateInDrawer.value,
                 onChanged: (enabled) async {
@@ -559,9 +629,6 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "Warn max. call rate",
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
               ),
               Switch(
                 value: _apiController.showApiMaxCallWarning,
@@ -613,9 +680,6 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "Test API",
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
               ),
               ElevatedButton(
                 child: const Text("PING"),
@@ -685,9 +749,6 @@ class SettingsPageState extends State<SettingsPage> {
                   "Enable debug messages",
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
               Switch(
                 value: _settingsProvider.debugMessages,
                 onChanged: (enabled) async {
@@ -722,9 +783,6 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "Clear tutorials",
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
               ),
               ElevatedButton(
                 child: const Text("CLEAR"),
@@ -1035,9 +1093,6 @@ class SettingsPageState extends State<SettingsPage> {
                   "Sync theme and web themes",
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
               Switch(
                 value: _settingsProvider.syncTheme,
                 onChanged: (enabled) async {
@@ -1094,9 +1149,6 @@ class SettingsPageState extends State<SettingsPage> {
                   "App bar position",
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
               Flexible(
                 flex: 2,
                 child: _appBarPositionDropdown(),
@@ -1125,9 +1177,6 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "Default launch section",
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
                 child: _openSectionDropdown(),
@@ -1181,9 +1230,6 @@ class SettingsPageState extends State<SettingsPage> {
                 child: Text(
                   "On app exit",
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
                 child: _appExitDropdown(),
@@ -2158,7 +2204,6 @@ class SettingsPageState extends State<SettingsPage> {
         ),
       ],
       onChanged: (value) {
-        // TODO: use settings provider for this?
         Prefs().setDefaultSection(value!);
         setState(() {
           _openSectionValue = value;
@@ -2522,7 +2567,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   DropdownButton _spiesSourceDropdown() {
     return DropdownButton<SpiesSource>(
-      value: _settingsProvider.spiesSource,
+      value: _spy.spiesSource,
       items: const [
         DropdownMenuItem(
           value: SpiesSource.yata,
@@ -2554,9 +2599,9 @@ class SettingsPageState extends State<SettingsPage> {
       onChanged: (value) {
         setState(() {
           if (value == SpiesSource.yata) {
-            _settingsProvider.changeSpiesSource = SpiesSource.yata;
+            _spy.spiesSource = SpiesSource.yata;
           } else {
-            _settingsProvider.changeSpiesSource = SpiesSource.tornStats;
+            _spy.spiesSource = SpiesSource.tornStats;
           }
         });
       },

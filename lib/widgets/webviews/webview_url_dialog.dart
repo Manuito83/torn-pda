@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 // Package imports:
@@ -10,9 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 // Project imports:
@@ -20,8 +19,8 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -154,23 +153,30 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             final String attackId = widget.url.split("user2ID=")[1];
                             final t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
 
-                            // Get stats from YATA
-                            var spyModel = YataSpyModel();
-                            var spyFoundInYata = false;
-                            try {
-                              final UserController u = Get.put(UserController());
-                              final String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=${u.alternativeYataKey}';
-                              final resp = await http.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 15));
-                              if (resp.statusCode == 200) {
-                                final spyJson = json.decode(resp.body);
-                                final spiedStats = spyJson["spies"][attackId];
-                                if (spiedStats != null) {
-                                  spyModel = yataSpyModelFromJson(json.encode(spiedStats));
+                            final SpiesController spyController = Get.find<SpiesController>();
+
+                            bool spyFoundInYata = false;
+                            YataSpyModel yataSpy = YataSpyModel();
+
+                            bool spyFoundInTornStats = false;
+                            SpyElement tornStatsSpy = SpyElement();
+
+                            if (spyController.spiesSource == SpiesSource.yata) {
+                              for (var spy in spyController.yataSpies) {
+                                if (spy.targetName == t.name) {
+                                  yataSpy = spy;
                                   spyFoundInYata = true;
+                                  continue;
                                 }
                               }
-                            } catch (e) {
-                              // Won't get YATA details
+                            } else if (spyController.spiesSource == SpiesSource.tornStats) {
+                              for (var spy in spyController.tornStatsSpies.spies) {
+                                if (spy.playerName == t.name) {
+                                  tornStatsSpy = spy;
+                                  spyFoundInTornStats = true;
+                                  continue;
+                                }
+                              }
                             }
 
                             int membersNotified = 0;
@@ -179,13 +185,21 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               String exactStats = "";
                               String estimatedStats = "";
                               if (spyFoundInYata) {
-                                final String total = formatBigNumbers(spyModel.total!);
-                                final String str = formatBigNumbers(spyModel.strength!);
-                                final String spd = formatBigNumbers(spyModel.speed!);
-                                final String def = formatBigNumbers(spyModel.defense!);
-                                final String dex = formatBigNumbers(spyModel.dexterity!);
+                                final String total = formatBigNumbers(yataSpy.total!);
+                                final String str = formatBigNumbers(yataSpy.strength!);
+                                final String spd = formatBigNumbers(yataSpy.speed!);
+                                final String def = formatBigNumbers(yataSpy.defense!);
+                                final String dex = formatBigNumbers(yataSpy.dexterity!);
                                 exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
-                                    "updated ${readTimestamp(spyModel.update!)}";
+                                    "updated ${readTimestamp(yataSpy.update!)}";
+                              } else if (spyFoundInTornStats) {
+                                final String total = formatBigNumbers(tornStatsSpy.total!);
+                                final String str = formatBigNumbers(tornStatsSpy.strength!);
+                                final String spd = formatBigNumbers(tornStatsSpy.speed!);
+                                final String def = formatBigNumbers(tornStatsSpy.defense!);
+                                final String dex = formatBigNumbers(tornStatsSpy.dexterity!);
+                                exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
+                                    "updated ${readTimestamp(tornStatsSpy.timestamp!)}";
                               } else {
                                 estimatedStats = StatsCalculator.calculateStats(
                                   criminalRecordTotal: t.criminalrecord!.total,

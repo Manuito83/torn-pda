@@ -12,39 +12,33 @@ import 'package:torn_pda/models/chaining/retal_model.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
+import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
-class WarOptions {
+class RetalsOptions {
   String? description;
   IconData? iconData;
 
-  WarOptions({this.description}) {
+  RetalsOptions({this.description}) {
     switch (description) {
-      case "Toggle chain widget":
-        iconData = MdiIcons.linkVariant;
-      case "Hidden targets":
-        iconData = Icons.undo_outlined;
-      case "Nuke revive":
-        // Own icon in widget
-        break;
-      case "UHC revive":
-        // Own icon in widget
-        break;
+      case "Manage Spies":
+        iconData = MdiIcons.incognito;
     }
   }
 }
 
 class RetalsPage extends StatefulWidget {
-  //final Function tabCallback;
+  final RetalsController retalsController;
 
   const RetalsPage({
+    required this.retalsController,
     super.key,
-    //@required this.tabCallback,
   });
 
   @override
@@ -58,6 +52,10 @@ class RetalsPageState extends State<RetalsPage> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late WebViewProvider _webViewProvider;
+
+  final _popupOptionsChoices = <RetalsOptions>[
+    RetalsOptions(description: "Manage Spies"),
+  ];
 
   @override
   void initState() {
@@ -76,7 +74,7 @@ class RetalsPageState extends State<RetalsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _r ??= Get.put(RetalsController());
+    _r ??= widget.retalsController;
 
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
@@ -213,7 +211,7 @@ class RetalsPageState extends State<RetalsPage> {
       ),
       actions: <Widget>[
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.only(right: 10),
           child: GetBuilder<RetalsController>(
             builder: (r) {
               return Padding(
@@ -235,23 +233,114 @@ class RetalsPageState extends State<RetalsPage> {
             },
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(right: 10),
-          child: GetBuilder<RetalsController>(
-            builder: (r) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  onTap: r.updating
-                      ? null
-                      : () {
-                          r.retrieveRetals(context);
-                        },
-                  child: const Icon(Icons.refresh),
+        GetBuilder<RetalsController>(
+          builder: (r) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: GestureDetector(
+                onTap: r.updating
+                    ? null
+                    : () {
+                        r.retrieveRetals(context);
+                      },
+                child: const Icon(Icons.refresh),
+              ),
+            );
+          },
+        ),
+        PopupMenuButton<RetalsOptions>(
+          icon: const Icon(Icons.settings),
+          onSelected: (selection) {
+            switch (selection.description) {
+              case "Manage Spies":
+                showDialog(
+                  useRootNavigator: false,
+                  context: context,
+                  builder: (BuildContext context) {
+                    return SpiesManagementDialog();
+                  },
+                );
+                break;
+            }
+          },
+          itemBuilder: (BuildContext context) {
+            final spyController = Get.find<SpiesController>();
+            String lastUpdated = "Never updated";
+            int lastUpdatedTs = 0;
+
+            if (spyController.spiesSource == SpiesSource.yata && spyController.yataSpiesTime != null) {
+              lastUpdatedTs = spyController.yataSpiesTime!.millisecondsSinceEpoch;
+              lastUpdated = spyController.statsOld((lastUpdatedTs / 1000).round());
+            } else if (spyController.spiesSource == SpiesSource.tornStats && spyController.tornStatsSpiesTime != null) {
+              lastUpdatedTs = spyController.tornStatsSpiesTime!.millisecondsSinceEpoch;
+              lastUpdated = spyController.statsOld((lastUpdatedTs / 1000).round());
+            }
+
+            final currentTime = DateTime.now().millisecondsSinceEpoch;
+            final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
+            final spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : _themeProvider.mainText;
+
+            return _popupOptionsChoices.where((RetalsOptions choice) {
+              return true;
+            }).map((RetalsOptions choice) {
+              // Spies
+              if (choice.description!.contains("Manage Spies")) {
+                return PopupMenuItem<RetalsOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Icon(
+                          MdiIcons.incognito,
+                          size: 24,
+                          color: _themeProvider.mainText,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text("Manage Spies"),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  height: 25,
+                                  width: 25,
+                                  child: Image.asset(
+                                    spyController.spiesSource == SpiesSource.yata
+                                        ? 'images/icons/yata_logo.png'
+                                        : 'images/icons/tornstats_logo.png',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              lastUpdated,
+                              style: TextStyle(fontSize: 11, color: spiesUpdateColor),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              // Everything else
+              return PopupMenuItem<RetalsOptions>(
+                value: choice,
+                child: Row(
+                  children: [
+                    Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
+                    const SizedBox(width: 10),
+                    Text(choice.description!),
+                  ],
                 ),
               );
-            },
-          ),
+            }).toList();
+          },
         ),
       ],
     );
@@ -373,7 +462,7 @@ class RetalsTargetsList extends StatelessWidget {
     for (final Retal thisRetal in retalsController.retaliationList) {
       filteredCards.add(
         RetalCard(
-          key: UniqueKey(),
+          key: ValueKey(thisRetal.retalId),
           retalModel: thisRetal,
           expiryTimeStamp: thisRetal.retalExpiry,
         ),

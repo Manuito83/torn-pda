@@ -13,26 +13,28 @@ class TornStatsSpiesModel {
     this.status,
     this.message,
     this.user,
-    this.spies,
+    this.spies = const <SpyElement>[],
   });
 
   bool? status;
   String? message;
   User? user;
-  List<SpyElement>? spies;
+  List<SpyElement> spies;
 
   factory TornStatsSpiesModel.fromJson(Map<String, dynamic> json) => TornStatsSpiesModel(
         status: json["status"],
         message: json["message"],
         user: json["user"] == null ? null : User.fromJson(json["user"]),
-        spies: json["spies"] == null ? null : List<SpyElement>.from(json["spies"].map((x) => SpyElement.fromJson(x))),
+        spies: json["spies"] == null
+            ? <SpyElement>[]
+            : List<SpyElement>.from(json["spies"].map((x) => SpyElement.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
         "user": user == null ? null : user!.toJson(),
-        "spies": spies == null ? null : List<dynamic>.from(spies!.map((x) => x.toJson())),
+        "spies": List<dynamic>.from(spies.map((x) => x.toJson())),
       };
 }
 

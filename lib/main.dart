@@ -33,6 +33,7 @@ import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
@@ -161,6 +162,7 @@ Future<void> main() async {
     DartPingIOS.register();
   }
 
+  Get.put(SpiesController(), permanent: true);
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
 

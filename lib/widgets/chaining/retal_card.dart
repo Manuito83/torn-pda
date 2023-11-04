@@ -17,6 +17,7 @@ import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -26,7 +27,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/timestamp_ago.dart';
+import 'package:torn_pda/widgets/spies/spies_exact_details_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -705,302 +706,6 @@ class RetalCardState extends State<RetalCard> {
   }
 
   Widget _statsWidget() {
-    void showDetailedStatsDialog() {
-      String lastUpdated = "";
-      if (_retal!.statsExactUpdated != 0) {
-        lastUpdated = readTimestamp(_retal!.statsExactUpdated!);
-      }
-
-      Widget strWidget;
-      if (_retal!.statsStr == -1) {
-        strWidget = const Text(
-          "Strength: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var strDiff = "";
-        Color strColor;
-        final result = _userProvider.basic!.strength! - _retal!.statsStr!;
-        if (result == 0) {
-          strDiff = "Same as you";
-          strColor = Colors.orange;
-        } else if (result < 0) {
-          strDiff = "${formatBigNumbers(result.abs())} higher than you";
-          strColor = Colors.red;
-        } else {
-          strDiff = "${formatBigNumbers(result.abs())} lower than you";
-          strColor = Colors.green;
-        }
-
-        strWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Strength: ${formatBigNumbers(_retal!.statsStr!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              strDiff,
-              style: TextStyle(fontSize: 12, color: strColor),
-            ),
-          ],
-        );
-      }
-
-      Widget spdWidget;
-      if (_retal!.statsSpd == -1) {
-        spdWidget = const Text(
-          "Speed: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var spdDiff = "";
-        Color spdColor;
-        final result = _userProvider.basic!.speed! - _retal!.statsSpd!;
-        if (result == 0) {
-          spdDiff = "Same as you";
-          spdColor = Colors.orange;
-        } else if (result < 0) {
-          spdDiff = "${formatBigNumbers(result.abs())} higher than you";
-          spdColor = Colors.red;
-        } else {
-          spdDiff = "${formatBigNumbers(result.abs())} lower than you";
-          spdColor = Colors.green;
-        }
-
-        spdWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Speed: ${formatBigNumbers(_retal!.statsSpd!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              spdDiff,
-              style: TextStyle(fontSize: 12, color: spdColor),
-            ),
-          ],
-        );
-      }
-
-      Widget defWidget;
-      if (_retal!.statsDef == -1) {
-        defWidget = const Text(
-          "Defense: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var defDiff = "";
-        Color defColor;
-        final result = _userProvider.basic!.defense! - _retal!.statsDef!;
-        if (result == 0) {
-          defDiff = "Same as you";
-          defColor = Colors.orange;
-        } else if (result < 0) {
-          defDiff = "${formatBigNumbers(result.abs())} higher than you";
-          defColor = Colors.red;
-        } else {
-          defDiff = "${formatBigNumbers(result.abs())} lower than you";
-          defColor = Colors.green;
-        }
-
-        defWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Defense: ${formatBigNumbers(_retal!.statsDef!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              defDiff,
-              style: TextStyle(fontSize: 12, color: defColor),
-            ),
-          ],
-        );
-      }
-
-      Widget dexWidget;
-      if (_retal!.statsDex == -1) {
-        dexWidget = const Text(
-          "Dexterity: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var dexDiff = "";
-        Color dexColor;
-        final result = _userProvider.basic!.dexterity! - _retal!.statsDex!;
-        if (result == 0) {
-          dexDiff = "Same as you";
-          dexColor = Colors.orange;
-        } else if (result < 0) {
-          dexDiff = "${formatBigNumbers(result.abs())} higher than you";
-          dexColor = Colors.red;
-        } else {
-          dexDiff = "${formatBigNumbers(result.abs())} lower than you";
-          dexColor = Colors.green;
-        }
-
-        dexWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Dexterity: ${formatBigNumbers(_retal!.statsDex!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              dexDiff,
-              style: TextStyle(fontSize: 12, color: dexColor),
-            ),
-          ],
-        );
-      }
-
-      Widget totalWidget;
-      if (_retal!.statsExactTotal == -1) {
-        totalWidget = Text(
-          "TOTAL: unknown (>${formatBigNumbers(_retal!.statsExactTotalKnown)})",
-          style: const TextStyle(fontSize: 12),
-        );
-      } else {
-        var totalDiff = "";
-        Color totalColor;
-        final result = _userProvider.basic!.total! - _retal!.statsExactTotal!;
-        if (result == 0) {
-          totalDiff = "Same as you";
-          totalColor = Colors.orange;
-        } else if (result < 0) {
-          totalDiff = "${formatBigNumbers(result.abs())} higher than you";
-          totalColor = Colors.red;
-        } else {
-          totalDiff = "${formatBigNumbers(result.abs())} lower than you";
-          totalColor = Colors.green;
-        }
-
-        totalWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "TOTAL: ${formatBigNumbers(_retal!.statsExactTotal!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              totalDiff,
-              style: TextStyle(fontSize: 12, color: totalColor),
-            ),
-          ],
-        );
-      }
-
-      Widget sourceWidget = const SizedBox.shrink();
-      if (widget.retalModel.spiesSource.isNotEmpty) {
-        sourceWidget = Row(
-          children: [
-            const Text(
-              "Source: ",
-              style: TextStyle(fontSize: 12),
-            ),
-            SizedBox(
-              height: 16,
-              width: 16,
-              child: Image.asset(
-                widget.retalModel.spiesSource == "yata"
-                    ? 'images/icons/yata_logo.png'
-                    : 'images/icons/tornstats_logo.png',
-              ),
-            ),
-          ],
-        );
-      }
-
-      BotToast.showAnimationWidget(
-        allowClick: false,
-        onlyOne: true,
-        wrapToastAnimation: (controller, cancel, child) => Stack(
-          children: <Widget>[
-            GestureDetector(
-              onTap: () {
-                cancel();
-              },
-              child: AnimatedBuilder(
-                builder: (_, child) => Opacity(
-                  opacity: controller.value,
-                  child: child,
-                ),
-                animation: controller,
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.black26),
-                  child: SizedBox.expand(),
-                ),
-              ),
-            ),
-            CustomOffsetAnimation(
-              controller: controller,
-              child: child,
-            )
-          ],
-        ),
-        toastBuilder: (cancelFunc) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Text(_retal!.name!),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_retal!.factionName != "0")
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    "Faction: ${_retal!.factionName}",
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              if (lastUpdated.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    "Updated: $lastUpdated",
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
-                child: strWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: spdWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: defWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: dexWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4),
-                child: totalWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4),
-                child: sourceWidget,
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                cancelFunc();
-              },
-              child: const Text('Thanks'),
-            ),
-          ],
-        ),
-        animationDuration: const Duration(milliseconds: 300),
-      );
-    }
-
     if (_retal!.statsExactTotalKnown != -1) {
       Color? exactColor = Colors.green;
       if (_userProvider.basic!.total! < _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) {
@@ -1052,7 +757,30 @@ class RetalCardState extends State<RetalCard> {
               size: 16,
             ),
             onTap: () {
-              showDetailedStatsDialog();
+              showDialog<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  SpiesController spy = Get.find<SpiesController>();
+                  return SpiesExactDetailsDialog(
+                    spy: spy,
+                    strength: _retal!.statsStr ?? -1,
+                    strengthUpdate: _retal!.statsStrUpdated,
+                    defense: _retal!.statsDef ?? -1,
+                    defenseUpdate: _retal!.statsDefUpdated,
+                    speed: _retal!.statsSpd ?? -1,
+                    speedUpdate: _retal!.statsSpdUpdated,
+                    dexterity: _retal!.statsDex ?? -1,
+                    dexterityUpdate: _retal!.statsDexUpdated,
+                    total: _retal!.statsExactTotal ?? -1,
+                    totalUpdate: _retal!.statsExactTotalUpdated,
+                    update: _retal!.statsExactUpdated ?? 0,
+                    name: _retal!.name!,
+                    factionName: _retal!.factionName!,
+                    themeProvider: _themeProvider,
+                    userDetailsProvider: _userProvider,
+                  );
+                },
+              );
             },
           ),
         ],
