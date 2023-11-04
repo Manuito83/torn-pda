@@ -23,6 +23,7 @@ import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
@@ -35,6 +36,7 @@ import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
+import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class WarOptions {
@@ -43,8 +45,8 @@ class WarOptions {
 
   WarOptions({this.description}) {
     switch (description) {
-      case "Toggle chain widget":
-        iconData = MdiIcons.linkVariant;
+      case "Manage Spies":
+        iconData = MdiIcons.incognito;
       case "Hidden targets":
         iconData = Icons.undo_outlined;
       case "Nuke revive":
@@ -113,7 +115,7 @@ class WarPageState extends State<WarPage> {
   ];
 
   final _popupOptionsChoices = <WarOptions>[
-    //WarOptions(description: "Toggle chain widget"),
+    WarOptions(description: "Manage Spies"),
     WarOptions(description: "Hidden targets"),
     WarOptions(description: "Nuke revive"),
     WarOptions(description: "UHC revive"),
@@ -734,6 +736,15 @@ class WarPageState extends State<WarPage> {
           icon: const Icon(Icons.settings),
           onSelected: (selection) {
             switch (selection.description) {
+              case "Manage Spies":
+                showDialog(
+                  useRootNavigator: false,
+                  context: context,
+                  builder: (BuildContext context) {
+                    return SpiesManagementDialog();
+                  },
+                );
+                break;
               case "Hidden targets":
                 _showHiddenMembersDialogs(context);
                 break;
@@ -748,6 +759,29 @@ class WarPageState extends State<WarPage> {
             }
           },
           itemBuilder: (BuildContext context) {
+            final spyController = Get.find<SpiesController>();
+            String lastUpdated = "Never updated";
+            int lastUpdatedTs = 0;
+
+            if (spyController.spiesSource == SpiesSource.yata && spyController.yataSpiesTime != null) {
+              lastUpdatedTs = spyController.yataSpiesTime!.millisecondsSinceEpoch;
+              if (lastUpdatedTs > 0) {
+                lastUpdated = spyController.statsOld((lastUpdatedTs / 1000).round());
+              }
+            } else if (spyController.spiesSource == SpiesSource.tornStats && spyController.tornStatsSpiesTime != null) {
+              lastUpdatedTs = spyController.tornStatsSpiesTime!.millisecondsSinceEpoch;
+              if (lastUpdatedTs > 0) {
+                lastUpdated = spyController.statsOld((lastUpdatedTs / 1000).round());
+              }
+            }
+
+            Color spiesUpdateColor = Colors.blue;
+            if (lastUpdatedTs > 0) {
+              final currentTime = DateTime.now().millisecondsSinceEpoch;
+              final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
+              spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : _themeProvider!.mainText!;
+            }
+
             return _popupOptionsChoices.where((WarOptions choice) {
               // Don't return hidden members option if there is none
               if (choice.description!.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
@@ -768,6 +802,51 @@ class WarPageState extends State<WarPage> {
               }
               return true;
             }).map((WarOptions choice) {
+              // Spies
+              if (choice.description!.contains("Manage Spies")) {
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Icon(
+                          MdiIcons.incognito,
+                          size: 24,
+                          color: _themeProvider!.mainText,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text("Manage Spies"),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  height: 25,
+                                  width: 25,
+                                  child: Image.asset(
+                                    spyController.spiesSource == SpiesSource.yata
+                                        ? 'images/icons/yata_logo.png'
+                                        : 'images/icons/tornstats_logo.png',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              lastUpdated,
+                              style: TextStyle(fontSize: 11, color: spiesUpdateColor),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
               // Reviving services
               if (choice.description!.contains("Nuke")) {
                 return PopupMenuItem<WarOptions>(
@@ -1572,6 +1651,7 @@ class WarTargetsListState extends State<WarTargetsList> {
 
   Widget slidableCard(WarCard filteredCard) {
     return Slidable(
+      key: ValueKey(filteredCard.memberModel!.memberId),
       closeOnScroll: false,
       startActionPane: ActionPane(
         motion: const ScrollMotion(),

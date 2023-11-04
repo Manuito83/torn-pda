@@ -11,7 +11,6 @@ import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
-import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 
 enum BrowserSetting {
   app,
@@ -166,14 +165,6 @@ class SettingsProvider extends ChangeNotifier {
   set changeShowSecondsInClock(bool value) {
     _showSecondsInClock = value;
     Prefs().setShowSecondsInClock(value);
-    notifyListeners();
-  }
-
-  SpiesSource _spiesSource = SpiesSource.yata;
-  SpiesSource get spiesSource => _spiesSource;
-  set changeSpiesSource(SpiesSource value) {
-    _spiesSource = value;
-    _spiesSource == SpiesSource.yata ? Prefs().setSpiesSource('yata') : Prefs().setSpiesSource('tornstats');
     notifyListeners();
   }
 
@@ -791,13 +782,6 @@ class SettingsProvider extends ChangeNotifier {
         _currentTimeZone = TimeZoneSetting.localTime;
       case 'torn':
         _currentTimeZone = TimeZoneSetting.tornTime;
-    }
-
-    final String spiesSourceSaved = await Prefs().getSpiesSource();
-    if (spiesSourceSaved == "yata") {
-      _spiesSource = SpiesSource.yata;
-    } else {
-      _spiesSource = SpiesSource.tornStats;
     }
 
     final String naturalNerveBarSource = await Prefs().getNaturalNerveBarSource();

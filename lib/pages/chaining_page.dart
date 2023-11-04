@@ -89,7 +89,10 @@ class ChainingPageState extends State<ChainingPage> {
                       ),
                       const AttacksPage(),
                       const WarPage(),
-                      if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled) const RetalsPage(),
+                      if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
+                        RetalsPage(
+                          retalsController: _r,
+                        ),
                       /*
                       TacPage(
                         userKey: _myCurrentKey,

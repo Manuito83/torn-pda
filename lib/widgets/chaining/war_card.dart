@@ -17,6 +17,7 @@ import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -25,10 +26,10 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
-import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
+import 'package:torn_pda/widgets/spies/estimated_stats_dialog.dart';
+import 'package:torn_pda/widgets/spies/spies_exact_details_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -834,302 +835,6 @@ class WarCardState extends State<WarCard> {
   }
 
   Widget _statsWidget() {
-    void showDetailedStatsDialog() {
-      String lastUpdated = "";
-      if (_member!.statsExactUpdated != 0) {
-        lastUpdated = readTimestamp(_member!.statsExactUpdated!);
-      }
-
-      Widget strWidget;
-      if (_member!.statsStr == -1) {
-        strWidget = const Text(
-          "Strength: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var strDiff = "";
-        Color strColor;
-        final result = _userProvider.basic!.strength! - _member!.statsStr!;
-        if (result == 0) {
-          strDiff = "Same as you";
-          strColor = Colors.orange;
-        } else if (result < 0) {
-          strDiff = "${formatBigNumbers(result.abs())} higher than you";
-          strColor = Colors.red;
-        } else {
-          strDiff = "${formatBigNumbers(result.abs())} lower than you";
-          strColor = Colors.green;
-        }
-
-        strWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Strength: ${formatBigNumbers(_member!.statsStr!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              strDiff,
-              style: TextStyle(fontSize: 12, color: strColor),
-            ),
-          ],
-        );
-      }
-
-      Widget spdWidget;
-      if (_member!.statsSpd == -1) {
-        spdWidget = const Text(
-          "Speed: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var spdDiff = "";
-        Color spdColor;
-        final result = _userProvider.basic!.speed! - _member!.statsSpd!;
-        if (result == 0) {
-          spdDiff = "Same as you";
-          spdColor = Colors.orange;
-        } else if (result < 0) {
-          spdDiff = "${formatBigNumbers(result.abs())} higher than you";
-          spdColor = Colors.red;
-        } else {
-          spdDiff = "${formatBigNumbers(result.abs())} lower than you";
-          spdColor = Colors.green;
-        }
-
-        spdWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Speed: ${formatBigNumbers(_member!.statsSpd!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              spdDiff,
-              style: TextStyle(fontSize: 12, color: spdColor),
-            ),
-          ],
-        );
-      }
-
-      Widget defWidget;
-      if (_member!.statsDef == -1) {
-        defWidget = const Text(
-          "Defense: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var defDiff = "";
-        Color defColor;
-        final result = _userProvider.basic!.defense! - _member!.statsDef!;
-        if (result == 0) {
-          defDiff = "Same as you";
-          defColor = Colors.orange;
-        } else if (result < 0) {
-          defDiff = "${formatBigNumbers(result.abs())} higher than you";
-          defColor = Colors.red;
-        } else {
-          defDiff = "${formatBigNumbers(result.abs())} lower than you";
-          defColor = Colors.green;
-        }
-
-        defWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Defense: ${formatBigNumbers(_member!.statsDef!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              defDiff,
-              style: TextStyle(fontSize: 12, color: defColor),
-            ),
-          ],
-        );
-      }
-
-      Widget dexWidget;
-      if (_member!.statsDex == -1) {
-        dexWidget = const Text(
-          "Dexterity: unknown",
-          style: TextStyle(fontSize: 12),
-        );
-      } else {
-        var dexDiff = "";
-        Color dexColor;
-        final result = _userProvider.basic!.dexterity! - _member!.statsDex!;
-        if (result == 0) {
-          dexDiff = "Same as you";
-          dexColor = Colors.orange;
-        } else if (result < 0) {
-          dexDiff = "${formatBigNumbers(result.abs())} higher than you";
-          dexColor = Colors.red;
-        } else {
-          dexDiff = "${formatBigNumbers(result.abs())} lower than you";
-          dexColor = Colors.green;
-        }
-
-        dexWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Dexterity: ${formatBigNumbers(_member!.statsDex!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              dexDiff,
-              style: TextStyle(fontSize: 12, color: dexColor),
-            ),
-          ],
-        );
-      }
-
-      Widget totalWidget;
-      if (_member!.statsExactTotal == -1) {
-        totalWidget = Text(
-          "TOTAL: unknown (>${formatBigNumbers(_member!.statsExactTotalKnown!)})",
-          style: const TextStyle(fontSize: 12),
-        );
-      } else {
-        var totalDiff = "";
-        Color totalColor;
-        final result = _userProvider.basic!.total! - _member!.statsExactTotal!;
-        if (result == 0) {
-          totalDiff = "Same as you";
-          totalColor = Colors.orange;
-        } else if (result < 0) {
-          totalDiff = "${formatBigNumbers(result.abs())} higher than you";
-          totalColor = Colors.red;
-        } else {
-          totalDiff = "${formatBigNumbers(result.abs())} lower than you";
-          totalColor = Colors.green;
-        }
-
-        totalWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "TOTAL: ${formatBigNumbers(_member!.statsExactTotal!)}",
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              totalDiff,
-              style: TextStyle(fontSize: 12, color: totalColor),
-            ),
-          ],
-        );
-      }
-
-      Widget sourceWidget = const SizedBox.shrink();
-      if (widget.memberModel!.spiesSource!.isNotEmpty) {
-        sourceWidget = Row(
-          children: [
-            const Text(
-              "Source: ",
-              style: TextStyle(fontSize: 12),
-            ),
-            SizedBox(
-              height: 16,
-              width: 16,
-              child: Image.asset(
-                widget.memberModel!.spiesSource == "yata"
-                    ? 'images/icons/yata_logo.png'
-                    : 'images/icons/tornstats_logo.png',
-              ),
-            ),
-          ],
-        );
-      }
-
-      BotToast.showAnimationWidget(
-        allowClick: false,
-        onlyOne: true,
-        wrapToastAnimation: (controller, cancel, child) => Stack(
-          children: <Widget>[
-            GestureDetector(
-              onTap: () {
-                cancel();
-              },
-              child: AnimatedBuilder(
-                builder: (_, child) => Opacity(
-                  opacity: controller.value,
-                  child: child,
-                ),
-                animation: controller,
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.black26),
-                  child: SizedBox.expand(),
-                ),
-              ),
-            ),
-            CustomOffsetAnimation(
-              controller: controller,
-              child: child,
-            )
-          ],
-        ),
-        toastBuilder: (cancelFunc) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Text(_member!.name!),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_member!.factionName != "0")
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    "Faction: ${_member!.factionName}",
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              if (lastUpdated.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Text(
-                    "Updated: $lastUpdated",
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
-                child: strWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: spdWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: defWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 10),
-                child: dexWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4),
-                child: totalWidget,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, left: 4),
-                child: sourceWidget,
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                cancelFunc();
-              },
-              child: const Text('Thanks'),
-            ),
-          ],
-        ),
-        animationDuration: const Duration(milliseconds: 300),
-      );
-    }
-
     if (_member!.statsExactTotalKnown != -1) {
       Color? exactColor = Colors.green;
       if (_userProvider.basic!.total! < _member!.statsExactTotalKnown! - _member!.statsExactTotalKnown! * 0.1) {
@@ -1182,7 +887,30 @@ class WarCardState extends State<WarCard> {
               size: 16,
             ),
             onTap: () {
-              showDetailedStatsDialog();
+              showDialog<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  SpiesController spy = Get.find<SpiesController>();
+                  return SpiesExactDetailsDialog(
+                    spy: spy,
+                    strength: _member!.statsStr ?? -1,
+                    strengthUpdate: _member!.statsStrUpdated,
+                    defense: _member!.statsDef ?? -1,
+                    defenseUpdate: _member!.statsDefUpdated,
+                    speed: _member!.statsSpd ?? -1,
+                    speedUpdate: _member!.statsSpdUpdated,
+                    dexterity: _member!.statsDex ?? -1,
+                    dexterityUpdate: _member!.statsDexUpdated,
+                    total: _member!.statsExactTotal ?? -1,
+                    totalUpdate: _member!.statsExactTotalUpdated,
+                    update: _member!.statsExactUpdated ?? 0,
+                    name: _member!.name!,
+                    factionName: _member!.factionName!,
+                    themeProvider: _themeProvider,
+                    userDetailsProvider: _userProvider,
+                  );
+                },
+              );
             },
           ),
         ],
@@ -1333,18 +1061,31 @@ class WarCardState extends State<WarCard> {
               size: 16,
             ),
             onTap: () {
-              _showEstimatedDetailsDialog(
-                xanaxComparison,
-                xanaxColor,
-                refillComparison,
-                refillColor,
-                enhancementComparison,
-                enhancementColor,
-                cansComparison,
-                cansColor,
-                sslColor,
-                sslProb,
-                _member!,
+              showDialog(
+                useRootNavigator: false,
+                context: context,
+                barrierDismissible: true,
+                builder: (_) {
+                  return EstimatedStatsDialog(
+                    xanaxCompare: xanaxComparison,
+                    xanaxColor: xanaxColor,
+                    refillCompare: refillComparison,
+                    refillColor: refillColor,
+                    enhancementCompare: enhancementComparison,
+                    enhancementColor: enhancementColor,
+                    cansCompare: cansComparison,
+                    cansColor: cansColor,
+                    sslColor: sslColor,
+                    sslProb: sslProb,
+                    otherXanTaken: _member!.memberXanax!,
+                    otherEctTaken: _member!.memberEcstasy!,
+                    otherLsdTaken: _member!.memberEcstasy!,
+                    otherName: _member!.name!,
+                    otherFactionName: _member!.factionName!,
+                    otherLastActionRelative: _member!.lastAction!.relative!,
+                    themeProvider: _themeProvider,
+                  );
+                },
               );
             },
           ),
@@ -1556,252 +1297,6 @@ class WarCardState extends State<WarCard> {
             ),
           ),
       ],
-    );
-  }
-
-  void _showEstimatedDetailsDialog(
-    int xanaxCompare,
-    Color xanaxColor,
-    int refillCompare,
-    Color refillColor,
-    int enhancementCompare,
-    Color? enhancementColor,
-    int cansCompare,
-    Color cansColor,
-    Color sslColor,
-    bool sslProb,
-    Member member,
-  ) {
-    String xanaxRelative = "";
-    if (xanaxCompare > 0) {
-      xanaxRelative = "${xanaxCompare.abs()} MORE than you";
-    } else if (xanaxCompare == 0) {
-      xanaxRelative = "SAME as you";
-    } else {
-      xanaxRelative = "${xanaxCompare.abs()} LESS than you";
-    }
-    final Widget xanaxWidget = Row(
-      children: [
-        const Text(
-          "> Xanax: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            xanaxRelative,
-            style: TextStyle(color: xanaxColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String refillRelative = "";
-    if (refillCompare > 0) {
-      refillRelative = "${refillCompare.abs()} MORE than you";
-    } else if (refillCompare == 0) {
-      refillRelative = "SAME as you";
-    } else {
-      refillRelative = "${refillCompare.abs()} LESS than you";
-    }
-    final Widget refillWidget = Row(
-      children: [
-        const Text(
-          "> (E) Refills: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            refillRelative,
-            style: TextStyle(color: refillColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String enhancementRelative = "";
-    if (enhancementColor == Colors.white) enhancementColor = _themeProvider.mainText;
-    if (enhancementCompare > 0) {
-      enhancementRelative = "${enhancementCompare.abs()} MORE than you";
-    } else if (enhancementCompare == 0) {
-      enhancementRelative = "SAME as you";
-    } else if (enhancementCompare < 0) {
-      enhancementRelative = "${enhancementCompare.abs()} LESS than you";
-    }
-    final Widget enhancementWidget = Row(
-      children: [
-        const Text(
-          "> Enhancer(s): ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            enhancementRelative,
-            style: TextStyle(color: enhancementColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String cansRelative = "";
-    if (cansCompare > 0) {
-      cansRelative = "${cansCompare.abs()} MORE than you";
-    } else if (cansCompare == 0) {
-      cansRelative = "SAME as you";
-    } else if (cansCompare < 0) {
-      cansRelative = "${cansCompare.abs()} LESS than you";
-    }
-    final Widget cansWidget = Row(
-      children: [
-        const Text(
-          "> Cans: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            cansRelative,
-            style: TextStyle(color: cansColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    final Widget sslWidget = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              "> SSL probability: ",
-              style: TextStyle(fontSize: 14),
-            ),
-            Text(
-              !sslProb
-                  ? "none"
-                  : sslColor == Colors.green
-                      ? "low"
-                      : sslColor == Colors.orange
-                          ? "med"
-                          : "high",
-              style: TextStyle(
-                color: sslColor,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.only(left: 12),
-          child: Text(
-            "[Sports Science Lab Gym]",
-            style: TextStyle(fontSize: 9),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Xanax: ${member.memberXanax}",
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                "Ecstasy: ${member.memberEcstasy}",
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                "LSD: ${member.memberLsd}",
-                style: const TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-
-    BotToast.showAnimationWidget(
-      allowClick: false,
-      onlyOne: true,
-      wrapToastAnimation: (controller, cancel, child) => Stack(
-        children: <Widget>[
-          GestureDetector(
-            onTap: () {
-              cancel();
-            },
-            child: AnimatedBuilder(
-              builder: (_, child) => Opacity(
-                opacity: controller.value,
-                child: child,
-              ),
-              animation: controller,
-              child: const DecoratedBox(
-                decoration: BoxDecoration(color: Colors.black26),
-                child: SizedBox.expand(),
-              ),
-            ),
-          ),
-          CustomOffsetAnimation(
-            controller: controller,
-            child: child,
-          )
-        ],
-      ),
-      toastBuilder: (cancelFunc) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: Text(member.name!),
-        backgroundColor: _themeProvider.secondBackground,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (member.factionName != "0")
-              Padding(
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  "Faction: ${member.factionName}",
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-            if (member.lastAction!.relative!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  "Online: ${member.lastAction!.relative!.replaceAll("0 minutes ago", "now")}",
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: xanaxWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: refillWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: enhancementWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: cansWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: sslWidget,
-            ),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              cancelFunc();
-            },
-            child: const Text('Thanks'),
-          ),
-        ],
-      ),
-      animationDuration: const Duration(milliseconds: 300),
     );
   }
 }

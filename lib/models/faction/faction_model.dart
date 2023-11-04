@@ -102,12 +102,17 @@ class Member {
     this.statsEstimated,
     this.spiesSource,
     this.statsExactTotal,
+    this.statsExactTotalUpdated,
     this.statsExactTotalKnown,
     this.statsExactUpdated,
     this.statsStr,
+    this.statsStrUpdated,
     this.statsSpd,
+    this.statsSpdUpdated,
     this.statsDef,
+    this.statsDefUpdated,
     this.statsDex,
+    this.statsDexUpdated,
     this.statsSort,
     this.lifeSort,
     this.overrideEasyLife,
@@ -152,12 +157,17 @@ class Member {
   String? statsEstimated = "";
   String? spiesSource = "yata";
   int? statsExactTotal = -1;
+  int? statsExactTotalUpdated;
   int? statsExactTotalKnown = -1;
-  int? statsExactUpdated = 0;
+  int? statsExactUpdated;
   int? statsStr = -1;
+  int? statsStrUpdated;
   int? statsSpd = -1;
+  int? statsSpdUpdated;
   int? statsDef = -1;
+  int? statsDefUpdated;
   int? statsDex = -1;
+  int? statsDexUpdated;
   int? statsSort = 0; // Mixed estimates and exacts so that members can be sorted
   int? lifeSort = 0;
   bool? overrideEasyLife = false;
@@ -202,12 +212,17 @@ class Member {
         statsEstimated: json["statsEstimated"] ?? "",
         spiesSource: json["spiesSource"] ?? "yata",
         statsExactTotal: json["statsExactTotal"] ?? -1,
+        statsExactTotalUpdated: json["statsExactTotalUpdated"],
         statsExactTotalKnown: json["statsExactTotalKnown"] ?? -1,
         statsExactUpdated: json["statsExactUpdated"] ?? 0,
         statsStr: json["statsStr"] ?? -1,
+        statsStrUpdated: json["statsStrUpdated"],
         statsSpd: json["statsSpd"] ?? -1,
+        statsSpdUpdated: json["statsSpdUpdated"],
         statsDef: json["statsDef"] ?? -1,
+        statsDefUpdated: json["statsDefUpdated"],
         statsDex: json["statsDex"] ?? -1,
+        statsDexUpdated: json["statsDexUpdated"],
         statsSort: json["statsSort"] ?? 0,
         lifeSort: json["lifeSort"] ?? json["lifeCurrent"] ?? 0,
         overrideEasyLife: json["overrideEasyLife"] ?? false,
@@ -249,12 +264,17 @@ class Member {
         "statsEstimated": statsEstimated,
         "spiesSource": spiesSource,
         "statsExactTotal": statsExactTotal,
+        "statsExactTotalUpdated": statsExactTotalUpdated,
         "statsExactTotalKnown": statsExactTotalKnown,
         "statsExactUpdated": statsExactUpdated,
         "statsStr": statsStr,
+        "statsStrUpdated": statsStrUpdated,
         "statsSpd": statsSpd,
+        "statsSpdUpdated": statsSpdUpdated,
         "statsDef": statsDef,
+        "statsDefUpdated": statsDefUpdated,
         "statsDex": statsDex,
+        "statsDexUpdated": statsDexUpdated,
         "statsSort": statsSort,
         "lifeSort": lifeSort,
         "overrideEasyLife": overrideEasyLife,

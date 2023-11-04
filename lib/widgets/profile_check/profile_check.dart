@@ -1,5 +1,4 @@
 // Dart imports:
-import 'dart:convert';
 import 'dart:developer';
 
 // Package imports:
@@ -7,33 +6,26 @@ import 'package:expandable/expandable.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/tornstats/tornstats_spy_model.dart';
 // Project imports:
-import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
-import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
+import 'package:torn_pda/widgets/spies/estimated_stats_dialog.dart';
+import 'package:torn_pda/widgets/spies/spies_exact_details_dialog.dart';
 
 enum ProfileCheckType {
   profile,
   attack,
-}
-
-enum SpiesSource {
-  yata,
-  tornStats,
 }
 
 class ProfileAttackCheckWidget extends StatefulWidget {
@@ -62,7 +54,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   bool _errorToShow = false;
 
   late SettingsProvider _settingsProvider;
-  final UserController _u = Get.put(UserController());
+  final SpiesController _spy = Get.find<SpiesController>();
 
   late UserDetailsProvider _userDetails;
   final _expandableController = ExpandableController();
@@ -556,48 +548,45 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     if (_settingsProvider.profileStatsEnabled == "0" || _settingsProvider.profileStatsEnabled == "2") {
       int? strength = 0;
+      int? strengthUpdate;
       int? defense = 0;
+      int? defenseUpdate;
       int? speed = 0;
+      int? speedUpdate;
       int? dexterity = 0;
+      int? dexterityUpdate;
       int? total = 0;
-      int? timestamp = 0;
+      int? totalUpdate;
       bool spyFound = false;
-      SpiesSource? spiesSource;
 
       try {
-        if (_settingsProvider.spiesSource == SpiesSource.yata) {
-          final String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_u.alternativeYataKey}';
-          final resp = await http.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 15));
-          if (resp.statusCode == 200) {
-            final spyJson = json.decode(resp.body);
-            final spiedStats = spyJson["spies"]["${otherProfile.playerId}"];
-            if (spiedStats != null) {
-              final spyModel = yataSpyModelFromJson(json.encode(spiedStats));
-              spiesSource = SpiesSource.yata;
-              strength = spyModel.strength;
-              defense = spyModel.defense;
-              speed = spyModel.speed;
-              dexterity = spyModel.dexterity;
-              total = spyModel.total;
-              timestamp = spyModel.update;
+        if (_spy.spiesSource == SpiesSource.yata) {
+          for (var spy in _spy.yataSpies) {
+            if (spy.targetName == otherProfile.name) {
+              strength = spy.strength;
+              strengthUpdate = spy.strengthTimestamp;
+              defense = spy.defense;
+              defenseUpdate = spy.defenseTimestamp;
+              speed = spy.speed;
+              speedUpdate = spy.speedTimestamp;
+              dexterity = spy.dexterity;
+              dexterityUpdate = spy.dexterityTimestamp;
+              total = spy.total;
+              totalUpdate = spy.totalTimestamp;
               spyFound = true;
+              continue;
             }
           }
         } else {
-          final String tornStatsURL =
-              'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/spy/${otherProfile.playerId}';
-          final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 5));
-          if (resp.statusCode == 200) {
-            final TornStatsSpyModel spyJson = tornStatsSpyModelFromJson(resp.body);
-            if (!spyJson.message!.contains("ERROR") && !spyJson.spy!.message!.contains("not found")) {
-              spiesSource = SpiesSource.tornStats;
-              strength = spyJson.spy!.strength;
-              defense = spyJson.spy!.defense;
-              speed = spyJson.spy!.speed;
-              dexterity = spyJson.spy!.dexterity;
-              total = spyJson.spy!.total;
-              timestamp = spyJson.spy!.timestamp;
+          for (var spy in _spy.tornStatsSpies.spies) {
+            if (spy.playerName == otherProfile.name) {
+              strength = spy.strength;
+              defense = spy.defense;
+              speed = spy.speed;
+              dexterity = spy.dexterity;
+              total = spy.total;
               spyFound = true;
+              continue;
             }
           }
         }
@@ -793,7 +782,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             child: Row(
               children: [
                 Image.asset(
-                  spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                  _spy.spiesSource == SpiesSource.yata
+                      ? 'images/icons/yata_logo.png'
+                      : 'images/icons/tornstats_logo.png',
                   height: 18,
                 ),
                 const SizedBox(width: 8),
@@ -818,16 +809,28 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             size: 18,
                           ),
                           onTap: () {
-                            _showSpiedDetailsDialog(
-                              strength: strength,
-                              defense: defense,
-                              speed: speed,
-                              dexterity: dexterity,
-                              total: total,
-                              name: _playerName,
-                              factionName: _factionName,
-                              update: timestamp,
-                              spiesSource: spiesSource,
+                            showDialog<void>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return SpiesExactDetailsDialog(
+                                  spy: _spy,
+                                  strength: strength ?? -1,
+                                  strengthUpdate: strengthUpdate,
+                                  defense: defense ?? -1,
+                                  defenseUpdate: defenseUpdate,
+                                  speed: speed ?? -1,
+                                  speedUpdate: speedUpdate,
+                                  dexterity: dexterity ?? -1,
+                                  dexterityUpdate: dexterityUpdate,
+                                  total: total ?? -1,
+                                  totalUpdate: totalUpdate,
+                                  update: totalUpdate!,
+                                  name: _playerName!,
+                                  factionName: _factionName!,
+                                  themeProvider: widget.themeProvider!,
+                                  userDetailsProvider: _userDetails,
+                                );
+                              },
                             );
                           },
                         ),
@@ -1048,18 +1051,31 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                         size: 18,
                       ),
                       onTap: () {
-                        _showEstimatedDetailsDialog(
-                          xanaxComparison,
-                          xanaxColor,
-                          refillComparison,
-                          refillColor,
-                          enhancementComparison,
-                          enhancementColor,
-                          cansComparison,
-                          cansColor,
-                          sslColor,
-                          sslProb,
-                          otherProfile,
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (_) {
+                            return EstimatedStatsDialog(
+                              xanaxCompare: xanaxComparison,
+                              xanaxColor: xanaxColor,
+                              refillCompare: refillComparison,
+                              refillColor: refillColor,
+                              enhancementCompare: enhancementComparison,
+                              enhancementColor: enhancementColor,
+                              cansCompare: cansComparison,
+                              cansColor: cansColor,
+                              sslColor: sslColor,
+                              sslProb: sslProb,
+                              otherXanTaken: otherProfile.personalstats!.xantaken!,
+                              otherEctTaken: otherProfile.personalstats!.exttaken!,
+                              otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
+                              otherName: otherProfile.name!,
+                              otherFactionName: otherProfile.name!,
+                              otherLastActionRelative: otherProfile.lastAction!.relative!,
+                              themeProvider: widget.themeProvider!,
+                            );
+                          },
                         );
                       },
                     ),
@@ -1076,512 +1092,5 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         setState(() {});
       }
     }
-  }
-
-  void _showSpiedDetailsDialog({
-    required int? strength,
-    required int? defense,
-    required int? speed,
-    required int? dexterity,
-    required int? total,
-    required int? update,
-    required String? name,
-    required String? factionName,
-    required SpiesSource? spiesSource,
-  }) {
-    String lastUpdated = "";
-    if (update != 0) {
-      lastUpdated = readTimestamp(update!);
-    }
-
-    Widget strWidget;
-    if (strength == -1) {
-      strWidget = const Text(
-        "Strength: unknown",
-        style: TextStyle(fontSize: 12),
-      );
-    } else {
-      var strDiff = "";
-      Color strColor;
-      final result = _userDetails.basic!.strength! - strength!;
-      if (result == 0) {
-        strDiff = "Same as you";
-        strColor = Colors.orange;
-      } else if (result < 0) {
-        strDiff = "${formatBigNumbers(result.abs())} higher than you";
-        strColor = Colors.red;
-      } else {
-        strDiff = "${formatBigNumbers(result.abs())} lower than you";
-        strColor = Colors.green;
-      }
-
-      strWidget = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Strength: ${formatBigNumbers(strength)}",
-            style: const TextStyle(fontSize: 12),
-          ),
-          Text(
-            strDiff,
-            style: TextStyle(fontSize: 12, color: strColor),
-          ),
-        ],
-      );
-    }
-
-    Widget spdWidget;
-    if (speed == -1) {
-      spdWidget = const Text(
-        "Speed: unknown",
-        style: TextStyle(fontSize: 12),
-      );
-    } else {
-      var spdDiff = "";
-      Color spdColor;
-      final result = _userDetails.basic!.speed! - speed!;
-      if (result == 0) {
-        spdDiff = "Same as you";
-        spdColor = Colors.orange;
-      } else if (result < 0) {
-        spdDiff = "${formatBigNumbers(result.abs())} higher than you";
-        spdColor = Colors.red;
-      } else {
-        spdDiff = "${formatBigNumbers(result.abs())} lower than you";
-        spdColor = Colors.green;
-      }
-
-      spdWidget = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Speed: ${formatBigNumbers(speed)}",
-            style: const TextStyle(fontSize: 12),
-          ),
-          Text(
-            spdDiff,
-            style: TextStyle(fontSize: 12, color: spdColor),
-          ),
-        ],
-      );
-    }
-
-    Widget defWidget;
-    if (defense == -1) {
-      defWidget = const Text(
-        "Defense: unknown",
-        style: TextStyle(fontSize: 12),
-      );
-    } else {
-      var defDiff = "";
-      Color defColor;
-      final result = _userDetails.basic!.defense! - defense!;
-      if (result == 0) {
-        defDiff = "Same as you";
-        defColor = Colors.orange;
-      } else if (result < 0) {
-        defDiff = "${formatBigNumbers(result.abs())} higher than you";
-        defColor = Colors.red;
-      } else {
-        defDiff = "${formatBigNumbers(result.abs())} lower than you";
-        defColor = Colors.green;
-      }
-
-      defWidget = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Defense: ${formatBigNumbers(defense)}",
-            style: const TextStyle(fontSize: 12),
-          ),
-          Text(
-            defDiff,
-            style: TextStyle(fontSize: 12, color: defColor),
-          ),
-        ],
-      );
-    }
-
-    Widget dexWidget;
-    if (dexterity == -1) {
-      dexWidget = const Text(
-        "Dexterity: unknown",
-        style: TextStyle(fontSize: 12),
-      );
-    } else {
-      var dexDiff = "";
-      Color dexColor;
-      final result = _userDetails.basic!.dexterity! - dexterity!;
-      if (result == 0) {
-        dexDiff = "Same as you";
-        dexColor = Colors.orange;
-      } else if (result < 0) {
-        dexDiff = "${formatBigNumbers(result.abs())} higher than you";
-        dexColor = Colors.red;
-      } else {
-        dexDiff = "${formatBigNumbers(result.abs())} lower than you";
-        dexColor = Colors.green;
-      }
-
-      dexWidget = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Dexterity: ${formatBigNumbers(dexterity)}",
-            style: const TextStyle(fontSize: 12),
-          ),
-          Text(
-            dexDiff,
-            style: TextStyle(fontSize: 12, color: dexColor),
-          ),
-        ],
-      );
-    }
-
-    Widget totalWidget;
-    if (total == -1) {
-      totalWidget = const Text(
-        "TOTAL: unknown",
-        style: TextStyle(fontSize: 12),
-      );
-    } else {
-      var totalDiff = "";
-      Color totalColor;
-      final result = _userDetails.basic!.total! - total!;
-      if (result == 0) {
-        totalDiff = "Same as you";
-        totalColor = Colors.orange;
-      } else if (result < 0) {
-        totalDiff = "${formatBigNumbers(result.abs())} higher than you";
-        totalColor = Colors.red;
-      } else {
-        totalDiff = "${formatBigNumbers(result.abs())} lower than you";
-        totalColor = Colors.green;
-      }
-
-      totalWidget = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "TOTAL: ${formatBigNumbers(total)}",
-            style: const TextStyle(fontSize: 12),
-          ),
-          Text(
-            totalDiff,
-            style: TextStyle(fontSize: 12, color: totalColor),
-          ),
-        ],
-      );
-    }
-
-    Widget sourceWidget = const SizedBox.shrink();
-    if (spiesSource != null) {
-      sourceWidget = Row(
-        children: [
-          const Text(
-            "Source: ",
-            style: TextStyle(fontSize: 12),
-          ),
-          SizedBox(
-            height: 16,
-            width: 16,
-            child: Image.asset(
-              spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
-            ),
-          ),
-        ],
-      );
-    }
-
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: name!.isNotEmpty ? Text(name) : const Text("Spied stats"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (factionName != "0" && factionName!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Text(
-                      "Faction: $factionName",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                if (lastUpdated.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Text(
-                      "Updated: $lastUpdated",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
-                  child: strWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 10),
-                  child: spdWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 10),
-                  child: defWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 10),
-                  child: dexWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4),
-                  child: totalWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4),
-                  child: sourceWidget,
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Thanks'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showEstimatedDetailsDialog(
-    int xanaxCompare,
-    Color xanaxColor,
-    int refillCompare,
-    Color refillColor,
-    int enhancementCompare,
-    Color? enhancementColor,
-    int cansCompare,
-    Color cansColor,
-    Color sslColor,
-    bool sslProb,
-    OtherProfileModel otherProfile,
-  ) {
-    String xanaxRelative = "";
-    if (xanaxCompare > 0) {
-      xanaxRelative = "${xanaxCompare.abs()} MORE than you";
-    } else if (xanaxCompare == 0) {
-      xanaxRelative = "SAME as you";
-    } else {
-      xanaxRelative = "${xanaxCompare.abs()} LESS than you";
-    }
-    final Widget xanaxWidget = Row(
-      children: [
-        const Text(
-          "> Xanax: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            xanaxRelative,
-            style: TextStyle(color: xanaxColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String refillRelative = "";
-    if (refillCompare > 0) {
-      refillRelative = "${refillCompare.abs()} MORE than you";
-    } else if (refillCompare == 0) {
-      refillRelative = "SAME as you";
-    } else {
-      refillRelative = "${refillCompare.abs()} LESS than you";
-    }
-    final Widget refillWidget = Row(
-      children: [
-        const Text(
-          "> (E) Refills: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            refillRelative,
-            style: TextStyle(color: refillColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String enhancementRelative = "";
-    if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider!.mainText;
-    if (enhancementCompare > 0) {
-      enhancementRelative = "${enhancementCompare.abs()} MORE than you";
-    } else if (enhancementCompare == 0) {
-      enhancementRelative = "SAME as you";
-    } else if (enhancementCompare < 0) {
-      enhancementRelative = "${enhancementCompare.abs()} LESS than you";
-    }
-    final Widget enhancementWidget = Row(
-      children: [
-        const Text(
-          "> Enhancer(s): ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            enhancementRelative,
-            style: TextStyle(color: enhancementColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String cansRelative = "";
-    if (cansCompare > 0) {
-      cansRelative = "${cansCompare.abs()} MORE than you";
-    } else if (cansCompare == 0) {
-      cansRelative = "SAME as you";
-    } else if (cansCompare < 0) {
-      cansRelative = "${cansCompare.abs()} LESS than you";
-    }
-    final Widget cansWidget = Row(
-      children: [
-        const Text(
-          "> Cans: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            cansRelative,
-            style: TextStyle(color: cansColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    final Widget sslWidget = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              "> SSL probability: ",
-              style: TextStyle(fontSize: 14),
-            ),
-            Text(
-              !sslProb
-                  ? "none"
-                  : sslColor == Colors.green
-                      ? "low"
-                      : sslColor == Colors.orange
-                          ? "med"
-                          : "high",
-              style: TextStyle(
-                color: sslColor,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.only(left: 12),
-          child: Text(
-            "[Sports Science Lab Gym]",
-            style: TextStyle(fontSize: 9),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Xanax: ${otherProfile.personalstats!.xantaken}",
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                "Ecstasy: ${otherProfile.personalstats!.exttaken}",
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                "LSD: ${otherProfile.personalstats!.lsdtaken}",
-                style: const TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-
-    showDialog(
-      useRootNavigator: false,
-      context: context,
-      barrierDismissible: true,
-      builder: (_) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Text(otherProfile.name!),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (otherProfile.faction!.factionName != "0")
-                  Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: Text(
-                      "Faction: ${otherProfile.faction!.factionName}",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                if (otherProfile.lastAction!.relative!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: Text(
-                      "Online: ${otherProfile.lastAction!.relative!.replaceAll(RegExp('0 minutes ago'), "now")}",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4),
-                  child: xanaxWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4),
-                  child: refillWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4),
-                  child: enhancementWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4),
-                  child: cansWidget,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, left: 4),
-                  child: sslWidget,
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Thanks'),
-            ),
-          ],
-        );
-      },
-    );
   }
 }

@@ -30,6 +30,7 @@ enum TipClass {
   factionCommunication,
   chaining,
   chainingWar,
+  spies,
   trading,
   deepLinks,
   userScripts,
@@ -104,6 +105,7 @@ class TipsPageState extends State<TipsPage> {
   var _factionCommunicationTipsList = <TipTextBuilder>[];
   var _chainingTipsList = <TipTextBuilder>[];
   var _chainingWarTipsList = <TipTextBuilder>[];
+  var _spiesTipsList = <TipTextBuilder>[];
   var _tradingTipsList = <TipTextBuilder>[];
   var _deepLinksTipsList = <TipTextBuilder>[];
   var _userScriptsTipsList = <TipTextBuilder>[];
@@ -120,6 +122,7 @@ class TipsPageState extends State<TipsPage> {
     _factionCommunicationTipsList = buildFactionCommunicationTips();
     _chainingTipsList = buildChainingTips();
     _chainingWarTipsList = buildChainingWarTips();
+    _spiesTipsList = buildSpiesTips();
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
     _userScriptsTipsList = buildUserScriptsTipsList();
@@ -204,6 +207,10 @@ class TipsPageState extends State<TipsPage> {
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.chainingWar),
                 const SizedBox(height: 25),
+                const Text("SPIES"),
+                const SizedBox(height: 10),
+                tipsPanels(TipClass.spies),
+                const SizedBox(height: 25),
                 const Text("TRADING"),
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.trading),
@@ -274,6 +281,8 @@ class TipsPageState extends State<TipsPage> {
         listToShow = _chainingTipsList;
       case TipClass.chainingWar:
         listToShow = _chainingWarTipsList;
+      case TipClass.spies:
+        listToShow = _spiesTipsList;
       case TipClass.trading:
         listToShow = _tradingTipsList;
       case TipClass.deepLinks:
@@ -942,18 +951,6 @@ class TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
-        headerValue: "How are stats calculated?",
-        expandedValue:
-            "If your faction maintains a list of spies in YATA or Torn Stats, Torn PDA will retrieve it (at intervals "
-            "not shorter than an hour) and show exact stats in the cards. Please bear in mind that you might need to have "
-            "special permissions in YATA or Torn Stats in order for this to work (ask your faction leader about it!)."
-            "\n\nYou can switch between YATA and Torn Stats as your source of spies in Settings."
-            "\n\nIf exact stats can't be obtained, then Torn PDA will calculate approximate stats whenever a target is "
-            "updated (individually or as part of a global update).",
-      ),
-    );
-    tips.add(
-      ExpandableTip(
         headerValue: "Can I hide an entire faction temporarily?",
         expandedValue: "Yes. Tap on the faction icon in the app bar and then use the 'eye' icon.",
       ),
@@ -986,6 +983,45 @@ class TipsPageState extends State<TipsPage> {
             "not lower than 1 hour) or whenever a global update is performed by the user.",
       ),
     );
+    return tips;
+  }
+
+  List<ExpandableTip> buildSpiesTips() {
+    final tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "What are spies? How are exact enemy stats retrieved?",
+        expandedValue: "If your faction maintains a list of spies in YATA or Torn Stats, Torn PDA can retrieve it "
+            "and show exact stats in several sections (the Profile Widget in the browser, and the War and Retalation "
+            "sections inside of Chaining).\n\nPlease bear in mind that you might need to have "
+            "special permissions in YATA or Torn Stats in order for this to work (ask your faction leader about it!)."
+            "\n\nIn short, you will be able to see other players battlestats as spied in game. Some providers also "
+            "store the date of when the stats were spied, in which case Torn PDA also shows this information."
+            "\n\nYou can switch between YATA and Torn Stats as your source of spies in Settings."
+            "\n\nIf exact stats can't be obtained, then Torn PDA will calculate approximate stats.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Are spies retrieved and updated automatically?",
+        expandedValue: "No. Although this was an automatic process in the past (before v3.1.9), waiting for the spies "
+            "providers to update proved to cause some delays in certain situations (during weekends, big wars or "
+            "competitions), which in turn was making Torn PDA's interface slower as it was waiting for this data."
+            "\n\nTo avoid this, spies need to be updated manually. Please remember to do so as instructed by "
+            "your faction, or before chaining, warring, etc.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "How can I manage my spies, update them or change providers?",
+        expandedValue: "You can do all this in the Settings section (look for the spies subsection). You will be able "
+            "to see what your current provider is, how many spies are synced, when were they retrieved for the last time, "
+            "swap providers and update your spies list.\n\n"
+            "For convenience, this is also accesible through the options (gear) icon in the War and Retals sections "
+            "(inside of Chaining).",
+      ),
+    );
+
     return tips;
   }
 
