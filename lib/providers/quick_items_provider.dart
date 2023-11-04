@@ -227,6 +227,9 @@ class QuickItemsProvider extends ChangeNotifier {
     for (final quickItem in _fullQuickItemsList) {
       quickItem.inventory = null;
     }
+    for (final quickItem in _activeQuickItemsList) {
+      quickItem.inventory = null;
+    }
     return true;
 
     /*

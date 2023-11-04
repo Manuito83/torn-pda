@@ -1004,7 +1004,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Are spies retrieved and updated automatically?",
-        expandedValue: "No. Although this was an automatic process in the past (before v3.1.9), waiting for the spies "
+        expandedValue: "No. Although this was an automatic process in the past (before v3.2.0), waiting for the spies "
             "providers to update proved to cause some delays in certain situations (during weekends, big wars or "
             "competitions), which in turn was making Torn PDA's interface slower as it was waiting for this data."
             "\n\nTo avoid this, spies need to be updated manually. Please remember to do so as instructed by "

@@ -45,10 +45,15 @@ class ChangeLogState extends State<ChangeLog> {
     final v3_2_0 = ChangeLogItem();
     v3_2_0.version = 'Torn PDA v3.2.0';
     v3_2_0.date = '15 NOV 2023';
-    const String feat3_2_0_1 = "Added Chain Watcher alert if API fails under watch";
-    const String feat3_2_0_2 = "Fixed several issues caused by lack of inventory details";
+    const String feat3_2_0_1 = "Reconfigured how spies are retrieved (now manually) to speed up loading times of the "
+        "Profile Widget, as well as the War and Retals section. Make sure to check Tips and Settings for further information.";
+    const String feat3_2_0_2 = "Added Chain Watcher alert if API fails under watch";
+    const String feat3_2_0_3 = "Fixed chat hide feature";
+    const String feat3_2_0_4 = "Fixed several issues caused by lack of inventory details";
     v3_2_0.features.add(feat3_2_0_1);
     v3_2_0.features.add(feat3_2_0_2);
+    v3_2_0.features.add(feat3_2_0_3);
+    v3_2_0.features.add(feat3_2_0_4);
 
     // VERSION 3.1.9
     final v3_1_9 = ChangeLogItem();

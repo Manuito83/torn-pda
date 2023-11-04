@@ -504,7 +504,7 @@ String removeChatOnLoadStartJS() {
     try {
       var style = document.createElement('style');
       style.type = 'text/css';
-      style.innerHTML = '[class*="chat-box-wrap_"] { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
+      style.innerHTML = '[class*="chat-app-container_"] { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
       document.getElementsByTagName('head')[0].appendChild(style);
     } catch (e) {
       // Sometimes firing too early and generating error in other scripts
@@ -535,7 +535,7 @@ String removeChatJS() {
   return '''
     try {
       var doc = document;
-      var chatBox = document.querySelectorAll("[class*='chat-box-wrap_']");
+      var chatBox = document.querySelectorAll("[class*='chat-app-container_']");
       chatBox[0].style.display = 'none';
     } catch (e) {
       // Sometimes firing too early and generating error in other scripts
@@ -549,7 +549,7 @@ String removeChatJS() {
 String restoreChatJS() {
   return '''
     var doc = document;
-    var chatBox = document.querySelectorAll("[class*='chat-box-wrap_']");
+    var chatBox = document.querySelectorAll("[class*='chat-app-container_']");
     chatBox[0].style.display = 'block';
     
     // Return to avoid iOS WKErrorDomain
@@ -815,7 +815,7 @@ String chatHighlightJS({required String highlightMap}) {
         return str;
       };
     
-      if (document.querySelector("[class*='chat-box-wrap_']")) {
+      if (document.querySelector("[class*='chat-app-container_']")) {
         manipulateChat();
       }
     
@@ -870,7 +870,7 @@ String chatHighlightJS({required String highlightMap}) {
     function chatsLoaded() {
       return new Promise((resolve) => {
         let checker = setInterval(() => {
-          if (document.querySelector("[class*='chat-box-wrap_']")) {
+          if (document.querySelector("[class*='chat-app-container_']")) {
             setInterval(() => {
               resolve(true);
             }, 300);
