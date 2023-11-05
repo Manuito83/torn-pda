@@ -1804,6 +1804,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         Prefs().setHiddenForeignStocks([]);
       }
 
+      if (appVersion == '3.2.0') {
+        _settingsProvider.changeHighlightColor = 0xFF009628;
+      }
+
       // Will trigger an extra upload to Firebase when version changes
       _forceFireUserReload = true;
 

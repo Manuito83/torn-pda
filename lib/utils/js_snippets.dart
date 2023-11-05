@@ -790,8 +790,11 @@ String changeLoadOutJS({required String item, required bool attackWebview}) {
 
 String chatHighlightJS({required String highlightMap}) {
   return '''
-    // Credit: Torn Tools
-    
+  // Credit: Torn Tools
+
+  "use strict";
+
+  (async () => {    
     // Example var highlights = [ { name: "Manuito", highlight: "rgba(124, 169, 0, 0.4)", sender: "rgba(124, 169, 0, 1)" } ];
     var highlights = $highlightMap;
   
@@ -820,20 +823,20 @@ String chatHighlightJS({required String highlightMap}) {
       }
     
       function manipulateChat() {
-        for (let chat of document.querySelectorAll("[class*='chat-box-content_']")) {
-          for (let message of chat.querySelectorAll("[class*='message_']")) {
-            applyChatHighlights(message);
-          }
+        for (let message of document.querySelectorAll("[class*='chat-box-body__'] [class*='chat-box-body__message-box__']")) {
+      applyChatHighlights(message);
         }
       }
     
       function applyChatHighlights(message) {
-        let sender = message.querySelector("a").innerText.replace(":", "").trim();
-        let text = simplify(message.querySelector("span").innerText);
-        const words = text.split(" ").map(simplify);
+        if (!message) return;
+      
+        let sender = simplify(message.querySelector("[class*='chat-box-body__sender-button__'] a").textContent);
+        let words = message.lastElementChild.textContent.split(" ").map(simplify);
       
         for (let entry of highlights) {
           if (entry["name"] === sender) {
+            let color = entry["sender"];
             // Color for name of sender
             message.querySelector("a").style.color = entry["sender"];
           }
@@ -843,26 +846,33 @@ String chatHighlightJS({required String highlightMap}) {
           if (!words.includes(entry["name"].toLowerCase())) continue;
           let color = entry["highlight"];
           // Color for messages background
-          message.querySelector("span").parentElement.style.backgroundColor = color;
+          message.style.backgroundColor = color;
           break;
         }
       
         function simplify(text) {
-          return text.toLowerCase().replaceAll([".", "?", ":", "!", '"', "'", ";", "`", ","], "");
+          return text.toLowerCase().replaceAll([".", "?", ":", "!", '"', "'", ";", "`", ","], "").trim();
         }
       }  
-    
+                      
       new MutationObserver((mutationsList) => {
         for (let mutation of mutationsList) {
           for (let addedNode of mutation.addedNodes) {
-            if (addedNode.classList && addedNode.classList.toString().includes("chat-box-content_")) {
-              manipulateChat();
+            
+            if (!addedNode.className && addedNode.parentElement?.className.includes("chat-box-body__")) {
+              // CHAT MESSAGE!
+              applyChatHighlights(addedNode.querySelector("[class*='chat-box-body__message-box__']"));
             }
-          
-            if (addedNode.classList && addedNode.classList.toString().includes("message_")) {
-              applyChatHighlights(addedNode);
+			
+			      /*
+            if (addedNode.className?.includes("group-chat-box__")) {
+              // CHAT BOX!
+              for (const message of addedNode.querySelectorAll("[class*='chat-box-body__'] [class*='chat-box-body__message-box__']")) {
+                applyChatHighlights(message);
+              }
             }
-          }
+			      */
+		      }
         }
       }).observe(document.querySelector("#chatRoot"), { childList: true, subtree: true });  
     });
@@ -882,6 +892,7 @@ String chatHighlightJS({required String highlightMap}) {
     
     // Return to avoid iOS WKErrorDomain
     123;
+  })(); 
   ''';
 }
 

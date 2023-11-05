@@ -353,7 +353,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _highlightColor = 0x66b74093;
+  var _highlightColor = 0xFF009628;
   int get highlightColor => _highlightColor;
   set changeHighlightColor(int value) {
     _highlightColor = value;

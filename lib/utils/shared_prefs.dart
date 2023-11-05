@@ -2261,7 +2261,7 @@ class Prefs {
 
   Future<int> getHighlightColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kHighlightColor) ?? 0x667ca900;
+    return prefs.getInt(_kHighlightColor) ?? 0x701397248;
   }
 
   Future<bool> setHighlightColor(int value) async {
