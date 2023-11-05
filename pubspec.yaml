@@ -27,7 +27,7 @@ dependencies:
   bot_toast: 4.0.1
   cloud_firestore: 4.5.0
   cloud_functions: 4.0.7
-  connectivity_plus: 2.3.7
+  connectivity_plus: 5.0.1
   cookie_jar: 3.0.1
   crypto: 3.0.3
   cupertino_icons: 1.0.2
