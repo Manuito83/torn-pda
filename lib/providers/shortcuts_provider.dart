@@ -891,37 +891,37 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Casino: Slots"
         ..nickname = "Slots"
-        ..url = "https://www.torn.com/loader.php?sid=slots"
+        ..url = "https://www.torn.com/page.php?sid=slots"
         ..originalName = "Casino: Slots"
         ..originalNickname = "Slots"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=slots"
+        ..originalUrl = "https://www.torn.com/page.php?sid=slots"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
         ..name = "Casino: Roulette"
         ..nickname = "Roulette"
-        ..url = "https://www.torn.com/loader.php?sid=roulette"
+        ..url = "https://www.torn.com/page.php?sid=roulette"
         ..originalName = "Casino: Roulette"
         ..originalNickname = "Roulette"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=roulette"
+        ..originalUrl = "https://www.torn.com/page.php?sid=roulette"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
         ..name = "Casino: High-Low"
         ..nickname = "High-low"
-        ..url = "https://www.torn.com/loader.php?sid=highlow"
+        ..url = "https://www.torn.com/page.php?sid=highlow"
         ..originalName = "Casino: High-Low"
         ..originalNickname = "High-low"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=highlow"
+        ..originalUrl = "https://www.torn.com/page.php?sid=highlow"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
         ..name = "Casino: Keno"
         ..nickname = "Keno"
-        ..url = "https://www.torn.com/loader.php?sid=keno"
+        ..url = "https://www.torn.com/page.php?sid=keno"
         ..originalName = "Casino: Keno"
         ..originalNickname = "Keno"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=keno"
+        ..originalUrl = "https://www.torn.com/page.php?sid=keno"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
@@ -936,37 +936,37 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Casino: Bookie"
         ..nickname = "Bookie"
-        ..url = "https://www.torn.com/page.php?sid=bookie#/popular"
+        ..url = "https://www.torn.com/page.php?sid=bookie"
         ..originalName = "Casino: Bookie"
         ..originalNickname = "Bookie"
-        ..originalUrl = "https://www.torn.com/page.php?sid=bookie#/popular"
+        ..originalUrl = "https://www.torn.com/page.php?sid=bookie"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
         ..name = "Casino: Lottery"
         ..nickname = "Lottery"
-        ..url = "https://www.torn.com/loader.php?sid=lottery"
+        ..url = "https://www.torn.com/page.php?sid=lottery"
         ..originalName = "Casino: Lottery"
         ..originalNickname = "Lottery"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=lottery"
+        ..originalUrl = "https://www.torn.com/page.php?sid=lottery"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
         ..name = "Casino: Blackjack"
         ..nickname = "Blackjack"
-        ..url = "https://www.torn.com/loader.php?sid=blackjack"
+        ..url = "https://www.torn.com/page.php?sid=blackjack"
         ..originalName = "Casino: Blackjack"
         ..originalNickname = "Blackjack"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=blackjack"
+        ..originalUrl = "https://www.torn.com/page.php?sid=blackjack"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
         ..name = "Casino: Poker"
         ..nickname = "Poker"
-        ..url = "https://www.torn.com/loader.php?sid=holdem"
+        ..url = "https://www.torn.com/page.php?sid=holdem"
         ..originalName = "Casino: Poker"
         ..originalNickname = "Poker"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=holdem"
+        ..originalUrl = "https://www.torn.com/page.php?sid=holdem"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
@@ -981,10 +981,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Casino: Spin the Wheel"
         ..nickname = "Spin Wheel"
-        ..url = "https://www.torn.com/loader.php?sid=spinTheWheel"
+        ..url = "https://www.torn.com/page.php?sid=spinTheWheel"
         ..originalName = "Casino: Spin the Wheel"
         ..originalNickname = "Spin Wheel"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=spinTheWheel"
+        ..originalUrl = "https://www.torn.com/page.php?sid=spinTheWheel"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()

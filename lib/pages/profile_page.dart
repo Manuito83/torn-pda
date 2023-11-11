@@ -3463,6 +3463,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var burglary = "";
     var shoplifting = "";
     var cardSkimming = "";
+    var hustling = "";
     hunting = _miscModel!.hunting ?? "";
     racing = _miscModel!.racing ?? "";
     reviving = _miscModel!.reviving ?? "";
@@ -3472,6 +3473,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     burglary = _miscModel!.burglary ?? "";
     shoplifting = _miscModel!.shoplifting ?? "";
     cardSkimming = _miscModel!.cardSkimming ?? "";
+    hustling = _miscModel!.hustling ?? "";
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -4066,6 +4068,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 const SizedBox(
                                   width: 130,
                                   child: Text('Burglary: '),
+                                ),
+                                SelectableText(burglary),
+                              ],
+                            ),
+                          if (hustling.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Hustling: '),
                                 ),
                                 SelectableText(burglary),
                               ],
