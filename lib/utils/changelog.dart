@@ -39,7 +39,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 347 - 05/11/2023
+    // Build 348 - 11/11/2023
+
+    // VERSION 3.2.1
+    final v3_2_1 = ChangeLogItem();
+    v3_2_1.version = 'Torn PDA v3.2.1';
+    v3_2_1.date = '20 NOV 2023';
+    const String feat3_2_1_1 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
+    const String feat3_2_1_2 = "Added missing crimes to Basic Info card";
+    const String feat3_2_1_3 = "Fixed some shortcuts URLs (need to readd)";
+    v3_2_1.features.add(feat3_2_1_1);
+    v3_2_1.features.add(feat3_2_1_2);
+    v3_2_1.features.add(feat3_2_1_3);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();
@@ -1558,6 +1569,7 @@ class ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_2_1);
     itemList.add(v3_2_0);
     itemList.add(v3_1_9);
     itemList.add(v3_1_8);
