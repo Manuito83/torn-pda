@@ -47,10 +47,12 @@ class ChangeLogState extends State<ChangeLog> {
     v3_2_1.date = '20 NOV 2023';
     const String feat3_2_1_1 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
     const String feat3_2_1_2 = "Added missing crimes to Basic Info card";
-    const String feat3_2_1_3 = "Fixed some shortcuts URLs (need to readd)";
+    const String feat3_2_1_3 = "Fixed issue updating new/former faction members in War";
+    const String feat3_2_1_4 = "Fixed some shortcuts URLs (need to readd)";
     v3_2_1.features.add(feat3_2_1_1);
     v3_2_1.features.add(feat3_2_1_2);
     v3_2_1.features.add(feat3_2_1_3);
+    v3_2_1.features.add(feat3_2_1_4);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();

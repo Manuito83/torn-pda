@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:developer' as dev;
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -818,7 +819,7 @@ class WarController extends GetxController {
   }
 
   Future _integrityCheck({bool force = false}) async {
-    if (!force && DateTime.now().difference(_lastIntegrityCheck).inHours < 1) {
+    if (!force && DateTime.now().difference(_lastIntegrityCheck).inMinutes < 10) {
       return;
     }
 
@@ -829,18 +830,31 @@ class WarController extends GetxController {
       }
       final FactionModel apiImport = apiResult as FactionModel;
 
+      bool changes = false;
       Map<String, Member> oldFactionMembers = Map.from(faction.members!);
 
       // Remove members that do not longer belong to the faction
-      oldFactionMembers.removeWhere((memberId, memberDetails) => !apiImport.members!.containsKey(memberId));
+      oldFactionMembers.removeWhere((memberId, memberDetails) {
+        if (!apiImport.members!.containsKey(memberId)) {
+          dev.log("${memberDetails.name} left faction!");
+          changes = true;
+          return true;
+        }
+        return false;
+      });
 
       // Add new members that were not here before
       apiImport.members!.forEach((key, value) {
         if (!oldFactionMembers.containsKey(key)) {
           faction.members![key] = apiImport.members![key];
           updateSingleMemberFull(faction.members![key]!);
+          changes = true;
         }
       });
+
+      if (changes) {
+        faction.members = Map.from(oldFactionMembers);
+      }
     }
 
     Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
