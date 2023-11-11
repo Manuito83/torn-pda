@@ -4273,8 +4273,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       bool reachedEnd = false;
       final skippedNames = [];
 
-      // We'll skip maximum of 3 targets
-      for (var i = 0; i < 3; i++) {
+      // We'll skip maximum of 10 targets
+      for (var i = 0; i < 10; i++) {
         // Get the status of our next target
         final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload!.attackIdList[i]);
 
@@ -4402,7 +4402,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       bool reachedEnd = false;
       final skippedNames = [];
 
-      // We'll skip maximum of 3 targets
+      // We'll skip maximum of 8 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
         final nextTarget = await Get.find<ApiCallerController>()
