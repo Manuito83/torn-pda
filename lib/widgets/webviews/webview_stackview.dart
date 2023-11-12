@@ -396,8 +396,12 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
       toggleButtonIconColor: Colors.transparent,
       toggleButtonOnPressed: () {
         if (_webViewProvider.currentTab == 0) {
-          _webViewProvider.verticalMenuCurrentIndex = 0;
-          _webViewProvider.verticalMenuOpen();
+          if (_webViewProvider.verticalMenuIsOpen) {
+            _webViewProvider.verticalMenuClose();
+          } else {
+            _webViewProvider.verticalMenuCurrentIndex = 0;
+            _webViewProvider.verticalMenuOpen();
+          }
         } else {
           _webViewProvider.verticalMenuClose();
           _webViewProvider.activateTab(0);
