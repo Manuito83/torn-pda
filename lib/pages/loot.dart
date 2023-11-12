@@ -882,7 +882,7 @@ class LootPageState extends State<LootPage> {
                 Text("Next attack not set!", style: TextStyle(color: Colors.orange[700])),
                 if (_lootRangersClearAtZeroReason.isNotEmpty)
                   Text(
-                    "Reason: $_lootRangersClearAtZeroReason",
+                    "Looting will resume after $_lootRangersClearAtZeroReason",
                     style: TextStyle(color: Colors.orange[700]),
                   ),
               ],
