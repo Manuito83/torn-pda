@@ -48,13 +48,15 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat3_2_1_1 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
     const String feat3_2_1_2 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
     const String feat3_2_1_3 = "Added missing crimes to Basic Info card";
-    const String feat3_2_1_4 = "Fixed issue updating new/former faction members in War";
-    const String feat3_2_1_5 = "Fixed some shortcuts URLs (need to re-add)";
+    const String feat3_2_1_4 = "Added additional information to Loot Rangers attack status in certain conditions";
+    const String feat3_2_1_5 = "Fixed issue updating new/former faction members in War";
+    const String feat3_2_1_6 = "Fixed some shortcuts URLs (need to re-add)";
     v3_2_1.features.add(feat3_2_1_1);
     v3_2_1.features.add(feat3_2_1_2);
     v3_2_1.features.add(feat3_2_1_3);
     v3_2_1.features.add(feat3_2_1_4);
     v3_2_1.features.add(feat3_2_1_5);
+    v3_2_1.features.add(feat3_2_1_6);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();
