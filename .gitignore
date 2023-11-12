@@ -85,6 +85,7 @@ lib/generated_plugin_registrant.dart
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 /lib/config/
+/lib/torn-pda-native/
 android/.idea/.gitignore
 android/.idea/gradle.xml
 android/.idea/misc.xml
