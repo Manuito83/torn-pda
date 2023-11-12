@@ -80,6 +80,8 @@ class LootPageState extends State<LootPage> {
   bool? _alarmVibration;
 
   int _lootRangersTime = 0;
+  String _lootRangersClearAtZeroReason = "";
+  bool _lootRangersAttackOngoing = false;
   final List<String> _lootRangersIdOrder = <String>[];
   final List<String?> _lootRangersNameOrder = <String?>[];
 
@@ -665,10 +667,21 @@ class LootPageState extends State<LootPage> {
       if (response.statusCode == 200) {
         final lrJson = lootRangersFromJson(response.body);
 
+        // DEBUG
+        //final lrJson = lootRangersFromJson(lootRangersDebug);
+
         if (lrJson.time!.clear == 0) {
           _lootRangersTime = 0;
+          if (lrJson.time!.attack) {
+            _lootRangersAttackOngoing = true;
+          }
+          if (lrJson.time!.reason != null) {
+            _lootRangersClearAtZeroReason = lrJson.time!.reason!;
+          }
         } else {
           _lootRangersTime = lrJson.time!.clear! * 1000;
+          _lootRangersAttackOngoing = false;
+          _lootRangersClearAtZeroReason = "";
         }
 
         _lootRangersNameOrder.clear();
@@ -863,12 +876,24 @@ class LootPageState extends State<LootPage> {
               )
             ],
           ),
-          if (_lootRangersTime == 0)
-            Text("Next attack not set!", style: TextStyle(color: Colors.orange[700]))
+          if (_lootRangersTime == 0 && !_lootRangersAttackOngoing)
+            Column(
+              children: [
+                Text("Next attack not set!", style: TextStyle(color: Colors.orange[700])),
+                if (_lootRangersClearAtZeroReason.isNotEmpty)
+                  Text(
+                    "Reason: $_lootRangersClearAtZeroReason",
+                    style: TextStyle(color: Colors.orange[700]),
+                  ),
+              ],
+            )
+          else if (_lootRangersTime == 0 && _lootRangersAttackOngoing)
+            Text("ATTACK ONGOING NOW", style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold))
           else
             Text("Next attack $timeString"),
-          if (_lootRangersTime > 0) Text("Order: ${_lootRangersNameOrder.join(", ")}"),
-          if (_lootRangersTime > 0)
+          if (_lootRangersTime > 0 || (_lootRangersTime == 0 && _lootRangersAttackOngoing))
+            Text("Order: ${_lootRangersNameOrder.join(", ")}"),
+          if (_lootRangersTime > 0 || (_lootRangersTime == 0 && _lootRangersAttackOngoing))
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
