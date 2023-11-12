@@ -8,7 +8,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:get/get.dart';
 
 // Project imports:
-import 'package:torn_pda/private/yata_config.dart';
+import 'package:torn_pda/config/yata_config.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 
 class YataError {
