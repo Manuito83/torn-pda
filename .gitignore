@@ -84,7 +84,7 @@ lib/generated_plugin_registrant.dart
 !**/ios/**/default.mode2v3
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
-/lib/private/
+/lib/config/
 android/.idea/.gitignore
 android/.idea/gradle.xml
 android/.idea/misc.xml
