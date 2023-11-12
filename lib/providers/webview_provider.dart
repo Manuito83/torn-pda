@@ -1206,6 +1206,21 @@ class WebViewProvider extends ChangeNotifier {
     tab.webViewKey?.currentState?.reloadFromOutside();
   }
 
+  void passHealingChoiceFromOutside(HealingPages choice) {
+    final tab = _tabList[_currentTab];
+    tab.webViewKey?.currentState?.openHealingPage(choice);
+  }
+
+  void passOpenCloseChainWidgetFromOutside() {
+    final tab = _tabList[_currentTab];
+    tab.webViewKey?.currentState?.openCloseChainWidgetFromOutside();
+  }
+
+  void passNextChainAttackFromOutside() {
+    final tab = _tabList[_currentTab];
+    tab.webViewKey?.currentState?.nextChainAttack();
+  }
+
   /// At least used in the following cases:
   /// 1.- On main tab init: in case the user only uses the browser, it will fire after an app's launch when browser rebuilds
   /// 2.- Whenever the user launches the browser from a tap (other than the PDA icon, which does not load any URL itself)

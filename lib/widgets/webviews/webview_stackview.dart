@@ -19,6 +19,7 @@ import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart'
 import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
 import 'package:torn_pda/widgets/webviews/tabs_excess_dialog.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
@@ -394,8 +395,13 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
       toggleButtonColor: Colors.transparent,
       toggleButtonIconColor: Colors.transparent,
       toggleButtonOnPressed: () {
-        _webViewProvider.verticalMenuClose();
-        _webViewProvider.activateTab(0);
+        if (_webViewProvider.currentTab == 0) {
+          _webViewProvider.verticalMenuCurrentIndex = 0;
+          _webViewProvider.verticalMenuOpen();
+        } else {
+          _webViewProvider.verticalMenuClose();
+          _webViewProvider.activateTab(0);
+        }
       },
       backgroundWidget: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -463,12 +469,72 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
         ],
       ),
       items: [
-        CircularMenuItem(
-          icon: Icons.copy_all_outlined,
-          onTap: () {
-            _webViewProvider.duplicateTab(0);
-          },
-        ),
+        if (!_webViewProvider.tabList[0].isChainingBrowser)
+          CircularMenuItem(
+            icon: Icons.copy_all_outlined,
+            onTap: () {
+              _webViewProvider.duplicateTab(0);
+            },
+          ),
+        /* ITEMS FOR CHAINING */
+        if (_webViewProvider.tabList[0].isChainingBrowser)
+          CircularMenuItem(
+            icon: MdiIcons.playPause,
+            onLongPress: () => _webViewProvider.cancelChainingBrowser(),
+            onTap: () {
+              _webViewProvider.passNextChainAttackFromOutside();
+            },
+          ),
+        if (_webViewProvider.tabList[0].isChainingBrowser)
+          // We simulate the same layout as for a normal CircularMenuItem
+          Container(
+            height: 38,
+            width: 38,
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey,
+                  blurRadius: 2,
+                ),
+              ],
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Material(
+                color: Theme.of(context).primaryColor,
+                child: InkWell(
+                  child: PopupMenuButton<HealingPages>(
+                    padding: const EdgeInsets.all(6),
+                    icon: const Icon(
+                      Icons.healing,
+                      color: Colors.white,
+                    ),
+                    onSelected: (HealingPages choice) {
+                      _webViewProvider.passHealingChoiceFromOutside(choice);
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return chainingAidPopupChoices.map((HealingPages choice) {
+                        return PopupMenuItem<HealingPages>(
+                          value: choice,
+                          child: Text(choice.description!),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (_webViewProvider.tabList[0].isChainingBrowser)
+          CircularMenuItem(
+            icon: MdiIcons.linkVariant,
+            onTap: () {
+              _webViewProvider.passOpenCloseChainWidgetFromOutside();
+              _webViewProvider.verticalMenuClose();
+            },
+          ),
+        /* ITEMS FOR CHAINING */
         if (_webViewProvider.currentTab == 0)
           CircularMenuItem(
             icon: Icons.arrow_forward,

@@ -453,13 +453,15 @@ class TipsPageState extends State<TipsPage> {
             TextSpan(
               text:
                   "Whenever you access the browser from a target attack request (in the Chaining section), your first "
-                  "browser tab will be converted to a special 'chaining tab', with additional icons at the top that "
+                  "browser tab will be converted to a special 'chaining tab', with additional icons at the top (*) that "
                   "will allow you to continue from one target to another, until you reach the end of your list.\n\n"
                   "Please be aware that you can stop your chain session at any time by long-pressing the play/pause "
-                  "button at the right corner of your app bar.\n\n"
+                  "button at the right corner (*) of your app bar.\n\n"
                   "It is not recommended to use this tab for normal day-to-day widget usage (such us quick items, "
                   "crimes, etc.) since it can lack some of the normal features in certain cases. Instead, it is better "
-                  "to stop the chain session or use another tab.",
+                  "to stop the chain session or use another tab.\n\n"
+                  "(*): Please note that chain control buttons are also accesible if you tap/double tap your first browser "
+                  "tab while chaining, which makes them also easily accesible if you are using the full screen mode.",
               style: TextStyle(
                 fontSize: 13,
               ),

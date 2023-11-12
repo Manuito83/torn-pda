@@ -6,7 +6,7 @@ import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart'
 
 class CircularMenuTabs extends StatefulWidget {
   /// List of CircularMenuItem contains at least two items.
-  final List<CircularMenuItem> items;
+  final List<Widget> items;
 
   /// Menu alignment
   final AlignmentGeometry alignment;

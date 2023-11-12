@@ -105,6 +105,11 @@ class VaultsOptions {
   }
 }
 
+final chainingAidPopupChoices = <HealingPages>[
+  HealingPages(description: "Personal"),
+  HealingPages(description: "Faction"),
+];
+
 class WebViewFull extends StatefulWidget {
   final int? windowId;
   final String customTitle;
@@ -278,10 +283,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // Chaining configuration
   bool _isChainingBrowser = false;
   ChainingPayload? _chainingPayload;
-  final _chainingAidPopupChoices = <HealingPages>[
-    HealingPages(description: "Personal"),
-    HealingPages(description: "Faction"),
-  ];
+
   final _chainWidgetController = ExpandableController();
   final _chainWidgetKey = GlobalKey();
   late ChainStatusProvider _chainStatusProvider;
@@ -3602,6 +3604,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
+  void openCloseChainWidgetFromOutside() {
+    _chainWidgetController.expanded ? _chainWidgetController.expanded = false : _chainWidgetController.expanded = true;
+  }
+
   void _activateFindInPage() {
     setState(() {
       _findInPageActive = true;
@@ -4208,11 +4214,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         onTap: _nextButtonPressed
             ? null
             : () {
-                _launchNextAttack();
-
-                if (_webViewProvider.webViewSplitActive) {
-                  _checkIfTargetsAttackedAndRevertChaining(split: true);
-                }
+                nextChainAttack();
               },
         onLongPress: () => _webViewProvider.cancelChainingBrowser(),
         child: const Padding(
@@ -4237,9 +4239,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       padding: const EdgeInsets.symmetric(horizontal: 1),
       child: PopupMenuButton<HealingPages>(
         icon: const Icon(Icons.healing),
-        onSelected: _openHealingPage,
+        onSelected: openHealingPage,
         itemBuilder: (BuildContext context) {
-          return _chainingAidPopupChoices.map((HealingPages choice) {
+          return chainingAidPopupChoices.map((HealingPages choice) {
             return PopupMenuItem<HealingPages>(
               value: choice,
               child: Text(choice.description!),
@@ -4250,7 +4252,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _openHealingPage(HealingPages choice) async {
+  Future<void> openHealingPage(HealingPages choice) async {
     String? goBackTitle = _pageTitle;
     // Check if the proper page loads (e.g. if we have started an attack, it won't let us change to another page!).
     // Note: this is something that can't be done from one target to another,
@@ -4384,6 +4386,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
       }
       _showNoteToast();
+    }
+  }
+
+  /// Not to be used right after launch
+  void nextChainAttack() {
+    _launchNextAttack();
+
+    if (_webViewProvider.webViewSplitActive) {
+      _checkIfTargetsAttackedAndRevertChaining(split: true);
     }
   }
 
