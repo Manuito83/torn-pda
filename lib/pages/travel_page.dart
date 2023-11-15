@@ -921,7 +921,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       tz.TZDateTime.from(scheduledNotificationDateTime, tz.local),
       platformChannelSpecifics,
       payload: 'travel',
-      androidAllowWhileIdle: true, // Deliver at exact time
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 

@@ -52,8 +52,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.2.1';
-const String androidCompilation = '348';
-const String iosCompilation = '348';
+const String androidCompilation = '349';
+const String iosCompilation = '349';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -109,7 +109,8 @@ Future<void> main() async {
   if (Platform.isAndroid) {
     final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
-    await androidImplementation.requestPermission();
+    await androidImplementation.requestNotificationsPermission();
+    await androidImplementation.requestExactAlarmsPermission();
   }
 
   tz.initializeTimeZones();

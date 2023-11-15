@@ -595,6 +595,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               ?.getActiveNotifications())!;
 
           for (final not in activeNotifications) {
+            if (not.id == null) continue;
             // Platform channel to cancel direct Firebase notifications (we can call
             // "cancelAll()" there without affecting scheduled notifications, which is
             // a problem with the local plugin)
@@ -603,7 +604,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             }
             // This cancels the Firebase alerts that have been triggered locally
             else {
-              flutterLocalNotificationsPlugin.cancel(not.id);
+              flutterLocalNotificationsPlugin.cancel(not.id!);
             }
           }
         }

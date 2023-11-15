@@ -362,7 +362,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
       tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes!)),
       platformChannelSpecifics,
       payload: '211',
-      androidAllowWhileIdle: true, // Deliver at exact time
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }

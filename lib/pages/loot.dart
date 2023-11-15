@@ -1245,7 +1245,7 @@ class LootPageState extends State<LootPage> {
       tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
       platformChannelSpecifics,
       payload: notificationPayload,
-      androidAllowWhileIdle: true, // Deliver at exact time
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
