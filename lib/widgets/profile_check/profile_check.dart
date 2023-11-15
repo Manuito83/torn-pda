@@ -824,7 +824,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                   dexterityUpdate: dexterityUpdate,
                                   total: total ?? -1,
                                   totalUpdate: totalUpdate,
-                                  update: totalUpdate!,
+                                  update: totalUpdate,
                                   name: _playerName!,
                                   factionName: _factionName!,
                                   themeProvider: widget.themeProvider!,

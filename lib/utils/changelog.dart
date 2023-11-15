@@ -39,24 +39,26 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 348 - 11/11/2023
+    // Build 349 - 11/11/2023
 
     // VERSION 3.2.1
     final v3_2_1 = ChangeLogItem();
     v3_2_1.version = 'Torn PDA v3.2.1';
-    v3_2_1.date = '20 NOV 2023';
+    v3_2_1.date = '22 NOV 2023';
     const String feat3_2_1_1 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
     const String feat3_2_1_2 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
     const String feat3_2_1_3 = "Added missing crimes to Basic Info card";
     const String feat3_2_1_4 = "Added additional information to Loot Rangers attack status in certain conditions";
-    const String feat3_2_1_5 = "Fixed issue updating new/former faction members in War";
-    const String feat3_2_1_6 = "Fixed some shortcuts URLs (need to re-add)";
+    const String feat3_2_1_5 = "Fixed issue when opening the spied stats dialog";
+    const String feat3_2_1_6 = "Fixed issue updating new/former faction members in War";
+    const String feat3_2_1_7 = "Fixed some shortcuts URLs (need to re-add)";
     v3_2_1.features.add(feat3_2_1_1);
     v3_2_1.features.add(feat3_2_1_2);
     v3_2_1.features.add(feat3_2_1_3);
     v3_2_1.features.add(feat3_2_1_4);
     v3_2_1.features.add(feat3_2_1_5);
     v3_2_1.features.add(feat3_2_1_6);
+    v3_2_1.features.add(feat3_2_1_7);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();
