@@ -4362,7 +4362,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (targetsSkipped > 0 && reachedEnd) {
         BotToast.showText(
           text: "No more targets, all remaining are either in jail, hospital or in a different "
-              "country (${skippedNames.join(", ")})",
+              "country (${skippedNames.join(", ")})\n\nPress and hold the play/pause button to stop the chaining mode",
           textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
@@ -4481,7 +4481,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (targetsSkipped > 0 && reachedEnd) {
         BotToast.showText(
           text: "No more targets, all remaining are either in jail, hospital or in a different "
-              "country (${skippedNames.join(", ")})",
+              "country (${skippedNames.join(", ")})\n\nPress and hold the play/pause button to stop the chaining mode",
           textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
