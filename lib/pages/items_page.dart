@@ -384,6 +384,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
+                  // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+                  /*
                   SizedBox(
                     width: 150,
                     height: 40,
@@ -456,6 +458,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                       ],
                     ),
                   ),
+                  */
                   SizedBox(
                     width: 150,
                     child: RawChip(
@@ -627,7 +630,9 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
     // Reset saved filters
     _hiddenCategories = await Prefs().getHiddenItemsCategories();
-    _ownedItemsFilter = await Prefs().getOnlyOwnedItemsFilter();
+    // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+    //_ownedItemsFilter = await Prefs().getOnlyOwnedItemsFilter();
+    _ownedItemsFilter = 0; // TODO!
 
     // Sort them for the first time
     final String savedSort = await Prefs().getItemsSort();

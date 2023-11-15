@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 349 - 15/11/2023
+    // Build 350 - 15/11/2023
 
     // VERSION 3.2.1
     final v3_2_1 = ChangeLogItem();
@@ -52,6 +52,7 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat3_2_1_5 = "Fixed issue when opening the spied stats dialog";
     const String feat3_2_1_6 = "Fixed issue updating new/former faction members in War";
     const String feat3_2_1_7 = "Fixed some shortcuts URLs (need to re-add)";
+    const String feat3_2_1_8 = "Removed unusable inventory filter in Items";
     v3_2_1.features.add(feat3_2_1_1);
     v3_2_1.features.add(feat3_2_1_2);
     v3_2_1.features.add(feat3_2_1_3);
@@ -59,6 +60,7 @@ class ChangeLogState extends State<ChangeLog> {
     v3_2_1.features.add(feat3_2_1_5);
     v3_2_1.features.add(feat3_2_1_6);
     v3_2_1.features.add(feat3_2_1_7);
+    v3_2_1.features.add(feat3_2_1_8);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();
