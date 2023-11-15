@@ -39,6 +39,7 @@ class OwnProfileMisc {
     // Skills - Crimes
     this.searchForCash,
     this.bootlegging,
+    this.pickpocketing,
     this.graffiti,
     this.burglary,
     this.shoplifting,
@@ -82,6 +83,7 @@ class OwnProfileMisc {
   // Skills - Crimes
   String? searchForCash;
   String? bootlegging;
+  String? pickpocketing;
   String? graffiti;
   String? burglary;
   String? shoplifting;
@@ -123,6 +125,7 @@ class OwnProfileMisc {
         reviving: json["reviving"],
         searchForCash: json["search_for_cash"],
         bootlegging: json["bootlegging"],
+        pickpocketing: json["pickpocketing"],
         graffiti: json["graffiti"],
         burglary: json["burglary"],
         shoplifting: json["shoplifting"],
@@ -167,6 +170,7 @@ class OwnProfileMisc {
         "reviving": reviving,
         "search_for_cash": searchForCash,
         "bootlegging": bootlegging,
+        "pickpocketing": pickpocketing,
         "graffiti": graffiti,
         "burglary": burglary,
         "shoplifting": shoplifting,

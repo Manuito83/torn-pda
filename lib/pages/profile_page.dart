@@ -3459,6 +3459,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var reviving = "";
     var searchForCash = "";
     var bootlegging = "";
+    var pickpocketing = "";
     var graffiti = "";
     var burglary = "";
     var shoplifting = "";
@@ -3469,6 +3470,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     reviving = _miscModel!.reviving ?? "";
     searchForCash = _miscModel!.searchForCash ?? "";
     bootlegging = _miscModel!.bootlegging ?? "";
+    pickpocketing = _miscModel!.pickpocketing ?? "";
     graffiti = _miscModel!.graffiti ?? "";
     burglary = _miscModel!.burglary ?? "";
     shoplifting = _miscModel!.shoplifting ?? "";
@@ -3477,10 +3479,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
+        pickpocketing.isNotEmpty ||
         graffiti.isNotEmpty ||
         burglary.isNotEmpty ||
         shoplifting.isNotEmpty ||
-        cardSkimming.isNotEmpty) {
+        cardSkimming.isNotEmpty ||
+        hustling.isNotEmpty) {
       crimesExist = true;
     }
 
@@ -4050,6 +4054,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   child: Text('Shoplifting: '),
                                 ),
                                 SelectableText(shoplifting),
+                              ],
+                            ),
+                          if (pickpocketing.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Pickpocketing: '),
+                                ),
+                                SelectableText(pickpocketing),
                               ],
                             ),
                           if (cardSkimming.isNotEmpty)
@@ -5547,7 +5561,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification!)),
       platformChannelSpecifics,
       payload: notificationPayload,
-      androidAllowWhileIdle: true, // Deliver at exact time
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
