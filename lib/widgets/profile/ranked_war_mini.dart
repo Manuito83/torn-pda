@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 
 class RankedWarMini extends StatefulWidget {
   final RankedWar? rankedWar;
@@ -58,9 +61,11 @@ class RankedWarMiniState extends State<RankedWarMini> {
     final int ts = DateTime.now().millisecondsSinceEpoch;
     final bool warInFuture = widget.rankedWar!.war!.start! * 1000 > ts;
     final bool warActive = widget.rankedWar!.war!.start! < ts && widget.rankedWar!.war!.end == 0;
+    SettingsProvider settingsProvider = context.read<SettingsProvider>();
 
     if (warInFuture) {
       final bool lessThan24h = widget.rankedWar!.war!.start! * 1000 - ts < 86400000;
+      final dt = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar!.war!.start! * 1000);
       return Container(
         decoration: lessThan24h
             ? BoxDecoration(
@@ -71,20 +76,31 @@ class RankedWarMiniState extends State<RankedWarMini> {
                 ),
               )
             : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
-          child: Row(
-            children: [
-              Icon(MaterialCommunityIcons.sword_cross, color: Colors.orange[700]),
-              const SizedBox(width: 5),
-              Text(
-                _timeString,
-                style: TextStyle(
-                  fontWeight: lessThan24h ? FontWeight.bold : FontWeight.normal,
+        child: Row(
+          children: [
+            Icon(MaterialCommunityIcons.sword_cross, color: Colors.orange[700]),
+            const SizedBox(width: 5),
+            Column(
+              children: [
+                Text(
+                  _timeString,
+                  style: TextStyle(
+                    fontWeight: lessThan24h ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
-              ),
-            ],
-          ),
+                Text(
+                  TimeFormatter(
+                    inputTime: dt,
+                    timeFormatSetting: settingsProvider.currentTimeFormat,
+                    timeZoneSetting: settingsProvider.currentTimeZone,
+                  ).formatHourWithDaysElapsed(includeToday: true),
+                  style: TextStyle(
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     } else if (warActive) {

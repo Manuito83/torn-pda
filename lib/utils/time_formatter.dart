@@ -36,6 +36,36 @@ class TimeFormatter {
     return _hourFormatted;
   }
 
+  String formatHourWithDaysElapsed({bool includeToday = false}) {
+    late DateTime timeZonedTime;
+    String? zoneId;
+    switch (timeZoneSetting) {
+      case TimeZoneSetting.localTime:
+        timeZonedTime = inputTime!.toLocal();
+        zoneId = 'LT';
+      case TimeZoneSetting.tornTime:
+        timeZonedTime = inputTime!.toUtc();
+        zoneId = 'TCT';
+    }
+
+    final formatter = DateFormat('HH:mm');
+    final now = DateTime.now();
+    final difference = timeZonedTime.difference(now).inDays;
+
+    String suffix;
+    if (difference == 0) {
+      suffix = includeToday ? 'today' : '';
+    } else if (difference == 1) {
+      suffix = 'tomorrow';
+    } else {
+      suffix = 'in $difference days';
+    }
+
+    _hourFormatted = '${formatter.format(timeZonedTime)} $zoneId $suffix';
+
+    return _hourFormatted ?? "";
+  }
+
   String? _dayWeekFormatted;
   String? get formatDayWeek {
     late DateTime timeZonedTime;

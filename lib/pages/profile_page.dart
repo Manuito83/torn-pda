@@ -1296,7 +1296,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         inputTime: dateTimeArrival,
         timeFormatSetting: _settingsProvider!.currentTimeFormat,
         timeZoneSetting: _settingsProvider!.currentTimeZone,
-      ).formatHour;
+      ).formatHourWithDaysElapsed();
 
       final double percentage = _getTravelPercentage(totalTravelTimeSeconds);
       final String ballAssetLocation = _flagBallAsset();
@@ -2027,7 +2027,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHour;
+          ).formatHourWithDaysElapsed();
           return Row(
             children: <Widget>[
               const SizedBox(width: 65),
@@ -2044,7 +2044,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHour;
+          ).formatHourWithDaysElapsed();
           return Row(
             children: <Widget>[
               const SizedBox(width: 65),
@@ -2061,7 +2061,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHour;
+          ).formatHourWithDaysElapsed();
           return Row(
             children: <Widget>[
               const SizedBox(width: 65),
@@ -2078,7 +2078,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHour;
+          ).formatHourWithDaysElapsed();
           return Row(
             children: <Widget>[
               const SizedBox(width: 65),
@@ -2118,21 +2118,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
         final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final timerTime = _travelArrivalTime.add(Duration(seconds: -_travelTimerAhead));
         final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         notificationSetString = 'Travel notification set for $formattedTimeNotification';
         notificationCancelString = 'Travel notification cancelled!';
@@ -2150,7 +2150,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             case NotificationType.alarm:
               notificationIcon = Icons.notifications_none;
             case NotificationType.timer:
-              notificationIcon = Icons.timer;
+              notificationIcon = Icons.timer_outlined;
           }
         }
 
@@ -2183,7 +2183,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: _energyNotificationTime,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHour;
+          ).formatHourWithDaysElapsed();
 
           if (!percentageError) {
             _customEnergyMaxOverride = false;
@@ -2237,7 +2237,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: _nerveNotificationTime,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHour;
+          ).formatHourWithDaysElapsed();
 
           if (!percentageError) {
             _customNerveMaxOverride = false;
@@ -2270,7 +2270,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _lifeNotificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
         notificationSetString = 'Life notification set for $formattedTime';
         notificationCancelString = 'Life notification cancelled!';
         alarmSetString = 'Life alarm set for $formattedTime';
@@ -2286,7 +2286,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _drugsNotificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
         notificationSetString = 'Drugs cooldown notification set for $formattedTime';
         notificationCancelString = 'Drugs cooldown notification cancelled!';
         alarmSetString = 'Drugs cooldown alarm set for $formattedTime';
@@ -2302,7 +2302,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _medicalNotificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
         notificationSetString = 'Medical cooldown notification set for $formattedTime';
         notificationCancelString = 'Medical cooldown notification cancelled!';
         alarmSetString = 'Medical cooldown alarm set for $formattedTime';
@@ -2318,7 +2318,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _boosterNotificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
         notificationSetString = 'Booster cooldown notification set for $formattedTime';
         notificationCancelString = 'Booster cooldown notification cancelled!';
         alarmSetString = 'Booster cooldown alarm set for $formattedTime';
@@ -2336,21 +2336,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final alarmTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
         final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final timerTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
         final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         notificationSetString = 'Hospital release notification set for $formattedTime';
         notificationCancelString = 'Hospital release notification cancelled!';
@@ -2369,21 +2369,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final alarmTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
         final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final timerTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
         final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         notificationSetString = 'Jail release notification set for $formattedTime';
         notificationCancelString = 'Jail release notification cancelled!';
@@ -2402,26 +2402,26 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final alarmTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
         final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         final timerTime = _rankedWarTime.add(Duration(seconds: -_rankedWarNotificationAhead));
         final formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
           timeZoneSetting: _settingsProvider!.currentTimeZone,
-        ).formatHour;
+        ).formatHourWithDaysElapsed();
 
         notificationSetString = 'Ranked war notification set for $formattedTime';
-        notificationCancelString = 'Ranked war  notification cancelled!';
-        alarmSetString = 'Ranked war  alarm set for $formattedTimeAlarm';
-        timerSetString = 'Ranked war  timer set for $formattedTimeTimer';
+        notificationCancelString = 'Ranked war notification cancelled!';
+        alarmSetString = 'Ranked war alarm set for $formattedTimeAlarm';
+        timerSetString = 'Ranked war timer set for $formattedTimeTimer';
         notificationType = _rankedWarNotificationType;
         notificationIcon = _rankedWarNotificationIcon;
     }
@@ -2476,17 +2476,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 );
               }
             case NotificationType.alarm:
-              _setAlarm(profileNotification);
-              BotToast.showText(
-                text: alarmSetString,
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: percentageError ? Colors.red : Colors.green,
-                duration: const Duration(seconds: 5),
-                contentPadding: const EdgeInsets.all(10),
-              );
+              _setAlarm(profileNotification, alarmSetString, percentageError);
+
             case NotificationType.timer:
               _setTimer(profileNotification);
               BotToast.showText(
@@ -2697,7 +2688,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
       timeZoneSetting: _settingsProvider!.currentTimeZone,
-    ).formatHour;
+    ).formatHourWithDaysElapsed();
     final String diff = _timeFormatted(timeEnd);
     return Flexible(
       child: Padding(
@@ -2713,7 +2704,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
       timeZoneSetting: _settingsProvider!.currentTimeZone,
-    ).formatHour;
+    ).formatHourWithDaysElapsed();
     final String diff = _timeFormatted(timeEnd);
     return Flexible(
       child: Padding(
@@ -2729,7 +2720,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
       timeZoneSetting: _settingsProvider!.currentTimeZone,
-    ).formatHour;
+    ).formatHourWithDaysElapsed();
     final String diff = _timeFormatted(timeEnd);
     return Flexible(
       child: Padding(
@@ -5058,7 +5049,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               inputTime: complexTime,
               timeFormatSetting: _settingsProvider!.currentTimeFormat,
               timeZoneSetting: _settingsProvider!.currentTimeZone,
-            ).formatHour;
+            ).formatHourWithDaysElapsed();
             complexTimeString = "OC will be ready @ $formattedTime${_timeFormatted(complexTime)}";
           } else {
             complexReady = true;
@@ -5100,7 +5091,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               inputTime: simpleTime,
               timeFormatSetting: _settingsProvider!.currentTimeFormat,
               timeZoneSetting: _settingsProvider!.currentTimeZone,
-            ).formatHour;
+            ).formatHourWithDaysElapsed();
             simpleString = "A faction organized crime will be ready @ "
                 "$formattedTime${_timeFormatted(simpleTime)}";
           }
@@ -6096,7 +6087,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _travelNotificationIcon = Icons.notifications_none;
       } else if (travel == '2') {
         _travelNotificationType = NotificationType.timer;
-        _travelNotificationIcon = Icons.timer;
+        _travelNotificationIcon = Icons.timer_outlined;
       }
 
       if (energy == '0') {
@@ -6107,7 +6098,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _energyNotificationIcon = Icons.notifications_none;
       } else if (energy == '2') {
         _energyNotificationType = NotificationType.timer;
-        _energyNotificationIcon = Icons.timer;
+        _energyNotificationIcon = Icons.timer_outlined;
       }
 
       if (nerve == '0') {
@@ -6118,7 +6109,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _nerveNotificationIcon = Icons.notifications_none;
       } else if (nerve == '2') {
         _nerveNotificationType = NotificationType.timer;
-        _nerveNotificationIcon = Icons.timer;
+        _nerveNotificationIcon = Icons.timer_outlined;
       }
 
       if (life == '0') {
@@ -6129,7 +6120,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _lifeNotificationIcon = Icons.notifications_none;
       } else if (life == '2') {
         _lifeNotificationType = NotificationType.timer;
-        _lifeNotificationIcon = Icons.timer;
+        _lifeNotificationIcon = Icons.timer_outlined;
       }
 
       if (drugs == '0') {
@@ -6140,7 +6131,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _drugsNotificationIcon = Icons.notifications_none;
       } else if (drugs == '2') {
         _drugsNotificationType = NotificationType.timer;
-        _drugsNotificationIcon = Icons.timer;
+        _drugsNotificationIcon = Icons.timer_outlined;
       }
 
       if (medical == '0') {
@@ -6151,7 +6142,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _medicalNotificationIcon = Icons.notifications_none;
       } else if (medical == '2') {
         _medicalNotificationType = NotificationType.timer;
-        _medicalNotificationIcon = Icons.timer;
+        _medicalNotificationIcon = Icons.timer_outlined;
       }
 
       if (booster == '0') {
@@ -6162,7 +6153,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _boosterNotificationIcon = Icons.notifications_none;
       } else if (booster == '2') {
         _boosterNotificationType = NotificationType.timer;
-        _boosterNotificationIcon = Icons.timer;
+        _boosterNotificationIcon = Icons.timer_outlined;
       }
 
       if (hospital == '0') {
@@ -6173,7 +6164,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _hospitalNotificationIcon = Icons.notifications_none;
       } else if (hospital == '2') {
         _hospitalNotificationType = NotificationType.timer;
-        _hospitalNotificationIcon = Icons.timer;
+        _hospitalNotificationIcon = Icons.timer_outlined;
       }
 
       if (jail == '0') {
@@ -6184,7 +6175,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _jailNotificationIcon = Icons.notifications_none;
       } else if (jail == '2') {
         _jailNotificationType = NotificationType.timer;
-        _jailNotificationIcon = Icons.timer;
+        _jailNotificationIcon = Icons.timer_outlined;
       }
 
       if (rankedWar == '0') {
@@ -6195,7 +6186,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _rankedWarNotificationIcon = Icons.notifications_none;
       } else if (rankedWar == '2') {
         _rankedWarNotificationType = NotificationType.timer;
-        _rankedWarNotificationIcon = Icons.timer;
+        _rankedWarNotificationIcon = Icons.timer_outlined;
       }
 
       _eventsExpController.expanded = expandEvents;
@@ -6207,10 +6198,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
   }
 
-  void _setAlarm(ProfileNotification profileNotification) {
+  void _setAlarm(ProfileNotification profileNotification, String alarmSetString, bool percentageError) {
+    bool moreThan24Hours = false;
     int? hour;
     int? minute;
     String? message;
+
+    DateTime currentTime = DateTime.now();
 
     switch (profileNotification) {
       case ProfileNotification.travel:
@@ -6218,46 +6212,91 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Travel';
+        Duration difference = currentTime.difference(alarmTime);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.energy:
         hour = _energyNotificationTime!.hour;
         minute = _energyNotificationTime!.minute;
         message = 'Torn PDA Energy';
+        Duration difference = currentTime.difference(_energyNotificationTime!);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.nerve:
         hour = _nerveNotificationTime!.hour;
         minute = _nerveNotificationTime!.minute;
         message = 'Torn PDA Nerve';
+        Duration difference = currentTime.difference(_nerveNotificationTime!);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.life:
         hour = _lifeNotificationTime!.hour;
         minute = _lifeNotificationTime!.minute;
         message = 'Torn PDA Life';
+        Duration difference = currentTime.difference(_lifeNotificationTime!);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.drugs:
         hour = _drugsNotificationTime!.hour;
         minute = _drugsNotificationTime!.minute;
         message = 'Torn PDA Drugs';
+        Duration difference = currentTime.difference(_drugsNotificationTime!);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.medical:
         hour = _medicalNotificationTime!.hour;
         minute = _medicalNotificationTime!.minute;
         message = 'Torn PDA Medical';
+        Duration difference = currentTime.difference(_medicalNotificationTime!);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.booster:
         hour = _boosterNotificationTime!.hour;
         minute = _boosterNotificationTime!.minute;
         message = 'Torn PDA Booster';
+        Duration difference = currentTime.difference(_boosterNotificationTime!);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.hospital:
         final alarmTime = _hospitalReleaseTime.add(Duration(minutes: -_hospitalAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Hospital';
+        Duration difference = currentTime.difference(alarmTime);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.jail:
         final alarmTime = _jailReleaseTime.add(Duration(minutes: -_jailAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Jail';
+        Duration difference = currentTime.difference(alarmTime);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.rankedWar:
         final alarmTime = _rankedWarTime.add(Duration(minutes: -_rankedWarAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA War';
+        Duration difference = currentTime.difference(alarmTime);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
     }
+
+    if (moreThan24Hours) {
+      BotToast.showText(
+        text: "Alarms can't be set for a period longer than 24 hours!",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.red,
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
+      );
+      return;
+    }
+
+    BotToast.showText(
+      text: alarmSetString,
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: percentageError ? Colors.red : Colors.green,
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
+    );
 
     // Travel sound and vibration is configured from the travel section
     String thisSound;
