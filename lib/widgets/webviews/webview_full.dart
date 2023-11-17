@@ -385,6 +385,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
       disallowOverScroll: _settingsProvider.iosDisallowOverscroll,
       overScrollMode: OverScrollMode.NEVER,
+      // These two allow video playing for crimes
+      mediaPlaybackRequiresUserGesture: false,
+      allowsInlineMediaPlayback: true,
     );
 
     _pullToRefreshController = PullToRefreshController(
