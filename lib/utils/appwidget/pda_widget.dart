@@ -291,7 +291,7 @@ Future<void> pdaWidget_fetchData() async {
             formatter = DateFormat('HH:mm');
             break;
           case TimeFormatSetting.h12:
-            formatter = DateFormat('HH:mm a');
+            formatter = DateFormat('hh:mm a');
             break;
         }
         HomeWidget.saveWidgetData<String>('last_updated', "${formatter.format(DateTime.now())} LT");

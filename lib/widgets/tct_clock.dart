@@ -39,7 +39,7 @@ class TctClockState extends State<TctClock> {
       case TimeFormatSetting.h24:
         formatter = DateFormat(settingsProvider.showSecondsInClock ? 'HH:mm:ss' : 'HH:mm');
       case TimeFormatSetting.h12:
-        formatter = DateFormat(settingsProvider.showSecondsInClock ? 'HH:mm:ss a' : 'HH:mm a');
+        formatter = DateFormat(settingsProvider.showSecondsInClock ? 'hh:mm:ss a' : 'hh:mm a');
     }
 
     return Column(

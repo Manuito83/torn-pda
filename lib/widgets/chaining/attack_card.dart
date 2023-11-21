@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -292,7 +293,17 @@ class AttackCardState extends State<AttackCard> {
 
   String _returnDateFormatted() {
     final date = DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded! * 1000);
-    final formatter = DateFormat('dd MMMM HH:mm');
+
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final TimeFormatSetting timePrefs = settingsProvider.currentTimeFormat;
+    late DateFormat formatter;
+    switch (timePrefs) {
+      case TimeFormatSetting.h24:
+        formatter = DateFormat('dd MMMM HH:mm');
+      case TimeFormatSetting.h12:
+        formatter = DateFormat('dd MMMM hh:mm a');
+    }
+
     return formatter.format(date);
   }
 

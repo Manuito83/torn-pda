@@ -11,9 +11,9 @@ class TimeFormatter {
 
   TimeFormatter({required this.inputTime, required this.timeFormatSetting, required this.timeZoneSetting});
 
-  String? _hourFormatted;
   String? get formatHour {
     late DateTime timeZonedTime;
+    String? hourFormatted;
     String? zoneId;
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
@@ -27,17 +27,18 @@ class TimeFormatter {
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
         final formatter = DateFormat('HH:mm');
-        _hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+        hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
       case TimeFormatSetting.h12:
         final formatter = DateFormat('hh:mm a');
-        _hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+        hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
     }
 
-    return _hourFormatted;
+    return hourFormatted;
   }
 
   String formatHourWithDaysElapsed({bool includeToday = false}) {
     late DateTime timeZonedTime;
+    String? hourFormatted;
     String? zoneId;
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
@@ -48,9 +49,17 @@ class TimeFormatter {
         zoneId = 'TCT';
     }
 
-    final formatter = DateFormat('HH:mm');
     final now = DateTime.now();
     final difference = timeZonedTime.difference(now).inDays;
+
+    switch (timeFormatSetting) {
+      case TimeFormatSetting.h24:
+        final formatter = DateFormat('HH:mm');
+        hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+      case TimeFormatSetting.h12:
+        final formatter = DateFormat('hh:mm a');
+        hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+    }
 
     String suffix;
     if (difference == 0) {
@@ -61,9 +70,7 @@ class TimeFormatter {
       suffix = 'in $difference days';
     }
 
-    _hourFormatted = '${formatter.format(timeZonedTime)} $zoneId $suffix';
-
-    return _hourFormatted ?? "";
+    return '$hourFormatted $suffix';
   }
 
   String? _dayWeekFormatted;

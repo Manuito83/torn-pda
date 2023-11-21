@@ -5656,7 +5656,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool triggered = false;
     final updatedTypes = <String>[];
     final updatedTimes = <String>[];
-    final formatter = DateFormat('HH:mm');
+
+    final TimeFormatSetting timePrefs = _settingsProvider!.currentTimeFormat;
+    DateFormat formatter;
+    switch (timePrefs) {
+      case TimeFormatSetting.h24:
+        formatter = DateFormat('HH:mm');
+      case TimeFormatSetting.h12:
+        formatter = DateFormat('hh:mm a');
+    }
 
     for (final notification in pendingNotificationRequests) {
       // Don't take into account notifications that don't split this way
