@@ -12,6 +12,9 @@ To access the API key, define a string constant(s), "_###PDA-APIKEY###_" in the 
 
 Additionally, functions PDA_httpGet() and PDA_httpPost() are provided. For more information on those, see [TornPDA_API.js](TornPDA_API.js)
 
+## GreaseMonkey Functions (`GM_`)
+Torn PDA support some GM functions as well. These can be found in [GMforPDA.user.js](GMforPDA.user.js) and will aide in porting existing scripts to Torn PDA. Due to platform restrictions, they will not behave the same as they do in TamperMonkey or GreaseMonkey. If any errors arise from these functions, please let us know!
+
 ## Contact Us
 For discussion and support with scripting, please join our Discord server!
 

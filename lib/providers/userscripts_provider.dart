@@ -59,6 +59,14 @@ class UserScriptsProvider extends ChangeNotifier {
         ),
       );
 
+      scriptList.add(
+        UserScript(
+          groupName: "__TornPDA_GM__",
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+          source: handler_GM(),
+        ),
+      );
+
       // Add evaluateJavascript handler
       scriptList.add(
         UserScript(
