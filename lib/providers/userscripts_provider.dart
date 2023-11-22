@@ -59,6 +59,7 @@ class UserScriptsProvider extends ChangeNotifier {
         ),
       );
 
+      // Add GM Handlers (by Kwack)
       scriptList.add(
         UserScript(
           groupName: "__TornPDA_GM__",

@@ -39,21 +39,24 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 350 - 15/11/2023
+    // Build 351 - 22/11/2023
 
     // VERSION 3.2.1
     final v3_2_1 = ChangeLogItem();
     v3_2_1.version = 'Torn PDA v3.2.1';
     v3_2_1.date = '22 NOV 2023';
-    const String feat3_2_1_1 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
-    const String feat3_2_1_2 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
-    const String feat3_2_1_3 = "Added missing crimes to Basic Info card";
-    const String feat3_2_1_4 = "Added additional information to Loot Rangers attack status in certain conditions";
-    const String feat3_2_1_5 = "Added local time to War widget in Profile and fixed issue with alarms";
-    const String feat3_2_1_6 = "Fixed issue when opening the spied stats dialog";
-    const String feat3_2_1_7 = "Fixed issue updating new/former faction members in War";
-    const String feat3_2_1_8 = "Fixed some shortcuts URLs (need to re-add)";
-    const String feat3_2_1_9 = "Removed unusable inventory filter in Items";
+    const String feat3_2_1_1 =
+        "Added Grease Monkey handlers to userscripts (read Disclaimer in userscripts section) - by Kwack";
+    const String feat3_2_1_2 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
+    const String feat3_2_1_3 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
+    const String feat3_2_1_4 = "Added missing crimes to Basic Info card";
+    const String feat3_2_1_5 = "Added additional information to Loot Rangers attack status in certain conditions";
+    const String feat3_2_1_6 = "Added local time to War widget in Profile and fixed issue with alarms";
+    const String feat3_2_1_7 = "Fixed issue when opening the spied stats dialog";
+    const String feat3_2_1_8 = "Fixed issue updating new/former faction members in War";
+    const String feat3_2_1_9 = "Fixed some shortcuts URLs (need to re-add)";
+    const String feat3_2_1_10 = "Fixed time format (12/24h) setting in several sections";
+    const String feat3_2_1_11 = "Removed unusable inventory filter in Items";
     v3_2_1.features.add(feat3_2_1_1);
     v3_2_1.features.add(feat3_2_1_2);
     v3_2_1.features.add(feat3_2_1_3);
@@ -63,6 +66,8 @@ class ChangeLogState extends State<ChangeLog> {
     v3_2_1.features.add(feat3_2_1_7);
     v3_2_1.features.add(feat3_2_1_8);
     v3_2_1.features.add(feat3_2_1_9);
+    v3_2_1.features.add(feat3_2_1_10);
+    v3_2_1.features.add(feat3_2_1_11);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();

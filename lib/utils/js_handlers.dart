@@ -164,17 +164,22 @@ String handler_evaluateJS() {
   ''';
 }
 
+/// By Kwack [2190604]
 String handler_GM() {
   return '''
-    const ver = 0.2;
+    if (typeof GMforPDAversion === 'undefined') {
 
-    if (!window.flutter_inappwebview)
+      const GMforPDAversion = 0.2;
+
+      if (!window.flutter_inappwebview) {
         throw new Error(
             "GMforPDA requires flutter_inappwebview to be defined. Ensure this script is running inside of PDA."
         );
+      }
 
-    window.GM = {
-        ver,
+      window.GM = {
+        
+        GMforPDAversion,
 
         getValue(key, defaultValue) {
             return localStorage.getItem(key) ?? defaultValue;
@@ -257,7 +262,7 @@ String handler_GM() {
                 (title
                     ? `Notification from script \${title}:`
                     : "Notification from unnamed source:") +
-                "\n" +
+                "\\n" +
                 text;
             if (confirm(alert)) onclick?.();
             return ondone?.();
@@ -281,11 +286,13 @@ String handler_GM() {
                 version: undefined,
             },
             scriptMetaStr: "This information is unavailable in TornPDA",
-            scriptHandler: `TornPDA, using GMforPDA version \${ver}`,
-            version: ver,
+            scriptHandler: `TornPDA, using GMforPDA version \${GMforPDAversion}`,
+            version: GMforPDAversion,
         },
-    };
 
-    Object.entries(GM).forEach(([k, v]) => window[`GM_\${k}`] = v);
+      },
+
+      Object.entries(GM).forEach(([k, v]) => window[`GM_\${k}`] = v);
+    }
    ''';
 }

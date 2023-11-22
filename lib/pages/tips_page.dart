@@ -1145,12 +1145,13 @@ class TipsPageState extends State<TipsPage> {
                   "userscripts section in Settings & Advanced Browser Settings.\n\n"
                   "As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not include any "
                   "external libraries that are served in frameworks such as GM or TM. Therefore, if you are trying to "
-                  "use a scripts that was develop for another platform or that won't work in your browser console, "
+                  "use a script that was developed for another platform or that won't work in your browser console, "
                   "you might need to adapt the code.\n\n"
                   "Make sure to read carefully the disclaimer, as it contains instructions and limitations in case "
                   "you would like to install new userscripts. In the disclaimer you will also find handy information "
                   "if you are an advanced programmer and would like to understand how to implement some complex "
-                  "scenarios in your scripts that work with Torn PDA.\n\n"
+                  "scenarios in your scripts that work with Torn PDA (including GET, POST, JS evaluation and some "
+                  "Grease Monkey handlers).\n\n"
                   "There is a list of several userscripts examples at ",
               style: const TextStyle(
                 fontSize: 13,

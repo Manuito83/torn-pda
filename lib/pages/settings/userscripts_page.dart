@@ -701,7 +701,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 const SizedBox(height: 10),
                 const Text(
                   "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
-                  "code changes to work with Torn PDA if external libraries were used.\n\n"
+                  "code changes to work with Torn PDA if external libraries were used. If you are an advanced user, "
+                  "please scroll down to the 'GM handlers' section for more information an alternatives.\n\n"
                   "If a script does not work as intended after changing its code in Torn PDA, please "
                   "try resetting your browser cache in the advanced browser settings section.",
                   style: TextStyle(
@@ -900,6 +901,51 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                       const TextSpan(
                         text: ".",
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
+                const Text(
+                  "GM HANDLERS (ADVANCED)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not "
+                        "include any external libraries that are served in frameworks such as GM or TM. Therefore, "
+                        "if you are trying to use a script that was developed for another platform or that won't even "
+                        "work in your (desktop) browser console, you might need to adapt the code.\n\n"
+                        "However, Torn PDA incorporates basic GM handlers to make life easier when converting scripts, "
+                        "supporting dot notation (e.g.: 'GM.addStyle') and underscode notation (e.g.: 'GM_addStyle').\n\n"
+                        "Whilst these handlers supply vanilla JS counterparts to the GM_ functions, they cannot prepare "
+                        "your script to run on mobile devices: viewports are different, the page looks different, "
+                        "some selectors change, etcetera. So even if using these handlers, be prepared to adapt "
+                        "your script as necessary.\n\n"
+                        "For more information on how to proceed, please visit the ",
+                    style: const TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "GM-For-PDA handler implementation",
+                        style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String scriptApiUrl =
+                                "https://github.com/Manuito83/torn-pda/blob/master/userscripts/GMforPDA.user.js";
+                            if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
+                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
+                            }
+                          },
+                      ),
+                      const TextSpan(
+                        text: ".\n\nAlso, in case of doubt, please head to our Discord server where "
+                            "we will be delighted to support you with this.\n\n"
+                            "Credit goes to Kwack for the development and testing of this integration.\n\n",
                       ),
                     ],
                   ),
