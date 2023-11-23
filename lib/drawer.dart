@@ -499,16 +499,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future _deepLinksStreamSub() async {
     try {
-      _deepLinkSub = linkStream.listen((String? link) {
+      _deepLinkSub = linkStream.listen((String? link) async {
         if (_settingsProvider.debugMessages) {
           BotToast.showText(
-            text: "Deep link launch\n\n$link",
+            onlyOne: false,
+            text: "Deep link awakes\n\n$link",
+            align: Alignment(0, 0.5),
             textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.blue[700]!,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
             contentPadding: const EdgeInsets.all(10),
           );
         }
@@ -550,11 +552,41 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else {
         // Prevents double activation
         if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 5) {
+          if (_settingsProvider.debugMessages) {
+            BotToast.showText(
+              onlyOne: false,
+              text: "Deep link triggered return\n\n "
+                  "${DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds} seconds",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.red[700]!,
+              duration: const Duration(seconds: 3),
+              contentPadding: const EdgeInsets.all(10),
+            );
+            await Future.delayed(Duration(seconds: 1));
+          }
           return;
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         _preferencesCompleter.future.whenComplete(() async {
           await _changelogCompleter.future;
+
+          if (_settingsProvider.debugMessages) {
+            BotToast.showText(
+              onlyOne: false,
+              text: "Deep link browser opens\n\n$url",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue[700]!,
+              duration: const Duration(seconds: 3),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
+
           _webViewProvider.openBrowserPreference(
             context: context,
             url: url,
