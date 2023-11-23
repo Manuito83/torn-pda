@@ -311,6 +311,82 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Flexible(child: const Text("Mini-profile name tap opens new tab")),
+                  Switch(
+                    value: _settingsProvider.hitInMiniProfileOpensNewTab,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.hitInMiniProfileOpensNewTab = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'If enabled, tapping a player name in a mini-profile window will open a new tab, instead of loading '
+                'the profile in the same window',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            if (_settingsProvider.hitInMiniProfileOpensNewTab)
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(30, 0, 20, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Icon(Icons.arrow_forward_ios_outlined, size: 16),
+                              SizedBox(width: 5),
+                              Flexible(child: const Text("Automatically change to new tab")),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: _settingsProvider.hitInMiniProfileOpensNewTabAndChangeTab,
+                          onChanged: (value) {
+                            setState(() {
+                              _settingsProvider.hitInMiniProfileOpensNewTabAndChangeTab = value;
+                            });
+                          },
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.green,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'By using this switch you can select if the browser should automatically change to the newly generated '
+                      'tab after tapping a player\'s name in a mini-profile. By setting it to off, you can open several '
+                      'tabs in a row from different mini-profiles.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ],

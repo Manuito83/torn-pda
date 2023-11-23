@@ -106,6 +106,8 @@ class Prefs {
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
+  final String _kHitInMiniProfileOpensNewTab = "pda__hitInMiniProfileOpensNewTab";
+  final String _kHitInMiniProfileOpensNewTabAndChangeTab = "pda__hitInMiniProfileOpensNewTabAndChangeTab";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
@@ -1282,6 +1284,27 @@ class Prefs {
   Future<bool> setExtraPlayerNetworth(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExtraPlayerNetworth, value);
+  }
+
+  // *************
+  Future<bool> getHitInMiniProfileOpensNewTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kHitInMiniProfileOpensNewTab) ?? false;
+  }
+
+  Future<bool> setHitInMiniProfileOpensNewTab(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kHitInMiniProfileOpensNewTab, value);
+  }
+
+  Future<bool> getHitInMiniProfileOpensNewTabAndChangeTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kHitInMiniProfileOpensNewTabAndChangeTab) ?? true;
+  }
+
+  Future<bool> setHitInMiniProfileOpensNewTabAndChangeTab(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kHitInMiniProfileOpensNewTabAndChangeTab, value);
   }
 
   /// ----------------------------

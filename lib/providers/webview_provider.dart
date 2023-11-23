@@ -1380,6 +1380,8 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void _restorePreferences() async {
+    _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
+
     String splitType = await Prefs().getSplitScreenWebview();
     switch (splitType) {
       case "off":

@@ -401,6 +401,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _hitInMiniProfileOpensNewTab = false;
+  bool get hitInMiniProfileOpensNewTab => _hitInMiniProfileOpensNewTab;
+  set hitInMiniProfileOpensNewTab(bool value) {
+    _hitInMiniProfileOpensNewTab = value;
+    Prefs().setHitInMiniProfileOpensNewTab(_hitInMiniProfileOpensNewTab);
+    notifyListeners();
+  }
+
+  var _hitInMiniProfileOpensNewTabAndChangeTab = false;
+  bool get hitInMiniProfileOpensNewTabAndChangeTab => _hitInMiniProfileOpensNewTabAndChangeTab;
+  set hitInMiniProfileOpensNewTabAndChangeTab(bool value) {
+    _hitInMiniProfileOpensNewTabAndChangeTab = value;
+    Prefs().setHitInMiniProfileOpensNewTabAndChangeTab(_hitInMiniProfileOpensNewTabAndChangeTab);
+    notifyListeners();
+  }
+
   var _removeNotificationsOnLaunch = true;
   bool get removeNotificationsOnLaunch => _removeNotificationsOnLaunch;
   set changeRemoveNotificationsOnLaunch(bool value) {
@@ -765,6 +781,9 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _extraPlayerNetworth = await Prefs().getExtraPlayerNetworth();
+
+    _hitInMiniProfileOpensNewTab = await Prefs().getHitInMiniProfileOpensNewTab();
+    _hitInMiniProfileOpensNewTabAndChangeTab = await Prefs().getHitInMiniProfileOpensNewTabAndChangeTab();
 
     _removeNotificationsOnLaunch = await Prefs().getRemoveNotificationsOnLaunch();
 

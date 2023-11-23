@@ -3456,6 +3456,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var shoplifting = "";
     var cardSkimming = "";
     var hustling = "";
+    var disposal = "";
     hunting = _miscModel!.hunting ?? "";
     racing = _miscModel!.racing ?? "";
     reviving = _miscModel!.reviving ?? "";
@@ -3467,6 +3468,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     shoplifting = _miscModel!.shoplifting ?? "";
     cardSkimming = _miscModel!.cardSkimming ?? "";
     hustling = _miscModel!.hustling ?? "";
+    disposal = _miscModel!.disposal ?? "";
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -3475,7 +3477,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         burglary.isNotEmpty ||
         shoplifting.isNotEmpty ||
         cardSkimming.isNotEmpty ||
-        hustling.isNotEmpty) {
+        hustling.isNotEmpty ||
+        disposal.isNotEmpty) {
       crimesExist = true;
     }
 
@@ -4084,7 +4087,17 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   width: 130,
                                   child: Text('Hustling: '),
                                 ),
-                                SelectableText(burglary),
+                                SelectableText(hustling),
+                              ],
+                            ),
+                          if (disposal.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Disposal: '),
+                                ),
+                                SelectableText(disposal),
                               ],
                             ),
                         ],

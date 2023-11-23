@@ -1196,6 +1196,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _addScriptApiHandlers(webView!);
           },
           shouldOverrideUrlLoading: (c, request) async {
+            if (_settingsProvider.hitInMiniProfileOpensNewTab) {
+              if (await _hitShouldOpenNewTab(c, request)) {
+                return NavigationActionPolicy.CANCEL;
+              }
+            }
+
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
@@ -1643,6 +1649,34 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  /// Analysis of hit elements to change navigation behaviour
+  Future<bool> _hitShouldOpenNewTab(
+    InAppWebViewController c,
+    NavigationAction request,
+  ) async {
+    var hitResult = await c.getHitTestResult();
+    if (hitResult?.extra == null) return false;
+
+    // Mini Profiles
+    if (request.request.url.toString().contains("https://www.torn.com/profiles.php?") &&
+        hitResult!.extra!.contains("https://awardimages.torn.com/") &&
+        hitResult.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE) {
+      final html = await webView?.getHtml();
+      if (html == null || html.isEmpty) return false;
+      final document = parse(html);
+      final miniProfile = document.querySelector("[class*='profile-mini-_wrapper_']");
+      if (miniProfile != null) {
+        _webViewProvider.addTab(url: request.request.url.toString());
+        if (_settingsProvider.hitInMiniProfileOpensNewTabAndChangeTab) {
+          _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+        }
+        return true;
+      }
+    }
+
+    return false;
   }
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
