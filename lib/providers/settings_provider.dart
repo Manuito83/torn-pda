@@ -708,6 +708,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _exactPermissionDialogShownAndroid = 0;
+  int get exactPermissionDialogShownAndroid => _exactPermissionDialogShownAndroid;
+  set exactPermissionDialogShownAndroid(int value) {
+    _exactPermissionDialogShownAndroid = value;
+    Prefs().setExactPermissionDialogShownAndroid(value);
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -876,6 +883,8 @@ class SettingsProvider extends ChangeNotifier {
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
     _appwidgetMoneyEnabled = await Prefs().getAppwidgetMoneyEnabled();
+
+    _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 
     notifyListeners();
   }

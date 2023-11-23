@@ -354,6 +354,10 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
       iOS: iOSPlatformChannelSpecifics,
     );
 
+    if (Platform.isAndroid) {
+      await assessExactAlarmsPermissionsAndroid(context, _settingsProvider);
+    }
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       notificationId,
       notificationTitle,
@@ -362,7 +366,9 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
       tz.TZDateTime.from(widget.boardingTime, tz.local).add(Duration(minutes: _delayMinutes!)),
       platformChannelSpecifics,
       payload: '211',
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
+      androidScheduleMode: exactAlarmsPermissionAndroid
+          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          : AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }

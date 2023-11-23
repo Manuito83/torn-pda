@@ -913,6 +913,10 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       notificationSubtitle = " ";
     }
 
+    if (Platform.isAndroid) {
+      await assessExactAlarmsPermissionsAndroid(context, _settingsProvider!);
+    }
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       201,
       notificationTitle,
@@ -921,7 +925,9 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       tz.TZDateTime.from(scheduledNotificationDateTime, tz.local),
       platformChannelSpecifics,
       payload: 'travel',
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
+      androidScheduleMode: exactAlarmsPermissionAndroid
+          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          : AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 

@@ -64,6 +64,8 @@ final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
 
 final StreamController<String?> selectNotificationStream = StreamController<String?>.broadcast();
 
+bool exactAlarmsPermissionAndroid = false;
+
 class ReceivedNotification {
   ReceivedNotification({
     required this.id,
@@ -110,7 +112,7 @@ Future<void> main() async {
     final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
     await androidImplementation.requestNotificationsPermission();
-    await androidImplementation.requestExactAlarmsPermission();
+    exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
   }
 
   tz.initializeTimeZones();

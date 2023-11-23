@@ -11,7 +11,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 
 // IDS
 // 101 -> 109 profile cooldowns
@@ -744,5 +746,35 @@ Future reconfigureNotificationChannels({String? mod}) async {
     const platform = MethodChannel('tornpda.channel');
     platform.invokeMethod('deleteNotificationChannels');
     configureNotificationChannels(mod: mod);
+  }
+}
+
+Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvider settingsProvider) async {
+  final androidImplementation =
+      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
+  exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
+
+  if (!exactAlarmsPermissionAndroid) {
+    // 0 > Never requested
+    // 1 > Native permission requested
+    // 2 > Torn PDA dialog shown
+    int permissionLevel = settingsProvider.exactPermissionDialogShownAndroid;
+
+    // If we never requested permission before, show the system dialog
+    if (permissionLevel == 0) {
+      exactAlarmsPermissionAndroid = await androidImplementation.requestExactAlarmsPermission() ?? false;
+      settingsProvider.exactPermissionDialogShownAndroid = 1;
+    }
+    // If system dialog was shown, show own Torn PDA dialog
+    else if (permissionLevel == 1) {
+      await showDialog(
+        useRootNavigator: false,
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlarmPermissionsDialog();
+        },
+      );
+    }
   }
 }

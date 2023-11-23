@@ -307,6 +307,9 @@ class Prefs {
   final String _kAppwidgetMoneyEnabled = "pda_appwidgetMoneyEnabled";
   final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
 
+  // Permissions
+  final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
+
   // Api Rate
   final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
   final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
@@ -2982,6 +2985,20 @@ class Prefs {
   Future<bool> setAppwidgetExplanationShown(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kAppwidgetExplanationShown, value);
+  }
+
+  /// ----------------------------
+  /// Methods for permissions
+  /// ----------------------------
+
+  Future<int> getExactPermissionDialogShownAndroid() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kExactPermissionDialogShownAndroid) ?? 0;
+  }
+
+  Future<bool> setExactPermissionDialogShownAndroid(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kExactPermissionDialogShownAndroid, value);
   }
 
   /// ----------------------------

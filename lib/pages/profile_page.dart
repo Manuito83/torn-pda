@@ -5557,6 +5557,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       iOS: iOSPlatformChannelSpecifics,
     );
 
+    if (Platform.isAndroid) {
+      await assessExactAlarmsPermissionsAndroid(context, _settingsProvider!);
+    }
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       notificationId,
       notificationTitle,
@@ -5565,7 +5569,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification!)),
       platformChannelSpecifics,
       payload: notificationPayload,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
+      androidScheduleMode: exactAlarmsPermissionAndroid
+          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          : AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 

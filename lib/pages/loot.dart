@@ -1237,6 +1237,10 @@ class LootPageState extends State<LootPage> {
       iOS: darwinNotificationDetails,
     );
 
+    if (Platform.isAndroid) {
+      await assessExactAlarmsPermissionsAndroid(context, _settingsProvider);
+    }
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       notificationId,
       notificationTitle,
@@ -1245,7 +1249,9 @@ class LootPageState extends State<LootPage> {
       tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
       platformChannelSpecifics,
       payload: notificationPayload,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Deliver at exact time
+      androidScheduleMode: exactAlarmsPermissionAndroid
+          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          : AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
