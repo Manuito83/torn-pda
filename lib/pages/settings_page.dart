@@ -1084,7 +1084,28 @@ class SettingsPageState extends State<SettingsPage> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Use Material theme",
+                ),
+              ),
+              Switch(
+                value: _themeProvider.useMaterial3,
+                onChanged: (enabled) async {
+                  _themeProvider.useMaterial3 = enabled;
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[

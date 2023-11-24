@@ -48,18 +48,19 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat3_2_1_1 =
         "Added Grease Monkey handlers to userscripts (read Disclaimer in userscripts section) - by Kwack";
     const String feat3_2_1_2 = "Added file download support to browser";
-    const String feat3_2_1_3 = "Tapping player name in mini-profiles opens new tab (disabled by default)";
-    const String feat3_2_1_4 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
-    const String feat3_2_1_5 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
-    const String feat3_2_1_6 = "Added missing crimes to Basic Info card";
-    const String feat3_2_1_7 = "Added additional information to Loot Rangers attack status in certain conditions";
-    const String feat3_2_1_8 = "Added local time to War widget in Profile and fixed issue with alarms";
-    const String feat3_2_1_9 = "Fixed issue when opening the spied stats dialog";
-    const String feat3_2_1_10 = "Fixed issue updating new/former faction members in War";
-    const String feat3_2_1_11 = "Fixed some shortcuts URLs (need to re-add)";
-    const String feat3_2_1_12 = "Fixed time format (12/24h) setting in several sections";
-    const String feat3_2_1_13 = "Fixed persistence of setting to only load tabs when used";
-    const String feat3_2_1_14 = "Removed unusable inventory filter in Items";
+    const String feat3_2_1_3 = "Added Material theme support (can be disabled)";
+    const String feat3_2_1_4 = "Tapping player name in mini-profiles opens new tab (disabled by default)";
+    const String feat3_2_1_5 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
+    const String feat3_2_1_6 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
+    const String feat3_2_1_7 = "Added missing crimes to Basic Info card";
+    const String feat3_2_1_8 = "Added additional information to Loot Rangers attack status in certain conditions";
+    const String feat3_2_1_9 = "Added local time to War widget in Profile and fixed issue with alarms";
+    const String feat3_2_1_10 = "Fixed issue when opening the spied stats dialog";
+    const String feat3_2_1_11 = "Fixed issue updating new/former faction members in War";
+    const String feat3_2_1_12 = "Fixed some shortcuts URLs (need to re-add)";
+    const String feat3_2_1_13 = "Fixed time format (12/24h) setting in several sections";
+    const String feat3_2_1_14 = "Fixed persistence of setting to only load tabs when used";
+    const String feat3_2_1_15 = "Removed unusable inventory filter in Items";
     v3_2_1.features.add(feat3_2_1_1);
     v3_2_1.features.add(feat3_2_1_2);
     v3_2_1.features.add(feat3_2_1_3);
@@ -74,6 +75,7 @@ class ChangeLogState extends State<ChangeLog> {
     v3_2_1.features.add(feat3_2_1_12);
     v3_2_1.features.add(feat3_2_1_13);
     v3_2_1.features.add(feat3_2_1_14);
+    v3_2_1.features.add(feat3_2_1_15);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();

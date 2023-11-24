@@ -20,6 +20,14 @@ class ThemeProvider extends ChangeNotifier {
   Color? cardColor;
   Color? statusBar;
 
+  bool _useMaterial3 = true;
+  bool get useMaterial3 => _useMaterial3;
+  set useMaterial3(bool value) {
+    _useMaterial3 = value;
+    Prefs().setUseMaterial3(value);
+    notifyListeners();
+  }
+
   ThemeProvider() {
     _restoreSharedPreferences();
   }
@@ -113,6 +121,8 @@ class ThemeProvider extends ChangeNotifier {
       case 'extraDark':
         _currentTheme = AppTheme.extraDark;
     }
+
+    useMaterial3 = await Prefs().getUseMaterial3();
 
     _getColors();
     notifyListeners();

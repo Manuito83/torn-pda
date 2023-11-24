@@ -615,15 +615,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                   Text(
                     "[${_user!.playerId}] - Level ${_user!.level}",
-                    style: const TextStyle(
-                      fontSize: 10, color: Colors.white
-                    ),
+                    style: const TextStyle(fontSize: 10, color: Colors.white),
                   ),
                 ],
               ),
             )
           else
-            const Text("Profile"),
+            const Text("Profile", style: TextStyle(color: Colors.white)),
         ],
       ),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,

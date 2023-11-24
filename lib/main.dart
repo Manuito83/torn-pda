@@ -304,6 +304,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         color: _themeProvider.statusBar,
       ),
       primarySwatch: Colors.blueGrey,
+      useMaterial3: _themeProvider.useMaterial3,
       brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
     );
 
