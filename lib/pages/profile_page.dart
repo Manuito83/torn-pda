@@ -558,7 +558,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       title: Column(
         children: [
@@ -602,7 +602,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(right: 5),
-                          child: Text(_user!.name!),
+                          child: Text(_user!.name!, style: TextStyle(color: Colors.white)),
                         ),
                         if (_user!.lastAction!.status == "Offline")
                           const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
@@ -616,7 +616,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Text(
                     "[${_user!.playerId}] - Level ${_user!.level}",
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 10, color: Colors.white
                     ),
                   ),
                 ],
@@ -687,7 +687,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 tooltipBackgroundColor: _themeProvider!.secondBackground!,
                 descTextStyle: const TextStyle(fontSize: 13),
                 tooltipPadding: const EdgeInsets.all(20),
-                child: const TctClock(),
+                child: const TctClock(color: Colors.white),
               ),
             ),
           )

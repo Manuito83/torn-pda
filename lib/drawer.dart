@@ -1505,7 +1505,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         browserTapType: BrowserTapType.long,
                       );
                     },
-                    child: const TctClock(),
+                    child: TctClock(color: _themeProvider!.mainText!),
                   ),
                 ],
               ),

@@ -341,10 +341,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      title: const Text('User scripts'),
+      title: const Text('User scripts', style: TextStyle(color: Colors.white)),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [

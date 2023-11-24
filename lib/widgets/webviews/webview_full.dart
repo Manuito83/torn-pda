@@ -1654,9 +1654,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final bool notHonorImage = !result.extra!.contains("images/honors");
 
     if (notCurrentUrl && ((isAnchorType && notProfileLink) || (isAnchorImageType && notAwardImage && notHonorImage))) {
-      final focus = (await controller.requestFocusNodeHref())!;
-      if (focus.url != null) {
-        _showLongPressCard(focus.src, focus.url);
+      final focus = (await controller.requestFocusNodeHref());
+      if (focus?.url != null) {
+        _showLongPressCard(focus?.src, focus?.url);
       }
     }
 
@@ -1944,7 +1944,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           elevation: _settingsProvider.appBarTop ? 2 : 0,
           systemOverlayStyle: SystemUiOverlayStyle.light,
           leading: IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () async {
               setState(() {
                 _findInPageActive = false;
@@ -1992,7 +1992,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               ? _chainingActionButtons()
               : <Widget>[
                   IconButton(
-                    icon: const Icon(Icons.search),
+                    icon: const Icon(Icons.search, color: Colors.white),
                     onPressed: () {
                       _findPreviousText = _findController.text;
                       _findAll();
@@ -2003,14 +2003,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.keyboard_arrow_up),
+                          icon: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
                           onPressed: () {
                             _findNext(forward: false);
                             _findFocus.unfocus();
                           },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.keyboard_arrow_down),
+                          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
                           onPressed: () {
                             _findNext(forward: true);
                             _findFocus.unfocus();
@@ -2053,7 +2053,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         leading: _backButtonPopsContext && _webViewProvider.webViewSplitActive
             ? null
             : IconButton(
-                icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
+                icon: _backButtonPopsContext ? const Icon(Icons.close, color: Colors.white) : const Icon(Icons.arrow_back_ios, color: Colors.white),
                 onPressed: () async {
                   // Normal behavior is just to pop and go to previous page
                   if (_backButtonPopsContext) {
@@ -2126,7 +2126,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             Text(
                               _pageTitle!,
                               overflow: TextOverflow.fade,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(fontSize: 14, color:Colors.white),
                             ),
                           ],
                         ),
@@ -2136,7 +2136,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         child: Text(
                           _pageTitle!,
                           overflow: TextOverflow.fade,
-                          style: const TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 16, color:Colors.white),
                         ),
                       ),
                   ],
@@ -2172,7 +2172,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               child: InkWell(
                 customBorder: const CircleBorder(),
                 splashColor: Colors.orange,
-                child: const Icon(Icons.refresh),
+                child: Icon(Icons.refresh, color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white),
                 onTap: () async {
                   _scrollX = await webView!.getScrollX();
                   _scrollY = await webView!.getScrollY();
@@ -4044,7 +4044,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Future<void> _downloadRequestStarted(DownloadStartRequest url) async {
     try {
-      Directory? directory = await getDownloadsDirectory();
+      Directory? directory = Platform.isIOS ? await getApplicationDocumentsDirectory() : await getDownloadsDirectory();
       await FlutterDownloader.enqueue(
         url: url.url.toString(),
         fileName: url.suggestedFilename,
@@ -4053,14 +4053,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         openFileFromNotification: true,
       );
       BotToast.showText(
-        text: "Downloaded as ${directory.path}/${url.suggestedFilename}",
+        text: Platform.isIOS ? "Downloaded in app folder as ${url.suggestedFilename}" : "Downloaded as ${directory.path}/${url.suggestedFilename}",
         clickClose: true,
         textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         duration: Duration(seconds: 5),
-        contentColor: Colors.orange[800]!,
+        contentColor: Colors.blue[800]!,
         contentPadding: const EdgeInsets.all(10),
       );
     } catch (e) {
@@ -4164,7 +4164,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                   var uri = Uri.parse(u);
                                   String path = uri.path;
                                   String fileName = path.substring(path.lastIndexOf('/') + 1);
-                                  Directory? directory = await getDownloadsDirectory();
+                                  Directory? directory = Platform.isIOS ? await getApplicationDocumentsDirectory() : await getDownloadsDirectory();
                                   await FlutterDownloader.enqueue(
                                     url: u,
                                     fileName: fileName,
@@ -4173,14 +4173,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                     openFileFromNotification: true,
                                   );
                                   BotToast.showText(
-                                    text: "Downloaded as ${directory.path}/$fileName",
+                                    text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as ${directory.path}/$fileName",
                                     clickClose: true,
                                     textStyle: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
                                     duration: Duration(seconds: 5),
-                                    contentColor: Colors.orange[800]!,
+                                    contentColor: Colors.blue[800]!,
                                     contentPadding: const EdgeInsets.all(10),
                                   );
                                 } catch (e) {
@@ -4365,7 +4365,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         onLongPress: () => _webViewProvider.cancelChainingBrowser(),
         child: const Padding(
           padding: EdgeInsets.only(right: 10),
-          child: Icon(MdiIcons.playPause),
+          child: Icon(MdiIcons.playPause, color: Colors.white),
         ),
       ),
     );
@@ -4373,7 +4373,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Widget _endAttackButton() {
     return IconButton(
-      icon: const Icon(MdiIcons.stop),
+      icon: const Icon(MdiIcons.stop, color: Colors.white),
       onPressed: () {
         _webViewProvider.cancelChainingBrowser();
       },
@@ -4384,7 +4384,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1),
       child: PopupMenuButton<HealingPages>(
-        icon: const Icon(Icons.healing),
+        icon: const Icon(Icons.healing, color: Colors.white),
         onSelected: openHealingPage,
         itemBuilder: (BuildContext context) {
           return chainingAidPopupChoices.map((HealingPages choice) {

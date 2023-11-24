@@ -185,10 +185,10 @@ class StakeoutsPageState extends State<StakeoutsPage> {
 
   AppBar buildAppBar(BuildContext _) {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      title: const Text("Stakeouts"),
+      title: const Text("Stakeouts", style: TextStyle(color: Colors.white)),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [

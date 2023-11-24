@@ -108,7 +108,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Row(
         children: [

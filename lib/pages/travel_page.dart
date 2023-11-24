@@ -191,7 +191,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
@@ -213,7 +213,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
-      title: const Text('Travel'),
+      title: const Text('Travel', style: TextStyle(color: Colors.white)),
       actions: <Widget>[
         IconButton(
           icon: Icon(

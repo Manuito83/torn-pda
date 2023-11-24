@@ -230,11 +230,11 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
-      title: const Text('Alternative API keys'),
+      title: const Text('Alternative API keys', style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {

@@ -223,7 +223,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
@@ -245,7 +245,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
-      title: const Text('Items'),
+      title: const Text('Items', style: TextStyle(color: Colors.white)),
       actions: [
         if (_itemsSuccess)
           PopupMenuButton<ItemsSort>(

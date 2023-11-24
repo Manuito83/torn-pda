@@ -314,7 +314,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
 
   AppBar buildAppBarSuccess(BuildContext _) {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -324,7 +324,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       toolbarHeight: kMinInteractiveDimension,
-      title: const Text("Ranked Wars"),
+      title: const Text("Ranked Wars", style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
         onPressed: () {
@@ -365,10 +365,10 @@ class RankedWarsPageState extends State<RankedWarsPage> {
 
   AppBar buildAppBarError(BuildContext _) {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      title: const Text("Ranked Wars"),
+      title: const Text("Ranked Wars", style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {

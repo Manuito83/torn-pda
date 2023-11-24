@@ -233,7 +233,7 @@ class TipsPageState extends State<TipsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
@@ -256,7 +256,7 @@ class TipsPageState extends State<TipsPage> {
           if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
         ],
       ),
-      title: const Text('Torn PDA - Tips'),
+      title: const Text('Torn PDA - Tips', style: TextStyle(color: Colors.white)),
     );
   }
 

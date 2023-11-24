@@ -84,9 +84,9 @@ class IconsFilterPageState extends State<IconsFilterPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: widget.settingsProvider!.appBarTop ? 2 : 0,
-      title: const Text("Filter icons"),
+      title: const Text("Filter icons", style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {

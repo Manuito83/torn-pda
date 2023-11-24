@@ -6,7 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 
 class TctClock extends StatefulWidget {
+  final Color color;
+  
   const TctClock({
+    required this.color,
     super.key,
   });
 
@@ -47,18 +50,18 @@ class TctClockState extends State<TctClock> {
       children: <Widget>[
         Text(
           formatter.format(_currentTctTime),
-          style: TextStyle(fontSize: settingsProvider.showSecondsInClock ? 12 : 14),
+          style: TextStyle(fontSize: settingsProvider.showSecondsInClock ? 12 : 14, color: widget.color),
         ),
         Text(
           'TCT',
-          style: TextStyle(fontSize: settingsProvider.showDateInClock != "off" ? 10 : 14),
+          style: TextStyle(fontSize: settingsProvider.showDateInClock != "off" ? 10 : 14, color: widget.color),
         ),
         if (settingsProvider.showDateInClock != "off")
           Text(
             settingsProvider.showDateInClock == "dayfirst"
                 ? DateFormat('dd MMM').format(_currentTctTime).toUpperCase()
                 : DateFormat('MMM dd').format(_currentTctTime).toUpperCase(),
-            style: const TextStyle(fontSize: 10),
+            style: TextStyle(fontSize: 10, color: widget.color),
           ),
       ],
     );

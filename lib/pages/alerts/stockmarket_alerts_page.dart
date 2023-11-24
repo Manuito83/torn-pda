@@ -183,10 +183,10 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsP!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      title: const Text("Stock market alerts"),
+      title: const Text("Stock market alerts", style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
         onPressed: () {

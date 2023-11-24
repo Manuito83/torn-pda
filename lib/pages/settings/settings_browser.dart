@@ -1849,11 +1849,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
-      title: const Text('Browser settings'),
+      title: const Text('Browser settings', style: TextStyle(color: Colors.white)),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
       leading: Row(
         children: [

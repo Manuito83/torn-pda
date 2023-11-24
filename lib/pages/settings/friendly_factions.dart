@@ -209,10 +209,10 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      title: const Text('Friendly factions'),
+      title: const Text('Friendly factions', style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
