@@ -20,11 +20,13 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
@@ -388,6 +390,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // These two allow video playing for crimes
       mediaPlaybackRequiresUserGesture: false,
       allowsInlineMediaPlayback: true,
+      //
+      useOnDownloadStart: true,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -1598,23 +1602,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           },
           onLongPressHitTestResult: (controller, result) async {
             if (result.extra == null) return;
-
-            final bool notCurrentUrl = result.extra!.replaceAll("#", "") != _currentUrl;
-            final bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
-            final bool isImageAnchorType = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
-            final bool notProfileLink = !result.extra!.contains("https://www.torn.com/profiles.php?XID=");
-            // Awards and honors have a native popup
-            final bool notAwardImage = !result.extra!.contains("awardimages");
-            // Also, honors might open quick profiles in Torn (native)
-            final bool notHonorImage = !result.extra!.contains("images/honors");
-
-            if (notCurrentUrl &&
-                ((isAnchorType && notProfileLink) || (isImageAnchorType && notAwardImage && notHonorImage))) {
-              final focus = (await controller.requestFocusNodeHref())!;
-              if (focus.url != null) {
-                _showLongPressCard(focus.src, focus.url);
-              }
-            }
+            await _assessLongPressOptions(result, controller);
+          },
+          onDownloadStartRequest: (controller, url) async {
+            await _downloadRequestStarted(url);
           },
           /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
@@ -1649,6 +1640,32 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  Future<void> _assessLongPressOptions(InAppWebViewHitTestResult result, InAppWebViewController controller) async {
+    final bool notCurrentUrl = result.extra!.replaceAll("#", "") != _currentUrl;
+    final bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
+    final bool isAnchorImageType = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
+    final bool isImage = result.type == InAppWebViewHitTestResultType.IMAGE_TYPE;
+    final bool notProfileLink = !result.extra!.contains("https://www.torn.com/profiles.php?XID=");
+    // Awards and honors have a native popup
+    final bool notAwardImage = !result.extra!.contains("awardimages");
+    // Also, honors might open quick profiles in Torn (native)
+    final bool notHonorImage = !result.extra!.contains("images/honors");
+
+    if (notCurrentUrl && ((isAnchorType && notProfileLink) || (isAnchorImageType && notAwardImage && notHonorImage))) {
+      final focus = (await controller.requestFocusNodeHref())!;
+      if (focus.url != null) {
+        _showLongPressCard(focus.src, focus.url);
+      }
+    }
+
+    if (isImage) {
+      final focus = (await controller.requestFocusNodeHref())!;
+      if (focus.src != null) {
+        _showLongPressCard(focus.src, focus.url);
+      }
+    }
   }
 
   /// Analysis of hit elements to change navigation behaviour
@@ -4025,6 +4042,40 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _downloadRequestStarted(DownloadStartRequest url) async {
+    try {
+      Directory? directory = await getDownloadsDirectory();
+      await FlutterDownloader.enqueue(
+        url: url.url.toString(),
+        fileName: url.suggestedFilename,
+        savedDir: directory!.path,
+        showNotification: true,
+        openFileFromNotification: true,
+      );
+      BotToast.showText(
+        text: "Downloaded as ${directory.path}/${url.suggestedFilename}",
+        clickClose: true,
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        duration: Duration(seconds: 5),
+        contentColor: Colors.orange[800]!,
+        contentPadding: const EdgeInsets.all(10),
+      );
+    } catch (e) {
+      BotToast.showText(
+        text: "Could not complete download: $e",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800]!,
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+  }
+
   void _showLongPressCard(String? src, Uri? url) {
     BotToast.showCustomText(
       clickClose: true,
@@ -4086,6 +4137,64 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 final String u = src.replaceAll("http:", "https:");
                                 _webViewProvider.addTab(url: u);
                                 _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                textCancel();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (src != null)
+                      Column(
+                        children: [
+                          const SizedBox(width: 150, child: Divider(color: Colors.white)),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                            child: GestureDetector(
+                              child: const Text(
+                                "Download image",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onTap: () async {
+                                try {
+                                  // If we are using tabs, add a tab
+                                  final String u = src.replaceAll("http:", "https:");
+                                  var uri = Uri.parse(u);
+                                  String path = uri.path;
+                                  String fileName = path.substring(path.lastIndexOf('/') + 1);
+                                  Directory? directory = await getDownloadsDirectory();
+                                  await FlutterDownloader.enqueue(
+                                    url: u,
+                                    fileName: fileName,
+                                    savedDir: directory!.path,
+                                    showNotification: true,
+                                    openFileFromNotification: true,
+                                  );
+                                  BotToast.showText(
+                                    text: "Downloaded as ${directory.path}/$fileName",
+                                    clickClose: true,
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    duration: Duration(seconds: 5),
+                                    contentColor: Colors.orange[800]!,
+                                    contentPadding: const EdgeInsets.all(10),
+                                  );
+                                } catch (e) {
+                                  BotToast.showText(
+                                    text: "Could not complete download: $e",
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.orange[800]!,
+                                    contentPadding: const EdgeInsets.all(10),
+                                  );
+                                }
+
                                 textCancel();
                               },
                             ),

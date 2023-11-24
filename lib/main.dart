@@ -15,6 +15,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
@@ -106,6 +107,9 @@ Future<void> main() async {
   // Initialise Workmanager for app widget
   // [isInDebugMode] sends notifications each time a task is performed
   Workmanager().initialize(pdaWidget_backgroundUpdate);
+
+  // Initialize FlutterDownloader before using
+  await FlutterDownloader.initialize();
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {
