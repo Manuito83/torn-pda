@@ -2053,7 +2053,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         leading: _backButtonPopsContext && _webViewProvider.webViewSplitActive
             ? null
             : IconButton(
-                icon: _backButtonPopsContext ? const Icon(Icons.close, color: Colors.white) : const Icon(Icons.arrow_back_ios, color: Colors.white),
+                icon: _backButtonPopsContext
+                    ? const Icon(Icons.close, color: Colors.white)
+                    : const Icon(Icons.arrow_back_ios, color: Colors.white),
                 onPressed: () async {
                   // Normal behavior is just to pop and go to previous page
                   if (_backButtonPopsContext) {
@@ -2126,7 +2128,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             Text(
                               _pageTitle!,
                               overflow: TextOverflow.fade,
-                              style: const TextStyle(fontSize: 14, color:Colors.white),
+                              style: const TextStyle(fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
@@ -2136,7 +2138,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         child: Text(
                           _pageTitle!,
                           overflow: TextOverflow.fade,
-                          style: const TextStyle(fontSize: 16, color:Colors.white),
+                          style: const TextStyle(fontSize: 16, color: Colors.white),
                         ),
                       ),
                   ],
@@ -2172,7 +2174,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               child: InkWell(
                 customBorder: const CircleBorder(),
                 splashColor: Colors.orange,
-                child: Icon(Icons.refresh, color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white),
+                child: Icon(Icons.refresh,
+                    color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white),
                 onTap: () async {
                   _scrollX = await webView!.getScrollX();
                   _scrollY = await webView!.getScrollY();
@@ -4053,7 +4056,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         openFileFromNotification: true,
       );
       BotToast.showText(
-        text: Platform.isIOS ? "Downloaded in app folder as ${url.suggestedFilename}" : "Downloaded as ${directory.path}/${url.suggestedFilename}",
+        text: Platform.isIOS
+            ? "Downloaded in app folder as ${url.suggestedFilename}"
+            : "Downloaded as ${directory.path}/${url.suggestedFilename}",
         clickClose: true,
         textStyle: const TextStyle(
           fontSize: 14,
@@ -4159,12 +4164,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               ),
                               onTap: () async {
                                 try {
-                                  // If we are using tabs, add a tab
                                   final String u = src.replaceAll("http:", "https:");
                                   var uri = Uri.parse(u);
                                   String path = uri.path;
                                   String fileName = path.substring(path.lastIndexOf('/') + 1);
-                                  Directory? directory = Platform.isIOS ? await getApplicationDocumentsDirectory() : await getDownloadsDirectory();
+                                  Directory? directory = Platform.isIOS
+                                      ? await getApplicationDocumentsDirectory()
+                                      : await getDownloadsDirectory();
                                   await FlutterDownloader.enqueue(
                                     url: u,
                                     fileName: fileName,
@@ -4173,7 +4179,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                     openFileFromNotification: true,
                                   );
                                   BotToast.showText(
-                                    text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as ${directory.path}/$fileName",
+                                    text: Platform.isIOS
+                                        ? "Downloaded in app folder as $fileName"
+                                        : "Downloaded as ${directory.path}/$fileName",
                                     clickClose: true,
                                     textStyle: const TextStyle(
                                       fontSize: 14,
