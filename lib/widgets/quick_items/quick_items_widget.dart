@@ -13,6 +13,7 @@ import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 // Project imports:
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -72,7 +73,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     spacing: 5,
-                    runSpacing: -10,
+                    runSpacing: context.read<ThemeProvider>().useMaterial3 ? 2 : -5,
                     children: _itemButtons(),
                   ),
                 ),
@@ -129,6 +130,11 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
+            padding: const EdgeInsets.all(4),
+            visualDensity: VisualDensity.compact,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
             side: item.isLoadout! || item.isEnergyPoints! || item.isNervePoints!
                 ? const BorderSide(color: Colors.blue)
                 : null,

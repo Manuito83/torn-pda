@@ -80,6 +80,8 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   void decreaseInventory(QuickItem item) {
+    return;
+    // Temporary removed items in Torn
     if (item.inventory! > 0) {
       item.inventory = item.inventory! - 1;
       _saveListAfterChanges();
