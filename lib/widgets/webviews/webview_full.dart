@@ -1678,7 +1678,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Mini Profiles
     if (request.request.url.toString().contains("https://www.torn.com/profiles.php?") &&
-        hitResult!.extra!.contains("https://awardimages.torn.com/") &&
+        hitResult!.extra!.contains("https://www.torn.com/images/honors") &&
         hitResult.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE) {
       final html = await webView?.getHtml();
       if (html == null || html.isEmpty) return false;

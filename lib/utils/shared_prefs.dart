@@ -65,7 +65,7 @@ class Prefs {
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
-  final String _kUseMaterial3 = "pda_useMaterial3";
+  final String _kUseMaterial3Theme = "pda_useMaterial3Theme";
   final String _kSyncTheme = "tornLite_syncTheme";
   final String _kThemeToSync = "tornLite_themeToSync";
   final String _kVibrationPattern = "pda_vibrationPattern";
@@ -766,12 +766,12 @@ class Prefs {
 
   Future<bool> getUseMaterial3() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseMaterial3) ?? true;
+    return prefs.getBool(_kUseMaterial3Theme) ?? false;
   }
 
   Future<bool> setUseMaterial3(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseMaterial3, value);
+    return prefs.setBool(_kUseMaterial3Theme, value);
   }
 
   /// ----------------------------
