@@ -48,7 +48,7 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat3_2_1_1 =
         "Added Grease Monkey handlers to userscripts (read Disclaimer in userscripts section) - by Kwack";
     const String feat3_2_1_2 = "Added file download support to browser";
-    const String feat3_2_1_3 = "Added Material theme support (can be disabled)";
+    const String feat3_2_1_3 = "Added Material theme support (disabled by default)";
     const String feat3_2_1_4 = "Tapping player name in mini-profiles opens new tab (disabled by default)";
     const String feat3_2_1_5 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
     const String feat3_2_1_6 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
