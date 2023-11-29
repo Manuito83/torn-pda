@@ -34,7 +34,7 @@ class AnnouncementDialog extends StatelessWidget {
           children: [
             const Text(
               "Three years of development, more than 100k lines of code, an active Discord community, a beta-testing "
-              "team, official dev support... and more than 15k users that enjoy their Torn City game experience daily: "
+              "team, official dev support... and more than 30k users that enjoy their Torn City game experience daily: "
               "this is what Torn PDA has become thanks to your support, suggestions and comments.",
               style: TextStyle(fontSize: 14),
             ),

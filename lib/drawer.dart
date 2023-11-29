@@ -1876,23 +1876,27 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
         if (savedSeconds < 86400) return;
 
-        // If we are still in an old dialog, get DB to see if we can are free to show it
-        int? allowed =
-            (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
-        if (allowed == 1) {
-          // If we are allowed to proceed, show the dialog
-          await showDialog(
-            useRootNavigator: false,
-            context: context,
-            barrierDismissible: false,
-            builder: (context) {
-              return AnnouncementDialog(themeProvider: _themeProvider);
-            },
-          );
+        // If we are still in an old dialog version, get DB to see if we can are free to show it
+        try {
+          int? databaseDialogAllowed =
+              (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
+          if (databaseDialogAllowed == 1) {
+            // If we are allowed to proceed, show the dialog
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                return AnnouncementDialog(themeProvider: _themeProvider);
+              },
+            );
 
-          // Then update the version to the current one
-          Prefs().setAppAnnouncementDialogVersion(1);
-          return; // Do not show more dialogs below
+            // Then update the version to the current one
+            Prefs().setAppAnnouncementDialogVersion(1);
+            return; // Do not show more dialogs below
+          }
+        } catch (e) {
+          //
         }
       }
 
