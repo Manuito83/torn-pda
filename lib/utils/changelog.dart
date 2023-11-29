@@ -39,12 +39,12 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 353 - 25/11/2023
+    // Build 354 - 29/11/2023
 
     // VERSION 3.2.1
     final v3_2_1 = ChangeLogItem();
     v3_2_1.version = 'Torn PDA v3.2.1';
-    v3_2_1.date = '30 NOV 2023';
+    v3_2_1.date = '01 DEC 2023';
     const String feat3_2_1_1 =
         "Added Grease Monkey handlers to userscripts (read Disclaimer in userscripts section) - by Kwack";
     const String feat3_2_1_2 = "Added file download support to browser";
