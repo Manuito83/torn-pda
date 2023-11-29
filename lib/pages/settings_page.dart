@@ -1693,7 +1693,7 @@ class SettingsPageState extends State<SettingsPage> {
               ),
             ),
             expanded: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.only(bottom: 20),
               child: Column(
                 children: <Widget>[
                   Padding(
@@ -1709,7 +1709,10 @@ class SettingsPageState extends State<SettingsPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               ElevatedButton(
-                                child: const Text("Copy"),
+                                child: const Text(
+                                  "Copy",
+                                  style: TextStyle(fontSize: 13),
+                                ),
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: _userProfile.userApiKey.toString()));
                                   BotToast.showText(
@@ -1727,7 +1730,10 @@ class SettingsPageState extends State<SettingsPage> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 10),
                                 child: ElevatedButton(
-                                  child: const Text("Reload"),
+                                  child: const Text(
+                                    "Reload",
+                                    style: TextStyle(fontSize: 13),
+                                  ),
                                   onPressed: () {
                                     FocusScope.of(context).requestFocus(FocusNode());
                                     if (_formKey.currentState!.validate()) {
@@ -1740,7 +1746,7 @@ class SettingsPageState extends State<SettingsPage> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 10),
                                 child: ElevatedButton(
-                                  child: const Text("Remove"),
+                                  child: const Icon(Icons.delete_outline),
                                   onPressed: () async {
                                     FocusScope.of(context).requestFocus(FocusNode());
                                     // Removes the form error
