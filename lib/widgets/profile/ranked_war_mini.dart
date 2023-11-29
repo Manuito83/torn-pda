@@ -60,10 +60,10 @@ class RankedWarMiniState extends State<RankedWarMini> {
   Widget build(BuildContext context) {
     final int ts = DateTime.now().millisecondsSinceEpoch;
     final bool warInFuture = widget.rankedWar!.war!.start! * 1000 > ts;
-    final bool warActive = widget.rankedWar!.war!.start! < ts && widget.rankedWar!.war!.end == 0;
+    final bool warActive = widget.rankedWar!.war!.start! * 1000 < ts && widget.rankedWar!.war!.end == 0;
     SettingsProvider settingsProvider = context.read<SettingsProvider>();
 
-    if (!warInFuture) {
+    if (warInFuture) {
       final bool lessThan24h = widget.rankedWar!.war!.start! * 1000 - ts < 86400000;
       final dt = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar!.war!.start! * 1000);
       return Container(
