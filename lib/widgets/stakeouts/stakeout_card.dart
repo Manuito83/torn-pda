@@ -93,7 +93,7 @@ class StakeoutCardState extends State<StakeoutCard> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
         child: Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
           elevation: 2,
@@ -159,7 +159,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                 padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
                   children: <Widget>[
-                    // If last fetch was more than 10 minutes ago, we don't should Status details
+                    // If last fetch was more than 10 minutes ago, we don't update status details
                     if (DateTime.now().millisecondsSinceEpoch - _stakeout!.lastFetch! < 600000)
                       Row(
                         children: <Widget>[

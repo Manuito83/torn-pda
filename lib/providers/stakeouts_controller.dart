@@ -94,7 +94,8 @@ class StakeoutsController extends GetxController {
   Timer? _stakeoutTimer;
   void startTimer() {
     _stakeoutTimer?.cancel();
-    _stakeoutTimer = Timer.periodic(const Duration(milliseconds: 4000), (Timer t) {
+    // 2 seconds ensure 15 stakeouts can fit inside of 30 seconds
+    _stakeoutTimer = Timer.periodic(const Duration(seconds: 2), (Timer t) {
       _fetchStakeoutsPeriodic();
       _resetSleepTimeIfExpired();
     });
@@ -384,9 +385,21 @@ class StakeoutsController extends GetxController {
 
   Future<void> _fetchStakeoutsPeriodic() async {
     if (!_stakeoutsEnabled!) return;
+
     final int currentMills = DateTime.now().millisecondsSinceEpoch;
-    Stakeout? stakeoutPass = stakeouts.firstWhereOrNull((element) => currentMills - element.lastPass > 30000);
-    if (stakeoutPass == null) return;
+
+    // Get the stakeouts with a time difference more than 28 seconds
+    // This still ensures that even with a low number of stakeouts, we only try update every 30 seconds roughly
+    List<Stakeout> filteredStakeouts = stakeouts.where((element) => currentMills - element.lastPass > 28000).toList();
+    if (filteredStakeouts.isEmpty) {
+      return;
+    }
+
+    // Get the stakeout with the highest time difference.
+    Stakeout stakeoutPass = filteredStakeouts.reduce((value, element) {
+      return currentMills - value.lastPass > currentMills - element.lastPass ? value : element;
+    });
+
     // [lastPass] always gets updated, even if no option are active;
     stakeoutPass.lastPass = currentMills;
 
@@ -396,6 +409,10 @@ class StakeoutsController extends GetxController {
     }
 
     //log("Stakeouts: updating ${stakeoutPass.name} @${DateTime.now()}");
+
+    // [lastPass] always gets updated, even if no option are active;
+    stakeoutPass.lastPass = currentMills;
+
     final response = await Get.find<ApiCallerController>().getOtherProfileBasic(playerId: stakeoutPass.id);
     if (response is BasicProfileModel) {
       final int currentMills = DateTime.now().millisecondsSinceEpoch;

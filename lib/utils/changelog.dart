@@ -55,12 +55,13 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat3_2_1_7 = "Added missing crimes to Basic Info card";
     const String feat3_2_1_8 = "Added additional information to Loot Rangers attack status in certain conditions";
     const String feat3_2_1_9 = "Added local time to War widget in Profile and fixed issue with alarms";
-    const String feat3_2_1_10 = "Fixed issue when opening the spied stats dialog";
-    const String feat3_2_1_11 = "Fixed issue updating new/former faction members in War";
-    const String feat3_2_1_12 = "Fixed some shortcuts URLs (need to re-add)";
-    const String feat3_2_1_13 = "Fixed time format (12/24h) setting in several sections";
-    const String feat3_2_1_14 = "Fixed persistence of setting to only load tabs when used";
-    const String feat3_2_1_15 = "Removed unusable inventory filter in Items";
+    const String feat3_2_1_10 = "Fixed stakeouts update when more than 10 targets are configured";
+    const String feat3_2_1_11 = "Fixed issue when opening the spied stats dialog";
+    const String feat3_2_1_12 = "Fixed issue updating new/former faction members in War";
+    const String feat3_2_1_13 = "Fixed some shortcuts URLs (need to re-add)";
+    const String feat3_2_1_14 = "Fixed time format (12/24h) setting in several sections";
+    const String feat3_2_1_15 = "Fixed persistence of setting to only load tabs when used";
+    const String feat3_2_1_16 = "Removed unusable inventory filter in Items";
     v3_2_1.features.add(feat3_2_1_1);
     v3_2_1.features.add(feat3_2_1_2);
     v3_2_1.features.add(feat3_2_1_3);
@@ -76,6 +77,7 @@ class ChangeLogState extends State<ChangeLog> {
     v3_2_1.features.add(feat3_2_1_13);
     v3_2_1.features.add(feat3_2_1_14);
     v3_2_1.features.add(feat3_2_1_15);
+    v3_2_1.features.add(feat3_2_1_16);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();
