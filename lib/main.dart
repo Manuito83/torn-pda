@@ -52,9 +52,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.2.1';
-const String androidCompilation = '354';
-const String iosCompilation = '354';
+const String appVersion = '3.2.2';
+const String androidCompilation = '355';
+const String iosCompilation = '355';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -299,8 +299,18 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     final ThemeData theme = ThemeData(
       cardColor: _themeProvider.cardColor,
+      cardTheme: CardTheme(
+        // Material 3 overrides
+        surfaceTintColor: _themeProvider.currentTheme == AppTheme.extraDark
+            ? Color.fromARGB(255, 14, 14, 14)
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.black
+                : null,
+        color: _themeProvider.currentTheme == AppTheme.extraDark ? Color.fromARGB(255, 14, 14, 14) : null,
+      ),
       appBarTheme: AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.light,
+        surfaceTintColor: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : null,
         color: _themeProvider.statusBar,
       ),
       primarySwatch: Colors.blueGrey,

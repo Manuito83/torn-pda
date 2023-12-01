@@ -216,7 +216,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime? _nnbTriggeredTime;
   late DateTime _yataTriggeredTime;
   late DateTime _tsTriggeredTime;
-  final _ocNnbUrl = "factions.php?step=your#/tab=crimes";
   final _ocNnbController = ExpandableController();
   String _ocSource = "";
 
@@ -3808,7 +3807,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future<void> _assessOCnnb(String calledUrl) async {
     if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.off) return;
 
-    if (!calledUrl.contains(_ocNnbUrl)) {
+    if (!calledUrl.contains("factions.php?step=your") || !calledUrl.contains("/tab=crimes")) {
       // Return calls and reset widget if we are in another URL
       if (_ocNnbTriggered) _ocNnbTriggered = false;
       if (_ocNnbController.expanded) {

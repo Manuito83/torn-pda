@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 // Package imports:
+import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -66,7 +67,6 @@ import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 bool routeWithDrawer = true;
@@ -117,7 +117,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
-  StreamSubscription? _deepLinkSub;
   DateTime? _deepLinkSubTriggeredTime;
   bool _deepLinkInitOnce = false;
 
@@ -155,6 +154,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Intent receiver subscription
   StreamSubscription? _intentListenerSub;
 
+  // Deep links
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _deepLinkSubscription;
   late Stream _willPopShouldOpenDrawer;
   StreamSubscription? _willPopSubscription;
 
@@ -224,7 +226,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Deep Linking
     _deepLinksInit();
-    _deepLinksStreamSub();
 
     // This starts a stream that listens for tap on local notifications (i.e.:
     // when the app is open)
@@ -314,8 +315,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     WidgetsBinding.instance.removeObserver(this);
     selectNotificationStream.close();
     _willPopSubscription?.cancel();
-    _deepLinkSub?.cancel();
     _intentListenerSub?.cancel();
+    _deepLinkSubscription?.cancel();
     super.dispose();
   }
 
@@ -485,39 +486,24 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // ## Deep links
   Future _deepLinksInit() async {
     if (_deepLinkInitOnce) return;
+    _appLinks = AppLinks();
     _deepLinkInitOnce = true;
 
     try {
-      final initialUrl = await getInitialLink();
-      if (initialUrl != null && initialUrl.isNotEmpty) {
-        _deepLinkHandle(initialUrl);
+      // Check initial link if app was in cold state (terminated)
+      final appLink = await _appLinks.getInitialAppLink();
+      if (appLink != null) {
+        log('getInitialAppLink: $appLink');
+        _deepLinkHandle(appLink.toString());
       }
-    } on FormatException {
-      _deepLinkHandle("", error: true);
-    }
-  }
 
-  Future _deepLinksStreamSub() async {
-    try {
-      _deepLinkSub = linkStream.listen((String? link) async {
-        if (_settingsProvider.debugMessages) {
-          BotToast.showText(
-            onlyOne: false,
-            text: "Deep link awakes\n\n$link",
-            align: Alignment(0, 0.5),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.blue[700]!,
-            duration: const Duration(seconds: 4),
-            contentPadding: const EdgeInsets.all(10),
-          );
-        }
-        _deepLinkHandle(link);
+      // Handle link when app is in warm state (front or background)
+      _deepLinkSubscription = _appLinks.uriLinkStream.listen((uri) {
+        log('onAppLink: $uri');
+        _deepLinkHandle(uri.toString());
       });
     } catch (e) {
-      _deepLinkHandle("", error: true);
+      _deepLinkHandle(e.toString(), error: true);
     }
   }
 
@@ -549,9 +535,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           duration: const Duration(seconds: 4),
           contentPadding: const EdgeInsets.all(10),
         );
+        return;
       } else {
         // Prevents double activation
-        if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 5) {
+        if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
           if (_settingsProvider.debugMessages) {
             BotToast.showText(
               onlyOne: false,
@@ -595,10 +582,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
       }
     } catch (e) {
-      print(e);
       if (_settingsProvider.debugMessages) {
         BotToast.showText(
-          text: "Deep link error\n\n$e",
+          text: "Deep link catch\n\n$e",
           textStyle: const TextStyle(
             fontSize: 14,
             color: Colors.white,
@@ -1286,6 +1272,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
                     ? Drawer(
                         backgroundColor: _themeProvider!.canvas,
+                        surfaceTintColor: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : null,
                         elevation: 2, // This avoids shadow over SafeArea
                         child: ListView(
                           padding: EdgeInsets.zero,
@@ -1301,6 +1288,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     ? null
                     : Drawer(
                         backgroundColor: _themeProvider!.canvas,
+                        surfaceTintColor: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : null,
                         elevation: 2, // This avoids shadow over SafeArea
                         child: ListView(
                           padding: EdgeInsets.zero,

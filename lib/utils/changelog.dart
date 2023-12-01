@@ -39,7 +39,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 354 - 29/11/2023
+    // Build 355 - 01/12/2023
+
+    // VERSION 3.2.2
+    final v3_2_2 = ChangeLogItem();
+    v3_2_2.version = 'Torn PDA v3.2.2';
+    v3_2_2.date = '02 DEC 2023';
+    const String feat3_2_2_1 = "Corrected Material3 colors for spooky theme";
+    const String feat3_2_2_2 = "Fixed faction crimes NNB widget activation";
+    const String feat3_2_2_3 = "Fixed deep links management";
+    v3_2_2.features.add(feat3_2_2_1);
+    v3_2_2.features.add(feat3_2_2_2);
+    v3_2_2.features.add(feat3_2_2_3);
 
     // VERSION 3.2.1
     final v3_2_1 = ChangeLogItem();
@@ -1596,6 +1607,7 @@ class ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v3_2_2);
     itemList.add(v3_2_1);
     itemList.add(v3_2_0);
     itemList.add(v3_1_9);
