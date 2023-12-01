@@ -53,8 +53,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.2.2';
-const String androidCompilation = '355';
-const String iosCompilation = '355';
+const String androidCompilation = '356';
+const String iosCompilation = '356';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
