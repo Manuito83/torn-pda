@@ -39,12 +39,12 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 359 - 01/12/2023
+    // Build 360 - 02/12/2023
 
     // VERSION 3.2.2
     final v3_2_2 = ChangeLogItem();
     v3_2_2.version = 'Torn PDA v3.2.2';
-    v3_2_2.date = '02 DEC 2023';
+    v3_2_2.date = '04 DEC 2023';
     v3_2_2.infoString =
         'Hotfix: improved native support for deep links, material theme colors and NNB widget activation';
     const String feat3_2_2_1 =

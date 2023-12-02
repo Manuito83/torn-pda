@@ -4795,6 +4795,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   clearCacheAndReload() async {
     await webView!.clearCache();
+    webView!.evaluateJavascript(
+      source: '''
+        localStorage.clear();
+        console.log("Cleared cache and local storage!");
+      ''',
+    );
     webView!.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
   }
 
