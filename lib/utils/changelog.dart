@@ -39,47 +39,61 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 361 - 03/12/2023
+    // Build 362 - 04/12/2023
 
     // VERSION 3.2.2
     final v3_2_2 = ChangeLogItem();
     v3_2_2.version = 'Torn PDA v3.2.2';
-    v3_2_2.date = '04 DEC 2023';
-    v3_2_2.infoString =
-        'Hotfix: improved native support for deep links, material theme colors and NNB widget activation';
-    const String feat3_2_2_1 =
-        "Added Grease Monkey handlers to userscripts (read Disclaimer in userscripts section) - by Kwack";
-    const String feat3_2_2_2 = "Added file download support to browser";
-    const String feat3_2_2_3 = "Added Material theme support (disabled by default)";
-    const String feat3_2_2_4 = "Tapping player name in mini-profiles opens new tab (disabled by default)";
-    const String feat3_2_2_5 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
-    const String feat3_2_2_6 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
-    const String feat3_2_2_7 = "Added missing crimes to Basic Info card";
-    const String feat3_2_2_8 = "Added additional information to Loot Rangers attack status in certain conditions";
-    const String feat3_2_2_9 = "Added local time to War widget in Profile and fixed issue with alarms";
-    const String feat3_2_2_10 = "Fixed stakeouts update when more than 10 targets are configured";
-    const String feat3_2_2_11 = "Fixed issue when opening the spied stats dialog";
-    const String feat3_2_2_12 = "Fixed issue updating new/former faction members in War";
-    const String feat3_2_2_13 = "Fixed some shortcuts URLs (need to re-add)";
-    const String feat3_2_2_14 = "Fixed time format (12/24h) setting in several sections";
-    const String feat3_2_2_15 = "Fixed persistence of setting to only load tabs when used";
-    const String feat3_2_2_16 = "Removed unusable inventory filter in Items";
+    v3_2_2.date = '06 DEC 2023';
+    v3_2_2.infoString = Platform.isIOS ? "Temporarily disabled browser download feature to avoid crashes" : "";
+    const String feat3_2_2_1 = "Improved native support for deep links "
+        "(added info dialog if external browser is used)";
+    const String feat3_2_2_2 = "Adjusted material theme colors";
+    const String feat3_2_2_3 = "Fixed NNB widget activation";
+    const String feat3_2_2_4 = "Fixed localStorage not resetting when browser cache was cleared";
+
     v3_2_2.features.add(feat3_2_2_1);
     v3_2_2.features.add(feat3_2_2_2);
     v3_2_2.features.add(feat3_2_2_3);
     v3_2_2.features.add(feat3_2_2_4);
-    v3_2_2.features.add(feat3_2_2_5);
-    v3_2_2.features.add(feat3_2_2_6);
-    v3_2_2.features.add(feat3_2_2_7);
-    v3_2_2.features.add(feat3_2_2_8);
-    v3_2_2.features.add(feat3_2_2_9);
-    v3_2_2.features.add(feat3_2_2_10);
-    v3_2_2.features.add(feat3_2_2_11);
-    v3_2_2.features.add(feat3_2_2_12);
-    v3_2_2.features.add(feat3_2_2_13);
-    v3_2_2.features.add(feat3_2_2_14);
-    v3_2_2.features.add(feat3_2_2_15);
-    v3_2_2.features.add(feat3_2_2_16);
+
+    // VERSION 3.2.1
+    final v3_2_1 = ChangeLogItem();
+    v3_2_1.version = 'Torn PDA v3.2.1';
+    v3_2_1.date = '01 DEC 2023';
+    const String feat3_2_1_1 =
+        "Added Grease Monkey handlers to userscripts (read Disclaimer in userscripts section) - by Kwack";
+    const String feat3_2_1_2 = "Added file download support to browser";
+    const String feat3_2_1_3 = "Added Material theme support (disabled by default)";
+    const String feat3_2_1_4 = "Tapping player name in mini-profiles opens new tab (disabled by default)";
+    const String feat3_2_1_5 = "Increased to 10 the max. number of red/blue targets to be skipped while chaining";
+    const String feat3_2_1_6 = "Added chain control buttons to main browser tab (single/double tap) while chaining";
+    const String feat3_2_1_7 = "Added missing crimes to Basic Info card";
+    const String feat3_2_1_8 = "Added additional information to Loot Rangers attack status in certain conditions";
+    const String feat3_2_1_9 = "Added local time to War widget in Profile and fixed issue with alarms";
+    const String feat3_2_1_10 = "Fixed stakeouts update when more than 10 targets are configured";
+    const String feat3_2_1_11 = "Fixed issue when opening the spied stats dialog";
+    const String feat3_2_1_12 = "Fixed issue updating new/former faction members in War";
+    const String feat3_2_1_13 = "Fixed some shortcuts URLs (need to re-add)";
+    const String feat3_2_1_14 = "Fixed time format (12/24h) setting in several sections";
+    const String feat3_2_1_15 = "Fixed persistence of setting to only load tabs when used";
+    const String feat3_2_1_16 = "Removed unusable inventory filter in Items";
+    v3_2_1.features.add(feat3_2_1_1);
+    v3_2_1.features.add(feat3_2_1_2);
+    v3_2_1.features.add(feat3_2_1_3);
+    v3_2_1.features.add(feat3_2_1_4);
+    v3_2_1.features.add(feat3_2_1_5);
+    v3_2_1.features.add(feat3_2_1_6);
+    v3_2_1.features.add(feat3_2_1_7);
+    v3_2_1.features.add(feat3_2_1_8);
+    v3_2_1.features.add(feat3_2_1_9);
+    v3_2_1.features.add(feat3_2_1_10);
+    v3_2_1.features.add(feat3_2_1_11);
+    v3_2_1.features.add(feat3_2_1_12);
+    v3_2_1.features.add(feat3_2_1_13);
+    v3_2_1.features.add(feat3_2_1_14);
+    v3_2_1.features.add(feat3_2_1_15);
+    v3_2_1.features.add(feat3_2_1_16);
 
     // VERSION 3.2.0
     final v3_2_0 = ChangeLogItem();
@@ -1599,6 +1613,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // NEED TO ADD HERE!
     itemList.add(v3_2_2);
+    itemList.add(v3_2_1);
     itemList.add(v3_2_0);
     itemList.add(v3_1_9);
     itemList.add(v3_1_8);

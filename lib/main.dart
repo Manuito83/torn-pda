@@ -53,8 +53,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.2.2';
-const String androidCompilation = '361';
-const String iosCompilation = '361';
+const String androidCompilation = '362';
+const String iosCompilation = '362';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -306,9 +306,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         surfaceTintColor: _themeProvider.currentTheme == AppTheme.extraDark
             ? Color.fromARGB(255, 14, 14, 14)
             : _themeProvider.currentTheme == AppTheme.dark
-                ? Colors.brown
+                ? Colors.grey[800]
                 : null,
-        color: _themeProvider.currentTheme == AppTheme.extraDark ? Color.fromARGB(255, 14, 14, 14) : null,
+        color: _themeProvider.currentTheme == AppTheme.extraDark ? Color.fromARGB(255, 14, 14, 14) : Colors.grey[800],
       ),
       appBarTheme: AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.light,
