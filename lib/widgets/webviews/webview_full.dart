@@ -154,7 +154,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   //int _loadTimeMill = 0;
 
-  CookieManager cm = CookieManager.instance();
+  //CookieManager cm = CookieManager.instance();
 
   bool _firstLoad = true;
 
@@ -1392,6 +1392,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _scrollAfterLoad = false;
               }
 
+              /*
               if (_settingsProvider.restoreSessionCookie) {
                 if (_currentUrl.contains("torn.com")) {
                   Cookie? session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
@@ -1400,6 +1401,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   }
                 }
               }
+              */
 
               if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTheme) {
                 if (_currentUrl.contains("www.torn.com")) {
@@ -1604,7 +1606,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             await _assessLongPressOptions(result, controller);
           },
           onDownloadStartRequest: (controller, url) async {
-            await _downloadRequestStarted(url);
+            if (Platform.isAndroid) {
+              await _downloadRequestStarted(url);
+            }
           },
           /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
@@ -4147,67 +4151,68 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
-                    if (src != null)
-                      Column(
-                        children: [
-                          const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                            child: GestureDetector(
-                              child: const Text(
-                                "Download image",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
+                    if (Platform.isAndroid)
+                      if (src != null)
+                        Column(
+                          children: [
+                            const SizedBox(width: 150, child: Divider(color: Colors.white)),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                              child: GestureDetector(
+                                child: const Text(
+                                  "Download image",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                              onTap: () async {
-                                try {
-                                  final String u = src.replaceAll("http:", "https:");
-                                  var uri = Uri.parse(u);
-                                  String path = uri.path;
-                                  String fileName = path.substring(path.lastIndexOf('/') + 1);
-                                  Directory? directory = Platform.isIOS
-                                      ? await getApplicationDocumentsDirectory()
-                                      : await getDownloadsDirectory();
-                                  await FlutterDownloader.enqueue(
-                                    url: u,
-                                    fileName: fileName,
-                                    savedDir: directory!.path,
-                                    showNotification: true,
-                                    openFileFromNotification: true,
-                                  );
-                                  BotToast.showText(
-                                    text: Platform.isIOS
-                                        ? "Downloaded in app folder as $fileName"
-                                        : "Downloaded as ${directory.path}/$fileName",
-                                    clickClose: true,
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    duration: Duration(seconds: 5),
-                                    contentColor: Colors.blue[800]!,
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                } catch (e) {
-                                  BotToast.showText(
-                                    text: "Could not complete download: $e",
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.orange[800]!,
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                }
+                                onTap: () async {
+                                  try {
+                                    final String u = src.replaceAll("http:", "https:");
+                                    var uri = Uri.parse(u);
+                                    String path = uri.path;
+                                    String fileName = path.substring(path.lastIndexOf('/') + 1);
+                                    Directory? directory = Platform.isIOS
+                                        ? await getApplicationDocumentsDirectory()
+                                        : await getDownloadsDirectory();
+                                    await FlutterDownloader.enqueue(
+                                      url: u,
+                                      fileName: fileName,
+                                      savedDir: directory!.path,
+                                      showNotification: true,
+                                      openFileFromNotification: true,
+                                    );
+                                    BotToast.showText(
+                                      text: Platform.isIOS
+                                          ? "Downloaded in app folder as $fileName"
+                                          : "Downloaded as ${directory.path}/$fileName",
+                                      clickClose: true,
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      duration: Duration(seconds: 5),
+                                      contentColor: Colors.blue[800]!,
+                                      contentPadding: const EdgeInsets.all(10),
+                                    );
+                                  } catch (e) {
+                                    BotToast.showText(
+                                      text: "Could not complete download: $e",
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.orange[800]!,
+                                      contentPadding: const EdgeInsets.all(10),
+                                    );
+                                  }
 
-                                textCancel();
-                              },
+                                  textCancel();
+                                },
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     if (_settingsProvider.useTabsFullBrowser)
                       Column(
                         children: [

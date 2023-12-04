@@ -63,6 +63,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /*
   var _restoreSessionCookie = false;
   bool get restoreSessionCookie => _restoreSessionCookie;
   set restoreSessionCookie(bool enabled) {
@@ -72,6 +73,7 @@ class SettingsProvider extends ChangeNotifier {
       Prefs().setWebViewSessionCookie("");
     }
   }
+  */
 
   var _androidBrowserScale = 0;
   int get androidBrowserScale => _androidBrowserScale;
@@ -730,7 +732,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
-    _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
+    //_restoreSessionCookie = await Prefs().getRestoreSessionCookie();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
 

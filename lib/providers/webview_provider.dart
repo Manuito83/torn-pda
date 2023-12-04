@@ -9,7 +9,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+//import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
@@ -332,8 +332,9 @@ class WebViewProvider extends ChangeNotifier {
     bool recallLastSession = false,
     bool isChainingBrowser = false,
     ChainingPayload? chainingPayload,
-    bool restoreSessionCookie = false,
+    //bool restoreSessionCookie = false,
   }) async {
+    /*
     if (restoreSessionCookie) {
       try {
         final String sessionCookie = await Prefs().getWebViewSessionCookie();
@@ -361,6 +362,7 @@ class WebViewProvider extends ChangeNotifier {
         //
       }
     }
+    */
 
     _bottomBarStyleEnabled = await Prefs().getBrowserBottomBarStyleEnabled();
     _bottomBarStyleType = await Prefs().getBrowserBottomBarStyleType();

@@ -618,6 +618,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            /*
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -649,6 +650,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
+            */
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Row(
