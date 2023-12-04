@@ -726,7 +726,7 @@ class TipsPageState extends State<TipsPage> {
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () async {
-                      AppSettings.openAppSettings();
+                      AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
                     },
                 ),
                 const TextSpan(

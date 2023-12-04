@@ -43,6 +43,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
+import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
@@ -2310,11 +2311,22 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ],
-      onChanged: (value) {
+      onChanged: (value) async {
         if (value == '0') {
           _settingsProvider.changeBrowser = BrowserSetting.app;
         } else {
           _settingsProvider.changeBrowser = BrowserSetting.external;
+
+          if (Platform.isAndroid) {
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                return AppLinksBrowserDialog();
+              },
+            );
+          }
         }
         setState(() {
           _openBrowserValue = value;

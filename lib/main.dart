@@ -304,7 +304,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         surfaceTintColor: _themeProvider.currentTheme == AppTheme.extraDark
             ? Color.fromARGB(255, 14, 14, 14)
             : _themeProvider.currentTheme == AppTheme.dark
-                ? Colors.black
+                ? Colors.brown
                 : null,
         color: _themeProvider.currentTheme == AppTheme.extraDark ? Color.fromARGB(255, 14, 14, 14) : null,
       ),

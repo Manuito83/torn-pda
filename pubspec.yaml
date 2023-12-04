@@ -22,7 +22,7 @@ dependencies:
     sdk: flutter
   android_intent_plus: 3.1.5
   animations: 2.0.2
-  app_links: 3.4.5
+  app_links: 3.5.0-beta.2
   app_settings: 5.1.1
   audioplayers: 4.1.0
   bot_toast: 4.0.1
@@ -38,7 +38,7 @@ dependencies:
   dio: 5.0.3
   device_info_plus: 8.2.2
   dotted_border: 2.0.0+2
-  easy_rich_text: 1.0.1
+  easy_rich_text: 2.0.0
   expandable: 5.0.1
   ## ffi ^ to avoid strut errors
   ## ffi: ^1.0.0
@@ -91,7 +91,7 @@ dependencies:
   timeline_tile: 2.0.0
   timezone: 0.9.1
   toggle_switch: 2.0.1
-  url_launcher: 6.1.11
+  url_launcher: 6.2.1
   vibration: 1.7.4-nullsafety.0
   wakelock: 0.6.2
   webview_flutter: 3.0.4

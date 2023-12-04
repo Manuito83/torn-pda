@@ -44,7 +44,7 @@ class AlarmPermissionsDialogState extends State<AlarmPermissionsDialog> {
             textAlign: TextAlign.center,
           ),
           onPressed: () async {
-            await AppSettings.openAppSettings();
+            await AppSettings.openAppSettings(type: AppSettingsType.alarm);
             _settingsProvider.exactPermissionDialogShownAndroid = 2;
             Navigator.of(context).pop();
           },
