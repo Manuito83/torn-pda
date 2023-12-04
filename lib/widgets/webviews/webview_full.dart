@@ -390,7 +390,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       mediaPlaybackRequiresUserGesture: false,
       allowsInlineMediaPlayback: true,
       //
-      useOnDownloadStart: true,
+      useOnDownloadStart: Platform.isAndroid ? true : false, // Prevent downloads in iOS
     );
 
     _pullToRefreshController = PullToRefreshController(
