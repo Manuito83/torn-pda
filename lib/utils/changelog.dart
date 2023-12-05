@@ -39,23 +39,24 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 362 - 04/12/2023
+    // Build 364 - 05/12/2023
 
     // VERSION 3.2.2
     final v3_2_2 = ChangeLogItem();
     v3_2_2.version = 'Torn PDA v3.2.2';
-    v3_2_2.date = '06 DEC 2023';
-    v3_2_2.infoString = Platform.isIOS ? "Temporarily disabled browser download feature to avoid crashes" : "";
-    const String feat3_2_2_1 = "Improved native support for deep links "
-        "(added info dialog if external browser is used)";
+    v3_2_2.date = '08 DEC 2023';
+    String feat3_2_2_1 = Platform.isAndroid
+        ? "Improved deep links native support (added info dialog if external browser is used)"
+        : "Improved deep links native support";
     const String feat3_2_2_2 = "Adjusted material theme colors";
     const String feat3_2_2_3 = "Fixed NNB widget activation";
     const String feat3_2_2_4 = "Fixed localStorage not resetting when browser cache was cleared";
-
+    const String feat3_2_2_5 = "Fixed random browser crashes reported on iOS";
     v3_2_2.features.add(feat3_2_2_1);
     v3_2_2.features.add(feat3_2_2_2);
     v3_2_2.features.add(feat3_2_2_3);
     v3_2_2.features.add(feat3_2_2_4);
+    v3_2_2.features.add(feat3_2_2_5);
 
     // VERSION 3.2.1
     final v3_2_1 = ChangeLogItem();
