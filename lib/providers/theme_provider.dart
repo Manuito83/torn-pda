@@ -18,6 +18,7 @@ class ThemeProvider extends ChangeNotifier {
   Color? buttonText;
   Color? navSelected;
   Color? cardColor;
+  Color? cardSurfaceTintColor;
   Color? statusBar;
 
   bool _useMaterial3 = true;
@@ -47,8 +48,10 @@ class ThemeProvider extends ChangeNotifier {
   final _colorMainTextLIGHT = Colors.black;
   final _colorButtonTextLIGHT = Colors.white;
   final _colorNavSelectedLIGHT = Colors.blueGrey[100];
-  final _colorCardLIGHT = Colors.white;
   final _colorStatusBarLIGHT = Colors.blueGrey;
+  // Cards
+  final _colorCardLIGHT = Colors.white;
+  final _surfaceTintCardLIGHT = Colors.white;
 
   // COLORS ##DARK##
   final _canvasBackgroundDARK = Colors.grey[900];
@@ -56,17 +59,21 @@ class ThemeProvider extends ChangeNotifier {
   final _colorMainTextDARK = Colors.grey[50];
   final _colorButtonTextDARK = Colors.grey[200];
   final _colorNavSelectedDARK = Colors.blueGrey[600];
+  final _colorStatusBarDARK = Color.fromARGB(255, 37, 37, 37);
+  // Cards
   final _colorCardDARK = Colors.grey[800];
-  final _colorStatusBarDARK = const Color.fromARGB(255, 37, 37, 37);
+  final _surfaceTintCardDARK = Colors.grey[800];
 
   // COLORS ##EXTRA DARK##
   final _canvasBackgroundExtraDARK = Colors.black;
-  final _colorBackgroundExtraDARK = const Color(0xFF0C0C0C);
+  final _colorBackgroundExtraDARK = Color(0xFF0C0C0C);
   final _colorMainTextExtraDARK = Colors.grey[50];
   final _colorButtonTextExtraDARK = Colors.grey[200];
   final _colorNavSelectedExtraDARK = Colors.blueGrey[800];
-  final _colorCardExtraDARK = const Color(0xFF131313);
-  final _colorStatusBarExtraDARK = const Color(0xFF0C0C0C);
+  final _colorStatusBarExtraDARK = Color(0xFF0C0C0C);
+  // Cards
+  final _colorCardExtraDARK = Color.fromARGB(255, 14, 14, 14);
+  final _surfaceTintCardExtraDARK = Color.fromARGB(255, 14, 14, 14);
 
   void _getColors() {
     switch (_currentTheme) {
@@ -77,6 +84,7 @@ class ThemeProvider extends ChangeNotifier {
         buttonText = _colorButtonTextLIGHT;
         navSelected = _colorNavSelectedLIGHT;
         cardColor = _colorCardLIGHT;
+        cardSurfaceTintColor = _surfaceTintCardLIGHT;
         statusBar = _colorStatusBarLIGHT;
       case AppTheme.dark:
         canvas = _canvasBackgroundDARK;
@@ -85,6 +93,7 @@ class ThemeProvider extends ChangeNotifier {
         buttonText = _colorButtonTextDARK;
         navSelected = _colorNavSelectedDARK;
         cardColor = _colorCardDARK;
+        cardSurfaceTintColor = _surfaceTintCardDARK;
         statusBar = _colorStatusBarDARK;
       case AppTheme.extraDark:
         canvas = _canvasBackgroundExtraDARK;
@@ -93,6 +102,7 @@ class ThemeProvider extends ChangeNotifier {
         buttonText = _colorButtonTextExtraDARK;
         navSelected = _colorNavSelectedExtraDARK;
         cardColor = _colorCardExtraDARK;
+        cardSurfaceTintColor = _surfaceTintCardExtraDARK;
         statusBar = _colorStatusBarExtraDARK;
     }
   }
