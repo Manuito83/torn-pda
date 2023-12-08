@@ -1659,10 +1659,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
     }
 
-    if (isImage) {
-      final focus = (await controller.requestFocusNodeHref())!;
-      if (focus.src != null) {
-        _showLongPressCard(focus.src, focus.url);
+    if (isImage && notHonorImage) {
+      final focus = (await controller.requestFocusNodeHref());
+      if (focus?.src != null) {
+        _showLongPressCard(focus?.src, focus?.url);
       }
     }
   }
@@ -3461,7 +3461,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             final dom.Element userInfoValue = document!.querySelector('div.user-info-value')!;
             final String textContent = userInfoValue.querySelector('span.bold')!.text.trim();
-            final RegExp regUsername = RegExp('(' + username + r')\s*\[([0-9]+)\]');
+            final RegExp regUsername = RegExp('($username' r')\s*\[([0-9]+)\]');
             final match = regUsername.firstMatch(textContent);
             if (match != null) {
               setState(() {
@@ -4122,31 +4122,33 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         },
                       ),
                     ),
-                    if (src != null)
-                      Column(
-                        children: [
-                          const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                            child: GestureDetector(
-                              child: const Text(
-                                "Open image in new tab",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
+                    // iOS will automatically recognize images as downloadable content and start a download
+                    if (Platform.isAndroid)
+                      if (src != null)
+                        Column(
+                          children: [
+                            const SizedBox(width: 150, child: Divider(color: Colors.white)),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                              child: GestureDetector(
+                                child: const Text(
+                                  "Open image in new tab",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                  ),
                                 ),
+                                onTap: () {
+                                  // If we are using tabs, add a tab
+                                  final String u = src.replaceAll("http:", "https:");
+                                  _webViewProvider.addTab(url: u);
+                                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                  textCancel();
+                                },
                               ),
-                              onTap: () {
-                                // If we are using tabs, add a tab
-                                final String u = src.replaceAll("http:", "https:");
-                                _webViewProvider.addTab(url: u);
-                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                                textCancel();
-                              },
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     if (src != null)
                       Column(
                         children: [

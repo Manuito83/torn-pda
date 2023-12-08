@@ -109,9 +109,7 @@ Future<void> main() async {
   Workmanager().initialize(pdaWidget_backgroundUpdate);
 
   // Initialize FlutterDownloader before using
-  if (Platform.isAndroid) {
-    await FlutterDownloader.initialize();
-  }
+  await FlutterDownloader.initialize();
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {
