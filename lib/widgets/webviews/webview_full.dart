@@ -154,7 +154,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   //int _loadTimeMill = 0;
 
-  //CookieManager cm = CookieManager.instance();
+  CookieManager cm = CookieManager.instance();
 
   bool _firstLoad = true;
 
@@ -1392,7 +1392,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _scrollAfterLoad = false;
               }
 
-              /*
               if (_settingsProvider.restoreSessionCookie) {
                 if (_currentUrl.contains("torn.com")) {
                   Cookie? session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
@@ -1401,7 +1400,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   }
                 }
               }
-              */
 
               if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTheme) {
                 if (_currentUrl.contains("www.torn.com")) {

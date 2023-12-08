@@ -89,7 +89,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
       recallLastSession: widget.recallLastSession,
       isChainingBrowser: widget.isChainingBrowser,
       chainingPayload: widget.chainingPayload,
-      //restoreSessionCookie: _settingsProvider.restoreSessionCookie,
+      restoreSessionCookie: _settingsProvider.restoreSessionCookie,
       context: context,
     );
   }
