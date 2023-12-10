@@ -44,30 +44,34 @@ class TimeFormatter {
       case TimeZoneSetting.localTime:
         timeZonedTime = inputTime!.toLocal();
         zoneId = 'LT';
+        break;
       case TimeZoneSetting.tornTime:
         timeZonedTime = inputTime!.toUtc();
         zoneId = 'TCT';
+        break;
     }
 
     final now = DateTime.now();
-    final difference = timeZonedTime.difference(now).inDays;
+    int differenceInDays = (timeZonedTime.weekday - now.weekday + 7) % 7;
 
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
         final formatter = DateFormat('HH:mm');
         hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+        break;
       case TimeFormatSetting.h12:
         final formatter = DateFormat('hh:mm a');
         hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+        break;
     }
 
     String suffix;
-    if (difference == 0) {
+    if (differenceInDays == 0) {
       suffix = includeToday ? 'today' : '';
-    } else if (difference == 1) {
+    } else if (differenceInDays == 1) {
       suffix = 'tomorrow';
     } else {
-      suffix = 'in $difference days';
+      suffix = 'in $differenceInDays days';
     }
 
     return '$hourFormatted $suffix';

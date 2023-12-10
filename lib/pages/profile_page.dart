@@ -2681,13 +2681,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _drugCounter() {
-    final timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.drug!));
+    final DateTime timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.drug!));
+
     final formattedTime = TimeFormatter(
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
       timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHourWithDaysElapsed();
-    final String diff = _timeFormatted(timeEnd);
+    final String diff = _timeFormatted(timeEnd, previous: formattedTime);
     return Flexible(
       child: Padding(
         padding: const EdgeInsets.only(right: 5),
@@ -2703,7 +2704,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
       timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHourWithDaysElapsed();
-    final String diff = _timeFormatted(timeEnd);
+    final String diff = _timeFormatted(timeEnd, previous: formattedTime);
     return Flexible(
       child: Padding(
         padding: const EdgeInsets.only(right: 5),
@@ -2719,7 +2720,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
       timeZoneSetting: _settingsProvider!.currentTimeZone,
     ).formatHourWithDaysElapsed();
-    final String diff = _timeFormatted(timeEnd);
+    final String diff = _timeFormatted(timeEnd, previous: formattedTime);
     return Flexible(
       child: Padding(
         padding: const EdgeInsets.only(right: 5),
@@ -2728,7 +2729,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  String _timeFormatted(DateTime timeEnd) {
+  String _timeFormatted(DateTime timeEnd, {required String previous}) {
     final timeDifference = timeEnd.difference(_serverTime);
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
@@ -2743,8 +2744,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timeFormatSetting: _settingsProvider!.currentTimeFormat,
         timeZoneSetting: _settingsProvider!.currentTimeZone,
       ).formatDayWeek;
-      diff = ' $dayWeek, in '
-          '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+      if (previous.contains("tomorrow")) {
+        diff = ', in '
+            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+      } else {
+        diff = ' (${dayWeek!.replaceAll("on ", "")}), in '
+            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+      }
     }
     return diff;
   }
@@ -5061,7 +5067,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               timeFormatSetting: _settingsProvider!.currentTimeFormat,
               timeZoneSetting: _settingsProvider!.currentTimeZone,
             ).formatHourWithDaysElapsed();
-            complexTimeString = "OC will be ready @ $formattedTime${_timeFormatted(complexTime)}";
+            complexTimeString =
+                "OC will be ready @ $formattedTime${_timeFormatted(complexTime, previous: formattedTime)}";
           } else {
             complexReady = true;
             if (_ocComplexPeopleNotReady == 0) {
@@ -5104,7 +5111,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               timeZoneSetting: _settingsProvider!.currentTimeZone,
             ).formatHourWithDaysElapsed();
             simpleString = "A faction organized crime will be ready @ "
-                "$formattedTime${_timeFormatted(simpleTime)}";
+                "$formattedTime${_timeFormatted(simpleTime, previous: formattedTime)}";
           }
         }
 
