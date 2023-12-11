@@ -24,7 +24,7 @@ dependencies:
   animations: 2.0.2
   app_links: 3.5.0-beta.2
   app_settings: 5.1.1
-  audioplayers: 4.1.0
+  audioplayers: 5.2.1
   bot_toast: 4.0.1
   cloud_firestore: 4.5.0
   cloud_functions: 4.0.7
@@ -53,7 +53,7 @@ dependencies:
   flutter_colorpicker: 1.0.3
   flutter_downloader: 1.11.5
   flutter_font_icons: 2.2.5
-  flutter_inappwebview: 6.0.0-beta.25
+  flutter_inappwebview: 6.0.0-beta.31
   #flutter_inappwebview:
   #  git:
   #    url: https://github.com/Manuito83/flutter_inappwebview.git

@@ -317,7 +317,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // We will later changed this for a listenable one in build()
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
-    WebView.debugLoggingSettings.enabled = false;
+    PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
 
     _localChatRemovalActive = widget.chatRemovalActive;
 
