@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
+import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 // Useful for functions debugging
 import 'package:dart_ping_ios/dart_ping_ios.dart';
@@ -26,6 +27,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
+import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
@@ -169,11 +171,19 @@ Future<void> main() async {
     DartPingIOS.register();
   }
 
+  Get.put(AudioController(), permanent: true);
   Get.put(SpiesController(), permanent: true);
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
 
   HttpOverrides.global = MyHttpOverrides();
+
+  // iOS settings for AudioPlayer are managed through the controller
+  AudioPlayer.global.setAudioContext(
+    AudioContext(
+      android: AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
+    ),
+  );
 
   runApp(
     MultiProvider(

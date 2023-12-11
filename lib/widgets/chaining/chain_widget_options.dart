@@ -1,5 +1,4 @@
 // Flutter imports:
-import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/audio_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -27,8 +27,6 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   late ChainStatusProvider _chainStatusProvider;
   ThemeProvider? _themeProvider;
   late SettingsProvider _settingsProvider;
-
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +316,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         : Colors.grey,
                   ),
                   onTap: () {
-                    _audioPlayer.play(AssetSource('../sounds/alerts/connection.wav'));
+                    Get.find<AudioController>().play(file: '../sounds/alerts/connection.wav');
                   },
                 ),
               ],
@@ -515,7 +513,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                             : Colors.grey,
                       ),
                       onTap: () {
-                        _audioPlayer.play(AssetSource('../sounds/alerts/alert1.wav'));
+                        Get.find<AudioController>().play(file: '../sounds/alerts/alert1.wav');
                       },
                     ),
                   ],
@@ -632,7 +630,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         : Colors.grey,
                   ),
                   onTap: () {
-                    _audioPlayer.play(AssetSource('../sounds/alerts/alert2.wav'));
+                    Get.find<AudioController>().play(file: '../sounds/alerts/alert2.wav');
                   },
                 ),
               ],
@@ -747,7 +745,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         : Colors.grey,
                   ),
                   onTap: () {
-                    _audioPlayer.play(AssetSource('../sounds/alerts/warning1.wav'));
+                    Get.find<AudioController>().play(file: '../sounds/alerts/warning1.wav');
                   },
                 ),
               ],
@@ -862,7 +860,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         : Colors.grey,
                   ),
                   onTap: () {
-                    _audioPlayer.play(AssetSource('../sounds/alerts/warning2.wav'));
+                    Get.find<AudioController>().play(file: '../sounds/alerts/warning2.wav');
                   },
                 ),
               ],

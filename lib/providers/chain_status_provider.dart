@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -11,6 +10,7 @@ import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 
 // Project imports:
@@ -130,8 +130,6 @@ class ChainStatusProvider extends ChangeNotifier {
 
   bool widgetVisible = false;
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
   int _lastChainCount = 0;
   bool _wereWeChaining = false;
 
@@ -173,7 +171,9 @@ class ChainStatusProvider extends ChangeNotifier {
   void activateWatcher() {
     _watcherActive = true;
     _enableWakelock();
-    _audioPlayer.play(AssetSource('../sounds/alerts/tick.wav'));
+
+    Get.find<AudioController>().play(file: '../sounds/alerts/tick.wav');
+
     notifyListeners();
   }
 
@@ -394,7 +394,7 @@ class ChainStatusProvider extends ChangeNotifier {
           _chainWatcherDefcon = WatchDefcon.apiFail;
           _borderColor = Colors.purple[600]!;
           if (_soundEnabled) {
-            _audioPlayer.play(AssetSource('../sounds/alerts/connection.wav'));
+            Get.find<AudioController>().play(file: '../sounds/alerts/connection.wav');
           }
           if (_vibrationEnabled) {
             _vibrate(3);
@@ -445,7 +445,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.panic) {
             _chainWatcherDefcon = WatchDefcon.panic;
             if (_soundEnabled) {
-              _audioPlayer.play(AssetSource('../sounds/alerts/warning2.wav'));
+              Get.find<AudioController>().play(file: '../sounds/alerts/warning2.wav');
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -467,7 +467,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.red2) {
             _chainWatcherDefcon = WatchDefcon.red2;
             if (_soundEnabled) {
-              _audioPlayer.play(AssetSource('../sounds/alerts/warning2.wav'));
+              Get.find<AudioController>().play(file: '../sounds/alerts/warning2.wav');
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -484,7 +484,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.red1) {
             _chainWatcherDefcon = WatchDefcon.red1;
             if (_soundEnabled) {
-              _audioPlayer.play(AssetSource('../sounds/alerts/warning1.wav'));
+              Get.find<AudioController>().play(file: '../sounds/alerts/warning1.wav');
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -501,7 +501,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.orange2) {
             _chainWatcherDefcon = WatchDefcon.orange2;
             if (_soundEnabled) {
-              _audioPlayer.play(AssetSource('../sounds/alerts/alert2.wav'));
+              Get.find<AudioController>().play(file: '../sounds/alerts/alert2.wav');
             }
             if (_vibrationEnabled) {
               _vibrate(3);
@@ -515,7 +515,7 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_chainWatcherDefcon != WatchDefcon.orange1) {
             _chainWatcherDefcon = WatchDefcon.orange1;
             if (_soundEnabled) {
-              _audioPlayer.play(AssetSource('../sounds/alerts/alert1.wav'));
+              Get.find<AudioController>().play(file: '../sounds/alerts/alert1.wav');
             }
             if (_vibrationEnabled) {
               _vibrate(3);
