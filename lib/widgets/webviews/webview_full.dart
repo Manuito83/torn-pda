@@ -1324,6 +1324,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _revertTransparentBackground();
             }
 
+            // iOS will start a download when we browser to an image with 'open image in new tab'
+            // To prevent this from happening, in those cases we will open a new webview with useOnDownloadRequest
+            // disabled, only to re-enable it later when we have loaded the new tab
             if (Platform.isIOS && !widget.allowDownloads) {
               _revertDownloads();
             }
