@@ -66,6 +66,7 @@ class SleepingWebView {
   final bool chatRemovalActive;
   final bool isChainingBrowser;
   final ChainingPayload? chainingPayload;
+  final bool allowDownloads;
 
   const SleepingWebView({
     this.customUrl = 'https://www.torn.com',
@@ -75,6 +76,7 @@ class SleepingWebView {
     this.key,
     this.isChainingBrowser = false,
     this.chainingPayload,
+    this.allowDownloads = true,
   });
 }
 
@@ -464,6 +466,7 @@ class WebViewProvider extends ChangeNotifier {
     List<String?>? historyForward,
     bool isChainingBrowser = false,
     ChainingPayload? chainingPayload,
+    bool allowDownloads = true,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     final key = GlobalKey<WebViewFullState>();
@@ -481,6 +484,7 @@ class WebViewProvider extends ChangeNotifier {
                 chatRemovalActive: chatRemovalActive,
                 isChainingBrowser: isChainingBrowser,
                 chainingPayload: chainingPayload,
+                allowDownloads: allowDownloads,
               )
         ..sleepingWebView = sleepTab
             ? SleepingWebView(
@@ -490,6 +494,7 @@ class WebViewProvider extends ChangeNotifier {
                 chatRemovalActive: chatRemovalActive,
                 isChainingBrowser: isChainingBrowser,
                 chainingPayload: chainingPayload,
+                allowDownloads: allowDownloads,
               )
             : null
         ..pageTitle = pageTitle
@@ -644,6 +649,7 @@ class WebViewProvider extends ChangeNotifier {
       chatRemovalActive: sleeping.chatRemovalActive,
       isChainingBrowser: sleeping.isChainingBrowser,
       chainingPayload: sleeping.chainingPayload,
+      allowDownloads: sleeping.allowDownloads,
     );
   }
 

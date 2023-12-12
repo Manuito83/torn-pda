@@ -119,6 +119,7 @@ class WebViewFull extends StatefulWidget {
   //final bool dialog;
   final bool useTabs;
   final bool chatRemovalActive;
+  final bool allowDownloads;
 
   @override
   final GlobalKey<WebViewFullState>? key;
@@ -134,6 +135,7 @@ class WebViewFull extends StatefulWidget {
     //this.dialog = false,
     this.useTabs = false,
     this.chatRemovalActive = false,
+    this.allowDownloads = true,
     this.key,
 
     // Chaining
@@ -156,7 +158,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   CookieManager cm = CookieManager.instance();
 
-  bool _firstLoad = true;
+  bool _firstLoadRevertBackground = true;
+  bool _firstLoadRestoreDownloads = true;
 
   URLRequest? _initialUrl;
   String? _pageTitle = "";
@@ -390,7 +393,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       mediaPlaybackRequiresUserGesture: false,
       allowsInlineMediaPlayback: true,
       //
-      useOnDownloadStart: true,
+      useOnDownloadStart: widget.allowDownloads,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -1321,6 +1324,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _revertTransparentBackground();
             }
 
+            if (Platform.isIOS && !widget.allowDownloads) {
+              _revertDownloads();
+            }
+
             try {
               _currentUrl = uri.toString();
 
@@ -1603,8 +1610,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             if (result.extra == null) return;
             await _assessLongPressOptions(result, controller);
           },
-          onDownloadStartRequest: (controller, url) async {
-            await _downloadRequestStarted(url);
+          onDownloadStartRequest: (controller, request) async {
+            await _downloadRequestStarted(request);
           },
           /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
@@ -4036,11 +4043,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future<void> _revertTransparentBackground() async {
-    if (_firstLoad) {
+    if (_firstLoadRevertBackground) {
       final InAppWebViewSettings newSettings = (await webView!.getSettings())!;
       newSettings.transparentBackground = false;
       webView!.setSettings(settings: newSettings);
-      _firstLoad = false;
+      _firstLoadRevertBackground = false;
+    }
+  }
+
+  Future<void> _revertDownloads() async {
+    if (_firstLoadRestoreDownloads) {
+      final InAppWebViewSettings newSettings = (await webView!.getSettings())!;
+      newSettings.useOnDownloadStart = true;
+      webView!.setSettings(settings: newSettings);
+      _firstLoadRestoreDownloads = false;
     }
   }
 
@@ -4122,33 +4138,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         },
                       ),
                     ),
-                    // iOS will automatically recognize images as downloadable content and start a download
-                    if (Platform.isAndroid)
-                      if (src != null)
-                        Column(
-                          children: [
-                            const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                              child: GestureDetector(
-                                child: const Text(
-                                  "Open image in new tab",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
+                    if (src != null)
+                      Column(
+                        children: [
+                          const SizedBox(width: 150, child: Divider(color: Colors.white)),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                            child: GestureDetector(
+                              child: const Text(
+                                "Open image in new tab",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
                                 ),
-                                onTap: () {
-                                  // If we are using tabs, add a tab
-                                  final String u = src.replaceAll("http:", "https:");
-                                  _webViewProvider.addTab(url: u);
-                                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                                  textCancel();
-                                },
                               ),
+                              onTap: () async {
+                                // If we are using tabs, add a tab
+                                final String u = src.replaceAll("http:", "https:");
+                                _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
+                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                textCancel();
+                              },
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
                     if (src != null)
                       Column(
                         children: [
