@@ -6,7 +6,6 @@ import 'package:app_settings/app_settings.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';

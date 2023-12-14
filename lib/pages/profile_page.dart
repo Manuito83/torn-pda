@@ -4419,7 +4419,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       String? courseName;
-      _tornEducationModel!.education!.forEach((key, value) {
+      _tornEducationModel!.education.forEach((key, value) {
         if (key == _miscModel!.educationCurrent.toString()) {
           courseName = value.name;
         }
@@ -4459,7 +4459,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     else {
       // If the number of courses studied and available are not the same, we have forgotten
       // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
-      if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education!.length - 1) {
+      if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education.length - 1) {
         showMisc = true;
         educationActive = true;
         educationWidget = Row(
