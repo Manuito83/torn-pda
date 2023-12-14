@@ -45,13 +45,13 @@ class ChangeLogState extends State<ChangeLog> {
     final v3_2_3 = ChangeLogItem();
     v3_2_3.version = 'Torn PDA v3.2.3';
     v3_2_3.date = '20 DEC 2023';
-    String feat3_2_3_1 = "Added deep links and default app explanation in Tips";
+    const String feat3_2_3_1 = "Added deep links and default app explanation in Tips";
     const String feat3_2_3_2 = "Fixed browser download issues on iOS";
     const String feat3_2_3_3 = "Fixed audio channels mixing in Chain Watcher";
     const String feat3_2_3_4 = "Fixed timezone references";
     const String feat3_2_3_5 = "Fixed random logouts";
     v3_2_3.features.add(feat3_2_3_1);
-    v3_2_3.features.add(feat3_2_3_2);
+    if (Platform.isIOS) v3_2_3.features.add(feat3_2_3_2);
     v3_2_3.features.add(feat3_2_3_3);
     v3_2_3.features.add(feat3_2_3_4);
     v3_2_3.features.add(feat3_2_3_5);
