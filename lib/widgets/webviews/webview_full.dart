@@ -4813,7 +4813,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   clearCacheAndReload() async {
-    await webView!.clearCache();
+    await InAppWebViewController.clearAllCache();
+    CookieManager cookieManager = CookieManager.instance();
+    cookieManager.deleteAllCookies();
     webView!.evaluateJavascript(
       source: '''
         localStorage.clear();
