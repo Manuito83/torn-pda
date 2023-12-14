@@ -6,6 +6,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -1124,6 +1125,63 @@ class TipsPageState extends State<TipsPage> {
                 const TextSpan(
                   text: ".",
                 ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    tips.add(
+      ComplexExpandableTip(
+        headerValue: "Why is Torn PDA selected as my default browser for Torn?",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "Thanks to the developers at Torn, Torn PDA is recognized as an official app to handle Torn "
+                  "links. This implies that your device will redirect them to the app by default, or open a choice dialog "
+                  "if you have any other eligible app for that purpose.\n\n",
+              style: const TextStyle(
+                fontSize: 13,
+              ),
+              children: [
+                if (Platform.isIOS)
+                  const TextSpan(
+                      text: "If you would like to prevent this from happening on iOS, you can select the application "
+                          "you'd like to handle your Torn links by long-pressing (tap and hold) the relevant Torn link "
+                          "(you will only need to do this once).",
+                      children: [
+                        TextSpan(
+                            text:
+                                "\n\nPlease be aware that some applications (e.g.: Safari) might still insist and offer you "
+                                "to use Torn PDA. As this is something specific to the way some apps have been designed, "
+                                "the way to get rid of these messages might vary from one app to another. In Safari's specific case, "
+                                "you can get rid of it by using extensions, or by adding a Torn browser shortcut to your home screen."),
+                      ]),
+                if (Platform.isAndroid)
+                  TextSpan(text: "", children: [
+                    const TextSpan(
+                      text: "If you would like to prevent this from happening on Android, access your ",
+                    ),
+                    TextSpan(
+                      text: "Android's Torn PDA app settings",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 13,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          await AppSettings.openAppSettings();
+                        },
+                    ),
+                    const TextSpan(
+                      text: " and ensure that the 'Open by default' option is deactivated.\n\n"
+                          "Please note that some Android manufacturers with customized operating systems (e.g.: Xiaomi) "
+                          "might not allow you to directly change this setting, or the changes might not work as intended. "
+                          "In these cases, please have a look at apps such as 'Hidden Settings' that allow you to access "
+                          "the actual operating system configuration for any of your installed apps. ",
+                    ),
+                  ]),
               ],
             ),
           );
