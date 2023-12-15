@@ -597,7 +597,7 @@ class TipsPageState extends State<TipsPage> {
                   text: "\n\nFor more information, please ",
                 ),
                 TextSpan(
-                  text: "tab here",
+                  text: "tap here",
                   style: const TextStyle(
                     decoration: TextDecoration.underline,
                     fontWeight: FontWeight.bold,
