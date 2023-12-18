@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // Build 367 - 16/12/2023
+    // Build 368 - 17/12/2023
 
     // VERSION 3.2.3
     final v3_2_3 = ChangeLogItem();
@@ -49,12 +49,14 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat3_2_3_2 = "Fixed browser download issues on iOS";
     const String feat3_2_3_3 = "Fixed audio channels mixing in Chain Watcher";
     const String feat3_2_3_4 = "Fixed timezone references";
-    const String feat3_2_3_5 = "Fixed random logouts";
+    const String feat3_2_3_5 = "Fixed issues with API model";
+    const String feat3_2_3_6 = "Fixed random logouts";
     v3_2_3.features.add(feat3_2_3_1);
     if (Platform.isIOS) v3_2_3.features.add(feat3_2_3_2);
     v3_2_3.features.add(feat3_2_3_3);
     v3_2_3.features.add(feat3_2_3_4);
     v3_2_3.features.add(feat3_2_3_5);
+    v3_2_3.features.add(feat3_2_3_6);
 
     // VERSION 3.2.2
     final v3_2_2 = ChangeLogItem();
@@ -1628,7 +1630,7 @@ class ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v3_2_2);
+    itemList.add(v3_2_3);
     itemList.add(v3_2_2);
     itemList.add(v3_2_1);
     itemList.add(v3_2_0);
