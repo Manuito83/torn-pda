@@ -17,7 +17,6 @@ import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -27,7 +26,6 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/spies/spies_exact_details_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -757,6 +755,8 @@ class RetalCardState extends State<RetalCard> {
               size: 16,
             ),
             onTap: () {
+              // TODO!
+              /*
               showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
@@ -781,6 +781,7 @@ class RetalCardState extends State<RetalCard> {
                   );
                 },
               );
+              */
             },
           ),
         ],

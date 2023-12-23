@@ -20,8 +20,8 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
-import 'package:torn_pda/widgets/spies/estimated_stats_dialog.dart';
-import 'package:torn_pda/widgets/spies/spies_exact_details_dialog.dart';
+import 'package:torn_pda/widgets/stats/estimated_stats_dialog.dart';
+import 'package:torn_pda/widgets/stats/spies_exact_details_dialog.dart';
 
 enum ProfileCheckType {
   profile,
@@ -809,6 +809,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             size: 18,
                           ),
                           onTap: () {
+                            // TODO!
+                            /*
                             showDialog<void>(
                               context: context,
                               builder: (BuildContext context) {
@@ -832,6 +834,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 );
                               },
                             );
+                            */
                           },
                         ),
                       ),
@@ -1051,6 +1054,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                         size: 18,
                       ),
                       onTap: () {
+                        // TODO!
+                        /*
                         showDialog(
                           useRootNavigator: false,
                           context: context,
@@ -1077,6 +1082,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             );
                           },
                         );
+                        */
                       },
                     ),
                   ),

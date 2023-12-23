@@ -28,8 +28,8 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
-import 'package:torn_pda/widgets/spies/estimated_stats_dialog.dart';
-import 'package:torn_pda/widgets/spies/spies_exact_details_dialog.dart';
+import 'package:torn_pda/widgets/stats/estimated_stats_dialog.dart';
+import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -890,8 +890,9 @@ class WarCardState extends State<WarCard> {
               showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
+                  // TODO: change this in other files!
                   SpiesController spy = Get.find<SpiesController>();
-                  return SpiesExactDetailsDialog(
+                  final spiesPayload = SpiesPayload(
                     spy: spy,
                     strength: _member!.statsStr ?? -1,
                     strengthUpdate: _member!.statsStrUpdated,
@@ -909,6 +910,8 @@ class WarCardState extends State<WarCard> {
                     themeProvider: _themeProvider,
                     userDetailsProvider: _userProvider,
                   );
+
+                  return StatsDialog(spiesPayload: spiesPayload);
                 },
               );
             },

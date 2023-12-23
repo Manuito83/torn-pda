@@ -1,69 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 
 class SpiesExactDetailsDialog extends StatelessWidget {
-  const SpiesExactDetailsDialog({
-    super.key,
-    required this.spy,
-    required this.strength,
-    required this.strengthUpdate,
-    required this.defense,
-    required this.defenseUpdate,
-    required this.speed,
-    required this.speedUpdate,
-    required this.dexterity,
-    required this.dexterityUpdate,
-    required this.total,
-    required this.totalUpdate,
-    required this.update,
-    required this.name,
-    required this.factionName,
-    required this.themeProvider,
-    required this.userDetailsProvider,
-  });
-
-  final SpiesController spy;
-  final int? strength;
-  final int? strengthUpdate;
-  final int? defense;
-  final int? defenseUpdate;
-  final int? speed;
-  final int? speedUpdate;
-  final int? dexterity;
-  final int? dexterityUpdate;
-  final int? total;
-  final int? totalUpdate;
-  final int? update;
-  final String? name;
-  final String? factionName;
+  final SpiesPayload spiesPayload;
   final ThemeProvider themeProvider;
-  final UserDetailsProvider userDetailsProvider;
+
+  const SpiesExactDetailsDialog({
+    Key? key,
+    required this.spiesPayload,
+    required this.themeProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
     final currentTime = DateTime.now().millisecondsSinceEpoch;
     final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
-    final strUpdateColor =
-        (strengthUpdate != null && strengthUpdate! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText;
-    final defUpdateColor =
-        (defenseUpdate != null && defenseUpdate! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText;
-    final spdUpdateColor =
-        (speedUpdate != null && speedUpdate! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText;
-    final dexUpdateColor =
-        (dexterityUpdate != null && dexterityUpdate! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText;
-    final totalUpdateColor =
-        (totalUpdate != null && totalUpdate! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText;
+    final strUpdateColor = (spiesPayload.strengthUpdate != null && spiesPayload.strengthUpdate! * 1000 < oneMonthAgo)
+        ? Colors.red
+        : themeProvider.mainText;
+    final defUpdateColor = (spiesPayload.defenseUpdate != null && spiesPayload.defenseUpdate! * 1000 < oneMonthAgo)
+        ? Colors.red
+        : themeProvider.mainText;
+    final spdUpdateColor = (spiesPayload.speedUpdate != null && spiesPayload.speedUpdate! * 1000 < oneMonthAgo)
+        ? Colors.red
+        : themeProvider.mainText;
+    final dexUpdateColor = (spiesPayload.dexterityUpdate != null && spiesPayload.dexterityUpdate! * 1000 < oneMonthAgo)
+        ? Colors.red
+        : themeProvider.mainText;
+    final totalUpdateColor = (spiesPayload.totalUpdate != null && spiesPayload.totalUpdate! * 1000 < oneMonthAgo)
+        ? Colors.red
+        : themeProvider.mainText;
 
     Color lastSpyUpdateColor = themeProvider.mainText!;
-    if (update != null) {
-      lastSpyUpdateColor = (update! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText!;
+    if (spiesPayload.update != null) {
+      lastSpyUpdateColor = (spiesPayload.update! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText!;
     }
 
     Widget strWidget;
-    if (strength == null || strength == -1) {
+    if (spiesPayload.strength == null || spiesPayload.strength == -1) {
       strWidget = const Text(
         "Strength: unknown",
         style: TextStyle(fontSize: 12),
@@ -71,7 +48,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var strDiff = "";
       Color strColor;
-      final result = userDetailsProvider.basic!.strength! - strength!;
+      final result = spiesPayload.userDetailsProvider.basic!.strength! - spiesPayload.strength!;
       if (result == 0) {
         strDiff = "Same as you";
         strColor = Colors.orange;
@@ -87,16 +64,16 @@ class SpiesExactDetailsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Strength: ${formatBigNumbers(strength!)}",
+            "Strength: ${formatBigNumbers(spiesPayload.strength!)}",
             style: const TextStyle(fontSize: 12),
           ),
           Text(
             strDiff,
             style: TextStyle(fontSize: 12, color: strColor),
           ),
-          strengthUpdate != null
+          spiesPayload.strengthUpdate != null
               ? Text(
-                  spy.statsOld(strengthUpdate),
+                  spiesPayload.spy.statsOld(spiesPayload.strengthUpdate),
                   style: TextStyle(fontSize: 10, color: strUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -105,7 +82,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     }
 
     Widget spdWidget;
-    if (speed == null || speed == -1) {
+    if (spiesPayload.speed == null || spiesPayload.speed == -1) {
       spdWidget = const Text(
         "Speed: unknown",
         style: TextStyle(fontSize: 12),
@@ -113,7 +90,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var spdDiff = "";
       Color spdColor;
-      final result = userDetailsProvider.basic!.speed! - speed!;
+      final result = spiesPayload.userDetailsProvider.basic!.speed! - spiesPayload.speed!;
       if (result == 0) {
         spdDiff = "Same as you";
         spdColor = Colors.orange;
@@ -129,16 +106,16 @@ class SpiesExactDetailsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Speed: ${formatBigNumbers(speed!)}",
+            "Speed: ${formatBigNumbers(spiesPayload.speed!)}",
             style: const TextStyle(fontSize: 12),
           ),
           Text(
             spdDiff,
             style: TextStyle(fontSize: 12, color: spdColor),
           ),
-          speedUpdate != null
+          spiesPayload.speedUpdate != null
               ? Text(
-                  spy.statsOld(speedUpdate),
+                  spiesPayload.spy.statsOld(spiesPayload.speedUpdate),
                   style: TextStyle(fontSize: 10, color: spdUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -147,7 +124,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     }
 
     Widget defWidget;
-    if (defense == null || defense == -1) {
+    if (spiesPayload.defense == null || spiesPayload.defense == -1) {
       defWidget = const Text(
         "Defense: unknown",
         style: TextStyle(fontSize: 12),
@@ -155,7 +132,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var defDiff = "";
       Color defColor;
-      final result = userDetailsProvider.basic!.defense! - defense!;
+      final result = spiesPayload.userDetailsProvider.basic!.defense! - spiesPayload.defense!;
       if (result == 0) {
         defDiff = "Same as you";
         defColor = Colors.orange;
@@ -171,16 +148,16 @@ class SpiesExactDetailsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Defense: ${formatBigNumbers(defense!)}",
+            "Defense: ${formatBigNumbers(spiesPayload.defense!)}",
             style: const TextStyle(fontSize: 12),
           ),
           Text(
             defDiff,
             style: TextStyle(fontSize: 12, color: defColor),
           ),
-          defenseUpdate != null
+          spiesPayload.defenseUpdate != null
               ? Text(
-                  spy.statsOld(defenseUpdate),
+                  spiesPayload.spy.statsOld(spiesPayload.defenseUpdate),
                   style: TextStyle(fontSize: 10, color: defUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -189,7 +166,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     }
 
     Widget dexWidget;
-    if (dexterity == null || dexterity == -1) {
+    if (spiesPayload.dexterity == null || spiesPayload.dexterity == -1) {
       dexWidget = const Text(
         "Dexterity: unknown",
         style: TextStyle(fontSize: 12),
@@ -197,7 +174,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var dexDiff = "";
       Color dexColor;
-      final result = userDetailsProvider.basic!.dexterity! - dexterity!;
+      final result = spiesPayload.userDetailsProvider.basic!.dexterity! - spiesPayload.dexterity!;
       if (result == 0) {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
@@ -213,16 +190,16 @@ class SpiesExactDetailsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dexterity: ${formatBigNumbers(dexterity!)}",
+            "Dexterity: ${formatBigNumbers(spiesPayload.dexterity!)}",
             style: const TextStyle(fontSize: 12),
           ),
           Text(
             dexDiff,
             style: TextStyle(fontSize: 12, color: dexColor),
           ),
-          dexterityUpdate != null
+          spiesPayload.dexterityUpdate != null
               ? Text(
-                  spy.statsOld(dexterityUpdate),
+                  spiesPayload.spy.statsOld(spiesPayload.dexterityUpdate),
                   style: TextStyle(fontSize: 10, color: dexUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -231,7 +208,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     }
 
     Widget totalWidget;
-    if (total == null || total == -1) {
+    if (spiesPayload.total == null || spiesPayload.total == -1) {
       totalWidget = const Text(
         "TOTAL: unknown",
         style: TextStyle(fontSize: 12),
@@ -239,7 +216,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var totalDiff = "";
       Color totalColor;
-      final result = userDetailsProvider.basic!.total! - total!;
+      final result = spiesPayload.userDetailsProvider.basic!.total! - spiesPayload.total!;
       if (result == 0) {
         totalDiff = "Same as you";
         totalColor = Colors.orange;
@@ -255,16 +232,16 @@ class SpiesExactDetailsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "TOTAL: ${formatBigNumbers(total!)}",
+            "TOTAL: ${formatBigNumbers(spiesPayload.total!)}",
             style: const TextStyle(fontSize: 12),
           ),
           Text(
             totalDiff,
             style: TextStyle(fontSize: 12, color: totalColor),
           ),
-          totalUpdate != null
+          spiesPayload.totalUpdate != null
               ? Text(
-                  spy.statsOld(totalUpdate),
+                  spiesPayload.spy.statsOld(spiesPayload.totalUpdate),
                   style: TextStyle(fontSize: 10, color: totalUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -273,7 +250,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     }
 
     Widget sourceWidget = const SizedBox.shrink();
-    if (spy.spiesSource != null) {
+    if (spiesPayload.spy.spiesSource != null) {
       sourceWidget = Row(
         children: [
           const Text(
@@ -284,81 +261,82 @@ class SpiesExactDetailsDialog extends StatelessWidget {
             height: 16,
             width: 16,
             child: Image.asset(
-              spy.spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+              spiesPayload.spy.spiesSource == SpiesSource.yata
+                  ? 'images/icons/yata_logo.png'
+                  : 'images/icons/tornstats_logo.png',
             ),
           ),
         ],
       );
     }
 
-    String player = name ?? "";
-    String faction = factionName ?? "";
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-      title: player.isNotEmpty ? Text(player) : const Text("Spied stats"),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (faction != "0" && faction.isNotEmpty)
+    String faction = spiesPayload.factionName ?? "";
+    return Container(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Padding(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.only(bottom: 20),
                 child: Text(
-                  "Faction: $factionName",
-                  style: const TextStyle(fontSize: 12),
+                  "SPIED STATS",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.all(4),
-              child: Row(
-                children: [
-                  Text(
-                    "Last spy: ",
-                    style: TextStyle(fontSize: 12),
+              if (faction != "0" && faction.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    "Faction: ${spiesPayload.factionName}",
+                    style: const TextStyle(fontSize: 12),
                   ),
-                  Text(
-                    spy.statsOld(update),
-                    style: TextStyle(fontSize: 12, color: lastSpyUpdateColor),
-                  ),
-                ],
+                ),
+              Padding(
+                padding: const EdgeInsets.all(4),
+                child: Row(
+                  children: [
+                    Text(
+                      "Last spy: ",
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      spiesPayload.spy.statsOld(spiesPayload.update),
+                      style: TextStyle(fontSize: 12, color: lastSpyUpdateColor),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
-              child: strWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
-              child: spdWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
-              child: defWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 10),
-              child: dexWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: totalWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: sourceWidget,
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
+                child: strWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: spdWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: defWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: dexWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: totalWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: sourceWidget,
+              ),
+            ],
+          ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Thanks'),
-        ),
-      ],
     );
   }
 }

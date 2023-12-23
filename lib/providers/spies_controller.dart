@@ -80,8 +80,8 @@ class SpiesController extends GetxController {
   }
 
   Future _restoreSpies() async {
-    String spiesSource = await Prefs().getSpiesSource();
-    spiesSource == "yata" ? _spiesSource = SpiesSource.yata : SpiesSource.tornStats;
+    String source = await Prefs().getSpiesSource();
+    source == "yata" ? spiesSource = SpiesSource.yata : spiesSource = SpiesSource.tornStats;
 
     // Load YATA
     _yataSpiesTime = DateTime.fromMillisecondsSinceEpoch(await Prefs().getYataSpiesTime());
@@ -182,6 +182,9 @@ class SpiesController extends GetxController {
             spies.add(spyModel);
           });
         }
+      } else {
+        log("Error fetching Yata spies: ${resp.statusCode}");
+        return false;
       }
     } catch (e) {
       log(e.toString());
