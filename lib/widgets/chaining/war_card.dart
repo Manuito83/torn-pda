@@ -835,6 +835,126 @@ class WarCardState extends State<WarCard> {
   }
 
   Widget _statsWidget() {
+    // ESTIMATED
+    if (!_member!.statsComparisonSuccess!) {
+      return const Text(
+        "unk stats",
+        style: TextStyle(
+          fontSize: 12,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    // Globals
+    int xanaxComparison = 0;
+    Color xanaxColor = Colors.orange;
+    int refillComparison = 0;
+    Color refillColor = Colors.orange;
+    int enhancementComparison = 0;
+    Color? enhancementColor = _themeProvider.mainText;
+    int cansComparison = 0;
+    Color cansColor = Colors.orange;
+    Color sslColor = Colors.green;
+    bool sslProb = true;
+    int? ecstasy = 0;
+    int? lsd = 0;
+
+    List<Widget> additional = <Widget>[];
+    // XANAX
+    final int otherXanax = _member!.memberXanax!;
+    final int myXanax = _member!.myXanax!;
+    xanaxComparison = otherXanax - myXanax;
+    if (xanaxComparison < -10) {
+      xanaxColor = Colors.green;
+    } else if (xanaxComparison > 10) {
+      xanaxColor = Colors.red;
+    }
+    final Text xanaxText = Text(
+      "X",
+      style: TextStyle(color: xanaxColor, fontSize: 11),
+    );
+
+    // REFILLS
+    final int otherRefill = _member!.memberRefill!;
+    final int myRefill = _member!.myRefill!;
+    refillComparison = otherRefill - myRefill;
+    refillColor = Colors.orange;
+    if (refillComparison < -10) {
+      refillColor = Colors.green;
+    } else if (refillComparison > 10) {
+      refillColor = Colors.red;
+    }
+    final Text refillText = Text(
+      "R",
+      style: TextStyle(color: refillColor, fontSize: 11),
+    );
+
+    // ENHANCER
+    final int otherEnhancement = _member!.memberEnhancement!;
+    final int myEnhancement = _member!.myEnhancement!;
+    enhancementComparison = otherEnhancement - myEnhancement;
+    if (enhancementComparison < 0) {
+      enhancementColor = Colors.green;
+    } else if (enhancementComparison > 0) {
+      enhancementColor = Colors.red;
+    }
+    final Text enhancementText = Text(
+      "E",
+      style: TextStyle(color: enhancementColor, fontSize: 11),
+    );
+
+    // CANS
+    final int otherCans = _member!.memberCans!;
+    final int myCans = _member!.myCans!;
+    cansComparison = otherCans - myCans;
+    if (cansComparison < 0) {
+      cansColor = Colors.green;
+    } else if (cansComparison > 0) {
+      cansColor = Colors.red;
+    }
+    final Text cansText = Text(
+      "C",
+      style: TextStyle(color: cansColor, fontSize: 11),
+    );
+
+    /// SSL
+    /// If (xan + esc) > 150, SSL is blank;
+    /// if (esc + xan) < 150 & LSD < 50, SSL is green;
+    /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
+    /// if (esc + xan) < 150 & LSD > 100 SSL is red
+    Widget sslWidget = const SizedBox.shrink();
+    sslColor = Colors.green;
+    ecstasy = _member!.memberEcstasy;
+    lsd = _member!.memberLsd;
+    if (otherXanax + ecstasy! > 150) {
+      sslProb = false;
+    } else {
+      if (lsd! > 50 && lsd < 50) {
+        sslColor = Colors.orange;
+      } else if (lsd > 100) {
+        sslColor = Colors.red;
+      }
+      sslWidget = Text(
+        "[SSL]",
+        style: TextStyle(
+          color: sslColor,
+          fontSize: 11,
+        ),
+      );
+    }
+
+    additional.add(xanaxText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(refillText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(enhancementText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(cansText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(sslWidget);
+    additional.add(const SizedBox(width: 5));
+
     if (_member!.statsExactTotalKnown != -1) {
       Color? exactColor = Colors.green;
       if (_userProvider.basic!.total! < _member!.statsExactTotalKnown! - _member!.statsExactTotalKnown! * 0.1) {
@@ -911,7 +1031,30 @@ class WarCardState extends State<WarCard> {
                     userDetailsProvider: _userProvider,
                   );
 
-                  return StatsDialog(spiesPayload: spiesPayload);
+                  final estimatedStatsPayload = EstimatedStatsPayload(
+                    xanaxCompare: xanaxComparison,
+                    xanaxColor: xanaxColor,
+                    refillCompare: refillComparison,
+                    refillColor: refillColor,
+                    enhancementCompare: enhancementComparison,
+                    enhancementColor: enhancementColor,
+                    cansCompare: cansComparison,
+                    cansColor: cansColor,
+                    sslColor: sslColor,
+                    sslProb: sslProb,
+                    otherXanTaken: _member!.memberXanax!,
+                    otherEctTaken: _member!.memberEcstasy!,
+                    otherLsdTaken: _member!.memberEcstasy!,
+                    otherName: _member!.name!,
+                    otherFactionName: _member!.factionName!,
+                    otherLastActionRelative: _member!.lastAction!.relative!,
+                    themeProvider: _themeProvider,
+                  );
+
+                  return StatsDialog(
+                    spiesPayload: spiesPayload,
+                    estimatedStatsPayload: estimatedStatsPayload,
+                  );
                 },
               );
             },
@@ -919,125 +1062,6 @@ class WarCardState extends State<WarCard> {
         ],
       );
     } else if (_member!.statsEstimated!.isNotEmpty) {
-      if (!_member!.statsComparisonSuccess!) {
-        return const Text(
-          "unk stats",
-          style: TextStyle(
-            fontSize: 12,
-            fontStyle: FontStyle.italic,
-          ),
-        );
-      }
-
-      // Globals
-      int xanaxComparison = 0;
-      Color xanaxColor = Colors.orange;
-      int refillComparison = 0;
-      Color refillColor = Colors.orange;
-      int enhancementComparison = 0;
-      Color? enhancementColor = _themeProvider.mainText;
-      int cansComparison = 0;
-      Color cansColor = Colors.orange;
-      Color sslColor = Colors.green;
-      bool sslProb = true;
-      int? ecstasy = 0;
-      int? lsd = 0;
-
-      List<Widget> additional = <Widget>[];
-      // XANAX
-      final int otherXanax = _member!.memberXanax!;
-      final int myXanax = _member!.myXanax!;
-      xanaxComparison = otherXanax - myXanax;
-      if (xanaxComparison < -10) {
-        xanaxColor = Colors.green;
-      } else if (xanaxComparison > 10) {
-        xanaxColor = Colors.red;
-      }
-      final Text xanaxText = Text(
-        "X",
-        style: TextStyle(color: xanaxColor, fontSize: 11),
-      );
-
-      // REFILLS
-      final int otherRefill = _member!.memberRefill!;
-      final int myRefill = _member!.myRefill!;
-      refillComparison = otherRefill - myRefill;
-      refillColor = Colors.orange;
-      if (refillComparison < -10) {
-        refillColor = Colors.green;
-      } else if (refillComparison > 10) {
-        refillColor = Colors.red;
-      }
-      final Text refillText = Text(
-        "R",
-        style: TextStyle(color: refillColor, fontSize: 11),
-      );
-
-      // ENHANCER
-      final int otherEnhancement = _member!.memberEnhancement!;
-      final int myEnhancement = _member!.myEnhancement!;
-      enhancementComparison = otherEnhancement - myEnhancement;
-      if (enhancementComparison < 0) {
-        enhancementColor = Colors.green;
-      } else if (enhancementComparison > 0) {
-        enhancementColor = Colors.red;
-      }
-      final Text enhancementText = Text(
-        "E",
-        style: TextStyle(color: enhancementColor, fontSize: 11),
-      );
-
-      // CANS
-      final int otherCans = _member!.memberCans!;
-      final int myCans = _member!.myCans!;
-      cansComparison = otherCans - myCans;
-      if (cansComparison < 0) {
-        cansColor = Colors.green;
-      } else if (cansComparison > 0) {
-        cansColor = Colors.red;
-      }
-      final Text cansText = Text(
-        "C",
-        style: TextStyle(color: cansColor, fontSize: 11),
-      );
-
-      /// SSL
-      /// If (xan + esc) > 150, SSL is blank;
-      /// if (esc + xan) < 150 & LSD < 50, SSL is green;
-      /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
-      /// if (esc + xan) < 150 & LSD > 100 SSL is red
-      Widget sslWidget = const SizedBox.shrink();
-      sslColor = Colors.green;
-      ecstasy = _member!.memberEcstasy;
-      lsd = _member!.memberLsd;
-      if (otherXanax + ecstasy! > 150) {
-        sslProb = false;
-      } else {
-        if (lsd! > 50 && lsd < 50) {
-          sslColor = Colors.orange;
-        } else if (lsd > 100) {
-          sslColor = Colors.red;
-        }
-        sslWidget = Text(
-          "[SSL]",
-          style: TextStyle(
-            color: sslColor,
-            fontSize: 11,
-          ),
-        );
-      }
-
-      additional.add(xanaxText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(refillText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(enhancementText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(cansText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(sslWidget);
-      additional.add(const SizedBox(width: 5));
-
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1064,12 +1088,10 @@ class WarCardState extends State<WarCard> {
               size: 16,
             ),
             onTap: () {
-              showDialog(
-                useRootNavigator: false,
+              showDialog<void>(
                 context: context,
-                barrierDismissible: true,
-                builder: (_) {
-                  return EstimatedStatsDialog(
+                builder: (BuildContext context) {
+                  final estimatedStatsPayload = EstimatedStatsPayload(
                     xanaxCompare: xanaxComparison,
                     xanaxColor: xanaxColor,
                     refillCompare: refillComparison,
@@ -1087,6 +1109,10 @@ class WarCardState extends State<WarCard> {
                     otherFactionName: _member!.factionName!,
                     otherLastActionRelative: _member!.lastAction!.relative!,
                     themeProvider: _themeProvider,
+                  );
+
+                  return StatsDialog(
+                    estimatedStatsPayload: estimatedStatsPayload,
                   );
                 },
               );

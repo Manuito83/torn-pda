@@ -1,55 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 
 class EstimatedStatsDialog extends StatelessWidget {
   const EstimatedStatsDialog({
-    super.key,
-    required this.xanaxCompare,
-    required this.xanaxColor,
-    required this.refillCompare,
-    required this.refillColor,
-    required this.enhancementCompare,
-    required this.enhancementColor,
-    required this.cansCompare,
-    required this.cansColor,
-    required this.sslColor,
-    required this.sslProb,
-    required this.otherXanTaken,
-    required this.otherEctTaken,
-    required this.otherLsdTaken,
-    required this.otherName,
-    required this.otherFactionName,
-    required this.otherLastActionRelative,
+    required this.estimatedStatsPayload,
     required this.themeProvider,
   });
 
-  final int xanaxCompare;
-  final Color xanaxColor;
-  final int refillCompare;
-  final Color refillColor;
-  final int enhancementCompare;
-  final Color? enhancementColor;
-  final int cansCompare;
-  final Color cansColor;
-  final Color sslColor;
-  final bool sslProb;
-  final int otherXanTaken;
-  final int otherEctTaken;
-  final int otherLsdTaken;
-  final String otherName;
-  final String otherFactionName;
-  final String otherLastActionRelative;
+  final EstimatedStatsPayload estimatedStatsPayload;
   final ThemeProvider themeProvider;
 
   @override
   Widget build(BuildContext context) {
     String xanaxRelative = "";
-    if (xanaxCompare > 0) {
-      xanaxRelative = "${xanaxCompare.abs()} MORE than you";
-    } else if (xanaxCompare == 0) {
+    if (estimatedStatsPayload.xanaxCompare > 0) {
+      xanaxRelative = "${estimatedStatsPayload.xanaxCompare.abs()} MORE than you";
+    } else if (estimatedStatsPayload.xanaxCompare == 0) {
       xanaxRelative = "SAME as you";
     } else {
-      xanaxRelative = "${xanaxCompare.abs()} LESS than you";
+      xanaxRelative = "${estimatedStatsPayload.xanaxCompare.abs()} LESS than you";
     }
     final Widget xanaxWidget = Row(
       children: [
@@ -60,19 +30,19 @@ class EstimatedStatsDialog extends StatelessWidget {
         Flexible(
           child: Text(
             xanaxRelative,
-            style: TextStyle(color: xanaxColor, fontSize: 14),
+            style: TextStyle(color: estimatedStatsPayload.xanaxColor, fontSize: 14),
           ),
         ),
       ],
     );
 
     String refillRelative = "";
-    if (refillCompare > 0) {
-      refillRelative = "${refillCompare.abs()} MORE than you";
-    } else if (refillCompare == 0) {
+    if (estimatedStatsPayload.refillCompare > 0) {
+      refillRelative = "${estimatedStatsPayload.refillCompare.abs()} MORE than you";
+    } else if (estimatedStatsPayload.refillCompare == 0) {
       refillRelative = "SAME as you";
     } else {
-      refillRelative = "${refillCompare.abs()} LESS than you";
+      refillRelative = "${estimatedStatsPayload.refillCompare.abs()} LESS than you";
     }
     final Widget refillWidget = Row(
       children: [
@@ -83,21 +53,21 @@ class EstimatedStatsDialog extends StatelessWidget {
         Flexible(
           child: Text(
             refillRelative,
-            style: TextStyle(color: refillColor, fontSize: 14),
+            style: TextStyle(color: estimatedStatsPayload.refillColor, fontSize: 14),
           ),
         ),
       ],
     );
 
     String enhancementRelative = "";
-    Color? enhColor = enhancementColor;
+    Color? enhColor = estimatedStatsPayload.enhancementColor;
     if (enhColor == Colors.white) enhColor = themeProvider.mainText;
-    if (enhancementCompare > 0) {
-      enhancementRelative = "${enhancementCompare.abs()} MORE than you";
-    } else if (enhancementCompare == 0) {
+    if (estimatedStatsPayload.enhancementCompare > 0) {
+      enhancementRelative = "${estimatedStatsPayload.enhancementCompare.abs()} MORE than you";
+    } else if (estimatedStatsPayload.enhancementCompare == 0) {
       enhancementRelative = "SAME as you";
-    } else if (enhancementCompare < 0) {
-      enhancementRelative = "${enhancementCompare.abs()} LESS than you";
+    } else if (estimatedStatsPayload.enhancementCompare < 0) {
+      enhancementRelative = "${estimatedStatsPayload.enhancementCompare.abs()} LESS than you";
     }
     final Widget enhancementWidget = Row(
       children: [
@@ -115,12 +85,12 @@ class EstimatedStatsDialog extends StatelessWidget {
     );
 
     String cansRelative = "";
-    if (cansCompare > 0) {
-      cansRelative = "${cansCompare.abs()} MORE than you";
-    } else if (cansCompare == 0) {
+    if (estimatedStatsPayload.cansCompare > 0) {
+      cansRelative = "${estimatedStatsPayload.cansCompare.abs()} MORE than you";
+    } else if (estimatedStatsPayload.cansCompare == 0) {
       cansRelative = "SAME as you";
-    } else if (cansCompare < 0) {
-      cansRelative = "${cansCompare.abs()} LESS than you";
+    } else if (estimatedStatsPayload.cansCompare < 0) {
+      cansRelative = "${estimatedStatsPayload.cansCompare.abs()} LESS than you";
     }
     final Widget cansWidget = Row(
       children: [
@@ -131,7 +101,7 @@ class EstimatedStatsDialog extends StatelessWidget {
         Flexible(
           child: Text(
             cansRelative,
-            style: TextStyle(color: cansColor, fontSize: 14),
+            style: TextStyle(color: estimatedStatsPayload.cansColor, fontSize: 14),
           ),
         ),
       ],
@@ -147,15 +117,15 @@ class EstimatedStatsDialog extends StatelessWidget {
               style: TextStyle(fontSize: 14),
             ),
             Text(
-              !sslProb
+              !estimatedStatsPayload.sslProb
                   ? "none"
-                  : sslColor == Colors.green
+                  : estimatedStatsPayload.sslColor == Colors.green
                       ? "low"
-                      : sslColor == Colors.orange
+                      : estimatedStatsPayload.sslColor == Colors.orange
                           ? "med"
                           : "high",
               style: TextStyle(
-                color: sslColor,
+                color: estimatedStatsPayload.sslColor,
                 fontSize: 14,
               ),
             ),
@@ -174,15 +144,15 @@ class EstimatedStatsDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Xanax: $otherXanTaken",
+                "Xanax: ${estimatedStatsPayload.otherXanTaken}",
                 style: const TextStyle(fontSize: 12),
               ),
               Text(
-                "Ecstasy: $otherEctTaken",
+                "Ecstasy: ${estimatedStatsPayload.otherEctTaken}",
                 style: const TextStyle(fontSize: 12),
               ),
               Text(
-                "LSD: $otherLsdTaken",
+                "LSD: ${estimatedStatsPayload.otherLsdTaken}",
                 style: const TextStyle(fontSize: 12),
               ),
             ],
@@ -191,27 +161,33 @@ class EstimatedStatsDialog extends StatelessWidget {
       ],
     );
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-      title: Text(otherName),
-      content: SingleChildScrollView(
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (otherFactionName != "0")
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Text(
+                "ESTIMATED STATS",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (estimatedStatsPayload.otherFactionName != "0")
               Padding(
                 padding: const EdgeInsets.all(2),
                 child: Text(
-                  "Faction: $otherFactionName",
+                  "Faction: ${estimatedStatsPayload.otherFactionName}",
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
-            if (otherLastActionRelative.isNotEmpty)
+            if (estimatedStatsPayload.otherLastActionRelative.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(2),
                 child: Text(
-                  "Online: ${otherLastActionRelative.replaceAll(RegExp('0 minutes ago'), "now")}",
+                  "Online: ${estimatedStatsPayload.otherLastActionRelative.replaceAll(RegExp('0 minutes ago'), "now")}",
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
@@ -238,14 +214,6 @@ class EstimatedStatsDialog extends StatelessWidget {
           ],
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Thanks'),
-        ),
-      ],
     );
   }
 }
