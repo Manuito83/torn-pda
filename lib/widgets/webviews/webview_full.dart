@@ -362,7 +362,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _findController.addListener(onFindInputTextChange);
 
     _initialWebViewSettings = InAppWebViewSettings(
-      cacheEnabled: false,
+      //cacheEnabled: false,
       transparentBackground: true,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
@@ -378,7 +378,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       /// and deactivate it dynamically, where onLoadResource stops triggering!
       //useShouldInterceptAjaxRequest: false,
       mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-      cacheMode: CacheMode.LOAD_NO_CACHE,
+      //cacheMode: CacheMode.LOAD_NO_CACHE,
       safeBrowsingEnabled: false,
       //useHybridComposition: true,
       supportMultipleWindows: true,
@@ -1115,6 +1115,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // EVENTS
           onWebViewCreated: (c) async {
             webView = c;
+
+            // Clear cache (except for cookies) for each new session
+            await InAppWebViewController.clearAllCache();
+
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
