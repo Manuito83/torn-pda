@@ -320,7 +320,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // We will later changed this for a listenable one in build()
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
-    PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
+    // TODO for InAppWebView 6.0 release: PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
+    WebView.debugLoggingSettings.enabled = false;
 
     _localChatRemovalActive = widget.chatRemovalActive;
 
@@ -4817,7 +4818,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   clearCacheAndReload() async {
-    await InAppWebViewController.clearAllCache();
+    // For InAppWebView 6.0 release: await InAppWebViewController.clearAllCache();
+    await webView!.clearCache();
     CookieManager cookieManager = CookieManager.instance();
     cookieManager.deleteAllCookies();
     webView!.evaluateJavascript(
