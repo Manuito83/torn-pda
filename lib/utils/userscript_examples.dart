@@ -648,121 +648,79 @@ let waitForElementsAndRun = setInterval(() => {
   static UserScriptModel _companyStocksOrderExample() {
     const source = r"""
 // ==UserScript==
-// @name         Torn company stock order
-// @version      0.2.11
-// @description  Automatically calculate stock percent based on sale and enter the order amount to order up to max capacity.
-// @author       Nemithrell - Torn PDA adaptation v1 [Manuito]
-// @match        companies.php
+// @name         auto-stock-fill
+// @namespace    dev.kwack.torn.scripts
+// @version      1.0.0
+// @description  Automatically fill your company's stock order
+// @author       Kwack [2190604]
+// @match        https://www.torn.com/*
+// @grant        none
 // ==/UserScript==
-
-var apiKey = '###PDA-APIKEY###';
-	
-function run () {
-	var urlStock = `https://api.torn.com/company/?selections=stock&key=${apiKey}`;
-	var urlStorage = `https://api.torn.com/company/?selections=detailed&key=${apiKey}`;
-	var storage
-
-	fetch(urlStorage)
-		.then(function(response) {
-		if(response.ok) {
-			return response.json();
-		}
-		throw new Error('Network response was not ok.');
-	})
-		.then(function(myJson) {
-		if (myJson.error){
-			throw new Error(myJson.error.error);
-		}
-		storage = myJson.company_detailed.upgrades.storage_space;
+/* https://github.com/Mephiles/torntools_extension/blob/master/extension/scripts/features/auto-stock-fill/ttAutoStockFill.js */
+(async () => {
+	window.addEventListener("hashchange", (e) => {
+		if (getHashParams(new URL(e.newURL).hash).get("option") === "stock") start();
 	});
-
-	fetch(urlStock)
-		.then(function(response) {
-		if(response.ok) {
-			return response.json();
-		}
-		throw new Error('Network response was not ok.');
-	})
-		.then(function(myJson) {
-		if (myJson.error){
-			throw new Error(myJson.error.error);
-		}
-
-		var totalSold = 0;
-		var totalStock = 0;
-		var availableStock = 0;
-		var totalNeededStock = 0;
-		var maxStock = 0;
-		for (var key1 in myJson.company_stock) {
-			totalSold += myJson.company_stock[key1].sold_amount;
-			totalStock += myJson.company_stock[key1].in_stock;
-			totalStock += myJson.company_stock[key1].on_order;
-		}
-
-		availableStock = storage - totalStock;
-
-		for (var key2 in myJson.company_stock) {
-			maxStock = 0;
-			maxStock = storage * (myJson.company_stock[key2].sold_amount/totalSold);
-			totalNeededStock += maxStock - (myJson.company_stock[key2].on_order + myJson.company_stock[key2].in_stock) > 0 ?  maxStock - (myJson.company_stock[key2].on_order + myJson.company_stock[key2].in_stock) : 0;
-		}
-
-		$( ".stock-list-title.bold.t-hide" ).find(".name")[0].firstChild.after(" (MaxStock)");
-		$( ".stock-list-title.bold.t-hide" ).find(".stock")[0].firstChild.after(" (+order)");
-
-		for (var key in myJson.company_stock) {
-			if (myJson.company_stock.hasOwnProperty(key)) {
-				var orderPercent = myJson.company_stock[key].sold_amount/totalSold
-				var orderAmount = 0;
-				maxStock = 0;
-				maxStock = storage * (myJson.company_stock[key].sold_amount/totalSold);
-				var neededStock = maxStock - (myJson.company_stock[key].on_order + myJson.company_stock[key].in_stock)
-				var neededPercent = neededStock > 0 ? neededStock/totalNeededStock : 0;
-
-				orderAmount = Math.floor(availableStock * neededPercent);
-				console.log(availableStock);
-				console.log(neededPercent);
-				console.log("**");
-
-				$( ".stock-list.fm-list.t-blue-cont.h" ).find("div:contains("+key+")").append(" (" + new Intl.NumberFormat('en-US').format(Math.floor(maxStock)) + ")");
-				$( ".stock-list.fm-list.t-blue-cont.h" ).find("div:contains("+key+")").parent().find(".stock").append(" (" + new Intl.NumberFormat('en-US').format(1 + myJson.company_stock[key].in_stock) + ")");
-				
-				if(orderAmount != 0)
-				{
-					$( ".stock-list.fm-list.t-blue-cont.h" ).find("div:contains("+key+")").parent().find(".quantity").find("input").val(orderAmount);
+	if (getHashParams(document.location.hash).get("option") === "stock") start();
+	async function start() {
+		getForm().then(addButton).catch(console.error);
+	}
+	function getHashParams(hash) {
+		return new URLSearchParams(hash.replace(/[#\/]/g, ""));
+	}
+	function callback(form) {
+		const storageCap = Array.from(form.querySelectorAll(".storage-capacity > *")).map((el) =>
+			parseInt(el.innerText),
+		);
+		const usableCap = storageCap[1] - storageCap[0];
+		const totalSoldDaily = parseInt(form.querySelector(".stock-list > li.total .sold-daily").textContent);
+		Array.from(form.querySelectorAll(".stock-list > li:not(.total):not(.quantity)")).forEach((el) => {
+			const soldDaily = parseInt(el.querySelector(".sold-daily").lastChild.textContent);
+			const neededStock = Math.max((soldDaily / totalSoldDaily) * usableCap, 0);
+			updateInput(el.querySelector("input"), Math.floor(neededStock).toString());
+		});
+	}
+	function addButton(form) {
+		if ($("#kw-auto-fill").length > 0) return; // Do not inject button twice
+		$("<span/>", { class: "btn-wrap silver" })
+			.append(
+				$("<span/>", { class: "btn" }).append(
+					$("<button/>", { class: "torn-btn", id: "kw-auto-fill" })
+						.on("click", () => callback(form))
+						.text("Auto-fill"),
+				),
+			)
+			.appendTo(form);
+	}
+	function getForm() {
+		return new Promise((res, rej) => {
+			let tick = 0;
+			const interval = setInterval(() => {
+				const form = document.querySelector("div#stock > form");
+				if (form) {
+					clearInterval(interval);
+					res(form);
+				} else {
+					tick++;
+					if (tick > 100) {
+						clearInterval(interval);
+						rej(new Error("**KW** FORM NOT FOUND"));
+					}
 				}
-				$( ".stock-list.fm-list.t-blue-cont.h" ).find("div:contains("+key+")").parent().find(".quantity").find("input").trigger('keyup');
-			}
-		}
-	}).catch(function(error) {
-		console.log('There has been a problem with your fetch operation: ', error.message);
-	});
-}
-
-function stocksLoaded() {
-  return new Promise((resolve) => {
-	let checker = setInterval(() => {
-	  if (document.querySelector(".stock-list-wrap")) {
-		setInterval(() => {
-		  resolve(true);
-		}, 300);
-		return clearInterval(checker);
-	  }
-	});
-  });
-} 
-
-if (document.querySelector(".stock-list-wrap")) {
-	run();
-} else {
-	stocksLoaded().then(() => {
-		run();
-	});
-}""";
+			}, 100);
+		});
+	}
+	function updateInput(input, value) {
+		input.value = value;
+		input.dispatchEvent(new Event("change", { bubbles: true }));
+		input.dispatchEvent(new Event("input", { bubbles: true }));
+	}
+})();
+""";
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 2,
+      version: 3,
 
       enabled: false,
       urls: getUrls(source),
