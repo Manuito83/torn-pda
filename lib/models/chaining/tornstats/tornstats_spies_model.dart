@@ -33,7 +33,7 @@ class TornStatsSpiesModel {
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
-        "user": user == null ? null : user!.toJson(),
+        "user": user?.toJson(),
         "spies": List<dynamic>.from(spies.map((x) => x.toJson())),
       };
 }

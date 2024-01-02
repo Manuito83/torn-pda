@@ -39,11 +39,11 @@ class BarsModel {
 
   Map<String, dynamic> toJson() => {
         "server_time": serverTime,
-        "happy": happy == null ? null : happy!.toJson(),
-        "life": life == null ? null : life!.toJson(),
-        "energy": energy == null ? null : energy!.toJson(),
-        "nerve": nerve == null ? null : nerve!.toJson(),
-        "chain": chain == null ? null : chain!.toJson(),
+        "happy": happy?.toJson(),
+        "life": life?.toJson(),
+        "energy": energy?.toJson(),
+        "nerve": nerve?.toJson(),
+        "chain": chain?.toJson(),
       };
 }
 

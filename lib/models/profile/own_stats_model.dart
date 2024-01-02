@@ -20,7 +20,7 @@ class OwnPersonalStatsModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "personalstats": personalstats == null ? null : personalstats!.toJson(),
+        "personalstats": personalstats?.toJson(),
       };
 }
 

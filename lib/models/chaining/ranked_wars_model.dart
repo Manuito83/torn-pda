@@ -48,7 +48,7 @@ class RankedWar {
   Map<String, dynamic> toJson() => {
         "factions":
             factions == null ? null : Map.from(factions!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-        "war": war == null ? null : war!.toJson(),
+        "war": war?.toJson(),
       };
 }
 

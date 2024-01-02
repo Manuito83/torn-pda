@@ -167,8 +167,8 @@ class TargetModel {
         "married": married!.toJson(),
         "states": states!.toJson(),
         "last_action": lastAction!.toJson(),
-        "discord": discord == null ? null : discord!.toJson(),
-        "competition": competition == null ? null : competition!.toJson(),
+        "discord": discord?.toJson(),
+        "competition": competition?.toJson(),
       };
 }
 

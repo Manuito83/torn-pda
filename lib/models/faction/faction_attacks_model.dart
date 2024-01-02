@@ -114,7 +114,7 @@ class Attack {
         "ranked_war": rankedWar,
         "respect_gain": respectGain,
         "respect_loss": respectLoss,
-        "modifiers": modifiers == null ? null : modifiers!.toJson(),
+        "modifiers": modifiers?.toJson(),
       };
 }
 

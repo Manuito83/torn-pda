@@ -5,9 +5,11 @@
 // Dart imports:
 import 'dart:convert';
 
-Map<String, LootModel> lootModelFromJson(String str) => Map.from(json.decode(str)).map((k, v) => MapEntry<String, LootModel>(k, LootModel.fromJson(v)));
+Map<String, LootModel> lootModelFromJson(String str) =>
+    Map.from(json.decode(str)).map((k, v) => MapEntry<String, LootModel>(k, LootModel.fromJson(v)));
 
-String lootModelToJson(Map<String, LootModel> data) => json.encode(Map.from(data).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())));
+String lootModelToJson(Map<String, LootModel> data) =>
+    json.encode(Map.from(data).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())));
 
 class LootModel {
   LootModel({
@@ -25,20 +27,22 @@ class LootModel {
   Levels? levels;
 
   factory LootModel.fromJson(Map<String, dynamic> json) => LootModel(
-    name: json["name"],
-    hospout: json["hospout"],
-    status: json["status"],
-    timings: json["timings"] == null ? null : Map.from(json["timings"]).map((k, v) => MapEntry<String, Timing>(k, Timing.fromJson(v))),
-    levels: json["levels"] == null ? null : Levels.fromJson(json["levels"]),
-  );
+        name: json["name"],
+        hospout: json["hospout"],
+        status: json["status"],
+        timings: json["timings"] == null
+            ? null
+            : Map.from(json["timings"]).map((k, v) => MapEntry<String, Timing>(k, Timing.fromJson(v))),
+        levels: json["levels"] == null ? null : Levels.fromJson(json["levels"]),
+      );
 
   Map<String, dynamic> toJson() => {
-    "name": name,
-    "hospout": hospout,
-    "status": status,
-    "timings": timings == null ? null : Map.from(timings!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-    "levels": levels == null ? null : levels!.toJson(),
-  };
+        "name": name,
+        "hospout": hospout,
+        "status": status,
+        "timings": timings == null ? null : Map.from(timings!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "levels": levels?.toJson(),
+      };
 }
 
 class Levels {
@@ -51,14 +55,14 @@ class Levels {
   int? next;
 
   factory Levels.fromJson(Map<String, dynamic> json) => Levels(
-    current: json["current"],
-    next: json["next"],
-  );
+        current: json["current"],
+        next: json["next"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "current": current,
-    "next": next,
-  };
+        "current": current,
+        "next": next,
+      };
 }
 
 class Timing {
@@ -71,12 +75,12 @@ class Timing {
   int? ts;
 
   factory Timing.fromJson(Map<String, dynamic> json) => Timing(
-    due: json["due"],
-    ts: json["ts"],
-  );
+        due: json["due"],
+        ts: json["ts"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "due": due,
-    "ts": ts,
-  };
+        "due": due,
+        "ts": ts,
+      };
 }
