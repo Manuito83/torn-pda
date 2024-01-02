@@ -156,7 +156,7 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
                       ),
                     ),
                     Tab(
-                      icon: Icon(MdiIcons.approximatelyEqual, color: Colors.white),
+                      icon: Icon(MdiIcons.compareHorizontal, color: Colors.white),
                     ),
                     Tab(
                       icon: Icon(MdiIcons.approximatelyEqual, color: Colors.white),

@@ -171,7 +171,7 @@ class EstimatedStatsDialog extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Text(
-                "ESTIMATED STATS",
+                "TRAINING COMPARISON",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),

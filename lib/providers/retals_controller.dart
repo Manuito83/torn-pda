@@ -278,6 +278,7 @@ class RetalsController extends GetxController {
           validAttack = true;
         }
 
+        // DEBUG
         bool validTime = false;
         if ((timeStamp - value.timestampEnded!) < 300) {
           validTime = true;

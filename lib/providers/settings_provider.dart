@@ -377,6 +377,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /*
   String? _profileStatsEnabled = "0";
   String? get profileStatsEnabled => _profileStatsEnabled;
   set changeProfileStatsEnabled(String? value) {
@@ -384,6 +385,7 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setProfileStatsEnabled(_profileStatsEnabled!);
     notifyListeners();
   }
+  */
 
   var _friendlyFactions = <FriendlyFaction>[];
   List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
@@ -777,7 +779,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 
-    _profileStatsEnabled = await Prefs().getProfileStatsEnabled();
+    //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();
 
     final savedFriendlyFactions = await Prefs().getFriendlyFactions();
     if (savedFriendlyFactions.isNotEmpty) {

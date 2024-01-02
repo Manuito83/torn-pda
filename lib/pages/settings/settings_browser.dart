@@ -206,9 +206,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
+            /*
             if (_settingsProvider.extraPlayerInformation)
               Column(
                 children: [
+                  
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -221,6 +223,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       ],
                     ),
                   ),
+                  
+
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -241,6 +246,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ],
               ),
+              */
             if (_settingsProvider.extraPlayerInformation)
               Column(
                 children: [
@@ -280,37 +286,41 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
             if (_settingsProvider.extraPlayerInformation)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Text("Show networth"),
-                    Switch(
-                      value: _settingsProvider.extraPlayerNetworth,
-                      onChanged: (value) {
-                        setState(() {
-                          _settingsProvider.changeExtraPlayerNetworth = value;
-                        });
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        const Text("Show networth"),
+                        Switch(
+                          value: _settingsProvider.extraPlayerNetworth,
+                          onChanged: (value) {
+                            setState(() {
+                              _settingsProvider.changeExtraPlayerNetworth = value;
+                            });
+                          },
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.green,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'If enabled, this will show an additional line with the networth of the '
+                      'player you are visiting',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'If enabled, this will show an additional line with the networth of the '
-                'player you are visiting',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -1993,6 +2003,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
+  /*
   DropdownButton _profileStatsDropdown() {
     return DropdownButton<String>(
       value: _settingsProvider.profileStatsEnabled,
@@ -2044,6 +2055,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       },
     );
   }
+  */
 
   Future _restorePreferences() async {
     final alternativeBrowser = await Prefs().getBrowserBottomBarStyleEnabled();

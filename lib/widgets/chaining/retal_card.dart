@@ -17,6 +17,7 @@ import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -26,6 +27,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -704,6 +706,115 @@ class RetalCardState extends State<RetalCard> {
   }
 
   Widget _statsWidget() {
+    // Globals
+    int xanaxComparison = 0;
+    Color xanaxColor = Colors.orange;
+    int refillComparison = 0;
+    Color refillColor = Colors.orange;
+    int enhancementComparison = 0;
+    Color? enhancementColor = _themeProvider.mainText;
+    int cansComparison = 0;
+    Color cansColor = Colors.orange;
+    Color sslColor = Colors.green;
+    bool sslProb = true;
+    int? ecstasy = 0;
+    int? lsd = 0;
+
+    List<Widget> additional = <Widget>[];
+    // XANAX
+    final int otherXanax = _retal!.retalXanax!;
+    final int myXanax = _retal!.myXanax!;
+    xanaxComparison = otherXanax - myXanax;
+    if (xanaxComparison < -10) {
+      xanaxColor = Colors.green;
+    } else if (xanaxComparison > 10) {
+      xanaxColor = Colors.red;
+    }
+    final Text xanaxText = Text(
+      "X",
+      style: TextStyle(color: xanaxColor, fontSize: 11),
+    );
+
+    // REFILLS
+    final int otherRefill = _retal!.retalRefill!;
+    final int myRefill = _retal!.myRefill!;
+    refillComparison = otherRefill - myRefill;
+    refillColor = Colors.orange;
+    if (refillComparison < -10) {
+      refillColor = Colors.green;
+    } else if (refillComparison > 10) {
+      refillColor = Colors.red;
+    }
+    final Text refillText = Text(
+      "R",
+      style: TextStyle(color: refillColor, fontSize: 11),
+    );
+
+    // ENHANCER
+    final int otherEnhancement = _retal!.retalEnhancement!;
+    final int myEnhancement = _retal!.myEnhancement!;
+    enhancementComparison = otherEnhancement - myEnhancement;
+    if (enhancementComparison < 0) {
+      enhancementColor = Colors.green;
+    } else if (enhancementComparison > 0) {
+      enhancementColor = Colors.red;
+    }
+    final Text enhancementText = Text(
+      "E",
+      style: TextStyle(color: enhancementColor, fontSize: 11),
+    );
+
+    // CANS
+    final int otherCans = _retal!.retalCans!;
+    final int myCans = _retal!.myCans!;
+    cansComparison = otherCans - myCans;
+    if (cansComparison < 0) {
+      cansColor = Colors.green;
+    } else if (cansComparison > 0) {
+      cansColor = Colors.red;
+    }
+    final Text cansText = Text(
+      "C",
+      style: TextStyle(color: cansColor, fontSize: 11),
+    );
+
+    /// SSL
+    /// If (xan + esc) > 150, SSL is blank;
+    /// if (esc + xan) < 150 & LSD < 50, SSL is green;
+    /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
+    /// if (esc + xan) < 150 & LSD > 100 SSL is red
+    Widget sslWidget = const SizedBox.shrink();
+    sslColor = Colors.green;
+    ecstasy = _retal!.retalEcstasy;
+    lsd = _retal!.retalLsd;
+    if (otherXanax + ecstasy! > 150) {
+      sslProb = false;
+    } else {
+      if (lsd! > 50 && lsd < 50) {
+        sslColor = Colors.orange;
+      } else if (lsd > 100) {
+        sslColor = Colors.red;
+      }
+      sslWidget = Text(
+        "[SSL]",
+        style: TextStyle(
+          color: sslColor,
+          fontSize: 11,
+        ),
+      );
+    }
+
+    additional.add(xanaxText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(refillText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(enhancementText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(cansText);
+    additional.add(const SizedBox(width: 5));
+    additional.add(sslWidget);
+    additional.add(const SizedBox(width: 5));
+
     if (_retal!.statsExactTotalKnown != -1) {
       Color? exactColor = Colors.green;
       if (_userProvider.basic!.total! < _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) {
@@ -755,13 +866,11 @@ class RetalCardState extends State<RetalCard> {
               size: 16,
             ),
             onTap: () {
-              // TODO!
-              /*
               showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
-                  SpiesController spy = Get.find<SpiesController>();
-                  return SpiesExactDetailsDialog(
+                  final SpiesController spy = Get.find<SpiesController>();
+                  final spiesPayload = SpiesPayload(
                     spy: spy,
                     strength: _retal!.statsStr ?? -1,
                     strengthUpdate: _retal!.statsStrUpdated,
@@ -779,9 +888,33 @@ class RetalCardState extends State<RetalCard> {
                     themeProvider: _themeProvider,
                     userDetailsProvider: _userProvider,
                   );
+
+                  final estimatedStatsPayload = EstimatedStatsPayload(
+                    xanaxCompare: xanaxComparison,
+                    xanaxColor: xanaxColor,
+                    refillCompare: refillComparison,
+                    refillColor: refillColor,
+                    enhancementCompare: enhancementComparison,
+                    enhancementColor: enhancementColor,
+                    cansCompare: cansComparison,
+                    cansColor: cansColor,
+                    sslColor: sslColor,
+                    sslProb: sslProb,
+                    otherXanTaken: _retal!.retalXanax!,
+                    otherEctTaken: _retal!.retalEcstasy!,
+                    otherLsdTaken: _retal!.retalLsd!,
+                    otherName: _retal!.name!,
+                    otherFactionName: _retal!.factionName!,
+                    otherLastActionRelative: _retal!.lastAction.relative!,
+                    themeProvider: _themeProvider,
+                  );
+
+                  return StatsDialog(
+                    spiesPayload: spiesPayload,
+                    estimatedStatsPayload: estimatedStatsPayload,
+                  );
                 },
               );
-              */
             },
           ),
         ],
@@ -796,115 +929,6 @@ class RetalCardState extends State<RetalCard> {
           ),
         );
       }
-
-      // Globals
-      int xanaxComparison = 0;
-      Color xanaxColor = Colors.orange;
-      int refillComparison = 0;
-      Color refillColor = Colors.orange;
-      int enhancementComparison = 0;
-      Color? enhancementColor = _themeProvider.mainText;
-      int cansComparison = 0;
-      Color cansColor = Colors.orange;
-      Color sslColor = Colors.green;
-      bool sslProb = true;
-      int? ecstasy = 0;
-      int? lsd = 0;
-
-      List<Widget> additional = <Widget>[];
-      // XANAX
-      final int otherXanax = _retal!.retalXanax!;
-      final int myXanax = _retal!.myXanax!;
-      xanaxComparison = otherXanax - myXanax;
-      if (xanaxComparison < -10) {
-        xanaxColor = Colors.green;
-      } else if (xanaxComparison > 10) {
-        xanaxColor = Colors.red;
-      }
-      final Text xanaxText = Text(
-        "X",
-        style: TextStyle(color: xanaxColor, fontSize: 11),
-      );
-
-      // REFILLS
-      final int otherRefill = _retal!.retalRefill!;
-      final int myRefill = _retal!.myRefill!;
-      refillComparison = otherRefill - myRefill;
-      refillColor = Colors.orange;
-      if (refillComparison < -10) {
-        refillColor = Colors.green;
-      } else if (refillComparison > 10) {
-        refillColor = Colors.red;
-      }
-      final Text refillText = Text(
-        "R",
-        style: TextStyle(color: refillColor, fontSize: 11),
-      );
-
-      // ENHANCER
-      final int otherEnhancement = _retal!.retalEnhancement!;
-      final int myEnhancement = _retal!.myEnhancement!;
-      enhancementComparison = otherEnhancement - myEnhancement;
-      if (enhancementComparison < 0) {
-        enhancementColor = Colors.green;
-      } else if (enhancementComparison > 0) {
-        enhancementColor = Colors.red;
-      }
-      final Text enhancementText = Text(
-        "E",
-        style: TextStyle(color: enhancementColor, fontSize: 11),
-      );
-
-      // CANS
-      final int otherCans = _retal!.retalCans!;
-      final int myCans = _retal!.myCans!;
-      cansComparison = otherCans - myCans;
-      if (cansComparison < 0) {
-        cansColor = Colors.green;
-      } else if (cansComparison > 0) {
-        cansColor = Colors.red;
-      }
-      final Text cansText = Text(
-        "C",
-        style: TextStyle(color: cansColor, fontSize: 11),
-      );
-
-      /// SSL
-      /// If (xan + esc) > 150, SSL is blank;
-      /// if (esc + xan) < 150 & LSD < 50, SSL is green;
-      /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
-      /// if (esc + xan) < 150 & LSD > 100 SSL is red
-      Widget sslWidget = const SizedBox.shrink();
-      sslColor = Colors.green;
-      ecstasy = _retal!.retalEcstasy;
-      lsd = _retal!.retalLsd;
-      if (otherXanax + ecstasy! > 150) {
-        sslProb = false;
-      } else {
-        if (lsd! > 50 && lsd < 50) {
-          sslColor = Colors.orange;
-        } else if (lsd > 100) {
-          sslColor = Colors.red;
-        }
-        sslWidget = Text(
-          "[SSL]",
-          style: TextStyle(
-            color: sslColor,
-            fontSize: 11,
-          ),
-        );
-      }
-
-      additional.add(xanaxText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(refillText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(enhancementText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(cansText);
-      additional.add(const SizedBox(width: 5));
-      additional.add(sslWidget);
-      additional.add(const SizedBox(width: 5));
 
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -932,18 +956,33 @@ class RetalCardState extends State<RetalCard> {
               size: 16,
             ),
             onTap: () {
-              _showEstimatedDetailsDialog(
-                xanaxComparison,
-                xanaxColor,
-                refillComparison,
-                refillColor,
-                enhancementComparison,
-                enhancementColor,
-                cansComparison,
-                cansColor,
-                sslColor,
-                sslProb,
-                _retal!,
+              showDialog<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  final estimatedStatsPayload = EstimatedStatsPayload(
+                    xanaxCompare: xanaxComparison,
+                    xanaxColor: xanaxColor,
+                    refillCompare: refillComparison,
+                    refillColor: refillColor,
+                    enhancementCompare: enhancementComparison,
+                    enhancementColor: enhancementColor,
+                    cansCompare: cansComparison,
+                    cansColor: cansColor,
+                    sslColor: sslColor,
+                    sslProb: sslProb,
+                    otherXanTaken: _retal!.retalXanax!,
+                    otherEctTaken: _retal!.retalEcstasy!,
+                    otherLsdTaken: _retal!.retalLsd!,
+                    otherName: _retal!.name!,
+                    otherFactionName: _retal!.factionName!,
+                    otherLastActionRelative: _retal!.lastAction.relative!,
+                    themeProvider: _themeProvider,
+                  );
+
+                  return StatsDialog(
+                    estimatedStatsPayload: estimatedStatsPayload,
+                  );
+                },
               );
             },
           ),
