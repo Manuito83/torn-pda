@@ -1081,7 +1081,7 @@ class WebViewProvider extends ChangeNotifier {
   void _callAssessMethods() {
     final tab = _tabList[_currentTab];
     if (tab.currentUrl!.contains("gym.php") || tab.currentUrl!.contains("index.php?page=hunting")) {
-      tab.webViewKey?.currentState?.assessEnergyWarning();
+      tab.webViewKey?.currentState?.assessEnergyWarning(tab.currentUrl.toString());
     }
   }
 

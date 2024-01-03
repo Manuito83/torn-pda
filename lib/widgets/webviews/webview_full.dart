@@ -3697,11 +3697,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ASSESS GYM
-  Future assessEnergyWarning() async {
+  Future assessEnergyWarning(String targetUrl) async {
     if (!mounted) return;
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
-    final easyUrl = _currentUrl.replaceAll('#', '');
+    final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
       final stats = await Get.find<ApiCallerController>().getBars();
       if (stats is BarsModel) {
