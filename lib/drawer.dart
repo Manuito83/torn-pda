@@ -327,23 +327,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
           statusBarColor: _themeProvider!.statusBar,
-          systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
-              ? _themeProvider!.statusBar
-              : Colors.transparent,
-          systemNavigationBarIconBrightness:
-              MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
-                  ? Brightness.light
-                  : _themeProvider!.currentTheme == AppTheme.light
-                      ? Brightness.dark
-                      : Brightness.light,
-          statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
-              ? MediaQuery.orientationOf(context) == Orientation.landscape
-                  ? Brightness.dark
-                  : Brightness.light
-              : Brightness.dark,
-          statusBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
-              ? Brightness.light
-              : Brightness.light,
+          systemNavigationBarColor: _themeProvider!.statusBar,
+          systemNavigationBarIconBrightness: Brightness.light,
+          statusBarIconBrightness: Brightness.light,
+          // iOS
+          statusBarBrightness: Brightness.dark,
         ),
       );
     });
@@ -1453,23 +1441,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                               SystemChrome.setSystemUIOverlayStyle(
                                 SystemUiOverlayStyle(
                                   statusBarColor: _themeProvider!.statusBar,
-                                  systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
-                                      ? _themeProvider!.canvas
-                                      : _themeProvider!.statusBar,
-                                  systemNavigationBarIconBrightness:
-                                      MediaQuery.orientationOf(context) == Orientation.landscape
-                                          ? _themeProvider!.currentTheme == AppTheme.light
-                                              ? Brightness.dark
-                                              : Brightness.light
-                                          : Brightness.light,
-                                  statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
-                                      ? MediaQuery.orientationOf(context) == Orientation.portrait
-                                          ? Brightness.dark
-                                          : Brightness.light
-                                      : Brightness.dark,
-                                  statusBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.portrait
-                                      ? Brightness.light
-                                      : Brightness.light,
+                                  systemNavigationBarColor: _themeProvider!.statusBar,
+                                  systemNavigationBarIconBrightness: Brightness.light,
+                                  statusBarIconBrightness: Brightness.light,
+                                  // iOS
+                                  statusBarBrightness: Brightness.dark,
                                 ),
                               );
                             });

@@ -319,8 +319,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor:
-            _themeProvider!.currentTheme == AppTheme.light ? Colors.blueGrey : _themeProvider!.canvas,
+        systemNavigationBarColor: _themeProvider!.statusBar,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       toolbarHeight: kMinInteractiveDimension,
