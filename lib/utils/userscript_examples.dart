@@ -649,9 +649,9 @@ let waitForElementsAndRun = setInterval(() => {
     const source = r"""
 // ==UserScript==
 // @name         auto-stock-fill
-// @namespace    dev.kwack.torn.scripts
-// @version      1.0.0
-// @description  Automatically fill your company's stock order
+// @namespace    https://github.com/Kwack-Kwack/pda-userscripts
+// @version      1.0.2
+// @description  Automatically fill your company's stock
 // @author       Kwack [2190604]
 // @match        https://www.torn.com/*
 // @grant        none
@@ -670,12 +670,12 @@ let waitForElementsAndRun = setInterval(() => {
 	}
 	function callback(form) {
 		const storageCap = Array.from(form.querySelectorAll(".storage-capacity > *")).map((el) =>
-			parseInt(el.innerText),
+			getNumber(el.innerText),
 		);
 		const usableCap = storageCap[1] - storageCap[0];
-		const totalSoldDaily = parseInt(form.querySelector(".stock-list > li.total .sold-daily").textContent);
+		const totalSoldDaily = getNumber(form.querySelector(".stock-list > li.total .sold-daily").textContent);
 		Array.from(form.querySelectorAll(".stock-list > li:not(.total):not(.quantity)")).forEach((el) => {
-			const soldDaily = parseInt(el.querySelector(".sold-daily").lastChild.textContent);
+			const soldDaily = getNumber(el.querySelector(".sold-daily").lastChild.textContent);
 			const neededStock = Math.max((soldDaily / totalSoldDaily) * usableCap, 0);
 			updateInput(el.querySelector("input"), Math.floor(neededStock).toString());
 		});
@@ -714,6 +714,9 @@ let waitForElementsAndRun = setInterval(() => {
 		input.value = value;
 		input.dispatchEvent(new Event("change", { bubbles: true }));
 		input.dispatchEvent(new Event("input", { bubbles: true }));
+	}
+	function getNumber(str) {
+		return parseInt(str.replace(/,/g, ""));
 	}
 })();
 """;
