@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
@@ -103,10 +104,10 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       useOnLoadResource: true,
       //javaScriptCanOpenWindowsAutomatically: true,
       userAgent: Platform.isAndroid
-          ? "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) "
-              "Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36 com.manuito.tornlite"
+          ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
           : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-              "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 com.manuito.tornlite",
+              "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
       //supportMultipleWindows: true,
       initialScale: _settingsProvider.androidBrowserScale,
       useWideViewPort: false,

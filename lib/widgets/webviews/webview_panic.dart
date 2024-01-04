@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/config/webview_config.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
@@ -170,6 +171,11 @@ class WebViewPanicState extends State<WebViewPanic> {
                         child: WebView(
                           initialUrl: _initialUrl,
                           javascriptMode: JavascriptMode.unrestricted,
+                          userAgent: Platform.isAndroid
+                              ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
+                                  "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
+                              : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                                  "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
                           javascriptChannels: {
                             JavascriptChannel(
                               name: 'loadoutChangeHandler',
@@ -490,8 +496,8 @@ class WebViewPanicState extends State<WebViewPanic> {
       bool reachedEnd = false;
       final skippedNames = [];
 
-      // We'll skip maximum of 3 targets
-      for (var i = 0; i < 3; i++) {
+      // We'll skip maximum of 10 targets
+      for (var i = 0; i < 10; i++) {
         // Get the status of our next target
         final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[i]);
 
