@@ -24,6 +24,9 @@ class UserDetailsProvider extends ChangeNotifier {
     if (!_u.alternativeTornStatsKeyEnabled) {
       _u.alternativeTornStatsKey = basic!.userApiKey!;
     }
+    if (!_u.alternativeTSCKeyEnabled) {
+      _u.alternativeTSCKey = basic!.userApiKey!;
+    }
 
     Prefs().setOwnDetails(ownProfileBasicToJson(basic!));
     notifyListeners();
@@ -64,6 +67,14 @@ class UserDetailsProvider extends ChangeNotifier {
         _u.alternativeTornStatsKey = await Prefs().getAlternativeTornStatsKey();
       } else {
         _u.alternativeTornStatsKey = basic!.userApiKey!;
+      }
+
+      final bool alternativeTSCKey = await Prefs().getAlternativeTSCKeyEnabled();
+      if (alternativeTSCKey) {
+        _u.alternativeTSCKeyEnabled = true;
+        _u.alternativeTSCKey = await Prefs().getAlternativeTSCKey();
+      } else {
+        _u.alternativeTSCKey = basic!.userApiKey!;
       }
 
       // Check if we have a valid API Key

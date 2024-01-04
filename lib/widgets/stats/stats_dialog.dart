@@ -7,6 +7,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/stats/estimated_stats_dialog.dart';
 import 'package:torn_pda/widgets/stats/spies_exact_details_dialog.dart';
+import 'package:torn_pda/widgets/stats/tcs_stats_dialog.dart';
 
 class SpiesPayload {
   const SpiesPayload({
@@ -86,14 +87,24 @@ class EstimatedStatsPayload {
   final ThemeProvider themeProvider;
 }
 
+class TSCStatsPayload {
+  const TSCStatsPayload({
+    required this.targetId,
+  });
+
+  final int targetId;
+}
+
 class StatsDialog extends StatefulWidget {
   const StatsDialog({
-    this.spiesPayload,
+    required this.spiesPayload,
     required this.estimatedStatsPayload,
+    required this.tscStatsPayload,
   });
 
   final SpiesPayload? spiesPayload;
   final EstimatedStatsPayload estimatedStatsPayload;
+  final TSCStatsPayload? tscStatsPayload;
 
   @override
   State<StatsDialog> createState() => _StatsDialogState();
@@ -109,7 +120,7 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _spyExists = widget.spiesPayload != null;
-    _tabController = TabController(vsync: this, length: 3);
+    _tabController = TabController(vsync: this, length: widget.tscStatsPayload != null ? 3 : 2);
     _tabController.index = _spyExists ? 0 : 1;
     _originTab = _spyExists ? 0 : 1;
     _tabController.addListener(_onTabTapped);
@@ -128,7 +139,7 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         child: DefaultTabController(
           initialIndex: _spyExists ? 0 : 1,
-          length: 3,
+          length: widget.tscStatsPayload != null ? 3 : 2,
           child: Container(
             height: 550,
             child: Scaffold(
@@ -158,9 +169,10 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
                     Tab(
                       icon: Icon(MdiIcons.compareHorizontal, color: Colors.white),
                     ),
-                    Tab(
-                      icon: Icon(MdiIcons.approximatelyEqual, color: Colors.white),
-                    ),
+                    if (widget.tscStatsPayload != null)
+                      Tab(
+                        icon: Icon(MdiIcons.approximatelyEqual, color: Colors.white),
+                      ),
                   ],
                 ),
               ),
@@ -191,9 +203,17 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
                       ],
                     ),
                   ),
-                  Center(
-                    child: Text("It's sunny here"),
-                  ),
+                  if (widget.tscStatsPayload != null)
+                    SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          TSCStatsDialog(
+                            tscStatsPayload: widget.tscStatsPayload!,
+                            themeProvider: _themeProvider,
+                          ),
+                        ],
+                      ),
+                    )
                 ],
               ),
             ),
@@ -201,7 +221,7 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
         ));
   }
 
-  _onTabTapped() {
+  _onTabTapped() async {
     if (!_spyExists && _tabController.index == 0) {
       setState(() {
         _tabController.index = _originTab;

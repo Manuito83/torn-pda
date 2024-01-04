@@ -28,7 +28,6 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
-import 'package:torn_pda/widgets/stats/estimated_stats_dialog.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -1010,7 +1009,6 @@ class WarCardState extends State<WarCard> {
               showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
-                  // TODO: change this in other files!
                   SpiesController spy = Get.find<SpiesController>();
                   final spiesPayload = SpiesPayload(
                     spy: spy,
@@ -1051,9 +1049,12 @@ class WarCardState extends State<WarCard> {
                     themeProvider: _themeProvider,
                   );
 
+                  final tscStatsPayload = TSCStatsPayload(targetId: _member!.memberId!);
+
                   return StatsDialog(
                     spiesPayload: spiesPayload,
                     estimatedStatsPayload: estimatedStatsPayload,
+                    tscStatsPayload: tscStatsPayload,
                   );
                 },
               );
@@ -1111,8 +1112,12 @@ class WarCardState extends State<WarCard> {
                     themeProvider: _themeProvider,
                   );
 
+                  final tscStatsPayload = TSCStatsPayload(targetId: _member!.memberId!);
+
                   return StatsDialog(
+                    spiesPayload: null,
                     estimatedStatsPayload: estimatedStatsPayload,
+                    tscStatsPayload: tscStatsPayload,
                   );
                 },
               );

@@ -978,9 +978,12 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 themeProvider: widget.themeProvider!,
                               );
 
+                              final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
+
                               return StatsDialog(
                                 spiesPayload: spiesPayload,
                                 estimatedStatsPayload: estimatedStatsPayload,
+                                tscStatsPayload: tscStatsPayload,
                               );
                             },
                           );
@@ -1069,8 +1072,12 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             themeProvider: widget.themeProvider!,
                           );
 
+                          final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
+
                           return StatsDialog(
+                            spiesPayload: null,
                             estimatedStatsPayload: estimatedStatsPayload,
+                            tscStatsPayload: tscStatsPayload,
                           );
                         },
                       );

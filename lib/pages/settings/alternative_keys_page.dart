@@ -26,6 +26,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
 
   final TextEditingController _yataKeyController = TextEditingController();
   final TextEditingController _tornStatsKeyController = TextEditingController();
+  final TextEditingController _tscKeyController = TextEditingController();
 
   final UserController _u = Get.put(UserController());
 
@@ -35,6 +36,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _yataKeyController.text = _u.alternativeYataKey;
     _tornStatsKeyController.text = _u.alternativeTornStatsKey;
+    _tscKeyController.text = _u.alternativeTSCKey;
 
     routeWithDrawer = false;
     routeName = "alternative_keys";
@@ -76,6 +78,9 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     const Divider(),
                     const SizedBox(height: 15),
                     _tornStatsKey(),
+                    const SizedBox(height: 15),
+                    const SizedBox(height: 40),
+                    _tscKey(),
                     const SizedBox(height: 15),
                     const SizedBox(height: 40),
                   ],
@@ -216,6 +221,76 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           }
                           w.alternativeTornStatsKey = key;
                           Prefs().setAlternativeTornStatsKey(key);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _tscKey() {
+    return GetBuilder<UserController>(
+      builder: (w) {
+        return Column(
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'TORN STATS CENTRAL',
+                  style: TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Alternative key enabled"),
+                  Switch(
+                    value: w.alternativeTSCKeyEnabled,
+                    onChanged: (enabled) {
+                      w.alternativeTSCKeyEnabled = enabled;
+                      Prefs().setAlternativeTSCKeyEnabled(enabled);
+                      if (!enabled) {
+                        w.alternativeTSCKey = w.apiKey!;
+                      }
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            if (w.alternativeTSCKeyEnabled)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Text("Key"),
+                    SizedBox(
+                      width: 150,
+                      child: TextFormField(
+                        controller: _tscKeyController,
+                        decoration: const InputDecoration(
+                          border: UnderlineInputBorder(),
+                          isDense: true,
+                        ),
+                        style: const TextStyle(fontSize: 12),
+                        maxLength: 19,
+                        onChanged: (key) {
+                          if (key.isEmpty) {
+                            key = w.apiKey!;
+                          }
+                          w.alternativeTSCKey = key;
+                          Prefs().setAlternativeTSCKey(key);
                         },
                       ),
                     ),

@@ -909,9 +909,12 @@ class RetalCardState extends State<RetalCard> {
                     themeProvider: _themeProvider,
                   );
 
+                  final tscStatsPayload = TSCStatsPayload(targetId: _retal!.retalId!);
+
                   return StatsDialog(
                     spiesPayload: spiesPayload,
                     estimatedStatsPayload: estimatedStatsPayload,
+                    tscStatsPayload: tscStatsPayload,
                   );
                 },
               );
@@ -979,8 +982,12 @@ class RetalCardState extends State<RetalCard> {
                     themeProvider: _themeProvider,
                   );
 
+                  final tscStatsPayload = TSCStatsPayload(targetId: _retal!.retalId!);
+
                   return StatsDialog(
+                    spiesPayload: null,
                     estimatedStatsPayload: estimatedStatsPayload,
+                    tscStatsPayload: tscStatsPayload,
                   );
                 },
               );

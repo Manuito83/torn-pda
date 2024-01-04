@@ -286,10 +286,15 @@ class Prefs {
   final String _kStatsEventsAchieved = "pda_statsEventsAchieved";
 
   // Alternative keys
+  // YATA
   final String _kAlternativeYataKeyEnabled = "pda_alternativeYataKeyEnabled";
   final String _kAlternativeYataKey = "pda_alternativeYataKey";
+  // TS
   final String _kAlternativeTornStatsKeyEnabled = "pda_alternativeTornStatsKeyEnabled";
   final String _kAlternativeTornStatsKey = "pda_alternativeTornStatsKey";
+  // TSC
+  final String _kAlternativeTSCKeyEnabled = "pda_alternativeTSCKeyEnabled";
+  final String _kAlternativeTSCKey = "pda_alternativeTSCKey";
 
   // TornStats stats chart configuration
   final String _kTornStatsChartSave = "pda_tornStatsChartSave";
@@ -2350,6 +2355,27 @@ class Prefs {
   Future<bool> setAlternativeTornStatsKey(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAlternativeTornStatsKey, value);
+  }
+
+  // TORN STATS CENTRAL
+  Future<bool> getAlternativeTSCKeyEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAlternativeTSCKeyEnabled) ?? false;
+  }
+
+  Future<bool> setAlternativeTSCKeyEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAlternativeTSCKeyEnabled, value);
+  }
+
+  Future<String> getAlternativeTSCKey() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAlternativeTSCKey) ?? "";
+  }
+
+  Future<bool> setAlternativeTSCKey(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAlternativeTSCKey, value);
   }
 
   /// ---------------------
