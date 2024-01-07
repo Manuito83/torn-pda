@@ -1054,7 +1054,7 @@ class WarCardState extends State<WarCard> {
                   return StatsDialog(
                     spiesPayload: spiesPayload,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: tscStatsPayload,
+                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
                   );
                 },
               );
@@ -1117,7 +1117,7 @@ class WarCardState extends State<WarCard> {
                   return StatsDialog(
                     spiesPayload: null,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: tscStatsPayload,
+                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
                   );
                 },
               );

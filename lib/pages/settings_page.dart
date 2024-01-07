@@ -47,6 +47,7 @@ import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
+import 'package:torn_pda/widgets/stats/tsc_info.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
@@ -185,6 +186,10 @@ class SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       _spiesSection(),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      _statsSection(),
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
@@ -523,6 +528,90 @@ class SettingsPageState extends State<SettingsPage> {
                 },
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _statsSection() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'STATS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Use Torn Stats Central",
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    GestureDetector(
+                      child: Icon(Icons.info_outline, size: 18),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return TSCInfoDialog(
+                              settingsProvider: _settingsProvider,
+                              themeProvider: _themeProvider,
+                            );
+                          },
+                        );
+                      },
+                    )
+                  ],
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.tscEnabledStatus == 1 ? true : false,
+                onChanged: (enabled) async {
+                  if (_settingsProvider.tscEnabledStatus != 1) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return TSCInfoDialog(
+                          settingsProvider: _settingsProvider,
+                          themeProvider: _themeProvider,
+                        );
+                      },
+                    );
+                  } else {
+                    setState(() {
+                      _settingsProvider.tscEnabledStatus = 0;
+                    });
+                  }
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Enable Torn Stats Central estimations in the sections where spied or estimated stats are shown (e.g.: '
+            'war targets cards, retal cards or profile widget)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ),
       ],

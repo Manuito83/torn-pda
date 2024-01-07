@@ -378,6 +378,10 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   /*
+  Deactivated as profile stats are now always enabled to reduce settings' complexity
+  */
+
+  /*
   String? _profileStatsEnabled = "0";
   String? get profileStatsEnabled => _profileStatsEnabled;
   set changeProfileStatsEnabled(String? value) {
@@ -386,6 +390,19 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
   */
+
+  // Torn Stats Central
+  // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
+  //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
+  //  0 == disabled
+  //  1 == enabled
+  int _tscEnabledStatus = -1;
+  int get tscEnabledStatus => _tscEnabledStatus;
+  set tscEnabledStatus(int value) {
+    _tscEnabledStatus = value;
+    Prefs().setTSCEnabledStatus(_tscEnabledStatus);
+    notifyListeners();
+  }
 
   var _friendlyFactions = <FriendlyFaction>[];
   List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
@@ -778,6 +795,8 @@ class SettingsProvider extends ChangeNotifier {
     _removeAirplane = await Prefs().getRemoveAirplane();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
+
+    _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
 
     //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();
 

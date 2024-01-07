@@ -87,7 +87,7 @@ class Estimate {
 class StatInterval {
   String min;
   String max;
-  int battleScore;
+  double battleScore;
   String fairFight;
   dynamic lastUpdated;
 

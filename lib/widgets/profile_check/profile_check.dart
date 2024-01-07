@@ -983,7 +983,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               return StatsDialog(
                                 spiesPayload: spiesPayload,
                                 estimatedStatsPayload: estimatedStatsPayload,
-                                tscStatsPayload: tscStatsPayload,
+                                tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
                               );
                             },
                           );
@@ -1077,7 +1077,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           return StatsDialog(
                             spiesPayload: null,
                             estimatedStatsPayload: estimatedStatsPayload,
-                            tscStatsPayload: tscStatsPayload,
+                            tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
                           );
                         },
                       );

@@ -110,17 +110,19 @@ class StatsDialog extends StatefulWidget {
   State<StatsDialog> createState() => _StatsDialogState();
 }
 
-class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStateMixin {
+class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin {
   late ThemeProvider _themeProvider;
   late bool _spyExists;
   late TabController _tabController;
   late int _originTab;
 
+  bool _disableTSCcalledBack = false;
+
   @override
   void initState() {
     super.initState();
     _spyExists = widget.spiesPayload != null;
-    _tabController = TabController(vsync: this, length: widget.tscStatsPayload != null ? 3 : 2);
+    _tabController = TabController(vsync: this, length: _getLength());
     _tabController.index = _spyExists ? 0 : 1;
     _originTab = _spyExists ? 0 : 1;
     _tabController.addListener(_onTabTapped);
@@ -139,7 +141,7 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         child: DefaultTabController(
           initialIndex: _spyExists ? 0 : 1,
-          length: widget.tscStatsPayload != null ? 3 : 2,
+          length: _getLength(),
           child: Container(
             height: 550,
             child: Scaffold(
@@ -169,9 +171,16 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
                     Tab(
                       icon: Icon(MdiIcons.compareHorizontal, color: Colors.white),
                     ),
-                    if (widget.tscStatsPayload != null)
+                    if (widget.tscStatsPayload != null && !_disableTSCcalledBack)
                       Tab(
-                        icon: Icon(MdiIcons.approximatelyEqual, color: Colors.white),
+                        child: Text(
+                          "T S C",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -203,13 +212,14 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
                       ],
                     ),
                   ),
-                  if (widget.tscStatsPayload != null)
+                  if (widget.tscStatsPayload != null && !_disableTSCcalledBack)
                     SingleChildScrollView(
                       child: Column(
                         children: [
                           TSCStatsDialog(
                             tscStatsPayload: widget.tscStatsPayload!,
                             themeProvider: _themeProvider,
+                            callBackToDisableTSCtab: _disableTSC,
                           ),
                         ],
                       ),
@@ -238,5 +248,21 @@ class _StatsDialogState extends State<StatsDialog> with SingleTickerProviderStat
         contentPadding: const EdgeInsets.all(10),
       );
     }
+  }
+
+  _disableTSC() {
+    setState(() {
+      _disableTSCcalledBack = true;
+      _tabController.index = 1;
+      _tabController.dispose();
+      _tabController = TabController(vsync: this, length: _getLength());
+    });
+  }
+
+  int _getLength() {
+    if (widget.tscStatsPayload != null && !_disableTSCcalledBack) {
+      return 3;
+    }
+    return 2;
   }
 }
