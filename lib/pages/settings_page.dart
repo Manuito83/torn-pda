@@ -546,74 +546,95 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
+        if (_settingsProvider.tscEnabledStatus_RC)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                 child: Row(
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        "Use Torn Stats Central",
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Row(
+                        children: [
+                          const Flexible(
+                            child: Text(
+                              "Use Torn Stats Central",
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          GestureDetector(
+                            child: Icon(Icons.info_outline, size: 18),
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return TSCInfoDialog(
+                                    settingsProvider: _settingsProvider,
+                                    themeProvider: _themeProvider,
+                                  );
+                                },
+                              );
+                            },
+                          )
+                        ],
                       ),
                     ),
-                    SizedBox(width: 8),
-                    GestureDetector(
-                      child: Icon(Icons.info_outline, size: 18),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return TSCInfoDialog(
-                              settingsProvider: _settingsProvider,
-                              themeProvider: _themeProvider,
-                            );
-                          },
-                        );
+                    Switch(
+                      value: _settingsProvider.tscEnabledStatus == 1 ? true : false,
+                      onChanged: (enabled) async {
+                        if (_settingsProvider.tscEnabledStatus != 1) {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return TSCInfoDialog(
+                                settingsProvider: _settingsProvider,
+                                themeProvider: _themeProvider,
+                              );
+                            },
+                          );
+                        } else {
+                          setState(() {
+                            _settingsProvider.tscEnabledStatus = 0;
+                          });
+                        }
                       },
-                    )
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
                   ],
                 ),
               ),
-              Switch(
-                value: _settingsProvider.tscEnabledStatus == 1 ? true : false,
-                onChanged: (enabled) async {
-                  if (_settingsProvider.tscEnabledStatus != 1) {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return TSCInfoDialog(
-                          settingsProvider: _settingsProvider,
-                          themeProvider: _themeProvider,
-                        );
-                      },
-                    );
-                  } else {
-                    setState(() {
-                      _settingsProvider.tscEnabledStatus = 0;
-                    });
-                  }
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Enable Torn Stats Central estimations in the sections where spied or estimated stats are shown (e.g.: '
+                  'war targets cards, retal cards or profile widget)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ),
             ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Enable Torn Stats Central estimations in the sections where spied or estimated stats are shown (e.g.: '
-            'war targets cards, retal cards or profile widget)',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              children: [
+                Text(
+                  "TSC temporarily deactivated",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
       ],
     );
   }

@@ -404,6 +404,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _tscEnabledStatus_RC = true;
+  bool get tscEnabledStatus_RC => _tscEnabledStatus_RC;
+  set tscEnabledStatus_RC(bool value) {
+    _tscEnabledStatus_RC = value;
+    notifyListeners();
+  }
+
   var _friendlyFactions = <FriendlyFaction>[];
   List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
   set setFriendlyFactions(List<FriendlyFaction> faction) {

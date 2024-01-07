@@ -2,6 +2,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -111,6 +112,7 @@ class StatsDialog extends StatefulWidget {
 }
 
 class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin {
+  late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
   late bool _spyExists;
   late TabController _tabController;
@@ -121,6 +123,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    _settingsProvider = context.read<SettingsProvider>();
     _spyExists = widget.spiesPayload != null;
     _tabController = TabController(vsync: this, length: _getLength());
     _tabController.index = _spyExists ? 0 : 1;
@@ -171,7 +174,9 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                     Tab(
                       icon: Icon(MdiIcons.compareHorizontal, color: Colors.white),
                     ),
-                    if (widget.tscStatsPayload != null && !_disableTSCcalledBack)
+                    if (widget.tscStatsPayload != null &&
+                        !_disableTSCcalledBack &&
+                        _settingsProvider.tscEnabledStatus_RC)
                       Tab(
                         child: Text(
                           "T S C",
@@ -212,7 +217,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                       ],
                     ),
                   ),
-                  if (widget.tscStatsPayload != null && !_disableTSCcalledBack)
+                  if (widget.tscStatsPayload != null && !_disableTSCcalledBack && _settingsProvider.tscEnabledStatus_RC)
                     SingleChildScrollView(
                       child: Column(
                         children: [
@@ -260,7 +265,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
   }
 
   int _getLength() {
-    if (widget.tscStatsPayload != null && !_disableTSCcalledBack) {
+    if (widget.tscStatsPayload != null && !_disableTSCcalledBack && _settingsProvider.tscEnabledStatus_RC) {
       return 3;
     }
     return 2;

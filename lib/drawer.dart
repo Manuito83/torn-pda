@@ -12,6 +12,8 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/foundation.dart';
 // Flutter imports:
 import 'package:flutter/material.dart' hide Intent;
 import 'package:flutter/services.dart';
@@ -308,6 +310,31 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _initIntentListenerSubscription();
       _initIntentReceiverOnLaunch();
     }
+
+    // Remote Config settings
+    remoteConfig.setConfigSettings(RemoteConfigSettings(
+      fetchTimeout: const Duration(minutes: 1),
+      minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
+    ));
+
+    // Remote Config defaults
+    remoteConfig.setDefaults(const {
+      "tsc_enabled": true,
+    });
+
+    // Remote Config first fetch and live update
+    _preferencesCompleter.future.whenComplete(() async {
+      await remoteConfig.fetchAndActivate();
+      _settingsProvider.tscEnabledStatus_RC = remoteConfig.getBool("tsc_enabled");
+
+      remoteConfig.onConfigUpdated.listen((event) async {
+        await remoteConfig.activate();
+        if (event.updatedKeys.contains("tsc_enabled")) {
+          log("Remote Config tsc_enabled: ${remoteConfig.getBool("tsc_enabled")}");
+          _settingsProvider.tscEnabledStatus_RC = remoteConfig.getBool("tsc_enabled");
+        }
+      });
+    });
   }
 
   @override
