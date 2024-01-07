@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
