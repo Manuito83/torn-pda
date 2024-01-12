@@ -258,7 +258,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       exampleUpdatable
                           ? GestureDetector(
                               child: const Icon(
-                                Icons.update,
+                                Icons.e_mobiledata,
                                 color: Colors.green,
                                 size: 20,
                               ),
@@ -278,7 +278,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                             )
                           : GestureDetector(
                               child: const Icon(
-                                Icons.update,
+                                Icons.e_mobiledata,
                                 color: Colors.grey,
                                 size: 20,
                               ),
