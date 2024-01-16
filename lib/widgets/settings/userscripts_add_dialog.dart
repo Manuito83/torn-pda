@@ -1,10 +1,14 @@
 // Flutter imports:
+import 'dart:developer';
+
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:http/http.dart' as http;
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
@@ -30,6 +34,13 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
   final _addSourceController = TextEditingController();
   final _nameFormKey = GlobalKey<FormState>();
   final _sourceFormKey = GlobalKey<FormState>();
+
+  // Remote source handlingt
+  final _remoteUrlController = TextEditingController();
+  final _remoteUrlKey = GlobalKey<FormState>();
+  final _remoteSourceFormKey = GlobalKey<FormState>();
+  bool _remoteSourceFetching = false;
+  final _remoteSourceController = TextEditingController();
 
   late UserScriptsProvider _userScriptsProvider;
   late ThemeProvider _themeProvider;
@@ -60,12 +71,19 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         }
       }
     }
+
+    // Listen to changes so that "clear" button becomes active when there is text in the URL field
+    _remoteUrlController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   Future dispose() async {
     _addNameController.dispose();
     _addSourceController.dispose();
+    _remoteUrlController.dispose();
+    _remoteSourceController.dispose();
     super.dispose();
   }
 
@@ -268,17 +286,177 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                    width: 20,
+                    child: GestureDetector(
+                      child: const Icon(MdiIcons.arrowLeft),
+                      onTap: () {
+                        _tabController.animateTo(0);
+                      },
+                    )),
+                Row(
+                  children: [
+                    const Icon(MdiIcons.earth),
+                    const SizedBox(width: 6),
+                    Text(widget.editExisting ? "Remote script update" : "Remote script load"),
+                  ],
+                ),
+                Container(
+                  width: 20,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 25, 8, 8),
+            child: Form(
+              key: _remoteUrlKey,
+              child: TextFormField(
+                style: const TextStyle(fontSize: 12),
+                controller: _remoteUrlController,
+                minLines: 1,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  counterText: "",
+                  border: OutlineInputBorder(),
+                  labelText: 'Remote URL',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty || !value.contains("http")) {
+                    return "Enter a valid URL!";
+                  }
+                  _addNameController.text = value.trim();
+                  return null;
+                },
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(MdiIcons.earth),
-                const SizedBox(width: 6),
-                Text(widget.editExisting ? "Remote script update" : "Remote script load"),
+                ElevatedButton(
+                  child: Text("Fetch"),
+                  onPressed: _remoteUrlController.text.isEmpty
+                      ? null
+                      : () async {
+                          bool success = false;
+                          String message = "";
+                          String source = "";
+
+                          try {
+                            setState(() {
+                              _remoteSourceFetching = true;
+                            });
+
+                            // Get source
+                            ({bool success, String message, String source}) result = await _fetchRemoteSource();
+
+                            success = result.success;
+                            message = result.message;
+                            source = result.source;
+                          } catch (e) {
+                            log(e.toString());
+                            message = "Fetch error: $e";
+                          }
+
+                          BotToast.showText(
+                            align: Alignment(0, 0),
+                            clickClose: true,
+                            text: message,
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: success ? Colors.green : Colors.orange[700]!,
+                            duration: const Duration(seconds: 4),
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+
+                          setState(() {
+                            if (success) {
+                              _remoteSourceController.text = source;
+                            } else {
+                              _remoteSourceController.clear();
+                            }
+                            _remoteSourceFetching = false;
+                          });
+                        },
+                ),
+                Container(width: 20),
+                ElevatedButton(
+                  child: Text("Clear"),
+                  onPressed: _remoteUrlController.text.isEmpty
+                      ? null
+                      : () {
+                          setState(() {
+                            _remoteUrlController.clear();
+                            _remoteSourceController.clear();
+                          });
+                        },
+                ),
               ],
+            ),
+          ),
+          _remoteSourceFetching
+              ? Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Fetching script..."),
+                      Container(height: 20),
+                      CircularProgressIndicator(),
+                    ],
+                  ),
+                )
+              : Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                    child: Form(
+                      key: _remoteSourceFormKey,
+                      child: TextFormField(
+                        readOnly: true,
+                        maxLines: null,
+                        expands: true,
+                        autocorrect: false,
+                        style: const TextStyle(fontSize: 12),
+                        controller: _remoteSourceController,
+                        keyboardType: TextInputType.multiline,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          counterText: "",
+                          border: OutlineInputBorder(),
+                          label: _remoteSourceController.text.isEmpty ? Center(child: Text("Remote source")) : null,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Cannot be empty!";
+                          }
+                          _remoteSourceController.text = value.trim();
+                          return null;
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: ElevatedButton(
+              child: Text("Load"),
+              onPressed: _remoteSourceController.text.isEmpty
+                  ? null
+                  : () {
+                      // TODO
+                    },
             ),
           ),
         ],
@@ -315,5 +493,26 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         _userScriptsProvider.updateUserScript(widget.editScript, inputName, inputTime, inputSource, sourcedChanged);
       }
     }
+  }
+
+  Future<({bool success, String message, String source})> _fetchRemoteSource() async {
+    bool success = false;
+    String message = "";
+    String source = "";
+    try {
+      final response = await http.get(Uri.parse(_remoteUrlController.text.trim()));
+      if (response.statusCode == 200) {
+        success = true;
+        message = "Script fetched!\n\nFor security reasons please make sure to verify its contents!";
+        source = response.body;
+      } else {
+        message = "Error ${response.statusCode}: ${response.reasonPhrase ?? 'invalid server response'}";
+      }
+    } catch (e) {
+      log(e.toString());
+      message = "Error: $e";
+    }
+
+    return (success: success, message: message, source: source);
   }
 }
