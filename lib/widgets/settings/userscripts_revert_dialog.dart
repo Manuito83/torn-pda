@@ -1,4 +1,5 @@
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -6,10 +7,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 
 // Project imports:
-import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
-import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptsRevertDialog extends StatefulWidget {
   @override
@@ -20,13 +19,11 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
   late ThemeProvider _themeProvider;
   late UserScriptsProvider _userScriptsProvider;
 
-  bool _onlyRestoreNew = true;
-  int _missingScripts = 0;
-
   @override
   void initState() {
     super.initState();
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider =
+        Provider.of<UserScriptsProvider>(context, listen: false);
   }
 
   @override
@@ -34,17 +31,6 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     // Get number missing example scripts
-    final exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
-    _missingScripts = exampleScripts.length;
-    int overwrite = 0;
-    for (final existing in _userScriptsProvider.userScriptList) {
-      for (final example in exampleScripts) {
-        if (existing.exampleCode == example.exampleCode) {
-          _missingScripts--;
-          overwrite++;
-        }
-      }
-    }
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -81,53 +67,30 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                     const SizedBox(height: 10),
                     Flexible(
                       child: Text(
-                        "This will restore the example scripts that come with Torn PDA by default!",
-                        style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                        "This will re-add any of the example userscripts that you may have deleted!",
+                        style: TextStyle(
+                            fontSize: 12, color: _themeProvider.mainText),
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                _onlyRestoreNew
-                                    ? "Only add example scripts that are not in the list "
-                                        "(you are missing $_missingScripts example "
-                                        "${_missingScripts == 1 ? "script" : "scripts"})"
-                                    : "This will add all missing example scripts and overwrite any "
-                                        "changes if they are already in your list "
-                                        "(found $overwrite)",
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: _onlyRestoreNew ? Colors.green[600] : Colors.orange[600],
-                                ),
-                              ),
-                            ),
-                            Switch(
-                              value: _onlyRestoreNew,
-                              inactiveThumbColor: Colors.orange[300],
-                              onChanged: (value) {
-                                setState(() {
-                                  _onlyRestoreNew = value;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
                           child: const Text("Do it!"),
                           onPressed: () {
-                            _userScriptsProvider.restoreExamples(_onlyRestoreNew);
-                            Navigator.of(context).pop();
+                            _userScriptsProvider
+                                .addDefaultScripts()
+                                .then((r) => BotToast.showText(
+                                      text:
+                                          "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
+                                          "${r.failed} script${r.failed == 1 ? "" : "s"} failed.\n"
+                                          "${r.alreadyAdded} script${r.alreadyAdded == 1 ? "" : "s"} already added/",
+                                      textStyle: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ))
+                                .then(Navigator.of(context).pop);
                           },
                         ),
                         TextButton(
