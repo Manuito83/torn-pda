@@ -135,10 +135,55 @@ class ShortcutsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void restoreShortcutsFromServerSave() {
-    _activeShortcuts.clear();
-    _allShortcuts.clear();
-    _initializeStockShortcuts();
+  void restoreShortcutsFromServerSave({
+    required bool overwritte,
+    required List<String> shortcutsList,
+    required String? shortcutTile,
+    required String? shortcutMenu,
+  }) async {
+    if (overwritte) {
+      // If we are going to overwritte, we modify Prefs(), as we are going to reload the provider preferences
+      if (shortcutTile != null) {
+        await Prefs().setShortcutTile(shortcutTile);
+      }
+
+      if (shortcutMenu != null) {
+        await Prefs().setShortcutMenu(shortcutMenu);
+      }
+
+      await Prefs().setActiveShortcutsList(shortcutsList);
+      _activeShortcuts.clear();
+      _allShortcuts.clear();
+      _initializeStockShortcuts();
+    } else {
+      // If we don't want to overwritte, change preferences and notify listeners
+      changeShortcutMenu(shortcutMenu ?? _shortcutMenu);
+      changeShortcutTile(shortcutTile ?? _shortcutTile);
+
+      for (final script in shortcutsList) {
+        final serverShortcut = shortcutFromJson(script);
+        // For custom shortcuts, add only if we don't have the same one already in the app
+        if (serverShortcut.isCustom!) {
+          bool existing = false;
+          for (final active in _activeShortcuts) {
+            if (serverShortcut.name == active.name && serverShortcut.url == active.url) {
+              existing = true;
+              break;
+            }
+          }
+          if (!existing) {
+            activateShortcut(serverShortcut);
+          }
+        } else {
+          // For stock shortcuts, activate them if they are not already active
+          for (final stock in _allShortcuts) {
+            if (serverShortcut.originalName == stock.originalName && !_activeShortcuts.contains(stock)) {
+              activateShortcut(stock);
+            }
+          }
+        }
+      }
+    }
   }
 
   void _configureStockShortcuts() {

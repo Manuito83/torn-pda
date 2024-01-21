@@ -42,9 +42,16 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
           children: [
             Padding(
               padding: EdgeInsets.only(bottom: 30),
-              child: Text(
-                "CLEAR BACKUP",
-                style: TextStyle(fontSize: 18),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.delete_outline),
+                  SizedBox(width: 10),
+                  Text(
+                    "CLEAR BACKUP",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ],
               ),
             ),
             FutureBuilder(

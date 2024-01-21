@@ -6,7 +6,6 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/settings/backup_prefs_groups.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 
 class BackupRestoreDialog extends StatefulWidget {
   final OwnProfileBasic userProfile;
@@ -36,6 +35,9 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
     "userscripts",
   ];
 
+  bool _overwritteShortcuts = true;
+  bool _overwritteUserscripts = true;
+
   @override
   void initState() {
     super.initState();
@@ -57,9 +59,16 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 30),
-              child: Text(
-                "RESTORE SETTINGS",
-                style: TextStyle(fontSize: 18),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.download),
+                  SizedBox(width: 10),
+                  Text(
+                    "RESTORE SETTINGS",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ],
               ),
             ),
             FutureBuilder(
@@ -83,43 +92,18 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
                     );
                   }
 
-                  return Column(
-                    children: [
-                      if (BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.shortcuts))
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _selectedItems.contains("shortcuts"),
-                            title: const Text("Shorcuts"),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedItems.contains("shortcuts")
-                                    ? _selectedItems.remove("shortcuts")
-                                    : _selectedItems.add("shortcuts");
-                              });
-                            },
-                          ),
-                        ),
-                      if (BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.userscripts))
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _selectedItems.contains("userscripts"),
-                            title: const Text("User scripts"),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedItems.contains("userscripts")
-                                    ? _selectedItems.remove("userscripts")
-                                    : _selectedItems.add("userscripts");
-                              });
-                            },
-                          ),
-                        ),
-                    ],
+                  return Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Text("Available parameters"),
+                          if (BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.shortcuts)) _shorcutsMain(),
+                          Divider(),
+                          if (BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.userscripts))
+                            _userscriptsMain(),
+                        ],
+                      ),
+                    ),
                   );
                 }
                 return Padding(
@@ -170,6 +154,142 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
     );
   }
 
+  Widget _shorcutsMain() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+          child: CheckboxListTile(
+            checkColor: Colors.white,
+            activeColor: Colors.blueGrey,
+            value: _selectedItems.contains("shortcuts"),
+            title: const Text("Shorcuts"),
+            subtitle: Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
+            onChanged: (value) {
+              setState(() {
+                _selectedItems.contains("shortcuts")
+                    ? _selectedItems.remove("shortcuts")
+                    : _selectedItems.add("shortcuts");
+              });
+            },
+          ),
+        ),
+        if (_selectedItems.contains("shortcuts"))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                GestureDetector(
+                  child: Icon(Icons.info_outline),
+                  onTap: () {
+                    BotToast.showText(
+                      text: "If enabled, your shorcuts will be erased and a new list will be built "
+                          "from the server\n\nIf disabled, incoming shorcuts will be added to the "
+                          "existing ones when possible (avoiding repetitions)",
+                      clickClose: true,
+                      contentColor: Colors.blue,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      duration: const Duration(seconds: 10),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  },
+                ),
+                SizedBox(width: 15),
+                const Flexible(
+                  child: Text(
+                    "Overwritte existing",
+                  ),
+                ),
+                SizedBox(width: 15),
+                Switch(
+                  value: _overwritteShortcuts,
+                  onChanged: (value) async {
+                    setState(() {
+                      _overwritteShortcuts = value;
+                    });
+                  },
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _userscriptsMain() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+          child: CheckboxListTile(
+            checkColor: Colors.white,
+            activeColor: Colors.blueGrey,
+            value: _selectedItems.contains("userscripts"),
+            title: const Text("User scripts"),
+            subtitle: Text("Scripts list", style: TextStyle(fontSize: 12)),
+            onChanged: (value) {
+              setState(() {
+                _selectedItems.contains("userscripts")
+                    ? _selectedItems.remove("userscripts")
+                    : _selectedItems.add("userscripts");
+              });
+            },
+          ),
+        ),
+        if (_selectedItems.contains("userscripts"))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                GestureDetector(
+                  child: Icon(Icons.info_outline),
+                  onTap: () {
+                    BotToast.showText(
+                      text: "If enabled, your user scripts will be erased and a new list will be built "
+                          "from the server\n\nIf disabled, incoming user scripts will be added to the "
+                          "existing ones when possible (avoiding repetitions)",
+                      clickClose: true,
+                      contentColor: Colors.blue,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      duration: const Duration(seconds: 10),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  },
+                ),
+                SizedBox(width: 15),
+                const Flexible(
+                  child: Text(
+                    "Overwritte existing",
+                  ),
+                ),
+                SizedBox(width: 15),
+                Switch(
+                  value: _overwritteUserscripts,
+                  onChanged: (value) async {
+                    setState(() {
+                      _overwritteUserscripts = value;
+                    });
+                  },
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   /// Receives data from online backup and loads it into the appropiate prefs, controllers and providers
   Future<void> _restoreOnlineBackup() async {
     //final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -188,30 +308,25 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
       final shortcutTile = result["prefs"]["pda_shortcutTile"];
       final shortcutMenu = result["prefs"]["pda_shortcutMenu"];
       if (activeShortcutsList != null) {
-        // Save to prefs
-        final shortcutsList = activeShortcutsList.map((item) => item as String).toList();
-        await Prefs().setActiveShortcutsList(shortcutsList);
-        if (shortcutTile != null) {
-          await Prefs().setShortcutTile(shortcutTile);
-        }
-        if (shortcutMenu != null) {
-          await Prefs().setShortcutMenu(shortcutMenu);
-        }
-
         // Restore through the provider
+        final shortcutsList = activeShortcutsList.map((item) => item as String).toList();
         final shortcutsProvider = context.read<ShortcutsProvider>();
-        shortcutsProvider.restoreShortcutsFromServerSave();
+        shortcutsProvider.restoreShortcutsFromServerSave(
+          overwritte: _overwritteShortcuts,
+          shortcutsList: shortcutsList,
+          shortcutTile: shortcutTile,
+          shortcutMenu: shortcutMenu,
+        );
       }
 
       // User scripts
-      final userscripts = result["prefs"]["pda_userScriptsList"];
+      String? userscripts = result["prefs"]["pda_userScriptsList"];
       if (userscripts != null) {
-        // Save to prefs
-        await Prefs().setUserScriptsList(userscripts);
-
-        // Restore trough the provider
         final userscriptsProvider = context.read<UserScriptsProvider>();
-        userscriptsProvider.restoreScriptsFromServerSave();
+        userscriptsProvider.restoreScriptsFromServerSave(
+          overwritte: _overwritteUserscripts,
+          scriptsList: userscripts,
+        );
       }
     }
 

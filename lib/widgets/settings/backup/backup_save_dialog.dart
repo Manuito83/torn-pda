@@ -51,9 +51,16 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 30),
-              child: Text(
-                "UPLOAD SETTINGS",
-                style: TextStyle(fontSize: 18),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.upload),
+                  SizedBox(width: 10),
+                  Text(
+                    "UPLOAD SETTINGS",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ],
               ),
             ),
             FutureBuilder(
@@ -69,63 +76,17 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
                     );
                   }
 
-                  return Column(
-                    children: [
-                      // ===
-                      // Shortcuts
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _selectedItems.contains("shortcuts"),
-                          title: const Text("Shortcuts"),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
-                              BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.shortcuts)
-                                  ? _addExistingSubtitle()
-                                  : Container(),
-                            ],
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedItems.contains("shortcuts")
-                                  ? _selectedItems.remove("shortcuts")
-                                  : _selectedItems.add("shortcuts");
-                            });
-                          },
-                        ),
+                  return Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          // Shortcuts
+                          _shorcutsMain(),
+                          // Userscripts
+                          _userscriptsMain(),
+                        ],
                       ),
-                      // ===
-                      // Userscripts
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _selectedItems.contains("userscripts"),
-                          title: const Text("User scripts"),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Scripts list", style: TextStyle(fontSize: 12)),
-                              BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.userscripts)
-                                  ? _addExistingSubtitle()
-                                  : Container(),
-                            ],
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedItems.contains("userscripts")
-                                  ? _selectedItems.remove("userscripts")
-                                  : _selectedItems.add("userscripts");
-                            });
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
                   );
                 }
                 return Padding(
@@ -164,6 +125,60 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Padding _userscriptsMain() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+      child: CheckboxListTile(
+        checkColor: Colors.white,
+        activeColor: Colors.blueGrey,
+        value: _selectedItems.contains("userscripts"),
+        title: const Text("User scripts"),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Scripts list", style: TextStyle(fontSize: 12)),
+            BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.userscripts)
+                ? _addExistingSubtitle()
+                : Container(),
+          ],
+        ),
+        onChanged: (value) {
+          setState(() {
+            _selectedItems.contains("userscripts")
+                ? _selectedItems.remove("userscripts")
+                : _selectedItems.add("userscripts");
+          });
+        },
+      ),
+    );
+  }
+
+  Padding _shorcutsMain() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+      child: CheckboxListTile(
+        checkColor: Colors.white,
+        activeColor: Colors.blueGrey,
+        value: _selectedItems.contains("shortcuts"),
+        title: const Text("Shortcuts"),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
+            BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.shortcuts)
+                ? _addExistingSubtitle()
+                : Container(),
+          ],
+        ),
+        onChanged: (value) {
+          setState(() {
+            _selectedItems.contains("shortcuts") ? _selectedItems.remove("shortcuts") : _selectedItems.add("shortcuts");
+          });
+        },
       ),
     );
   }
