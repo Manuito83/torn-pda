@@ -553,7 +553,7 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
-        if (_settingsProvider.tscEnabledStatus_RC)
+        if (_settingsProvider.tscEnabledStatusRemoteConfig)
           Column(
             children: [
               Padding(
@@ -789,117 +789,145 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Upload settings",
+        if (!_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "Online backup is temporarily disabled, please check in game or Discord for more information",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.red[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Upload settings",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.upload),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupSaveDialog(userProfile: _userProfile);
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
-              ElevatedButton(
-                child: const Icon(Icons.upload),
-                onPressed: () {
-                  showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return BackupSaveDialog(userProfile: _userProfile);
-                    },
-                  );
-                },
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so"
+                  "that you can later restore them if needed or share them across different devices",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Restore settings",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.download),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupRestoreDialog(userProfile: _userProfile);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "This will download your saved settings and restore them in the app. Please be aware that this will "
+                  "overwritte your current preferences",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Clear Backup",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupDeleteDialog(userProfile: _userProfile);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "In case there is something wrong with your online backup when trying to restore it, or you want to "
+                  "clear it for any other reason, this will delete the online saved data",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ),
             ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so"
-            "that you can later restore them if needed or share them across different devices",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Restore settings",
-                ),
-              ),
-              ElevatedButton(
-                child: const Icon(Icons.download),
-                onPressed: () {
-                  showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return BackupRestoreDialog(userProfile: _userProfile);
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "This will download your saved settings and restore them in the app. Please be aware that this will "
-            "overwritte your current preferences",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Clear Backup",
-                ),
-              ),
-              ElevatedButton(
-                child: const Icon(Icons.delete_outline),
-                onPressed: () async {
-                  showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return BackupDeleteDialog(userProfile: _userProfile);
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "In case there is something wrong with your online backup when trying to restore it, or you want to "
-            "clear it for any other reason, this will delete the online saved data",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
       ],
     );
   }

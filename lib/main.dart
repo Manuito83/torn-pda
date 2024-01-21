@@ -152,7 +152,7 @@ Future<void> main() async {
 
   if (kDebugMode) {
     // ! ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
-    FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+    //FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
   }

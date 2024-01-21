@@ -176,7 +176,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                     ),
                     if (widget.tscStatsPayload != null &&
                         !_disableTSCcalledBack &&
-                        _settingsProvider.tscEnabledStatus_RC)
+                        _settingsProvider.tscEnabledStatusRemoteConfig)
                       Tab(
                         child: Text(
                           "T S C",
@@ -217,7 +217,9 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                       ],
                     ),
                   ),
-                  if (widget.tscStatsPayload != null && !_disableTSCcalledBack && _settingsProvider.tscEnabledStatus_RC)
+                  if (widget.tscStatsPayload != null &&
+                      !_disableTSCcalledBack &&
+                      _settingsProvider.tscEnabledStatusRemoteConfig)
                     SingleChildScrollView(
                       child: Column(
                         children: [
@@ -265,7 +267,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
   }
 
   int _getLength() {
-    if (widget.tscStatsPayload != null && !_disableTSCcalledBack && _settingsProvider.tscEnabledStatus_RC) {
+    if (widget.tscStatsPayload != null && !_disableTSCcalledBack && _settingsProvider.tscEnabledStatusRemoteConfig) {
       return 3;
     }
     return 2;

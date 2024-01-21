@@ -320,18 +320,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Remote Config defaults
     remoteConfig.setDefaults(const {
       "tsc_enabled": true,
+      "prefs_backup_enabled": true,
     });
 
     // Remote Config first fetch and live update
     _preferencesCompleter.future.whenComplete(() async {
       await remoteConfig.fetchAndActivate();
-      _settingsProvider.tscEnabledStatus_RC = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
 
       remoteConfig.onConfigUpdated.listen((event) async {
         await remoteConfig.activate();
         if (event.updatedKeys.contains("tsc_enabled")) {
           log("Remote Config tsc_enabled: ${remoteConfig.getBool("tsc_enabled")}");
-          _settingsProvider.tscEnabledStatus_RC = remoteConfig.getBool("tsc_enabled");
+          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
         }
       });
     });
