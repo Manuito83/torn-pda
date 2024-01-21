@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { FactionModel, Attack, State } from "./interfaces/faction_interface";
 import { sendNotificationToUser } from "./notification";
-const rp = require("request-promise");
+const fetch = require("node-fetch");
 
 export const retalsGroup = {
 
@@ -157,10 +157,8 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/timestamp`).set(currentDateInMillis));
 
         // Use api to get attacks information and see if we have new retals
-        const apiAttacks = await rp({
-            uri: `https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}`,
-            json: false,
-        });
+        const response = await fetch(`https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}`);
+        const apiAttacks = response.json();
 
         // If permissions are not right, remove this user as a host
         if (apiAttacks.includes("Incorrect ID-entity relation")) {

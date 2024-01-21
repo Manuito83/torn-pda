@@ -10,6 +10,7 @@ import { lootRangersGroup } from "./loot_rangers";
 import { refillsGroup } from "./refills";
 import { factionAssistGroup } from "./faction_assist";
 import { retalsGroup } from "./retals";
+import { prefsBackupGroup } from "./prefs_backup";
 //import { testGroup } from "./tests";
 //import { helperGroup } from "./helpers";
 
@@ -31,5 +32,6 @@ export const lootRangers = lootRangersGroup;
 export const refills = refillsGroup;
 export const factionAssist = factionAssistGroup;
 export const retals = retalsGroup;
+export const prefsBackup = prefsBackupGroup;
 //export const tests = testGroup;
 //export const helper = helperGroup;

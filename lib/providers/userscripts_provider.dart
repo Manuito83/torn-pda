@@ -280,6 +280,11 @@ class UserScriptsProvider extends ChangeNotifier {
     _saveUserScriptsListSharedPrefs();
   }
 
+  void restoreScriptsFromServerSave() async {
+    _userScriptList.clear();
+    await loadPreferences();
+  }
+
   void _saveUserScriptsListSharedPrefs() {
     final saveString = json.encode(_userScriptList);
     Prefs().setUserScriptsList(saveString);

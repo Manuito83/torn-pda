@@ -6,6 +6,7 @@ import 'dart:io';
 // Package imports:
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 // Useful for functions debugging
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -151,7 +152,7 @@ Future<void> main() async {
 
   if (kDebugMode) {
     // ! ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
-    //FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+    FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
   }

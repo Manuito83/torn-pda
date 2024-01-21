@@ -135,6 +135,12 @@ class ShortcutsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void restoreShortcutsFromServerSave() {
+    _activeShortcuts.clear();
+    _allShortcuts.clear();
+    _initializeStockShortcuts();
+  }
+
   void _configureStockShortcuts() {
     _allShortcuts.addAll({
       Shortcut()

@@ -1,15 +1,13 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
-const rp = require("request-promise");
+const fetch = require("node-fetch");
 const privateKey = require("../key/torn_key");
 
 
 async function getNpcHospital(npc: String, key: String) {
-    return rp({
-        uri: `https://api.torn.com/user/${npc}?selections=&key=${key}`,
-        json: true,
-    });
+    const response = await fetch(`https://api.torn.com/user/${npc}?selections=&key=${key}`);
+    return response.json();
 }
 
 

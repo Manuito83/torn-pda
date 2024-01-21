@@ -11,17 +11,15 @@ import {
 import { getUsersStat } from "./torn_api";
 
 const privateKey = require("../key/torn_key");
-const rp = require("request-promise");
+import fetch from 'node-fetch';
 const runtimeOpts = {
   timeoutSeconds: 120,
   memory: "512MB" as "512MB",
 }
 
 export async function getStockMarket(apiKey: string) {
-  return rp({
-    uri: `https://api.torn.com/torn/?selections=stocks&key=${apiKey}`,
-    json: true,
-  });
+  const response = await fetch(`https://api.torn.com/torn/?selections=stocks&key=${apiKey}`);
+  return response.json();
 }
 
 export const alertsGroup = {
@@ -295,7 +293,7 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
 
   try {
 
-    const userStats = await getUsersStat(subscriber.apiKey);
+    const userStats: any = await getUsersStat(subscriber.apiKey);
 
     if (!userStats.error) {
 

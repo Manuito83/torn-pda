@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
-const rp = require("request-promise");
+const fetch = require("node-fetch");
 
 export const lootRangersGroup = {
 
@@ -16,11 +16,9 @@ export const lootRangersGroup = {
       const firebaseAdmin = require("firebase-admin");
       const db = firebaseAdmin.database();
 
-      function getLootRangersApi() {
-        return rp({
-          uri: `https://api.lzpt.io/loot`,
-          json: true,
-        });
+      async function getLootRangersApi() {
+        const response = await fetch(`https://api.lzpt.io/loot`);
+        return response.json();
       }
 
       try {
