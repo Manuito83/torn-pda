@@ -6,6 +6,7 @@ import 'dart:io';
 // Package imports:
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 // Useful for functions debugging
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';

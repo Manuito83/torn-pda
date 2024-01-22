@@ -54,7 +54,7 @@ export const refillsGroup = {
           }
           subscribersThisTime++;
 
-          const apiRefills = await getUsersRefills(thisUser.apiKey);
+          const apiRefills: any = await getUsersRefills(thisUser.apiKey);
 
           // If API returns an error, will log it below (probably IP block?)
           if (!apiRefills.error) {

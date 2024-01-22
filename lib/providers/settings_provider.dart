@@ -404,10 +404,17 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _tscEnabledStatus_RC = true;
-  bool get tscEnabledStatus_RC => _tscEnabledStatus_RC;
-  set tscEnabledStatus_RC(bool value) {
-    _tscEnabledStatus_RC = value;
+  bool _tscEnabledStatusRemoteConfig = true;
+  bool get tscEnabledStatusRemoteConfig => _tscEnabledStatusRemoteConfig;
+  set tscEnabledStatusRemoteConfig(bool value) {
+    _tscEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
+  bool _backupPrefsEnabledStatusRemoteConfig = true;
+  bool get backupPrefsEnabledStatusRemoteConfig => _backupPrefsEnabledStatusRemoteConfig;
+  set backupPrefsEnabledStatusRemoteConfig(bool value) {
+    _backupPrefsEnabledStatusRemoteConfig = value;
     notifyListeners();
   }
 

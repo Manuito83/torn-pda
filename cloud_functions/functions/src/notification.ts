@@ -1,6 +1,7 @@
 import * as admin from "firebase-admin";
-import stripHtml from "string-strip-html";
 import * as functions from "firebase-functions";
+
+const stripHtml = (...args: string[]) => import('string-strip-html').then(({ default: fetch }) => stripHtml(...args));
 
 export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;

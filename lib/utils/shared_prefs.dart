@@ -206,9 +206,9 @@ class Prefs {
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
-  final String _kShortcutTile = "pda_shortcutTile";
-  final String _kShortcutMenu = "pda_shortcutMenu";
-  final String _kActiveShortcutsList = "pda_activeShortcutsList";
+  final String _kShortcutTile = "pda_shortcutTile"; // Firebase User Pref
+  final String _kShortcutMenu = "pda_shortcutMenu"; // Firebase User Pref
+  final String _kActiveShortcutsList = "pda_activeShortcutsList"; // Firebase User Pref
 
   // Reviving
   final String _kUseNukeRevive = "pda_useNukeRevive";

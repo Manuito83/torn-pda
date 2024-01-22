@@ -232,6 +232,51 @@ class UserScriptsProvider extends ChangeNotifier {
     _saveUserScriptsListSharedPrefs();
   }
 
+  void restoreScriptsFromServerSave({
+    required bool overwritte,
+    required String scriptsList,
+  }) async {
+    // If we overwritte, just save to prefs and initialise
+    if (overwritte) {
+      await Prefs().setUserScriptsList(scriptsList);
+      _userScriptList.clear();
+      await loadPreferences();
+      return;
+    }
+
+    // If we don't overwritte, try to add the scripts
+    final decoded = json.decode(scriptsList);
+    for (final dec in decoded) {
+      try {
+        final decodedModel = UserScriptModel.fromJson(dec);
+
+        // Check if the script with the same name already exists in the list
+        final bool scriptExists = _userScriptList.any((script) {
+          return script.name!.toLowerCase() == decodedModel.name!.toLowerCase();
+        });
+
+        if (scriptExists) continue;
+
+        addUserScript(
+          decodedModel.name,
+          decodedModel.time,
+          decodedModel.source!,
+          enabled: decodedModel.enabled,
+          exampleCode: decodedModel.exampleCode,
+          version: decodedModel.version,
+          edited: decodedModel.edited,
+          allScriptFirstLoad: true,
+        );
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+    }
+    _sort();
+    notifyListeners();
+    _saveUserScriptsListSharedPrefs();
+  }
+
   void _saveUserScriptsListSharedPrefs() {
     final saveString = json.encode(_userScriptList);
     Prefs().setUserScriptsList(saveString);
