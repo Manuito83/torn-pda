@@ -343,9 +343,9 @@ class UserScriptsProvider extends ChangeNotifier {
           s.updateStatus = UserScriptUpdateStatus.upToDate;
         }
         notifyListeners(); // Notify listeners of the change after every row
-        _saveUserScriptsListSharedPrefs();
       });
     }));
+    _saveUserScriptsListSharedPrefs(); // Only save once all scripts are updated, so that we don't save the "updating" status
     return updates;
   }
 
