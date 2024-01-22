@@ -461,8 +461,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                           _remoteSourceFetching = false;
                         });
                       }
-                    }
-                    ),
+                    }),
                 Container(width: 20),
                 ElevatedButton(
                   child: Text("Clear"),
@@ -605,7 +604,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
 
       if (!widget.editExisting) {
         try {
-          _userScriptsProvider.addUserScript(inputName, inputTime, inputSource);
+          final metaMap = UserScriptModel.parseHeader(inputSource);
+          _userScriptsProvider.addUserScript(inputName, inputTime, inputSource,
+              enabled: true,
+              version: metaMap["version"] ?? "0.0.0",
+              edited: true,
+              url: null, // No URL on local scripts
+              updateStatus: UserScriptUpdateStatus.noRemote,
+              isExample: false);
         } on Exception catch (e) {
           log(e.toString());
           BotToast.showText(

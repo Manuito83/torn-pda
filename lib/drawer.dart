@@ -33,6 +33,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
+import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
@@ -79,7 +80,8 @@ class DrawerPage extends StatefulWidget {
   DrawerPageState createState() => DrawerPageState();
 }
 
-class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+class DrawerPageState extends State<DrawerPage>
+    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -113,7 +115,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
   late WebViewProvider _webViewProvider;
-  final StakeoutsController _s = Get.put(StakeoutsController(), permanent: true);
+  final StakeoutsController _s =
+      Get.put(StakeoutsController(), permanent: true);
   final ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -176,10 +179,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       quickActions.setShortcutItems(<ShortcutItem>[
         // NOTE: keep the same file name for both platforms
-        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
-        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
-        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
-        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
+        const ShortcutItem(
+            type: 'open_torn',
+            localizedTitle: 'Torn Home',
+            icon: "action_torn"),
+        const ShortcutItem(
+            type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
+        const ShortcutItem(
+            type: 'open_crimes',
+            localizedTitle: 'Crimes',
+            icon: "action_crimes"),
+        const ShortcutItem(
+            type: 'open_travel',
+            localizedTitle: 'Travel',
+            icon: "action_travel"),
       ]);
 
       quickActions.initialize((String shortcutType) async {
@@ -326,15 +339,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Remote Config first fetch and live update
     _preferencesCompleter.future.whenComplete(() async {
       await remoteConfig.fetchAndActivate();
-      _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-      _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+      _settingsProvider.tscEnabledStatusRemoteConfig =
+          remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.backupPrefsEnabledStatusRemoteConfig =
+          remoteConfig.getBool("prefs_backup_enabled");
 
       remoteConfig.onConfigUpdated.listen((event) async {
         await remoteConfig.activate();
         if (event.updatedKeys.contains("tsc_enabled")) {
           log("Remote Config tsc_enabled: ${remoteConfig.getBool("tsc_enabled")}");
-          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+          _settingsProvider.tscEnabledStatusRemoteConfig =
+              remoteConfig.getBool("tsc_enabled");
+          _settingsProvider.backupPrefsEnabledStatusRemoteConfig =
+              remoteConfig.getBool("prefs_backup_enabled");
         }
       });
     });
@@ -402,6 +419,40 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (Platform.isAndroid) {
         pdaWidget_handleBackgroundUpdateStatus();
       }
+
+      // Check for script updates
+      final int alreadyAvailableCount = _userScriptsProvider.userScriptList
+          .where(
+              (s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable)
+          .length;
+      _userScriptsProvider.checkForUpdates().then((i) async {
+        // Check if we need to show a notification (only if there are any new updates)
+        if (i - alreadyAvailableCount > 0) {
+          flutterLocalNotificationsPlugin.show(
+              777,
+              "Torn PDA",
+              "You have $i script update${i == 1 ? "" : "s"} available, visit the UserScripts "
+                  "section to update them.",
+              const NotificationDetails(
+                android: AndroidNotificationDetails(
+                  "torn_pda",
+                  "Torn PDA",
+                  importance: Importance.max,
+                  priority: Priority.high,
+                  showWhen: false,
+                  ticker: "ticker",
+                ),
+                iOS: DarwinNotificationDetails(
+                  presentAlert: true,
+                  presentBadge: true,
+                  presentSound: true,
+                ),
+              ),
+              );
+        }
+        log("UserScripts checkForUpdates() completed with $i updates available, "
+        "$alreadyAvailableCount already prompted");
+      });
     }
   }
 
@@ -446,7 +497,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         intent.data!.contains("pdaWidget://blue:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com";
-    } else if (intent.data!.contains("pdaWidget://hospital:status:icon:clicked")) {
+    } else if (intent.data!
+        .contains("pdaWidget://hospital:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/hospitalview.php";
     } else if (intent.data!.contains("pdaWidget://jail:status:icon:clicked")) {
@@ -556,7 +608,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return;
       } else {
         // Prevents double activation
-        if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
+        if (_deepLinkSubTriggeredTime != null &&
+            DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds <
+                3) {
           if (_settingsProvider.debugMessages) {
             BotToast.showText(
               onlyOne: false,
@@ -624,11 +678,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
       // Get rid of notifications in Android
       try {
-        if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
+        if (Platform.isAndroid &&
+            _settingsProvider.removeNotificationsOnLaunch) {
           // Gets the active (already shown) notifications
-          final List<ActiveNotification> activeNotifications = (await flutterLocalNotificationsPlugin
-              .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-              ?.getActiveNotifications())!;
+          final List<ActiveNotification> activeNotifications =
+              (await flutterLocalNotificationsPlugin
+                  .resolvePlatformSpecificImplementation<
+                      AndroidFlutterLocalNotificationsPlugin>()
+                  ?.getActiveNotifications())!;
 
           for (final not in activeNotifications) {
             if (not.id == null) continue;
@@ -657,12 +714,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     Prefs().getDataStockMarket().then((stocks) {
       if (stocks.isNotEmpty) {
         Prefs().setDataStockMarket("");
-        Future.delayed(const Duration(seconds: 1)).then((value) => _openBackgroundStockDialog(stocks));
+        Future.delayed(const Duration(seconds: 1))
+            .then((value) => _openBackgroundStockDialog(stocks));
       }
     });
   }
 
-  Future<void> _onFirebaseBackgroundNotification(Map<String, dynamic> message) async {
+  Future<void> _onFirebaseBackgroundNotification(
+      Map<String, dynamic> message) async {
     bool launchBrowser = false;
     var browserUrl = "https://www.torn.com";
 
@@ -798,16 +857,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _preferencesCompleter.future.whenComplete(() async {
         await _changelogCompleter.future;
         if (!_settingsProvider.retaliationSectionEnabled ||
-            (int.parse(bulkDetails!) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+            (int.parse(bulkDetails!) == 1 &&
+                _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowser = true;
-          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          browserUrl =
+              "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+          final attacksResult =
+              await Get.find<ApiCallerController>().getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowser = true;
-            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+            browserUrl =
+                "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
           } else {
             // If we pass all checks above, redirect to the retals section
             _retalsRedirection = true;
@@ -822,7 +885,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      browserUrl =
+          "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
 
       Color? totalColor = Colors.grey[700];
       try {
@@ -832,19 +896,25 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+          final own =
+              await Get.find<ApiCallerController>().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
-            final int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
-            final int refillsComparison = otherRefills! - own.personalstats!.refills!;
-            final int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
+            final int xanaxComparison =
+                otherXanax! - own.personalstats!.xantaken!;
+            final int refillsComparison =
+                otherRefills! - own.personalstats!.refills!;
+            final int drinksComparison =
+                otherDrinks! - own.personalstats!.energydrinkused!;
 
             final int otherTotals = otherXanax + otherRefills + otherDrinks;
-            final int myTotals =
-                own.personalstats!.xantaken! + own.personalstats!.refills! + own.personalstats!.energydrinkused!;
+            final int myTotals = own.personalstats!.xantaken! +
+                own.personalstats!.refills! +
+                own.personalstats!.energydrinkused!;
 
             if (otherTotals < myTotals - myTotals * 0.1) {
               totalColor = Colors.green[700];
-            } else if (otherTotals >= myTotals - myTotals * 0.1 && otherTotals <= myTotals + myTotals * 0.1) {
+            } else if (otherTotals >= myTotals - myTotals * 0.1 &&
+                otherTotals <= myTotals + myTotals * 0.1) {
               totalColor = Colors.orange[700];
             } else {
               totalColor = Colors.red[700];
@@ -861,23 +931,29 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
             String refillsString = "";
             if (refillsComparison < 0) {
-              refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+              refillsString =
+                  "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
             } else if (refillsComparison == 0) {
               refillsString = "\n- Refills (E): SAME as you";
             } else {
-              refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
+              refillsString =
+                  "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
             }
 
             String drinksString = "";
             if (drinksComparison < 0) {
-              drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+              drinksString =
+                  "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
             } else if (drinksComparison == 0) {
               drinksString = "\n- Drinks (E): SAME as you";
             } else {
-              drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
+              drinksString =
+                  "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
             }
 
-            if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+            if (xanaxString.isNotEmpty &&
+                refillsString.isNotEmpty &&
+                drinksString.isNotEmpty) {
               int? begin = message["body"].indexOf("\n- Xanax");
               int? last = message["body"].length;
               message["body"] = message["body"].replaceRange(begin, last, "");
@@ -909,7 +985,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
         // This is a standard loot alert for a single NPC
         launchBrowser = true;
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        browserUrl =
+            "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
       } else if (incomingIds[0].contains("[")) {
         // This is a Loot Rangers alert for one or more NPCs
         final ids = <String>[];
@@ -995,7 +1072,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('400-')) {
         launchBrowser = true;
         final npcId = payload.split('-')[1];
-        browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+        browserUrl =
+            'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
       } else if (payload.contains('499-')) {
         // Loot Rangers payload is (split by -)
         // [0] 499
@@ -1022,7 +1100,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // Open chaining browser for Loot Rangers
         _webViewProvider.openBrowserPreference(
           context: context,
-          url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
+          url:
+              "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
           browserTapType: BrowserTapType.chain,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -1035,7 +1114,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             ..showOnlineFactionWarning = false,
         );
 
-        browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$lootRangersNpcsIds';
+        browserUrl =
+            'https://www.torn.com/loader.php?sid=attack&user2ID=$lootRangersNpcsIds';
       } else if (payload.contains('tornMessageId:')) {
         launchBrowser = true;
         final messageId = payload.split(':');
@@ -1052,7 +1132,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final tradeId = payload.split(':');
         browserUrl = "https://www.torn.com/trade.php";
         if (tradeId[1] != "0") {
-          browserUrl = "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
+          browserUrl =
+              "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
         }
       } else if (payload.contains('211')) {
         launchBrowser = true;
@@ -1074,16 +1155,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // Or everything is OK but we elected to open the browser with just 1 target
         // >> Open browser
         if (!_settingsProvider.retaliationSectionEnabled ||
-            (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+            (int.parse(bulkDetails) == 1 &&
+                _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowser = true;
-          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          browserUrl =
+              "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+          final attacksResult =
+              await Get.find<ApiCallerController>().getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowser = true;
-            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+            browserUrl =
+                "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
           } else {
             // If we pass all checks above, redirect to the retals section
             _retalsRedirection = true;
@@ -1101,7 +1186,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final assistId = assistSplit[0].split(':');
         final assistBody = assistSplit[1].split('assistDetails:');
         final bulkDetails = assistSplit[2].split('bulkDetails:');
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
+        browserUrl =
+            "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
 
         Color? totalColor = Colors.grey[700];
         try {
@@ -1111,19 +1197,25 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+            final own =
+                await Get.find<ApiCallerController>().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
-              final int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
-              final int refillsComparison = otherRefills! - own.personalstats!.refills!;
-              final int drinksComparison = otherDrinks! - own.personalstats!.energydrinkused!;
+              final int xanaxComparison =
+                  otherXanax! - own.personalstats!.xantaken!;
+              final int refillsComparison =
+                  otherRefills! - own.personalstats!.refills!;
+              final int drinksComparison =
+                  otherDrinks! - own.personalstats!.energydrinkused!;
 
               final int otherTotals = otherXanax + otherRefills + otherDrinks;
-              final int myTotals =
-                  own.personalstats!.xantaken! + own.personalstats!.refills! + own.personalstats!.energydrinkused!;
+              final int myTotals = own.personalstats!.xantaken! +
+                  own.personalstats!.refills! +
+                  own.personalstats!.energydrinkused!;
 
               if (otherTotals < myTotals - myTotals * 0.1) {
                 totalColor = Colors.green[700];
-              } else if (otherTotals >= myTotals - myTotals * 0.1 && otherTotals <= myTotals + myTotals * 0.1) {
+              } else if (otherTotals >= myTotals - myTotals * 0.1 &&
+                  otherTotals <= myTotals + myTotals * 0.1) {
                 totalColor = Colors.orange[700];
               } else {
                 totalColor = Colors.red[700];
@@ -1131,32 +1223,40 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
               String xanaxString = "";
               if (xanaxComparison < 0) {
-                xanaxString = "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
+                xanaxString =
+                    "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
               } else if (xanaxComparison == 0) {
                 xanaxString = "\n- Xanax: SAME as you";
               } else {
-                xanaxString = "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
+                xanaxString =
+                    "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
               }
 
               String refillsString = "";
               if (refillsComparison < 0) {
-                refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+                refillsString =
+                    "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
               } else if (refillsComparison == 0) {
                 refillsString = "\n- Refills (E): SAME as you";
               } else {
-                refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
+                refillsString =
+                    "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
               }
 
               String drinksString = "";
               if (drinksComparison < 0) {
-                drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+                drinksString =
+                    "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
               } else if (drinksComparison == 0) {
                 drinksString = "\n- Drinks (E): SAME as you";
               } else {
-                drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
+                drinksString =
+                    "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
               }
 
-              if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+              if (xanaxString.isNotEmpty &&
+                  refillsString.isNotEmpty &&
+                  drinksString.isNotEmpty) {
                 final int begin = assistBody[1].indexOf("\n- Xanax");
                 final int last = assistBody[1].length;
                 assistBody[1] = assistBody[1].replaceRange(begin, last, "");
@@ -1190,7 +1290,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
           // This is a standard loot alert for a single NPC
           launchBrowser = true;
-          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          browserUrl =
+              "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else if (incomingIds[0].contains("[")) {
           // This is a Loot Rangers alert for one or more NPCs
           final ids = <String>[];
@@ -1269,7 +1370,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            !_changelogIsActive) {
           // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
           // safe area will be black
           return Container(
@@ -1280,17 +1382,23 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                 : _themeProvider!.canvas,
             child: SafeArea(
               right: _webViewProvider.webViewSplitActive &&
-                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
+                  _webViewProvider.splitScreenPosition ==
+                      WebViewSplitPosition.left,
               left: _webViewProvider.webViewSplitActive &&
-                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+                  _webViewProvider.splitScreenPosition ==
+                      WebViewSplitPosition.right,
               child: Scaffold(
                 key: _scaffoldKey,
                 body: _getPages(),
                 endDrawer: _webViewProvider.webViewSplitActive &&
-                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                        _webViewProvider.splitScreenPosition ==
+                            WebViewSplitPosition.left
                     ? Drawer(
                         backgroundColor: _themeProvider!.canvas,
-                        surfaceTintColor: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : null,
+                        surfaceTintColor:
+                            _themeProvider!.currentTheme == AppTheme.extraDark
+                                ? Colors.black
+                                : null,
                         elevation: 2, // This avoids shadow over SafeArea
                         child: ListView(
                           padding: EdgeInsets.zero,
@@ -1302,11 +1410,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                       )
                     : null,
                 drawer: _webViewProvider.webViewSplitActive &&
-                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                        _webViewProvider.splitScreenPosition ==
+                            WebViewSplitPosition.left
                     ? null
                     : Drawer(
                         backgroundColor: _themeProvider!.canvas,
-                        surfaceTintColor: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : null,
+                        surfaceTintColor:
+                            _themeProvider!.currentTheme == AppTheme.extraDark
+                                ? Colors.black
+                                : null,
                         elevation: 2, // This avoids shadow over SafeArea
                         child: ListView(
                           padding: EdgeInsets.zero,
@@ -1335,7 +1447,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Widget _getDrawerHeader() {
     return SizedBox(
-      height: MediaQuery.orientationOf(context) == Orientation.portrait ? 280 : 250,
+      height:
+          MediaQuery.orientationOf(context) == Orientation.portrait ? 280 : 250,
       child: DrawerHeader(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1351,9 +1464,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         StreamBuilder<int>(
                           stream: _apiController.callCountStream,
                           initialData: 0,
-                          builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                          builder: (BuildContext context,
+                              AsyncSnapshot<int> snapshot) {
                             final int callCount = snapshot.data ?? 0;
-                            final double progress = math.min(callCount / 100, 1.0);
+                            final double progress =
+                                math.min(callCount / 100, 1.0);
                             return LinearPercentIndicator(
                               padding: const EdgeInsets.all(0),
                               barRadius: const Radius.circular(10),
@@ -1364,8 +1479,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                               lineHeight: 14.0,
                               percent: progress,
                               backgroundColor:
-                                  _themeProvider!.currentTheme == AppTheme.light ? Colors.grey[400] : Colors.grey[800],
-                              progressColor: callCount >= 95 ? Colors.red[400] : Colors.green,
+                                  _themeProvider!.currentTheme == AppTheme.light
+                                      ? Colors.grey[400]
+                                      : Colors.grey[800],
+                              progressColor: callCount >= 95
+                                  ? Colors.red[400]
+                                  : Colors.green,
                             );
                           },
                         ),
@@ -1415,24 +1534,35 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                           borderWidth: 1,
                           cornerRadius: 5,
                           borderColor:
-                              _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-                          initialLabelIndex: _themeProvider!.currentTheme == AppTheme.light
+                              _themeProvider!.currentTheme == AppTheme.light
+                                  ? [Colors.blueGrey]
+                                  : [Colors.grey[900]!],
+                          initialLabelIndex: _themeProvider!.currentTheme ==
+                                  AppTheme.light
                               ? 0
                               : _themeProvider!.currentTheme == AppTheme.dark
                                   ? 1
                                   : 2,
-                          activeBgColor: _themeProvider!.currentTheme == AppTheme.light
+                          activeBgColor: _themeProvider!.currentTheme ==
+                                  AppTheme.light
                               ? [Colors.blueGrey]
                               : _themeProvider!.currentTheme == AppTheme.dark
                                   ? [Colors.blueGrey]
                                   : [Colors.blueGrey[900]!],
-                          activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                          inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
+                          activeFgColor:
+                              _themeProvider!.currentTheme == AppTheme.light
+                                  ? Colors.black
+                                  : Colors.white,
+                          inactiveBgColor: _themeProvider!.currentTheme ==
+                                  AppTheme.light
                               ? Colors.white
                               : _themeProvider!.currentTheme == AppTheme.dark
                                   ? Colors.grey[800]
                                   : Colors.black,
-                          inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                          inactiveFgColor:
+                              _themeProvider!.currentTheme == AppTheme.light
+                                  ? Colors.black
+                                  : Colors.white,
                           totalSwitches: 3,
                           animate: true,
                           animationDuration: 500,
@@ -1471,8 +1601,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                               SystemChrome.setSystemUIOverlayStyle(
                                 SystemUiOverlayStyle(
                                   statusBarColor: _themeProvider!.statusBar,
-                                  systemNavigationBarColor: _themeProvider!.statusBar,
-                                  systemNavigationBarIconBrightness: Brightness.light,
+                                  systemNavigationBarColor:
+                                      _themeProvider!.statusBar,
+                                  systemNavigationBarIconBrightness:
+                                      Brightness.light,
                                   statusBarIconBrightness: Brightness.light,
                                   // iOS
                                   statusBarBrightness: Brightness.dark,
@@ -1521,13 +1653,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             selectedColor: Colors.red,
             iconColor: _themeProvider!.mainText,
             child: Ink(
-              color: position == _selected ? Colors.grey[300] : Colors.transparent,
+              color:
+                  position == _selected ? Colors.grey[300] : Colors.transparent,
               child: ListTile(
                 leading: _returnDrawerIcons(drawerPosition: position),
                 title: Text(
                   _drawerItemsList[position],
                   style: TextStyle(
-                    fontWeight: position == _selected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: position == _selected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
                 selected: position == _selected,
@@ -1542,13 +1677,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       for (var i = 0; i < _drawerItemsList.length; i++) {
         // For this two, it is necessary to call Settings Provider from the Drawer and pass the callbacks all the
         // way to the relevant children. Otherwise, the drawer won't update in realtime (it's not listening)
-        if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
+        if (_settingsProvider.disableTravelSection &&
+            _drawerItemsList[i] == "Travel") {
           continue;
         }
-        if (!_settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
+        if (!_settingsProvider.rankedWarsInMenu &&
+            _drawerItemsList[i] == "Ranked Wars") {
           continue;
         }
-        if (!_settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
+        if (!_settingsProvider.stockExchangeInMenu &&
+            _drawerItemsList[i] == "Stock Market") {
           continue;
         }
 
@@ -1569,7 +1707,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                 title: Text(
                   _drawerItemsList[i],
                   style: TextStyle(
-                    fontWeight: i == _selected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        i == _selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: i == _selected,
@@ -1607,7 +1746,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case 8:
         return const RankedWarsPage(calledFromMenu: true);
       case 9:
-        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
+        return StockMarketAlertsPage(
+            calledFromMenu: true,
+            stockMarketInMenuCallback: _onChangeStockMarketInMenu);
       case 10:
         return AlertsSettings(_onChangeStockMarketInMenu);
       case 11:
@@ -1682,7 +1823,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
 
     // Set up UserScriptsProvider so that user preferences are applied
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider =
+        Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
 
     // Set up UserProvider. If key is empty, redirect to the Settings page.
@@ -1756,6 +1898,23 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)
       _updateLastActiveTime();
+
+      _userScriptsProvider.checkForUpdates().then((i) async {
+        if (i > 0) {
+          BotToast.showText(
+            clickClose: true,
+            text: "There are $i new scripts available!",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: const Duration(seconds: 6),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
+        log("UserScripts checkForUpdates() completed with $i updates available");
+      });
     }
 
     // Change device preferences
@@ -1800,7 +1959,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider!.basic!.userApiKey;
-    final dynamic prof = await Get.find<ApiCallerController>().getOwnProfileBasic();
+    final dynamic prof =
+        await Get.find<ApiCallerController>().getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof
@@ -1820,7 +1980,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _handleChangelog() async {
     final String savedCompilation = await Prefs().getAppCompilation();
-    final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+    final String currentCompilation =
+        Platform.isAndroid ? androidCompilation : iosCompilation;
 
     if (savedCompilation != currentCompilation) {
       Prefs().setAppCompilation(currentCompilation);
@@ -1853,8 +2014,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Appwidget dialog
       if (Platform.isAndroid) {
         if (!await Prefs().getAppwidgetExplanationShown()) {
-          final int widgets =
-              (await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
+          final int widgets = (await HomeWidget.getWidgetCount(
+              name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
           if (widgets > 0) {
             await _showAppwidgetExplanationDialog(context);
             Prefs().setAppwidgetExplanationShown(true);
@@ -1872,8 +2033,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
         // If we are still in an old dialog version, get DB to see if we can are free to show it
         try {
-          int? databaseDialogAllowed =
-              (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
+          int? databaseDialogAllowed = (await FirebaseDatabase.instance
+                  .ref()
+                  .child("announcement/version")
+                  .once())
+              .snapshot
+              .value as int?;
           if (databaseDialogAllowed == 1) {
             // If we are allowed to proceed, show the dialog
             await showDialog(
@@ -1939,7 +2104,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   _openDrawer() {
     if (routeWithDrawer) {
-      if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+      if (_webViewProvider.webViewSplitActive &&
+          _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
         _scaffoldKey.currentState!.openEndDrawer();
       } else {
         _scaffoldKey.currentState!.openDrawer();
@@ -2001,7 +2167,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                       ],
                     ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      mainAxisSize:
+                          MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Padding(
                           padding: const EdgeInsets.only(bottom: 10),
@@ -2011,7 +2178,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                               Flexible(
                                 child: Text(
                                   "STOCK MARKET UPDATE!",
-                                  style: TextStyle(fontSize: 11, color: _themeProvider!.mainText),
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: _themeProvider!.mainText),
                                 ),
                               ),
                             ],
@@ -2020,7 +2189,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         Flexible(
                           child: Text(
                             update,
-                            style: TextStyle(fontSize: 11, color: _themeProvider!.mainText),
+                            style: TextStyle(
+                                fontSize: 11, color: _themeProvider!.mainText),
                           ),
                         ),
                         const SizedBox(height: 15),
@@ -2034,7 +2204,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                               onPressed: () async {
                                 _webViewProvider.openBrowserPreference(
                                   context: context,
-                                  url: "https://www.torn.com/page.php?sid=stocks",
+                                  url:
+                                      "https://www.torn.com/page.php?sid=stocks",
                                   browserTapType: BrowserTapType.notification,
                                 );
                                 Navigator.of(context).pop();

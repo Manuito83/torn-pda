@@ -252,7 +252,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
         // Check if the script with the same name already exists in the list
         final bool scriptExists = _userScriptList.any((script) {
-          return script.name!.toLowerCase() == decodedModel.name!.toLowerCase();
+          return script.name.toLowerCase() == decodedModel.name.toLowerCase();
         });
 
         if (scriptExists) continue;
@@ -260,12 +260,14 @@ class UserScriptsProvider extends ChangeNotifier {
         addUserScript(
           decodedModel.name,
           decodedModel.time,
-          decodedModel.source!,
+          decodedModel.source,
           enabled: decodedModel.enabled,
-          exampleCode: decodedModel.exampleCode,
           version: decodedModel.version,
           edited: decodedModel.edited,
           allScriptFirstLoad: true,
+          isExample: decodedModel.isExample,
+          updateStatus: decodedModel.updateStatus,
+          url: decodedModel.url,
         );
       } catch (e, trace) {
         FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
