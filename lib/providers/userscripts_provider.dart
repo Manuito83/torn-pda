@@ -270,7 +270,8 @@ class UserScriptsProvider extends ChangeNotifier {
           url: decodedModel.url,
         );
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.log(
+            "PDA error at adding server userscript. Error: $e. Stack: $trace");
         FirebaseCrashlytics.instance.recordError(e, trace);
       }
     }
@@ -390,21 +391,22 @@ class UserScriptsProvider extends ChangeNotifier {
     return updates;
   }
 
-  Future<({int added, int failed, int alreadyAdded})>
+  Future<({int added, int failed, int removed})>
       addDefaultScripts() async {
     int added = 0;
     int failed = 0;
-    int alreadyAdded = 0;
+    // int alreadyAdded = 0;
+    int initialScriptCount = userScriptList.length;
+    // Remove example scripts;
+    userScriptList.removeWhere((s) => s.isExample);
     await Future.wait(defaultScriptUrls.map((url) =>
         addUserScriptFromURL(url, isExample: true).then((r) => r.success
             ? added++
-            : r.message == "Script with same name already exists"
-                ? alreadyAdded++
-                : failed++)));
+            : failed++)));
     return (
       added: added,
       failed: failed,
-      alreadyAdded: alreadyAdded,
+      removed: initialScriptCount - userScriptList.length - added,
     );
   }
 }

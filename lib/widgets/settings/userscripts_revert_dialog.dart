@@ -85,7 +85,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                                       text:
                                           "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
                                           "${r.failed} script${r.failed == 1 ? "" : "s"} failed.\n"
-                                          "${r.alreadyAdded} script${r.alreadyAdded == 1 ? "" : "s"} already added/",
+                                          "${r.removed} script${r.removed == 1 ? "" : "s"} removed.",
                                       textStyle: TextStyle(
                                         color: Colors.white,
                                       ),
