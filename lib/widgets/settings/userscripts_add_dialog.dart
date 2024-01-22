@@ -67,7 +67,6 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
 
     if (widget.editExisting) {
       for (final script in _userScriptsProvider.userScriptList) {
-        print(script.url);
         if (script.name == widget.editScript!.name) {
           _addNameController.text = script.name;
           _addSourceController.text = script.source;
@@ -450,9 +449,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                             _remoteSourceController.text = resultModel.source;
                             _remoteNameController.text = resultModel.name;
                             final String text = resultModel.time.name;
-                            log(text);
                             _remoteRunTimeController.text = text;
-                            log(_remoteRunTimeController.text);
                           } else {
                             _remoteSourceController.clear();
                             _remoteNameController.clear();

@@ -326,15 +326,9 @@ class UserScriptsProvider extends ChangeNotifier {
         _saveUserScriptsListSharedPrefs();
       } else {
         if (savedScripts.isNotEmpty) {
-          print("Saved scripts:");
-          print(savedScripts);
           final decoded = json.decode(savedScripts);
-          // log("Decoded:");
-          // log(decoded.toString());
           for (final dec in decoded) {
-            // log(dec.toString());
             try {
-              print(dec);
               final decodedModel = UserScriptModel.fromJson(dec);
 
               // Check if the script with the same name already exists in the list
