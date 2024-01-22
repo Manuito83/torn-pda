@@ -406,7 +406,7 @@ class UserScriptsProvider extends ChangeNotifier {
     return (
       added: added,
       failed: failed,
-      removed: initialScriptCount - userScriptList.length - added,
+      removed: initialScriptCount - (userScriptList.length - added),
     );
   }
 }
