@@ -60,6 +60,9 @@ const String appVersion = '3.2.5';
 const String androidCompilation = '374';
 const String iosCompilation = '374';
 
+// TODO
+const bool pointFunctionsEmulatorToLocal = true;
+
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
 
@@ -151,8 +154,9 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
-    // ! ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
-    //FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+    if (pointFunctionsEmulatorToLocal) {
+      FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+    }
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
   }

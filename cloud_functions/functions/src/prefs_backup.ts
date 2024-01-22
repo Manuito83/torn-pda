@@ -45,7 +45,7 @@ export const prefsBackupGroup = {
                 return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null));
             }
 
-            // User authentication
+            // User authentication 
             const failReason = await validateUserAuthAndReturnError(inputJson.key, inputJson.id);
             if (failReason !== null) {
                 return JSON.stringify(new UserPrefsOutput(false, failReason, null));

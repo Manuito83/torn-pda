@@ -84,6 +84,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
     _addSourceController.dispose();
     _remoteUrlController.dispose();
     _remoteSourceController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
