@@ -47,6 +47,7 @@ import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_delete_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_restore_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_save_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup/backup_share_dialog.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
@@ -896,7 +897,47 @@ class SettingsPageState extends State<SettingsPage> {
                   children: <Widget>[
                     const Flexible(
                       child: Text(
-                        "Clear Backup",
+                        "Share settings",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.share),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupShareDialog(
+                              userProfile: _userProfile,
+                              themeProvider: _themeProvider,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "This will allow you to share your settings and receive settings from other players with the use "
+                  "of the player ID and a password",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Clear backup",
                       ),
                     ),
                     ElevatedButton(

@@ -89,14 +89,17 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
                     ),
                   );
                 }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 50, bottom: 50),
-                  child: Column(
-                    children: [
-                      const Text("Fetching server info..."),
-                      const SizedBox(height: 25),
-                      const CircularProgressIndicator(),
-                    ],
+                return Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 40),
+                        const Text("Fetching server info..."),
+                        const SizedBox(height: 25),
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 );
               },

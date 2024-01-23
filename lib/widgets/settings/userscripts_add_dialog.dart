@@ -94,6 +94,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
     _remoteSourceController.dispose();
     _remoteNameController.dispose();
     _remoteRunTimeController.dispose();
+     _tabController.dispose();
     super.dispose();
   }
 

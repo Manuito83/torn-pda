@@ -78,15 +78,17 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
                   );
                 }
 
-                return Padding(
-                  padding: const EdgeInsets.only(top: 30, bottom: 30),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text("Fetching server info..."),
-                      const SizedBox(height: 25),
-                      const CircularProgressIndicator(),
-                    ],
+                return Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 40),
+                        const Text("Fetching server info..."),
+                        const SizedBox(height: 25),
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 );
               },
