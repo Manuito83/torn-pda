@@ -17,8 +17,14 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 class UserScriptsAddDialog extends StatefulWidget {
   final bool editExisting;
   final UserScriptModel? editScript;
+  final int defaultPage;
+  final String? defaultUrl;
 
-  const UserScriptsAddDialog({required this.editExisting, this.editScript});
+  const UserScriptsAddDialog(
+      {required this.editExisting,
+      this.editScript,
+      this.defaultPage = 0,
+      this.defaultUrl});
 
   @override
   UserScriptsAddDialogState createState() => UserScriptsAddDialogState();
@@ -64,6 +70,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     _tabController = TabController(vsync: this, length: 2);
+    _tabController.animateTo(widget.defaultPage);
 
     if (widget.editExisting) {
       for (final script in _userScriptsProvider.userScriptList) {
@@ -78,6 +85,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
           _remoteUrlController.text = script.url ?? "";
         }
       }
+    } else if (widget.defaultUrl != null) {
+      _remoteUrlController.text = widget.defaultUrl!;
     }
 
     // Listen to changes so that "clear" button becomes active when there is text in the URL field
@@ -94,7 +103,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
     _remoteSourceController.dispose();
     _remoteNameController.dispose();
     _remoteRunTimeController.dispose();
-     _tabController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
