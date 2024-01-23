@@ -1285,9 +1285,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   request.request.url.toString().replaceAll("http:", "https:"));
               return NavigationActionPolicy.CANCEL;
             }
-            if (request.request.url
-                .toString()
-                .endsWith(".user.js")) {
+            // Check for content-type header to prevent loading of non-JS files.
+            // Add anyway if there's no header, as it's probably a userscript.
+            if (request.request.url.toString().endsWith(".user.js") &&
+                (request.request.headers?["content-type"]
+                        ?.contains("text/javascript") ??
+                    true)) {
               showDialog<void>(
                 context: context,
                 builder: (b) {
