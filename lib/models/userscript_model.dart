@@ -48,14 +48,14 @@ class UserScriptModel {
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     return UserScriptModel(
         enabled: json["enabled"],
-        matches: (json["matches"] as List<dynamic>).cast<String>(),
+        matches: (json["matches"] as List<dynamic>? ?? tryGetMatches(json["source"])).cast<String>(),
         name: json["name"],
         version: json["version"],
         edited: json["edited"],
         source: json["source"],
-        url: json["url"],
+        url: json["url"] ?? tryGetUrl(json["source"]),
         updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
-        isExample: json["isExample"],
+        isExample: json["isExample"] ?? false,
         time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end);
   }
 
@@ -247,6 +247,24 @@ class UserScriptModel {
       );
     } else {
       return false;
+    }
+  }
+
+  static tryGetMatches(String source) {
+    try {
+      final metaMap = UserScriptModel.parseHeader(source);
+      return metaMap["matches"] ?? const ["*"];
+    } catch (e) {
+      return const ["*"];
+    }
+  }
+
+  static tryGetUrl(String source) {
+    try {
+      final metaMap = UserScriptModel.parseHeader(source);
+      return metaMap["downloadURL"];
+    } catch (e) {
+      return null;
     }
   }
 }
