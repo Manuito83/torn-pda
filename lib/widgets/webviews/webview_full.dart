@@ -2287,7 +2287,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool getAttack = false;
     bool getJail = false;
     bool getBounties = false;
-    bool setGFAddButton = false;
 
     if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
         (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
@@ -2342,11 +2341,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       getBounties = true;
     }
 
-    if (RegExp(r"https:\/\/greasyfork\.org\/[\w]+\/scripts\/[\S\s]+").hasMatch(_currentUrl)) {
-      setGFAddButton = true;
-      anySectionTriggered = true;
-    }
-
     // Using a more direct call for OC NNB
     // The script handles repetitions and we handle how many times API are called
     _assessOCnnb(_currentUrl);
@@ -2375,7 +2369,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     if (anySectionTriggered) {
-      log(setGFAddButton.toString());
       dom.Document doc;
       var pageTitle = "";
       final html = await webView!.getHtml();
