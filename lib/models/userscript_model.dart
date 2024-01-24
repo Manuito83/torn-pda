@@ -6,11 +6,9 @@
 import 'dart:convert';
 import "package:http/http.dart" as http;
 
-UserScriptModel userScriptModelFromJson(String str) =>
-    UserScriptModel.fromJson(json.decode(str));
+UserScriptModel userScriptModelFromJson(String str) => UserScriptModel.fromJson(json.decode(str));
 
-String userScriptModelToJson(UserScriptModel data) =>
-    json.encode(data.toJson());
+String userScriptModelToJson(UserScriptModel data) => json.encode(data.toJson());
 
 enum UserScriptTime { start, end }
 
@@ -56,18 +54,13 @@ class UserScriptModel {
         edited: json["edited"],
         source: json["source"],
         url: json["url"],
-        updateStatus: UserScriptUpdateStatus.values
-            .byName(json["updateStatus"] ?? "noRemote"),
+        updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
         isExample: json["isExample"],
-        time: json["time"] == "start"
-            ? UserScriptTime.start
-            : UserScriptTime.end);
+        time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end);
   }
 
   factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
-      {String? url,
-      UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
-      bool? isExample}) {
+      {String? url, UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote, bool? isExample}) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }
@@ -82,15 +75,12 @@ class UserScriptModel {
       matches: metaMap["matches"] ?? ["*"],
       url: url,
       updateStatus: updateStatus,
-      time: metaMap["injectionTime"] == "document-start"
-          ? UserScriptTime.start
-          : UserScriptTime.end,
+      time: metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end,
       isExample: isExample ?? false,
     );
   }
 
-  static Future<({bool success, String message, UserScriptModel? model})>
-      fromURL(String url, {bool? isExample}) async {
+  static Future<({bool success, String message, UserScriptModel? model})> fromURL(String url, {bool? isExample}) async {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -99,9 +89,7 @@ class UserScriptModel {
           success: true,
           message: "Success",
           model: UserScriptModel.fromMetaMap(metaMap,
-              url: url,
-              updateStatus: UserScriptUpdateStatus.upToDate,
-              isExample: isExample ?? false),
+              url: url, updateStatus: UserScriptUpdateStatus.upToDate, isExample: isExample ?? false),
         );
       } else {
         return (
@@ -150,15 +138,12 @@ class UserScriptModel {
 
   static Map<String, dynamic> parseHeader(String source) {
     // Thanks to [ViolentMonkey](https://github.com/violentmonkey/violentmonkey) for the following two regexes
-    String? meta = RegExp(
-            r"((?:^|\n)\s*\/\/\x20==UserScript==)([\s\S]*?\n)\s*\/\/\x20==\/UserScript==|$")
-        .stringMatch(source);
+    String? meta =
+        RegExp(r"((?:^|\n)\s*\/\/\x20==UserScript==)([\s\S]*?\n)\s*\/\/\x20==\/UserScript==|$").stringMatch(source);
     if (meta == null || meta.isEmpty) {
       throw Exception("No header found in userscript.");
     }
-    Iterable<RegExpMatch> metaMatches =
-        RegExp(r"^(?:^|\n)\s*\/\/\x20(@\S+)(.*)$", multiLine: true)
-            .allMatches(meta);
+    Iterable<RegExpMatch> metaMatches = RegExp(r"^(?:^|\n)\s*\/\/\x20(@\S+)(.*)$", multiLine: true).allMatches(meta);
     Map<String, dynamic> metaMap = {"@match": <String>[]};
     for (final match in metaMatches) {
       if (match.groupCount < 2) {
@@ -185,9 +170,8 @@ class UserScriptModel {
     };
   }
 
-  shouldInject(String url, [UserScriptTime? time]) => matches.any((match) =>
-      (match == "*" || url.contains(match.replaceAll("*", ""))) &&
-      (this.time == time || time == null));
+  shouldInject(String url, [UserScriptTime? time]) => matches
+      .any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))) && (this.time == time || time == null));
 
   void update({
     bool? enabled,
@@ -213,9 +197,7 @@ class UserScriptModel {
         this.name = metaMap["name"];
       }
       if (metaMap["injectionTime"] != null) {
-        this.time = metaMap["injectionTime"] == "document-start"
-            ? UserScriptTime.start
-            : UserScriptTime.end;
+        this.time = metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end;
       }
       if (metaMap["downloadURL"] != null) {
         this.url = metaMap["downloadURL"];

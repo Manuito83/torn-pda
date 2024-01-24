@@ -22,8 +22,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
   @override
   void initState() {
     super.initState();
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
   }
 
   @override
@@ -68,8 +67,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                     Flexible(
                       child: Text(
                         "This will re-add any of the example userscripts that you may have deleted!",
-                        style: TextStyle(
-                            fontSize: 12, color: _themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -82,8 +80,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                             _userScriptsProvider
                                 .addDefaultScripts()
                                 .then((r) => BotToast.showText(
-                                      text:
-                                          "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
+                                      text: "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
                                           "${r.failed} script${r.failed == 1 ? "" : "s"} failed.\n"
                                           "${r.removed} script${r.removed == 1 ? "" : "s"} removed.",
                                       textStyle: TextStyle(

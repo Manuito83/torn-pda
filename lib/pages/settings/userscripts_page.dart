@@ -38,8 +38,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (_userScriptsProvider.scriptsFirstTime) {
@@ -62,10 +61,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       } else {
         if (_userScriptsProvider.v2FirstTime) {
           await showDialog(
-              useRootNavigator: false,
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => _v2Dialog());
+              useRootNavigator: false, context: context, barrierDismissible: false, builder: (context) => _v2Dialog());
           _userScriptsProvider.changeV2FirstTime(false);
         }
       }
@@ -113,13 +109,11 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color?>(
-                                _themeProvider.secondBackground),
+                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
-                                side: const BorderSide(
-                                    width: 2, color: Colors.blueGrey),
+                                side: const BorderSide(width: 2, color: Colors.blueGrey),
                               ),
                             ),
                           ),
@@ -138,9 +132,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           minWidth: 1.0,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor:
-                                  MaterialStateProperty.all<Color?>(
-                                      _themeProvider.secondBackground),
+                              backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
                               shape: MaterialStateProperty.all<OutlinedBorder>(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
@@ -156,9 +148,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               size: 20,
                               color: _themeProvider.mainText,
                             ),
-                            onPressed: () =>
-                                _userScriptsProvider.checkForUpdates().then((i) => BotToast.showText(
-                                  text: i > 0 ? "$i script${i == 1 ? " is" : "s are"} ready to update" : "No updates found",
+                            onPressed: () => _userScriptsProvider.checkForUpdates().then((i) => BotToast.showText(
+                                  text: i > 0
+                                      ? "$i script${i == 1 ? " is" : "s are"} ready to update"
+                                      : "No updates found",
                                   textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
@@ -172,8 +165,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color?>(
-                                _themeProvider.secondBackground),
+                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -194,7 +186,6 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           },
                         ),
                       ),
-                      
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -214,8 +205,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                   const SizedBox(height: 10),
                   Flexible(
                     child: Consumer<UserScriptsProvider>(
-                      builder: (context, settingsProvider, child) =>
-                          scriptsCards(),
+                      builder: (context, settingsProvider, child) => scriptsCards(),
                     ),
                   ),
                 ],
@@ -250,15 +240,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           activeColor: Colors.green,
                           inactiveThumbColor: Colors.red[100],
                           onChanged: (value) {
-                            _userScriptsProvider.changeUserScriptEnabled(
-                                script, value);
+                            _userScriptsProvider.changeUserScriptEnabled(script, value);
                           },
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Flexible(
-                          child: Text(script.name,
-                              style: const TextStyle(fontSize: 13))),
+                      Flexible(child: Text(script.name, style: const TextStyle(fontSize: 13))),
                     ],
                   ),
                 ),
@@ -284,13 +271,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           );
                         },
                       )
-                    else if (script.updateStatus ==
-                        UserScriptUpdateStatus.localModified)
+                    else if (script.updateStatus == UserScriptUpdateStatus.localModified)
                       GestureDetector(
                           child: Icon(
-                            script.isExample
-                                ? MdiIcons.lockOff
-                                : MdiIcons.earthOff,
+                            script.isExample ? MdiIcons.lockOff : MdiIcons.earthOff,
                             color: Colors.orange,
                             size: 20,
                           ),
@@ -306,13 +290,9 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               contentPadding: const EdgeInsets.all(10),
                             );
                           })
-                    else if (script.updateStatus ==
-                        UserScriptUpdateStatus.upToDate)
+                    else if (script.updateStatus == UserScriptUpdateStatus.upToDate)
                       GestureDetector(
-                          child: Icon(
-                              script.isExample ? MdiIcons.lock : MdiIcons.earth,
-                              color: Colors.green,
-                              size: 20),
+                          child: Icon(script.isExample ? MdiIcons.lock : MdiIcons.earth, color: Colors.green, size: 20),
                           onTap: () async {
                             BotToast.showText(
                               text:
@@ -325,36 +305,13 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               contentPadding: const EdgeInsets.all(10),
                             );
                           })
-                    else if (script.updateStatus ==
-                        UserScriptUpdateStatus.updateAvailable)
+                    else if (script.updateStatus == UserScriptUpdateStatus.updateAvailable)
                       GestureDetector(
-                          child: Icon(
-                              script.isExample
-                                  ? MdiIcons.lockPlus
-                                  : MdiIcons.earthPlus,
-                              color: Colors.red,
-                              size: 20),
-                          onTap: () async {
-                            BotToast.showText(
-                              text:
-                                  "An update is available (currently on v${script.version})",
-                              textStyle: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              contentColor: Colors.grey[800]!,
-                              contentPadding: const EdgeInsets.all(10),
-                            );
-                          })
-                    else if (script.updateStatus ==
-                        UserScriptUpdateStatus.error)
-                      GestureDetector(
-                          child: const Icon(MdiIcons.earthRemove,
+                          child: Icon(script.isExample ? MdiIcons.lockPlus : MdiIcons.earthPlus,
                               color: Colors.red, size: 20),
                           onTap: () async {
                             BotToast.showText(
-                              text:
-                                  "An error occurred while checking for updates. Please try again later.",
+                              text: "An update is available (currently on v${script.version})",
                               textStyle: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
@@ -363,13 +320,23 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               contentPadding: const EdgeInsets.all(10),
                             );
                           })
-                    else if (script.updateStatus ==
-                        UserScriptUpdateStatus.updating)
+                    else if (script.updateStatus == UserScriptUpdateStatus.error)
                       GestureDetector(
-                          child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator()),
+                          child: const Icon(MdiIcons.earthRemove, color: Colors.red, size: 20),
+                          onTap: () async {
+                            BotToast.showText(
+                              text: "An error occurred while checking for updates. Please try again later.",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[800]!,
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          })
+                    else if (script.updateStatus == UserScriptUpdateStatus.updating)
+                      GestureDetector(
+                          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
                           onTap: () async => BotToast.showText(
                                 text: "Checking for updates...",
                                 textStyle: const TextStyle(
@@ -381,12 +348,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               ))
                     else
                       GestureDetector(
-                        child: const Icon(MdiIcons.helpCircle,
-                            color: Colors.blue, size: 20),
+                        child: const Icon(MdiIcons.helpCircle, color: Colors.blue, size: 20),
                         onTap: () async {
                           BotToast.showText(
-                            text:
-                                "The update status of this script could not be determined.",
+                            text: "The update status of this script could not be determined.",
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
@@ -452,10 +417,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          if (!_webViewProvider.webViewSplitActive)
-            PdaBrowserIcon()
-          else
-            Container(),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon() else Container(),
         ],
       ),
       actions: [
@@ -531,8 +493,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         const Flexible(
                           child: Text(
@@ -544,16 +505,14 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         Flexible(
                           child: Text(
                             "This will remove all user scripts!",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         const SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -639,14 +598,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
                             "Remove ${script.name}?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -749,8 +706,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         ..onTap = () async {
                           const url = 'https://discord.gg/vyP23kJ';
                           if (await canLaunchUrl(Uri.parse(url))) {
-                            await launchUrl(Uri.parse(url),
-                                mode: LaunchMode.externalApplication);
+                            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                           }
                         },
                     ),
@@ -762,11 +718,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () async {
-                          const url =
-                              'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
-                          await context
-                              .read<WebViewProvider>()
-                              .openBrowserPreference(
+                          const url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
+                          await context.read<WebViewProvider>().openBrowserPreference(
                                 context: context,
                                 url: url,
                                 browserTapType: BrowserTapType.short,
@@ -848,8 +801,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 const SizedBox(height: 10),
                 const Text.rich(
                   TextSpan(
-                    text:
-                        "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
+                    text: "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
                         "loads (START) and after the load has been completed (END). The user can select when each "
                         "script should be loaded by editing its details.\n\n"
                         "By loading the script at the ",
@@ -864,8 +816,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         ),
                       ),
                       TextSpan(
-                        text:
-                            ", you might be able to fetch resources loading and ajax calls, for example. However, "
+                        text: ", you might be able to fetch resources loading and ajax calls, for example. However, "
                             "Torn PDA will inject the script even before the HTML Document or jQuery are available; "
                             "therefore, you need to plan for this and check their availability before doing any work. "
                             "This can be accomplished with ",
@@ -911,8 +862,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                             ),
                           ),
                           TextSpan(
-                            text:
-                                ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
+                            text: ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
                                 "However, please be aware that there might be some items being dynamically "
                                 "loaded (e.g.: items list, jail and hospital lists, etc.), so it might still be "
                                 "necessary to ensure that certain elements are available before doing any work.",
@@ -929,8 +879,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                     children: [
                       Text(
                         "UNSUPPORTED WINDOWS (iOS)",
-                        style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 10),
                       Text(
@@ -954,8 +903,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 const SizedBox(height: 10),
                 Text.rich(
                   TextSpan(
-                    text:
-                        "Torn limits cross-origin requests via the content-security-policy header. In order to "
+                    text: "Torn limits cross-origin requests via the content-security-policy header. In order to "
                         "allow other APIs to be called from within the browser (though an userscript), Torn PDA "
                         "incorporates its own JavasScript API.\n\n"
                         "For more information regarding GET and POST calls, please visit the ",
@@ -973,8 +921,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                             const String scriptApiUrl =
                                 "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_API.js";
                             if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
-                              await launchUrl(Uri.parse(scriptApiUrl),
-                                  mode: LaunchMode.externalApplication);
+                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
                             }
                           },
                       ),
@@ -992,8 +939,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 const SizedBox(height: 10),
                 Text.rich(
                   TextSpan(
-                    text:
-                        "Torn limits the use of the eval() function in javascript via the content-security-policy "
+                    text: "Torn limits the use of the eval() function in javascript via the content-security-policy "
                         "header. In order to allow the execution of javascript code retrieved at runtime by userscripts, "
                         " Torn PDA incorporates a handler through which source code can be passed which is then "
                         "evaluated directly from the app.\n\n"
@@ -1012,8 +958,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                             const String scriptApiUrl =
                                 "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_EvaluateJavascript.js";
                             if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
-                              await launchUrl(Uri.parse(scriptApiUrl),
-                                  mode: LaunchMode.externalApplication);
+                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
                             }
                           },
                       ),
@@ -1031,8 +976,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 const SizedBox(height: 10),
                 Text.rich(
                   TextSpan(
-                    text:
-                        "As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not "
+                    text: "As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not "
                         "include any external libraries that are served in frameworks such as GM or TM. Therefore, "
                         "if you are trying to use a script that was developed for another platform or that won't even "
                         "work in your (desktop) browser console, you might need to adapt the code.\n\n"
@@ -1057,14 +1001,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                             const String scriptApiUrl =
                                 "https://github.com/Manuito83/torn-pda/blob/master/userscripts/GMforPDA.user.js";
                             if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
-                              await launchUrl(Uri.parse(scriptApiUrl),
-                                  mode: LaunchMode.externalApplication);
+                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
                             }
                           },
                       ),
                       const TextSpan(
-                        text:
-                            ".\n\nAlso, in case of doubt, please head to our Discord server where "
+                        text: ".\n\nAlso, in case of doubt, please head to our Discord server where "
                             "we will be delighted to support you with this.\n\n"
                             "Credit goes to Kwack for the development and testing of this integration.\n\n",
                       ),
@@ -1169,32 +1111,24 @@ class UserScriptsPageState extends State<UserScriptsPage> {
             child: SingleChildScrollView(
                 child: Padding(
                     padding: EdgeInsets.only(right: 12),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("New Feature (v3.2.6)",
-                              style: TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.bold)),
-                          SizedBox(height: 10),
-                          Text.rich(TextSpan(
-                              text: "Torn PDA now has a ",
-                              style: TextStyle(fontSize: 13),
-                              children: [
-                                TextSpan(
-                                  text: "new UserScript Manager",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                TextSpan(
-                                    text:
-                                        "allowing the user to add remote scripts for "
-                                        "easy-updating!\n\n"
-                                        "When you add a new script, you will notice an "
-                                        "option to configure the remote URL. Adding a "
-                                        "URL to the script will allow PDA to check for "
-                                        "updates for you, and makes it much easier to "
-                                        "install these updates.")
-                              ])),
-                        ])))),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text("New Feature (v3.2.6)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 10),
+                      Text.rich(TextSpan(text: "Torn PDA now has a ", style: TextStyle(fontSize: 13), children: [
+                        TextSpan(
+                          text: "new UserScript Manager",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                            text: "allowing the user to add remote scripts for "
+                                "easy-updating!\n\n"
+                                "When you add a new script, you will notice an "
+                                "option to configure the remote URL. Adding a "
+                                "URL to the script will allow PDA to check for "
+                                "updates for you, and makes it much easier to "
+                                "install these updates.")
+                      ])),
+                    ])))),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),

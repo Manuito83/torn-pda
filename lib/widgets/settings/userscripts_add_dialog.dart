@@ -20,18 +20,13 @@ class UserScriptsAddDialog extends StatefulWidget {
   final int defaultPage;
   final String? defaultUrl;
 
-  const UserScriptsAddDialog(
-      {required this.editExisting,
-      this.editScript,
-      this.defaultPage = 0,
-      this.defaultUrl});
+  const UserScriptsAddDialog({required this.editExisting, this.editScript, this.defaultPage = 0, this.defaultUrl});
 
   @override
   UserScriptsAddDialogState createState() => UserScriptsAddDialogState();
 }
 
-class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
-    with TickerProviderStateMixin {
+class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerProviderStateMixin {
   double hPad = 15;
   double vPad = 20;
   double frame = 10;
@@ -65,8 +60,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
   @override
   void initState() {
     super.initState();
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     _tabController = TabController(vsync: this, length: 2);
@@ -141,9 +135,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
               children: [
                 const Icon(Icons.code),
                 const SizedBox(width: 6),
-                Text(widget.editExisting
-                    ? "Edit existing script"
-                    : "Add new script"),
+                Text(widget.editExisting ? "Edit existing script" : "Add new script"),
               ],
             ),
           ),
@@ -174,8 +166,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                       } else {
                         // Allow to save same script, but not if it conflicts
                         // with another existing script
-                        if (script.name.toLowerCase() !=
-                            widget.editScript!.name.toLowerCase()) {
+                        if (script.name.toLowerCase() != widget.editScript!.name.toLowerCase()) {
                           return "Script name already taken!";
                         }
                       }
@@ -223,27 +214,20 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                 ToggleSwitch(
                   minHeight: 28,
                   customHeights: const [30, 30],
-                  borderColor: _themeProvider.currentTheme == AppTheme.light
-                      ? [Colors.blueGrey]
-                      : [Colors.grey[900]!],
-                  initialLabelIndex:
-                      _originalTime == UserScriptTime.start ? 0 : 1,
+                  borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
+                  initialLabelIndex: _originalTime == UserScriptTime.start ? 0 : 1,
                   activeBgColor: _themeProvider.currentTheme == AppTheme.light
                       ? [Colors.blueGrey[400]!]
                       : _themeProvider.currentTheme == AppTheme.dark
                           ? [Colors.blueGrey]
                           : [Colors.blueGrey[700]!],
-                  activeFgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? Colors.black
-                      : Colors.white,
+                  activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
                   inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
                       ? Colors.white
                       : _themeProvider.currentTheme == AppTheme.dark
                           ? Colors.grey[800]
                           : Colors.black,
-                  inactiveFgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? Colors.black
-                      : Colors.white,
+                  inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
                   borderWidth: 1,
                   cornerRadius: 5,
                   totalSwitches: 2,
@@ -251,9 +235,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                   animationDuration: 500,
                   labels: const ["START", "END"],
                   onToggle: (index) {
-                    index == 0
-                        ? _originalTime = UserScriptTime.start
-                        : _originalTime = UserScriptTime.end;
+                    index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
                   },
                 )
               ],
@@ -341,9 +323,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                   children: [
                     const Icon(MdiIcons.earth),
                     const SizedBox(width: 6),
-                    Text(widget.editExisting
-                        ? "Remote script update"
-                        : "Remote script load"),
+                    Text(widget.editExisting ? "Remote script update" : "Remote script load"),
                   ],
                 ),
                 Container(
@@ -368,9 +348,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                   labelText: 'Remote URL',
                 ),
                 validator: (value) {
-                  if (value == null ||
-                      value.isEmpty ||
-                      !value.contains("https")) {
+                  if (value == null || value.isEmpty || !value.contains("https")) {
                     return "Enter a valid URL!";
                   }
                   _addNameController.text = value.trim();
@@ -385,8 +363,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                    child: Text(
-                        widget.editExisting ? "Check for Update" : "Fetch"),
+                    child: Text(widget.editExisting ? "Check for Update" : "Fetch"),
                     onPressed: () async {
                       if (_remoteUrlController.text.isEmpty) {
                         return;
@@ -398,8 +375,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                       try {
                         setState(() => _remoteSourceFetching = true);
 
-                        final result = await UserScriptModel.fromURL(
-                            _remoteUrlController.text.trim());
+                        final result = await UserScriptModel.fromURL(_remoteUrlController.text.trim());
 
                         success = result.success;
                         message = result.message;
@@ -412,25 +388,19 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                           BotToast.showText(
                             align: Alignment(0, 0),
                             clickClose: true,
-                            text: message ??
-                                (success
-                                    ? "Success"
-                                    : "An unknown error occurred"),
+                            text: message ?? (success ? "Success" : "An unknown error occurred"),
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor:
-                                success ? Colors.green : Colors.orange[700]!,
+                            contentColor: success ? Colors.green : Colors.orange[700]!,
                             duration: const Duration(seconds: 4),
                             contentPadding: const EdgeInsets.all(10),
                           );
                         } else {
                           final String newVersion = resultModel!.version;
                           final String oldVersion = widget.editScript!.version;
-                          final bool isOlderVersion =
-                              UserScriptModel.isNewerVersion(
-                                  newVersion, oldVersion);
+                          final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
                           final String finalMessage = !success
                               ? (message ?? "An unknown error occurred")
                               : isOlderVersion
@@ -445,9 +415,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor: success && isOlderVersion
-                                ? Colors.green
-                                : Colors.orange[700]!,
+                            contentColor: success && isOlderVersion ? Colors.green : Colors.orange[700]!,
                             duration: const Duration(seconds: 4),
                             contentPadding: const EdgeInsets.all(10),
                           );
@@ -515,9 +483,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                           isDense: true,
                           counterText: "",
                           border: OutlineInputBorder(),
-                          label: _remoteSourceController.text.isEmpty
-                              ? Center(child: Text("Remote source"))
-                              : null,
+                          label: _remoteSourceController.text.isEmpty ? Center(child: Text("Remote source")) : null,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -540,21 +506,16 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                     : () {
                         if (!widget.editExisting) {
                           _userScriptsProvider
-                              .addUserScriptFromURL(
-                                  _remoteUrlController.text.trim())
+                              .addUserScriptFromURL(_remoteUrlController.text.trim())
                               .then((r) => BotToast.showText(
                                     align: Alignment(0, 0),
                                     clickClose: true,
-                                    text: r.success
-                                        ? "Script successfully added!"
-                                        : "Error: ${r.message}",
+                                    text: r.success ? "Script successfully added!" : "Error: ${r.message}",
                                     textStyle: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
                                     ),
-                                    contentColor: r.success
-                                        ? Colors.green
-                                        : Colors.orange[700]!,
+                                    contentColor: r.success ? Colors.green : Colors.orange[700]!,
                                     duration: const Duration(seconds: 4),
                                     contentPadding: const EdgeInsets.all(10),
                                   ))
@@ -563,8 +524,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                           _userScriptsProvider.updateUserScript(
                               widget.editScript!,
                               _remoteNameController.text,
-                              UserScriptTime.values
-                                  .byName(_remoteRunTimeController.text),
+                              UserScriptTime.values.byName(_remoteRunTimeController.text),
                               _remoteSourceController.text,
                               true,
                               true);
@@ -585,17 +545,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
                       },
               ),
               Container(width: 20),
-              ElevatedButton(
-                  child: const Text("Cancel"),
-                  onPressed: Navigator.of(context).pop)
+              ElevatedButton(child: const Text("Cancel"), onPressed: Navigator.of(context).pop)
             ]),
           )
         ]));
   }
 
   Future<void> _addPressed(BuildContext context) async {
-    if (_nameFormKey.currentState!.validate() &&
-        _sourceFormKey.currentState!.validate()) {
+    if (_nameFormKey.currentState!.validate() && _sourceFormKey.currentState!.validate()) {
       // Get rid of dialog first, so that it can't
       // be pressed twice
 
@@ -644,8 +601,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog>
           sourcedChanged = false;
         }
 
-        _userScriptsProvider.updateUserScript(widget.editScript!, inputName,
-            inputTime, inputSource, sourcedChanged, false);
+        _userScriptsProvider.updateUserScript(
+            widget.editScript!, inputName, inputTime, inputSource, sourcedChanged, false);
       }
     }
   }
