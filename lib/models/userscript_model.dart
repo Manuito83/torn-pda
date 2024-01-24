@@ -186,21 +186,25 @@ class UserScriptModel {
   }) {
     if (source != null) {
       this.source = source;
-      final metaMap = UserScriptModel.parseHeader(source);
-      if (metaMap["version"] != null) {
-        this.version = metaMap["version"];
-      }
-      if (metaMap["matches"] != null) {
-        this.matches = metaMap["matches"];
-      }
-      if (metaMap["name"] != null) {
-        this.name = metaMap["name"];
-      }
-      if (metaMap["injectionTime"] != null) {
-        this.time = metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end;
-      }
-      if (metaMap["downloadURL"] != null) {
-        this.url = metaMap["downloadURL"];
+      try {
+        final metaMap = UserScriptModel.parseHeader(source);
+        if (metaMap["version"] != null) {
+          this.version = metaMap["version"];
+        }
+        if (metaMap["matches"] != null) {
+          this.matches = metaMap["matches"];
+        }
+        if (metaMap["name"] != null) {
+          this.name = metaMap["name"];
+        }
+        if (metaMap["injectionTime"] != null) {
+          this.time = metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end;
+        }
+        if (metaMap["downloadURL"] != null) {
+          this.url = metaMap["downloadURL"];
+        }
+      } catch (e) {
+        // Do nothing
       }
     }
     if (enabled != null) {

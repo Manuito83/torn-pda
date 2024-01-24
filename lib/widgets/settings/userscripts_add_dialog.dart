@@ -264,11 +264,29 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                       return "Cannot be empty!";
                     }
                     try {
-                      // Need to be able to parse the header, or else it will throw an error down the track
+                      // Check whether the userscript can be parsed or not. This will throw an error if not,
+                      // so warn the user it will be injected in all pages.
                       UserScriptModel.parseHeader(value);
-                      // As long as the header can be parsed, all other parameters are optional
+                      // If no error is thrown, approve the data
                       return null;
+                    } on Exception catch (e) {
+                      if (e.toString().contains("No header found")) {
+                        BotToast.showText(
+                            text: "No header was found in the script, it will be injected in all pages!",
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.orange[700]!,
+                            duration: const Duration(seconds: 4),
+                            contentPadding: const EdgeInsets.all(10));
+                        return null;
+                      } else {
+                        // If the error is not about the header, show it to the user.
+                        return e.toString();
+                      }
                     } catch (e) {
+                      // Should not happen, but just in case...
                       return e.toString();
                     }
                   },
@@ -521,7 +539,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                                   ))
                               .then(Navigator.of(context).pop);
                         } else {
-                          _userScriptsProvider.updateUserScript(
+                          final bool couldParseHeader = _userScriptsProvider.updateUserScript(
                               widget.editScript!,
                               _remoteNameController.text,
                               UserScriptTime.values.byName(_remoteRunTimeController.text),
@@ -531,12 +549,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           BotToast.showText(
                             align: Alignment(0, 0),
                             clickClose: true,
-                            text: "Script successfully updated!",
+                            text: couldParseHeader
+                                ? "Script successfully updated!"
+                                : "Could not parse the header, the script will inject on all pages.",
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor: Colors.green,
+                            contentColor: couldParseHeader ? Colors.green : Colors.orange[700]!,
                             duration: const Duration(seconds: 4),
                             contentPadding: const EdgeInsets.all(10),
                           );
@@ -569,27 +589,43 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       if (!widget.editExisting) {
         try {
           final metaMap = UserScriptModel.parseHeader(inputSource);
-          _userScriptsProvider.addUserScript(inputName, inputTime, inputSource,
-              enabled: true,
-              version: metaMap["version"] ?? "0.0.0",
-              edited: true,
-              url: null, // No URL on local scripts
-              updateStatus: UserScriptUpdateStatus.noRemote,
-              isExample: false);
+          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(metaMap));
         } on Exception catch (e) {
-          log(e.toString());
-          BotToast.showText(
-            align: Alignment(0, 0),
-            clickClose: true,
-            text: "Error: $e",
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.orange[700]!,
-            duration: const Duration(seconds: 4),
-            contentPadding: const EdgeInsets.all(10),
-          );
+          if (e.toString().contains("No header found")) {
+            BotToast.showText(
+                text: "No header was found in the script, it will be injected in all pages!",
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[700]!,
+                duration: const Duration(seconds: 4),
+                contentPadding: const EdgeInsets.all(10));
+            _userScriptsProvider.addUserScriptByModel(UserScriptModel(
+              enabled: true,
+              matches: const ["*"],
+              name: inputName,
+              version: "0.0.0",
+              edited: true,
+              source: inputSource,
+              time: inputTime,
+              updateStatus: UserScriptUpdateStatus.noRemote,
+              isExample: false,
+            ));
+          } else {
+            BotToast.showText(
+              align: Alignment(0, 0),
+              clickClose: true,
+              text: "Error: $e",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[700]!,
+              duration: const Duration(seconds: 4),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
         }
       } else {
         // Flag the script as edited if we've changed something now or in the past
@@ -601,8 +637,20 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
           sourcedChanged = false;
         }
 
-        _userScriptsProvider.updateUserScript(
+        bool couldParseHeader = _userScriptsProvider.updateUserScript(
             widget.editScript!, inputName, inputTime, inputSource, sourcedChanged, false);
+        if (!couldParseHeader) {
+          BotToast.showText(
+            text: "Could not parse the header, the script will inject on all pages.",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.orange[700]!,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
       }
     }
   }
