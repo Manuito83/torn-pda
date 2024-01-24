@@ -31,11 +31,6 @@ class UserScriptsProvider extends ChangeNotifier {
   bool _scriptsFirstTime = true;
   bool get scriptsFirstTime => _scriptsFirstTime;
 
-  bool _v2FirstTime = true;
-  bool get v2FirstTime => _v2FirstTime;
-
-  // bool newFeatInjectionTimeShown = true;
-
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
   set setUserScriptsEnabled(bool enabled) {
@@ -99,13 +94,11 @@ class UserScriptsProvider extends ChangeNotifier {
     if (!_userScriptsEnabled) {
       return UnmodifiableListView(const <UserScript>[]);
     } else {
-      return UnmodifiableListView(_userScriptList
-          .where((s) => s.shouldInject(url, time))
-          .map((s) => UserScript(
-                groupName: s.name,
-                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                source: adaptSource(s.source, apiKey),
-              )));
+      return UnmodifiableListView(_userScriptList.where((s) => s.shouldInject(url, time)).map((s) => UserScript(
+            groupName: s.name,
+            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+            source: adaptSource(s.source, apiKey),
+          )));
     }
   }
 
@@ -115,10 +108,7 @@ class UserScriptsProvider extends ChangeNotifier {
     if (!_userScriptsEnabled) {
       return const <String>[];
     } else {
-      return _userScriptList
-          .where((s) => !s.shouldInject(url))
-          .map((s) => s.name)
-          .toList();
+      return _userScriptList.where((s) => !s.shouldInject(url)).map((s) => s.name).toList();
     }
   }
 
@@ -130,16 +120,11 @@ class UserScriptsProvider extends ChangeNotifier {
     return anonFunction;
   }
 
-  Future<({bool success, String? message})> addUserScriptFromURL(String url,
-      {bool? isExample}) async {
+  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
     final response = await UserScriptModel.fromURL(url, isExample: isExample);
     if (response.success && response.model != null) {
-      if (_userScriptList
-          .any((script) => script.name == response.model!.name)) {
-        return (
-          success: false,
-          message: "Script with same name already exists"
-        );
+      if (_userScriptList.any((script) => script.name == response.model!.name)) {
+        return (success: false, message: "Script with same name already exists");
       }
       userScriptList.add(response.model!);
       _sort();
@@ -149,6 +134,13 @@ class UserScriptsProvider extends ChangeNotifier {
     } else {
       return (success: false, message: response.message);
     }
+  }
+
+  void addUserScriptByModel(UserScriptModel model) {
+    userScriptList.add(model);
+    _sort();
+    _saveUserScriptsListSharedPrefs();
+    notifyListeners();
   }
 
   void addUserScript(
@@ -185,7 +177,8 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
-  void updateUserScript(
+  /// Returns a bool indicating if the header could be parsed
+  bool updateUserScript(
     UserScriptModel editedModel,
     String name,
     UserScriptTime time,
@@ -193,20 +186,26 @@ class UserScriptsProvider extends ChangeNotifier {
     bool changedSource,
     bool isFromRemote,
   ) {
-    userScriptList
-        .firstWhere((script) => script.name == editedModel.name)
-        .update(
-            name: name,
-            time: time,
-            source: source,
-            matches: getUrls(source),
-            updateStatus: isFromRemote
-                ? UserScriptUpdateStatus.upToDate
-                : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
-                    ? UserScriptUpdateStatus.noRemote
-                    : UserScriptUpdateStatus.localModified);
+    List<String>? matches;
+    bool couldParseHeader = true;
+    try {
+      matches = getUrls(source);
+    } catch (e) {
+      matches ??= const ["*"];
+    }
+    userScriptList.firstWhere((script) => script.name == editedModel.name).update(
+        name: name,
+        time: time,
+        source: source,
+        matches: matches,
+        updateStatus: isFromRemote
+            ? UserScriptUpdateStatus.upToDate
+            : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
+                ? UserScriptUpdateStatus.noRemote
+                : UserScriptUpdateStatus.localModified);
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
+    return couldParseHeader;
   }
 
   void removeUserScript(UserScriptModel removedModel) {
@@ -270,8 +269,7 @@ class UserScriptsProvider extends ChangeNotifier {
           url: decodedModel.url,
         );
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.log(
-            "PDA error at adding server userscript. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
         FirebaseCrashlytics.instance.recordError(e, trace);
       }
     }
@@ -295,18 +293,12 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void _sort() {
-    _userScriptList
-        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   void changeScriptsFirstTime(bool value) {
     _scriptsFirstTime = value;
     Prefs().setUserScriptsFirstTime(value);
-  }
-
-  void changeV2FirstTime(bool value) {
-    _v2FirstTime = value;
-    Prefs().setUserScriptsFeatV2Shown(value);
   }
 
   Future<void> loadPreferences() async {
@@ -315,11 +307,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
 
-      _v2FirstTime = await Prefs().getUserScriptsFirstTime();
-
       final savedScripts = await Prefs().getUserScriptsList();
-
-      _v2FirstTime = await Prefs().getUserScriptsFeatV2Shown();
 
       // NULL returned if we installed the app, so we add all the example scripts
       if (savedScripts == null) {
@@ -335,8 +323,7 @@ class UserScriptsProvider extends ChangeNotifier {
               // Check if the script with the same name already exists in the list
               // (user-reported bug)
               final String name = decodedModel.name.toLowerCase();
-              if (_userScriptList
-                  .any((script) => script.name.toLowerCase() == name)) continue;
+              if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
 
               addUserScript(
                 decodedModel.name,
@@ -351,8 +338,7 @@ class UserScriptsProvider extends ChangeNotifier {
                 isExample: decodedModel.isExample,
               );
             } catch (e, trace) {
-              FirebaseCrashlytics.instance.log(
-                  "PDA error at adding one userscript. Error: $e. Stack: $trace");
+              FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
               FirebaseCrashlytics.instance.recordError(e, trace);
             }
           }
@@ -365,8 +351,7 @@ class UserScriptsProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e, trace) {
       // Pass (scripts will be empty)
-      FirebaseCrashlytics.instance
-          .log("PDA error at userscripts first load. Error: $e. Stack: $trace");
+      FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
       FirebaseCrashlytics.instance.recordError(e, trace);
     }
   }
@@ -391,18 +376,15 @@ class UserScriptsProvider extends ChangeNotifier {
     return updates;
   }
 
-  Future<({int added, int failed, int removed})>
-      addDefaultScripts() async {
+  Future<({int added, int failed, int removed})> addDefaultScripts() async {
     int added = 0;
     int failed = 0;
     // int alreadyAdded = 0;
     int initialScriptCount = userScriptList.length;
     // Remove example scripts;
     userScriptList.removeWhere((s) => s.isExample);
-    await Future.wait(defaultScriptUrls.map((url) =>
-        addUserScriptFromURL(url, isExample: true).then((r) => r.success
-            ? added++
-            : failed++)));
+    await Future.wait(defaultScriptUrls
+        .map((url) => addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
     return (
       added: added,
       failed: failed,

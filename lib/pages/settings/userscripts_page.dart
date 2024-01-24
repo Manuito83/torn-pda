@@ -51,18 +51,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           },
         );
 
-        // If we see user scripts for the first time, don't show new features in the next visit
-        // (the user should use the disclaimer for that)
-        // _userScriptsProvider.changeFeatInjectionTimeShown(true);
-
         if (_firstTimeNotAccepted) {
           _goBack();
-        }
-      } else {
-        if (_userScriptsProvider.v2FirstTime) {
-          await showDialog(
-              useRootNavigator: false, context: context, barrierDismissible: false, builder: (context) => _v2Dialog());
-          _userScriptsProvider.changeV2FirstTime(false);
         }
       }
     });
@@ -734,28 +724,30 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Activation URLs starting with '@match' in the header are supported; however, wildcards (*) will be ignored. "
-                  "Instead, you can use full URLs or just a part of them (e.g. 'profile.php' or 'torn.com').",
+                  "Any remote script needs to have a valid header, or else the remote install will fail. "
+                  "Local UserScripts do not have this constraint, although without a valid header the match pattern "
+                  "will not be validated and the script will be injected in all pages.",
                   style: TextStyle(
                     fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
-                  "Torn PDA will replace it with your API key in runtime.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "The remote URL can be any URL that returns a plaintext file with a valid userscript header. "
+                    "However, the popup will only be added automatically on requests with the \"text/javascript\" "
+                    "content-type header. If you want to add a script that does not have this header (such as "
+                    "raw GitHub links) you must copy the url and navigate to the userscript section to add it.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 10),
                 const Text(
-                  "User scripts are isolated from one another on runtime and executed inside anonymous functions. "
-                  "There is no need for you to adapt them this way.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
+                    "Torn PDA will replace it with your API key in runtime.",
+                    style: TextStyle(fontSize: 13)),
+                const SizedBox(height: 10),
+                const Text(
+                    "User scripts are isolated from one another on runtime and executed inside anonymous functions. "
+                    "There is no need for you to adapt them this way.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 25),
                 const Text(
                   "TROUBLESHOOTING",
@@ -763,15 +755,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
-                  "code changes to work with Torn PDA if external libraries were used. If you are an advanced user, "
-                  "please scroll down to the 'GM handlers' section for more information an alternatives.\n\n"
-                  "If a script does not work as intended after changing its code in Torn PDA, please "
-                  "try resetting your browser cache in the advanced browser settings section.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
+                    "code changes to work with Torn PDA if external libraries were used. If you are an advanced user, "
+                    "please scroll down to the 'GM handlers' section for more information an alternatives.\n\n"
+                    "If a script does not work as intended after changing its code in Torn PDA, please "
+                    "try resetting your browser cache in the advanced browser settings section.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 25),
                 const Text(
                   "INJECTION CONSTRAINTS",
@@ -779,20 +768,17 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
-                  "as much as possible with script injection times and URLs. However, due to the different limitations "
-                  "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
-                  "be injected again in pages with pagination (e.g.: jail, hospital, forums...). Also, reloading the "
-                  "page might result in scripts being injected multiple times.\n\n"
-                  "Hence, it's the script developer's responsibility to control all these constraints. A few ideas: "
-                  "make sure that that the script is prepared for multiple injection retries by adding a variable to "
-                  "the main container; make sure that pagination works by adding click listeners; make sure that no "
-                  "conflicts exist with other scripts (variable names, etc.) by enclosing the script in an "
-                  "anonymous function.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
+                    "as much as possible with script injection times and URLs. However, due to the different limitations "
+                    "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
+                    "be injected again in pages with pagination (e.g.: jail, hospital, forums...). Also, reloading the "
+                    "page might result in scripts being injected multiple times.\n\n"
+                    "Hence, it's the script developer's responsibility to control all these constraints. A few ideas: "
+                    "make sure that that the script is prepared for multiple injection retries by adding a variable to "
+                    "the main container; make sure that pagination works by adding click listeners; make sure that no "
+                    "conflicts exist with other scripts (variable names, etc.) by enclosing the script in an "
+                    "anonymous function.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 25),
                 const Text(
                   "SCRIPT INJECTION TIME",
@@ -1033,6 +1019,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   }
 
   WillPopScope _firstTimeDialog() {
+    // Will show for users updating to V2, as well as new users.
     return WillPopScope(
       onWillPop: () async => false,
       child: AlertDialog(
@@ -1049,6 +1036,17 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 "from your Torn account or other websites you visit.",
                 style: TextStyle(
                   fontSize: 13,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Torn PDA has recently added support for remote scripts. Even though these scripts "
+                "may have been safe previously, malicious updates can be added. Ensure you verify all changes "
+                "before you install any updates from scripts. If you are unsure, please reach out in the "
+                "UserScripts section of the Discord server.",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               SizedBox(height: 10),
@@ -1103,45 +1101,6 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       ),
     );
   }
-
-  AlertDialog _v2Dialog() => AlertDialog(
-        title: const Text("SCRIPT MANAGER V2"),
-        content: const Scrollbar(
-            thumbVisibility: true,
-            child: SingleChildScrollView(
-                child: Padding(
-                    padding: EdgeInsets.only(right: 12),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text("New Feature (v3.2.6)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 10),
-                      Text.rich(TextSpan(text: "Torn PDA now has a ", style: TextStyle(fontSize: 13), children: [
-                        TextSpan(
-                          text: "new UserScript Manager",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                            text: "allowing the user to add remote scripts for "
-                                "easy-updating!\n\n"
-                                "When you add a new script, you will notice an "
-                                "option to configure the remote URL. Adding a "
-                                "URL to the script will allow PDA to check for "
-                                "updates for you, and makes it much easier to "
-                                "install these updates.")
-                      ])),
-                    ])))),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              child: const Text("Understood"),
-              onPressed: () {
-                Navigator.of(context).pop('exit');
-              },
-            ),
-          ),
-        ],
-      );
-  //
 
   _goBack() {
     routeWithDrawer = false;
