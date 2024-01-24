@@ -116,7 +116,7 @@ class UserScriptModel {
     final List<String> version1List = version1.split(".");
     final List<String> version2List = version2.split(".");
     for (int i = 0; i < version1List.length; i++) {
-      if (int.parse(version1List[i]) > int.parse(version2List[i])) {
+      if (version2.length <= i || int.parse(version1List[i]) > int.parse(version2List[i])) {
         return true;
       }
     }
