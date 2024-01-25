@@ -309,6 +309,13 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               contentColor: Colors.grey[800]!,
                               contentPadding: const EdgeInsets.all(10),
                             );
+                            showDialog(
+                                builder: (c) => UserScriptsAddDialog(
+                                      editScript: script,
+                                      editExisting: true,
+                                      defaultPage: 1,
+                                    ),
+                                context: context);
                           })
                     else if (script.updateStatus == UserScriptUpdateStatus.error)
                       GestureDetector(

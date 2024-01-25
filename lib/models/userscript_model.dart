@@ -250,7 +250,7 @@ class UserScriptModel {
     }
   }
 
-  static tryGetMatches(String source) {
+  static List<String> tryGetMatches(String source) {
     try {
       final metaMap = UserScriptModel.parseHeader(source);
       return metaMap["matches"] ?? const ["*"];
@@ -259,7 +259,7 @@ class UserScriptModel {
     }
   }
 
-  static tryGetUrl(String source) {
+  static String? tryGetUrl(String source) {
     try {
       final metaMap = UserScriptModel.parseHeader(source);
       return metaMap["downloadURL"];
