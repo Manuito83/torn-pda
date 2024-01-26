@@ -46,17 +46,47 @@ class UserScriptModel {
   bool isExample;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
-    return UserScriptModel(
+    // First check if is old model
+    if (json["exampleCode"] is int) {
+      final bool enabled = json["enabled"] is bool ? json["enabled"] : true;
+      final String source = json["source"] is String ? json["source"] : "";
+      final List<String> matches = json["urls"] is List<dynamic> ? json["urls"].cast<String>() : tryGetMatches(source);
+      final String name = json["name"] is String ? json["name"] : "Unknown";
+      final String version = json["version"] is String ? json["version"] : tryGetVersion(source) ?? "0.0.0";
+      final bool edited = json["edited"] is bool ? json["edited"] : false;
+      final UserScriptTime time = json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end;
+      final bool isExample = json["isExample"] ?? (json["exampleCode"] ?? 0) > 0;
+      final url = json["url"] is String
+          ? json["url"]
+          : tryGetUrl(json["source"]) ?? (isExample ? exampleScriptURLs[json["exampleCode"] - 1] : null);
+      final updateStatus =
+          UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? (url is String ? "upToDate" : "noRemote"));
+      return UserScriptModel(
+        enabled: enabled,
+        matches: matches,
+        name: name,
+        version: version,
+        edited: edited,
+        source: source,
+        time: time,
+        url: url,
+        updateStatus: updateStatus,
+        isExample: isExample,
+      );
+    } else {
+      return UserScriptModel(
         enabled: json["enabled"],
-        matches: (json["matches"] as List<dynamic>? ?? tryGetMatches(json["source"])).cast<String>(),
+        matches: json["matches"],
         name: json["name"],
         version: json["version"],
         edited: json["edited"],
         source: json["source"],
-        url: json["url"] ?? tryGetUrl(json["source"]),
+        time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end,
+        url: json["url"],
         updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
-        isExample: json["isExample"] ?? false,
-        time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end);
+        isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
+      );
+    }
   }
 
   factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
@@ -238,16 +268,16 @@ class UserScriptModel {
     final response = await http.get(Uri.parse(url!));
     if (response.statusCode == 200) {
       try {
-      final metaMap = UserScriptModel.parseHeader(response.body);
-      if (metaMap["version"] == null) {
-        return UserScriptUpdateStatus.upToDate;
-      }
-      return UserScriptModel.isNewerVersion(
-        metaMap["version"],
-        version,
-      )
-          ? UserScriptUpdateStatus.updateAvailable
-          : UserScriptUpdateStatus.upToDate;
+        final metaMap = UserScriptModel.parseHeader(response.body);
+        if (metaMap["version"] == null) {
+          return UserScriptUpdateStatus.upToDate;
+        }
+        return UserScriptModel.isNewerVersion(
+          metaMap["version"],
+          version,
+        )
+            ? UserScriptUpdateStatus.updateAvailable
+            : UserScriptUpdateStatus.upToDate;
       } catch (_) {
         return UserScriptUpdateStatus.error;
       }
@@ -258,7 +288,7 @@ class UserScriptModel {
 
   static List<String> tryGetMatches(String source) {
     try {
-      final metaMap = UserScriptModel.parseHeader(source);
+      final metaMap = parseHeader(source);
       return metaMap["matches"] ?? const ["*"];
     } catch (e) {
       return const ["*"];
@@ -273,4 +303,31 @@ class UserScriptModel {
       return null;
     }
   }
+
+  static String? tryGetVersion(String source) {
+    try {
+      final metaMap = UserScriptModel.parseHeader(source);
+      return metaMap["version"];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static List<String?> exampleScriptURLs = const [
+    // 1: Bazaar Auto Price
+    "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Bazaar%20Auto%20Price%20(Torn%20PDA).js",
+    // 2: TornCat (deprecated)
+    null,
+    // 3: Custom Race Presets
+    "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Custom%20Race%20Presets%20(Torn%20PDA).js",
+    // 4: Custom Gym Ratios
+    "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Custom%20Gym%20Ratios%20(Torn%20PDA).js",
+    // 5: Company Stocks Order
+    "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Company%20Stock%20Order%20(Torn%20PDA).js",
+    // 6: Company Activity
+    "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Company%20Activity%20(Torn%20PDA).js",
+    // 7: Hospital Filters
+    // TODO: Add remote for Hosp Filters after merge
+    null,
+  ];
 }

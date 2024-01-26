@@ -536,7 +536,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               ElevatedButton(
                 child: Text(widget.editExisting ? "Save" : "Load"),
-                onPressed: _remoteNameController.text.isEmpty
+                onPressed: _remoteNameController.text.isEmpty ||
+                        _remoteSourceController.text.isEmpty ||
+                        _remoteRunTimeController.text.isEmpty
                     ? null
                     : () {
                         if (!widget.editExisting) {
@@ -559,7 +561,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           final bool couldParseHeader = _userScriptsProvider.updateUserScript(
                               widget.editScript!,
                               _remoteNameController.text,
-                              UserScriptTime.values.byName(_remoteRunTimeController.text),
+                              UserScriptTime.values.byName(_remoteRunTimeController.text ),
                               _remoteSourceController.text,
                               true,
                               true);

@@ -15,13 +15,6 @@ import 'package:torn_pda/utils/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
 
-const List<String> _defaultScriptUrls = [
-  "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Bazaar%20Auto%20Price%20(Torn%20PDA).js",
-  "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Company%20Activity%20(Torn%20PDA).js",
-  "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Company%20Stock%20Order%20(Torn%20PDA).js",
-  "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Custom%20Gym%20Ratios%20(Torn%20PDA).js",
-];
-
 class UserScriptsProvider extends ChangeNotifier {
   final List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
@@ -40,7 +33,7 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<String> get defaultScriptUrls => _defaultScriptUrls;
+  List<String?> get defaultScriptUrls => UserScriptModel.exampleScriptURLs;
 
   UnmodifiableListView<UserScript> getHandlerSources({
     required String apiKey,
@@ -154,6 +147,7 @@ class UserScriptsProvider extends ChangeNotifier {
     UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
     allScriptFirstLoad = false,
     bool isExample = false,
+    List<String>? matches,
   }) {
     final newScript = UserScriptModel(
       name: name,
@@ -162,7 +156,7 @@ class UserScriptsProvider extends ChangeNotifier {
       enabled: enabled,
       version: version,
       edited: edited,
-      matches: getUrls(source),
+      matches: matches ?? UserScriptModel.tryGetMatches(source),
       updateStatus: updateStatus,
       url: url,
       isExample: isExample,
@@ -189,7 +183,7 @@ class UserScriptsProvider extends ChangeNotifier {
     List<String>? matches;
     bool couldParseHeader = true;
     try {
-      matches = getUrls(source);
+      matches = UserScriptModel.tryGetMatches(source);
     } catch (e) {
       matches ??= const ["*"];
     }
@@ -267,6 +261,7 @@ class UserScriptsProvider extends ChangeNotifier {
           isExample: decodedModel.isExample,
           updateStatus: decodedModel.updateStatus,
           url: decodedModel.url,
+          matches: decodedModel.matches,
         );
       } catch (e, trace) {
         FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
@@ -281,15 +276,6 @@ class UserScriptsProvider extends ChangeNotifier {
   void _saveUserScriptsListSharedPrefs() {
     final saveString = json.encode(_userScriptList);
     Prefs().setUserScriptsList(saveString);
-  }
-
-  List<String> getUrls(String source) {
-    final Map<String, dynamic> metaMap = UserScriptModel.parseHeader(source);
-    if (metaMap["matches"] == null) {
-      return const ["*"];
-    } else {
-      return metaMap["matches"];
-    }
   }
 
   void _sort() {
@@ -363,6 +349,7 @@ class UserScriptsProvider extends ChangeNotifier {
       s.updateStatus = UserScriptUpdateStatus.updating;
       notifyListeners(); // Notify listeners of the change to show updating, but **do not save this to shared prefs**
       return s.checkUpdateStatus().then((updateStatus) {
+        if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
         s.update(updateStatus: updateStatus);
         notifyListeners(); // Notify listeners of the change after every row
       }).catchError((e) {
@@ -382,8 +369,9 @@ class UserScriptsProvider extends ChangeNotifier {
     int initialScriptCount = userScriptList.length;
     // Remove example scripts;
     userScriptList.removeWhere((s) => s.isExample);
-    await Future.wait(defaultScriptUrls
-        .map((url) => addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
+    await Future.wait(defaultScriptUrls.map((url) => url == null
+        ? Future.value()
+        : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
     return (
       added: added,
       failed: failed,
