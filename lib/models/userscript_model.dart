@@ -231,22 +231,28 @@ class UserScriptModel {
     this.updateStatus = updateStatus;
   }
 
-  Future<bool> canUpdate() async {
+  Future<UserScriptUpdateStatus> checkUpdateStatus() async {
     if (url == null) {
-      return false;
+      return UserScriptUpdateStatus.noRemote;
     }
     final response = await http.get(Uri.parse(url!));
     if (response.statusCode == 200) {
+      try {
       final metaMap = UserScriptModel.parseHeader(response.body);
       if (metaMap["version"] == null) {
-        return false;
+        return UserScriptUpdateStatus.upToDate;
       }
       return UserScriptModel.isNewerVersion(
         metaMap["version"],
         version,
-      );
+      )
+          ? UserScriptUpdateStatus.updateAvailable
+          : UserScriptUpdateStatus.upToDate;
+      } catch (_) {
+        return UserScriptUpdateStatus.error;
+      }
     } else {
-      return false;
+      return UserScriptUpdateStatus.error;
     }
   }
 

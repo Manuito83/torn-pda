@@ -416,27 +416,44 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                             contentPadding: const EdgeInsets.all(10),
                           );
                         } else {
-                          final String newVersion = resultModel!.version;
-                          final String oldVersion = widget.editScript!.version;
-                          final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
-                          final String finalMessage = !success
-                              ? (message ?? "An unknown error occurred")
-                              : isOlderVersion
-                                  ? "Newer version found: $newVersion\nPlease review changes and save!"
-                                  : "No newer version found";
-                          log(finalMessage);
-                          BotToast.showText(
-                            align: Alignment(0, 0),
-                            clickClose: true,
-                            text: finalMessage,
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: success && isOlderVersion ? Colors.green : Colors.orange[700]!,
-                            duration: const Duration(seconds: 4),
-                            contentPadding: const EdgeInsets.all(10),
-                          );
+                          if (!success) {
+                            log("An error occured in script ${widget.editScript!.name}: $message");
+                            BotToast.showText(
+                              align: Alignment(0, 0),
+                              clickClose: true,
+                              text: message ?? "An unknown error occurred",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.orange[700]!,
+                              duration: const Duration(seconds: 4),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                            widget.editScript!.updateStatus = UserScriptUpdateStatus.error;
+                          } else {
+                            final String newVersion = resultModel!.version;
+                            final String oldVersion = widget.editScript!.version;
+                            final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
+                            final String finalMessage = !success
+                                ? (message ?? "An unknown error occurred")
+                                : isOlderVersion
+                                    ? "Newer version found: $newVersion\nPlease review changes and save!"
+                                    : "No newer version found";
+                            log(finalMessage);
+                            BotToast.showText(
+                              align: Alignment(0, 0),
+                              clickClose: true,
+                              text: finalMessage,
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: success && isOlderVersion ? Colors.green : Colors.orange[700]!,
+                              duration: const Duration(seconds: 4),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          }
                         }
 
                         setState(() {

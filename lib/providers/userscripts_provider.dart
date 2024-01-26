@@ -358,17 +358,16 @@ class UserScriptsProvider extends ChangeNotifier {
 
   Future<int> checkForUpdates() async {
     int updates = 0;
-    await Future.wait(_userScriptList.map((s) {
+    await Future.wait<void>(_userScriptList.map((s) {
       if (s.url == null) return Future.value();
       s.updateStatus = UserScriptUpdateStatus.updating;
       notifyListeners(); // Notify listeners of the change to show updating, but **do not save this to shared prefs**
-      return s.canUpdate().then((canUpdate) {
-        if (canUpdate) {
-          s.updateStatus = UserScriptUpdateStatus.updateAvailable;
-          updates++; // Increment number of scripts updated
-        } else {
-          s.updateStatus = UserScriptUpdateStatus.upToDate;
-        }
+      return s.checkUpdateStatus().then((updateStatus) {
+        s.update(updateStatus: updateStatus);
+        notifyListeners(); // Notify listeners of the change after every row
+      }).catchError((e) {
+        print(e);
+        s.update(updateStatus: UserScriptUpdateStatus.error);
         notifyListeners(); // Notify listeners of the change after every row
       });
     }));
