@@ -1235,27 +1235,40 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             // Add anyway if there's no header, as it's probably a userscript.
             if (request.request.url.toString().endsWith(".user.js") &&
                 (request.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
-              showDialog<void>(
-                context: context,
-                builder: (b) {
-                  log("Opening script add dialog for url ${request.request.url.toString()}");
-                  BotToast.showText(
-                    text: "UserScript detected, opening dialog...",
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.blue,
-                    duration: const Duration(seconds: 3),
-                    contentPadding: const EdgeInsets.all(10),
-                    clickClose: true,
-                  );
-                  return UserScriptsAddDialog(
-                    editExisting: false,
-                    defaultUrl: request.request.url.toString(),
-                    defaultPage: 1,
-                  );
-                },
+              // First look for existing script with this url
+              final existingScript =
+                  _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == request.request.url.toString());
+              late String message;
+              if (existingScript != null) {
+                message = "UserScript already exists, opening dialog...";
+                showDialog(
+                    context: context,
+                    builder: (_) => UserScriptsAddDialog(
+                          editExisting: true,
+                          editScript: existingScript,
+                          defaultPage: 1,
+                          // No need for default URL as it already exists in the script object
+                        ));
+              } else {
+                message = "UserScript detected, opening dialog...";
+                showDialog(
+                    builder: (_) => UserScriptsAddDialog(
+                          editExisting: false,
+                          defaultUrl: request.request.url.toString(),
+                          defaultPage: 1,
+                        ),
+                    context: context);
+              }
+              BotToast.showText(
+                text: message,
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+                clickClose: true,
               );
               return NavigationActionPolicy.CANCEL;
             }
