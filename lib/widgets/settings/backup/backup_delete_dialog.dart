@@ -136,13 +136,16 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
   }
 
   Future _getOriginalServerPrefs() async {
-    final result = await firebaseFunctions.getUserPrefs(
-      userId: widget.userProfile.playerId ?? 0,
-      apiKey: widget.userProfile.userApiKey.toString(),
-    );
+    final result = await firebaseFunctions
+        .getUserPrefs(userId: widget.userProfile.playerId ?? 0, apiKey: widget.userProfile.userApiKey.toString())
+        .catchError((value) {
+      return <String, dynamic>{"success": false, "message": "Could not connect to server"};
+    });
 
     if (!result["success"]) {
-      _serverError = result["message"];
+      setState(() {
+        _serverError = result["message"];
+      });
       return;
     }
 

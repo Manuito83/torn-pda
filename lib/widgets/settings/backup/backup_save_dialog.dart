@@ -25,10 +25,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
   String _serverError = "";
   Map<String, dynamic> _serverPrefs = {};
 
-  final _selectedItems = <String>[
-    "shortcuts",
-    "userscripts",
-  ];
+  final _selectedItems = <String>["shortcuts", "userscripts", "targets"];
 
   @override
   void initState() {
@@ -84,6 +81,8 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
                           _shorcutsMain(),
                           // Userscripts
                           _userscriptsMain(),
+                          // Targets
+                          _targetsMain(),
                         ],
                       ),
                     ),
@@ -186,6 +185,30 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
     );
   }
 
+  Padding _targetsMain() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+      child: CheckboxListTile(
+        checkColor: Colors.white,
+        activeColor: Colors.blueGrey,
+        value: _selectedItems.contains("targets"),
+        title: const Text("Targets"),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Targets list and notes", style: TextStyle(fontSize: 12)),
+            BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.targets) ? _addExistingSubtitle() : Container(),
+          ],
+        ),
+        onChanged: (value) {
+          setState(() {
+            _selectedItems.contains("targets") ? _selectedItems.remove("targets") : _selectedItems.add("targets");
+          });
+        },
+      ),
+    );
+  }
+
   Text _addExistingSubtitle() {
     return Text(
       "EXISTING SAVE (OVERWRITTE)",
@@ -217,6 +240,15 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
       ]);
     }
 
+    // Targets
+    if (_selectedItems.contains("targets")) {
+      final targetsList = await Prefs().getTargetsList();
+      prefs.addEntries([
+        MapEntry("pda_targetsList", targetsList),
+      ]);
+    }
+
+    // Send to server
     final result = await firebaseFunctions.saveUserPrefs(
       userId: widget.userProfile.playerId ?? 0,
       apiKey: widget.userProfile.userApiKey.toString(),
@@ -236,10 +268,11 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
   }
 
   Future _getOriginalServerPrefs() async {
-    final result = await firebaseFunctions.getUserPrefs(
-      userId: widget.userProfile.playerId ?? 0,
-      apiKey: widget.userProfile.userApiKey.toString(),
-    );
+    final result = await firebaseFunctions
+        .getUserPrefs(userId: widget.userProfile.playerId ?? 0, apiKey: widget.userProfile.userApiKey.toString())
+        .catchError((value) {
+      return <String, dynamic>{"success": false, "message": "Could not connect to server"};
+    });
 
     if (!result["success"]) {
       setState(() {
@@ -248,6 +281,8 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
       return;
     }
 
-    _serverPrefs = result["prefs"] ?? {};
+    setState(() {
+      _serverPrefs = result["prefs"] ?? {};
+    });
   }
 }
