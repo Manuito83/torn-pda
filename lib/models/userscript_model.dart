@@ -76,7 +76,7 @@ class UserScriptModel {
     } else {
       return UserScriptModel(
         enabled: json["enabled"],
-        matches: json["matches"],
+        matches: json["matches"] is List<dynamic> ? json["matches"].cast<String>() : const ["*"],
         name: json["name"],
         version: json["version"],
         edited: json["edited"],
