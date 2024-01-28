@@ -261,7 +261,7 @@ class UserScriptsProvider extends ChangeNotifier {
           decodedModel.name,
           decodedModel.time,
           decodedModel.source,
-          enabled: decodedModel.enabled,
+          enabled: defaultToDisabled ? false : decodedModel.enabled,
           version: decodedModel.version,
           edited: decodedModel.edited,
           allScriptFirstLoad: true,

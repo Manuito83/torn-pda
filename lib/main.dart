@@ -56,12 +56,12 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.2.5';
-const String androidCompilation = '374';
-const String iosCompilation = '374';
+const String appVersion = '3.3.0';
+const String androidCompilation = '375';
+const String iosCompilation = '375';
 
 // TODO
-const bool pointFunctionsEmulatorToLocal = true;
+const bool pointFunctionsEmulatorToLocal = false;
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;

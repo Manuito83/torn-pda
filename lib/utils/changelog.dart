@@ -39,6 +39,19 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.3.0 - Build 375 - 28/01/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.3.0'
+        ..date = '15 FEB 2024'
+        ..features = [
+          "Improved user script manager: includes remote fetching, auto update, auto JS file import and fixes [Kwack]",
+          "Added private cloud backup and share functionality for specific Torn PDA settings",
+          "Fixed Awards images",
+          "Fixed spy settings persistence",
+        ],
+    );
+
     // v3.2.5 - Build 374 - 04/01/2024
     itemList.add(
       ChangeLogItem()
