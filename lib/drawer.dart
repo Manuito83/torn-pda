@@ -33,6 +33,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
+import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
@@ -44,6 +45,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
@@ -402,6 +404,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (Platform.isAndroid) {
         pdaWidget_handleBackgroundUpdateStatus();
       }
+
+      checkForScriptUpdates();
     }
   }
 
@@ -992,6 +996,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('racing')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';
+      } else if (payload.contains("scriptupdate")) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => UserScriptsPage(),
+          ),
+        );
       } else if (payload.contains('400-')) {
         launchBrowser = true;
         final npcId = payload.split('-')[1];
@@ -1756,6 +1766,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)
       _updateLastActiveTime();
+
+      checkForScriptUpdates();
     }
 
     // Change device preferences
@@ -2076,6 +2088,40 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         );
       },
     );
+  }
+
+  void checkForScriptUpdates() {
+    final int alreadyAvailableCount = _userScriptsProvider.userScriptList
+        .where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable)
+        .length;
+    _userScriptsProvider.checkForUpdates().then((i) async {
+      // Check if we need to show a notification (only if there are any new updates)
+      if (i - alreadyAvailableCount > 0) {
+        flutterLocalNotificationsPlugin.show(
+            777,
+            "Torn PDA",
+            "You have $i script update${i == 1 ? "" : "s"} available, visit the UserScripts "
+                "section to update them.",
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                "torn_pda",
+                "Torn PDA",
+                importance: Importance.max,
+                priority: Priority.high,
+                showWhen: false,
+                ticker: "ticker",
+              ),
+              iOS: DarwinNotificationDetails(
+                presentAlert: true,
+                presentBadge: true,
+                presentSound: true,
+              ),
+            ),
+            payload: "scriptupdate");
+      }
+      log("UserScripts checkForUpdates() completed with $i updates available, "
+          "$alreadyAvailableCount already prompted");
+    });
   }
 
   void changeUID(String uid) {

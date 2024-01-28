@@ -69,6 +69,7 @@ import 'package:torn_pda/widgets/gym/steadfast_widget.dart';
 import 'package:torn_pda/widgets/jail/jail_widget.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
+import "package:torn_pda/widgets/settings/userscripts_add_dialog.dart";
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -1228,6 +1229,47 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             if (request.request.url.toString().contains("http://")) {
               _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
+              return NavigationActionPolicy.CANCEL;
+            }
+            // Check for content-type header to prevent loading of non-JS files.
+            // Add anyway if there's no header, as it's probably a userscript.
+            if (request.request.url.toString().endsWith(".user.js") &&
+                (request.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
+              // First look for existing script with this url
+              final existingScript =
+                  _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == request.request.url.toString());
+              late String message;
+              if (existingScript != null) {
+                message = "UserScript already exists, opening dialog...";
+                showDialog(
+                    context: context,
+                    builder: (_) => UserScriptsAddDialog(
+                          editExisting: true,
+                          editScript: existingScript,
+                          defaultPage: 1,
+                          // No need for default URL as it already exists in the script object
+                        ));
+              } else {
+                message = "UserScript detected, opening dialog...";
+                showDialog(
+                    builder: (_) => UserScriptsAddDialog(
+                          editExisting: false,
+                          defaultUrl: request.request.url.toString(),
+                          defaultPage: 1,
+                        ),
+                    context: context);
+              }
+              BotToast.showText(
+                text: message,
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+                clickClose: true,
+              );
               return NavigationActionPolicy.CANCEL;
             }
 

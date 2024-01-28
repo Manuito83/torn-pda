@@ -8,7 +8,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:toggle_switch/toggle_switch.dart';
-import 'package:http/http.dart' as http;
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
@@ -18,8 +17,10 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 class UserScriptsAddDialog extends StatefulWidget {
   final bool editExisting;
   final UserScriptModel? editScript;
+  final int defaultPage;
+  final String? defaultUrl;
 
-  const UserScriptsAddDialog({required this.editExisting, this.editScript});
+  const UserScriptsAddDialog({required this.editExisting, this.editScript, this.defaultPage = 0, this.defaultUrl});
 
   @override
   UserScriptsAddDialogState createState() => UserScriptsAddDialogState();
@@ -41,12 +42,16 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
   final _remoteSourceFormKey = GlobalKey<FormState>();
   bool _remoteSourceFetching = false;
   final _remoteSourceController = TextEditingController();
+  final _remoteNameController = TextEditingController();
+  final _remoteRunTimeController = TextEditingController();
 
   late UserScriptsProvider _userScriptsProvider;
   late ThemeProvider _themeProvider;
 
   String? _originalSource = "";
   String? _originalName = "";
+
+  UserScriptModel? model;
 
   UserScriptTime _originalTime = UserScriptTime.end;
 
@@ -59,17 +64,23 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     _tabController = TabController(vsync: this, length: 2);
+    _tabController.animateTo(widget.defaultPage);
 
     if (widget.editExisting) {
       for (final script in _userScriptsProvider.userScriptList) {
         if (script.name == widget.editScript!.name) {
-          _addNameController.text = script.name!;
-          _addSourceController.text = script.source!;
+          _addNameController.text = script.name;
+          _addSourceController.text = script.source;
           _originalSource = script.source;
           _originalName = script.name;
           _originalTime = script.time;
+
+          _remoteNameController.text = script.name;
+          _remoteUrlController.text = script.url ?? "";
         }
       }
+    } else if (widget.defaultUrl != null) {
+      _remoteUrlController.text = widget.defaultUrl!;
     }
 
     // Listen to changes so that "clear" button becomes active when there is text in the URL field
@@ -84,6 +95,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
     _addSourceController.dispose();
     _remoteUrlController.dispose();
     _remoteSourceController.dispose();
+    _remoteNameController.dispose();
+    _remoteRunTimeController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -147,13 +160,13 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     return "Enter a valid name!";
                   }
                   for (final script in _userScriptsProvider.userScriptList) {
-                    if (script.name!.toLowerCase() == value.toLowerCase()) {
+                    if (script.name.toLowerCase() == value.toLowerCase()) {
                       if (!widget.editExisting) {
                         return "Script name already taken!";
                       } else {
                         // Allow to save same script, but not if it conflicts
                         // with another existing script
-                        if (script.name!.toLowerCase() != widget.editScript!.name!.toLowerCase()) {
+                        if (script.name.toLowerCase() != widget.editScript!.name.toLowerCase()) {
                           return "Script name already taken!";
                         }
                       }
@@ -250,8 +263,32 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     if (value!.isEmpty) {
                       return "Cannot be empty!";
                     }
-                    _addSourceController.text = value.trim();
-                    return null;
+                    try {
+                      // Check whether the userscript can be parsed or not. This will throw an error if not,
+                      // so warn the user it will be injected in all pages.
+                      UserScriptModel.parseHeader(value);
+                      // If no error is thrown, approve the data
+                      return null;
+                    } on Exception catch (e) {
+                      if (e.toString().contains("No header found")) {
+                        BotToast.showText(
+                            text: "No header was found in the script, it will be injected in all pages!",
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.orange[700]!,
+                            duration: const Duration(seconds: 4),
+                            contentPadding: const EdgeInsets.all(10));
+                        return null;
+                      } else {
+                        // If the error is not about the header, show it to the user.
+                        return e.toString();
+                      }
+                    } catch (e) {
+                      // Should not happen, but just in case...
+                      return e.toString();
+                    }
                   },
                 ),
               ),
@@ -285,9 +322,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
   Widget _remoteLoadTab() {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
-      child: Column(
-        children: [
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
+        child: Column(children: [
           Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
@@ -330,7 +366,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                   labelText: 'Remote URL',
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty || !value.contains("http")) {
+                  if (value == null || value.isEmpty || !value.contains("https")) {
                     return "Enter a valid URL!";
                   }
                   _addNameController.text = value.trim();
@@ -345,34 +381,32 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  child: Text("Fetch"),
-                  onPressed: _remoteUrlController.text.isEmpty
-                      ? null
-                      : () async {
-                          bool success = false;
-                          String message = "";
-                          String source = "";
+                    child: Text(widget.editExisting ? "Check for Update" : "Fetch"),
+                    onPressed: () async {
+                      if (_remoteUrlController.text.isEmpty) {
+                        return;
+                      }
+                      bool success = false;
+                      String? message;
+                      UserScriptModel? resultModel;
 
-                          try {
-                            setState(() {
-                              _remoteSourceFetching = true;
-                            });
+                      try {
+                        setState(() => _remoteSourceFetching = true);
 
-                            // Get source
-                            ({bool success, String message, String source}) result = await _fetchRemoteSource();
+                        final result = await UserScriptModel.fromURL(_remoteUrlController.text.trim());
 
-                            success = result.success;
-                            message = result.message;
-                            source = result.source;
-                          } catch (e) {
-                            log(e.toString());
-                            message = "Fetch error: $e";
-                          }
-
+                        success = result.success;
+                        message = result.message;
+                        resultModel = result.model;
+                      } catch (e) {
+                        log(e.toString());
+                        message = "Fetch error: $e";
+                      } finally {
+                        if (!widget.editExisting) {
                           BotToast.showText(
                             align: Alignment(0, 0),
                             clickClose: true,
-                            text: message,
+                            text: message ?? (success ? "Success" : "An unknown error occurred"),
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
@@ -381,17 +415,63 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                             duration: const Duration(seconds: 4),
                             contentPadding: const EdgeInsets.all(10),
                           );
+                        } else {
+                          if (!success) {
+                            log("An error occured in script ${widget.editScript!.name}: $message");
+                            BotToast.showText(
+                              align: Alignment(0, 0),
+                              clickClose: true,
+                              text: message ?? "An unknown error occurred",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.orange[700]!,
+                              duration: const Duration(seconds: 4),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                            widget.editScript!.updateStatus = UserScriptUpdateStatus.error;
+                          } else {
+                            final String newVersion = resultModel!.version;
+                            final String oldVersion = widget.editScript!.version;
+                            final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
+                            final String finalMessage = !success
+                                ? (message ?? "An unknown error occurred")
+                                : isOlderVersion
+                                    ? "Newer version found: $newVersion\nPlease review changes and save!"
+                                    : "No newer version found";
+                            log(finalMessage);
+                            BotToast.showText(
+                              align: Alignment(0, 0),
+                              clickClose: true,
+                              text: finalMessage,
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: success && isOlderVersion ? Colors.green : Colors.orange[700]!,
+                              duration: const Duration(seconds: 4),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          }
+                        }
 
-                          setState(() {
-                            if (success) {
-                              _remoteSourceController.text = source;
-                            } else {
-                              _remoteSourceController.clear();
-                            }
-                            _remoteSourceFetching = false;
-                          });
-                        },
-                ),
+                        setState(() {
+                          if (success) {
+                            model = resultModel!;
+                            _remoteSourceController.text = resultModel.source;
+                            _remoteNameController.text = resultModel.name;
+                            final String text = resultModel.time.name;
+                            _remoteRunTimeController.text = text;
+                          } else {
+                            _remoteSourceController.clear();
+                            _remoteNameController.clear();
+                            _remoteRunTimeController.clear();
+                          }
+                          _remoteSourceFetching = false;
+                        });
+                      }
+                    }),
                 Container(width: 20),
                 ElevatedButton(
                   child: Text("Clear"),
@@ -401,6 +481,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           setState(() {
                             _remoteUrlController.clear();
                             _remoteSourceController.clear();
+                            _remoteNameController.clear();
+                            _remoteRunTimeController.clear();
                           });
                         },
                 ),
@@ -451,24 +533,68 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                 ),
           Padding(
             padding: const EdgeInsets.all(10),
-            child: ElevatedButton(
-              child: Text("Load"),
-              onPressed: _remoteSourceController.text.isEmpty
-                  ? null
-                  : () {
-                      // TODO
-                    },
-            ),
-          ),
-        ],
-      ),
-    );
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ElevatedButton(
+                child: Text(widget.editExisting ? "Save" : "Load"),
+                onPressed: _remoteNameController.text.isEmpty ||
+                        _remoteSourceController.text.isEmpty ||
+                        _remoteRunTimeController.text.isEmpty
+                    ? null
+                    : () {
+                        if (!widget.editExisting) {
+                          _userScriptsProvider
+                              .addUserScriptFromURL(_remoteUrlController.text.trim())
+                              .then((r) => BotToast.showText(
+                                    align: Alignment(0, 0),
+                                    clickClose: true,
+                                    text: r.success ? "Script successfully added!" : "Error: ${r.message}",
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: r.success ? Colors.green : Colors.orange[700]!,
+                                    duration: const Duration(seconds: 4),
+                                    contentPadding: const EdgeInsets.all(10),
+                                  ))
+                              .then(Navigator.of(context).pop);
+                        } else {
+                          final bool couldParseHeader = _userScriptsProvider.updateUserScript(
+                              widget.editScript!,
+                              _remoteNameController.text,
+                              UserScriptTime.values.byName(_remoteRunTimeController.text ),
+                              _remoteSourceController.text,
+                              true,
+                              true);
+                          BotToast.showText(
+                            align: Alignment(0, 0),
+                            clickClose: true,
+                            text: couldParseHeader
+                                ? "Script successfully updated!"
+                                : "Could not parse the header, the script will inject on all pages.",
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: couldParseHeader ? Colors.green : Colors.orange[700]!,
+                            duration: const Duration(seconds: 4),
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                          Navigator.of(context).pop();
+                        }
+                      },
+              ),
+              Container(width: 20),
+              ElevatedButton(child: const Text("Cancel"), onPressed: Navigator.of(context).pop)
+            ]),
+          )
+        ]));
   }
 
   Future<void> _addPressed(BuildContext context) async {
     if (_nameFormKey.currentState!.validate() && _sourceFormKey.currentState!.validate()) {
       // Get rid of dialog first, so that it can't
       // be pressed twice
+
       Navigator.of(context).pop();
 
       // Copy controller's text ot local variable
@@ -480,40 +606,71 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       _addNameController.text = _addSourceController.text = '';
 
       if (!widget.editExisting) {
-        _userScriptsProvider.addUserScript(inputName, inputTime, inputSource);
+        try {
+          final metaMap = UserScriptModel.parseHeader(inputSource);
+          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(metaMap));
+        } on Exception catch (e) {
+          if (e.toString().contains("No header found")) {
+            BotToast.showText(
+                text: "No header was found in the script, it will be injected in all pages!",
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[700]!,
+                duration: const Duration(seconds: 4),
+                contentPadding: const EdgeInsets.all(10));
+            _userScriptsProvider.addUserScriptByModel(UserScriptModel(
+              enabled: true,
+              matches: const ["*"],
+              name: inputName,
+              version: "0.0.0",
+              edited: true,
+              source: inputSource,
+              time: inputTime,
+              updateStatus: UserScriptUpdateStatus.noRemote,
+              isExample: false,
+            ));
+          } else {
+            BotToast.showText(
+              align: Alignment(0, 0),
+              clickClose: true,
+              text: "Error: $e",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[700]!,
+              duration: const Duration(seconds: 4),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
+        }
       } else {
         // Flag the script as edited if we've changed something now or in the past
         var sourcedChanged = true;
-        if (!widget.editScript!.edited! &&
+        if (!widget.editScript!.edited &&
             inputSource == _originalSource &&
             inputTime == _originalTime &&
             inputName == _originalName) {
           sourcedChanged = false;
         }
 
-        _userScriptsProvider.updateUserScript(widget.editScript, inputName, inputTime, inputSource, sourcedChanged);
+        bool couldParseHeader = _userScriptsProvider.updateUserScript(
+            widget.editScript!, inputName, inputTime, inputSource, sourcedChanged, false);
+        if (!couldParseHeader) {
+          BotToast.showText(
+            text: "Could not parse the header, the script will inject on all pages.",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.orange[700]!,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
       }
     }
-  }
-
-  Future<({bool success, String message, String source})> _fetchRemoteSource() async {
-    bool success = false;
-    String message = "";
-    String source = "";
-    try {
-      final response = await http.get(Uri.parse(_remoteUrlController.text.trim()));
-      if (response.statusCode == 200) {
-        success = true;
-        message = "Script fetched!\n\nFor security reasons please make sure to verify its contents!";
-        source = response.body;
-      } else {
-        message = "Error ${response.statusCode}: ${response.reasonPhrase ?? 'invalid server response'}";
-      }
-    } catch (e) {
-      log(e.toString());
-      message = "Error: $e";
-    }
-
-    return (success: success, message: message, source: source);
   }
 }

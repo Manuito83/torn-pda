@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -52,25 +51,9 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           },
         );
 
-        // If we see user scripts for the first time, don't show new features in the next visit
-        // (the user should use the disclaimer for that)
-        _userScriptsProvider.changeFeatInjectionTimeShown(true);
-
         if (_firstTimeNotAccepted) {
           _goBack();
         }
-      } else {
-        if (appVersion == "2.9.4" && !_userScriptsProvider.newFeatInjectionTimeShown) {
-          await showDialog(
-            useRootNavigator: false,
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return _injectionTimeDialog();
-            },
-          );
-        }
-        _userScriptsProvider.changeFeatInjectionTimeShown(true);
       }
     });
 
@@ -136,6 +119,39 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                       const SizedBox(width: 15),
                       ButtonTheme(
+                          minWidth: 1.0,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
+                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: const BorderSide(
+                                    width: 2,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.refresh,
+                              size: 20,
+                              color: _themeProvider.mainText,
+                            ),
+                            onPressed: () => _userScriptsProvider.checkForUpdates().then((i) => BotToast.showText(
+                                  text: i > 0
+                                      ? "$i script${i == 1 ? " is" : "s are"} ready to update"
+                                      : "No updates found",
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
+                                  contentPadding: const EdgeInsets.all(10),
+                                )),
+                          )),
+                      const SizedBox(width: 15),
+                      ButtonTheme(
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
@@ -194,16 +210,6 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   ListView scriptsCards() {
     final scriptList = <Widget>[];
     for (final script in _userScriptsProvider.userScriptList) {
-      var exampleUpdatable = false;
-      var custom = false;
-      if (script.exampleCode! > 0) {
-        if (script.edited != null && !script.edited!) {
-          exampleUpdatable = true;
-        }
-      } else {
-        custom = true;
-      }
-
       scriptList.add(
         Card(
           key: UniqueKey(),
@@ -219,7 +225,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         height: 20,
                         width: 60,
                         child: Switch(
-                          value: script.enabled!,
+                          value: script.enabled,
                           activeTrackColor: Colors.green[100],
                           activeColor: Colors.green,
                           inactiveThumbColor: Colors.red[100],
@@ -229,13 +235,13 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Flexible(child: Text(script.name!, style: const TextStyle(fontSize: 13))),
+                      Flexible(child: Text(script.name, style: const TextStyle(fontSize: 13))),
                     ],
                   ),
                 ),
                 Row(
                   children: [
-                    if (custom)
+                    if (script.updateStatus == UserScriptUpdateStatus.noRemote)
                       GestureDetector(
                         child: const Icon(
                           MdiIcons.alphaC,
@@ -244,7 +250,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         ),
                         onTap: () async {
                           BotToast.showText(
-                            text: 'This is a custom script',
+                            text:
+                                'This is a custom script without an update URL. It will not be updated automatically.',
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
@@ -254,50 +261,103 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           );
                         },
                       )
+                    else if (script.updateStatus == UserScriptUpdateStatus.localModified)
+                      GestureDetector(
+                          child: Icon(
+                            script.isExample ? MdiIcons.lockOff : MdiIcons.earthOff,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
+                          onTap: () async {
+                            BotToast.showText(
+                              text:
+                                  "This is a${script.isExample ? "n example" : ""} script that you have edited, so it will not update. Reset changes to enable updates again.",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[800]!,
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          })
+                    else if (script.updateStatus == UserScriptUpdateStatus.upToDate)
+                      GestureDetector(
+                          child: Icon(script.isExample ? MdiIcons.lock : MdiIcons.earth, color: Colors.green, size: 20),
+                          onTap: () async {
+                            BotToast.showText(
+                              text:
+                                  "This ${script.isExample ? "example " : ""}script is up-to-date (v${script.version})",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[800]!,
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          })
+                    else if (script.updateStatus == UserScriptUpdateStatus.updateAvailable)
+                      GestureDetector(
+                          child: Icon(script.isExample ? MdiIcons.lockPlus : MdiIcons.earthPlus,
+                              color: Colors.red, size: 20),
+                          onTap: () async {
+                            BotToast.showText(
+                              text: "An update is available (currently on v${script.version})",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[800]!,
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                            showDialog(
+                                builder: (c) => UserScriptsAddDialog(
+                                      editScript: script,
+                                      editExisting: true,
+                                      defaultPage: 1,
+                                    ),
+                                context: context);
+                          })
+                    else if (script.updateStatus == UserScriptUpdateStatus.error)
+                      GestureDetector(
+                          child: const Icon(MdiIcons.earthRemove, color: Colors.red, size: 20),
+                          onTap: () async {
+                            BotToast.showText(
+                              text: "An error occurred while checking for updates. Please try again later.",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[800]!,
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          })
+                    else if (script.updateStatus == UserScriptUpdateStatus.updating)
+                      GestureDetector(
+                          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
+                          onTap: () async => BotToast.showText(
+                                text: "Checking for updates...",
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.grey[800]!,
+                                contentPadding: const EdgeInsets.all(10),
+                              ))
                     else
-                      exampleUpdatable
-                          ? GestureDetector(
-                              child: const Icon(
-                                Icons.e_mobiledata,
-                                color: Colors.green,
-                                size: 20,
-                              ),
-                              onTap: () async {
-                                BotToast.showText(
-                                  text: 'This is an example script that has not been edited and will be updated '
-                                      'automatically with each release of Torn PDA!',
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: Colors.green[800]!,
-                                  duration: const Duration(seconds: 4),
-                                  contentPadding: const EdgeInsets.all(10),
-                                );
-                              },
-                            )
-                          : GestureDetector(
-                              child: const Icon(
-                                Icons.e_mobiledata,
-                                color: Colors.grey,
-                                size: 20,
-                              ),
-                              onTap: () async {
-                                BotToast.showText(
-                                  text: 'This is an example script that has been edited in the past and will not be '
-                                      'automatically updated.'
-                                      '\n\nIf you wish to activate auto updates, remove it and then '
-                                      'load the missing example scripts again!',
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: Colors.grey[800]!,
-                                  duration: const Duration(seconds: 7),
-                                  contentPadding: const EdgeInsets.all(10),
-                                );
-                              },
+                      GestureDetector(
+                        child: const Icon(MdiIcons.helpCircle, color: Colors.blue, size: 20),
+                        onTap: () async {
+                          BotToast.showText(
+                            text: "The update status of this script could not be determined.",
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
                             ),
+                            contentColor: Colors.grey[800]!,
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                        },
+                      ),
                     const SizedBox(width: 12),
                     GestureDetector(
                       child: const Icon(Icons.edit, size: 20),
@@ -671,28 +731,30 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Activation URLs starting with '@match' in the header are supported; however, wildcards (*) will be ignored. "
-                  "Instead, you can use full URLs or just a part of them (e.g. 'profile.php' or 'torn.com').",
+                  "Any remote script needs to have a valid header, or else the remote install will fail. "
+                  "Local UserScripts do not have this constraint, although without a valid header the match pattern "
+                  "will not be validated and the script will be injected in all pages.",
                   style: TextStyle(
                     fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
-                  "Torn PDA will replace it with your API key in runtime.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "The remote URL can be any URL that returns a plaintext file with a valid userscript header. "
+                    "However, the popup will only be added automatically on requests with the \"text/javascript\" "
+                    "content-type header. If you want to add a script that does not have this header (such as "
+                    "raw GitHub links) you must copy the url and navigate to the userscript section to add it.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 10),
                 const Text(
-                  "User scripts are isolated from one another on runtime and executed inside anonymous functions. "
-                  "There is no need for you to adapt them this way.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
+                    "Torn PDA will replace it with your API key in runtime.",
+                    style: TextStyle(fontSize: 13)),
+                const SizedBox(height: 10),
+                const Text(
+                    "User scripts are isolated from one another on runtime and executed inside anonymous functions. "
+                    "There is no need for you to adapt them this way.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 25),
                 const Text(
                   "TROUBLESHOOTING",
@@ -700,15 +762,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
-                  "code changes to work with Torn PDA if external libraries were used. If you are an advanced user, "
-                  "please scroll down to the 'GM handlers' section for more information an alternatives.\n\n"
-                  "If a script does not work as intended after changing its code in Torn PDA, please "
-                  "try resetting your browser cache in the advanced browser settings section.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
+                    "code changes to work with Torn PDA if external libraries were used. If you are an advanced user, "
+                    "please scroll down to the 'GM handlers' section for more information an alternatives.\n\n"
+                    "If a script does not work as intended after changing its code in Torn PDA, please "
+                    "try resetting your browser cache in the advanced browser settings section.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 25),
                 const Text(
                   "INJECTION CONSTRAINTS",
@@ -716,20 +775,17 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
-                  "as much as possible with script injection times and URLs. However, due to the different limitations "
-                  "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
-                  "be injected again in pages with pagination (e.g.: jail, hospital, forums...). Also, reloading the "
-                  "page might result in scripts being injected multiple times.\n\n"
-                  "Hence, it's the script developer's responsibility to control all these constraints. A few ideas: "
-                  "make sure that that the script is prepared for multiple injection retries by adding a variable to "
-                  "the main container; make sure that pagination works by adding click listeners; make sure that no "
-                  "conflicts exist with other scripts (variable names, etc.) by enclosing the script in an "
-                  "anonymous function.",
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
+                    "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
+                    "as much as possible with script injection times and URLs. However, due to the different limitations "
+                    "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
+                    "be injected again in pages with pagination (e.g.: jail, hospital, forums...). Also, reloading the "
+                    "page might result in scripts being injected multiple times.\n\n"
+                    "Hence, it's the script developer's responsibility to control all these constraints. A few ideas: "
+                    "make sure that that the script is prepared for multiple injection retries by adding a variable to "
+                    "the main container; make sure that pagination works by adding click listeners; make sure that no "
+                    "conflicts exist with other scripts (variable names, etc.) by enclosing the script in an "
+                    "anonymous function.",
+                    style: TextStyle(fontSize: 13)),
                 const SizedBox(height: 25),
                 const Text(
                   "SCRIPT INJECTION TIME",
@@ -970,6 +1026,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   }
 
   WillPopScope _firstTimeDialog() {
+    // Will show for users updating to V2, as well as new users.
     return WillPopScope(
       onWillPop: () async => false,
       child: AlertDialog(
@@ -986,6 +1043,17 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 "from your Torn account or other websites you visit.",
                 style: TextStyle(
                   fontSize: 13,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Torn PDA has recently added support for remote scripts. Even though these scripts "
+                "may have been safe previously, malicious updates can be added. Ensure you verify all changes "
+                "before you install any updates from scripts. If you are unsure, please reach out in the "
+                "UserScripts section of the Discord server.",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               SizedBox(height: 10),
@@ -1038,114 +1106,6 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           ),
         ],
       ),
-    );
-  }
-
-  AlertDialog _injectionTimeDialog() {
-    return AlertDialog(
-      title: const Text("SCRIPT INJECTION TIME"),
-      content: const Scrollbar(
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "NEW FEATURE (v2.9.4)",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 10),
-                Text.rich(
-                  TextSpan(
-                    text: "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
-                        "loads (START) and after the load has been completed (END). The user can select when each "
-                        "script should be loaded by editing its details.\n\n"
-                        "By loading the script at the ",
-                    style: TextStyle(
-                      fontSize: 13,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: "START",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ", you might be able to fetch resources loading and ajax calls, for example. However, "
-                            "Torn PDA will inject the script even before the HTML Document or jQuery are available; "
-                            "therefore, you need to plan for this and check their availability before doing any work. "
-                            "This can be accomplished with ",
-                      ),
-                      TextSpan(
-                        text: "intervals",
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      TextSpan(
-                        text: " or properties such as ",
-                      ),
-                      TextSpan(
-                        text: "'Document.readyState'",
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      TextSpan(
-                        text: " or checks like ",
-                      ),
-                      TextSpan(
-                        text: "'typeof window.jQuery'",
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ".",
-                      ),
-                      TextSpan(
-                        text: "\n\n"
-                            "By loading the script at the ",
-                        style: TextStyle(
-                          fontSize: 13,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: "END",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          TextSpan(
-                            text: ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
-                                "However, please be aware that there might be some items being dynamically "
-                                "loaded (e.g.: items list, jail and hospital lists, etc.), so it might still be "
-                                "necessary to ensure that certain elements are available before doing any work.",
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: TextButton(
-            child: const Text("Understood"),
-            onPressed: () {
-              Navigator.of(context).pop('exit');
-            },
-          ),
-        ),
-      ],
     );
   }
 
