@@ -4375,16 +4375,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       tooltipBackgroundColor: _themeProvider.secondBackground!,
       descTextStyle: const TextStyle(fontSize: 13),
       tooltipPadding: const EdgeInsets.all(20),
-      child: GestureDetector(
-        onTap: _nextButtonPressed
-            ? null
-            : () {
-                nextChainAttack();
-              },
-        onLongPress: () => _webViewProvider.cancelChainingBrowser(),
-        child: const Padding(
-          padding: EdgeInsets.only(right: 10),
-          child: Icon(MdiIcons.playPause, color: Colors.white),
+      child: Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: IconButton(
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(MdiIcons.playPause, color: Colors.white),
+          onPressed: _nextButtonPressed ? null : nextChainAttack,
         ),
       ),
     );
