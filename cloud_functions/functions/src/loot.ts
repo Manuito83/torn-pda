@@ -69,7 +69,7 @@ export const lootGroup = {
 
                 const refNpcs = db.ref("loot/hospital");
                 await refNpcs.once("value", function (snapshot) {
-                    let dbArray = snapshot.val() || [];
+                    const dbArray = snapshot.val() || [];
                     npcHospitalJSON = JSON.parse(JSON.stringify(dbArray))
                 });
 
@@ -80,13 +80,13 @@ export const lootGroup = {
                         let warnMessage = "";
                         let npcName = "";
 
-                        let npcTimeHospital = npcHospitalJSON[npcId];
-                        let npcTimeLevel4 = npcTimeHospital + 210 * 60;
-                        let npcTimeLevel5 = npcTimeHospital + 450 * 60;
+                        const npcTimeHospital = npcHospitalJSON[npcId];
+                        const npcTimeLevel4 = npcTimeHospital + 210 * 60;
+                        const npcTimeLevel5 = npcTimeHospital + 450 * 60;
 
                         const currentDateInMillis = Math.floor(Date.now() / 1000);
-                        let timeToLevel4 = npcTimeLevel4 - currentDateInMillis;
-                        let timeToLevel5 = npcTimeLevel5 - currentDateInMillis;
+                        const timeToLevel4 = npcTimeLevel4 - currentDateInMillis;
+                        const timeToLevel5 = npcTimeLevel5 - currentDateInMillis;
 
                         if (timeToLevel4 > 0 && timeToLevel4 < 360) {
                             const minutesRemaining = Math.round((timeToLevel4) / 60);
@@ -110,11 +110,11 @@ export const lootGroup = {
                         const refTimestamp = db.ref(`loot/alertsTimestamp/${npcId}`);
                         let timestamp = 0;
                         await refTimestamp.once("value", function (snapshot) {
-                            let lastAlerted = snapshot.val() || 0;
+                            const lastAlerted = snapshot.val() || 0;
                             timestamp = JSON.parse(JSON.stringify(lastAlerted));
                         });
 
-                        let lastAlertedInSeconds = currentDateInMillis - timestamp;
+                        const lastAlertedInSeconds = currentDateInMillis - timestamp;
                         console.log(lastAlertedInSeconds);
                         if (lastAlertedInSeconds < 600) {
                             continue;

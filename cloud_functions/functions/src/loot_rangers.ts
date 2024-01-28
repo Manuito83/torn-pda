@@ -11,7 +11,7 @@ export const lootRangersGroup = {
     .onRun(async () => {
 
       const promises: Promise<any>[] = [];
-      let errorUID = "";
+      const errorUID = "";
 
       const firebaseAdmin = require("firebase-admin");
       const db = firebaseAdmin.database();
@@ -84,9 +84,9 @@ export const lootRangersGroup = {
         );
 
         // Build name order
-        let orderArray = [];
+        const orderArray = [];
         const npcArray = lrJson.order;
-        for (var id of npcArray) {
+        for (const id of npcArray) {
           // If [clear] is false, the NPC won't participate in this attack
           if (lrJson.npcs[id].clear) {
             orderArray.push(`${lrJson.npcs[id].name}[${id}]`);
@@ -104,7 +104,7 @@ export const lootRangersGroup = {
         let subtitle = `Attack order: ${orderArray.join(', ')}`;
         console.log(subtitle);
 
-        let attackTime = `${hours}:${minutes}`;
+        const attackTime = `${hours}:${minutes}`;
 
         for (const key of Array.from(subscribers.keys())) {
 

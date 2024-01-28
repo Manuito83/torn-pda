@@ -145,7 +145,7 @@ export const prefsBackupGroup = {
 
             // Initialize Firestore
             const db = admin.firestore();
-            let dbPrefs: { [k: string]: string; } = {};
+            const dbPrefs: { [k: string]: string; } = {};
             let dbConfiguration: { [k: string]: string; } = {};
 
             // Reference to the player backup document
@@ -340,7 +340,7 @@ export const prefsBackupGroup = {
             const userPrefsRef = mainImportBackupDoc.ref.collection('prefs');
             const userPrefsSnapshot = await userPrefsRef.get();
 
-            let dbPrefs: { [k: string]: string; } = {};
+            const dbPrefs: { [k: string]: string; } = {};
 
             const preferencesMapping = {
                 shortcuts: ['pda_activeShortcutsList', 'pda_shortcutMenu', 'pda_shortcutTile'],

@@ -37,7 +37,7 @@ export const refillsGroup = {
       let sent = 0;
       let nothingSelected = 0;
 
-      let serverTime = new Date().getHours() + 1;
+      const serverTime = new Date().getHours() + 1;
 
       // Loop all subscribers
       for (const key of Array.from(subscribers.keys())) {
@@ -48,8 +48,8 @@ export const refillsGroup = {
           errorUID = thisUser.uid;
 
           // Because we are launching at 21:58, for example, we add one hour for 22:00 to match the app
-          let desiredTime = thisUser.refillsTime || 22;
-          if (serverTime != desiredTime) {
+          const desiredTime = thisUser.refillsTime || 22;
+          if (serverTime !== desiredTime) {
             continue;
           }
           subscribersThisTime++;
@@ -95,7 +95,7 @@ export const refillsGroup = {
               // (the user has chosen at least 1 refill)
             } else {
 
-              let refillsToSend = [];
+              const refillsToSend = [];
 
               if (thisUser.refillsRequested.includes("energy") && !apiRefills.refills.energy_refill_used) {
                 refillsToSend.push("energy");

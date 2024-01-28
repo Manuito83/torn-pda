@@ -341,7 +341,7 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
     // We allow up to 10 tries (will be reverted by the app later)
     if (e.toString().includes("Requested entity was not found")) {
       if (subscriber.tokenErrors !== undefined) {
-        let errors = subscriber.tokenErrors + 1;
+        const errors = subscriber.tokenErrors + 1;
         if (errors >= 10) {
           await admin
             .firestore()
