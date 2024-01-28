@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 export async function getUsersStat(apiKey: string) {
-  const response = await fetch('https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents&key=${apiKey}&comment=PDA-Alerts');
+  const response = await fetch(`https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents&key=${apiKey}&comment=PDA-Alerts`);
   const data = await response.json();
   return data;
 
