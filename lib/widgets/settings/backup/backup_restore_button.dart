@@ -3,19 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
-import 'package:torn_pda/utils/settings/backup_prefs_groups.dart';
 
 class BackupRestoreButton extends StatefulWidget {
   final OwnProfileBasic userProfile;
   final bool overwritteShortcuts;
   final bool overwritteUserscripts;
+  final bool overwritteTargets;
+  final bool fromShareDialog;
 
   const BackupRestoreButton({
     required this.userProfile,
     required this.overwritteShortcuts,
     required this.overwritteUserscripts,
+    required this.overwritteTargets,
+    this.fromShareDialog = false,
   });
 
   @override
@@ -79,6 +83,19 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
         userscriptsProvider.restoreScriptsFromServerSave(
           overwritte: widget.overwritteUserscripts,
           scriptsList: userscripts,
+          defaultToDisabled: widget.fromShareDialog,
+        );
+      }
+
+      // Shortcuts
+      final targetsBackup = result["prefs"]["pda_targetsList"] as List?;
+      if (targetsBackup != null) {
+        // Restore through the provider
+        final targetsList = targetsBackup.map((item) => item as String).toList();
+        final targetsProvider = context.read<TargetsProvider>();
+        targetsProvider.restoreTargetsFromServerSave(
+          backup: targetsList,
+          overwritte: widget.overwritteTargets,
         );
       }
     }

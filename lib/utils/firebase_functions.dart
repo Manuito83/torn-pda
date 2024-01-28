@@ -17,6 +17,8 @@ class _FirebaseFunctions {
     String drinks = "unk",
     String exactStats = "",
   }) async {
+    //################
+    // ASSIST MESSAGES
     final HttpsCallable callable = FirebaseFunctions.instanceFor(
       region: 'us-east4',
     ).httpsCallable(
@@ -40,6 +42,8 @@ class _FirebaseFunctions {
     return results.data;
   }
 
+  //###################
+  // PREFERENCES BACKUP
   Future<Map<String, dynamic>> saveUserPrefs({
     required String apiKey,
     required int userId,
@@ -99,6 +103,56 @@ class _FirebaseFunctions {
     Map<String, dynamic> data = {
       'key': apiKey,
       'id': userId,
+    };
+
+    String jsonData = json.encode(data);
+
+    final HttpsCallableResult results = await callable.call(jsonData);
+
+    return json.decode(results.data);
+  }
+
+  Future<Map<String, dynamic>> saveOwnBackupShare({
+    required String apiKey,
+    required int userId,
+    required bool ownShareEnabled,
+    required String ownSharePassword,
+    required List<String> prefs,
+  }) async {
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
+      region: 'us-east4',
+    ).httpsCallable(
+      'prefsBackup-setOwnSharePrefs',
+    );
+
+    Map<String, dynamic> data = {
+      'key': apiKey,
+      'id': userId,
+      'ownShareEnabled': ownShareEnabled,
+      'ownSharePassword': ownSharePassword,
+      'ownSharePrefs': prefs,
+    };
+
+    String jsonData = json.encode(data);
+
+    final HttpsCallableResult results = await callable.call(jsonData);
+
+    return json.decode(results.data);
+  }
+
+  Future<Map<String, dynamic>> getImportShare({
+    required int shareId,
+    required String sharePassword,
+  }) async {
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
+      region: 'us-east4',
+    ).httpsCallable(
+      'prefsBackup-getImportShare',
+    );
+
+    Map<String, dynamic> data = {
+      'shareId': shareId,
+      'sharePassword': sharePassword,
     };
 
     String jsonData = json.encode(data);

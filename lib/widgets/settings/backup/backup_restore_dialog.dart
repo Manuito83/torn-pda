@@ -29,10 +29,12 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
   final _selectedItems = <String>[
     "shortcuts",
     "userscripts",
+    "targets",
   ];
 
   bool _overwritteShortcuts = true;
   bool _overwritteUserscripts = true;
+  bool _overwritteTargets = true;
 
   @override
   void initState() {
@@ -123,6 +125,7 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
                       userProfile: widget.userProfile,
                       overwritteShortcuts: _overwritteShortcuts,
                       overwritteUserscripts: _overwritteUserscripts,
+                      overwritteTargets: _overwritteTargets,
                     ),
                   TextButton(
                     onPressed: () {
@@ -140,10 +143,11 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
   }
 
   Future _getOriginalServerPrefs() async {
-    final result = await firebaseFunctions.getUserPrefs(
-      userId: widget.userProfile.playerId ?? 0,
-      apiKey: widget.userProfile.userApiKey.toString(),
-    );
+    final result = await firebaseFunctions
+        .getUserPrefs(userId: widget.userProfile.playerId ?? 0, apiKey: widget.userProfile.userApiKey.toString())
+        .catchError((value) {
+      return <String, dynamic>{"success": false, "message": "Could not connect to server"};
+    });
 
     if (!result["success"]) {
       setState(() {
@@ -167,6 +171,11 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
       case BackupPrefs.userscripts:
         setState(() {
           _overwritteUserscripts = value;
+        });
+        break;
+      case BackupPrefs.targets:
+        setState(() {
+          _overwritteTargets = value;
         });
         break;
     }

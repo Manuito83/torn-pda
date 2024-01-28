@@ -26,10 +26,43 @@ class UserPrefsOutput {
     success: boolean;
     message: string;
     prefs: { [k: string]: string; };
-    constructor(success: boolean, message: string, prefs: { [k: string]: string; }) {
+    configuration: { [k: string]: string; };
+    constructor(success: boolean, message: string, prefs: { [k: string]: string; }, configuration: { [k: string]: string; }) {
         this.success = success;
         this.message = message;
         this.prefs = prefs;
+        this.configuration = configuration;
+    }
+}
+
+class OwnSharePrefsSaveInput {
+    ownShareEnabled: boolean;
+    ownSharePassword: string;
+    ownSharePrefs: string[];
+    key: string;
+    id: number;
+
+    constructor(
+        ownShareEnabled: boolean,
+        ownSharePassword: string,
+        ownSharePrefs: string[],
+        key: string,
+        id: number
+    ) {
+        this.ownShareEnabled = ownShareEnabled;
+        this.ownSharePassword = ownSharePassword;
+        this.ownSharePrefs = ownSharePrefs;
+        this.key = key;
+        this.id = id;
+    }
+}
+
+class ImportGetInput {
+    importId: number;
+    importPassword: string;
+    constructor(importId: number, importPassword: string) {
+        this.importId = importId;
+        this.importPassword = importPassword;
     }
 }
 
@@ -42,13 +75,13 @@ export const prefsBackupGroup = {
 
             // Parameters check
             if (inputDetails.key === undefined || inputDetails.id === undefined || inputJson.prefs === undefined) {
-                return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null));
+                return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null, null));
             }
 
             // User authentication 
             const failReason = await validateUserAuthAndReturnError(inputJson.key, inputJson.id);
             if (failReason !== null) {
-                return JSON.stringify(new UserPrefsOutput(false, failReason, null));
+                return JSON.stringify(new UserPrefsOutput(false, failReason, null, null));
             }
 
             // Add data to database
@@ -87,61 +120,65 @@ export const prefsBackupGroup = {
 
             // Return UserPrefsOutput object
             await Promise.all(promises);
-            return JSON.stringify(new UserPrefsOutput(true, 'Successfully stored user preferences', null));
+            return JSON.stringify(new UserPrefsOutput(true, 'Successfully stored user preferences', null, null));
         } catch (e) {
-            return JSON.stringify(new UserPrefsOutput(false, `Error: ${e}`, null));
+            return JSON.stringify(new UserPrefsOutput(false, `Error: ${e}`, null, null));
         }
     }),
 
     getUserPrefs: functions.region('us-east4').https.onCall(async (data, context) => {
         try {
-
+            // Parse the incoming data
             const inputJson = JSON.parse(data);
             const inputDetails = new UserPrefsGetInput(inputJson.key, inputJson.id);
 
-            // Parameters check
+            // Validate the inputs
             if (inputDetails.key === undefined || inputDetails.id === undefined) {
-                return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null));
+                return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null, null));
             }
 
-            // User authentication
+            // Authenticate the user
             const failReason = await validateUserAuthAndReturnError(inputJson.key, inputJson.id);
             if (failReason !== null) {
-                return JSON.stringify(new UserPrefsOutput(false, failReason, null));
+                return JSON.stringify(new UserPrefsOutput(false, failReason, null, null));
             }
 
-            // Get data from database
+            // Initialize Firestore
             const db = admin.firestore();
-            const promises: Promise<any>[] = [];
-
-            // Initialize dbPrefs as an empty object (not a map, since it needs to be converted to JSON)
             let dbPrefs: { [k: string]: string; } = {};
+            let dbConfiguration: { [k: string]: string; } = {};
 
-            // Check if player backup document exists
+            // Reference to the player backup document
             const playerBackupRef = db.collection('player_backup').doc(String(inputDetails.id));
             const playerBackupDoc = await playerBackupRef.get();
 
+            // If the document doesn't exist, return with success (it's not an error per se)
             if (!playerBackupDoc.exists) {
-                // If the document doesn't exist, create it
-                return JSON.stringify(new UserPrefsOutput(true, 'No user preferences found', dbPrefs));
+                return JSON.stringify(new UserPrefsOutput(true, 'No user preferences found', dbPrefs, dbConfiguration));
             }
 
-            // Get user preferences from Firestore
-            const userPrefsRef = db.collection('player_backup').doc(String(inputDetails.id)).collection('prefs');
+            // Fetch the data from the parent document and store it in dbConfiguration
+            dbConfiguration = playerBackupDoc.data();
+            // Remove the prefs field from dbConfiguration as it will be handled separately
+            delete dbConfiguration.prefs;
+
+            // Reference to the prefs subcollection
+            const userPrefsRef = playerBackupDoc.ref.collection('prefs');
             const userPrefsSnapshot = await userPrefsRef.get();
+
+            // Loop through the documents in the prefs subcollection and store them in dbPrefs
             for (const doc of userPrefsSnapshot.docs) {
                 dbPrefs[doc.id] = doc.data().prefKey;
             }
 
-            // Update last retrieved timestamp
-            promises.push(db.collection('player_backup').doc(String(inputDetails.id)).update({ last_retrieved: Date.now() }));
+            // Update the last_retrieved field in the parent document
+            await playerBackupDoc.ref.update({ last_retrieved: Date.now() });
 
             // Return UserPrefsOutput object
-            await Promise.all(promises);
-            return JSON.stringify(new UserPrefsOutput(true, 'Successfully retrieved user preferences', dbPrefs));
+            return JSON.stringify(new UserPrefsOutput(true, 'Successfully retrieved user preferences', dbPrefs, dbConfiguration));
 
         } catch (e) {
-            return JSON.stringify(new UserPrefsOutput(false, `Error: ${e}`, null));
+            return JSON.stringify(new UserPrefsOutput(false, `Error: ${e}`, null, null));
         }
     }),
 
@@ -153,13 +190,13 @@ export const prefsBackupGroup = {
 
             // Parameters check
             if (inputDetails.key === undefined || inputDetails.id === undefined) {
-                return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null));
+                return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null, null));
             }
 
             // User authentication
             const failReason = await validateUserAuthAndReturnError(inputJson.key, inputJson.id);
             if (failReason !== null) {
-                return JSON.stringify(new UserPrefsOutput(false, failReason, null));
+                return JSON.stringify(new UserPrefsOutput(false, failReason, null, null));
             }
 
             // Get data from database
@@ -172,7 +209,7 @@ export const prefsBackupGroup = {
 
             // If the document doesn't exist, return an error
             if (!playerBackupDoc.exists) {
-                return JSON.stringify(new UserPrefsOutput(false, 'User preferences not found', null));
+                return JSON.stringify(new UserPrefsOutput(false, 'User preferences not found', null, null));
             }
 
             // Delete the document (fields) and subcollections (prefs)
@@ -190,12 +227,145 @@ export const prefsBackupGroup = {
 
             // Return UserPrefsOutput object
             await Promise.all(promises);
-            return JSON.stringify(new UserPrefsOutput(true, 'Successfully removed user preferences', null));
+            return JSON.stringify(new UserPrefsOutput(true, 'Successfully removed user preferences', null, null));
 
         } catch (e) {
-            return JSON.stringify(new UserPrefsOutput(false, `Error: ${e}`, null));
+            return JSON.stringify(new UserPrefsOutput(false, `Error: ${e}`, null, null));
         }
     }),
+
+    setOwnSharePrefs: functions.region('us-east4').https.onCall(async (data, context) => {
+        try {
+            // Parse the incoming data
+            const inputJson = JSON.parse(data);
+            const inputDetails = new OwnSharePrefsSaveInput(
+                inputJson.ownShareEnabled,
+                inputJson.ownSharePassword,
+                inputJson.ownSharePrefs,
+                inputJson.key,
+                inputJson.id,
+            );
+
+            // Validate the inputs
+            if (
+                inputDetails.ownShareEnabled === undefined ||
+                inputDetails.ownSharePassword === undefined ||
+                inputDetails.ownSharePrefs === undefined ||
+                inputDetails.key === undefined ||
+                inputDetails.id === undefined
+            ) {
+                return JSON.stringify(
+                    new UserPrefsOutput(false, 'Invalid input', null, null)
+                );
+            }
+
+            // Authenticate the user
+            const failReason = await validateUserAuthAndReturnError(inputJson.key, inputJson.id);
+            if (failReason !== null) {
+                return JSON.stringify(
+                    new UserPrefsOutput(false, failReason, null, null)
+                );
+            }
+
+            // Initialize Firestore
+            const db = admin.firestore();
+
+            // Reference to the player document
+            const playerRef = db.collection('player_backup').doc(String(inputDetails.id));
+
+            // Fetch the existing player data
+            const playerDoc = await playerRef.get();
+            let existingData: any = {};
+            if (playerDoc.exists) {
+                existingData = playerDoc.data();
+            }
+
+            // Update the existing player data using the input data
+            existingData.ownShareEnabled = inputDetails.ownShareEnabled;
+            existingData.ownSharePassword = inputDetails.ownSharePassword;
+            existingData.ownSharePrefs = inputDetails.ownSharePrefs;
+            if (!existingData.ownSharePrefs) {
+                existingData.ownSharePrefs = [];
+            }
+
+            // Directly update the player document with the updated data
+            await playerRef.set(existingData, { merge: false });
+
+            // Return success response
+            return JSON.stringify(
+                new UserPrefsOutput(true, 'Successfully updated user share configuration', null, null)
+            );
+
+        } catch (e) {
+            functions.logger.error(`Failed to parse input data: ${e}`);
+            return JSON.stringify(
+                new UserPrefsOutput(false, `Error: ${e}`, null, null)
+            );
+        }
+    }),
+
+
+    getImportShare: functions.region('us-east4').https.onCall(async (data, context) => {
+        try {
+            // Parse the incoming data
+            const inputJson = JSON.parse(data);
+            const inputDetails = new ImportGetInput(inputJson.shareId, inputJson.sharePassword);
+
+            // Validate the inputs
+            if (inputDetails.importId === undefined || inputDetails.importPassword === undefined) {
+                return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null, null));
+            }
+
+            // Initialize Firestore
+            const db = admin.firestore();
+
+            // Reference to the player backup document
+            const mainImportBackupRef = db.collection('player_backup').doc(String(inputJson.shareId));
+            const mainImportBackupDoc = await mainImportBackupRef.get();
+
+            // If the document doesn't exist, return a failure response
+            let importConfiguration: any = {};
+            if (!mainImportBackupDoc.exists) {
+                return JSON.stringify(new UserPrefsOutput(false, 'No backup found with the provided details!', null, null));
+            } else {
+                importConfiguration = mainImportBackupDoc.data();
+                if (!importConfiguration.ownShareEnabled
+                    || importConfiguration.ownSharePassword !== inputDetails.importPassword
+                    || importConfiguration.ownSharePrefs.length === 0) {
+                    return JSON.stringify(new UserPrefsOutput(false, 'No backup found with the provided details!', null, null));
+                }
+            }
+
+            // Reference to the prefs subcollection
+            const userPrefsRef = mainImportBackupDoc.ref.collection('prefs');
+            const userPrefsSnapshot = await userPrefsRef.get();
+
+            let dbPrefs: { [k: string]: string; } = {};
+
+            const preferencesMapping = {
+                shortcuts: ['pda_activeShortcutsList', 'pda_shortcutMenu', 'pda_shortcutTile'],
+                userscripts: ['pda_userScriptsList'],
+                targets: ['pda_targetsList'],
+            };
+
+            for (const [preferenceCategory, categoryKeys] of Object.entries(preferencesMapping)) {
+                if (mainImportBackupDoc.data().ownSharePrefs.includes(preferenceCategory)) {
+                    for (const preference of userPrefsSnapshot.docs) {
+                        if (categoryKeys.includes(preference.id)) {
+                            dbPrefs[preference.id] = preference.data().prefKey;
+                        }
+                    }
+                }
+            }
+
+            // Return UserPrefsOutput object
+            return JSON.stringify(new UserPrefsOutput(true, 'Successfully retrieved user preferences', dbPrefs, null));
+
+        } catch (e) {
+            return JSON.stringify(new UserPrefsOutput(false, `Error: ${e}`, null, null));
+        }
+    }),
+
 
 };
 

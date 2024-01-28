@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:math';
 
 // Flutter imports:
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // Package imports:
@@ -583,6 +584,25 @@ class TargetsProvider extends ChangeNotifier {
     _currentColorFilterOut = await Prefs().getTargetsColorFilter();
 
     // Notification
+    notifyListeners();
+  }
+
+  // SERVER BACKUP RESTORE
+  restoreTargetsFromServerSave({required List<String> backup, required bool overwritte}) {
+    if (overwritte) {
+      _targets.clear();
+    }
+
+    var filteredBackup = backup.where((bTar) {
+      var backupTarget = targetModelFromJson(bTar);
+      return !_targets.any((local) => local.playerId == backupTarget.playerId);
+    }).toList();
+
+    for (var lala in filteredBackup) {
+      _targets.add(targetModelFromJson(lala));
+    }
+
+    _saveTargetsSharedPrefs();
     notifyListeners();
   }
 

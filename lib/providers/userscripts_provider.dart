@@ -225,15 +225,22 @@ class UserScriptsProvider extends ChangeNotifier {
     _saveUserScriptsListSharedPrefs();
   }
 
+  /// [defaultToDisabled] makes all scripts inactive, if we can trust them 100% because they come from a shared backup
   void restoreScriptsFromServerSave({
     required bool overwritte,
     required String scriptsList,
+    bool defaultToDisabled = false,
   }) async {
     // If we overwritte, just save to prefs and initialise
     if (overwritte) {
       await Prefs().setUserScriptsList(scriptsList);
       _userScriptList.clear();
       await loadPreferences();
+      if (defaultToDisabled) {
+        for (final script in _userScriptList) {
+          script.enabled = false;
+        }
+      }
       return;
     }
 

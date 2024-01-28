@@ -771,7 +771,7 @@ class AwardsPageState extends State<AwardsPage> {
           Widget image;
           if (value["awardType"] == "Medal") {
             image = Image.asset(
-              'images/awards/medals/${value["img"]}.png',
+              'images/awards/medals/${value["id"]}.png',
               errorBuilder: (
                 BuildContext context,
                 Object exception,
@@ -782,7 +782,7 @@ class AwardsPageState extends State<AwardsPage> {
             );
           } else {
             image = Image.asset(
-              'images/awards/honors/${value["img"]}.png',
+              'images/awards/honors/${value["id"]}.png',
               errorBuilder: (
                 BuildContext context,
                 Object exception,
