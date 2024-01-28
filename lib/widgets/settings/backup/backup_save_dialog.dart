@@ -21,6 +21,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
   double vPad = 20;
   double frame = 10;
 
+  bool _uploadInProgress = false;
   late Future _serverPrefsFetched;
   String _serverError = "";
   Map<String, dynamic> _serverPrefs = {};
@@ -110,11 +111,13 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
                 children: [
                   if (_selectedItems.isNotEmpty && _serverError.isEmpty)
                     TextButton(
-                      onPressed: () {
-                        _sendOnlineBackup();
+                      onPressed: () async {
+                        await _sendOnlineBackup();
                         Navigator.pop(context);
                       },
-                      child: Text("Save", style: TextStyle(color: Colors.green)),
+                      child: _uploadInProgress
+                          ? Container(height: 20, width: 20, child: CircularProgressIndicator())
+                          : Text("Save", style: TextStyle(color: Colors.green)),
                     ),
                   TextButton(
                     onPressed: () {
@@ -220,44 +223,59 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
   Future<void> _sendOnlineBackup() async {
     Map<String, dynamic> prefs = {};
 
-    // Shortcuts
-    if (_selectedItems.contains("shortcuts")) {
-      final activeShortcutsList = await Prefs().getActiveShortcutsList();
-      final shortcutTile = await Prefs().getShortcutTile();
-      final shortcutMenu = await Prefs().getShortcutMenu();
-      prefs.addEntries([
-        MapEntry("pda_activeShortcutsList", activeShortcutsList),
-        MapEntry("pda_shortcutTile", shortcutTile),
-        MapEntry("pda_shortcutMenu", shortcutMenu),
-      ]);
-    }
+    String message = "";
+    Color color = Colors.green;
 
-    // Userscripts
-    if (_selectedItems.contains("userscripts")) {
-      final activeUserscriptsList = await Prefs().getUserScriptsList();
-      prefs.addEntries([
-        MapEntry("pda_userScriptsList", activeUserscriptsList),
-      ]);
-    }
+    setState(() {
+      _uploadInProgress = true;
+    });
 
-    // Targets
-    if (_selectedItems.contains("targets")) {
-      final targetsList = await Prefs().getTargetsList();
-      prefs.addEntries([
-        MapEntry("pda_targetsList", targetsList),
-      ]);
-    }
+    try {
+      // Shortcuts
+      if (_selectedItems.contains("shortcuts")) {
+        final activeShortcutsList = await Prefs().getActiveShortcutsList();
+        final shortcutTile = await Prefs().getShortcutTile();
+        final shortcutMenu = await Prefs().getShortcutMenu();
+        prefs.addEntries([
+          MapEntry("pda_activeShortcutsList", activeShortcutsList),
+          MapEntry("pda_shortcutTile", shortcutTile),
+          MapEntry("pda_shortcutMenu", shortcutMenu),
+        ]);
+      }
 
-    // Send to server
-    final result = await firebaseFunctions.saveUserPrefs(
-      userId: widget.userProfile.playerId ?? 0,
-      apiKey: widget.userProfile.userApiKey.toString(),
-      prefs: prefs,
-    );
+      // Userscripts
+      if (_selectedItems.contains("userscripts")) {
+        final activeUserscriptsList = await Prefs().getUserScriptsList();
+        prefs.addEntries([
+          MapEntry("pda_userScriptsList", activeUserscriptsList),
+        ]);
+      }
+
+      // Targets
+      if (_selectedItems.contains("targets")) {
+        final targetsList = await Prefs().getTargetsList();
+        prefs.addEntries([
+          MapEntry("pda_targetsList", targetsList),
+        ]);
+      }
+
+      // Send to server
+      final result = await firebaseFunctions.saveUserPrefs(
+        userId: widget.userProfile.playerId ?? 0,
+        apiKey: widget.userProfile.userApiKey.toString(),
+        prefs: prefs,
+      );
+
+      message = result["message"];
+      color = result["success"] ? Colors.green : Colors.red;
+    } catch (e) {
+      message = "Error: $e";
+      color = Colors.red;
+    }
 
     BotToast.showText(
-      text: result["message"],
-      contentColor: result["success"] ? Colors.green : Colors.red,
+      text: message,
+      contentColor: color,
       textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
@@ -265,6 +283,10 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
       duration: const Duration(seconds: 10),
       contentPadding: const EdgeInsets.all(10),
     );
+
+    setState(() {
+      _uploadInProgress = false;
+    });
   }
 
   Future _getOriginalServerPrefs() async {

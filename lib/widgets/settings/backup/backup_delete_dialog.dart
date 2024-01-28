@@ -17,6 +17,7 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
   double vPad = 20;
   double frame = 10;
 
+  bool _deleteInProgress = false;
   late Future _serverPrefsFetched;
   String _serverError = "";
   Map<String, dynamic> _serverPrefs = {};
@@ -99,25 +100,50 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
               children: [
                 if (_serverPrefs.isNotEmpty)
                   TextButton(
-                    child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                    child: _deleteInProgress
+                        ? Container(
+                            width: 20,
+                            height: 20,
+                            child: const CircularProgressIndicator(),
+                          )
+                        : const Text("Delete", style: TextStyle(color: Colors.red)),
                     onPressed: () async {
-                      Navigator.of(context).pop();
+                      setState(() {
+                        _deleteInProgress = true;
+                      });
 
-                      final result = await firebaseFunctions.deleteUserPrefs(
-                        userId: widget.userProfile.playerId ?? 0,
-                        apiKey: widget.userProfile.userApiKey.toString(),
-                      );
+                      String message = "";
+                      Color color = Colors.green;
+
+                      try {
+                        final result = await firebaseFunctions.deleteUserPrefs(
+                          userId: widget.userProfile.playerId ?? 0,
+                          apiKey: widget.userProfile.userApiKey.toString(),
+                        );
+
+                        message = result["message"];
+                        color = result["success"] ? Colors.green : Colors.red;
+                      } catch (e) {
+                        message = "Error: $e";
+                        color = Colors.red;
+                      }
 
                       BotToast.showText(
-                        text: result["message"],
-                        contentColor: result["success"] ? Colors.green : Colors.red,
+                        text: message,
+                        contentColor: color,
                         textStyle: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
                         ),
-                        duration: const Duration(seconds: 10),
+                        duration: const Duration(seconds: 4),
                         contentPadding: const EdgeInsets.all(10),
                       );
+
+                      setState(() {
+                        _deleteInProgress = false;
+                      });
+
+                      Navigator.of(context).pop();
                     },
                   ),
                 TextButton(

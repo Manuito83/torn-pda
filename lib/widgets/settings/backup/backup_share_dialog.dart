@@ -41,6 +41,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
   bool _ownSharePasswordVisible = false;
 
   // Initial share settings (to detect unsaved changes)
+  bool _savingOwnShare = false;
   bool _ownShareEnabledInit = false;
   String _ownSharePasswordInit = "";
   final _ownSelectedItemsInit = <String>["shortcuts", "userscripts", "targets"];
@@ -208,17 +209,37 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                             onPressed: () async {
                               if (_ownSharePasswordFormKey.currentState != null &&
                                   _ownSharePasswordFormKey.currentState!.validate()) {
-                                final result = await firebaseFunctions.saveOwnBackupShare(
-                                  apiKey: widget.userProfile.userApiKey.toString(),
-                                  userId: widget.userProfile.playerId ?? 0,
-                                  ownShareEnabled: _ownShareEnabled,
-                                  ownSharePassword: _ownSharePasswordController.text,
-                                  prefs: _ownSelectedItems,
-                                );
+                                setState(() {
+                                  _savingOwnShare = true;
+                                });
+
+                                String message = "";
+                                Color color = Colors.green;
+
+                                try {
+                                  final result = await firebaseFunctions.saveOwnBackupShare(
+                                    apiKey: widget.userProfile.userApiKey.toString(),
+                                    userId: widget.userProfile.playerId ?? 0,
+                                    ownShareEnabled: _ownShareEnabled,
+                                    ownSharePassword: _ownSharePasswordController.text,
+                                    prefs: _ownSelectedItems,
+                                  );
+
+                                  message = result["message"];
+                                  color = result["success"] ? Colors.green : Colors.red;
+
+                                  if (result["success"]) {
+                                    _updateLastSavedParamsOwnShare();
+                                  }
+                                } catch (e) {
+                                  message = "Error: $e";
+                                  color = Colors.red;
+                                }
 
                                 BotToast.showText(
-                                  text: result["message"],
-                                  contentColor: result["success"] ? Colors.green : Colors.red,
+                                  text: message,
+                                  contentColor: color,
+                                  clickClose: true,
                                   textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
@@ -227,12 +248,18 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                                   contentPadding: const EdgeInsets.all(10),
                                 );
 
-                                if (result["success"]) {
-                                  _updateLastSavedParamsOwnShare();
-                                }
+                                setState(() {
+                                  _savingOwnShare = false;
+                                });
                               }
                             },
-                            child: Text("Save"),
+                            child: _savingOwnShare
+                                ? Container(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : const Text("Save"),
                           ),
                         if (_tabController.index == 1 &&
                             _importedPrefs.isNotEmpty &&
