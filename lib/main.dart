@@ -57,8 +57,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '3.3.0';
-const String androidCompilation = '375';
-const String iosCompilation = '375';
+const String androidCompilation = '376';
+const String iosCompilation = '376';
 
 // TODO
 const bool pointFunctionsEmulatorToLocal = false;

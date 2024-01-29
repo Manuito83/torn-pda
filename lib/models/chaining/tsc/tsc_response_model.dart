@@ -102,7 +102,7 @@ class StatInterval {
   factory StatInterval.fromJson(Map<String, dynamic> json) => StatInterval(
         min: json["min"],
         max: json["max"],
-        battleScore: json["battleScore"],
+        battleScore: json["battleScore"].toDouble(),
         fairFight: json["fairFight"],
         lastUpdated: json["lastUpdated"],
       );
