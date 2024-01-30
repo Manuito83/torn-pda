@@ -2097,19 +2097,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _userScriptsProvider.checkForUpdates().then((i) async {
       // Check if we need to show a notification (only if there are any new updates)
       if (i - alreadyAvailableCount > 0) {
+        flutterLocalNotificationsPlugin.cancel(777);
         flutterLocalNotificationsPlugin.show(
             777,
-            "Torn PDA",
+            "Script Update Available",
             "You have $i script update${i == 1 ? "" : "s"} available, visit the UserScripts "
                 "section to update them.",
             const NotificationDetails(
               android: AndroidNotificationDetails(
-                "torn_pda",
-                "Torn PDA",
-                importance: Importance.max,
+                "Script Update",
+                "Script Update",
+                channelDescription: "Torn PDA Script Updates",
                 priority: Priority.high,
-                showWhen: false,
-                ticker: "ticker",
+                visibility: NotificationVisibility.public,
+                icon: "notification_icon",
+                color: Colors.grey,
               ),
               iOS: DarwinNotificationDetails(
                 presentAlert: true,
