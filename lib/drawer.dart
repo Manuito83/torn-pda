@@ -2097,27 +2097,46 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _userScriptsProvider.checkForUpdates().then((i) async {
       // Check if we need to show a notification (only if there are any new updates)
       if (i - alreadyAvailableCount > 0) {
+        const String channelTitle = 'Manual scripts';
+        const String channelSubtitle = 'Manual scripts';
+        const String channelDescription = 'Manual notifications for scripts';
+        final String notificationTitle = 'Script Update Available';
+        final String notificationSubtitle = 'You have $i script update${i == 1 ? "" : "s"} available, '
+            'visit the UserScripts section to update them';
+        final int notificationId = 777;
+        final String notificationPayload = "scriptupdate";
+
+        final modifier = await getNotificationChannelsModifiers();
+        final androidPlatformChannelSpecifics = AndroidNotificationDetails(
+          "$channelTitle ${modifier.channelIdModifier}",
+          "$channelSubtitle ${modifier.channelIdModifier}",
+          channelDescription: channelDescription,
+          priority: Priority.high,
+          visibility: NotificationVisibility.public,
+          icon: 'notification_icon',
+          color: Colors.grey,
+          ledColor: const Color.fromARGB(255, 255, 0, 0),
+          ledOnMs: 1000,
+          ledOffMs: 500,
+        );
+
+        const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+          presentSound: true,
+          sound: 'slow_spring_board.aiff',
+        );
+
+        final platformChannelSpecifics = NotificationDetails(
+          android: androidPlatformChannelSpecifics,
+          iOS: iOSPlatformChannelSpecifics,
+        );
+
         flutterLocalNotificationsPlugin.show(
-            777,
-            "Torn PDA",
-            "You have $i script update${i == 1 ? "" : "s"} available, visit the UserScripts "
-                "section to update them.",
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                "torn_pda",
-                "Torn PDA",
-                importance: Importance.max,
-                priority: Priority.high,
-                showWhen: false,
-                ticker: "ticker",
-              ),
-              iOS: DarwinNotificationDetails(
-                presentAlert: true,
-                presentBadge: true,
-                presentSound: true,
-              ),
-            ),
-            payload: "scriptupdate");
+          notificationId,
+          notificationTitle,
+          notificationSubtitle,
+          platformChannelSpecifics,
+          payload: notificationPayload,
+        );
       }
       log("UserScripts checkForUpdates() completed with $i updates available, "
           "$alreadyAvailableCount already prompted");
