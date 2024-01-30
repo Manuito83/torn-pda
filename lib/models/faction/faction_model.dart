@@ -155,6 +155,7 @@ class Member {
   String? personalNoteColor = "";
   bool? hidden = false;
   String? statsEstimated = "";
+  // Spies parameters
   String? spiesSource = "yata";
   int? statsExactTotal = -1;
   int? statsExactTotalUpdated;

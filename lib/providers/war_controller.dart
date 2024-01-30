@@ -397,7 +397,7 @@ class WarController extends GetxController {
           f.members![apiMemberId]!.position = apiMember.position;
           f.members![apiMemberId]!.name = apiMember.name;
 
-          _assignSpiedStats(f.members![apiMemberId]);
+          _assignSpiedStats(f.members![apiMemberId]!);
 
           if (allAttacksSuccess is AttackModel) {
             _getRespectFF(
@@ -870,12 +870,12 @@ class WarController extends GetxController {
     }
   }
 
-  void _assignSpiedStats(Member? member) {
+  void _assignSpiedStats(Member member) {
     final SpiesController spy = Get.find<SpiesController>();
 
     if (spy.spiesSource == SpiesSource.yata) {
       for (final YataSpyModel spy in spy.yataSpies) {
-        if (spy.targetName == member!.name) {
+        if (spy.targetName == member.name) {
           member.spiesSource = "yata";
           member.statsExactTotal = member.statsSort = spy.total;
           member.statsExactTotalUpdated = spy.totalTimestamp;
@@ -899,7 +899,7 @@ class WarController extends GetxController {
       }
     } else {
       for (final SpyElement spy in spy.tornStatsSpies.spies) {
-        if (spy.playerName == member!.name) {
+        if (spy.playerName == member.name) {
           member.spiesSource = "tornstats";
           member.statsExactTotal = member.statsSort = spy.total;
           member.statsExactUpdated = spy.timestamp;
