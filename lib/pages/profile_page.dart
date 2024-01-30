@@ -3554,13 +3554,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               const SizedBox(height: 4),
               _companyAddictionWidget(),
               const SizedBox(height: 8),
-              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
-              const SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
                     child: SelectableText(
-                      'Battle Stats (effective): ${decimalFormat.format(totalEffective)}',
+                      'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
                     ),
                   ),
                   if (totalEffectiveModifier < 0)
@@ -3579,6 +3577,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     )
                 ],
               ),
+              const SizedBox(height: 2),
+              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
               if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
                 FutureBuilder(
                   future: _statsChartDataFetched,
@@ -3660,6 +3660,117 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: _companyAddictionWidget(),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Row(
+                  children: [
+                    const Text(
+                      'EFFECTIVE STATS',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    GestureDetector(
+                      child: const Icon(Icons.copy, size: 14),
+                      onTap: () {
+                        _shareMisc(shareType: "effective");
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Strength: '),
+                        ),
+                        SelectableText(decimalFormat.format(strengthModifiedTotal)),
+                        if (strengthModified)
+                          Text(
+                            " $strengthString",
+                            style: TextStyle(color: strengthColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Defense: '),
+                        ),
+                        SelectableText(decimalFormat.format(defenseModifiedTotal)),
+                        if (defenseModified)
+                          Text(
+                            " $defenseString",
+                            style: TextStyle(color: defenseColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Speed: '),
+                        ),
+                        SelectableText(decimalFormat.format(speedModifiedTotal)),
+                        if (speedModified)
+                          Text(
+                            " $speedString",
+                            style: TextStyle(color: speedColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Dexterity: '),
+                        ),
+                        SelectableText(decimalFormat.format(dexModifiedTotal)),
+                        if (dexModified)
+                          Text(
+                            " $dexString",
+                            style: TextStyle(color: dexColor, fontSize: 12),
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
+                    ),
+                    SizedBox(
+                      width: 50,
+                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text(
+                            'Total: ',
+                          ),
+                        ),
+                        SelectableText(
+                          decimalFormat.format(totalEffective),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
               Padding(
@@ -3781,117 +3892,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 )
               else
                 const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  children: [
-                    const Text(
-                      'EFFECTIVE STATS',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    GestureDetector(
-                      child: const Icon(Icons.copy, size: 14),
-                      onTap: () {
-                        _shareMisc(shareType: "effective");
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Strength: '),
-                        ),
-                        SelectableText(decimalFormat.format(strengthModifiedTotal)),
-                        if (strengthModified)
-                          Text(
-                            " $strengthString",
-                            style: TextStyle(color: strengthColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Defense: '),
-                        ),
-                        SelectableText(decimalFormat.format(defenseModifiedTotal)),
-                        if (defenseModified)
-                          Text(
-                            " $defenseString",
-                            style: TextStyle(color: defenseColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Speed: '),
-                        ),
-                        SelectableText(decimalFormat.format(speedModifiedTotal)),
-                        if (speedModified)
-                          Text(
-                            " $speedString",
-                            style: TextStyle(color: speedColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Dexterity: '),
-                        ),
-                        SelectableText(decimalFormat.format(dexModifiedTotal)),
-                        if (dexModified)
-                          Text(
-                            " $dexString",
-                            style: TextStyle(color: dexColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    SizedBox(
-                      width: 50,
-                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text(
-                            'Total: ',
-                          ),
-                        ),
-                        SelectableText(
-                          decimalFormat.format(totalEffective),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
