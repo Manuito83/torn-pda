@@ -90,7 +90,7 @@ class UserScriptModel {
   }
 
   factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
-      {String? url, UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote, bool? isExample}) {
+      {String? url, UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote, bool? isExample, String? name, String? source, UserScriptTime? time}) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }
@@ -99,13 +99,13 @@ class UserScriptModel {
       throw Exception("No script source found in userscript");
     }
     return UserScriptModel(
-      name: metaMap["name"],
+      name: name ?? metaMap["name"],
       version: metaMap["version"] ?? 0,
-      source: metaMap["source"],
+      source: source ?? metaMap["source"],
       matches: metaMap["matches"] ?? ["*"],
-      url: url,
+      url: url ?? metaMap["downloadURL"],
       updateStatus: updateStatus,
-      time: metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end,
+      time: time ?? (metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end),
       isExample: isExample ?? false,
     );
   }
@@ -200,8 +200,8 @@ class UserScriptModel {
     };
   }
 
-  shouldInject(String url, [UserScriptTime? time]) => matches
-      .any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))) && (this.time == time || time == null));
+  shouldInject(String url, [UserScriptTime? time]) => enabled && (this.time == time || time == null) &&  matches
+      .any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
 
   void update({
     bool? enabled,
