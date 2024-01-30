@@ -77,10 +77,47 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                     String error = tsc.message;
                     return Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 100),
-                        child: Text(
-                          "Error: $error",
-                          style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+                        padding: EdgeInsets.only(top: tsc.code == 3 ? 50 : 100),
+                        child: Column(
+                          children: [
+                            Text(
+                              "Error: $error",
+                              style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                            if (tsc.code == 3)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                                child: EasyRichText(
+                                  "Make sure you have registered as an user in TSC's Discord server if you haven't "
+                                  "done so yet, as it is needed in order to fetch data from the service.\n\nIf you "
+                                  "have, make sure you are using the correct key or that an alternative key has been "
+                                  "provided in Torn PDA Settings",
+                                  patternList: [
+                                    EasyRichTextPattern(
+                                      targetString: "TSC's Discord server",
+                                      style: TextStyle(
+                                        decoration: TextDecoration.underline,
+                                        color: Colors.blue[400],
+                                      ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () async {
+                                          Navigator.of(context).pop();
+                                          const url = 'https://discord.gg/eegQhTUqPS';
+                                          await context.read<WebViewProvider>().openBrowserPreference(
+                                                context: context,
+                                                url: url,
+                                                browserTapType: BrowserTapType.short,
+                                              );
+                                        },
+                                    ),
+                                  ],
+                                  defaultStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: widget.themeProvider.mainText,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     );
@@ -90,6 +127,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                         EasyRichText(
                           "The Torn Stats Central implementation in Torn PDA is part of a bigger stats estimation algorithm "
                           "developed by Mavri, which you can review in its own forum thread.\n\n"
+                          "You will need to register as an user in TSC's Dicord server if you haven't done so yet\n\n"
                           "IMPORTANT: please be aware that by making use of TSC in Torn PDA, your API Key WILL be shared "
                           "with TSC.\n\nAs with other service providers, you can configure an alternative API Key in Torn "
                           "PDA Settings. A Limited key is needed.",
@@ -129,10 +167,21 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                                 },
                             ),
                             EasyRichTextPattern(
-                              targetString: 'IMPORTANT',
+                              targetString: "TSC's Dicord server",
                               style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                                color: Colors.blue[400],
                               ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () async {
+                                  Navigator.of(context).pop();
+                                  const url = 'https://discord.gg/eegQhTUqPS';
+                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
                             ),
                           ],
                           defaultStyle: TextStyle(
