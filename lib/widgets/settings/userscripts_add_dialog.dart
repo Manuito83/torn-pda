@@ -608,7 +608,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       if (!widget.editExisting) {
         try {
           final metaMap = UserScriptModel.parseHeader(inputSource);
-          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(metaMap));
+          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(metaMap, name: inputName, source: inputSource, time: inputTime));
         } on Exception catch (e) {
           if (e.toString().contains("No header found")) {
             BotToast.showText(
