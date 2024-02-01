@@ -33,6 +33,14 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _userScriptsNotifyUpdates = true;
+  bool get userScriptsNotifyUpdates => _userScriptsNotifyUpdates;
+  set setUserScriptsNotifyUpdates(bool enabled) {
+    _userScriptsNotifyUpdates = enabled;
+    Prefs().setUserScriptsNotifyUpdates(enabled);
+    notifyListeners();
+  }
+
   List<String?> get defaultScriptUrls => UserScriptModel.exampleScriptURLs;
 
   UnmodifiableListView<UserScript> getHandlerSources({
