@@ -922,46 +922,31 @@ class WarController extends GetxController {
       _deleteSpiedStats(member);
     }
 
-    // Find the spy based in the current selected spy source
+        // Find the spy based in the current selected spy source
     if (spyController.spiesSource == SpiesSource.yata) {
-      for (final YataSpyModel spy in spyController.yataSpies) {
-        if (spy.targetName == member.name) {
-          assignYataSpy(member, spy);
-
+      final spy = spyController.getYataSpy(userId: member.memberId.toString(), name: member.name);
+      if (spy != null) {
+        assignYataSpy(member, spy);
+        spyFound = true;
+      } else if (spyController.allowMixedSpiesSources) {
+        // Check alternate source of spies if we allow mixed sources
+        final altSpy = spyController.getTornStatsSpy(userId: member.memberId.toString());
+        if (altSpy != null) {
+          assignTornStatsSpy(member, altSpy);
           spyFound = true;
-          break;
         }
       }
     } else if (spyController.spiesSource == SpiesSource.tornStats) {
-      for (final SpyElement spy in spyController.tornStatsSpies.spies) {
-        if (spy.playerName == member.name) {
-          assignTornStatsSpy(member, spy);
-
+      final spy = spyController.getTornStatsSpy(userId: member.memberId.toString());
+      if (spy != null) {
+        assignTornStatsSpy(member, spy);
+        spyFound = true;
+      } else if (spyController.allowMixedSpiesSources) {
+        // Check alternate source of spies if we allow mixed sources
+        final altSpy = spyController.getYataSpy(userId: member.memberId.toString(), name: member.name);
+        if (altSpy != null) {
+          assignYataSpy(member, altSpy);
           spyFound = true;
-          break;
-        }
-      }
-    }
-
-    // If we didn't find a spy and we allow mixed spies sources, search in the other source
-    if (spyController.allowMixedSpiesSources && !spyFound) {
-      if (spyController.spiesSource == SpiesSource.tornStats) {
-        for (final YataSpyModel spy in spyController.yataSpies) {
-          if (spy.targetName == member.name) {
-            assignYataSpy(member, spy);
-
-            spyFound = true;
-            break;
-          }
-        }
-      } else if (spyController.spiesSource == SpiesSource.yata) {
-        for (final SpyElement spy in spyController.tornStatsSpies.spies) {
-          if (spy.playerName == member.name) {
-            assignTornStatsSpy(member, spy);
-
-            spyFound = true;
-            break;
-          }
         }
       }
     }

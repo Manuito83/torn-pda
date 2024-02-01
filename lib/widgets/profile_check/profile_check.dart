@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
@@ -675,89 +676,34 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       additional.add(const SizedBox(width: 5));
     }
 
-    int? strength = 0;
-    int? strengthUpdate;
-    int? defense = 0;
-    int? defenseUpdate;
-    int? speed = 0;
-    int? speedUpdate;
-    int? dexterity = 0;
-    int? dexterityUpdate;
-    int? total = 0;
     SpiesSource? spySource;
     int? totalUpdate;
     int? spyUpdated;
-    bool spyFound = false;
+    YataSpyModel? yataSpy;
 
     // Locate the spy first based on the active source
     try {
+      // Find the spy based in the current selected spy source
       if (_spyController.spiesSource == SpiesSource.yata) {
-        for (var spy in _spyController.yataSpies) {
-          if (spy.targetName == otherProfile.name) {
-            strength = spy.strength;
-            strengthUpdate = spy.strengthTimestamp;
-            defense = spy.defense;
-            defenseUpdate = spy.defenseTimestamp;
-            speed = spy.speed;
-            speedUpdate = spy.speedTimestamp;
-            dexterity = spy.dexterity;
-            dexterityUpdate = spy.dexterityTimestamp;
-            total = spy.total;
-            spySource = SpiesSource.yata;
-            totalUpdate = spy.totalTimestamp;
-            spyUpdated = spy.update;
-            spyFound = true;
-            continue;
+        final spy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
+        if (spy != null) {
+          yataSpy = spy;
+        } else if (_spyController.allowMixedSpiesSources) {
+          // Check alternate source of spies if we allow mixed sources
+          final altSpy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
+          if (altSpy != null) {
+            yataSpy = altSpy.toYataModel();
           }
         }
       } else if (_spyController.spiesSource == SpiesSource.tornStats) {
-        for (var spy in _spyController.tornStatsSpies.spies) {
-          if (spy.playerName == otherProfile.name) {
-            strength = spy.strength;
-            defense = spy.defense;
-            speed = spy.speed;
-            dexterity = spy.dexterity;
-            total = spy.total;
-            spySource = SpiesSource.tornStats;
-            spyFound = true;
-            continue;
-          }
-        }
-      }
-
-      // If not fount and mixed sources are allowed, try the other source
-      if (_spyController.allowMixedSpiesSources && !spyFound) {
-        if (_spyController.spiesSource == SpiesSource.yata) {
-          for (var spy in _spyController.tornStatsSpies.spies) {
-            if (spy.playerName == otherProfile.name) {
-              strength = spy.strength;
-              defense = spy.defense;
-              speed = spy.speed;
-              dexterity = spy.dexterity;
-              total = spy.total;
-              spySource = SpiesSource.tornStats;
-              spyFound = true;
-              continue;
-            }
-          }
-        } else if (_spyController.spiesSource == SpiesSource.tornStats) {
-          for (var spy in _spyController.yataSpies) {
-            if (spy.targetName == otherProfile.name) {
-              strength = spy.strength;
-              strengthUpdate = spy.strengthTimestamp;
-              defense = spy.defense;
-              defenseUpdate = spy.defenseTimestamp;
-              speed = spy.speed;
-              speedUpdate = spy.speedTimestamp;
-              dexterity = spy.dexterity;
-              dexterityUpdate = spy.dexterityTimestamp;
-              total = spy.total;
-              spySource = SpiesSource.yata;
-              totalUpdate = spy.totalTimestamp;
-              spyUpdated = spy.update;
-              spyFound = true;
-              continue;
-            }
+        final spy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
+        if (spy != null) {
+          yataSpy = spy.toYataModel();
+        } else if (_spyController.allowMixedSpiesSources) {
+          // Check alternate source of spies if we allow mixed sources
+          final altSpy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
+          if (altSpy != null) {
+            yataSpy = altSpy;
           }
         }
       }
@@ -795,9 +741,14 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       ],
     );
 
-    if (spyFound) {
+    if (yataSpy != null) {
       // Stats spans
       final statsSpans = <TextSpan>[];
+      final strength = yataSpy.strength;
+      final speed = yataSpy.speed;
+      final defense = yataSpy.defense;
+      final dexterity = yataSpy.dexterity;
+      final total = yataSpy.total;
       // STR
       var strColor = Colors.white;
       if (strength != -1) {
@@ -985,13 +936,13 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               final spiesPayload = SpiesPayload(
                                 spyController: _spyController,
                                 strength: strength ?? -1,
-                                strengthUpdate: strengthUpdate,
+                                strengthUpdate: yataSpy?.strengthTimestamp ?? -1,
                                 defense: defense ?? -1,
-                                defenseUpdate: defenseUpdate,
+                                defenseUpdate: yataSpy?.defenseTimestamp ?? -1,
                                 speed: speed ?? -1,
-                                speedUpdate: speedUpdate,
+                                speedUpdate: yataSpy?.speedTimestamp ?? -1,
                                 dexterity: dexterity ?? -1,
-                                dexterityUpdate: dexterityUpdate,
+                                dexterityUpdate: yataSpy?.dexterityTimestamp ?? -1,
                                 total: total ?? -1,
                                 totalUpdate: totalUpdate,
                                 update: spyUpdated,
@@ -1041,7 +992,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           ),
         ),
       );
-    } else if (!spyFound) {
+    } else if (yataSpy == null) {
       _statsWidget = Container(
         color: Colors.grey[900],
         child: Padding(

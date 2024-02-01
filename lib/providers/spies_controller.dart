@@ -232,4 +232,27 @@ class SpiesController extends GetxController {
 
     return false;
   }
+
+  // Allow name lookup for YATA as old spies will be missing the ID
+  YataSpyModel? getYataSpy({required String userId, String? name}) {
+    if (name == null) {
+      return _yataSpies.firstWhereOrNull((spy) => spy.targetId == userId);
+    } else {
+      YataSpyModel? namedResponse;
+      // This looks weird, but it's to ensure that the ID will always take priority. Either an ID match is found,
+      // or the last matching name is returned. This is to ensure that if a user changes names with someone,
+      // their spies will not be mixed unless the spy data is missing their ID.
+      return _yataSpies.firstWhereOrNull((spy) {
+            if (spy.targetName == name) {
+              namedResponse = spy;
+            }
+            return spy.targetId == userId;
+          }) ??
+          namedResponse;
+    }
+  }
+
+  SpyElement? getTornStatsSpy({required String userId}) {
+    return _tornStatsSpies.spies.firstWhereOrNull((spy) => spy.playerId == userId);
+  }
 }

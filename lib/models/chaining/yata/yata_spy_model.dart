@@ -23,6 +23,7 @@ class YataSpyModel {
     this.totalTimestamp,
     this.update,
     this.targetName,
+    this.targetId,
     this.targetFactionName,
     this.targetFactionId,
   });
@@ -39,6 +40,7 @@ class YataSpyModel {
   int? totalTimestamp;
   int? update;
   String? targetName;
+  String? targetId;
   String? targetFactionName;
   int? targetFactionId;
 
@@ -55,6 +57,7 @@ class YataSpyModel {
     totalTimestamp: json["total_timestamp"],
     update: json["update"],
     targetName: json["target_name"],
+    targetId: json["target_id"],
     targetFactionName: json["target_faction_name"],
     targetFactionId: json["target_faction_id"],
   );
@@ -72,6 +75,7 @@ class YataSpyModel {
     "total_timestamp": totalTimestamp,
     "update": update,
     "target_name": targetName,
+    "target_id": targetId,
     "target_faction_name": targetFactionName,
     "target_faction_id": targetFactionId,
   };
