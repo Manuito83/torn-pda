@@ -42,7 +42,31 @@ class AwardCardState extends State<AwardCard> {
     final Row titleRow = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (award.type == "Honor") award.image! else Text(award.name!.trim()),
+        if (award.type == "Honor")
+          Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              award.image!,
+              Text(
+                award.name!,
+                style: TextStyle(
+                  fontFamily: 'Visitor',
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  backgroundColor: Colors.black.withOpacity(0.2),
+                  shadows: [
+                    Shadow(
+                      offset: Offset(2.0, 2.0),
+                      blurRadius: 2.0,
+                      color: Colors.black,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )
+        else
+          Text(award.name!.trim()),
         Row(
           children: [
             if (award.doubleMerit != null || award.tripleMerit != null || award.nextCrime != null)

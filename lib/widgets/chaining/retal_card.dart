@@ -869,9 +869,9 @@ class RetalCardState extends State<RetalCard> {
               showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
-                  final SpiesController spy = Get.find<SpiesController>();
+                  final SpiesController spyController = Get.find<SpiesController>();
                   final spiesPayload = SpiesPayload(
-                    spy: spy,
+                    spyController: spyController,
                     strength: _retal!.statsStr ?? -1,
                     strengthUpdate: _retal!.statsStrUpdated,
                     defense: _retal!.statsDef ?? -1,
@@ -883,6 +883,7 @@ class RetalCardState extends State<RetalCard> {
                     total: _retal!.statsExactTotal ?? -1,
                     totalUpdate: _retal!.statsExactTotalUpdated,
                     update: _retal!.statsExactUpdated ?? 0,
+                    spySource: _retal!.spySource,
                     name: _retal!.name!,
                     factionName: _retal!.factionName!,
                     themeProvider: _themeProvider,

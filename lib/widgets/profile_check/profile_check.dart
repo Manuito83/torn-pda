@@ -53,7 +53,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   bool _errorToShow = false;
 
   late SettingsProvider _settingsProvider;
-  final SpiesController _spy = Get.find<SpiesController>();
+  final SpiesController _spyController = Get.find<SpiesController>();
 
   late UserDetailsProvider _userDetails;
   final _expandableController = ExpandableController();
@@ -684,12 +684,15 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     int? dexterity = 0;
     int? dexterityUpdate;
     int? total = 0;
+    SpiesSource? spySource;
     int? totalUpdate;
+    int? spyUpdated;
     bool spyFound = false;
 
+    // Locate the spy first based on the active source
     try {
-      if (_spy.spiesSource == SpiesSource.yata) {
-        for (var spy in _spy.yataSpies) {
+      if (_spyController.spiesSource == SpiesSource.yata) {
+        for (var spy in _spyController.yataSpies) {
           if (spy.targetName == otherProfile.name) {
             strength = spy.strength;
             strengthUpdate = spy.strengthTimestamp;
@@ -700,21 +703,61 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             dexterity = spy.dexterity;
             dexterityUpdate = spy.dexterityTimestamp;
             total = spy.total;
+            spySource = SpiesSource.yata;
             totalUpdate = spy.totalTimestamp;
+            spyUpdated = spy.update;
             spyFound = true;
             continue;
           }
         }
-      } else {
-        for (var spy in _spy.tornStatsSpies.spies) {
+      } else if (_spyController.spiesSource == SpiesSource.tornStats) {
+        for (var spy in _spyController.tornStatsSpies.spies) {
           if (spy.playerName == otherProfile.name) {
             strength = spy.strength;
             defense = spy.defense;
             speed = spy.speed;
             dexterity = spy.dexterity;
             total = spy.total;
+            spySource = SpiesSource.tornStats;
             spyFound = true;
             continue;
+          }
+        }
+      }
+
+      // If not fount and mixed sources are allowed, try the other source
+      if (_spyController.allowMixedSpiesSources && !spyFound) {
+        if (_spyController.spiesSource == SpiesSource.yata) {
+          for (var spy in _spyController.tornStatsSpies.spies) {
+            if (spy.playerName == otherProfile.name) {
+              strength = spy.strength;
+              defense = spy.defense;
+              speed = spy.speed;
+              dexterity = spy.dexterity;
+              total = spy.total;
+              spySource = SpiesSource.tornStats;
+              spyFound = true;
+              continue;
+            }
+          }
+        } else if (_spyController.spiesSource == SpiesSource.tornStats) {
+          for (var spy in _spyController.yataSpies) {
+            if (spy.targetName == otherProfile.name) {
+              strength = spy.strength;
+              strengthUpdate = spy.strengthTimestamp;
+              defense = spy.defense;
+              defenseUpdate = spy.defenseTimestamp;
+              speed = spy.speed;
+              speedUpdate = spy.speedTimestamp;
+              dexterity = spy.dexterity;
+              dexterityUpdate = spy.dexterityTimestamp;
+              total = spy.total;
+              spySource = SpiesSource.yata;
+              totalUpdate = spy.totalTimestamp;
+              spyUpdated = spy.update;
+              spyFound = true;
+              continue;
+            }
           }
         }
       }
@@ -911,7 +954,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           child: Row(
             children: [
               Image.asset(
-                _spy.spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                spySource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
                 height: 18,
               ),
               const SizedBox(width: 8),
@@ -928,7 +971,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     ),
                     onlineStatus,
                     Padding(
-                      padding: const EdgeInsets.only(left: 2),
+                      padding: const EdgeInsets.only(left: 8),
                       child: GestureDetector(
                         child: Icon(
                           Icons.info_outline,
@@ -940,7 +983,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             context: context,
                             builder: (BuildContext context) {
                               final spiesPayload = SpiesPayload(
-                                spy: _spy,
+                                spyController: _spyController,
                                 strength: strength ?? -1,
                                 strengthUpdate: strengthUpdate,
                                 defense: defense ?? -1,
@@ -951,7 +994,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 dexterityUpdate: dexterityUpdate,
                                 total: total ?? -1,
                                 totalUpdate: totalUpdate,
-                                update: totalUpdate,
+                                update: spyUpdated,
+                                spySource: spySource,
                                 name: _playerName!,
                                 factionName: _factionName!,
                                 themeProvider: widget.themeProvider!,

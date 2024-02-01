@@ -1365,6 +1365,8 @@ class WebViewProvider extends ChangeNotifier {
       return Image.asset('images/icons/inventory/bazaar.png', color: themeProvider.mainText);
     } else if (url.contains("imarket.php")) {
       return Image.asset('images/icons/map/item_market.png', color: themeProvider.mainText);
+    } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
+      return Image.asset('images/icons/home/crimes.png');
     } else if (url.contains("index.php")) {
       return const ImageIcon(AssetImage('images/icons/home/home.png'));
     }

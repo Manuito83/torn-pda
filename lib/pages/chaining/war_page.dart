@@ -1576,61 +1576,59 @@ class WarTargetsListState extends State<WarTargetsList> {
 
     switch (widget.warController.currentSort) {
       case WarSortType.levelDes:
-        filteredCards.sort((a, b) => b.memberModel!.level!.compareTo(a.memberModel!.level!));
+        filteredCards.sort((a, b) => b.memberModel.level!.compareTo(a.memberModel.level!));
       case WarSortType.levelAsc:
-        filteredCards.sort((a, b) => a.memberModel!.level!.compareTo(b.memberModel!.level!));
+        filteredCards.sort((a, b) => a.memberModel.level!.compareTo(b.memberModel.level!));
       case WarSortType.respectDes:
-        filteredCards.sort((a, b) => b.memberModel!.respectGain!.compareTo(a.memberModel!.respectGain!));
+        filteredCards.sort((a, b) => b.memberModel.respectGain!.compareTo(a.memberModel.respectGain!));
       case WarSortType.respectAsc:
-        filteredCards.sort((a, b) => a.memberModel!.respectGain!.compareTo(b.memberModel!.respectGain!));
+        filteredCards.sort((a, b) => a.memberModel.respectGain!.compareTo(b.memberModel.respectGain!));
       case WarSortType.nameDes:
-        filteredCards.sort((a, b) => b.memberModel!.name!.toLowerCase().compareTo(a.memberModel!.name!.toLowerCase()));
+        filteredCards.sort((a, b) => b.memberModel.name!.toLowerCase().compareTo(a.memberModel.name!.toLowerCase()));
       case WarSortType.nameAsc:
-        filteredCards.sort((a, b) => a.memberModel!.name!.toLowerCase().compareTo(b.memberModel!.name!.toLowerCase()));
+        filteredCards.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));
       case WarSortType.lifeDes:
-        filteredCards.sort((a, b) => b.memberModel!.lifeSort!.compareTo(a.memberModel!.lifeSort!));
+        filteredCards.sort((a, b) => b.memberModel.lifeSort!.compareTo(a.memberModel.lifeSort!));
       case WarSortType.lifeAsc:
-        filteredCards.sort((a, b) => a.memberModel!.lifeSort!.compareTo(b.memberModel!.lifeSort!));
+        filteredCards.sort((a, b) => a.memberModel.lifeSort!.compareTo(b.memberModel.lifeSort!));
       case WarSortType.statsDes:
-        filteredCards.sort((a, b) => b.memberModel!.statsSort!.compareTo(a.memberModel!.statsSort!));
+        filteredCards.sort((a, b) => b.memberModel.statsSort!.compareTo(a.memberModel.statsSort!));
       case WarSortType.statsAsc:
-        filteredCards.sort((a, b) => a.memberModel!.statsSort!.compareTo(b.memberModel!.statsSort!));
+        filteredCards.sort((a, b) => a.memberModel.statsSort!.compareTo(b.memberModel.statsSort!));
       case WarSortType.onlineDes:
         filteredCards
-            .sort((a, b) => b.memberModel!.lastAction!.timestamp!.compareTo(a.memberModel!.lastAction!.timestamp!));
+            .sort((a, b) => b.memberModel.lastAction!.timestamp!.compareTo(a.memberModel.lastAction!.timestamp!));
       case WarSortType.onlineAsc:
         filteredCards
-            .sort((a, b) => a.memberModel!.lastAction!.timestamp!.compareTo(b.memberModel!.lastAction!.timestamp!));
+            .sort((a, b) => a.memberModel.lastAction!.timestamp!.compareTo(b.memberModel.lastAction!.timestamp!));
       case WarSortType.colorDes:
         filteredCards.sort(
-          (a, b) => b.memberModel!.personalNoteColor!
-              .toLowerCase()
-              .compareTo(a.memberModel!.personalNoteColor!.toLowerCase()),
+          (a, b) =>
+              b.memberModel.personalNoteColor!.toLowerCase().compareTo(a.memberModel.personalNoteColor!.toLowerCase()),
         );
       case WarSortType.colorAsc:
         filteredCards.sort(
-          (a, b) => a.memberModel!.personalNoteColor!
-              .toLowerCase()
-              .compareTo(b.memberModel!.personalNoteColor!.toLowerCase()),
+          (a, b) =>
+              a.memberModel.personalNoteColor!.toLowerCase().compareTo(b.memberModel.personalNoteColor!.toLowerCase()),
         );
       case WarSortType.notesDes:
         filteredCards.sort(
-          (a, b) => b.memberModel!.personalNote!.toLowerCase().compareTo(a.memberModel!.personalNote!.toLowerCase()),
+          (a, b) => b.memberModel.personalNote!.toLowerCase().compareTo(a.memberModel.personalNote!.toLowerCase()),
         );
       case WarSortType.notesAsc:
         filteredCards.sort((a, b) {
-          if (a.memberModel!.personalNote!.isEmpty && b.memberModel!.personalNote!.isNotEmpty) {
+          if (a.memberModel.personalNote!.isEmpty && b.memberModel.personalNote!.isNotEmpty) {
             return 1;
-          } else if (a.memberModel!.personalNote!.isNotEmpty && b.memberModel!.personalNote!.isEmpty) {
+          } else if (a.memberModel.personalNote!.isNotEmpty && b.memberModel.personalNote!.isEmpty) {
             return -1;
-          } else if (a.memberModel!.personalNote!.isEmpty && b.memberModel!.personalNote!.isEmpty) {
+          } else if (a.memberModel.personalNote!.isEmpty && b.memberModel.personalNote!.isEmpty) {
             return 0;
           } else {
-            return a.memberModel!.personalNote!.toLowerCase().compareTo(b.memberModel!.personalNote!.toLowerCase());
+            return a.memberModel.personalNote!.toLowerCase().compareTo(b.memberModel.personalNote!.toLowerCase());
           }
         });
       default:
-        filteredCards.sort((a, b) => a.memberModel!.name!.toLowerCase().compareTo(b.memberModel!.name!.toLowerCase()));
+        filteredCards.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));
         break;
     }
 
@@ -1638,10 +1636,10 @@ class WarTargetsListState extends State<WarTargetsList> {
     for (int i = 0; i < filteredCards.length; i++) {
       final WarCardDetails details = WarCardDetails()
         ..cardPosition = i + 1
-        ..memberId = filteredCards[i].memberModel!.memberId
-        ..name = filteredCards[i].memberModel!.name
-        ..personalNote = filteredCards[i].memberModel!.personalNote
-        ..personalNoteColor = filteredCards[i].memberModel!.personalNoteColor;
+        ..memberId = filteredCards[i].memberModel.memberId
+        ..name = filteredCards[i].memberModel.name
+        ..personalNote = filteredCards[i].memberModel.personalNote
+        ..personalNoteColor = filteredCards[i].memberModel.personalNoteColor;
 
       widget.warController.orderedCardsDetails.add(details);
     }
@@ -1651,7 +1649,7 @@ class WarTargetsListState extends State<WarTargetsList> {
 
   Widget slidableCard(WarCard filteredCard) {
     return Slidable(
-      key: ValueKey(filteredCard.memberModel!.memberId),
+      key: ValueKey(filteredCard.memberModel.memberId),
       closeOnScroll: false,
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
@@ -1669,23 +1667,23 @@ class WarTargetsListState extends State<WarTargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
-          if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel!.name).isEmpty)
+          if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel.name).isEmpty)
             SlidableAction(
               label: 'Add to panic!',
               backgroundColor: Colors.blue,
               icon: MdiIcons.alphaPCircleOutline,
               onPressed: (context) {
-                String message = "Added ${filteredCard.memberModel!.name} as a Panic Mode target!";
+                String message = "Added ${filteredCard.memberModel.name} as a Panic Mode target!";
                 Color? messageColor = Colors.green;
 
                 if (_chainStatusProvider.panicTargets.length < 10) {
                   setState(() {
                     _chainStatusProvider.addPanicTarget(
                       PanicTargetModel()
-                        ..name = filteredCard.memberModel!.name
-                        ..level = filteredCard.memberModel!.level
-                        ..id = filteredCard.memberModel!.memberId
-                        ..factionName = filteredCard.memberModel!.factionName,
+                        ..name = filteredCard.memberModel.name
+                        ..level = filteredCard.memberModel.level
+                        ..id = filteredCard.memberModel.memberId
+                        ..factionName = filteredCard.memberModel.factionName,
                     );
                     // Convert to target with the needed fields
                   });
@@ -1713,16 +1711,16 @@ class WarTargetsListState extends State<WarTargetsList> {
               backgroundColor: Colors.blue,
               icon: MdiIcons.alphaPCircleOutline,
               onPressed: (context) {
-                final String message = "Removed ${filteredCard.memberModel!.name} as a Panic Mode target!";
+                final String message = "Removed ${filteredCard.memberModel.name} as a Panic Mode target!";
                 const Color messageColor = Colors.green;
 
                 setState(() {
                   _chainStatusProvider.removePanicTarget(
                     PanicTargetModel()
-                      ..name = filteredCard.memberModel!.name
-                      ..level = filteredCard.memberModel!.level
-                      ..id = filteredCard.memberModel!.memberId
-                      ..factionName = filteredCard.memberModel!.factionName,
+                      ..name = filteredCard.memberModel.name
+                      ..level = filteredCard.memberModel.level
+                      ..id = filteredCard.memberModel.memberId
+                      ..factionName = filteredCard.memberModel.factionName,
                   );
                 });
 

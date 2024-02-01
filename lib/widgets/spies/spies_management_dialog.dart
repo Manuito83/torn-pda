@@ -15,7 +15,7 @@ class SpiesManagementDialog extends StatefulWidget {
 }
 
 class SpiesManagementDialogState extends State<SpiesManagementDialog> {
-  final SpiesController _spy = Get.find<SpiesController>();
+  final SpiesController _spyController = Get.find<SpiesController>();
 
   bool _fetchActive = false;
 
@@ -49,15 +49,15 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
     String lastUpdated = "Never updated";
     int lastUpdatedTs = 0;
 
-    if (_spy.spiesSource == SpiesSource.yata && _spy.yataSpiesTime != null) {
-      lastUpdatedTs = _spy.yataSpiesTime!.millisecondsSinceEpoch;
+    if (_spyController.spiesSource == SpiesSource.yata && _spyController.yataSpiesTime != null) {
+      lastUpdatedTs = _spyController.yataSpiesTime!.millisecondsSinceEpoch;
       if (lastUpdatedTs > 0) {
-        lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+        lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
       }
-    } else if (_spy.spiesSource == SpiesSource.tornStats && _spy.tornStatsSpiesTime != null) {
-      lastUpdatedTs = _spy.tornStatsSpiesTime!.millisecondsSinceEpoch;
+    } else if (_spyController.spiesSource == SpiesSource.tornStats && _spyController.tornStatsSpiesTime != null) {
+      lastUpdatedTs = _spyController.tornStatsSpiesTime!.millisecondsSinceEpoch;
       if (lastUpdatedTs > 0) {
-        lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+        lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
       }
     }
 
@@ -109,7 +109,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                 height: 30,
                 width: 30,
                 child: Image.asset(
-                  _spy.spiesSource == SpiesSource.yata
+                  _spyController.spiesSource == SpiesSource.yata
                       ? 'images/icons/yata_logo.png'
                       : 'images/icons/tornstats_logo.png',
                 ),
@@ -117,9 +117,9 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               GestureDetector(
                 onTap: () {
                   setState(() {
-                    _spy.spiesSource == SpiesSource.yata
-                        ? _spy.spiesSource = SpiesSource.tornStats
-                        : _spy.spiesSource = SpiesSource.yata;
+                    _spyController.spiesSource == SpiesSource.yata
+                        ? _spyController.spiesSource = SpiesSource.tornStats
+                        : _spyController.spiesSource = SpiesSource.yata;
                   });
                 },
                 child: Padding(
@@ -142,7 +142,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                     BlendMode.srcATop,
                   ),
                   child: Image.asset(
-                    _spy.spiesSource != SpiesSource.yata
+                    _spyController.spiesSource != SpiesSource.yata
                         ? 'images/icons/yata_logo.png'
                         : 'images/icons/tornstats_logo.png',
                   ),
@@ -179,14 +179,14 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
 
                 bool success = false;
                 try {
-                  success = _spy.spiesSource == SpiesSource.yata
-                      ? await _spy.fetchYataSpies()
-                      : await _spy.fetchTornStatsSpies();
+                  success = _spyController.spiesSource == SpiesSource.yata
+                      ? await _spyController.fetchYataSpies()
+                      : await _spyController.fetchTornStatsSpies();
                   if (success) {
                     BotToast.showText(
                       clickClose: true,
                       text: "Update successful!\n\n"
-                          "${_spy.spiesSource == SpiesSource.yata ? _spy.yataSpies.length : _spy.tornStatsSpies.spies.length} spies retrieved!",
+                          "${_spyController.spiesSource == SpiesSource.yata ? _spyController.yataSpies.length : _spyController.tornStatsSpies.spies.length} spies retrieved!",
                       textStyle: const TextStyle(
                         fontSize: 14,
                         color: Colors.white,
@@ -277,7 +277,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Updating ${_spy.spiesSource == SpiesSource.yata ? "YATA" : "Torn Stats"}..."),
+                  Text("Updating ${_spyController.spiesSource == SpiesSource.yata ? "YATA" : "Torn Stats"}..."),
                   Text(
                     "(time limit is 60 seconds)",
                     style: TextStyle(
@@ -334,8 +334,8 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
     final spiesCards = <Card>[];
 
     try {
-      if (_spy.spiesSource == SpiesSource.yata) {
-        List<YataSpyModel> sortedListOfSpies = List.from(_spy.yataSpies)
+      if (_spyController.spiesSource == SpiesSource.yata) {
+        List<YataSpyModel> sortedListOfSpies = List.from(_spyController.yataSpies)
           ..sort((a, b) => a.targetName!.trim().compareTo(b.targetName!.trim()));
 
         for (var spy in sortedListOfSpies) {
@@ -362,7 +362,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                             fontSize: 11,
                           ),
                         ),
-                        Text(spy.strength != -1 ? _spy.statsOld(spy.strengthTimestamp) : "",
+                        Text(spy.strength != -1 ? _spyController.statsOld(spy.strengthTimestamp) : "",
                             style: TextStyle(
                               fontSize: 11,
                             )),
@@ -377,7 +377,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                             fontSize: 11,
                           ),
                         ),
-                        Text(spy.defense != -1 ? _spy.statsOld(spy.defenseTimestamp) : "",
+                        Text(spy.defense != -1 ? _spyController.statsOld(spy.defenseTimestamp) : "",
                             style: TextStyle(
                               fontSize: 11,
                             )),
@@ -392,7 +392,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                             fontSize: 11,
                           ),
                         ),
-                        Text(spy.speed != -1 ? _spy.statsOld(spy.speedTimestamp) : "",
+                        Text(spy.speed != -1 ? _spyController.statsOld(spy.speedTimestamp) : "",
                             style: TextStyle(
                               fontSize: 11,
                             )),
@@ -407,7 +407,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                             fontSize: 11,
                           ),
                         ),
-                        Text(spy.dexterity != -1 ? _spy.statsOld(spy.dexterityTimestamp) : "",
+                        Text(spy.dexterity != -1 ? _spyController.statsOld(spy.dexterityTimestamp) : "",
                             style: TextStyle(
                               fontSize: 11,
                             )),
@@ -423,7 +423,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                             fontSize: 11,
                           ),
                         ),
-                        Text(spy.total != -1 ? _spy.statsOld(spy.totalTimestamp) : "",
+                        Text(spy.total != -1 ? _spyController.statsOld(spy.totalTimestamp) : "",
                             style: TextStyle(
                               fontSize: 11,
                             )),
@@ -436,7 +436,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
           );
         }
       } else {
-        final sortedListOfSpies = List.from(_spy.tornStatsSpies.spies)
+        final sortedListOfSpies = List.from(_spyController.tornStatsSpies.spies)
           ..sort((a, b) => a.playerName!.trim().compareTo(b.playerName!.trim()));
 
         for (var spy in sortedListOfSpies) {
@@ -508,7 +508,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                             fontSize: 11,
                           ),
                         ),
-                        Text(spy.total != -1 ? _spy.statsOld(spy.timestamp) : "",
+                        Text(spy.total != -1 ? _spyController.statsOld(spy.timestamp) : "",
                             style: TextStyle(
                               fontSize: 11,
                             )),

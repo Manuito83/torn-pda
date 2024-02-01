@@ -96,6 +96,7 @@ class Prefs {
   final String _kShowSecondsInClock = "pda_showSecondsInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kSpiesSource = "pda_SpiesSource";
+  final String _kAllowMixedSpiesSources = "pda_allowMixedSpiesSources";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
@@ -1075,6 +1076,16 @@ class Prefs {
   Future<bool> setSpiesSource(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kSpiesSource, value);
+  }
+
+  Future<bool> getAllowMixedSpiesSources() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAllowMixedSpiesSources) ?? true;
+  }
+
+  Future<bool> setAllowMixedSpiesSources(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAllowMixedSpiesSources, value);
   }
 
   /// ----------------------------

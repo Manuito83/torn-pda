@@ -64,6 +64,14 @@ class SpiesController extends GetxController {
     update();
   }
 
+  bool _allowMixedSpiesSources = true;
+  bool get allowMixedSpiesSources => _allowMixedSpiesSources;
+  set allowMixedSpiesSources(bool value) {
+    _allowMixedSpiesSources = value;
+    Prefs().setAllowMixedSpiesSources(value);
+    update();
+  }
+
   void saveSpies() {
     if (_spiesSource == SpiesSource.yata) {
       List<String> yataSpiesSave = <String>[];
@@ -97,6 +105,15 @@ class SpiesController extends GetxController {
     if (savedTornStatsSpies.isNotEmpty) {
       _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
     }
+  }
+
+  Future deleteSpies() async {
+    _yataSpiesTime = DateTime.fromMillisecondsSinceEpoch(0);
+    _yataSpies = <YataSpyModel>[];
+    _tornStatsSpiesTime = DateTime.fromMillisecondsSinceEpoch(0);
+    _tornStatsSpies = TornStatsSpiesModel()..spies = <SpyElement>[];
+    saveSpies();
+    update();
   }
 
   String formatUpdateString(int timestamp) {

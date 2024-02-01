@@ -158,10 +158,11 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
         // Use api to get attacks information and see if we have new retals
         const response = await fetch(`https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}`);
-        const apiAttacks = response.json();
+        const apiAttacks = await response.json();
 
         // If permissions are not right, remove this user as a host
-        if (apiAttacks.includes("Incorrect ID-entity relation")) {
+        // Code 7 == Incorrect ID-entity relation
+        if (apiAttacks.error && apiAttacks.error.code === 7) {
             promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
 
             const noPermsUser = await admin
@@ -194,7 +195,8 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         }
 
         // If the key is incorrect, deactivate the user and clean the key in the db
-        if (apiAttacks.includes("Incorrect key")) {
+        // Code 2 == Incorrect Key
+        if (apiAttacks.error && apiAttacks.error.code === 2) {
             promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
 
             const incorrectKeyUser = await admin
@@ -219,7 +221,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
             return;
         }
 
-        const factionModel: FactionModel = JSON.parse(apiAttacks);
+        const factionModel: FactionModel = apiAttacks;
 
         let notificationTitle = "";
         let notificationBody = ""
