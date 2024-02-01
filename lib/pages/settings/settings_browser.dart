@@ -448,6 +448,30 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
+            if (_userScriptsProvider.userScriptsEnabled) 
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        const Text("Notify for Script Updates"),
+                        Switch(
+                          value: _userScriptsProvider.userScriptsNotifyUpdates,
+                          onChanged: (value) {
+                            setState(() {
+                              _userScriptsProvider.setUserScriptsNotifyUpdates = value;
+                            });
+                          },
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.green,
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
             if (_userScriptsProvider.userScriptsEnabled)
               Column(
                 children: [

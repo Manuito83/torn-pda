@@ -2096,7 +2096,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         .length;
     _userScriptsProvider.checkForUpdates().then((i) async {
       // Check if we need to show a notification (only if there are any new updates)
-      if (i - alreadyAvailableCount > 0) {
+      if (_userScriptsProvider.userScriptsNotifyUpdates && i - alreadyAvailableCount > 0) {
         const String channelTitle = 'Manual scripts';
         const String channelSubtitle = 'Manual scripts';
         const String channelDescription = 'Manual notifications for scripts';
@@ -2138,8 +2138,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           payload: notificationPayload,
         );
       }
-      log("UserScripts checkForUpdates() completed with $i updates available, "
-          "$alreadyAvailableCount already prompted");
+      log("UserScripts checkForUpdates() completed with $i updates available, $alreadyAvailableCount "
+          "already prompted, should notify: ${_userScriptsProvider.userScriptsNotifyUpdates}");
     });
   }
 

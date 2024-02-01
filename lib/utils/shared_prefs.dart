@@ -198,6 +198,7 @@ class Prefs {
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
+  final String _kUserScriptsNotifyUpdates = "pda_userScriptsNotifyUpdates";
   final String _kUserScriptsList = "pda_userScriptsList";
   // final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
@@ -2479,6 +2480,16 @@ class Prefs {
   Future<bool> setUserScriptsEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUserScriptsEnabled, value);
+  }
+
+  Future<bool> getUserScriptsNotifyUpdates() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUserScriptsNotifyUpdates) ?? true;
+  }
+
+  Future<bool> setUserScriptsNotifyUpdates(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUserScriptsNotifyUpdates, value);
   }
 
   Future<String?> getUserScriptsList() async {
