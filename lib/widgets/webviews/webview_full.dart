@@ -4419,10 +4419,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       tooltipPadding: const EdgeInsets.all(20),
       child: Padding(
         padding: const EdgeInsets.only(right: 10),
-        child: IconButton(
-          visualDensity: VisualDensity.compact,
-          icon: const Icon(MdiIcons.playPause, color: Colors.white),
-          onPressed: _nextButtonPressed ? null : nextChainAttack,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            splashColor: Colors.orange,
+            child: const Icon(MdiIcons.playPause, color: Colors.white),
+            onTap: _nextButtonPressed ? null : nextChainAttack,
+            onLongPress: () => _webViewProvider.cancelChainingBrowser(),
+          ),
         ),
       ),
     );
@@ -4844,8 +4849,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   clearCacheAndReload() async {
-    // For InAppWebView 6.0 release: await InAppWebViewController.clearAllCache();
-    await webView!.clearCache();
+    await InAppWebViewController.clearAllCache();
     CookieManager cookieManager = CookieManager.instance();
     cookieManager.deleteAllCookies();
     webView!.evaluateJavascript(
