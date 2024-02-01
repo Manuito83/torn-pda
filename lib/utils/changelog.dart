@@ -50,6 +50,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added Torn Stats Central information and merged stats dialogs into one",
           "Spies: added option to allow mixed sources, fixed persistence and other issues",
           "Fixed Awards images",
+          "Fixed other reported issues",
         ],
     );
 

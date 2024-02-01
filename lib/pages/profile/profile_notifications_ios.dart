@@ -11,6 +11,7 @@ import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
 import 'package:torn_pda/pages/profile/jail_ahead_options.dart';
+import 'package:torn_pda/pages/profile/war_ahead_options.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
@@ -324,7 +325,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                       context,
                       MaterialPageRoute(
                         builder: (context) {
-                          return const JailAheadOptions();
+                          return const WarAheadOptions();
                         },
                       ),
                     );
