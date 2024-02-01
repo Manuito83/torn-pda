@@ -12,7 +12,7 @@ import 'package:torn_pda/widgets/stats/tcs_stats_dialog.dart';
 
 class SpiesPayload {
   const SpiesPayload({
-    required this.spy,
+    required this.spyController,
     required this.strength,
     required this.strengthUpdate,
     required this.defense,
@@ -23,6 +23,7 @@ class SpiesPayload {
     required this.dexterityUpdate,
     required this.total,
     required this.totalUpdate,
+    required this.spySource,
     required this.update,
     required this.name,
     required this.factionName,
@@ -30,7 +31,7 @@ class SpiesPayload {
     required this.userDetailsProvider,
   });
 
-  final SpiesController spy;
+  final SpiesController spyController;
   final int? strength;
   final int? strengthUpdate;
   final int? defense;
@@ -42,6 +43,7 @@ class SpiesPayload {
   final int? total;
   final int? totalUpdate;
   final int? update;
+  final SpiesSource? spySource;
   final String? name;
   final String? factionName;
   final ThemeProvider themeProvider;

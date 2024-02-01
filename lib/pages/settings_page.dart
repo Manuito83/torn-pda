@@ -100,7 +100,7 @@ class SettingsPageState extends State<SettingsPage> {
   late ShortcutsProvider _shortcutsProvider;
   late WebViewProvider _webViewProvider;
   final ApiCallerController _apiController = Get.find<ApiCallerController>();
-  final SpiesController _spy = Get.find<SpiesController>();
+  final SpiesController _spyController = Get.find<SpiesController>();
 
   final _expandableController = ExpandableController();
 
@@ -458,15 +458,16 @@ class SettingsPageState extends State<SettingsPage> {
             String lastUpdated = "Never updated";
             int lastUpdatedTs = 0;
 
-            if (_spy.spiesSource == SpiesSource.yata && _spy.yataSpiesTime != null) {
-              lastUpdatedTs = _spy.yataSpiesTime!.millisecondsSinceEpoch;
+            if (_spyController.spiesSource == SpiesSource.yata && _spyController.yataSpiesTime != null) {
+              lastUpdatedTs = _spyController.yataSpiesTime!.millisecondsSinceEpoch;
               if (lastUpdatedTs > 0) {
-                lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
               }
-            } else if (_spy.spiesSource == SpiesSource.tornStats && _spy.tornStatsSpiesTime != null) {
-              lastUpdatedTs = _spy.tornStatsSpiesTime!.millisecondsSinceEpoch;
+            } else if (_spyController.spiesSource == SpiesSource.tornStats &&
+                _spyController.tornStatsSpiesTime != null) {
+              lastUpdatedTs = _spyController.tornStatsSpiesTime!.millisecondsSinceEpoch;
               if (lastUpdatedTs > 0) {
-                lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
               }
             }
 
@@ -536,6 +537,96 @@ class SettingsPageState extends State<SettingsPage> {
                 },
               ),
             ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Allow mixed sources",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _spyController.allowMixedSpiesSources,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _spyController.allowMixedSpiesSources = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "If enabled, if a target's spy information cannot be found in the preferred spies source, it will also "
+            "be taken from the other source if available. When switching from one source to the other, the spy "
+            "information is preserved unless the new active source also contains a spy for a target",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Delete spies",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                child: const Icon(Icons.delete_outlined),
+                onPressed: () async {
+                  _spyController.deleteSpies();
+
+                  BotToast.showText(
+                    text: "Spies deleted!",
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.blue,
+                    duration: const Duration(seconds: 1),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Deletes all the spies information available in the local database if case you would prefer not to use '
+            'spies information or if there is a problem with the information and stats downloaded',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ),
       ],
@@ -2919,7 +3010,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   DropdownButton _spiesSourceDropdown() {
     return DropdownButton<SpiesSource>(
-      value: _spy.spiesSource,
+      value: _spyController.spiesSource,
       items: const [
         DropdownMenuItem(
           value: SpiesSource.yata,
@@ -2951,9 +3042,9 @@ class SettingsPageState extends State<SettingsPage> {
       onChanged: (value) {
         setState(() {
           if (value == SpiesSource.yata) {
-            _spy.spiesSource = SpiesSource.yata;
+            _spyController.spiesSource = SpiesSource.yata;
           } else {
-            _spy.spiesSource = SpiesSource.tornStats;
+            _spyController.spiesSource = SpiesSource.tornStats;
           }
         });
       },

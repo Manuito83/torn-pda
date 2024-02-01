@@ -836,12 +836,25 @@ class WarCardState extends State<WarCard> {
   Widget _statsWidget() {
     // Return if stats (any type) are not available
     if (!_member.statsComparisonSuccess! && _member.statsExactTotalKnown == -1) {
-      return const Text(
-        "unk stats",
-        style: TextStyle(
-          fontSize: 12,
-          fontStyle: FontStyle.italic,
-        ),
+      return Row(
+        children: [
+          const Text(
+            "unk stats",
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          // If stats are not available, show a refresh button to get the user profile and be able to perform the
+          // stats comparison and then give option to open the stats dialog
+          SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              _updateThisMember();
+            },
+            child: const Icon(Icons.refresh, size: 18),
+          ),
+        ],
       );
     }
 
@@ -1008,9 +1021,9 @@ class WarCardState extends State<WarCard> {
               showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
-                  SpiesController spy = Get.find<SpiesController>();
+                  SpiesController spyController = Get.find<SpiesController>();
                   final spiesPayload = SpiesPayload(
-                    spy: spy,
+                    spyController: spyController,
                     strength: _member.statsStr ?? -1,
                     strengthUpdate: _member.statsStrUpdated,
                     defense: _member.statsDef ?? -1,
@@ -1022,6 +1035,7 @@ class WarCardState extends State<WarCard> {
                     total: _member.statsExactTotal ?? -1,
                     totalUpdate: _member.statsExactTotalUpdated,
                     update: _member.statsExactUpdated ?? 0,
+                    spySource: _member.spySource,
                     name: _member.name!,
                     factionName: _member.factionName!,
                     themeProvider: _themeProvider,

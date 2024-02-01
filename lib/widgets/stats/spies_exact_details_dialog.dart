@@ -73,7 +73,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
           ),
           spiesPayload.strengthUpdate != null
               ? Text(
-                  spiesPayload.spy.statsOld(spiesPayload.strengthUpdate),
+                  spiesPayload.spyController.statsOld(spiesPayload.strengthUpdate),
                   style: TextStyle(fontSize: 10, color: strUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -115,7 +115,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
           ),
           spiesPayload.speedUpdate != null
               ? Text(
-                  spiesPayload.spy.statsOld(spiesPayload.speedUpdate),
+                  spiesPayload.spyController.statsOld(spiesPayload.speedUpdate),
                   style: TextStyle(fontSize: 10, color: spdUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -157,7 +157,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
           ),
           spiesPayload.defenseUpdate != null
               ? Text(
-                  spiesPayload.spy.statsOld(spiesPayload.defenseUpdate),
+                  spiesPayload.spyController.statsOld(spiesPayload.defenseUpdate),
                   style: TextStyle(fontSize: 10, color: defUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -199,7 +199,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
           ),
           spiesPayload.dexterityUpdate != null
               ? Text(
-                  spiesPayload.spy.statsOld(spiesPayload.dexterityUpdate),
+                  spiesPayload.spyController.statsOld(spiesPayload.dexterityUpdate),
                   style: TextStyle(fontSize: 10, color: dexUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -241,7 +241,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
           ),
           spiesPayload.totalUpdate != null
               ? Text(
-                  spiesPayload.spy.statsOld(spiesPayload.totalUpdate),
+                  spiesPayload.spyController.statsOld(spiesPayload.totalUpdate),
                   style: TextStyle(fontSize: 10, color: totalUpdateColor),
                 )
               : SizedBox.shrink(),
@@ -250,7 +250,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     }
 
     Widget sourceWidget = const SizedBox.shrink();
-    if (spiesPayload.spy.spiesSource != null) {
+    if (spiesPayload.spyController.spiesSource != null) {
       sourceWidget = Row(
         children: [
           const Text(
@@ -258,14 +258,19 @@ class SpiesExactDetailsDialog extends StatelessWidget {
             style: TextStyle(fontSize: 12),
           ),
           SizedBox(
-            height: 16,
-            width: 16,
+            height: 18,
+            width: 18,
             child: Image.asset(
-              spiesPayload.spy.spiesSource == SpiesSource.yata
+              spiesPayload.spySource == SpiesSource.yata
                   ? 'images/icons/yata_logo.png'
                   : 'images/icons/tornstats_logo.png',
             ),
           ),
+          if (spiesPayload.spySource != spiesPayload.spyController.spiesSource)
+            Text(
+              "(mixed source)",
+              style: TextStyle(fontSize: 12),
+            ),
         ],
       );
     }
@@ -303,7 +308,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
                       style: TextStyle(fontSize: 12),
                     ),
                     Text(
-                      spiesPayload.spy.statsOld(spiesPayload.update),
+                      spiesPayload.spyController.statsOld(spiesPayload.update),
                       style: TextStyle(fontSize: 12, color: lastSpyUpdateColor),
                     ),
                   ],

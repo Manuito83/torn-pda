@@ -871,51 +871,121 @@ class WarController extends GetxController {
   }
 
   void _assignSpiedStats(Member member) {
-    final SpiesController spy = Get.find<SpiesController>();
+    final SpiesController spyController = Get.find<SpiesController>();
 
-    if (spy.spiesSource == SpiesSource.yata) {
-      for (final YataSpyModel spy in spy.yataSpies) {
+    void assignTornStatsSpy(Member member, SpyElement spy) {
+      member.spySource = SpiesSource.tornStats;
+      member.statsExactTotal = member.statsSort = spy.total;
+      member.statsExactUpdated = spy.timestamp;
+      member.statsStr = spy.strength;
+      member.statsSpd = spy.speed;
+      member.statsDef = spy.defense;
+      member.statsDex = spy.dexterity;
+      int known = 0;
+      if (spy.strength != 1) known += spy.strength!;
+      if (spy.speed != 1) known += spy.speed!;
+      if (spy.defense != 1) known += spy.defense!;
+      if (spy.dexterity != 1) known += spy.dexterity!;
+      member.statsExactTotalKnown = known;
+    }
+
+    void assignYataSpy(Member member, YataSpyModel spy) {
+      member.spySource = SpiesSource.yata;
+      member.statsExactTotal = member.statsSort = spy.total;
+      member.statsExactTotalUpdated = spy.totalTimestamp;
+      member.statsExactUpdated = spy.update;
+      member.statsStr = spy.strength;
+      member.statsStrUpdated = spy.strengthTimestamp;
+      member.statsSpd = spy.speed;
+      member.statsSpdUpdated = spy.speedTimestamp;
+      member.statsDef = spy.defense;
+      member.statsDefUpdated = spy.defenseTimestamp;
+      member.statsDex = spy.dexterity;
+      member.statsDexUpdated = spy.dexterityTimestamp;
+      int known = 0;
+      if (spy.strength != 1) known += spy.strength!;
+      if (spy.speed != 1) known += spy.speed!;
+      if (spy.defense != 1) known += spy.defense!;
+      if (spy.dexterity != 1) known += spy.dexterity!;
+      member.statsExactTotalKnown = known;
+    }
+
+    bool spyFound = false;
+
+    // Delete spy information if we don't allow mixed spies sources
+    if ((!spyController.allowMixedSpiesSources &&
+            member.spySource != SpiesSource.yata &&
+            spyController.spiesSource == SpiesSource.yata) ||
+        (!spyController.allowMixedSpiesSources &&
+            member.spySource != SpiesSource.tornStats &&
+            spyController.spiesSource == SpiesSource.tornStats)) {
+      _deleteSpiedStats(member);
+    }
+
+    // Find the spy based in the current selected spy source
+    if (spyController.spiesSource == SpiesSource.yata) {
+      for (final YataSpyModel spy in spyController.yataSpies) {
         if (spy.targetName == member.name) {
-          member.spiesSource = "yata";
-          member.statsExactTotal = member.statsSort = spy.total;
-          member.statsExactTotalUpdated = spy.totalTimestamp;
-          member.statsExactUpdated = spy.update;
-          member.statsStr = spy.strength;
-          member.statsStrUpdated = spy.strengthTimestamp;
-          member.statsSpd = spy.speed;
-          member.statsSpdUpdated = spy.speedTimestamp;
-          member.statsDef = spy.defense;
-          member.statsDefUpdated = spy.defenseTimestamp;
-          member.statsDex = spy.dexterity;
-          member.statsDexUpdated = spy.dexterityTimestamp;
-          int known = 0;
-          if (spy.strength != 1) known += spy.strength!;
-          if (spy.speed != 1) known += spy.speed!;
-          if (spy.defense != 1) known += spy.defense!;
-          if (spy.dexterity != 1) known += spy.dexterity!;
-          member.statsExactTotalKnown = known;
+          assignYataSpy(member, spy);
+
+          spyFound = true;
           break;
         }
       }
-    } else {
-      for (final SpyElement spy in spy.tornStatsSpies.spies) {
+    } else if (spyController.spiesSource == SpiesSource.tornStats) {
+      for (final SpyElement spy in spyController.tornStatsSpies.spies) {
         if (spy.playerName == member.name) {
-          member.spiesSource = "tornstats";
-          member.statsExactTotal = member.statsSort = spy.total;
-          member.statsExactUpdated = spy.timestamp;
-          member.statsStr = spy.strength;
-          member.statsSpd = spy.speed;
-          member.statsDef = spy.defense;
-          member.statsDex = spy.dexterity;
-          int known = 0;
-          if (spy.strength != 1) known += spy.strength!;
-          if (spy.speed != 1) known += spy.speed!;
-          if (spy.defense != 1) known += spy.defense!;
-          if (spy.dexterity != 1) known += spy.dexterity!;
-          member.statsExactTotalKnown = known;
+          assignTornStatsSpy(member, spy);
+
+          spyFound = true;
           break;
         }
       }
     }
+
+    // If we didn't find a spy and we allow mixed spies sources, search in the other source
+    if (spyController.allowMixedSpiesSources && !spyFound) {
+      if (spyController.spiesSource == SpiesSource.tornStats) {
+        for (final YataSpyModel spy in spyController.yataSpies) {
+          if (spy.targetName == member.name) {
+            assignYataSpy(member, spy);
+
+            spyFound = true;
+            break;
+          }
+        }
+      } else if (spyController.spiesSource == SpiesSource.yata) {
+        for (final SpyElement spy in spyController.tornStatsSpies.spies) {
+          if (spy.playerName == member.name) {
+            assignTornStatsSpy(member, spy);
+
+            spyFound = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // If we didn't find a spy at all, delete the spies information (it might be an old spy,
+    // or the user might have deleted and recreated the spies list)
+    if (!spyFound) {
+      _deleteSpiedStats(member);
+    }
+  }
+
+  _deleteSpiedStats(Member member) {
+    member.spySource = SpiesSource.yata;
+    member.statsExactTotal = -1;
+    member.statsExactTotalUpdated = -1;
+    member.statsExactUpdated = -1;
+    member.statsStr = -1;
+    member.statsStrUpdated = -1;
+    member.statsSpd = -1;
+    member.statsSpdUpdated = -1;
+    member.statsDef = -1;
+    member.statsDefUpdated = -1;
+    member.statsDex = -1;
+    member.statsDexUpdated = -1;
+    member.statsExactTotalKnown = -1;
   }
 }
