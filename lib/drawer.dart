@@ -1379,12 +1379,33 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                             );
                           },
                         ),
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4, top: 1),
-                          child: Text(
-                            "API CALLS (60s)",
-                            style: TextStyle(fontSize: 9),
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4, top: 1),
+                              child: Text(
+                                "API CALLS (60s)",
+                                style: TextStyle(fontSize: 9),
+                              ),
+                            ),
+                            if (_apiController.delayCalls)
+                              StreamBuilder<Map<String, dynamic>>(
+                                stream: _apiController.queueStatsStream,
+                                initialData: {'queueLength': 0, 'avgTime': 0},
+                                builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                                  final int queueLength = snapshot.data?['queueLength'] ?? 0;
+                                  final double avgTime = snapshot.data?['avgTime'].toDouble() ?? 0;
+                                  return Text(
+                                    "QUEUE: $queueLength${queueLength > 0 ? ' (delay ${avgTime.ceil()} sec)' : ''}",
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        color: queueLength == 0 ? _themeProvider!.mainText : Colors.red,
+                                        fontWeight: queueLength == 0 ? FontWeight.normal : FontWeight.bold),
+                                  );
+                                },
+                              ),
+                          ],
                         ),
                       ],
                     ),

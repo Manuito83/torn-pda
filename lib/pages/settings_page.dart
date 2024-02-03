@@ -865,6 +865,42 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Delay API calls",
+                ),
+              ),
+              Switch(
+                value: _apiController.delayCalls,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _apiController.delayCalls = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Artificially delay API calls above 95 in 60 seconds to avoid hitting the max API rate. If enabled, the "
+            "current queue information will be shown in the main drawer menu API bar. NOTE: this option cannot take "
+            "into account API calls generated outside of Torn PDA",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -322,6 +322,7 @@ class Prefs {
 
   // Api Rate
   final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
+  final String _kDelayApiCalls = "pda_delayApiCalls";
   final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
 
   // Split screen configuration
@@ -3084,6 +3085,16 @@ class Prefs {
   Future<bool> setShowApiRateInDrawer(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowApiRateInDrawer, value);
+  }
+
+  Future<bool> getDelayApiCalls() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDelayApiCalls) ?? false;
+  }
+
+  Future<bool> setDelayApiCalls(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDelayApiCalls, value);
   }
 
   // ---

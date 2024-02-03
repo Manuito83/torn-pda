@@ -49,6 +49,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added private cloud backup and share functionality for specific Torn PDA settings",
           "Added Torn Stats Central information and merged stats dialogs into one",
           "Spies: added option to allow mixed sources, fixed persistence and other issues",
+          "Added option to delay API calls before hittin the API limit (disabled by default)",
           "Fixed Awards images",
           "Fixed other reported issues",
         ],
