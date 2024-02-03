@@ -57,7 +57,6 @@ class WarCardState extends State<WarCard> {
   Timer? _updatedTicker;
   Timer? _lifeTicker;
 
-  String _currentLifeString = "";
   late String _lastUpdatedString;
   late int _lastUpdatedMinutes;
 
@@ -211,7 +210,7 @@ class WarCardState extends State<WarCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       _returnRespectFF(_member.respectGain, _member.fairFight),
-                      if (!_member.overrideEasyLife!) _returnEasyHealth(_member) else _returnFullHealth(_member),
+                      CombinedHealthBars(member: _member),
                     ],
                   ),
                 ),
@@ -608,123 +607,6 @@ class WarCardState extends State<WarCard> {
             ),
         ],
       ),
-    );
-  }
-
-  Widget _returnEasyHealth(Member? target) {
-    Color? lifeBarColor = Colors.transparent;
-
-    String lifeText = "";
-    if (_member.status!.state == "Hospital") {
-      lifeText = "Hospital";
-      lifeBarColor = Colors.red[300];
-    } else if (_member.status!.state == "Jail") {
-      lifeText = "Jailed";
-      lifeBarColor = Colors.brown[300];
-    } else if (_member.status!.state == "Okay") {
-      lifeText = "Okay";
-      lifeBarColor = Colors.green[300];
-    } else if (_member.status!.state == "Traveling") {
-      lifeText = "Okay";
-      lifeBarColor = Colors.blue[300];
-    } else if (_member.status!.state == "Abroad") {
-      lifeText = "Okay";
-      lifeBarColor = Colors.blue[300];
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Flexible(
-          child: LinearPercentIndicator(
-            padding: const EdgeInsets.all(0),
-            barRadius: const Radius.circular(10),
-            width: 100,
-            lineHeight: 14,
-            progressColor: lifeBarColor,
-            center: Text(
-              lifeText,
-              style: const TextStyle(color: Colors.black, fontSize: 12),
-            ),
-            percent: 1,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _returnFullHealth(Member? target) {
-    Color? lifeBarColor = Colors.green;
-    Widget hospitalWarning = const SizedBox.shrink();
-    String lifeText = _member.lifeCurrent == -1 ? "?" : _member.lifeCurrent.toString();
-
-    if (_member.status!.state == "Hospital") {
-      // Handle if target is still in hospital
-      final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-      if (_member.status!.until! > now) {
-        final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target!.status!.until! * 1000);
-        _lifeTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
-        _refreshLifeClock(endTimeStamp);
-        lifeText = _currentLifeString;
-        lifeBarColor = Colors.red[300];
-        hospitalWarning = const Icon(
-          Icons.local_hospital,
-          size: 20,
-          color: Colors.red,
-        );
-      } else {
-        _lifeTicker?.cancel();
-        lifeText = "OUT";
-        hospitalWarning = const Icon(
-          MdiIcons.bandage,
-          size: 20,
-          color: Colors.green,
-        );
-      }
-    } else {
-      _lifeTicker?.cancel();
-    }
-
-    if (_member.status!.state == "Traveling" || _member.status!.state == "Abroad") {
-      lifeBarColor = Colors.blue[300];
-    }
-
-    // Found players in federal jail with a higher life than their maximum. Correct it if it's the
-    // case to avoid issues with percentage bar
-    double? lifePercentage;
-    if (_member.lifeCurrent != -1) {
-      if (_member.lifeCurrent! / _member.lifeMaximum! > 1) {
-        lifePercentage = 1;
-      } else if (_member.lifeCurrent! / _member.lifeMaximum! > 1) {
-        lifePercentage = 0;
-      } else {
-        lifePercentage = _member.lifeCurrent! / _member.lifeMaximum!;
-      }
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        const Text(
-          'Life ',
-          style: TextStyle(fontSize: 13),
-        ),
-        Flexible(
-          child: LinearPercentIndicator(
-            padding: const EdgeInsets.all(0),
-            barRadius: const Radius.circular(10),
-            width: 100,
-            lineHeight: 14,
-            progressColor: lifeBarColor,
-            center: Text(
-              lifeText,
-              style: const TextStyle(color: Colors.black, fontSize: 12),
-            ),
-            percent: lifePercentage ?? 0,
-          ),
-        ),
-        hospitalWarning,
-      ],
     );
   }
 
@@ -1212,63 +1094,6 @@ class WarCardState extends State<WarCard> {
     }
   }
 
-  _refreshLifeClock(DateTime timeEnd) {
-    final diff = timeEnd.difference(DateTime.now());
-    if (diff.inSeconds > 0) {
-      final Duration timeOut = Duration(seconds: diff.inSeconds);
-
-      String timeOutMin = timeOut.inMinutes.remainder(60).toString();
-      if (timeOut.inMinutes.remainder(60) < 10) {
-        timeOutMin = '0$timeOutMin';
-      }
-
-      String timeOutSec = timeOut.inSeconds.remainder(60).toString();
-      if (timeOut.inSeconds.remainder(60) < 10) {
-        timeOutSec = '0$timeOutSec';
-      }
-
-      int timerCadence = 1;
-      if (diff.inSeconds > 80) {
-        timerCadence = 20;
-        if (mounted) {
-          setState(() {
-            _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
-          });
-        }
-      } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
-        timerCadence = 1;
-      } else {
-        timerCadence = 1;
-        if (mounted) {
-          setState(() {
-            _currentLifeString = '$timeOutSec sec';
-          });
-        }
-      }
-
-      if (_lifeTicker != null) {
-        _lifeTicker!.cancel();
-        _lifeTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
-      }
-
-      if (diff.inSeconds < 2) {
-        // Artificially release instead of updating
-        _releaseFromHospital();
-      }
-    }
-  }
-
-  _releaseFromHospital() async {
-    await Future.delayed(const Duration(seconds: 5));
-    if (_lifeTicker != null) {
-      _lifeTicker!.cancel();
-    }
-    _member.status!.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
   Future<void> _startAttack() async {
     final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
@@ -1345,5 +1170,183 @@ class WarCardState extends State<WarCard> {
           ),
       ],
     );
+  }
+}
+
+class CombinedHealthBars extends StatefulWidget {
+  final Member member;
+
+  CombinedHealthBars({required this.member});
+
+  @override
+  CombinedHealthBarsState createState() => CombinedHealthBarsState();
+}
+
+class CombinedHealthBarsState extends State<CombinedHealthBars> {
+  Timer? _lifeTicker;
+  String _currentLifeString = '';
+
+  late Member _member;
+
+  @override
+  void dispose() {
+    _lifeTicker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _member = widget.member;
+
+    double? lifePercentage;
+    Color lifeBarColor = Colors.green.shade300;
+    Widget hospitalWarning = const SizedBox.shrink();
+    String lifeText = _member.lifeCurrent == -1 ? "?" : _member.lifeCurrent.toString();
+
+    if (!_member.overrideEasyLife!) {
+      lifeBarColor = Colors.transparent;
+      lifeText = "";
+      if (_member.status!.state == "Hospital") {
+        lifeText = "Hospital";
+        lifeBarColor = Colors.red.shade300;
+      } else if (_member.status!.state == "Jail") {
+        lifeText = "Jailed";
+        lifeBarColor = Colors.brown.shade300;
+      } else if (_member.status!.state == "Okay") {
+        lifeText = "Okay";
+        lifeBarColor = Colors.green.shade300;
+      } else if (_member.status!.state == "Traveling") {
+        lifeText = "Okay";
+        lifeBarColor = Colors.blue.shade300;
+      } else if (_member.status!.state == "Abroad") {
+        lifeText = "Okay";
+        lifeBarColor = Colors.blue.shade300;
+      }
+    } else {
+      if (_member.status!.state == "Hospital") {
+        // Handle if target is still in hospital
+        final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+        if (_member.status!.until! > now) {
+          final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(_member.status!.until! * 1000);
+          _lifeTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
+          _refreshLifeClock(endTimeStamp);
+          lifeText = _currentLifeString;
+          lifeBarColor = Colors.red.shade300;
+          hospitalWarning = const Icon(
+            Icons.local_hospital,
+            size: 20,
+            color: Colors.red,
+          );
+        } else {
+          _lifeTicker?.cancel();
+          lifeText = "OUT";
+          hospitalWarning = const Icon(
+            MdiIcons.bandage,
+            size: 20,
+            color: Colors.green,
+          );
+        }
+      } else {
+        _lifeTicker?.cancel();
+      }
+
+      if (_member.status!.state == "Traveling" || _member.status!.state == "Abroad") {
+        lifeBarColor = Colors.blue.shade300;
+      }
+
+      // Found players in federal jail with a higher life than their maximum. Correct it if it's the
+      // case to avoid issues with percentage bar
+      if (_member.lifeCurrent != -1) {
+        if (_member.lifeCurrent! / _member.lifeMaximum! > 1) {
+          lifePercentage = 1;
+        } else if (_member.lifeCurrent! / _member.lifeMaximum! > 1) {
+          lifePercentage = 0;
+        } else {
+          lifePercentage = _member.lifeCurrent! / _member.lifeMaximum!;
+        }
+      }
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        const Text(
+          'Life ',
+          style: TextStyle(fontSize: 13),
+        ),
+        Flexible(
+          child: LinearPercentIndicator(
+            padding: const EdgeInsets.all(0),
+            barRadius: const Radius.circular(10),
+            width: 100,
+            lineHeight: 14,
+            progressColor: lifeBarColor,
+            center: Text(
+              lifeText,
+              style: const TextStyle(color: Colors.black, fontSize: 12),
+            ),
+            percent: !_member.overrideEasyLife! ? 1 : lifePercentage ?? 0,
+          ),
+        ),
+        hospitalWarning,
+      ],
+    );
+  }
+
+  _refreshLifeClock(DateTime timeEnd) {
+    final diff = timeEnd.difference(DateTime.now());
+    if (diff.inSeconds > 0) {
+      final Duration timeOut = Duration(seconds: diff.inSeconds);
+
+      String timeOutMin = timeOut.inMinutes.remainder(60).toString();
+      if (timeOut.inMinutes.remainder(60) < 10) {
+        timeOutMin = '0$timeOutMin';
+      }
+
+      String timeOutSec = timeOut.inSeconds.remainder(60).toString();
+      if (timeOut.inSeconds.remainder(60) < 10) {
+        timeOutSec = '0$timeOutSec';
+      }
+
+      int timerCadence = 1;
+      if (diff.inSeconds > 80) {
+        timerCadence = 20;
+        if (mounted) {
+          setState(() {
+            _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
+          });
+        }
+      } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
+        timerCadence = 1;
+      } else {
+        timerCadence = 1;
+        if (mounted) {
+          setState(() {
+            _currentLifeString = '$timeOutSec sec';
+          });
+        }
+      }
+
+      if (_lifeTicker != null) {
+        _lifeTicker!.cancel();
+        _lifeTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
+      }
+
+      if (diff.inSeconds < 2) {
+        // Artificially release instead of updating
+        _releaseFromHospital();
+      }
+    }
+  }
+
+  _releaseFromHospital() async {
+    await Future.delayed(const Duration(seconds: 5));
+    if (_lifeTicker != null) {
+      _lifeTicker!.cancel();
+    }
+    _member.status!.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    if (mounted) {
+      setState(() {});
+    }
   }
 }
