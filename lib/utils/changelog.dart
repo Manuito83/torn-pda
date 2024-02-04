@@ -51,6 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Spies: added option to allow mixed sources, fixed persistence and other issues",
           "Added option to delay API calls before hittin the API limit (disabled by default)",
           "Fixed Awards images",
+          "Fixed RW widget update in Profile",
           "Fixed other reported issues",
         ],
     );

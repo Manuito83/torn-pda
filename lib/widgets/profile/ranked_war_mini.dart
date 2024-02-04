@@ -35,14 +35,6 @@ class RankedWarMiniState extends State<RankedWarMini> {
   void initState() {
     super.initState();
 
-    widget.rankedWar!.factions!.forEach((key, value) {
-      if (value.name == widget.playerFactionName) {
-        _playerFaction = value;
-      } else {
-        _enemyFaction = value;
-      }
-    });
-
     if (widget.rankedWar!.war!.start! * 1000 > DateTime.now().millisecondsSinceEpoch) {
       _tickerCall = Timer.periodic(const Duration(seconds: 1), (Timer t) {
         _updateTimeString();
@@ -58,6 +50,15 @@ class RankedWarMiniState extends State<RankedWarMini> {
 
   @override
   Widget build(BuildContext context) {
+    // Refresh scores information every time the widget is built
+    widget.rankedWar!.factions!.forEach((key, value) {
+      if (value.name == widget.playerFactionName) {
+        _playerFaction = value;
+      } else {
+        _enemyFaction = value;
+      }
+    });
+
     final int ts = DateTime.now().millisecondsSinceEpoch;
     final bool warInFuture = widget.rankedWar!.war!.start! * 1000 > ts;
     final bool warActive = widget.rankedWar!.war!.start! * 1000 < ts && widget.rankedWar!.war!.end == 0;
