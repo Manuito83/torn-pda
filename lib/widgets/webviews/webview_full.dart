@@ -1196,6 +1196,39 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _addScriptApiHandlers(webView!);
           },
           shouldOverrideUrlLoading: (c, request) async {
+            // Handle external schemes
+            if (!request.request.url.toString().startsWith("http:") &&
+                !request.request.url.toString().startsWith("https:") &&
+                !request.request.url.toString().startsWith("tornpda:")) {
+              try {
+                print(canLaunchUrl(Uri.parse(request.request.url.toString())));
+                await launchUrl(Uri.parse(request.request.url.toString()), mode: LaunchMode.externalApplication);
+              } catch (e) {
+                log("Error launching intent: $e");
+
+                // Extract the scheme from the URI
+                String errorMessage = "Cannot find a compatible app for this link!";
+                String scheme = Uri.parse(request.request.url.toString()).scheme;
+
+                if (scheme.isNotEmpty) {
+                  errorMessage = "Cannot find a compatible app for link $scheme:";
+                }
+
+                BotToast.showText(
+                  text: errorMessage,
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.orange,
+                  duration: const Duration(seconds: 4),
+                  contentPadding: const EdgeInsets.all(10),
+                  clickClose: true,
+                );
+              }
+              return NavigationActionPolicy.CANCEL;
+            }
+
             if (_settingsProvider.hitInMiniProfileOpensNewTab) {
               if (await _hitShouldOpenNewTab(c, request)) {
                 return NavigationActionPolicy.CANCEL;
