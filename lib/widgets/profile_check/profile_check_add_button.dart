@@ -88,7 +88,7 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
                             '\nYou can tap this icon to add or remove ${widget.playerName} or any other player '
                             'from several of your lists (including entire factions in War!).\n\nIt will also allow '
                             "you to quickly copy the player's ID and the profile's page link.\n\n"
-                            'A green icon means the player is not in any or your lists, while an orange icon means '
+                            'A green icon means the player is not in any of your lists, while an orange icon means '
                             'he/she is at least associated with one of them.\n\nTry it out!',
                         targetPadding: const EdgeInsets.all(10),
                         disableMovingAnimation: true,

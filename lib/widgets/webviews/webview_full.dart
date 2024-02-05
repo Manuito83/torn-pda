@@ -363,7 +363,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _findController.addListener(onFindInputTextChange);
 
     _initialWebViewSettings = InAppWebViewSettings(
-      //cacheEnabled: false,
+      cacheEnabled: _settingsProvider.webviewCacheEnabled,
       transparentBackground: true,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
@@ -1118,7 +1118,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             webView = c;
 
             // Clear cache (except for cookies) for each new session
-            await InAppWebViewController.clearAllCache();
+            if (!_settingsProvider.webviewCacheEnabled) {
+              await InAppWebViewController.clearAllCache();
+            }
 
             _terminalProvider.terminal = "Terminal";
 

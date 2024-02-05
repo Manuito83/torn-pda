@@ -85,6 +85,7 @@ class Prefs {
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
+  final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
@@ -953,6 +954,16 @@ class Prefs {
   Future<bool> setRestoreSessionCookie(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRestoreSessionCookie, value);
+  }
+
+  Future<bool> getWebviewCacheEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWebviewCacheEnabled) ?? true;
+  }
+
+  Future<bool> setWebviewCacheEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWebviewCacheEnabled, value);
   }
 
   /*

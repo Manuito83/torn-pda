@@ -448,7 +448,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
-            if (_userScriptsProvider.userScriptsEnabled) 
+            if (_userScriptsProvider.userScriptsEnabled)
               Column(
                 children: [
                   Padding(
@@ -657,12 +657,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  const Text("Restore session cookie"),
+                  const Text("Cache enabled"),
                   Switch(
-                    value: _settingsProvider.restoreSessionCookie,
+                    value: _settingsProvider.webviewCacheEnabled,
                     onChanged: (value) {
                       setState(() {
-                        _settingsProvider.restoreSessionCookie = value;
+                        _settingsProvider.webviewCacheEnabled = value;
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -674,8 +674,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Enable this option if you are getting logged out from Torn consistently; '
-                'Torn PDA will try to reestablish your session ID when the browser opens',
+                "Enable webview cache to improve performance (recommended). Disabling this might be useful if "
+                "you experience issues with Torn's website cache, such as images loading incorrectly, increased "
+                "app cached data, chat issues, etc. NOTE: this will only take effect after you restart the app.",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -715,6 +716,37 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 "Note: this will clear your browser's cache and current tabs. It can be "
                 'useful in case of errors (sections not loading correctly, etc.). '
                 "You'll be logged-out from Torn and all other sites",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Restore session cookie"),
+                  Switch(
+                    value: _settingsProvider.restoreSessionCookie,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.restoreSessionCookie = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Text(
+                'Enable this option if you are getting logged out from Torn consistently; '
+                'Torn PDA will try to reestablish your session ID when the browser opens',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,

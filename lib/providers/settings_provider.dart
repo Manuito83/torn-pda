@@ -73,6 +73,14 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
+  var _webviewCacheEnabled = false;
+  bool get webviewCacheEnabled => _webviewCacheEnabled;
+  set webviewCacheEnabled(bool enabled) {
+    _webviewCacheEnabled = enabled;
+    Prefs().setWebviewCacheEnabled(enabled);
+    notifyListeners();
+  }
+
   var _androidBrowserScale = 0;
   int get androidBrowserScale => _androidBrowserScale;
   set setAndroidBrowserScale(int scale) {
@@ -764,6 +772,7 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
     _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
+    _webviewCacheEnabled = await Prefs().getWebviewCacheEnabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
 
