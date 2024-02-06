@@ -54,7 +54,6 @@ class FriendDetailsPageState extends State<FriendDetailsPage> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
