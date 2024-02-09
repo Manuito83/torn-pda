@@ -55,13 +55,16 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
-// TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
+// TODO (App release)
 const String appVersion = '3.3.0';
 const String androidCompilation = '378';
 const String iosCompilation = '378';
 
-// TODO
+// TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
+
+// TODO (App release)
+const bool enableWakelockForDebug = false;
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
@@ -113,7 +116,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Avoid screen lock when testing in real device
-  if (kDebugMode) {
+  if (kDebugMode && enableWakelockForDebug) {
     WakelockPlus.enable();
   }
 
