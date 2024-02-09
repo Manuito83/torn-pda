@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
+
 TornStatsSpiesModel tornStatsSpiesModelFromJson(String str) => TornStatsSpiesModel.fromJson(json.decode(str));
 
 String tornStatsSpiesModelToJson(TornStatsSpiesModel data) => json.encode(data.toJson());
@@ -108,6 +110,25 @@ class SpyElement {
         "player_level": playerLevel,
         "player_faction": playerFaction,
       };
+
+  YataSpyModel toYataModel() {
+    return YataSpyModel(
+      strength: strength,
+      speed: speed,
+      defense: defense,
+      dexterity: dexterity,
+      total: total,
+      strengthTimestamp: timestamp,
+      speedTimestamp: timestamp,
+      defenseTimestamp: timestamp,
+      dexterityTimestamp: timestamp,
+      totalTimestamp: timestamp,
+      update: timestamp,
+      targetName: playerName,
+      targetId: playerId,
+      targetFactionName: playerFaction,
+    );
+  }
 }
 
 class User {
