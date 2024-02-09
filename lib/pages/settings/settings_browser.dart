@@ -105,6 +105,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
+                          _downloads(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _fullScreen(),
                           const SizedBox(height: 15),
                           const Divider(),
@@ -1846,6 +1850,46 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
+  Column _downloads() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'DOWNLOADS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Download action"),
+              _downloadsDropdown(),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Due to the operating system restrictions, Torn PDA can only download files to your app data folder (this "
+            "is to avoid requesting unnecesary permissions). As this folder can be difficult to access in certain "
+            "devices, the app can instead initiate a share request so that you can select whether to save your file "
+            "locally or share it somewhere else",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _showColorPickerTabs(BuildContext context) {
     showDialog(
       useRootNavigator: false,
@@ -2001,6 +2045,45 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 2;
         }
+      },
+    );
+  }
+
+  Widget _downloadsDropdown() {
+    return DropdownButton<bool>(
+      value: _settingsProvider.downloadActionShare,
+      items: const [
+        DropdownMenuItem(
+          value: true,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Share",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: false,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Save",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.downloadActionShare = value!;
+        });
       },
     );
   }

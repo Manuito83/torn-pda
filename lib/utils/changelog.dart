@@ -50,6 +50,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added Torn Stats Central information and merged stats dialogs into one",
           "Spies: added option to allow mixed sources, fixed persistence and other issues",
           "Added option to delay API calls before hitting the API limit (disabled by default)",
+          "Downloaded files trigger a share request automatically by default (see Tips for more info)",
           "Added option to enable or disable browser cache (enabled by default)",
           "Fixed Awards images",
           "Fixed RW widget update in Profile",

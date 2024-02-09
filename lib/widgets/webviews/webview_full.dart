@@ -7,6 +7,7 @@ import 'dart:io';
 // Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:dio/dio.dart';
 //import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
@@ -22,11 +23,11 @@ import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
@@ -1684,7 +1685,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             await _assessLongPressOptions(result, controller);
           },
           onDownloadStartRequest: (controller, request) async {
-            await _downloadRequestStarted(request);
+            await _downloadRequest(autoRequest: request);
           },
           /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
@@ -4133,42 +4134,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _downloadRequestStarted(DownloadStartRequest url) async {
-    try {
-      Directory? directory = Platform.isIOS ? await getApplicationDocumentsDirectory() : await getDownloadsDirectory();
-      await FlutterDownloader.enqueue(
-        url: url.url.toString(),
-        fileName: url.suggestedFilename,
-        savedDir: directory!.path,
-        showNotification: true,
-        openFileFromNotification: true,
-      );
-      BotToast.showText(
-        text: Platform.isIOS
-            ? "Downloaded in app folder as ${url.suggestedFilename}"
-            : "Downloaded as ${directory.path}/${url.suggestedFilename}",
-        clickClose: true,
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        duration: Duration(seconds: 5),
-        contentColor: Colors.blue[800]!,
-        contentPadding: const EdgeInsets.all(10),
-      );
-    } catch (e) {
-      BotToast.showText(
-        text: "Could not complete download: $e",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.orange[800]!,
-        contentPadding: const EdgeInsets.all(10),
-      );
-    }
-  }
-
   void _showLongPressCard(String? src, Uri? url) {
     BotToast.showCustomText(
       clickClose: true,
@@ -4251,47 +4216,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 ),
                               ),
                               onTap: () async {
-                                try {
-                                  final String u = src.replaceAll("http:", "https:");
-                                  var uri = Uri.parse(u);
-                                  String path = uri.path;
-                                  String fileName = path.substring(path.lastIndexOf('/') + 1);
-                                  Directory? directory = Platform.isIOS
-                                      ? await getApplicationDocumentsDirectory()
-                                      : await getDownloadsDirectory();
-                                  await FlutterDownloader.enqueue(
-                                    url: u,
-                                    fileName: fileName,
-                                    savedDir: directory!.path,
-                                    showNotification: true,
-                                    openFileFromNotification: true,
-                                  );
-                                  BotToast.showText(
-                                    text: Platform.isIOS
-                                        ? "Downloaded in app folder as $fileName"
-                                        : "Downloaded as ${directory.path}/$fileName",
-                                    clickClose: true,
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    duration: Duration(seconds: 5),
-                                    contentColor: Colors.blue[800]!,
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                } catch (e) {
-                                  BotToast.showText(
-                                    text: "Could not complete download: $e",
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.orange[800]!,
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                }
-
-                                textCancel();
+                                await _downloadRequest(dialogCancel: textCancel, manualSource: src);
                               },
                             ),
                           ),
@@ -4401,6 +4326,122 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  Future<void> _downloadRequest({
+    CancelFunc? dialogCancel,
+    String? manualSource,
+    DownloadStartRequest? autoRequest,
+  }) async {
+    final progressStream = StreamController<int>();
+    final cancelToken = CancelToken();
+
+    try {
+      if (dialogCancel != null) {
+        dialogCancel();
+      }
+
+      String url = "";
+      String fileName = "";
+
+      // If we come from the download dialog
+      if (manualSource != null) {
+        url = manualSource.replaceAll("http:", "https:");
+        var uri = Uri.parse(url);
+        String path = uri.path;
+        fileName = path.substring(path.lastIndexOf('/') + 1);
+      }
+      // If we come from the onDownloadRequest
+      else if (autoRequest != null) {
+        url = autoRequest.url.toString().replaceAll("http:", "https:");
+        fileName = autoRequest.suggestedFilename ?? "file";
+      }
+
+      // Get the correct path based on device
+      String fileSavePath = "";
+
+      if (Platform.isAndroid) {
+        // If we share, use temporary directory (we will delete this upon every webview provider initialisation)
+        if (_settingsProvider.downloadActionShare) {
+          fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+        } else {
+          // If we save, use downloads directory unless it can't be found in Android (else, use the temp one)
+          var temp = await getDownloadsDirectory();
+          if (temp != null) {
+            fileSavePath = "${temp.path}/$fileName";
+          } else {
+            fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+          }
+        }
+      } else if (Platform.isIOS) {
+        // iOS uses either the temp directory or the documents directory (which should always exist)
+        if (_settingsProvider.downloadActionShare) {
+          fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+        } else {
+          fileSavePath = "${(await getApplicationDocumentsDirectory()).path}/$fileName";
+        }
+      }
+
+      var cancelToastCallback = BotToast.showCustomText(
+        clickClose: false,
+        crossPage: false,
+        duration: null,
+        toastBuilder: (hideToast) {
+          return DownloadProgressToast(
+            fileName: fileName,
+            progress: progressStream.stream,
+            cancelToken: cancelToken,
+            cancelFunc: hideToast,
+          );
+        },
+      );
+
+      await Dio().download(
+        url,
+        fileSavePath,
+        onReceiveProgress: (received, total) {
+          int progress = ((received / total) * 100).toInt();
+          progressStream.add(progress);
+        },
+        cancelToken: cancelToken,
+      );
+
+      // When the download is complete or an error occurs, dismiss and close the stream
+      progressStream.close();
+      cancelToastCallback();
+
+      // Share the file
+      if (_settingsProvider.downloadActionShare) {
+        await Share.shareXFiles(
+          [XFile(fileSavePath)],
+          text: fileName,
+        );
+      }
+
+      if (!_settingsProvider.downloadActionShare) {
+        BotToast.showText(
+          text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as $fileSavePath",
+          clickClose: true,
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          duration: Duration(seconds: 5),
+          contentColor: Colors.blue[800]!,
+          contentPadding: const EdgeInsets.all(10),
+        );
+      }
+    } catch (e) {
+      BotToast.showText(
+        text: "Could not complete download: ${cancelToken.isCancelled ? "cancelled" : e}",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800]!,
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
   }
 
   // Chaining menu
@@ -4961,5 +5002,105 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         contentPadding: const EdgeInsets.all(10),
       );
     }
+  }
+}
+
+class DownloadProgressToast extends StatefulWidget {
+  final String fileName;
+  final Stream<int> progress;
+  final CancelToken cancelToken;
+  final VoidCallback cancelFunc;
+
+  DownloadProgressToast({
+    required this.fileName,
+    required this.progress,
+    required this.cancelToken,
+    required this.cancelFunc,
+  });
+
+  @override
+  DownloadProgressToastState createState() => DownloadProgressToastState();
+}
+
+class DownloadProgressToastState extends State<DownloadProgressToast> {
+  late StreamSubscription<int> _subscription;
+  int last = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = widget.progress.listen((data) {
+      setState(() {
+        last = data;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+
+  void hideToast() {
+    widget.cancelFunc();
+  }
+
+  void cancelDownload() {
+    widget.cancelToken.cancel("User canceled download");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width - 80;
+
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        width: screenWidth,
+        padding: EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.grey[700],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 5),
+              Text(
+                widget.fileName,
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 5),
+              LinearProgressIndicator(
+                value: last / 100,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                minHeight: 10,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    child: Text("Hide", style: TextStyle(color: Colors.white)),
+                    onPressed: hideToast,
+                  ),
+                  SizedBox(width: 10),
+                  TextButton(
+                    child: Text("Cancel", style: TextStyle(color: Colors.white)),
+                    onPressed: cancelDownload,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

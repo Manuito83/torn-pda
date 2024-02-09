@@ -447,6 +447,33 @@ class TipsPageState extends State<TipsPage> {
 
     tips.add(
       ComplexExpandableTip(
+        headerValue: "File downloads (save & share)",
+        buildExpandedText: () {
+          return const Text.rich(
+            TextSpan(
+              text: "Torn PDA allows you to save and share files from the browser."
+                  "\n\n"
+                  "In some mobile devices and/or operating systems, accessing your downloaded files is not always easy "
+                  "(and in some cases restricted to rooted devices or only by requesting high-level "
+                  "permissions from the user)."
+                  "\n\n"
+                  "To make things easier, the default action when a file is downloaded is to initiate a share request, "
+                  "so that the user can share it or use the dialog to save locally with a file explorer app. "
+                  "The cache files that are generated with this are automatically emptied by Torn PDA."
+                  "\n\n"
+                  "If you decide to 'save' files locally, make sure that you can access them in the app's data folder, "
+                  "since Torn PDA won't delete the file cache automatically in this case.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    tips.add(
+      ComplexExpandableTip(
         headerValue: "Chaining tab",
         buildExpandedText: () {
           return const Text.rich(

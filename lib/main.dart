@@ -18,7 +18,6 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
@@ -53,6 +52,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
@@ -112,12 +112,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Avoid screen lock when testing in real device
+  if (kDebugMode) {
+    WakelockPlus.enable();
+  }
+
   // Initialise Workmanager for app widget
   // [isInDebugMode] sends notifications each time a task is performed
   Workmanager().initialize(pdaWidget_backgroundUpdate);
-
-  // Initialize FlutterDownloader before using
-  await FlutterDownloader.initialize();
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {

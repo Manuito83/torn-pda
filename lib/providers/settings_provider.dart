@@ -756,6 +756,14 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setExactPermissionDialogShownAndroid(value);
   }
 
+  bool _downloadActionShare = true;
+  bool get downloadActionShare => _downloadActionShare;
+  set downloadActionShare(bool value) {
+    _downloadActionShare = value;
+    Prefs().setDownloadActionShare(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -929,6 +937,8 @@ class SettingsProvider extends ChangeNotifier {
     _appwidgetMoneyEnabled = await Prefs().getAppwidgetMoneyEnabled();
 
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
+
+    _downloadActionShare = await Prefs().getDownloadActionShare();
 
     notifyListeners();
   }

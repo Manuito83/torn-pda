@@ -321,6 +321,9 @@ class Prefs {
   // Permissions
   final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
 
+  // Downloads
+  final String _downloadActionShare = "pda_downloadActionShare";
+
   // Api Rate
   final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
   final String _kDelayApiCalls = "pda_delayApiCalls";
@@ -3083,6 +3086,20 @@ class Prefs {
   Future<bool> setExactPermissionDialogShownAndroid(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kExactPermissionDialogShownAndroid, value);
+  }
+
+  /// ----------------------------
+  /// Webview downloads
+  /// ----------------------------
+
+  Future<bool> getDownloadActionShare() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_downloadActionShare) ?? true;
+  }
+
+  Future<bool> setDownloadActionShare(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_downloadActionShare, value);
   }
 
   /// ----------------------------
