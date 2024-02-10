@@ -669,6 +669,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _tornStatsChartType = "line";
+  String get tornStatsChartType => _tornStatsChartType;
+  set setTornStatsChartType(String value) {
+    _tornStatsChartType = value;
+    Prefs().setTornStatsChartType(tornStatsChartType);
+    notifyListeners();
+  }
+
   var _tornStatsChartInCollapsedMiscCard = true;
   bool get tornStatsChartInCollapsedMiscCard => _tornStatsChartInCollapsedMiscCard;
   set setTornStatsChartInCollapsedMiscCard(bool value) {
@@ -921,6 +929,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _tornStatsChartDateTime = await Prefs().getTornStatsChartDateTime();
     _tornStatsChartEnabled = await Prefs().getTornStatsChartEnabled();
+    _tornStatsChartType = await Prefs().getTornStatsChartType();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();

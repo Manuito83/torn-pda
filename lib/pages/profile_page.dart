@@ -3592,6 +3592,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               height: 200,
                               child: StatsChart(
                                 statsData: _statsChartModel,
+                                chartType: _settingsProvider!.tornStatsChartType == "line"
+                                    ? TornStatsChartType.Line
+                                    : TornStatsChartType.Pie,
                               ),
                             ),
                             const SizedBox(height: 40),
@@ -3880,6 +3883,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               height: 200,
                               child: StatsChart(
                                 statsData: _statsChartModel,
+                                chartType: _settingsProvider!.tornStatsChartType == "line"
+                                    ? TornStatsChartType.Line
+                                    : TornStatsChartType.Pie,
                               ),
                             ),
                             const SizedBox(height: 40),

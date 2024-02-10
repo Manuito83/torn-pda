@@ -305,6 +305,7 @@ class Prefs {
   final String _kTornStatsChartSave = "pda_tornStatsChartSave";
   final String _kTornStatsChartDateTime = "pda_tornStatsChartDateTime";
   final String _kTornStatsChartEnabled = "pda_tornStatsChartEnabled";
+  final String _kTornStatsChartType = "pda_tornStatsChartType";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
 
   // Torn Attack Central
@@ -2450,6 +2451,16 @@ class Prefs {
   Future<bool> setTornStatsChartEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTornStatsChartEnabled, value);
+  }
+
+  Future<String> getTornStatsChartType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTornStatsChartType) ?? "line";
+  }
+
+  Future<bool> setTornStatsChartType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTornStatsChartType, value);
   }
 
   Future<bool> getTornStatsChartInCollapsedMiscCard() async {
