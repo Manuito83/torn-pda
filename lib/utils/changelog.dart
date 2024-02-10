@@ -52,6 +52,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added option to delay API calls before hitting the API limit (disabled by default)",
           "Downloaded files trigger a share request automatically by default (see Tips for more info)",
           "Added option to enable or disable browser cache (enabled by default)",
+          "Added pie option for Torn Stats chart",
           "Fixed Awards images",
           "Fixed RW widget update in Profile",
           "Fixed other reported issues",
