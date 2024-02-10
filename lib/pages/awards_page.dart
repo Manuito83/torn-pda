@@ -977,12 +977,13 @@ class AwardsPageState extends State<AwardsPage> {
         _allAwards.sort((a, b) => a.name!.trim().compareTo(b.name!.trim()));
         _buildAwardsWidgetList();
         sortToSave = 'nameAsc';
+      // Rarity is too broad, so we use circulation instead for the actual sorting
       case AwardsSortType.rarityAsc:
-        _allAwards.sort((a, b) => b.rarity!.compareTo(a.rarity!));
+        _allAwards.sort((a, b) => b.circulation!.compareTo(a.circulation!));
         _buildAwardsWidgetList();
         sortToSave = 'rarityAsc';
       case AwardsSortType.rarityDesc:
-        _allAwards.sort((a, b) => a.rarity!.compareTo(b.rarity!));
+        _allAwards.sort((a, b) => a.circulation!.compareTo(b.circulation!));
         _buildAwardsWidgetList();
         sortToSave = 'rarityDesc';
       case AwardsSortType.daysAsc:
