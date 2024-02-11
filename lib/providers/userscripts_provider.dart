@@ -360,6 +360,11 @@ class UserScriptsProvider extends ChangeNotifier {
   Future<int> checkForUpdates() async {
     int updates = 0;
     await Future.wait<void>(_userScriptList.map((s) {
+      // Only check for updates on relevant scripts
+      if (s.updateStatus == UserScriptUpdateStatus.localModified || s.updateStatus == UserScriptUpdateStatus.noRemote) {
+        return Future.value();
+      }
+      // Ensure script has a valid URL
       if (s.url == null) return Future.value();
       s.updateStatus = UserScriptUpdateStatus.updating;
       notifyListeners(); // Notify listeners of the change to show updating, but **do not save this to shared prefs**
