@@ -19,6 +19,8 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
   late ThemeProvider _themeProvider;
   late UserScriptsProvider _userScriptsProvider;
 
+  bool _loading = false;
+
   @override
   void initState() {
     super.initState();
@@ -76,19 +78,27 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                       children: <Widget>[
                         TextButton(
                           child: const Text("Do it!"),
-                          onPressed: () {
-                            _userScriptsProvider
-                                .addDefaultScripts()
-                                .then((r) => BotToast.showText(
-                                      text: "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
-                                          "${r.failed} script${r.failed == 1 ? "" : "s"} failed.\n"
-                                          "${r.removed} script${r.removed == 1 ? "" : "s"} removed.",
-                                      textStyle: TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ))
-                                .then(Navigator.of(context).pop);
-                          },
+                          onPressed: _loading
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _loading = true;
+                                  });
+                                  _userScriptsProvider
+                                      .addDefaultScripts()
+                                      .then((r) => BotToast.showText(
+                                            text: "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
+                                                "${r.failed} script${r.failed == 1 ? "" : "s"} failed.\n"
+                                                "${r.removed} script${r.removed == 1 ? "" : "s"} removed.",
+                                            textStyle: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ))
+                                      .then(Navigator.of(context).pop)
+                                      .then((_) => setState(() {
+                                            _loading = false;
+                                          }));
+                                },
                         ),
                         TextButton(
                           child: const Text("Better not!"),
