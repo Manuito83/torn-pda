@@ -48,6 +48,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
@@ -4608,33 +4609,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // List for all sources in column
     final moneySources = <Widget>[];
-
-    // Total Expanded
-    moneySources.add(
-      Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 10),
-        child: Row(
-          children: <Widget>[
-            const SizedBox(
-              width: 110,
-              child: Text(
-                'Total: ',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text(
-              '\$${moneyFormat.format(total)}',
-              style: TextStyle(
-                color: total! < 0 ? Colors.red : Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    final moneyQuantities = <Widget>[];
 
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
@@ -4659,31 +4634,78 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         source = "${v.key[0].toUpperCase()}${v.key.substring(1)}";
       }
 
+      Widget pointsPrice = SizedBox.shrink();
+      if (v.key == "points" && _miscModel != null && _miscModel!.points! > 0) {
+        String price = formatBigNumbers(((v.value!.round()) / _miscModel!.points!).round());
+
+        pointsPrice = Text(
+          " @ \$$price",
+          style: const TextStyle(
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+          ),
+        );
+      }
+
       moneySources.add(
-        Row(
-          children: <Widget>[
-            SizedBox(
-              width: 110,
-              child: Text('$source: '),
-            ),
-            Text(
-              '\$${moneyFormat.format(v.value!.round())}',
-              style: TextStyle(
-                color: v.value! < 0 ? Colors.red : Colors.green,
-              ),
-            ),
-            if (v.key == "points" && _miscModel != null && _miscModel!.points! > 0)
-              Text(
-                "  (@\$${moneyFormat.format((v.value!.round()) / _miscModel!.points!)})",
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-          ],
+        SizedBox(
+          width: 150,
+          child: Row(
+            children: [
+              Text(source),
+              pointsPrice,
+            ],
+          ),
+        ),
+      );
+
+      moneyQuantities.add(
+        Text(
+          '\$${moneyFormat.format(v.value!.round())}',
+          style: TextStyle(
+            color: v.value! < 0 ? Colors.red : Colors.green,
+          ),
         ),
       );
     }
+
+    // Total Expanded
+    Widget expandedNetworth = Padding(
+      padding: const EdgeInsets.only(left: 25, top: 10, bottom: 20),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Total: ',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              ...moneySources,
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$${moneyFormat.format(total)}',
+                style: TextStyle(
+                  color: total! < 0 ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              ...moneyQuantities,
+            ],
+          ),
+        ],
+      ),
+    );
 
     return Card(
       child: ExpandablePanel(
@@ -4712,13 +4734,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           ),
         ),
-        expanded: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: moneySources,
-          ),
-        ),
+        expanded: expandedNetworth,
       ),
     );
   }
