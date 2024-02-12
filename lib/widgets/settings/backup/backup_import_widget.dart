@@ -217,7 +217,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
             activeColor: Colors.blueGrey,
             value: _selectedItems.contains("targets"),
             title: const Text("Targets"),
-            subtitle: Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
+            subtitle: Text("Targets list and notes", style: TextStyle(fontSize: 12)),
             onChanged: (value) {
               setState(() {
                 _selectedItems.contains("targets") ? _selectedItems.remove("targets") : _selectedItems.add("targets");
