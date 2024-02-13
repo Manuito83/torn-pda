@@ -980,6 +980,12 @@ class TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
+        headerValue: "Can I pin a target to the top?",
+        expandedValue: "Yes. Swipe right the target's card to pin/unpin it.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
         headerValue: "Can I hide an entire faction temporarily?",
         expandedValue: "Yes. Tap on the faction icon in the app bar and then use the 'eye' icon.",
       ),
@@ -987,7 +993,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Can I hide a target?",
-        expandedValue: "Yes. Swipe right the target's card to hide it.",
+        expandedValue: "Yes. Swipe left the target's card to hide it.",
       ),
     );
     tips.add(

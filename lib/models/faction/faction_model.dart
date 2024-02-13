@@ -100,6 +100,7 @@ class Member {
     this.personalNote,
     this.personalNoteColor,
     this.hidden,
+    this.pinned = false,
     this.statsEstimated,
     //
     this.spySource = SpiesSource.yata,
@@ -157,6 +158,7 @@ class Member {
   String? personalNote = "";
   String? personalNoteColor = "";
   bool? hidden = false;
+  bool pinned = false;
   String? statsEstimated = "";
   // Spies parameters
   SpiesSource? spySource;
@@ -214,6 +216,7 @@ class Member {
         personalNote: json["personalNotes"] ?? "",
         personalNoteColor: json["personalNoteColor"] ?? "",
         hidden: json["hidden"] ?? false,
+        pinned: json["pinned"] ?? false,
         statsEstimated: json["statsEstimated"] ?? "",
         spySource: json["spiesSource"] == null
             ? SpiesSource.yata
@@ -270,6 +273,7 @@ class Member {
         "personalNotes": personalNote,
         "personalNoteColor": personalNoteColor,
         "hidden": hidden,
+        "pinned": pinned,
         "statsEstimated": statsEstimated,
         "spiesSource": spySource == SpiesSource.yata ? "yata" : "tornStats",
         "statsExactTotal": statsExactTotal,

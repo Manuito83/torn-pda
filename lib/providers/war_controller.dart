@@ -350,12 +350,12 @@ class WarController extends GetxController {
     return [thisCards.length, numberUpdated];
   }
 
-  Future<int> updateAllMembersEasy() async {
+  Future<int> updateAllMembersEasy({bool forceIntegrityCheck = true}) async {
     final dynamic allAttacksSuccess = await getAllAttacks();
 
     stopUpdate();
 
-    await _integrityCheck(force: true);
+    await _integrityCheck(force: forceIntegrityCheck);
 
     int numberUpdated = 0;
 
@@ -581,6 +581,28 @@ class WarController extends GetxController {
     for (final f in factions) {
       if (f.members!.keys.contains(hiddenMember!.memberId.toString())) {
         f.members![hiddenMember.memberId.toString()]!.hidden = false;
+        savePreferences();
+        update();
+        break;
+      }
+    }
+  }
+
+  void pinMember(Member? pinMember) {
+    for (final f in factions) {
+      if (f.members!.keys.contains(pinMember!.memberId.toString())) {
+        f.members![pinMember.memberId.toString()]!.pinned = true;
+        savePreferences();
+        update();
+        break;
+      }
+    }
+  }
+
+  void unpinMember(Member? pinMember) {
+    for (final f in factions) {
+      if (f.members!.keys.contains(pinMember!.memberId.toString())) {
+        f.members![pinMember.memberId.toString()]!.pinned = false;
         savePreferences();
         update();
         break;
@@ -831,6 +853,8 @@ class WarController extends GetxController {
       final FactionModel apiImport = apiResult as FactionModel;
 
       bool changes = false;
+
+      // Get a copy of the in-app faction members so that we can iterate safety and add/delete members
       Map<String, Member> oldFactionMembers = Map.from(faction.members!);
 
       // Remove members that do not longer belong to the faction
@@ -843,18 +867,19 @@ class WarController extends GetxController {
         return false;
       });
 
-      // Add new members that were not here before
+      // If some members have left, update [faction.members] from the changes in [oldFactionMembers]
+      if (changes) {
+        faction.members = Map.from(oldFactionMembers);
+      }
+
+      // Add new members that were not here before. We add them directly in [faction.members] so there is no need
+      // to track changes or use [oldFactionMembers] again here
       apiImport.members!.forEach((key, value) {
         if (!oldFactionMembers.containsKey(key)) {
           faction.members![key] = apiImport.members![key];
           updateSingleMemberFull(faction.members![key]!);
-          changes = true;
         }
       });
-
-      if (changes) {
-        faction.members = Map.from(oldFactionMembers);
-      }
     }
 
     Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
@@ -922,7 +947,7 @@ class WarController extends GetxController {
       _deleteSpiedStats(member);
     }
 
-        // Find the spy based in the current selected spy source
+    // Find the spy based in the current selected spy source
     if (spyController.spiesSource == SpiesSource.yata) {
       final spy = spyController.getYataSpy(userId: member.memberId.toString(), name: member.name);
       if (spy != null) {

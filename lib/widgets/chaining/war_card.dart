@@ -87,7 +87,7 @@ class WarCardState extends State<WarCard> {
     _returnLastUpdated();
     _themeProvider = Provider.of<ThemeProvider>(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       child: Card(
         shape: RoundedRectangleBorder(
           side: BorderSide(color: _borderColor(), width: 1.5),
@@ -103,11 +103,19 @@ class WarCardState extends State<WarCard> {
           child: Container(
             decoration: BoxDecoration(
               border: Border(
+                left: BorderSide(
+                  color: widget.memberModel.pinned ? Colors.green[800]! : Colors.transparent,
+                  width: 3,
+                ),
+                bottom: BorderSide(
+                  color: widget.memberModel.pinned ? Colors.green[800]! : Colors.transparent,
+                  width: 3,
+                ),
                 right: BorderSide(
                   color: _chainProvider.panicTargets.where((t) => t.name == _member.name).isNotEmpty
                       ? Colors.blue
                       : Colors.transparent,
-                  width: 2,
+                  width: 3,
                 ),
               ),
             ),
