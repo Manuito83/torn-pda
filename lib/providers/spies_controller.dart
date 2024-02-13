@@ -64,6 +64,14 @@ class SpiesController extends GetxController {
     update();
   }
 
+  bool _allowMixedSpiesSources = true;
+  bool get allowMixedSpiesSources => _allowMixedSpiesSources;
+  set allowMixedSpiesSources(bool value) {
+    _allowMixedSpiesSources = value;
+    Prefs().setAllowMixedSpiesSources(value);
+    update();
+  }
+
   void saveSpies() {
     if (_spiesSource == SpiesSource.yata) {
       List<String> yataSpiesSave = <String>[];
@@ -80,8 +88,8 @@ class SpiesController extends GetxController {
   }
 
   Future _restoreSpies() async {
-    String spiesSource = await Prefs().getSpiesSource();
-    spiesSource == "yata" ? _spiesSource = SpiesSource.yata : SpiesSource.tornStats;
+    String source = await Prefs().getSpiesSource();
+    source == "yata" ? spiesSource = SpiesSource.yata : spiesSource = SpiesSource.tornStats;
 
     // Load YATA
     _yataSpiesTime = DateTime.fromMillisecondsSinceEpoch(await Prefs().getYataSpiesTime());
@@ -97,6 +105,15 @@ class SpiesController extends GetxController {
     if (savedTornStatsSpies.isNotEmpty) {
       _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
     }
+  }
+
+  Future deleteSpies() async {
+    _yataSpiesTime = DateTime.fromMillisecondsSinceEpoch(0);
+    _yataSpies = <YataSpyModel>[];
+    _tornStatsSpiesTime = DateTime.fromMillisecondsSinceEpoch(0);
+    _tornStatsSpies = TornStatsSpiesModel()..spies = <SpyElement>[];
+    saveSpies();
+    update();
   }
 
   String formatUpdateString(int timestamp) {
@@ -182,6 +199,9 @@ class SpiesController extends GetxController {
             spies.add(spyModel);
           });
         }
+      } else {
+        log("Error fetching Yata spies: ${resp.statusCode}");
+        return false;
       }
     } catch (e) {
       log(e.toString());
@@ -211,5 +231,28 @@ class SpiesController extends GetxController {
     }
 
     return false;
+  }
+
+  // Allow name lookup for YATA as old spies will be missing the ID
+  YataSpyModel? getYataSpy({required String userId, String? name}) {
+    if (name == null) {
+      return _yataSpies.firstWhereOrNull((spy) => spy.targetId == userId);
+    } else {
+      YataSpyModel? namedResponse;
+      // This looks weird, but it's to ensure that the ID will always take priority. Either an ID match is found,
+      // or the last matching name is returned. This is to ensure that if a user changes names with someone,
+      // their spies will not be mixed unless the spy data is missing their ID.
+      return _yataSpies.firstWhereOrNull((spy) {
+            if (spy.targetName == name) {
+              namedResponse = spy;
+            }
+            return spy.targetId == userId;
+          }) ??
+          namedResponse;
+    }
+  }
+
+  SpyElement? getTornStatsSpy({required String userId}) {
+    return _tornStatsSpies.spies.firstWhereOrNull((spy) => spy.playerId == userId);
   }
 }

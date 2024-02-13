@@ -65,7 +65,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
   Future? _preferencesLoaded;
 
   late ThemeProvider _themeProvider;
-  SettingsProvider? _settingsProvider;
+  late SettingsProvider _settingsProvider;
 
   @override
   void initState() {
@@ -75,7 +75,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
     routeWithDrawer = false;
     routeName = "profile_options";
-    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
       if (mounted && routeName == "profile_options") _goBack();
     });
   }
@@ -92,8 +92,8 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider!.appBarTop
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
                   height: AppBar().preferredSize.height,
                   child: buildAppBar(),
@@ -376,10 +376,10 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   children: <Widget>[
                                     const Text("Show next Ranked War"),
                                     Switch(
-                                      value: _settingsProvider!.rankedWarsInProfile,
+                                      value: _settingsProvider.rankedWarsInProfile,
                                       onChanged: (value) {
                                         setState(() {
-                                          _settingsProvider!.changeRankedWarsInProfile = value;
+                                          _settingsProvider.changeRankedWarsInProfile = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -464,11 +464,11 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   children: <Widget>[
                                     const Text("Show organized crimes"),
                                     Switch(
-                                      value: _settingsProvider!.oCrimesEnabled,
+                                      value: _settingsProvider.oCrimesEnabled,
                                       onChanged: (value) {
                                         _oCrimesReactivated = value;
                                         setState(() {
-                                          _settingsProvider!.changeOCrimesEnabled = value;
+                                          _settingsProvider.changeOCrimesEnabled = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -509,12 +509,12 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   children: <Widget>[
                                     const Text("Show stats chart"),
                                     Switch(
-                                      value: _settingsProvider!.tornStatsChartEnabled,
+                                      value: _settingsProvider.tornStatsChartEnabled,
                                       onChanged: (value) {
                                         setState(() {
-                                          _settingsProvider!.setTornStatsChartEnabled = value;
+                                          _settingsProvider.setTornStatsChartEnabled = value;
                                           if (!value) {
-                                            _settingsProvider!.setTornStatsChartDateTime = 0;
+                                            _settingsProvider.setTornStatsChartDateTime = 0;
                                           }
                                         });
                                       },
@@ -537,7 +537,24 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
-                              if (_settingsProvider!.tornStatsChartEnabled)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    const Flexible(
+                                      child: Text("Chart type"),
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 20),
+                                    ),
+                                    Flexible(
+                                      child: _chartTypeDropdown(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_settingsProvider.tornStatsChartEnabled)
                                 Column(
                                   children: [
                                     Padding(
@@ -547,10 +564,10 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         children: <Widget>[
                                           const Text("Show with card collapsed"),
                                           Switch(
-                                            value: _settingsProvider!.tornStatsChartInCollapsedMiscCard,
+                                            value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
                                             onChanged: (value) {
                                               setState(() {
-                                                _settingsProvider!.setTornStatsChartInCollapsedMiscCard = value;
+                                                _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
                                               });
                                             },
                                             activeTrackColor: Colors.lightGreenAccent,
@@ -785,7 +802,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
   AppBar buildAppBar() {
     return AppBar(
       iconTheme: IconThemeData(color: Colors.white),
-      elevation: _settingsProvider!.appBarTop ? 2 : 0,
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Profile Options", style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
@@ -793,6 +810,45 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
           _goBack();
         },
       ),
+    );
+  }
+
+  DropdownButton _chartTypeDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.tornStatsChartType,
+      items: const [
+        DropdownMenuItem(
+          value: "line",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Line",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "pie",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Pie",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.setTornStatsChartType = value!;
+        });
+      },
     );
   }
 
@@ -1065,7 +1121,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   DropdownButton _lifeBarDropdown() {
     return DropdownButton<String>(
-      value: _settingsProvider!.lifeBarOption,
+      value: _settingsProvider.lifeBarOption,
       items: const [
         DropdownMenuItem(
           value: "ask",
@@ -1109,7 +1165,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
       ],
       onChanged: (value) {
         setState(() {
-          _settingsProvider!.changeLifeBarOption = value;
+          _settingsProvider.changeLifeBarOption = value;
         });
       },
     );

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
@@ -20,8 +21,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
-import 'package:torn_pda/widgets/spies/estimated_stats_dialog.dart';
-import 'package:torn_pda/widgets/spies/spies_exact_details_dialog.dart';
+import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 
 enum ProfileCheckType {
   profile,
@@ -54,7 +54,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   bool _errorToShow = false;
 
   late SettingsProvider _settingsProvider;
-  final SpiesController _spy = Get.find<SpiesController>();
+  final SpiesController _spyController = Get.find<SpiesController>();
 
   late UserDetailsProvider _userDetails;
   final _expandableController = ExpandableController();
@@ -213,8 +213,10 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       _factionId = otherProfile.faction!.factionId;
 
       // Estimated stats is not awaited, since it can take a few seconds
-      // to contact YATA and decide what we show
-      estimatedStatsCalculator(otherProfile);
+      // to contact YATA / TS and decide what we show
+      estimatedStatsCalculator(otherProfile).then((value) {
+        setState(() {});
+      });
 
       if (otherProfile.playerId == 2225097) {
         _isTornPda = true;
@@ -542,549 +544,545 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future estimatedStatsCalculator(OtherProfileModel otherProfile) async {
-    // 0 is enabled
-    // 1 is disabled
-    // 2 is only if spies
-
-    if (_settingsProvider.profileStatsEnabled == "0" || _settingsProvider.profileStatsEnabled == "2") {
-      int? strength = 0;
-      int? strengthUpdate;
-      int? defense = 0;
-      int? defenseUpdate;
-      int? speed = 0;
-      int? speedUpdate;
-      int? dexterity = 0;
-      int? dexterityUpdate;
-      int? total = 0;
-      int? totalUpdate;
-      bool spyFound = false;
-
+    // Even if we have no spy, we want to show estimated stats
+    final npcs = [4, 10, 15, 17, 19, 20];
+    String estimatedStats = "";
+    bool npc = false;
+    if (npcs.contains(otherProfile.playerId)) {
+      estimatedStats = "NPC!";
+      npc = true;
+    } else {
       try {
-        if (_spy.spiesSource == SpiesSource.yata) {
-          for (var spy in _spy.yataSpies) {
-            if (spy.targetName == otherProfile.name) {
-              strength = spy.strength;
-              strengthUpdate = spy.strengthTimestamp;
-              defense = spy.defense;
-              defenseUpdate = spy.defenseTimestamp;
-              speed = spy.speed;
-              speedUpdate = spy.speedTimestamp;
-              dexterity = spy.dexterity;
-              dexterityUpdate = spy.dexterityTimestamp;
-              total = spy.total;
-              totalUpdate = spy.totalTimestamp;
-              spyFound = true;
-              continue;
-            }
-          }
-        } else {
-          for (var spy in _spy.tornStatsSpies.spies) {
-            if (spy.playerName == otherProfile.name) {
-              strength = spy.strength;
-              defense = spy.defense;
-              speed = spy.speed;
-              dexterity = spy.dexterity;
-              total = spy.total;
-              spyFound = true;
-              continue;
-            }
-          }
-        }
+        estimatedStats = StatsCalculator.calculateStats(
+          criminalRecordTotal: otherProfile.criminalrecord!.total,
+          level: otherProfile.level,
+          networth: otherProfile.personalstats!.networth,
+          rank: otherProfile.rank,
+        );
       } catch (e) {
-        // Won't get spies details
-        log("Spy details failed: $e");
+        estimatedStats = "(EST) UNK";
       }
+    }
 
-      if (spyFound) {
-        // Stats spans
-        final statsSpans = <TextSpan>[];
-        // STR
-        var strColor = Colors.white;
-        if (strength != -1) {
-          if (_userDetails.basic!.strength! >= strength!) {
-            strColor = Colors.green;
-          } else if (_userDetails.basic!.strength! * 1.15 > strength) {
-            strColor = Colors.orange;
-          } else {
-            strColor = Colors.red;
-          }
-          statsSpans.add(
-            const TextSpan(
-              text: "STR ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-          statsSpans.add(
-            TextSpan(
-              text: formatBigNumbers(strength),
-              style: TextStyle(color: strColor, fontSize: 11),
-            ),
-          );
-          statsSpans.add(
-            const TextSpan(
-              text: ", ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-        } else {
-          statsSpans.add(
-            const TextSpan(
-              text: "STR ?, ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-        }
-        // SPD
-        var spdColor = Colors.white;
-        if (speed != -1) {
-          if (_userDetails.basic!.speed! >= speed!) {
-            spdColor = Colors.green;
-          } else if (_userDetails.basic!.speed! * 1.15 > speed) {
-            spdColor = Colors.orange;
-          } else {
-            spdColor = Colors.red;
-          }
-          statsSpans.add(
-            const TextSpan(
-              text: "SPD ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-          statsSpans.add(
-            TextSpan(
-              text: formatBigNumbers(speed),
-              style: TextStyle(color: spdColor, fontSize: 11),
-            ),
-          );
-          statsSpans.add(
-            const TextSpan(
-              text: ", ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-        } else {
-          statsSpans.add(
-            const TextSpan(
-              text: "SPD ?, ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-        }
-        // DEF
-        var defColor = Colors.white;
-        if (defense != -1) {
-          if (_userDetails.basic!.defense! >= defense!) {
-            defColor = Colors.green;
-          } else if (_userDetails.basic!.defense! * 1.15 > defense) {
-            defColor = Colors.orange;
-          } else {
-            defColor = Colors.red;
-          }
-          statsSpans.add(
-            const TextSpan(
-              text: "DEF ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-          statsSpans.add(
-            TextSpan(
-              text: formatBigNumbers(defense),
-              style: TextStyle(color: defColor, fontSize: 11),
-            ),
-          );
-          statsSpans.add(
-            const TextSpan(
-              text: ", ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-        } else {
-          statsSpans.add(
-            const TextSpan(
-              text: "DEF ?, ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-        }
-        // DEX
-        var dexColor = Colors.white;
-        if (dexterity != -1) {
-          if (_userDetails.basic!.dexterity! >= dexterity!) {
-            dexColor = Colors.green;
-          } else if (_userDetails.basic!.dexterity! * 1.15 > dexterity) {
-            dexColor = Colors.orange;
-          } else {
-            dexColor = Colors.red;
-          }
-          statsSpans.add(
-            const TextSpan(
-              text: "DEX ",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-          statsSpans.add(
-            TextSpan(
-              text: formatBigNumbers(dexterity),
-              style: TextStyle(color: dexColor, fontSize: 11),
-            ),
-          );
-        } else {
-          statsSpans.add(
-            const TextSpan(
-              text: "DEX ?",
-              style: TextStyle(color: Colors.white, fontSize: 11),
-            ),
-          );
-        }
+    // Globals
+    int xanaxComparison = 0;
+    Color xanaxColor = Colors.orange;
+    int refillComparison = 0;
+    Color refillColor = Colors.orange;
+    int enhancementComparison = 0;
+    Color enhancementColor = Colors.white;
+    int cansComparison = 0;
+    Color cansColor = Colors.orange;
+    Color sslColor = Colors.green;
+    bool sslProb = true;
+    int? ecstasy = 0;
+    int? lsd = 0;
 
-        final Widget onlineStatus = Row(
-          children: [
-            if (otherProfile.lastAction!.status == "Offline")
-              const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
-            else
-              otherProfile.lastAction!.status == "Idle"
-                  ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
-                  : const Icon(Icons.circle, size: 12, color: Colors.green),
-            if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
-              Padding(
-                padding: const EdgeInsets.only(left: 2),
-                child: Text(
-                  otherProfile.lastAction!.relative!
-                      .replaceAll("minute ago", "m")
-                      .replaceAll("minutes ago", "m")
-                      .replaceAll("hour ago", "h")
-                      .replaceAll("hours ago", "h")
-                      .replaceAll("day ago", "d")
-                      .replaceAll("days ago", "d"),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
-                  ),
-                ),
-              ),
-          ],
-        );
+    List<Widget> additional = <Widget>[];
+    final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+    if (own is OwnPersonalStatsModel) {
+      // XANAX
+      final int otherXanax = otherProfile.personalstats!.xantaken!;
+      final int myXanax = own.personalstats!.xantaken!;
+      xanaxComparison = otherXanax - myXanax;
+      if (xanaxComparison < -10) {
+        xanaxColor = Colors.green;
+      } else if (xanaxComparison > 10) {
+        xanaxColor = Colors.red;
+      }
+      final Text xanaxText = Text(
+        "XAN",
+        style: TextStyle(color: xanaxColor, fontSize: 11),
+      );
 
-        Color infoColorStats = Colors.white;
-        if (total != -1) {
-          infoColorStats = Colors.red;
-          if (_userDetails.basic!.total! >= total!) {
-            infoColorStats = Colors.green;
-          } else if (_userDetails.basic!.total! * 1.15 > total) {
-            infoColorStats = Colors.orange;
-          }
+      // REFILLS
+      final int otherRefill = otherProfile.personalstats!.refills!;
+      final int myRefill = own.personalstats!.refills!;
+      refillComparison = otherRefill - myRefill;
+      refillColor = Colors.orange;
+      if (refillComparison < -10) {
+        refillColor = Colors.green;
+      } else if (refillComparison > 10) {
+        refillColor = Colors.red;
+      }
+      final Text refillText = Text(
+        "RFL",
+        style: TextStyle(color: refillColor, fontSize: 11),
+      );
+
+      // ENHANCEMENT
+      final int otherEnhancement = otherProfile.personalstats!.statenhancersused!;
+      final int myEnhancement = own.personalstats!.statenhancersused!;
+      enhancementComparison = otherEnhancement - myEnhancement;
+      if (enhancementComparison < 0) {
+        enhancementColor = Colors.green;
+      } else if (enhancementComparison > 0) {
+        enhancementColor = Colors.red;
+      }
+      final Text enhancementText = Text(
+        "ENH",
+        style: TextStyle(color: enhancementColor, fontSize: 11),
+      );
+
+      // CANS
+      final int otherCans = otherProfile.personalstats!.energydrinkused!;
+      final int myCans = own.personalstats!.energydrinkused!;
+      cansComparison = otherCans - myCans;
+      if (cansComparison < 0) {
+        cansColor = Colors.green;
+      } else if (cansComparison > 0) {
+        cansColor = Colors.red;
+      }
+      final Text cansText = Text(
+        "CAN",
+        style: TextStyle(color: cansColor, fontSize: 11),
+      );
+
+      /// SSL
+      /// If (xan + esc) > 150, SSL is blank;
+      /// if (esc + xan) < 150 & LSD < 50, SSL is green;
+      /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
+      /// if (esc + xan) < 150 & LSD > 100 SSL is red
+      Widget sslWidget = const SizedBox.shrink();
+      sslColor = Colors.green;
+      ecstasy = otherProfile.personalstats!.exttaken;
+      lsd = otherProfile.personalstats!.lsdtaken;
+      if (otherXanax + ecstasy! > 150) {
+        sslProb = false;
+      } else {
+        if (lsd! > 50 && lsd < 50) {
+          sslColor = Colors.orange;
+        } else if (lsd > 100) {
+          sslColor = Colors.red;
         }
-
-        _statsWidget = Container(
-          color: Colors.grey[900],
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
-            child: Row(
-              children: [
-                Image.asset(
-                  _spy.spiesSource == SpiesSource.yata
-                      ? 'images/icons/yata_logo.png'
-                      : 'images/icons/tornstats_logo.png',
-                  height: 18,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: RichText(
-                          text: TextSpan(
-                            children: statsSpans,
-                          ),
-                        ),
-                      ),
-                      onlineStatus,
-                      Padding(
-                        padding: const EdgeInsets.only(left: 2),
-                        child: GestureDetector(
-                          child: Icon(
-                            Icons.info_outline,
-                            color: infoColorStats,
-                            size: 18,
-                          ),
-                          onTap: () {
-                            showDialog<void>(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return SpiesExactDetailsDialog(
-                                  spy: _spy,
-                                  strength: strength ?? -1,
-                                  strengthUpdate: strengthUpdate,
-                                  defense: defense ?? -1,
-                                  defenseUpdate: defenseUpdate,
-                                  speed: speed ?? -1,
-                                  speedUpdate: speedUpdate,
-                                  dexterity: dexterity ?? -1,
-                                  dexterityUpdate: dexterityUpdate,
-                                  total: total ?? -1,
-                                  totalUpdate: totalUpdate,
-                                  update: totalUpdate,
-                                  name: _playerName!,
-                                  factionName: _factionName!,
-                                  themeProvider: widget.themeProvider!,
-                                  userDetailsProvider: _userDetails,
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        sslWidget = Text(
+          "[SSL]",
+          style: TextStyle(
+            color: sslColor,
+            fontSize: 11,
           ),
         );
-      } else if (!spyFound && _settingsProvider.profileStatsEnabled == "0") {
-        // Even if we have no YATA spy, but we want to show estimated stats
-        final npcs = [4, 10, 15, 17, 19, 20];
-        String estimatedStats = "";
-        bool npc = false;
-        if (npcs.contains(otherProfile.playerId)) {
-          estimatedStats = "NPC!";
-          npc = true;
-        } else {
-          try {
-            estimatedStats = StatsCalculator.calculateStats(
-              criminalRecordTotal: otherProfile.criminalrecord!.total,
-              level: otherProfile.level,
-              networth: otherProfile.personalstats!.networth,
-              rank: otherProfile.rank,
-            );
-          } catch (e) {
-            estimatedStats = "(EST) UNK";
+      }
+
+      additional.add(xanaxText);
+      additional.add(const SizedBox(width: 5));
+      additional.add(refillText);
+      additional.add(const SizedBox(width: 5));
+      additional.add(enhancementText);
+      additional.add(const SizedBox(width: 5));
+      additional.add(cansText);
+      additional.add(const SizedBox(width: 5));
+      additional.add(sslWidget);
+      additional.add(const SizedBox(width: 5));
+    }
+
+    SpiesSource? spySource;
+    int? totalUpdate;
+    int? spyUpdated;
+    YataSpyModel? yataSpy;
+
+    // Locate the spy first based on the active source
+    try {
+      // Find the spy based in the current selected spy source
+      if (_spyController.spiesSource == SpiesSource.yata) {
+        final spy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
+        if (spy != null) {
+          yataSpy = spy;
+        } else if (_spyController.allowMixedSpiesSources) {
+          // Check alternate source of spies if we allow mixed sources
+          final altSpy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
+          if (altSpy != null) {
+            yataSpy = altSpy.toYataModel();
           }
         }
-
-        // Globals
-        int xanaxComparison = 0;
-        Color xanaxColor = Colors.orange;
-        int refillComparison = 0;
-        Color refillColor = Colors.orange;
-        int enhancementComparison = 0;
-        Color enhancementColor = Colors.white;
-        int cansComparison = 0;
-        Color cansColor = Colors.orange;
-        Color sslColor = Colors.green;
-        bool sslProb = true;
-        int? ecstasy = 0;
-        int? lsd = 0;
-
-        List<Widget> additional = <Widget>[];
-        final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
-        if (own is OwnPersonalStatsModel) {
-          // XANAX
-          final int otherXanax = otherProfile.personalstats!.xantaken!;
-          final int myXanax = own.personalstats!.xantaken!;
-          xanaxComparison = otherXanax - myXanax;
-          if (xanaxComparison < -10) {
-            xanaxColor = Colors.green;
-          } else if (xanaxComparison > 10) {
-            xanaxColor = Colors.red;
+      } else if (_spyController.spiesSource == SpiesSource.tornStats) {
+        final spy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
+        if (spy != null) {
+          yataSpy = spy.toYataModel();
+        } else if (_spyController.allowMixedSpiesSources) {
+          // Check alternate source of spies if we allow mixed sources
+          final altSpy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
+          if (altSpy != null) {
+            yataSpy = altSpy;
           }
-          final Text xanaxText = Text(
-            "XAN",
-            style: TextStyle(color: xanaxColor, fontSize: 11),
-          );
+        }
+      }
+    } catch (e) {
+      // Won't get spies details
+      log("Spy details failed: $e");
+    }
 
-          // REFILLS
-          final int otherRefill = otherProfile.personalstats!.refills!;
-          final int myRefill = own.personalstats!.refills!;
-          refillComparison = otherRefill - myRefill;
-          refillColor = Colors.orange;
-          if (refillComparison < -10) {
-            refillColor = Colors.green;
-          } else if (refillComparison > 10) {
-            refillColor = Colors.red;
-          }
-          final Text refillText = Text(
-            "RFL",
-            style: TextStyle(color: refillColor, fontSize: 11),
-          );
-
-          // ENHANCEMENT
-          final int otherEnhancement = otherProfile.personalstats!.statenhancersused!;
-          final int myEnhancement = own.personalstats!.statenhancersused!;
-          enhancementComparison = otherEnhancement - myEnhancement;
-          if (enhancementComparison < 0) {
-            enhancementColor = Colors.green;
-          } else if (enhancementComparison > 0) {
-            enhancementColor = Colors.red;
-          }
-          final Text enhancementText = Text(
-            "ENH",
-            style: TextStyle(color: enhancementColor, fontSize: 11),
-          );
-
-          // CANS
-          final int otherCans = otherProfile.personalstats!.energydrinkused!;
-          final int myCans = own.personalstats!.energydrinkused!;
-          cansComparison = otherCans - myCans;
-          if (cansComparison < 0) {
-            cansColor = Colors.green;
-          } else if (cansComparison > 0) {
-            cansColor = Colors.red;
-          }
-          final Text cansText = Text(
-            "CAN",
-            style: TextStyle(color: cansColor, fontSize: 11),
-          );
-
-          /// SSL
-          /// If (xan + esc) > 150, SSL is blank;
-          /// if (esc + xan) < 150 & LSD < 50, SSL is green;
-          /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
-          /// if (esc + xan) < 150 & LSD > 100 SSL is red
-          Widget sslWidget = const SizedBox.shrink();
-          sslColor = Colors.green;
-          ecstasy = otherProfile.personalstats!.exttaken;
-          lsd = otherProfile.personalstats!.lsdtaken;
-          if (otherXanax + ecstasy! > 150) {
-            sslProb = false;
-          } else {
-            if (lsd! > 50 && lsd < 50) {
-              sslColor = Colors.orange;
-            } else if (lsd > 100) {
-              sslColor = Colors.red;
-            }
-            sslWidget = Text(
-              "[SSL]",
+    // ONLINE STATUS
+    final Widget onlineStatus = Row(
+      children: [
+        if (otherProfile.lastAction!.status == "Offline")
+          const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+        else
+          otherProfile.lastAction!.status == "Idle"
+              ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
+              : const Icon(Icons.circle, size: 12, color: Colors.green),
+        if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
+          Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: Text(
+              otherProfile.lastAction!.relative!
+                  .replaceAll("minute ago", "m")
+                  .replaceAll("minutes ago", "m")
+                  .replaceAll("hour ago", "h")
+                  .replaceAll("hours ago", "h")
+                  .replaceAll("day ago", "d")
+                  .replaceAll("days ago", "d"),
               style: TextStyle(
-                color: sslColor,
                 fontSize: 11,
+                color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
               ),
-            );
-          }
-
-          additional.add(xanaxText);
-          additional.add(const SizedBox(width: 5));
-          additional.add(refillText);
-          additional.add(const SizedBox(width: 5));
-          additional.add(enhancementText);
-          additional.add(const SizedBox(width: 5));
-          additional.add(cansText);
-          additional.add(const SizedBox(width: 5));
-          additional.add(sslWidget);
-          additional.add(const SizedBox(width: 5));
-        }
-
-        // ONLINE STATUS
-        final Widget onlineStatus = Row(
-          children: [
-            if (otherProfile.lastAction!.status == "Offline")
-              const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
-            else
-              otherProfile.lastAction!.status == "Idle"
-                  ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
-                  : const Icon(Icons.circle, size: 12, color: Colors.green),
-            if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
-              Padding(
-                padding: const EdgeInsets.only(left: 2),
-                child: Text(
-                  otherProfile.lastAction!.relative!
-                      .replaceAll("minute ago", "m")
-                      .replaceAll("minutes ago", "m")
-                      .replaceAll("hour ago", "h")
-                      .replaceAll("hours ago", "h")
-                      .replaceAll("day ago", "d")
-                      .replaceAll("days ago", "d"),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
-                  ),
-                ),
-              ),
-          ],
-        );
-
-        _statsWidget = Container(
-          color: Colors.grey[900],
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        npc ? "" : "(EST)",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        estimatedStats,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      if (!npc)
-                        Expanded(
-                          child: Wrap(
-                            children: additional,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                if (!npc) onlineStatus,
-                if (!npc)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 2),
-                    child: GestureDetector(
-                      child: const Icon(
-                        Icons.info_outline,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      onTap: () {
-                        showDialog(
-                          useRootNavigator: false,
-                          context: context,
-                          barrierDismissible: true,
-                          builder: (_) {
-                            return EstimatedStatsDialog(
-                              xanaxCompare: xanaxComparison,
-                              xanaxColor: xanaxColor,
-                              refillCompare: refillComparison,
-                              refillColor: refillColor,
-                              enhancementCompare: enhancementComparison,
-                              enhancementColor: enhancementColor,
-                              cansCompare: cansComparison,
-                              cansColor: cansColor,
-                              sslColor: sslColor,
-                              sslProb: sslProb,
-                              otherXanTaken: otherProfile.personalstats!.xantaken!,
-                              otherEctTaken: otherProfile.personalstats!.exttaken!,
-                              otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
-                              otherName: otherProfile.name!,
-                              otherFactionName: otherProfile.name!,
-                              otherLastActionRelative: otherProfile.lastAction!.relative!,
-                              themeProvider: widget.themeProvider!,
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-              ],
             ),
+          ),
+      ],
+    );
+
+    if (yataSpy != null) {
+      // Stats spans
+      final statsSpans = <TextSpan>[];
+      final strength = yataSpy.strength;
+      final speed = yataSpy.speed;
+      final defense = yataSpy.defense;
+      final dexterity = yataSpy.dexterity;
+      final total = yataSpy.total;
+      // STR
+      var strColor = Colors.white;
+      if (strength != -1) {
+        if (_userDetails.basic!.strength! >= strength!) {
+          strColor = Colors.green;
+        } else if (_userDetails.basic!.strength! * 1.15 > strength) {
+          strColor = Colors.orange;
+        } else {
+          strColor = Colors.red;
+        }
+        statsSpans.add(
+          const TextSpan(
+            text: "STR ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+        statsSpans.add(
+          TextSpan(
+            text: formatBigNumbers(strength),
+            style: TextStyle(color: strColor, fontSize: 11),
+          ),
+        );
+        statsSpans.add(
+          const TextSpan(
+            text: ", ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+      } else {
+        statsSpans.add(
+          const TextSpan(
+            text: "STR ?, ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
           ),
         );
       }
+      // SPD
+      var spdColor = Colors.white;
+      if (speed != -1) {
+        if (_userDetails.basic!.speed! >= speed!) {
+          spdColor = Colors.green;
+        } else if (_userDetails.basic!.speed! * 1.15 > speed) {
+          spdColor = Colors.orange;
+        } else {
+          spdColor = Colors.red;
+        }
+        statsSpans.add(
+          const TextSpan(
+            text: "SPD ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+        statsSpans.add(
+          TextSpan(
+            text: formatBigNumbers(speed),
+            style: TextStyle(color: spdColor, fontSize: 11),
+          ),
+        );
+        statsSpans.add(
+          const TextSpan(
+            text: ", ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+      } else {
+        statsSpans.add(
+          const TextSpan(
+            text: "SPD ?, ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+      }
+      // DEF
+      var defColor = Colors.white;
+      if (defense != -1) {
+        if (_userDetails.basic!.defense! >= defense!) {
+          defColor = Colors.green;
+        } else if (_userDetails.basic!.defense! * 1.15 > defense) {
+          defColor = Colors.orange;
+        } else {
+          defColor = Colors.red;
+        }
+        statsSpans.add(
+          const TextSpan(
+            text: "DEF ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+        statsSpans.add(
+          TextSpan(
+            text: formatBigNumbers(defense),
+            style: TextStyle(color: defColor, fontSize: 11),
+          ),
+        );
+        statsSpans.add(
+          const TextSpan(
+            text: ", ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+      } else {
+        statsSpans.add(
+          const TextSpan(
+            text: "DEF ?, ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+      }
+      // DEX
+      var dexColor = Colors.white;
+      if (dexterity != -1) {
+        if (_userDetails.basic!.dexterity! >= dexterity!) {
+          dexColor = Colors.green;
+        } else if (_userDetails.basic!.dexterity! * 1.15 > dexterity) {
+          dexColor = Colors.orange;
+        } else {
+          dexColor = Colors.red;
+        }
+        statsSpans.add(
+          const TextSpan(
+            text: "DEX ",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+        statsSpans.add(
+          TextSpan(
+            text: formatBigNumbers(dexterity),
+            style: TextStyle(color: dexColor, fontSize: 11),
+          ),
+        );
+      } else {
+        statsSpans.add(
+          const TextSpan(
+            text: "DEX ?",
+            style: TextStyle(color: Colors.white, fontSize: 11),
+          ),
+        );
+      }
+
+      Color infoColorStats = Colors.white;
+      if (total != -1) {
+        infoColorStats = Colors.red;
+        if (_userDetails.basic!.total! >= total!) {
+          infoColorStats = Colors.green;
+        } else if (_userDetails.basic!.total! * 1.15 > total) {
+          infoColorStats = Colors.orange;
+        }
+      }
+
+      _statsWidget = Container(
+        color: Colors.grey[900],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
+          child: Row(
+            children: [
+              Image.asset(
+                spySource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                height: 18,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: RichText(
+                        text: TextSpan(
+                          children: statsSpans,
+                        ),
+                      ),
+                    ),
+                    onlineStatus,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: GestureDetector(
+                        child: Icon(
+                          Icons.info_outline,
+                          color: infoColorStats,
+                          size: 18,
+                        ),
+                        onTap: () {
+                          showDialog<void>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              final spiesPayload = SpiesPayload(
+                                spyController: _spyController,
+                                strength: strength ?? -1,
+                                strengthUpdate: yataSpy?.strengthTimestamp ?? -1,
+                                defense: defense ?? -1,
+                                defenseUpdate: yataSpy?.defenseTimestamp ?? -1,
+                                speed: speed ?? -1,
+                                speedUpdate: yataSpy?.speedTimestamp ?? -1,
+                                dexterity: dexterity ?? -1,
+                                dexterityUpdate: yataSpy?.dexterityTimestamp ?? -1,
+                                total: total ?? -1,
+                                totalUpdate: totalUpdate,
+                                update: spyUpdated,
+                                spySource: spySource,
+                                name: _playerName!,
+                                factionName: _factionName!,
+                                themeProvider: widget.themeProvider!,
+                                userDetailsProvider: _userDetails,
+                              );
+
+                              final estimatedStatsPayload = EstimatedStatsPayload(
+                                xanaxCompare: xanaxComparison,
+                                xanaxColor: xanaxColor,
+                                refillCompare: refillComparison,
+                                refillColor: refillColor,
+                                enhancementCompare: enhancementComparison,
+                                enhancementColor: enhancementColor,
+                                cansCompare: cansComparison,
+                                cansColor: cansColor,
+                                sslColor: sslColor,
+                                sslProb: sslProb,
+                                otherXanTaken: otherProfile.personalstats!.xantaken!,
+                                otherEctTaken: otherProfile.personalstats!.exttaken!,
+                                otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
+                                otherName: otherProfile.name!,
+                                otherFactionName: otherProfile.name!,
+                                otherLastActionRelative: otherProfile.lastAction!.relative!,
+                                themeProvider: widget.themeProvider!,
+                              );
+
+                              final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
+
+                              return StatsDialog(
+                                spiesPayload: spiesPayload,
+                                estimatedStatsPayload: estimatedStatsPayload,
+                                tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (yataSpy == null) {
+      _statsWidget = Container(
+        color: Colors.grey[900],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Row(
+                  children: [
+                    Text(
+                      npc ? "" : "(EST)",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      estimatedStats,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    if (!npc)
+                      Flexible(
+                        child: Wrap(
+                          children: additional,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (!npc)
+                Padding(
+                  padding: const EdgeInsets.only(right: 30),
+                  child: onlineStatus,
+                ),
+              if (!npc)
+                Padding(
+                  padding: const EdgeInsets.only(left: 2),
+                  child: GestureDetector(
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    onTap: () {
+                      showDialog<void>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          final estimatedStatsPayload = EstimatedStatsPayload(
+                            xanaxCompare: xanaxComparison,
+                            xanaxColor: xanaxColor,
+                            refillCompare: refillComparison,
+                            refillColor: refillColor,
+                            enhancementCompare: enhancementComparison,
+                            enhancementColor: enhancementColor,
+                            cansCompare: cansComparison,
+                            cansColor: cansColor,
+                            sslColor: sslColor,
+                            sslProb: sslProb,
+                            otherXanTaken: otherProfile.personalstats!.xantaken!,
+                            otherEctTaken: otherProfile.personalstats!.exttaken!,
+                            otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
+                            otherName: otherProfile.name!,
+                            otherFactionName: otherProfile.name!,
+                            otherLastActionRelative: otherProfile.lastAction!.relative!,
+                            themeProvider: widget.themeProvider!,
+                          );
+
+                          final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
+
+                          return StatsDialog(
+                            spiesPayload: null,
+                            estimatedStatsPayload: estimatedStatsPayload,
+                            tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
 
       // This might come a few seconds after the main widget builds, so we are showing
       // it if mounted and refreshing state

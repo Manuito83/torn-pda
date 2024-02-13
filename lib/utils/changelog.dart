@@ -39,6 +39,27 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.3.0 - Build 380 - 13/02/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.3.0'
+        ..date = '25 FEB 2024'
+        ..features = [
+          "Improved user script manager: includes remote fetching, auto update, auto JS file import and fixes [Kwack]",
+          "Added private cloud backup and share functionality for specific Torn PDA settings",
+          "Added Torn Stats Central information and merged stats dialogs into one",
+          "Spies: added option to allow mixed sources, fixed persistence and other issues",
+          "War cards can now be pinned (right swipe)",
+          "Added option to delay API calls before hitting the API limit (disabled by default)",
+          "Downloaded files trigger a share request automatically by default (see Tips for more info)",
+          "Added option to enable or disable browser cache (enabled by default)",
+          "Added pie option for Torn Stats chart",
+          "Fixed Awards images",
+          "Fixed RW widget update in Profile",
+          "Fixed other reported issues",
+        ],
+    );
+
     // v3.2.5 - Build 374 - 04/01/2024
     itemList.add(
       ChangeLogItem()

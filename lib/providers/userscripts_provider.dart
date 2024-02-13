@@ -1,7 +1,6 @@
 // Dart imports:
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:developer';
 
 // Flutter imports:
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -14,18 +13,16 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/utils/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/userscript_examples.dart';
+// import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptsProvider extends ChangeNotifier {
-  List<UserScriptModel> _userScriptList = <UserScriptModel>[];
+  final List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
 
   List<UserScriptModel> exampleScripts = <UserScriptModel>[];
 
   bool _scriptsFirstTime = true;
   bool get scriptsFirstTime => _scriptsFirstTime;
-
-  bool newFeatInjectionTimeShown = true;
 
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
@@ -35,6 +32,16 @@ class UserScriptsProvider extends ChangeNotifier {
     _saveUserScriptsListSharedPrefs();
     notifyListeners();
   }
+
+  var _userScriptsNotifyUpdates = true;
+  bool get userScriptsNotifyUpdates => _userScriptsNotifyUpdates;
+  set setUserScriptsNotifyUpdates(bool enabled) {
+    _userScriptsNotifyUpdates = enabled;
+    Prefs().setUserScriptsNotifyUpdates(enabled);
+    notifyListeners();
+  }
+
+  List<String?> get defaultScriptUrls => UserScriptModel.exampleScriptURLs;
 
   UnmodifiableListView<UserScript> getHandlerSources({
     required String apiKey,
@@ -85,64 +92,25 @@ class UserScriptsProvider extends ChangeNotifier {
     required String apiKey,
     required UserScriptTime time,
   }) {
-    final scriptListToAdd = <UserScript>[];
-    if (_userScriptsEnabled) {
-      for (final script in _userScriptList) {
-        if (script.enabled!) {
-          if (time != script.time) continue;
-
-          bool add = false;
-          if (script.urls!.isEmpty) {
-            // Add the continuous scripts
-            add = true;
-          } else {
-            for (final String? u in script.urls as Iterable<String?>) {
-              // Add the ones that match this URL
-              if (url.contains(u!.replaceAll("*", ""))) {
-                add = true;
-                break;
-              }
-            }
-          }
-
-          if (add) {
-            scriptListToAdd.add(
-              UserScript(
-                groupName: script.name,
-                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                source: adaptSource(script.source!, apiKey),
-              ),
-            );
-          }
-        }
-      }
+    if (!_userScriptsEnabled) {
+      return UnmodifiableListView(const <UserScript>[]);
+    } else {
+      return UnmodifiableListView(_userScriptList.where((s) => s.shouldInject(url, time)).map((s) => UserScript(
+            groupName: s.name,
+            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+            source: adaptSource(s.source, apiKey),
+          )));
     }
-    return UnmodifiableListView(scriptListToAdd);
   }
 
-  List<String?> getScriptsToRemove({
+  List<String> getScriptsToRemove({
     required String url,
   }) {
-    final scriptListToRemove = <String?>[];
-    if (_userScriptsEnabled) {
-      for (final script in _userScriptList) {
-        //if (script.enabled) {
-        if (script.urls!.isNotEmpty) {
-          var found = false;
-          for (final String? u in script.urls as Iterable<String?>) {
-            if (script.enabled! && url.contains(u!.replaceAll("*", ""))) {
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            scriptListToRemove.add(script.name);
-          }
-        }
-        //}
-      }
+    if (!_userScriptsEnabled) {
+      return const <String>[];
+    } else {
+      return _userScriptList.where((s) => !s.shouldInject(url)).map((s) => s.name).toList();
     }
-    return scriptListToRemove;
   }
 
   String adaptSource(String source, String apiKey) {
@@ -153,25 +121,53 @@ class UserScriptsProvider extends ChangeNotifier {
     return anonFunction;
   }
 
+  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
+    final response = await UserScriptModel.fromURL(url, isExample: isExample);
+    if (response.success && response.model != null) {
+      if (_userScriptList.any((script) => script.name == response.model!.name)) {
+        return (success: false, message: "Script with same name already exists");
+      }
+      userScriptList.add(response.model!);
+      _sort();
+      _saveUserScriptsListSharedPrefs();
+      notifyListeners();
+      return (success: true, message: null);
+    } else {
+      return (success: false, message: response.message);
+    }
+  }
+
+  void addUserScriptByModel(UserScriptModel model) {
+    userScriptList.add(model);
+    _sort();
+    _saveUserScriptsListSharedPrefs();
+    notifyListeners();
+  }
+
   void addUserScript(
-    String? name,
+    String name,
     UserScriptTime time,
     String source, {
-    bool? enabled = true,
-    int? exampleCode = 0,
-    int? version = 0,
+    bool enabled = true,
+    String version = "0.0.0",
     edited = false,
+    String? url,
+    UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
     allScriptFirstLoad = false,
+    bool isExample = false,
+    List<String>? matches,
   }) {
     final newScript = UserScriptModel(
       name: name,
       time: time,
       source: source,
       enabled: enabled,
-      exampleCode: exampleCode,
       version: version,
       edited: edited,
-      urls: getUrls(source),
+      matches: matches ?? UserScriptModel.tryGetMatches(source),
+      updateStatus: updateStatus,
+      url: url,
+      isExample: isExample,
     );
     userScriptList.add(newScript);
 
@@ -183,25 +179,35 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
-  void updateUserScript(
-    UserScriptModel? editedModel,
+  /// Returns a bool indicating if the header could be parsed
+  bool updateUserScript(
+    UserScriptModel editedModel,
     String name,
     UserScriptTime time,
     String source,
     bool changedSource,
+    bool isFromRemote,
   ) {
-    for (final script in userScriptList) {
-      if (script == editedModel) {
-        script.name = name;
-        script.urls = getUrls(source);
-        script.time = time;
-        script.source = source;
-        script.edited = changedSource;
-        break;
-      }
+    List<String>? matches;
+    bool couldParseHeader = true;
+    try {
+      matches = UserScriptModel.tryGetMatches(source);
+    } catch (e) {
+      matches ??= const ["*"];
     }
+    userScriptList.firstWhere((script) => script.name == editedModel.name).update(
+        name: name,
+        time: time,
+        source: source,
+        matches: matches,
+        updateStatus: isFromRemote
+            ? UserScriptUpdateStatus.upToDate
+            : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
+                ? UserScriptUpdateStatus.noRemote
+                : UserScriptUpdateStatus.localModified);
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
+    return couldParseHeader;
   }
 
   void removeUserScript(UserScriptModel removedModel) {
@@ -221,61 +227,63 @@ class UserScriptsProvider extends ChangeNotifier {
     _saveUserScriptsListSharedPrefs();
   }
 
-  Future restoreExamples(bool onlyRestoreNew) async {
-    log("Restoring userscript examples!");
-    final newList = <UserScriptModel>[];
-
-    // Add the ones that are not examples
-    for (final existing in _userScriptList) {
-      if (existing.exampleCode == 0) {
-        newList.add(existing);
-      }
-    }
-
-    // Then add the examples ones
-    final exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
-
-    // But before, ensure that we don't add an example script with an already taken name
-    // in a user-inserted script (with exampleCode == 0)
-    for (var s = 0; s < exampleScripts.length; s++) {
-      for (final existingScript in _userScriptList) {
-        if (existingScript.name!.toLowerCase() == exampleScripts[s].name!.toLowerCase() &&
-            existingScript.exampleCode == 0) {
-          exampleScripts[s].name = "${exampleScripts[s].name!} (example)";
-          break;
-        }
-      }
-    }
-
-    if (onlyRestoreNew) {
-      for (var i = 0; i < exampleScripts.length; i++) {
-        var newExample = true;
-        final currentExampleCode = exampleScripts[i].exampleCode;
-        for (var j = 0; j < _userScriptList.length; j++) {
-          if (currentExampleCode == _userScriptList[j].exampleCode) {
-            newExample = false;
-            break;
-          }
-        }
-        if (newExample) {
-          newList.add(exampleScripts[i]);
-        } else {
-          newList.add(_userScriptList.singleWhere((element) => element.exampleCode == currentExampleCode));
-        }
-      }
-    } else {
-      newList.addAll(exampleScripts);
-    }
-
-    _userScriptList = List<UserScriptModel>.from(newList);
-
-    _sort();
-    _saveUserScriptsListSharedPrefs();
-    notifyListeners();
-  }
-
   void wipe() {
     _userScriptList.clear();
+    notifyListeners();
+    _saveUserScriptsListSharedPrefs();
+  }
+
+  /// [defaultToDisabled] makes all scripts inactive, if we can trust them 100% because they come from a shared backup
+  void restoreScriptsFromServerSave({
+    required bool overwritte,
+    required String scriptsList,
+    bool defaultToDisabled = false,
+  }) async {
+    // If we overwritte, just save to prefs and initialise
+    if (overwritte) {
+      await Prefs().setUserScriptsList(scriptsList);
+      _userScriptList.clear();
+      await loadPreferences();
+      if (defaultToDisabled) {
+        for (final script in _userScriptList) {
+          script.enabled = false;
+        }
+      }
+      return;
+    }
+
+    // If we don't overwritte, try to add the scripts
+    final decoded = json.decode(scriptsList);
+    for (final dec in decoded) {
+      try {
+        final decodedModel = UserScriptModel.fromJson(dec);
+
+        // Check if the script with the same name already exists in the list
+        final bool scriptExists = _userScriptList.any((script) {
+          return script.name.toLowerCase() == decodedModel.name.toLowerCase();
+        });
+
+        if (scriptExists) continue;
+
+        addUserScript(
+          decodedModel.name,
+          decodedModel.time,
+          decodedModel.source,
+          enabled: defaultToDisabled ? false : decodedModel.enabled,
+          version: decodedModel.version,
+          edited: decodedModel.edited,
+          allScriptFirstLoad: true,
+          isExample: decodedModel.isExample,
+          updateStatus: decodedModel.updateStatus,
+          url: decodedModel.url,
+          matches: decodedModel.matches,
+        );
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+    }
+    _sort();
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
   }
@@ -285,25 +293,8 @@ class UserScriptsProvider extends ChangeNotifier {
     Prefs().setUserScriptsList(saveString);
   }
 
-  List<String> getUrls(String source) {
-    final urls = <String>[];
-    final regex = RegExp(r'(@match+\s+)(.*)');
-    final matches = regex.allMatches(source);
-    if (matches.isNotEmpty) {
-      for (final Match match in matches) {
-        try {
-          final noWildcard = match.group(2)!.replaceAll("*", "");
-          urls.add(noWildcard);
-        } catch (e) {
-          //
-        }
-      }
-    }
-    return urls;
-  }
-
-  _sort() {
-    _userScriptList.sort((a, b) => a.name!.toLowerCase().compareTo(b.name!.toLowerCase()));
+  void _sort() {
+    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   void changeScriptsFirstTime(bool value) {
@@ -311,33 +302,17 @@ class UserScriptsProvider extends ChangeNotifier {
     Prefs().setUserScriptsFirstTime(value);
   }
 
-  void changeFeatInjectionTimeShown(bool value) {
-    newFeatInjectionTimeShown = value;
-    Prefs().setUserScriptsFeatInjectionTimeShown(value);
-  }
-
   Future<void> loadPreferences() async {
     try {
-      _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
+      // _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
 
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
-      newFeatInjectionTimeShown = await Prefs().getUserScriptsFeatInjectionTimeShown();
 
       final savedScripts = await Prefs().getUserScriptsList();
-      exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
 
       // NULL returned if we installed the app, so we add all the example scripts
       if (savedScripts == null) {
-        for (final example in exampleScripts) {
-          addUserScript(
-            example.name,
-            example.time,
-            example.source!,
-            enabled: example.enabled,
-            exampleCode: example.exampleCode,
-            allScriptFirstLoad: true,
-          );
-        }
+        await addDefaultScripts();
         _saveUserScriptsListSharedPrefs();
       } else {
         if (savedScripts.isNotEmpty) {
@@ -348,44 +323,24 @@ class UserScriptsProvider extends ChangeNotifier {
 
               // Check if the script with the same name already exists in the list
               // (user-reported bug)
-              final bool scriptExists = _userScriptList.any((script) {
-                return script.name!.toLowerCase() == decodedModel.name!.toLowerCase();
-              });
-
-              if (scriptExists) continue;
+              final String name = decodedModel.name.toLowerCase();
+              if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
 
               addUserScript(
                 decodedModel.name,
                 decodedModel.time,
-                decodedModel.source!,
+                decodedModel.source,
                 enabled: decodedModel.enabled,
-                exampleCode: decodedModel.exampleCode,
                 version: decodedModel.version,
                 edited: decodedModel.edited,
+                url: decodedModel.url,
+                updateStatus: decodedModel.updateStatus,
                 allScriptFirstLoad: true,
+                isExample: decodedModel.isExample,
               );
             } catch (e, trace) {
               FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
               FirebaseCrashlytics.instance.recordError(e, trace);
-            }
-          }
-        }
-
-        // Update example scripts to latest versions
-        for (final script in _userScriptList) {
-          // Look for saved scripts than come from examples
-          if (script.exampleCode! > 0) {
-            if (script.edited == null) continue;
-            if (!script.edited!) {
-              // If the script has not been edited, find the example script and see if we need to update the source
-              for (final example in exampleScripts) {
-                if (script.exampleCode == example.exampleCode &&
-                    script.version != null &&
-                    script.version! < example.version!) {
-                  script.source = example.source;
-                  script.version = example.version;
-                }
-              }
             }
           }
         }
@@ -400,5 +355,47 @@ class UserScriptsProvider extends ChangeNotifier {
       FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
       FirebaseCrashlytics.instance.recordError(e, trace);
     }
+  }
+
+  Future<int> checkForUpdates() async {
+    int updates = 0;
+    await Future.wait<void>(_userScriptList.map((s) {
+      // Only check for updates on relevant scripts
+      if (s.updateStatus == UserScriptUpdateStatus.localModified || s.updateStatus == UserScriptUpdateStatus.noRemote) {
+        return Future.value();
+      }
+      // Ensure script has a valid URL
+      if (s.url == null) return Future.value();
+      s.updateStatus = UserScriptUpdateStatus.updating;
+      notifyListeners(); // Notify listeners of the change to show updating, but **do not save this to shared prefs**
+      return s.checkUpdateStatus().then((updateStatus) {
+        if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
+        s.update(updateStatus: updateStatus);
+        notifyListeners(); // Notify listeners of the change after every row
+      }).catchError((e) {
+        print(e);
+        s.update(updateStatus: UserScriptUpdateStatus.error);
+        notifyListeners(); // Notify listeners of the change after every row
+      });
+    }));
+    _saveUserScriptsListSharedPrefs(); // Only save once all scripts are updated, so that we don't save the "updating" status
+    return updates;
+  }
+
+  Future<({int added, int failed, int removed})> addDefaultScripts() async {
+    int added = 0;
+    int failed = 0;
+    // int alreadyAdded = 0;
+    int initialScriptCount = userScriptList.length;
+    // Remove example scripts;
+    userScriptList.removeWhere((s) => s.isExample);
+    await Future.wait(defaultScriptUrls.map((url) => url == null
+        ? Future.value()
+        : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
+    return (
+      added: added,
+      failed: failed,
+      removed: initialScriptCount - (userScriptList.length - added),
+    );
   }
 }

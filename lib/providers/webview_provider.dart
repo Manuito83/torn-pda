@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 //import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
@@ -375,6 +376,10 @@ class WebViewProvider extends ChangeNotifier {
     _useTabIcons = await Prefs().getUseTabsIcons();
     _hideTabs = await Prefs().getHideTabs();
 
+    // If we are sharing the downloads, we need to clear the files in the cache folder (although theoretically the OS
+    // should do this for us), as the user might not have access to the cache folder and can't free up space
+    await _clearTemporaryDownloadedFiles(context);
+
     // Add the main opener
     String? url = initUrl;
     if (recallLastSession) {
@@ -404,6 +409,28 @@ class WebViewProvider extends ChangeNotifier {
       );
     }
     _currentTab = 0;
+  }
+
+  Future<void> _clearTemporaryDownloadedFiles(BuildContext context) async {
+    try {
+      if (context.read<SettingsProvider>().downloadActionShare) {
+        // Both platforms should have used this folder to store downloads if [downloadActionShare] was enabled
+        // Other files (in the standard downloads folder, if [downloadActionShare] was disabled) won't be deleted
+        // (which might create an increase in cache size in Android if the user can't acces the folder)
+        String downloadsPath = "${(await getTemporaryDirectory()).path}/downloads/";
+
+        await for (var entity in Directory(downloadsPath).list(recursive: true, followLinks: true)) {
+          log("Deleting downloaded file: ${entity.path}");
+          await File(entity.path).delete();
+        }
+      }
+    } on MissingPlatformDirectoryException catch (_) {
+      log("No temporary files folder");
+    } catch (e, trace) {
+      log("PDA Crash at Deleting Downloaded Files: $e");
+      FirebaseCrashlytics.instance.log("PDA Crash at Deleting Downloaded Files");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
   }
 
   Future initialiseSecondary({required bool useTabs, bool recallLastSession = false}) async {
@@ -1365,6 +1392,8 @@ class WebViewProvider extends ChangeNotifier {
       return Image.asset('images/icons/inventory/bazaar.png', color: themeProvider.mainText);
     } else if (url.contains("imarket.php")) {
       return Image.asset('images/icons/map/item_market.png', color: themeProvider.mainText);
+    } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
+      return Image.asset('images/icons/home/crimes.png');
     } else if (url.contains("index.php")) {
       return const ImageIcon(AssetImage('images/icons/home/home.png'));
     }

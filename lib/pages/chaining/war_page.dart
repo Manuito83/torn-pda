@@ -304,7 +304,7 @@ class WarPageState extends State<WarPage> {
           )
         ],
         onToggle: (index) async {
-          await _performQuickUpdate();
+          await _performQuickUpdate(forceIntegrityCheck: false);
 
           if (index == null) {
             _w.setOnlineFilter(0);
@@ -370,7 +370,7 @@ class WarPageState extends State<WarPage> {
           ),
         ],
         onToggle: (index) async {
-          await _performQuickUpdate();
+          await _performQuickUpdate(forceIntegrityCheck: false);
 
           if (index == null) {
             _w.setOkayFilterActive(false);
@@ -434,7 +434,7 @@ class WarPageState extends State<WarPage> {
           ),
         ],
         onToggle: (index) async {
-          await _performQuickUpdate();
+          await _performQuickUpdate(forceIntegrityCheck: false);
 
           if (index == null) {
             w.setCountryFilterActive(false);
@@ -498,7 +498,7 @@ class WarPageState extends State<WarPage> {
           ),
         ],
         onToggle: (index) async {
-          await _performQuickUpdate();
+          await _performQuickUpdate(forceIntegrityCheck: false);
 
           if (index == null) {
             w.setTravelingFilterActive(false);
@@ -936,7 +936,7 @@ class WarPageState extends State<WarPage> {
     );
   }
 
-  Future<void> _performQuickUpdate({bool firstTime = false}) async {
+  Future<void> _performQuickUpdate({bool firstTime = false, bool forceIntegrityCheck = true}) async {
     try {
       setState(() {
         _quickUpdateActive = true;
@@ -956,7 +956,7 @@ class WarPageState extends State<WarPage> {
         );
       }
 
-      final int updatedMembers = await _w.updateAllMembersEasy();
+      final int updatedMembers = await _w.updateAllMembersEasy(forceIntegrityCheck: forceIntegrityCheck);
 
       String message = "";
       Color? messageColor = Colors.green;
@@ -1505,11 +1505,34 @@ class WarTargetsListState extends State<WarTargetsList> {
   Widget build(BuildContext context) {
     List<WarCard> filteredCards = getChildrenTarget();
 
+    // Count pinned members to add separator
+    final pinnedMembersCount = filteredCards.where((member) => member.memberModel.pinned).length;
+    Widget separator = Row(
+      children: [
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 30),
+            child: Divider(color: Colors.grey),
+          ),
+        ),
+        Text("UNPINNED", style: TextStyle(fontSize: 12, color: Colors.grey)),
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 30),
+            child: Divider(color: Colors.grey),
+          ),
+        ),
+      ],
+    );
+
     if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return ListView.builder(
         shrinkWrap: true,
         itemCount: filteredCards.length,
         itemBuilder: (context, index) {
+          if (index == pinnedMembersCount && index != 0) {
+            return separator;
+          }
           return slidableCard(filteredCards[index]);
         },
       );
@@ -1519,6 +1542,9 @@ class WarTargetsListState extends State<WarTargetsList> {
         itemCount: filteredCards.length,
         physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (context, index) {
+          if (index == pinnedMembersCount && index != 0) {
+            return separator;
+          }
           return slidableCard(filteredCards[index]);
         },
       );
@@ -1528,6 +1554,9 @@ class WarTargetsListState extends State<WarTargetsList> {
   List<WarCard> getChildrenTarget() {
     List<Member?> members = <Member?>[];
     List<WarCard> filteredCards = <WarCard>[];
+
+    List<WarCard> pinnedMembers = [];
+    List<WarCard> nonPinnedMembers = [];
 
     for (final faction in widget.warController.factions) {
       if (!faction.hidden!) {
@@ -1571,77 +1600,90 @@ class WarTargetsListState extends State<WarTargetsList> {
         continue;
       }
 
-      filteredCards.add(WarCard(memberModel: thisMember));
+      //filteredCards.add(WarCard(memberModel: thisMember));
+      if (thisMember.pinned) {
+        pinnedMembers.add(WarCard(memberModel: thisMember));
+      } else {
+        nonPinnedMembers.add(WarCard(memberModel: thisMember));
+      }
     }
 
-    switch (widget.warController.currentSort) {
-      case WarSortType.levelDes:
-        filteredCards.sort((a, b) => b.memberModel!.level!.compareTo(a.memberModel!.level!));
-      case WarSortType.levelAsc:
-        filteredCards.sort((a, b) => a.memberModel!.level!.compareTo(b.memberModel!.level!));
-      case WarSortType.respectDes:
-        filteredCards.sort((a, b) => b.memberModel!.respectGain!.compareTo(a.memberModel!.respectGain!));
-      case WarSortType.respectAsc:
-        filteredCards.sort((a, b) => a.memberModel!.respectGain!.compareTo(b.memberModel!.respectGain!));
-      case WarSortType.nameDes:
-        filteredCards.sort((a, b) => b.memberModel!.name!.toLowerCase().compareTo(a.memberModel!.name!.toLowerCase()));
-      case WarSortType.nameAsc:
-        filteredCards.sort((a, b) => a.memberModel!.name!.toLowerCase().compareTo(b.memberModel!.name!.toLowerCase()));
-      case WarSortType.lifeDes:
-        filteredCards.sort((a, b) => b.memberModel!.lifeSort!.compareTo(a.memberModel!.lifeSort!));
-      case WarSortType.lifeAsc:
-        filteredCards.sort((a, b) => a.memberModel!.lifeSort!.compareTo(b.memberModel!.lifeSort!));
-      case WarSortType.statsDes:
-        filteredCards.sort((a, b) => b.memberModel!.statsSort!.compareTo(a.memberModel!.statsSort!));
-      case WarSortType.statsAsc:
-        filteredCards.sort((a, b) => a.memberModel!.statsSort!.compareTo(b.memberModel!.statsSort!));
-      case WarSortType.onlineDes:
-        filteredCards
-            .sort((a, b) => b.memberModel!.lastAction!.timestamp!.compareTo(a.memberModel!.lastAction!.timestamp!));
-      case WarSortType.onlineAsc:
-        filteredCards
-            .sort((a, b) => a.memberModel!.lastAction!.timestamp!.compareTo(b.memberModel!.lastAction!.timestamp!));
-      case WarSortType.colorDes:
-        filteredCards.sort(
-          (a, b) => b.memberModel!.personalNoteColor!
-              .toLowerCase()
-              .compareTo(a.memberModel!.personalNoteColor!.toLowerCase()),
-        );
-      case WarSortType.colorAsc:
-        filteredCards.sort(
-          (a, b) => a.memberModel!.personalNoteColor!
-              .toLowerCase()
-              .compareTo(b.memberModel!.personalNoteColor!.toLowerCase()),
-        );
-      case WarSortType.notesDes:
-        filteredCards.sort(
-          (a, b) => b.memberModel!.personalNote!.toLowerCase().compareTo(a.memberModel!.personalNote!.toLowerCase()),
-        );
-      case WarSortType.notesAsc:
-        filteredCards.sort((a, b) {
-          if (a.memberModel!.personalNote!.isEmpty && b.memberModel!.personalNote!.isNotEmpty) {
-            return 1;
-          } else if (a.memberModel!.personalNote!.isNotEmpty && b.memberModel!.personalNote!.isEmpty) {
-            return -1;
-          } else if (a.memberModel!.personalNote!.isEmpty && b.memberModel!.personalNote!.isEmpty) {
-            return 0;
-          } else {
-            return a.memberModel!.personalNote!.toLowerCase().compareTo(b.memberModel!.personalNote!.toLowerCase());
-          }
-        });
-      default:
-        filteredCards.sort((a, b) => a.memberModel!.name!.toLowerCase().compareTo(b.memberModel!.name!.toLowerCase()));
-        break;
+    // Sorting function for pinned and non-pinned members
+    void sortMembers(List<WarCard> members) {
+      switch (widget.warController.currentSort) {
+        case WarSortType.levelDes:
+          members.sort((a, b) => b.memberModel.level!.compareTo(a.memberModel.level!));
+        case WarSortType.levelAsc:
+          members.sort((a, b) => a.memberModel.level!.compareTo(b.memberModel.level!));
+        case WarSortType.respectDes:
+          members.sort((a, b) => b.memberModel.respectGain!.compareTo(a.memberModel.respectGain!));
+        case WarSortType.respectAsc:
+          members.sort((a, b) => a.memberModel.respectGain!.compareTo(b.memberModel.respectGain!));
+        case WarSortType.nameDes:
+          members.sort((a, b) => b.memberModel.name!.toLowerCase().compareTo(a.memberModel.name!.toLowerCase()));
+        case WarSortType.nameAsc:
+          members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));
+        case WarSortType.lifeDes:
+          members.sort((a, b) => b.memberModel.lifeSort!.compareTo(a.memberModel.lifeSort!));
+        case WarSortType.lifeAsc:
+          members.sort((a, b) => a.memberModel.lifeSort!.compareTo(b.memberModel.lifeSort!));
+        case WarSortType.statsDes:
+          members.sort((a, b) => b.memberModel.statsSort!.compareTo(a.memberModel.statsSort!));
+        case WarSortType.statsAsc:
+          members.sort((a, b) => a.memberModel.statsSort!.compareTo(b.memberModel.statsSort!));
+        case WarSortType.onlineDes:
+          members.sort((a, b) => b.memberModel.lastAction!.timestamp!.compareTo(a.memberModel.lastAction!.timestamp!));
+        case WarSortType.onlineAsc:
+          members.sort((a, b) => a.memberModel.lastAction!.timestamp!.compareTo(b.memberModel.lastAction!.timestamp!));
+        case WarSortType.colorDes:
+          members.sort(
+            (a, b) => b.memberModel.personalNoteColor!
+                .toLowerCase()
+                .compareTo(a.memberModel.personalNoteColor!.toLowerCase()),
+          );
+        case WarSortType.colorAsc:
+          members.sort(
+            (a, b) => a.memberModel.personalNoteColor!
+                .toLowerCase()
+                .compareTo(b.memberModel.personalNoteColor!.toLowerCase()),
+          );
+        case WarSortType.notesDes:
+          members.sort(
+            (a, b) => b.memberModel.personalNote!.toLowerCase().compareTo(a.memberModel.personalNote!.toLowerCase()),
+          );
+        case WarSortType.notesAsc:
+          members.sort((a, b) {
+            if (a.memberModel.personalNote!.isEmpty && b.memberModel.personalNote!.isNotEmpty) {
+              return 1;
+            } else if (a.memberModel.personalNote!.isNotEmpty && b.memberModel.personalNote!.isEmpty) {
+              return -1;
+            } else if (a.memberModel.personalNote!.isEmpty && b.memberModel.personalNote!.isEmpty) {
+              return 0;
+            } else {
+              return a.memberModel.personalNote!.toLowerCase().compareTo(b.memberModel.personalNote!.toLowerCase());
+            }
+          });
+        default:
+          members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));
+          break;
+      }
     }
+
+    // Apply sorting to both lists
+    sortMembers(pinnedMembers);
+    sortMembers(nonPinnedMembers);
+
+    // Combine the sorted lists
+    filteredCards = [...pinnedMembers, ...nonPinnedMembers];
 
     widget.warController.orderedCardsDetails.clear();
     for (int i = 0; i < filteredCards.length; i++) {
       final WarCardDetails details = WarCardDetails()
         ..cardPosition = i + 1
-        ..memberId = filteredCards[i].memberModel!.memberId
-        ..name = filteredCards[i].memberModel!.name
-        ..personalNote = filteredCards[i].memberModel!.personalNote
-        ..personalNoteColor = filteredCards[i].memberModel!.personalNoteColor;
+        ..memberId = filteredCards[i].memberModel.memberId
+        ..name = filteredCards[i].memberModel.name
+        ..personalNote = filteredCards[i].memberModel.personalNote
+        ..personalNoteColor = filteredCards[i].memberModel.personalNoteColor;
 
       widget.warController.orderedCardsDetails.add(details);
     }
@@ -1651,17 +1693,29 @@ class WarTargetsListState extends State<WarTargetsList> {
 
   Widget slidableCard(WarCard filteredCard) {
     return Slidable(
-      key: ValueKey(filteredCard.memberModel!.memberId),
+      key: ValueKey(filteredCard.memberModel.memberId),
       closeOnScroll: false,
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
           SlidableAction(
             label: 'Hide',
-            backgroundColor: Colors.blue,
+            backgroundColor: Colors.grey,
             icon: Icons.delete,
             onPressed: (context) {
               widget.warController.hideMember(filteredCard.memberModel);
+            },
+          ),
+          SlidableAction(
+            label: filteredCard.memberModel.pinned ? 'Unpin' : 'Pin',
+            backgroundColor: Colors.green[800]!,
+            icon: filteredCard.memberModel.pinned ? MdiIcons.pinOffOutline : MdiIcons.pinOutline,
+            onPressed: (context) {
+              if (filteredCard.memberModel.pinned) {
+                widget.warController.unpinMember(filteredCard.memberModel);
+              } else {
+                widget.warController.pinMember(filteredCard.memberModel);
+              }
             },
           ),
         ],
@@ -1669,23 +1723,23 @@ class WarTargetsListState extends State<WarTargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
-          if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel!.name).isEmpty)
+          if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel.name).isEmpty)
             SlidableAction(
               label: 'Add to panic!',
               backgroundColor: Colors.blue,
               icon: MdiIcons.alphaPCircleOutline,
               onPressed: (context) {
-                String message = "Added ${filteredCard.memberModel!.name} as a Panic Mode target!";
+                String message = "Added ${filteredCard.memberModel.name} as a Panic Mode target!";
                 Color? messageColor = Colors.green;
 
                 if (_chainStatusProvider.panicTargets.length < 10) {
                   setState(() {
                     _chainStatusProvider.addPanicTarget(
                       PanicTargetModel()
-                        ..name = filteredCard.memberModel!.name
-                        ..level = filteredCard.memberModel!.level
-                        ..id = filteredCard.memberModel!.memberId
-                        ..factionName = filteredCard.memberModel!.factionName,
+                        ..name = filteredCard.memberModel.name
+                        ..level = filteredCard.memberModel.level
+                        ..id = filteredCard.memberModel.memberId
+                        ..factionName = filteredCard.memberModel.factionName,
                     );
                     // Convert to target with the needed fields
                   });
@@ -1713,16 +1767,16 @@ class WarTargetsListState extends State<WarTargetsList> {
               backgroundColor: Colors.blue,
               icon: MdiIcons.alphaPCircleOutline,
               onPressed: (context) {
-                final String message = "Removed ${filteredCard.memberModel!.name} as a Panic Mode target!";
+                final String message = "Removed ${filteredCard.memberModel.name} as a Panic Mode target!";
                 const Color messageColor = Colors.green;
 
                 setState(() {
                   _chainStatusProvider.removePanicTarget(
                     PanicTargetModel()
-                      ..name = filteredCard.memberModel!.name
-                      ..level = filteredCard.memberModel!.level
-                      ..id = filteredCard.memberModel!.memberId
-                      ..factionName = filteredCard.memberModel!.factionName,
+                      ..name = filteredCard.memberModel.name
+                      ..level = filteredCard.memberModel.level
+                      ..id = filteredCard.memberModel.memberId
+                      ..factionName = filteredCard.memberModel.factionName,
                   );
                 });
 

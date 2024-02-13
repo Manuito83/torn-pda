@@ -27,8 +27,6 @@ class RetalsCardDetails {
 }
 
 class RetalsController extends GetxController {
-  final SpiesController _spy = Get.find<SpiesController>();
-
   List<Retal> retaliationList = <Retal>[];
   List<RetalsCardDetails> orderedCardsDetails = <RetalsCardDetails>[];
 
@@ -278,6 +276,7 @@ class RetalsController extends GetxController {
           validAttack = true;
         }
 
+        // DEBUG
         bool validTime = false;
         if ((timeStamp - value.timestampEnded!) < 300) {
           validTime = true;
@@ -332,48 +331,106 @@ class RetalsController extends GetxController {
   }
 
   void _assignSpiedStats(Retal retal) {
-    if (_spy.spiesSource == SpiesSource.yata) {
-      for (final YataSpyModel spy in _spy.yataSpies) {
-        if (spy.targetName == retal.name) {
-          retal.spiesSource = "yata";
-          retal.statsExactTotal = retal.statsSort = spy.total;
-          retal.statsExactTotalUpdated = spy.totalTimestamp;
-          retal.statsExactUpdated = spy.update;
-          retal.statsStrUpdated = spy.strengthTimestamp;
-          retal.statsSpd = spy.speed;
-          retal.statsSpdUpdated = spy.speedTimestamp;
-          retal.statsDef = spy.defense;
-          retal.statsDefUpdated = spy.defenseTimestamp;
-          retal.statsDex = spy.dexterity;
-          retal.statsDexUpdated = spy.dexterityTimestamp;
-          int known = 0;
-          if (spy.strength != 1) known += spy.strength!;
-          if (spy.speed != 1) known += spy.speed!;
-          if (spy.defense != 1) known += spy.defense!;
-          if (spy.dexterity != 1) known += spy.dexterity!;
-          retal.statsExactTotalKnown = known;
-          break;
+    final SpiesController spyController = Get.find<SpiesController>();
+
+    void assignTornStatsSpy(Retal retal, SpyElement spy) {
+      retal.spySource = SpiesSource.tornStats;
+      retal.statsExactTotal = retal.statsSort = spy.total;
+      retal.statsExactUpdated = spy.timestamp;
+      retal.statsStr = spy.strength;
+      retal.statsSpd = spy.speed;
+      retal.statsDef = spy.defense;
+      retal.statsDex = spy.dexterity;
+      int known = 0;
+      if (spy.strength != 1) known += spy.strength!;
+      if (spy.speed != 1) known += spy.speed!;
+      if (spy.defense != 1) known += spy.defense!;
+      if (spy.dexterity != 1) known += spy.dexterity!;
+      retal.statsExactTotalKnown = known;
+    }
+
+    void assignYataSpy(Retal retal, YataSpyModel spy) {
+      retal.spySource = SpiesSource.yata;
+      retal.statsExactTotal = retal.statsSort = spy.total;
+      retal.statsExactTotalUpdated = spy.totalTimestamp;
+      retal.statsExactUpdated = spy.update;
+      retal.statsStr = spy.strength;
+      retal.statsStrUpdated = spy.strengthTimestamp;
+      retal.statsSpd = spy.speed;
+      retal.statsSpdUpdated = spy.speedTimestamp;
+      retal.statsDef = spy.defense;
+      retal.statsDefUpdated = spy.defenseTimestamp;
+      retal.statsDex = spy.dexterity;
+      retal.statsDexUpdated = spy.dexterityTimestamp;
+      int known = 0;
+      if (spy.strength != 1) known += spy.strength!;
+      if (spy.speed != 1) known += spy.speed!;
+      if (spy.defense != 1) known += spy.defense!;
+      if (spy.dexterity != 1) known += spy.dexterity!;
+      retal.statsExactTotalKnown = known;
+    }
+
+    bool spyFound = false;
+
+    // Delete spy information if we don't allow mixed spies sources
+    if ((!spyController.allowMixedSpiesSources &&
+            retal.spySource != SpiesSource.yata &&
+            spyController.spiesSource == SpiesSource.yata) ||
+        (!spyController.allowMixedSpiesSources &&
+            retal.spySource != SpiesSource.tornStats &&
+            spyController.spiesSource == SpiesSource.tornStats)) {
+      _deleteSpiedStats(retal);
+    }
+
+    // Find the spy based in the current selected spy source
+    if (spyController.spiesSource == SpiesSource.yata) {
+      final spy = spyController.getYataSpy(userId: retal.retalId.toString(), name: retal.name);
+      if (spy != null) {
+        assignYataSpy(retal, spy);
+        spyFound = true;
+      } else if (spyController.allowMixedSpiesSources) {
+        // Check alternate source of spies if we allow mixed sources
+        final altSpy = spyController.getTornStatsSpy(userId: retal.retalId.toString());
+        if (altSpy != null) {
+          assignTornStatsSpy(retal, altSpy);
+          spyFound = true;
         }
       }
-    } else {
-      for (final SpyElement spy in _spy.tornStatsSpies.spies) {
-        if (spy.playerName == retal.name) {
-          retal.spiesSource = "tornstats";
-          retal.statsExactTotal = retal.statsSort = spy.total;
-          retal.statsExactUpdated = spy.timestamp;
-          retal.statsStr = spy.strength;
-          retal.statsSpd = spy.speed;
-          retal.statsDef = spy.defense;
-          retal.statsDex = spy.dexterity;
-          int known = 0;
-          if (spy.strength != 1) known += spy.strength!;
-          if (spy.speed != 1) known += spy.speed!;
-          if (spy.defense != 1) known += spy.defense!;
-          if (spy.dexterity != 1) known += spy.dexterity!;
-          retal.statsExactTotalKnown = known;
-          break;
+    } else if (spyController.spiesSource == SpiesSource.tornStats) {
+      final spy = spyController.getTornStatsSpy(userId: retal.retalId.toString());
+      if (spy != null) {
+        assignTornStatsSpy(retal, spy);
+        spyFound = true;
+      } else if (spyController.allowMixedSpiesSources) {
+        // Check alternate source of spies if we allow mixed sources
+        final altSpy = spyController.getYataSpy(userId: retal.retalId.toString(), name: retal.name);
+        if (altSpy != null) {
+          assignYataSpy(retal, altSpy);
+          spyFound = true;
         }
       }
     }
+
+    // If we didn't find a spy at all, delete the spies information (it might be an old spy,
+    // or the user might have deleted and recreated the spies list)
+    if (!spyFound) {
+      _deleteSpiedStats(retal);
+    }
+  }
+
+  _deleteSpiedStats(Retal retal) {
+    retal.spySource = SpiesSource.yata;
+    retal.statsExactTotal = -1;
+    retal.statsExactTotalUpdated = -1;
+    retal.statsExactUpdated = -1;
+    retal.statsStr = -1;
+    retal.statsStrUpdated = -1;
+    retal.statsSpd = -1;
+    retal.statsSpdUpdated = -1;
+    retal.statsDef = -1;
+    retal.statsDefUpdated = -1;
+    retal.statsDex = -1;
+    retal.statsDexUpdated = -1;
+    retal.statsExactTotalKnown = -1;
   }
 }

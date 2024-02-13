@@ -34,9 +34,9 @@ class TornStatsSpyModel {
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
-        "compare": compare == null ? null : compare!.toJson(),
-        "spy": spy == null ? null : spy!.toJson(),
-        "attacks": attacks == null ? null : attacks!.toJson(),
+        "compare": compare?.toJson(),
+        "spy": spy?.toJson(),
+        "attacks": attacks?.toJson(),
       };
 }
 
@@ -76,7 +76,7 @@ class Compare {
 
   Map<String, dynamic> toJson() => {
         "status": status,
-        "data": data == null ? null : data!.toJson(),
+        "data": data?.toJson(),
       };
 }
 
@@ -95,8 +95,8 @@ class Data {
       );
 
   Map<String, dynamic> toJson() => {
-        "Attacks Won": attacksWon == null ? null : attacksWon!.toJson(),
-        "Attacks Lost": attacksLost == null ? null : attacksLost!.toJson(),
+        "Attacks Won": attacksWon?.toJson(),
+        "Attacks Lost": attacksLost?.toJson(),
       };
 }
 

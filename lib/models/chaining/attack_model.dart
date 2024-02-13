@@ -110,7 +110,7 @@ class Attack {
         "stealthed": stealthed,
         "respect_gain": respectGain,
         "chain": chain,
-        "modifiers": modifiers == null ? null : modifiers!.toJson(),
+        "modifiers": modifiers?.toJson(),
       };
 }
 

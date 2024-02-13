@@ -71,7 +71,7 @@ class StockMarketStock {
         "current_price": currentPrice,
         "market_cap": marketCap,
         "total_shares": totalShares,
-        "benefit": benefit == null ? null : benefit!.toJson(),
+        "benefit": benefit?.toJson(),
       };
 }
 

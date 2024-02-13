@@ -165,7 +165,6 @@ class ApiCallRequest {
 }
 
 class ApiCallerController extends GetxController {
-  final bool _delayCalls = false;
   int maxCallsAllowed = 95;
 
   final _callQueue = Queue<ApiCallRequest>();
@@ -175,6 +174,17 @@ class ApiCallerController extends GetxController {
 
   final _callCountStream = BehaviorSubject<int>.seeded(0);
   Stream<int> get callCountStream => _callCountStream.stream;
+
+  final _queueStatsStream = BehaviorSubject<Map<String, dynamic>>.seeded({'queueLength': 0, 'avgTime': 0});
+  Stream<Map<String, dynamic>> get queueStatsStream => _queueStatsStream.stream;
+
+  bool _delayCalls = false;
+  bool get delayCalls => _delayCalls;
+  set delayCalls(bool value) {
+    _delayCalls = value;
+    Prefs().setDelayApiCalls(value);
+    update();
+  }
 
   var _showApiRateInDrawer = false.obs;
   RxBool get showApiRateInDrawer => _showApiRateInDrawer;
@@ -200,12 +210,14 @@ class ApiCallerController extends GetxController {
     _timer = Timer.periodic(const Duration(seconds: 1), _checkQueue);
     _showApiRateInDrawer = (await Prefs().getShowApiRateInDrawer()) ? RxBool(true) : RxBool(false);
     _showApiMaxCallWarning = await Prefs().getShowApiMaxCallWarning();
+    _delayCalls = await Prefs().getDelayApiCalls();
   }
 
   @override
   void onClose() {
     _timer?.cancel();
     _callCountStream.close();
+    _queueStatsStream.close();
     super.onClose();
   }
 
@@ -223,13 +235,13 @@ class ApiCallerController extends GetxController {
     _callTimestamps.add(now);
 
     // Print debug message if over the limit and not delaying calls
-    if (!_delayCalls && _callTimestamps.length >= maxCallsAllowed) {
+    if (!delayCalls && _callTimestamps.length >= maxCallsAllowed) {
       debugPrint('Over the limit: would be queueing ${_callTimestamps.length - maxCallsAllowed} '
           'calls if delaying calls was enabled!');
     }
 
     // Check if calls should be delayed and if the limit has been reached in the last 60 seconds
-    if (_delayCalls &&
+    if (delayCalls &&
         _callTimestamps.length >= maxCallsAllowed &&
         now.difference(_callTimestamps.first).inSeconds < 60) {
       // Queue the request
@@ -287,12 +299,21 @@ class ApiCallerController extends GetxController {
         _logCallCount();
       });
     }
+
+    // If the queue is empty, update the queue stats stream
+    if (_callQueue.isEmpty) {
+      _queueStatsStream.add({'queueLength': 0, 'avgTime': 0});
+    }
   }
 
   void _logQueueMessage(ApiCallRequest request) {
     final int queuedCalls = _callQueue.length; // Get the number of API calls in the queue
     final int delaySum = _callQueue.fold(0, (sum, req) => sum + DateTime.now().difference(req.timestamp).inSeconds);
     final double averageDelay = queuedCalls > 0 ? delaySum / queuedCalls : 0;
+
+    // Update the queue stats stream
+    _queueStatsStream.add({'queueLength': _callQueue.length, 'avgTime': averageDelay});
+
     debugPrint("$queuedCalls queued calls! Average delay is $averageDelay seconds");
   }
 

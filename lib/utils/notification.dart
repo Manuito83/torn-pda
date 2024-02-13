@@ -22,6 +22,7 @@ import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 // 400 loot
 // 499 loot rangers
 // 555 chain watcher
+// 777 script updates
 
 Future showNotification(Map payload, int notId) async {
   showNotificationBoth(payload, notId);
@@ -726,6 +727,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Manual chain ${modifier.channelIdModifier}',
       'Manual chain ${modifier.channelIdModifier}',
       description: 'Manual notifications for chain',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual scripts ${modifier.channelIdModifier}',
+      'Manual scripts ${modifier.channelIdModifier}',
+      description: 'Manual notifications for scripts',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

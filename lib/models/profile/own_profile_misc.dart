@@ -184,14 +184,14 @@ class OwnProfileMisc {
         "hustling": hustling,
         "disposal": disposal,
         "cracking": cracking,
-        "city_bank": cityBank == null ? null : cityBank!.toJson(),
+        "city_bank": cityBank?.toJson(),
         "education_completed":
             educationCompleted == null ? null : List<dynamic>.from(educationCompleted!.map((x) => x)),
         "strength_info": strengthInfo == null ? null : List<dynamic>.from(strengthInfo!.map((x) => x)),
         "defense_info": defenseInfo == null ? null : List<dynamic>.from(defenseInfo!.map((x) => x)),
         "speed_info": speedInfo == null ? null : List<dynamic>.from(speedInfo!.map((x) => x)),
         "dexterity_info": dexterityInfo == null ? null : List<dynamic>.from(dexterityInfo!.map((x) => x)),
-        "jobpoints": jobpoints == null ? null : jobpoints!.toJson(),
+        "jobpoints": jobpoints?.toJson(),
         "properties":
             properties == null ? null : Map.from(properties!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
         "bazaar": List<dynamic>.from(bazaar!.map((x) => x.toJson())),
@@ -215,7 +215,7 @@ class Jobpoints {
       );
 
   Map<String, dynamic> toJson() => {
-        "jobs": jobs == null ? null : jobs!.toJson(),
+        "jobs": jobs?.toJson(),
         "companies":
             companies == null ? null : Map.from(companies!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
       };
@@ -348,8 +348,8 @@ class Property {
         "staff_cost": staffCost,
         "cost": cost,
         "marketprice": marketprice,
-        "modifications": modifications == null ? null : modifications!.toJson(),
-        "staff": staff == null ? null : staff!.toJson(),
+        "modifications": modifications?.toJson(),
+        "staff": staff?.toJson(),
       };
 }
 

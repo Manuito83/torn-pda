@@ -6,6 +6,7 @@
 import 'dart:convert';
 
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
@@ -99,21 +100,24 @@ class Member {
     this.personalNote,
     this.personalNoteColor,
     this.hidden,
+    this.pinned = false,
     this.statsEstimated,
-    this.spiesSource,
-    this.statsExactTotal,
-    this.statsExactTotalUpdated,
-    this.statsExactTotalKnown,
-    this.statsExactUpdated,
-    this.statsStr,
-    this.statsStrUpdated,
-    this.statsSpd,
-    this.statsSpdUpdated,
-    this.statsDef,
-    this.statsDefUpdated,
-    this.statsDex,
-    this.statsDexUpdated,
-    this.statsSort,
+    //
+    this.spySource = SpiesSource.yata,
+    this.statsExactTotal = -1,
+    this.statsExactTotalUpdated = -1,
+    this.statsExactTotalKnown = -1,
+    this.statsExactUpdated = -1,
+    this.statsStr = -1,
+    this.statsStrUpdated = -1,
+    this.statsSpd = -1,
+    this.statsSpdUpdated = -1,
+    this.statsDef = -1,
+    this.statsDefUpdated = -1,
+    this.statsDex = -1,
+    this.statsDexUpdated = -1,
+    //
+    this.statsSort = 0,
     this.lifeSort,
     this.overrideEasyLife,
     //
@@ -154,21 +158,24 @@ class Member {
   String? personalNote = "";
   String? personalNoteColor = "";
   bool? hidden = false;
+  bool pinned = false;
   String? statsEstimated = "";
-  String? spiesSource = "yata";
-  int? statsExactTotal = -1;
+  // Spies parameters
+  SpiesSource? spySource;
+  int? statsExactTotal;
   int? statsExactTotalUpdated;
-  int? statsExactTotalKnown = -1;
+  int? statsExactTotalKnown;
   int? statsExactUpdated;
-  int? statsStr = -1;
+  int? statsStr;
   int? statsStrUpdated;
-  int? statsSpd = -1;
+  int? statsSpd;
   int? statsSpdUpdated;
-  int? statsDef = -1;
+  int? statsDef;
   int? statsDefUpdated;
-  int? statsDex = -1;
+  int? statsDex;
   int? statsDexUpdated;
-  int? statsSort = 0; // Mixed estimates and exacts so that members can be sorted
+  // Sort parameters
+  int? statsSort; // Mixed estimates and exacts so that members can be sorted
   int? lifeSort = 0;
   bool? overrideEasyLife = false;
   // For stats estimates calculation
@@ -209,8 +216,13 @@ class Member {
         personalNote: json["personalNotes"] ?? "",
         personalNoteColor: json["personalNoteColor"] ?? "",
         hidden: json["hidden"] ?? false,
+        pinned: json["pinned"] ?? false,
         statsEstimated: json["statsEstimated"] ?? "",
-        spiesSource: json["spiesSource"] ?? "yata",
+        spySource: json["spiesSource"] == null
+            ? SpiesSource.yata
+            : json["spiesSource"] == "yata"
+                ? SpiesSource.yata
+                : SpiesSource.tornStats,
         statsExactTotal: json["statsExactTotal"] ?? -1,
         statsExactTotalUpdated: json["statsExactTotalUpdated"],
         statsExactTotalKnown: json["statsExactTotalKnown"] ?? -1,
@@ -261,8 +273,9 @@ class Member {
         "personalNotes": personalNote,
         "personalNoteColor": personalNoteColor,
         "hidden": hidden,
+        "pinned": pinned,
         "statsEstimated": statsEstimated,
-        "spiesSource": spiesSource,
+        "spiesSource": spySource == SpiesSource.yata ? "yata" : "tornStats",
         "statsExactTotal": statsExactTotal,
         "statsExactTotalUpdated": statsExactTotalUpdated,
         "statsExactTotalKnown": statsExactTotalKnown,

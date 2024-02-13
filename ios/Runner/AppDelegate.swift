@@ -1,6 +1,5 @@
 import UIKit
 import Flutter
-import flutter_downloader
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -13,7 +12,6 @@ import flutter_downloader
         UNUserNotificationCenterDelegate
     }
     GeneratedPluginRegistrant.register(with: self)
-    FlutterDownloaderPlugin.setPluginRegistrantCallback(registerPlugins)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
     
@@ -29,12 +27,6 @@ import flutter_downloader
     }
   }
   */
-}
-
-private func registerPlugins(registry: FlutterPluginRegistry) {
-    if (!registry.hasPlugin("FlutterDownloaderPlugin")) {
-       FlutterDownloaderPlugin.register(with: registry.registrar(forPlugin: "FlutterDownloaderPlugin")!)
-    }
 }
 
 // Flutter 2.2.3 USB keyboard fix

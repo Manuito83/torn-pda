@@ -17,7 +17,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/webview_panic.dart';
 import 'package:vibration/vibration.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum WatchDefcon {
   cooldown,
@@ -584,17 +584,17 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   void _enableWakelock() {
-    Wakelock.enabled.then((enabled) {
+    WakelockPlus.enabled.then((enabled) {
       if (!enabled) {
-        Wakelock.enable();
+        WakelockPlus.enable();
       }
     });
   }
 
   void _disableWakelock() {
-    Wakelock.enabled.then((enabled) {
+    WakelockPlus.enabled.then((enabled) {
       if (enabled) {
-        Wakelock.disable();
+        WakelockPlus.disable();
       }
     });
   }

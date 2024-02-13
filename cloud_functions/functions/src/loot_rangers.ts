@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
-const rp = require("request-promise");
+const fetch = require("node-fetch");
 
 export const lootRangersGroup = {
 
@@ -11,16 +11,14 @@ export const lootRangersGroup = {
     .onRun(async () => {
 
       const promises: Promise<any>[] = [];
-      let errorUID = "";
+      const errorUID = "";
 
       const firebaseAdmin = require("firebase-admin");
       const db = firebaseAdmin.database();
 
-      function getLootRangersApi() {
-        return rp({
-          uri: `https://api.lzpt.io/loot`,
-          json: true,
-        });
+      async function getLootRangersApi() {
+        const response = await fetch(`https://api.lzpt.io/loot`);
+        return response.json();
       }
 
       try {
@@ -86,9 +84,9 @@ export const lootRangersGroup = {
         );
 
         // Build name order
-        let orderArray = [];
+        const orderArray = [];
         const npcArray = lrJson.order;
-        for (var id of npcArray) {
+        for (const id of npcArray) {
           // If [clear] is false, the NPC won't participate in this attack
           if (lrJson.npcs[id].clear) {
             orderArray.push(`${lrJson.npcs[id].name}[${id}]`);
@@ -106,7 +104,7 @@ export const lootRangersGroup = {
         let subtitle = `Attack order: ${orderArray.join(', ')}`;
         console.log(subtitle);
 
-        let attackTime = `${hours}:${minutes}`;
+        const attackTime = `${hours}:${minutes}`;
 
         for (const key of Array.from(subscribers.keys())) {
 

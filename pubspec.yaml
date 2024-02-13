@@ -25,9 +25,9 @@ dependencies:
   app_links: 3.5.0-beta.2
   app_settings: 5.1.1
   audioplayers: 5.2.1
-  bot_toast: 4.0.1
-  cloud_firestore: 4.5.0
-  cloud_functions: 4.0.7
+  bot_toast: 4.1.3
+  cloud_firestore: 4.15.4
+  cloud_functions: 4.6.5
   connectivity_plus: 5.0.1
   cookie_jar: 3.0.1
   crypto: 3.0.3
@@ -42,16 +42,16 @@ dependencies:
   expandable: 5.0.1
   ## ffi ^ to avoid strut errors
   ## ffi: ^1.0.0
-  firebase_analytics: 10.2.1
-  firebase_auth: 4.2.5
-  firebase_core: 2.11.0
-  firebase_crashlytics: 3.1.0
-  firebase_database: 10.0.9
-  firebase_messaging: 14.4.0
+  firebase_analytics: 10.6.3
+  firebase_auth: 4.17.4
+  firebase_core: 2.25.4
+  firebase_crashlytics: 3.4.14
+  firebase_database: 10.4.5
+  firebase_messaging: 14.7.15
+  firebase_remote_config: 4.3.13
   fl_chart: 0.50.6
   flutter_app_badger: 1.3.0
   flutter_colorpicker: 1.0.3
-  flutter_downloader: 1.11.5
   flutter_font_icons: 2.2.5
   flutter_inappwebview: 6.0.0
   #flutter_inappwebview:
@@ -84,7 +84,7 @@ dependencies:
   quick_actions: 1.0.5
   receive_intent: 0.2.3
   rxdart: 0.27.7
-  share: 2.0.4
+  share_plus: 7.2.2
   shared_preferences: 2.0.15
   showcaseview: 2.0.0+1
   sliding_up_panel: 2.0.0+1
@@ -93,7 +93,7 @@ dependencies:
   toggle_switch: 2.0.1
   url_launcher: 6.2.1
   vibration: 1.7.4-nullsafety.0
-  wakelock: 0.6.2
+  wakelock_plus: 1.1.4
   webview_flutter: 3.0.4
   collection: 1.18.0
 
@@ -147,22 +147,8 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
 
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages
+  fonts:
+    - family: Visitor
+      fonts:
+        - asset: fonts/visitor.ttf
+  

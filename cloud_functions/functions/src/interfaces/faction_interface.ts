@@ -104,6 +104,7 @@ export enum State {
     Traveling = "Traveling",
 }
 
+// tslint:disable-next-line
 export interface Peace {
 }
 

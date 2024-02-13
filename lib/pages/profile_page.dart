@@ -19,7 +19,7 @@ import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -48,6 +48,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
@@ -3554,13 +3555,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               const SizedBox(height: 4),
               _companyAddictionWidget(),
               const SizedBox(height: 8),
-              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
-              const SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
                     child: SelectableText(
-                      'Battle Stats (effective): ${decimalFormat.format(totalEffective)}',
+                      'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
                     ),
                   ),
                   if (totalEffectiveModifier < 0)
@@ -3579,6 +3578,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     )
                 ],
               ),
+              const SizedBox(height: 2),
+              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
               if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
                 FutureBuilder(
                   future: _statsChartDataFetched,
@@ -3592,6 +3593,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               height: 200,
                               child: StatsChart(
                                 statsData: _statsChartModel,
+                                chartType: _settingsProvider!.tornStatsChartType == "line"
+                                    ? TornStatsChartType.Line
+                                    : TornStatsChartType.Pie,
                               ),
                             ),
                             const SizedBox(height: 40),
@@ -3662,125 +3666,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: _companyAddictionWidget(),
               ),
               const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  children: [
-                    const Text(
-                      'BATTLE STATS',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    GestureDetector(
-                      child: const Icon(Icons.copy, size: 14),
-                      onTap: () {
-                        _shareMisc(shareType: "battle");
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Strength: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.strength)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Defense: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.defense)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Speed: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.speed)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Dexterity: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.dexterity)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      width: 50,
-                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Total: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.total)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (_settingsProvider!.tornStatsChartEnabled)
-                FutureBuilder(
-                  future: _statsChartDataFetched,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (_statsChartModel?.data != null) {
-                        return Column(
-                          children: [
-                            const SizedBox(height: 40),
-                            SizedBox(
-                              height: 200,
-                              child: StatsChart(
-                                statsData: _statsChartModel,
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                          ],
-                        );
-                      }
-                    }
-                    return const SizedBox(height: 20);
-                  },
-                )
-              else
-                const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
@@ -3892,6 +3777,128 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
               ),
               const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Row(
+                  children: [
+                    const Text(
+                      'BATTLE STATS',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    GestureDetector(
+                      child: const Icon(Icons.copy, size: 14),
+                      onTap: () {
+                        _shareMisc(shareType: "battle");
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Strength: '),
+                        ),
+                        SelectableText(decimalFormat.format(_miscModel!.strength)),
+                        Text(
+                          " (${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Defense: '),
+                        ),
+                        SelectableText(decimalFormat.format(_miscModel!.defense)),
+                        Text(
+                          " (${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Speed: '),
+                        ),
+                        SelectableText(decimalFormat.format(_miscModel!.speed)),
+                        Text(
+                          " (${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Dexterity: '),
+                        ),
+                        SelectableText(decimalFormat.format(_miscModel!.dexterity)),
+                        Text(
+                          " (${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)",
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      width: 50,
+                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 80,
+                          child: Text('Total: '),
+                        ),
+                        SelectableText(decimalFormat.format(_miscModel!.total)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (_settingsProvider!.tornStatsChartEnabled)
+                FutureBuilder(
+                  future: _statsChartDataFetched,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_statsChartModel?.data != null) {
+                        return Column(
+                          children: [
+                            const SizedBox(height: 40),
+                            SizedBox(
+                              height: 200,
+                              child: StatsChart(
+                                statsData: _statsChartModel,
+                                chartType: _settingsProvider!.tornStatsChartType == "line"
+                                    ? TornStatsChartType.Line
+                                    : TornStatsChartType.Pie,
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                          ],
+                        );
+                      }
+                    }
+                    return const SizedBox(height: 20);
+                  },
+                )
+              else
+                const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
@@ -4602,33 +4609,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // List for all sources in column
     final moneySources = <Widget>[];
-
-    // Total Expanded
-    moneySources.add(
-      Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 10),
-        child: Row(
-          children: <Widget>[
-            const SizedBox(
-              width: 110,
-              child: Text(
-                'Total: ',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text(
-              '\$${moneyFormat.format(total)}',
-              style: TextStyle(
-                color: total! < 0 ? Colors.red : Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    final moneyQuantities = <Widget>[];
 
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
@@ -4653,31 +4634,78 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         source = "${v.key[0].toUpperCase()}${v.key.substring(1)}";
       }
 
+      Widget pointsPrice = SizedBox.shrink();
+      if (v.key == "points" && _miscModel != null && _miscModel!.points! > 0) {
+        String price = formatBigNumbers(((v.value!.round()) / _miscModel!.points!).round());
+
+        pointsPrice = Text(
+          " @ \$$price",
+          style: const TextStyle(
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+          ),
+        );
+      }
+
       moneySources.add(
-        Row(
-          children: <Widget>[
-            SizedBox(
-              width: 110,
-              child: Text('$source: '),
-            ),
-            Text(
-              '\$${moneyFormat.format(v.value!.round())}',
-              style: TextStyle(
-                color: v.value! < 0 ? Colors.red : Colors.green,
-              ),
-            ),
-            if (v.key == "points" && _miscModel != null && _miscModel!.points! > 0)
-              Text(
-                "  (@\$${moneyFormat.format((v.value!.round()) / _miscModel!.points!)})",
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-          ],
+        SizedBox(
+          width: 150,
+          child: Row(
+            children: [
+              Text(source),
+              pointsPrice,
+            ],
+          ),
+        ),
+      );
+
+      moneyQuantities.add(
+        Text(
+          '\$${moneyFormat.format(v.value!.round())}',
+          style: TextStyle(
+            color: v.value! < 0 ? Colors.red : Colors.green,
+          ),
         ),
       );
     }
+
+    // Total Expanded
+    Widget expandedNetworth = Padding(
+      padding: const EdgeInsets.only(left: 25, top: 10, bottom: 20),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Total: ',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              ...moneySources,
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$${moneyFormat.format(total)}',
+                style: TextStyle(
+                  color: total! < 0 ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              ...moneyQuantities,
+            ],
+          ),
+        ],
+      ),
+    );
 
     return Card(
       child: ExpandablePanel(
@@ -4706,13 +4734,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           ),
         ),
-        expanded: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: moneySources,
-          ),
-        ),
+        expanded: expandedNetworth,
       ),
     );
   }

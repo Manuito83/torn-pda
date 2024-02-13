@@ -90,7 +90,7 @@ class Item {
         "market_value": marketValue,
         "circulation": circulation,
         "image": image,
-        "coverage": coverage == null ? null : coverage!.toJson(),
+        "coverage": coverage?.toJson(),
       };
 }
 

@@ -350,12 +350,12 @@ class WarController extends GetxController {
     return [thisCards.length, numberUpdated];
   }
 
-  Future<int> updateAllMembersEasy() async {
+  Future<int> updateAllMembersEasy({bool forceIntegrityCheck = true}) async {
     final dynamic allAttacksSuccess = await getAllAttacks();
 
     stopUpdate();
 
-    await _integrityCheck(force: true);
+    await _integrityCheck(force: forceIntegrityCheck);
 
     int numberUpdated = 0;
 
@@ -397,7 +397,7 @@ class WarController extends GetxController {
           f.members![apiMemberId]!.position = apiMember.position;
           f.members![apiMemberId]!.name = apiMember.name;
 
-          _assignSpiedStats(f.members![apiMemberId]);
+          _assignSpiedStats(f.members![apiMemberId]!);
 
           if (allAttacksSuccess is AttackModel) {
             _getRespectFF(
@@ -581,6 +581,28 @@ class WarController extends GetxController {
     for (final f in factions) {
       if (f.members!.keys.contains(hiddenMember!.memberId.toString())) {
         f.members![hiddenMember.memberId.toString()]!.hidden = false;
+        savePreferences();
+        update();
+        break;
+      }
+    }
+  }
+
+  void pinMember(Member? pinMember) {
+    for (final f in factions) {
+      if (f.members!.keys.contains(pinMember!.memberId.toString())) {
+        f.members![pinMember.memberId.toString()]!.pinned = true;
+        savePreferences();
+        update();
+        break;
+      }
+    }
+  }
+
+  void unpinMember(Member? pinMember) {
+    for (final f in factions) {
+      if (f.members!.keys.contains(pinMember!.memberId.toString())) {
+        f.members![pinMember.memberId.toString()]!.pinned = false;
         savePreferences();
         update();
         break;
@@ -831,6 +853,8 @@ class WarController extends GetxController {
       final FactionModel apiImport = apiResult as FactionModel;
 
       bool changes = false;
+
+      // Get a copy of the in-app faction members so that we can iterate safety and add/delete members
       Map<String, Member> oldFactionMembers = Map.from(faction.members!);
 
       // Remove members that do not longer belong to the faction
@@ -843,18 +867,19 @@ class WarController extends GetxController {
         return false;
       });
 
-      // Add new members that were not here before
+      // If some members have left, update [faction.members] from the changes in [oldFactionMembers]
+      if (changes) {
+        faction.members = Map.from(oldFactionMembers);
+      }
+
+      // Add new members that were not here before. We add them directly in [faction.members] so there is no need
+      // to track changes or use [oldFactionMembers] again here
       apiImport.members!.forEach((key, value) {
         if (!oldFactionMembers.containsKey(key)) {
           faction.members![key] = apiImport.members![key];
           updateSingleMemberFull(faction.members![key]!);
-          changes = true;
         }
       });
-
-      if (changes) {
-        faction.members = Map.from(oldFactionMembers);
-      }
     }
 
     Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
@@ -870,52 +895,107 @@ class WarController extends GetxController {
     }
   }
 
-  void _assignSpiedStats(Member? member) {
-    final SpiesController spy = Get.find<SpiesController>();
+  void _assignSpiedStats(Member member) {
+    final SpiesController spyController = Get.find<SpiesController>();
 
-    if (spy.spiesSource == SpiesSource.yata) {
-      for (final YataSpyModel spy in spy.yataSpies) {
-        if (spy.targetName == member!.name) {
-          member.spiesSource = "yata";
-          member.statsExactTotal = member.statsSort = spy.total;
-          member.statsExactTotalUpdated = spy.totalTimestamp;
-          member.statsExactUpdated = spy.update;
-          member.statsStr = spy.strength;
-          member.statsStrUpdated = spy.strengthTimestamp;
-          member.statsSpd = spy.speed;
-          member.statsSpdUpdated = spy.speedTimestamp;
-          member.statsDef = spy.defense;
-          member.statsDefUpdated = spy.defenseTimestamp;
-          member.statsDex = spy.dexterity;
-          member.statsDexUpdated = spy.dexterityTimestamp;
-          int known = 0;
-          if (spy.strength != 1) known += spy.strength!;
-          if (spy.speed != 1) known += spy.speed!;
-          if (spy.defense != 1) known += spy.defense!;
-          if (spy.dexterity != 1) known += spy.dexterity!;
-          member.statsExactTotalKnown = known;
-          break;
+    void assignTornStatsSpy(Member member, SpyElement spy) {
+      member.spySource = SpiesSource.tornStats;
+      member.statsExactTotal = member.statsSort = spy.total;
+      member.statsExactUpdated = spy.timestamp;
+      member.statsStr = spy.strength;
+      member.statsSpd = spy.speed;
+      member.statsDef = spy.defense;
+      member.statsDex = spy.dexterity;
+      int known = 0;
+      if (spy.strength != 1) known += spy.strength!;
+      if (spy.speed != 1) known += spy.speed!;
+      if (spy.defense != 1) known += spy.defense!;
+      if (spy.dexterity != 1) known += spy.dexterity!;
+      member.statsExactTotalKnown = known;
+    }
+
+    void assignYataSpy(Member member, YataSpyModel spy) {
+      member.spySource = SpiesSource.yata;
+      member.statsExactTotal = member.statsSort = spy.total;
+      member.statsExactTotalUpdated = spy.totalTimestamp;
+      member.statsExactUpdated = spy.update;
+      member.statsStr = spy.strength;
+      member.statsStrUpdated = spy.strengthTimestamp;
+      member.statsSpd = spy.speed;
+      member.statsSpdUpdated = spy.speedTimestamp;
+      member.statsDef = spy.defense;
+      member.statsDefUpdated = spy.defenseTimestamp;
+      member.statsDex = spy.dexterity;
+      member.statsDexUpdated = spy.dexterityTimestamp;
+      int known = 0;
+      if (spy.strength != 1) known += spy.strength!;
+      if (spy.speed != 1) known += spy.speed!;
+      if (spy.defense != 1) known += spy.defense!;
+      if (spy.dexterity != 1) known += spy.dexterity!;
+      member.statsExactTotalKnown = known;
+    }
+
+    bool spyFound = false;
+
+    // Delete spy information if we don't allow mixed spies sources
+    if ((!spyController.allowMixedSpiesSources &&
+            member.spySource != SpiesSource.yata &&
+            spyController.spiesSource == SpiesSource.yata) ||
+        (!spyController.allowMixedSpiesSources &&
+            member.spySource != SpiesSource.tornStats &&
+            spyController.spiesSource == SpiesSource.tornStats)) {
+      _deleteSpiedStats(member);
+    }
+
+    // Find the spy based in the current selected spy source
+    if (spyController.spiesSource == SpiesSource.yata) {
+      final spy = spyController.getYataSpy(userId: member.memberId.toString(), name: member.name);
+      if (spy != null) {
+        assignYataSpy(member, spy);
+        spyFound = true;
+      } else if (spyController.allowMixedSpiesSources) {
+        // Check alternate source of spies if we allow mixed sources
+        final altSpy = spyController.getTornStatsSpy(userId: member.memberId.toString());
+        if (altSpy != null) {
+          assignTornStatsSpy(member, altSpy);
+          spyFound = true;
         }
       }
-    } else {
-      for (final SpyElement spy in spy.tornStatsSpies.spies) {
-        if (spy.playerName == member!.name) {
-          member.spiesSource = "tornstats";
-          member.statsExactTotal = member.statsSort = spy.total;
-          member.statsExactUpdated = spy.timestamp;
-          member.statsStr = spy.strength;
-          member.statsSpd = spy.speed;
-          member.statsDef = spy.defense;
-          member.statsDex = spy.dexterity;
-          int known = 0;
-          if (spy.strength != 1) known += spy.strength!;
-          if (spy.speed != 1) known += spy.speed!;
-          if (spy.defense != 1) known += spy.defense!;
-          if (spy.dexterity != 1) known += spy.dexterity!;
-          member.statsExactTotalKnown = known;
-          break;
+    } else if (spyController.spiesSource == SpiesSource.tornStats) {
+      final spy = spyController.getTornStatsSpy(userId: member.memberId.toString());
+      if (spy != null) {
+        assignTornStatsSpy(member, spy);
+        spyFound = true;
+      } else if (spyController.allowMixedSpiesSources) {
+        // Check alternate source of spies if we allow mixed sources
+        final altSpy = spyController.getYataSpy(userId: member.memberId.toString(), name: member.name);
+        if (altSpy != null) {
+          assignYataSpy(member, altSpy);
+          spyFound = true;
         }
       }
     }
+
+    // If we didn't find a spy at all, delete the spies information (it might be an old spy,
+    // or the user might have deleted and recreated the spies list)
+    if (!spyFound) {
+      _deleteSpiedStats(member);
+    }
+  }
+
+  _deleteSpiedStats(Member member) {
+    member.spySource = SpiesSource.yata;
+    member.statsExactTotal = -1;
+    member.statsExactTotalUpdated = -1;
+    member.statsExactUpdated = -1;
+    member.statsStr = -1;
+    member.statsStrUpdated = -1;
+    member.statsSpd = -1;
+    member.statsSpdUpdated = -1;
+    member.statsDef = -1;
+    member.statsDefUpdated = -1;
+    member.statsDex = -1;
+    member.statsDexUpdated = -1;
+    member.statsExactTotalKnown = -1;
   }
 }

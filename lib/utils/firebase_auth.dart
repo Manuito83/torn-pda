@@ -23,11 +23,13 @@ class AuthService {
 
   Future getUID() async {
     try {
-      final user = _firebaseAuth.currentUser!;
-      return user.uid;
+      if (_firebaseAuth.currentUser != null) {
+        final user = _firebaseAuth.currentUser;
+        return user!.uid;
+      }
     } catch (e) {
       print(e);
-      return null;
     }
+    return null;
   }
 }

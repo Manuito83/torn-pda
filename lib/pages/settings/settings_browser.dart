@@ -105,6 +105,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
+                          _downloads(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _fullScreen(),
                           const SizedBox(height: 15),
                           const Divider(),
@@ -206,9 +210,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
+            /*
             if (_settingsProvider.extraPlayerInformation)
               Column(
                 children: [
+                  
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -221,6 +227,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       ],
                     ),
                   ),
+                  
+
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -241,6 +250,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ],
               ),
+              */
             if (_settingsProvider.extraPlayerInformation)
               Column(
                 children: [
@@ -280,37 +290,41 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
             if (_settingsProvider.extraPlayerInformation)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Text("Show networth"),
-                    Switch(
-                      value: _settingsProvider.extraPlayerNetworth,
-                      onChanged: (value) {
-                        setState(() {
-                          _settingsProvider.changeExtraPlayerNetworth = value;
-                        });
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        const Text("Show networth"),
+                        Switch(
+                          value: _settingsProvider.extraPlayerNetworth,
+                          onChanged: (value) {
+                            setState(() {
+                              _settingsProvider.changeExtraPlayerNetworth = value;
+                            });
+                          },
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.green,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'If enabled, this will show an additional line with the networth of the '
+                      'player you are visiting',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'If enabled, this will show an additional line with the networth of the '
-                'player you are visiting',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -438,6 +452,30 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
+            if (_userScriptsProvider.userScriptsEnabled)
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        const Text("Notify for Script Updates"),
+                        Switch(
+                          value: _userScriptsProvider.userScriptsNotifyUpdates,
+                          onChanged: (value) {
+                            setState(() {
+                              _userScriptsProvider.setUserScriptsNotifyUpdates = value;
+                            });
+                          },
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.green,
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
             if (_userScriptsProvider.userScriptsEnabled)
               Column(
                 children: [
@@ -623,12 +661,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  const Text("Restore session cookie"),
+                  const Text("Cache enabled"),
                   Switch(
-                    value: _settingsProvider.restoreSessionCookie,
+                    value: _settingsProvider.webviewCacheEnabled,
                     onChanged: (value) {
                       setState(() {
-                        _settingsProvider.restoreSessionCookie = value;
+                        _settingsProvider.webviewCacheEnabled = value;
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -640,8 +678,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Enable this option if you are getting logged out from Torn consistently; '
-                'Torn PDA will try to reestablish your session ID when the browser opens',
+                "Enable webview cache to improve performance (recommended). Disabling this might be useful if "
+                "you experience issues with Torn's website cache, such as images loading incorrectly, increased "
+                "app cached data, chat issues, etc. NOTE: this will only take effect after you restart the app.",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -681,6 +720,37 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 "Note: this will clear your browser's cache and current tabs. It can be "
                 'useful in case of errors (sections not loading correctly, etc.). '
                 "You'll be logged-out from Torn and all other sites",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Restore session cookie"),
+                  Switch(
+                    value: _settingsProvider.restoreSessionCookie,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.restoreSessionCookie = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Text(
+                'Enable this option if you are getting logged out from Torn consistently; '
+                'Torn PDA will try to reestablish your session ID when the browser opens',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -1780,6 +1850,46 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
+  Column _downloads() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'DOWNLOADS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Download action"),
+              _downloadsDropdown(),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Due to the operating system restrictions, Torn PDA can only download files to your app data folder (this "
+            "is to avoid requesting unnecesary permissions). As this folder can be difficult to access in certain "
+            "devices, the app can instead initiate a share request so that you can select whether to save your file "
+            "locally or share it somewhere else",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _showColorPickerTabs(BuildContext context) {
     showDialog(
       useRootNavigator: false,
@@ -1939,6 +2049,45 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
+  Widget _downloadsDropdown() {
+    return DropdownButton<bool>(
+      value: _settingsProvider.downloadActionShare,
+      items: const [
+        DropdownMenuItem(
+          value: true,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Share",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: false,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Save",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.downloadActionShare = value!;
+        });
+      },
+    );
+  }
+
   Widget _refreshMethodDropdown() {
     return DropdownButton<BrowserRefreshSetting>(
       value: _settingsProvider.browserRefreshMethod,
@@ -1993,6 +2142,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
+  /*
   DropdownButton _profileStatsDropdown() {
     return DropdownButton<String>(
       value: _settingsProvider.profileStatsEnabled,
@@ -2044,6 +2194,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       },
     );
   }
+  */
 
   Future _restorePreferences() async {
     final alternativeBrowser = await Prefs().getBrowserBottomBarStyleEnabled();

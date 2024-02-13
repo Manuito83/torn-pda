@@ -6,6 +6,7 @@ import 'dart:io';
 // Package imports:
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 // Useful for functions debugging
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -13,10 +14,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
@@ -51,14 +52,22 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
-// TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '3.2.5';
-const String androidCompilation = '374';
-const String iosCompilation = '374';
+// TODO (App release)
+const String appVersion = '3.3.0';
+const String androidCompilation = '380';
+const String iosCompilation = '380';
+
+// TODO (App release)
+const bool pointFunctionsEmulatorToLocal = false;
+
+// TODO (App release)
+const bool enableWakelockForDebug = false;
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -106,12 +115,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Avoid screen lock when testing in real device
+  if (kDebugMode && enableWakelockForDebug) {
+    WakelockPlus.enable();
+  }
+
   // Initialise Workmanager for app widget
   // [isInDebugMode] sends notifications each time a task is performed
   Workmanager().initialize(pdaWidget_backgroundUpdate);
-
-  // Initialize FlutterDownloader before using
-  await FlutterDownloader.initialize();
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {
@@ -148,8 +159,9 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
-    // ! ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
-    //FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+    if (pointFunctionsEmulatorToLocal) {
+      FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+    }
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
   }
@@ -327,21 +339,11 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: _themeProvider.statusBar,
-        systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
-            ? _themeProvider.canvas
-            : _themeProvider.statusBar,
-        systemNavigationBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
-            ? _themeProvider.currentTheme == AppTheme.light
-                ? Brightness.dark
-                : Brightness.light
-            : Brightness.light,
-        statusBarBrightness: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Brightness.dark
-                : Brightness.light
-            : Brightness.dark,
-        statusBarIconBrightness:
-            MediaQuery.orientationOf(context) == Orientation.portrait ? Brightness.light : Brightness.light,
+        systemNavigationBarColor: _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.light,
+        // iOS
+        statusBarBrightness: Brightness.dark,
       ),
     );
 

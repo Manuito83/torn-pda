@@ -44,9 +44,14 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discrete_info.dart';
 import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup/backup_delete_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup/backup_restore_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup/backup_save_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup/backup_share_dialog.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
+import 'package:torn_pda/widgets/stats/tsc_info.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
@@ -95,7 +100,7 @@ class SettingsPageState extends State<SettingsPage> {
   late ShortcutsProvider _shortcutsProvider;
   late WebViewProvider _webViewProvider;
   final ApiCallerController _apiController = Get.find<ApiCallerController>();
-  final SpiesController _spy = Get.find<SpiesController>();
+  final SpiesController _spyController = Get.find<SpiesController>();
 
   final _expandableController = ExpandableController();
 
@@ -188,6 +193,10 @@ class SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
+                      _statsSection(),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _ocSection(),
                       const SizedBox(height: 15),
                       const Divider(),
@@ -209,6 +218,10 @@ class SettingsPageState extends State<SettingsPage> {
                       const Divider(),
                       const SizedBox(height: 5),
                       _apiRateSection(),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
+                      _saveSettingsSection(),
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
@@ -445,15 +458,16 @@ class SettingsPageState extends State<SettingsPage> {
             String lastUpdated = "Never updated";
             int lastUpdatedTs = 0;
 
-            if (_spy.spiesSource == SpiesSource.yata && _spy.yataSpiesTime != null) {
-              lastUpdatedTs = _spy.yataSpiesTime!.millisecondsSinceEpoch;
+            if (_spyController.spiesSource == SpiesSource.yata && _spyController.yataSpiesTime != null) {
+              lastUpdatedTs = _spyController.yataSpiesTime!.millisecondsSinceEpoch;
               if (lastUpdatedTs > 0) {
-                lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
               }
-            } else if (_spy.spiesSource == SpiesSource.tornStats && _spy.tornStatsSpiesTime != null) {
-              lastUpdatedTs = _spy.tornStatsSpiesTime!.millisecondsSinceEpoch;
+            } else if (_spyController.spiesSource == SpiesSource.tornStats &&
+                _spyController.tornStatsSpiesTime != null) {
+              lastUpdatedTs = _spyController.tornStatsSpiesTime!.millisecondsSinceEpoch;
               if (lastUpdatedTs > 0) {
-                lastUpdated = _spy.statsOld((lastUpdatedTs / 1000).round());
+                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
               }
             }
 
@@ -525,6 +539,201 @@ class SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Allow mixed sources",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _spyController.allowMixedSpiesSources,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _spyController.allowMixedSpiesSources = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "If enabled, if a target's spy information cannot be found in the preferred spies source, it will also "
+            "be taken from the other source if available. When switching from one source to the other, the spy "
+            "information is preserved unless the new active source also contains a spy for a target",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Delete spies",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                child: const Icon(Icons.delete_outlined),
+                onPressed: () async {
+                  _spyController.deleteSpies();
+
+                  BotToast.showText(
+                    text: "Spies deleted!",
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.blue,
+                    duration: const Duration(seconds: 1),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Deletes all the spies information available in the local database if case you would prefer not to use '
+            'spies information or if there is a problem with the information and stats downloaded',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _statsSection() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'STATS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        if (_settingsProvider.tscEnabledStatusRemoteConfig)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Row(
+                        children: [
+                          const Flexible(
+                            child: Text(
+                              "Use Torn Stats Central",
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          GestureDetector(
+                            child: Icon(Icons.info_outline, size: 18),
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return TSCInfoDialog(
+                                    settingsProvider: _settingsProvider,
+                                    themeProvider: _themeProvider,
+                                  );
+                                },
+                              );
+                            },
+                          )
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _settingsProvider.tscEnabledStatus == 1 ? true : false,
+                      onChanged: (enabled) async {
+                        if (_settingsProvider.tscEnabledStatus != 1) {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return TSCInfoDialog(
+                                settingsProvider: _settingsProvider,
+                                themeProvider: _themeProvider,
+                              );
+                            },
+                          );
+                        } else {
+                          setState(() {
+                            _settingsProvider.tscEnabledStatus = 0;
+                          });
+                        }
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Enable Torn Stats Central estimations in the sections where spied or estimated stats are shown (e.g.: '
+                  'war targets cards, retal cards or profile widget)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              children: [
+                Text(
+                  "TSC temporarily deactivated",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -656,6 +865,237 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Delay API calls",
+                ),
+              ),
+              Switch(
+                value: _apiController.delayCalls,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _apiController.delayCalls = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Artificially delay API calls above 95 in 60 seconds to avoid hitting the max API rate. If enabled, the "
+            "current queue information will be shown in the main drawer menu API bar. NOTE: this option cannot take "
+            "into account API calls generated outside of Torn PDA",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _saveSettingsSection() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'ONLINE BACKUP',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        if (!_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "Online backup is temporarily disabled, please check in game or Discord for more information",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.red[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Upload settings",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.upload),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupSaveDialog(userProfile: _userProfile);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so"
+                  "that you can later restore them if needed or share them across different devices",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Restore settings",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.download),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupRestoreDialog(userProfile: _userProfile);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "This will download your saved settings and restore them in the app. Please be aware that this will "
+                  "overwritte your current preferences",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Share settings",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.share),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupShareDialog(
+                              userProfile: _userProfile,
+                              themeProvider: _themeProvider,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "This will allow you to share your settings and receive settings from other players with the use "
+                  "of the player ID and a password",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Clear backup",
+                      ),
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return BackupDeleteDialog(userProfile: _userProfile);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "In case there is something wrong with your online backup when trying to restore it, or you want to "
+                  "clear it for any other reason, this will delete the online saved data",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -2606,7 +3046,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   DropdownButton _spiesSourceDropdown() {
     return DropdownButton<SpiesSource>(
-      value: _spy.spiesSource,
+      value: _spyController.spiesSource,
       items: const [
         DropdownMenuItem(
           value: SpiesSource.yata,
@@ -2638,9 +3078,9 @@ class SettingsPageState extends State<SettingsPage> {
       onChanged: (value) {
         setState(() {
           if (value == SpiesSource.yata) {
-            _spy.spiesSource = SpiesSource.yata;
+            _spyController.spiesSource = SpiesSource.yata;
           } else {
-            _spy.spiesSource = SpiesSource.tornStats;
+            _spyController.spiesSource = SpiesSource.tornStats;
           }
         });
       },

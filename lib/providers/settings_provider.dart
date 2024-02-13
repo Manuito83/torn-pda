@@ -73,6 +73,14 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
+  var _webviewCacheEnabled = false;
+  bool get webviewCacheEnabled => _webviewCacheEnabled;
+  set webviewCacheEnabled(bool enabled) {
+    _webviewCacheEnabled = enabled;
+    Prefs().setWebviewCacheEnabled(enabled);
+    notifyListeners();
+  }
+
   var _androidBrowserScale = 0;
   int get androidBrowserScale => _androidBrowserScale;
   set setAndroidBrowserScale(int scale) {
@@ -377,11 +385,44 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /*
+  Deactivated as profile stats are now always enabled to reduce settings' complexity
+  */
+
+  /*
   String? _profileStatsEnabled = "0";
   String? get profileStatsEnabled => _profileStatsEnabled;
   set changeProfileStatsEnabled(String? value) {
     _profileStatsEnabled = value;
     Prefs().setProfileStatsEnabled(_profileStatsEnabled!);
+    notifyListeners();
+  }
+  */
+
+  // Torn Stats Central
+  // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
+  //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
+  //  0 == disabled
+  //  1 == enabled
+  int _tscEnabledStatus = -1;
+  int get tscEnabledStatus => _tscEnabledStatus;
+  set tscEnabledStatus(int value) {
+    _tscEnabledStatus = value;
+    Prefs().setTSCEnabledStatus(_tscEnabledStatus);
+    notifyListeners();
+  }
+
+  bool _tscEnabledStatusRemoteConfig = true;
+  bool get tscEnabledStatusRemoteConfig => _tscEnabledStatusRemoteConfig;
+  set tscEnabledStatusRemoteConfig(bool value) {
+    _tscEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
+  bool _backupPrefsEnabledStatusRemoteConfig = true;
+  bool get backupPrefsEnabledStatusRemoteConfig => _backupPrefsEnabledStatusRemoteConfig;
+  set backupPrefsEnabledStatusRemoteConfig(bool value) {
+    _backupPrefsEnabledStatusRemoteConfig = value;
     notifyListeners();
   }
 
@@ -628,6 +669,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _tornStatsChartType = "line";
+  String get tornStatsChartType => _tornStatsChartType;
+  set setTornStatsChartType(String value) {
+    _tornStatsChartType = value;
+    Prefs().setTornStatsChartType(tornStatsChartType);
+    notifyListeners();
+  }
+
   var _tornStatsChartInCollapsedMiscCard = true;
   bool get tornStatsChartInCollapsedMiscCard => _tornStatsChartInCollapsedMiscCard;
   set setTornStatsChartInCollapsedMiscCard(bool value) {
@@ -715,6 +764,14 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setExactPermissionDialogShownAndroid(value);
   }
 
+  bool _downloadActionShare = true;
+  bool get downloadActionShare => _downloadActionShare;
+  set downloadActionShare(bool value) {
+    _downloadActionShare = value;
+    Prefs().setDownloadActionShare(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -731,6 +788,7 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
     _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
+    _webviewCacheEnabled = await Prefs().getWebviewCacheEnabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
 
@@ -777,7 +835,9 @@ class SettingsProvider extends ChangeNotifier {
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 
-    _profileStatsEnabled = await Prefs().getProfileStatsEnabled();
+    _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
+
+    //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();
 
     final savedFriendlyFactions = await Prefs().getFriendlyFactions();
     if (savedFriendlyFactions.isNotEmpty) {
@@ -869,6 +929,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _tornStatsChartDateTime = await Prefs().getTornStatsChartDateTime();
     _tornStatsChartEnabled = await Prefs().getTornStatsChartEnabled();
+    _tornStatsChartType = await Prefs().getTornStatsChartType();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
@@ -885,6 +946,8 @@ class SettingsProvider extends ChangeNotifier {
     _appwidgetMoneyEnabled = await Prefs().getAppwidgetMoneyEnabled();
 
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
+
+    _downloadActionShare = await Prefs().getDownloadActionShare();
 
     notifyListeners();
   }

@@ -5,10 +5,17 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 
-class StatsChart extends StatelessWidget {
-  StatsChart({required this.statsData});
+enum TornStatsChartType { Line, Pie }
 
+class StatsChart extends StatelessWidget {
+  final TornStatsChartType chartType;
   final StatsChartTornStats? statsData;
+
+  StatsChart({
+    Key? key,
+    required this.chartType,
+    required this.statsData,
+  }) : super(key: key);
 
   final _strengthSpots = <FlSpot>[];
   final _speedSpots = <FlSpot>[];
@@ -18,12 +25,22 @@ class StatsChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LineChartData lineChartData = buildData();
+    final dynamic chartData;
+    if (chartType == TornStatsChartType.Line) {
+      chartData = _buildLineChartData();
+    } else {
+      chartData = _buildPieChartData();
+    }
+
     return Column(
       children: [
         _legend(),
         const SizedBox(height: 5),
-        Flexible(child: LineChart(lineChartData)),
+        Flexible(
+          child: chartType == TornStatsChartType.Line
+              ? LineChart(chartData as LineChartData)
+              : PieChart(chartData as PieChartData),
+        ),
       ],
     );
   }
@@ -81,7 +98,7 @@ class StatsChart extends StatelessWidget {
     );
   }
 
-  LineChartData buildData() {
+  LineChartData _buildLineChartData() {
     double maxStat = 0;
     if (_strengthSpots.isEmpty) {
       for (int i = 0; i < statsData!.data!.length; i++) {
@@ -266,5 +283,52 @@ class StatsChart extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  PieChartData _buildPieChartData() {
+    List<PieChartSectionData> sections = [];
+    Map<String, double> sums = calculateSumOfStats();
+    double totalSum = sums.values.reduce((a, b) => a + b);
+
+    sums.forEach((label, value) {
+      double percent = (value / totalSum) * 100;
+      sections.add(
+        PieChartSectionData(
+          color: getColorForLabel(label),
+          value: value,
+          title: '${percent.toStringAsFixed(0)}%',
+          radius: 50,
+          titleStyle: TextStyle(color: Colors.black),
+        ),
+      );
+    });
+
+    return PieChartData(
+      sections: sections,
+    );
+  }
+
+  Map<String, double> calculateSumOfStats() {
+    return {
+      'Strength': statsData!.data!.map((stat) => stat.strength!).reduce((a, b) => a + b).toDouble(),
+      'Speed': statsData!.data!.map((stat) => stat.speed!).reduce((a, b) => a + b).toDouble(),
+      'Defense': statsData!.data!.map((stat) => stat.defense!).reduce((a, b) => a + b).toDouble(),
+      'Dexterity': statsData!.data!.map((stat) => stat.dexterity!).reduce((a, b) => a + b).toDouble(),
+    };
+  }
+
+  Color getColorForLabel(String label) {
+    switch (label) {
+      case 'Strength':
+        return Colors.blue;
+      case 'Speed':
+        return Colors.red;
+      case 'Defense':
+        return Colors.orange;
+      case 'Dexterity':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
   }
 }

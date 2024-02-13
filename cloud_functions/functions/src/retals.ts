@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { FactionModel, Attack, State } from "./interfaces/faction_interface";
 import { sendNotificationToUser } from "./notification";
-const rp = require("request-promise");
+const fetch = require("node-fetch");
 
 export const retalsGroup = {
 
@@ -23,7 +23,7 @@ export const retalsGroup = {
 
 
             // Get recent attacks for each faction
-            for (let id in factionsList) {
+            for (const id in factionsList) {
                 promisesGlobal.push(checkFaction(id, factionsList, db, refFactions));
             }
 
@@ -39,7 +39,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
     try {
         ownFactionId = +id;  // Parse to integer
 
-        let originalNoHostWarning = factionsList[id].noHostWarning;
+        const originalNoHostWarning = factionsList[id].noHostWarning;
 
         // Placeholder in the db, skip
         if (ownFactionId === 0) return;
@@ -68,7 +68,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
             // Get all members subscribed from this faction and get the API key of the last active
             // Later we can use this same subscribers if needed (if there are retals)
-            const response = await admin
+            const factionsSubscribers = await admin
                 .firestore()
                 .collection("players")
                 .where("active", "==", true)
@@ -76,7 +76,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                 .where("retalsNotification", "==", true)
                 .get();
 
-            subscribers = response.docs.map((d) => d.data());
+            subscribers = factionsSubscribers.docs.map((d) => d.data());
 
             // If there are no subscribers, get rid of this faction in the database
             if (subscribers.length === 0) {
@@ -157,22 +157,21 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/timestamp`).set(currentDateInMillis));
 
         // Use api to get attacks information and see if we have new retals
-        const apiAttacks = await rp({
-            uri: `https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}`,
-            json: false,
-        });
+        const response = await fetch(`https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}`);
+        const apiAttacks = await response.json();
 
         // If permissions are not right, remove this user as a host
-        if (apiAttacks.includes("Incorrect ID-entity relation")) {
+        // Code 7 == Incorrect ID-entity relation
+        if (apiAttacks.error && apiAttacks.error.code === 7) {
             promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
 
-            const response = await admin
+            const noPermsUser = await admin
                 .firestore()
                 .collection("players")
                 .where("apiKey", "==", apiKey)
                 .get();
 
-            subscribers = response.docs.map((d) => d.data());
+            subscribers = noPermsUser.docs.map((d) => d.data());
 
             for (const key of Array.from(subscribers.keys())) {
                 promisesFaction.push(
@@ -196,16 +195,17 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         }
 
         // If the key is incorrect, deactivate the user and clean the key in the db
-        if (apiAttacks.includes("Incorrect key")) {
+        // Code 2 == Incorrect Key
+        if (apiAttacks.error && apiAttacks.error.code === 2) {
             promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
 
-            const response = await admin
+            const incorrectKeyUser = await admin
                 .firestore()
                 .collection("players")
                 .where("apiKey", "==", apiKey)
                 .get();
 
-            subscribers = response.docs.map((d) => d.data());
+            subscribers = incorrectKeyUser.docs.map((d) => d.data());
 
             for (const key of Array.from(subscribers.keys())) {
                 promisesFaction.push(
@@ -221,7 +221,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
             return;
         }
 
-        const factionModel: FactionModel = JSON.parse(apiAttacks);
+        const factionModel: FactionModel = apiAttacks;
 
         let notificationTitle = "";
         let notificationBody = ""
@@ -229,15 +229,15 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         let lastRetalAttackerId = "";
         let lastRetalName = "";
         let lastRetalTargetId = 0;
-        let allRetalNames = [];
-        let allRetalNamesTrimmed = [];
+        const allRetalNames = [];
+        const allRetalNamesTrimmed = [];
         let retalMinutesRemaining = 0;
         let totalRetalsAbroad = 0;
 
         // Get all susceptible attacks (5 minutes)
         const lastFiveMinutes: Attack[] = [];
 
-        for (let attackId in factionModel.attacks) {
+        for (const attackId in factionModel.attacks) {
             if (factionModel.attacks[attackId].attacker_name !== "" &&
                 currentDateInMillis - factionModel.attacks[attackId].timestamp_ended < 300 &&
                 factionModel.attacks[attackId].timestamp_ended > factionTimeUpdated
@@ -246,14 +246,14 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
             }
         }
 
-        for (let incomingId in lastFiveMinutes) {
+        for (const incomingId in lastFiveMinutes) {
             // This is a valid incoming won attack in the last five minutes
             if (lastFiveMinutes[incomingId].attacker_faction !== ownFactionId &&
                 lastFiveMinutes[incomingId].respect > 0) {
 
                 let alreadyRetaliated = false;
                 // Ensure that we have not retaliated already
-                for (let outgoingId in lastFiveMinutes) {
+                for (const outgoingId in lastFiveMinutes) {
                     if (lastFiveMinutes[outgoingId].timestamp_started > lastFiveMinutes[incomingId].timestamp_ended &&
                         lastFiveMinutes[outgoingId].defender_name === lastFiveMinutes[incomingId].attacker_name &&
                         lastFiveMinutes[outgoingId].respect > 0) {
@@ -313,7 +313,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
         // If we didn't fill the subscribers before, do it now and also update the apiKey
         if (subscribers.length === 0) {
-            const response = await admin
+            const refillSubscribers = await admin
                 .firestore()
                 .collection("players")
                 .where("active", "==", true)
@@ -321,7 +321,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                 .where("retalsNotification", "==", true)
                 .get();
 
-            subscribers = response.docs.map((d) => d.data());
+            subscribers = refillSubscribers.docs.map((d) => d.data());
 
             // If there are no subscribers, get rid of this faction in the database
             if (subscribers.length === 0) {
@@ -365,7 +365,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
             // Find out where our subscriber is
             let subscriberState = "";
-            for (let memberId in factionModel.members) {
+            for (const memberId in factionModel.members) {
                 if (factionModel.members[memberId].name === subscribers[key].name) {
                     subscriberState = factionModel.members[memberId].status.state.toString();
                 }

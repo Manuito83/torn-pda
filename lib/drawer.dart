@@ -12,6 +12,8 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/foundation.dart';
 // Flutter imports:
 import 'package:flutter/material.dart' hide Intent;
 import 'package:flutter/services.dart';
@@ -31,6 +33,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
+import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
@@ -42,6 +45,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
@@ -308,6 +312,34 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _initIntentListenerSubscription();
       _initIntentReceiverOnLaunch();
     }
+
+    // Remote Config settings
+    remoteConfig.setConfigSettings(RemoteConfigSettings(
+      fetchTimeout: const Duration(minutes: 1),
+      minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
+    ));
+
+    // Remote Config defaults
+    remoteConfig.setDefaults(const {
+      "tsc_enabled": true,
+      "prefs_backup_enabled": true,
+    });
+
+    // Remote Config first fetch and live update
+    _preferencesCompleter.future.whenComplete(() async {
+      await remoteConfig.fetchAndActivate();
+      _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+
+      remoteConfig.onConfigUpdated.listen((event) async {
+        await remoteConfig.activate();
+        if (event.updatedKeys.contains("tsc_enabled")) {
+          log("Remote Config tsc_enabled: ${remoteConfig.getBool("tsc_enabled")}");
+          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+        }
+      });
+    });
   }
 
   @override
@@ -327,23 +359,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
           statusBarColor: _themeProvider!.statusBar,
-          systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
-              ? _themeProvider!.statusBar
-              : Colors.transparent,
-          systemNavigationBarIconBrightness:
-              MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
-                  ? Brightness.light
-                  : _themeProvider!.currentTheme == AppTheme.light
-                      ? Brightness.dark
-                      : Brightness.light,
-          statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
-              ? MediaQuery.orientationOf(context) == Orientation.landscape
-                  ? Brightness.dark
-                  : Brightness.light
-              : Brightness.dark,
-          statusBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.landscape // Going portrait
-              ? Brightness.light
-              : Brightness.light,
+          systemNavigationBarColor: _themeProvider!.statusBar,
+          systemNavigationBarIconBrightness: Brightness.light,
+          statusBarIconBrightness: Brightness.light,
+          // iOS
+          statusBarBrightness: Brightness.dark,
         ),
       );
     });
@@ -384,6 +404,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (Platform.isAndroid) {
         pdaWidget_handleBackgroundUpdateStatus();
       }
+
+      checkForScriptUpdates();
     }
   }
 
@@ -974,6 +996,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('racing')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';
+      } else if (payload.contains("scriptupdate")) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => UserScriptsPage(),
+          ),
+        );
       } else if (payload.contains('400-')) {
         launchBrowser = true;
         final npcId = payload.split('-')[1];
@@ -1351,12 +1379,33 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                             );
                           },
                         ),
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4, top: 1),
-                          child: Text(
-                            "API CALLS (60s)",
-                            style: TextStyle(fontSize: 9),
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4, top: 1),
+                              child: Text(
+                                "API CALLS (60s)",
+                                style: TextStyle(fontSize: 9),
+                              ),
+                            ),
+                            if (_apiController.delayCalls)
+                              StreamBuilder<Map<String, dynamic>>(
+                                stream: _apiController.queueStatsStream,
+                                initialData: {'queueLength': 0, 'avgTime': 0},
+                                builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                                  final int queueLength = snapshot.data?['queueLength'] ?? 0;
+                                  final double avgTime = snapshot.data?['avgTime'].toDouble() ?? 0;
+                                  return Text(
+                                    "QUEUE: $queueLength${queueLength > 0 ? ' (delay ${avgTime.ceil()} sec)' : ''}",
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        color: queueLength == 0 ? _themeProvider!.mainText : Colors.red,
+                                        fontWeight: queueLength == 0 ? FontWeight.normal : FontWeight.bold),
+                                  );
+                                },
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -1453,23 +1502,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                               SystemChrome.setSystemUIOverlayStyle(
                                 SystemUiOverlayStyle(
                                   statusBarColor: _themeProvider!.statusBar,
-                                  systemNavigationBarColor: MediaQuery.orientationOf(context) == Orientation.landscape
-                                      ? _themeProvider!.canvas
-                                      : _themeProvider!.statusBar,
-                                  systemNavigationBarIconBrightness:
-                                      MediaQuery.orientationOf(context) == Orientation.landscape
-                                          ? _themeProvider!.currentTheme == AppTheme.light
-                                              ? Brightness.dark
-                                              : Brightness.light
-                                          : Brightness.light,
-                                  statusBarBrightness: _themeProvider!.currentTheme == AppTheme.light
-                                      ? MediaQuery.orientationOf(context) == Orientation.portrait
-                                          ? Brightness.dark
-                                          : Brightness.light
-                                      : Brightness.dark,
-                                  statusBarIconBrightness: MediaQuery.orientationOf(context) == Orientation.portrait
-                                      ? Brightness.light
-                                      : Brightness.light,
+                                  systemNavigationBarColor: _themeProvider!.statusBar,
+                                  systemNavigationBarIconBrightness: Brightness.light,
+                                  statusBarIconBrightness: Brightness.light,
+                                  // iOS
+                                  statusBarBrightness: Brightness.dark,
                                 ),
                               );
                             });
@@ -1750,6 +1787,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)
       _updateLastActiveTime();
+
+      checkForScriptUpdates();
     }
 
     // Change device preferences
@@ -2070,6 +2109,59 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         );
       },
     );
+  }
+
+  void checkForScriptUpdates() {
+    final int alreadyAvailableCount = _userScriptsProvider.userScriptList
+        .where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable)
+        .length;
+    _userScriptsProvider.checkForUpdates().then((i) async {
+      // Check if we need to show a notification (only if there are any new updates)
+      if (_userScriptsProvider.userScriptsNotifyUpdates && i - alreadyAvailableCount > 0) {
+        const String channelTitle = 'Manual scripts';
+        const String channelSubtitle = 'Manual scripts';
+        const String channelDescription = 'Manual notifications for scripts';
+        final String notificationTitle = 'Script Update Available';
+        final String notificationSubtitle = 'You have $i script update${i == 1 ? "" : "s"} available, '
+            'visit the UserScripts section to update them';
+        final int notificationId = 777;
+        final String notificationPayload = "scriptupdate";
+
+        final modifier = await getNotificationChannelsModifiers();
+        final androidPlatformChannelSpecifics = AndroidNotificationDetails(
+          "$channelTitle ${modifier.channelIdModifier}",
+          "$channelSubtitle ${modifier.channelIdModifier}",
+          channelDescription: channelDescription,
+          priority: Priority.high,
+          visibility: NotificationVisibility.public,
+          icon: 'notification_icon',
+          color: Colors.grey,
+          ledColor: const Color.fromARGB(255, 255, 0, 0),
+          ledOnMs: 1000,
+          ledOffMs: 500,
+        );
+
+        const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+          presentSound: true,
+          sound: 'slow_spring_board.aiff',
+        );
+
+        final platformChannelSpecifics = NotificationDetails(
+          android: androidPlatformChannelSpecifics,
+          iOS: iOSPlatformChannelSpecifics,
+        );
+
+        flutterLocalNotificationsPlugin.show(
+          notificationId,
+          notificationTitle,
+          notificationSubtitle,
+          platformChannelSpecifics,
+          payload: notificationPayload,
+        );
+      }
+      log("UserScripts checkForUpdates() completed with $i updates available, $alreadyAvailableCount "
+          "already prompted, should notify: ${_userScriptsProvider.userScriptsNotifyUpdates}");
+    });
   }
 
   void changeUID(String uid) {

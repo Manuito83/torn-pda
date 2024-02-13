@@ -11,7 +11,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 // Project imports:
@@ -152,88 +151,74 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
                             final String attackId = widget.url.split("user2ID=")[1];
                             final t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
-
-                            final SpiesController spyController = Get.find<SpiesController>();
-
-                            bool spyFoundInYata = false;
-                            YataSpyModel yataSpy = YataSpyModel();
-
-                            bool spyFoundInTornStats = false;
-                            SpyElement tornStatsSpy = SpyElement();
-
-                            if (spyController.spiesSource == SpiesSource.yata) {
-                              for (var spy in spyController.yataSpies) {
-                                if (spy.targetName == t.name) {
-                                  yataSpy = spy;
-                                  spyFoundInYata = true;
-                                  continue;
-                                }
-                              }
-                            } else if (spyController.spiesSource == SpiesSource.tornStats) {
-                              for (var spy in spyController.tornStatsSpies.spies) {
-                                if (spy.playerName == t.name) {
-                                  tornStatsSpy = spy;
-                                  spyFoundInTornStats = true;
-                                  continue;
-                                }
-                              }
-                            }
-
-                            int membersNotified = 0;
+                            dynamic attackAssistMessageArg;
                             if (t is OtherProfileModel) {
-                              // Fill stats either way
-                              String exactStats = "";
-                              String estimatedStats = "";
-                              if (spyFoundInYata) {
-                                final String total = formatBigNumbers(yataSpy.total!);
-                                final String str = formatBigNumbers(yataSpy.strength!);
-                                final String spd = formatBigNumbers(yataSpy.speed!);
-                                final String def = formatBigNumbers(yataSpy.defense!);
-                                final String dex = formatBigNumbers(yataSpy.dexterity!);
-                                exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
-                                    "updated ${readTimestamp(yataSpy.update!)}";
-                              } else if (spyFoundInTornStats) {
-                                final String total = formatBigNumbers(tornStatsSpy.total!);
-                                final String str = formatBigNumbers(tornStatsSpy.strength!);
-                                final String spd = formatBigNumbers(tornStatsSpy.speed!);
-                                final String def = formatBigNumbers(tornStatsSpy.defense!);
-                                final String dex = formatBigNumbers(tornStatsSpy.dexterity!);
-                                exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
-                                    "updated ${readTimestamp(tornStatsSpy.timestamp!)}";
-                              } else {
-                                estimatedStats = StatsCalculator.calculateStats(
-                                  criminalRecordTotal: t.criminalrecord!.total,
-                                  level: t.level,
-                                  networth: t.personalstats!.networth,
-                                  rank: t.rank,
-                                );
+                              final SpiesController spyController = Get.find<SpiesController>();
 
-                                estimatedStats += "\n- Xanax: ${t.personalstats!.xantaken}";
-                                estimatedStats += "\n- Refills (E): ${t.personalstats!.refills}";
-                                estimatedStats += "\n- Drinks (E): ${t.personalstats!.energydrinkused}";
-                                estimatedStats += "\n(tap to get a comparison with you)";
+                              YataSpyModel? spy;
+
+                              switch (spyController.spiesSource) {
+                                case SpiesSource.yata:
+                                  spy = spyController.getYataSpy(userId: attackId, name: t.name);
+                                  break;
+                                case SpiesSource.tornStats:
+                                  spy = spyController.getTornStatsSpy(userId: attackId)?.toYataModel();
+                                  break;
+                                case null:
+                                  break;
                               }
+                              String? exactStats;
 
-                              membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                              if (spy != null) {
+                                final total = formatBigNumbers(spy.total!);
+                                final str = formatBigNumbers(spy.strength!);
+                                final spd = formatBigNumbers(spy.speed!);
+                                final def = formatBigNumbers(spy.defense!);
+                                final dex = formatBigNumbers(spy.dexterity!);
+                                exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
+                                    "updated ${readTimestamp(spy.update!)}";
+                              }
+                              String estimatedStats = StatsCalculator.calculateStats(
+                                criminalRecordTotal: t.criminalrecord!.total,
+                                level: t.level,
+                                networth: t.personalstats!.networth,
+                                rank: t.rank,
+                              );
+
+                              estimatedStats += "\n- Xanax: ${t.personalstats!.xantaken}";
+                              estimatedStats += "\n- Refills (E): ${t.personalstats!.refills}";
+                              estimatedStats += "\n- Drinks (E): ${t.personalstats!.energydrinkused}";
+                              estimatedStats += "\n(tap to get a comparison with you)";
+                              attackAssistMessageArg = (
                                 attackId: attackId,
                                 attackName: t.name,
                                 attackLevel: t.level.toString(),
                                 attackLife: "${t.life!.current}/${t.life!.maximum}",
                                 attackAge: t.age.toString(),
                                 estimatedStats: estimatedStats,
-                                exactStats: exactStats,
+                                exactStats: exactStats ?? "",
                                 xanax: t.personalstats!.xantaken.toString(),
                                 refills: t.personalstats!.refills.toString(),
                                 drinks: t.personalstats!.energydrinkused.toString(),
                               );
                             } else {
-                              membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                                attackId: attackId,
-                              );
+                              attackAssistMessageArg = (attackId: attackId);
                             }
+                            final int membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                              attackId: attackAssistMessageArg.attackId,
+                              attackName: attackAssistMessageArg.attackName,
+                              attackLevel: attackAssistMessageArg.attackLevel,
+                              attackLife: attackAssistMessageArg.attackLife,
+                              attackAge: attackAssistMessageArg.attackAge,
+                              estimatedStats: attackAssistMessageArg.estimatedStats,
+                              xanax: attackAssistMessageArg.xanax,
+                              refills: attackAssistMessageArg.refills,
+                              drinks: attackAssistMessageArg.drinks,
+                              exactStats: attackAssistMessageArg.exactStats,
+                            );
 
-                            String membersMessage = "$membersNotified faction member${membersNotified == 1 ? "" : "s"} "
-                                "${membersNotified == 1 ? "has" : "have"} been notified!";
+                            String membersMessage =
+                                "$membersNotified faction member${membersNotified == 1 ? " has" : "s have"} been notified!";
                             Color? membersColor = Colors.green;
 
                             if (membersNotified == 0) {

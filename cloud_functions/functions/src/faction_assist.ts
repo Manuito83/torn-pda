@@ -20,7 +20,7 @@ export const factionAssistGroup = {
             functions.logger.info(`User not found`);
             return -1;
         }
-        let faction = (callingUser.data().faction);
+        const faction = (callingUser.data().faction);
         if (callingUser.data().faction === undefined || callingUser.data().faction === 0) {
             functions.logger.info(`Call from ${callingUser.data().name} [${callingUser.data().playerId}]: faction not found`);
             return -1;
@@ -45,7 +45,7 @@ export const factionAssistGroup = {
         };
 
         // Retrieve data from app call
-        let attackId = data["attackId"].toString();
+        const attackId = data["attackId"].toString();
 
         let attackName = data["attackName"];
         if (attackName === "" || attackName === undefined) {
@@ -55,7 +55,7 @@ export const factionAssistGroup = {
         }
 
         let attackLevelAge = data["attackLevel"];
-        let attackAge = data["attackAge"];
+        const attackAge = data["attackAge"];
         if (attackLevelAge === "" || attackLevelAge === undefined || attackAge === "" || attackAge === undefined) {
             attackLevelAge = "";
         } else {
@@ -79,9 +79,9 @@ export const factionAssistGroup = {
                 estimatedStats = "";
             } else {
                 estimatedStats = `\n- Estimated stats: ${estimatedStats}`;
-                let xanax = data["xanax"];
-                let refills = data["refills"];
-                let drinks = data["drinks"];
+                const xanax = data["xanax"];
+                const refills = data["refills"];
+                const drinks = data["drinks"];
                 bulkDetails = `xanax:${xanax}#refills:${refills}#drinks:${drinks}`;
             }
 

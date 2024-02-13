@@ -21,7 +21,7 @@ class PropertyModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "property": property == null ? null : property!.toJson(),
+        "property": property?.toJson(),
       };
 }
 
@@ -64,7 +64,7 @@ class Property {
         "upkeep": upkeep,
         "upgrades": upgrades == null ? null : List<dynamic>.from(upgrades!.map((x) => x)),
         "staff": staff == null ? null : List<dynamic>.from(staff!.map((x) => x)),
-        "rented": rented == null ? null : rented!.toJson(),
+        "rented": rented?.toJson(),
         "users_living": usersLiving,
       };
 }

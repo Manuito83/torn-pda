@@ -33,4 +33,19 @@ class UserController extends GetxController {
     _alternativeTornStatsKey = key.trim();
     update();
   }
+
+  // Alternative keys Torn Stats Central
+  bool _alternativeTSCKeyEnabled = false;
+  bool get alternativeTSCKeyEnabled => _alternativeTSCKeyEnabled;
+  set alternativeTSCKeyEnabled(bool enabled) {
+    _alternativeTSCKeyEnabled = enabled;
+    update();
+  }
+
+  String _alternativeTSCKey = "";
+  String get alternativeTSCKey => _alternativeTSCKey.trim();
+  set alternativeTSCKey(String key) {
+    _alternativeTSCKey = key.trim();
+    update();
+  }
 }

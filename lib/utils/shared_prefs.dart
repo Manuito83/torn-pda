@@ -85,6 +85,7 @@ class Prefs {
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
+  final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
@@ -96,6 +97,7 @@ class Prefs {
   final String _kShowSecondsInClock = "pda_showSecondsInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kSpiesSource = "pda_SpiesSource";
+  final String _kAllowMixedSpiesSources = "pda_allowMixedSpiesSources";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
@@ -167,6 +169,7 @@ class Prefs {
   final String _kJobAddictionValue = "pda_jobAddiction";
   final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
+  final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
@@ -197,16 +200,18 @@ class Prefs {
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
+  final String _kUserScriptsNotifyUpdates = "pda_userScriptsNotifyUpdates";
   final String _kUserScriptsList = "pda_userScriptsList";
-  final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
+  // final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
+  final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
-  final String _kShortcutTile = "pda_shortcutTile";
-  final String _kShortcutMenu = "pda_shortcutMenu";
-  final String _kActiveShortcutsList = "pda_activeShortcutsList";
+  final String _kShortcutTile = "pda_shortcutTile"; // Firebase User Pref
+  final String _kShortcutMenu = "pda_shortcutMenu"; // Firebase User Pref
+  final String _kActiveShortcutsList = "pda_activeShortcutsList"; // Firebase User Pref
 
   // Reviving
   final String _kUseNukeRevive = "pda_useNukeRevive";
@@ -286,15 +291,21 @@ class Prefs {
   final String _kStatsEventsAchieved = "pda_statsEventsAchieved";
 
   // Alternative keys
+  // YATA
   final String _kAlternativeYataKeyEnabled = "pda_alternativeYataKeyEnabled";
   final String _kAlternativeYataKey = "pda_alternativeYataKey";
+  // TS
   final String _kAlternativeTornStatsKeyEnabled = "pda_alternativeTornStatsKeyEnabled";
   final String _kAlternativeTornStatsKey = "pda_alternativeTornStatsKey";
+  // TSC
+  final String _kAlternativeTSCKeyEnabled = "pda_alternativeTSCKeyEnabled";
+  final String _kAlternativeTSCKey = "pda_alternativeTSCKey";
 
   // TornStats stats chart configuration
   final String _kTornStatsChartSave = "pda_tornStatsChartSave";
   final String _kTornStatsChartDateTime = "pda_tornStatsChartDateTime";
   final String _kTornStatsChartEnabled = "pda_tornStatsChartEnabled";
+  final String _kTornStatsChartType = "pda_tornStatsChartType";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
 
   // Torn Attack Central
@@ -311,8 +322,12 @@ class Prefs {
   // Permissions
   final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
 
+  // Downloads
+  final String _downloadActionShare = "pda_downloadActionShare";
+
   // Api Rate
   final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
+  final String _kDelayApiCalls = "pda_delayApiCalls";
   final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
 
   // Split screen configuration
@@ -945,6 +960,16 @@ class Prefs {
     return prefs.setBool(_kRestoreSessionCookie, value);
   }
 
+  Future<bool> getWebviewCacheEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWebviewCacheEnabled) ?? true;
+  }
+
+  Future<bool> setWebviewCacheEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWebviewCacheEnabled, value);
+  }
+
   /*
   Future<bool> getClearBrowserCacheNextOpportunity() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -1067,6 +1092,16 @@ class Prefs {
   Future<bool> setSpiesSource(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kSpiesSource, value);
+  }
+
+  Future<bool> getAllowMixedSpiesSources() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAllowMixedSpiesSources) ?? true;
+  }
+
+  Future<bool> setAllowMixedSpiesSources(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAllowMixedSpiesSources, value);
   }
 
   /// ----------------------------
@@ -1276,6 +1311,17 @@ class Prefs {
   Future<bool> setProfileStatsEnabled(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kProfileStatsEnabled, value);
+  }
+
+  // *************
+  Future<int> getTSCEnabledStatus() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTSCEnabledStatus) ?? -1;
+  }
+
+  Future<bool> setTSCEnabledStatus(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTSCEnabledStatus, value);
   }
 
   // *************
@@ -2352,6 +2398,27 @@ class Prefs {
     return prefs.setString(_kAlternativeTornStatsKey, value);
   }
 
+  // TORN STATS CENTRAL
+  Future<bool> getAlternativeTSCKeyEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAlternativeTSCKeyEnabled) ?? false;
+  }
+
+  Future<bool> setAlternativeTSCKeyEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAlternativeTSCKeyEnabled, value);
+  }
+
+  Future<String> getAlternativeTSCKey() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAlternativeTSCKey) ?? "";
+  }
+
+  Future<bool> setAlternativeTSCKey(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAlternativeTSCKey, value);
+  }
+
   /// ---------------------
   /// TORNSTATS STATS CHART
   /// ---------------------
@@ -2384,6 +2451,16 @@ class Prefs {
   Future<bool> setTornStatsChartEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTornStatsChartEnabled, value);
+  }
+
+  Future<String> getTornStatsChartType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTornStatsChartType) ?? "line";
+  }
+
+  Future<bool> setTornStatsChartType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTornStatsChartType, value);
   }
 
   Future<bool> getTornStatsChartInCollapsedMiscCard() async {
@@ -2442,6 +2519,16 @@ class Prefs {
     return prefs.setBool(_kUserScriptsEnabled, value);
   }
 
+  Future<bool> getUserScriptsNotifyUpdates() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUserScriptsNotifyUpdates) ?? true;
+  }
+
+  Future<bool> setUserScriptsNotifyUpdates(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUserScriptsNotifyUpdates, value);
+  }
+
   Future<String?> getUserScriptsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kUserScriptsList);
@@ -2454,12 +2541,12 @@ class Prefs {
 
   Future<bool> getUserScriptsFirstTime() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUserScriptsFirstTime) ?? true;
+    return prefs.getBool(_kUserScriptsV2FirstTime) ?? true;
   }
 
   Future<bool> setUserScriptsFirstTime(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUserScriptsFirstTime, value);
+    return prefs.setBool(_kUserScriptsV2FirstTime, value);
   }
 
   Future<bool> getUserScriptsFeatInjectionTimeShown() async {
@@ -3013,6 +3100,20 @@ class Prefs {
   }
 
   /// ----------------------------
+  /// Webview downloads
+  /// ----------------------------
+
+  Future<bool> getDownloadActionShare() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_downloadActionShare) ?? true;
+  }
+
+  Future<bool> setDownloadActionShare(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_downloadActionShare, value);
+  }
+
+  /// ----------------------------
   /// Methods for Api Rate
   /// ----------------------------
   Future<bool> getShowApiRateInDrawer() async {
@@ -3023,6 +3124,16 @@ class Prefs {
   Future<bool> setShowApiRateInDrawer(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowApiRateInDrawer, value);
+  }
+
+  Future<bool> getDelayApiCalls() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDelayApiCalls) ?? false;
+  }
+
+  Future<bool> setDelayApiCalls(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDelayApiCalls, value);
   }
 
   // ---

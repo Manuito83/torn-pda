@@ -1,4 +1,5 @@
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/spies_controller.dart';
 
 class Retal {
   Retal({
@@ -20,7 +21,7 @@ class Retal {
     this.personalNote = "",
     this.personalNoteColor = "",
     this.statsEstimated = "",
-    this.spiesSource = "yata",
+    this.spySource = SpiesSource.yata,
     this.statsExactTotal = -1,
     this.statsExactTotalUpdated,
     this.statsExactTotalKnown = -1,
@@ -74,7 +75,7 @@ class Retal {
   String personalNote;
   String personalNoteColor;
   String statsEstimated;
-  String spiesSource;
+  SpiesSource spySource;
   int? statsExactTotal;
   int? statsExactTotalUpdated;
   int statsExactTotalKnown;
@@ -129,7 +130,11 @@ class Retal {
         personalNote: json["personalNotes"] ?? "",
         personalNoteColor: json["personalNoteColor"] ?? "",
         statsEstimated: json["statsEstimated"] ?? "",
-        spiesSource: json["spiesSource"] ?? "yata",
+        spySource: json["spiesSource"] == null
+            ? SpiesSource.yata
+            : json["spiesSource"] == "yata"
+                ? SpiesSource.yata
+                : SpiesSource.tornStats,
         statsExactTotal: json["statsExactTotal"] ?? -1,
         statsExactTotalUpdated: json["statsExactTotalUpdated"],
         statsExactTotalKnown: json["statsExactTotalKnown"] ?? -1,
@@ -181,7 +186,7 @@ class Retal {
         "personalNotes": personalNote,
         "personalNoteColor": personalNoteColor,
         "statsEstimated": statsEstimated,
-        "spiesSource": spiesSource,
+        "spiesSource": spySource == SpiesSource.yata ? "yata" : "tornStats",
         "statsExactTotal": statsExactTotal,
         "statsExactTotalUpdated": statsExactTotalUpdated,
         "statsExactTotalKnown": statsExactTotalKnown,
