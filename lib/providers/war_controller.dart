@@ -46,10 +46,33 @@ class WarController extends GetxController {
 
   late DateTime _lastIntegrityCheck;
 
-  bool nukeReviveActive = false;
-  bool uhcReviveActive = false;
-  bool helaReviveActive = false;
-  bool wtfReviveActive = false;
+  bool _nukeReviveActive = false;
+  bool get nukeReviveActive => _nukeReviveActive;
+  set nukeReviveActive(bool value) {
+    Prefs().setUseNukeRevive(value);
+    _nukeReviveActive = value;
+  }
+
+  bool _uhcReviveActive = false;
+  bool get uhcReviveActive => _uhcReviveActive;
+  set uhcReviveActive(bool value) {
+    Prefs().setUseUhcRevive(value);
+    _uhcReviveActive = value;
+  }
+
+  bool _helaReviveActive = false;
+  bool get helaReviveActive => _helaReviveActive;
+  set helaReviveActive(bool value) {
+    Prefs().setUseHelaRevive(value);
+    _helaReviveActive = value;
+  }
+
+  bool _wtfReviveActive = false;
+  bool get wtfReviveActive => _wtfReviveActive;
+  set wtfReviveActive(bool value) {
+    Prefs().setUseWtfRevive(value);
+    _wtfReviveActive = value;
+  }
 
   bool toggleAddUserActive = false;
 
