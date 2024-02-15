@@ -121,9 +121,19 @@ class ItemCardState extends State<ItemCard> {
                                     widget.item.name!,
                                     style: const TextStyle(fontSize: 12),
                                   ),
-                                  Text(
-                                    "Value: \$${decimalFormat.format(widget.item.marketValue)}",
-                                    style: const TextStyle(fontSize: 10),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "Value: \$${decimalFormat.format(widget.item.marketValue)}",
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                      SizedBox(width: 5),
+                                      if (widget.item.sellPrice != null && widget.item.sellPrice! > 0)
+                                        Text(
+                                          "(Sell @ \$${decimalFormat.format(widget.item.sellPrice)})",
+                                          style: const TextStyle(fontSize: 10),
+                                        ),
+                                    ],
                                   ),
                                   Row(
                                     children: [
