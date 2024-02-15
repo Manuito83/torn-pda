@@ -300,7 +300,17 @@ Future<void> pdaWidget_fetchData() async {
             formatter = DateFormat('hh:mm a');
             break;
         }
-        HomeWidget.saveWidgetData<String>('last_updated', "${formatter.format(DateTime.now())} LT");
+
+        bool timeZoneIsLocal = true;
+        String restoredTimeZone = await Prefs().getDefaultTimeZone();
+        if (restoredTimeZone == 'torn') {
+          timeZoneIsLocal = false;
+        }
+
+        HomeWidget.saveWidgetData<String>(
+            'last_updated',
+            "${formatter.format(timeZoneIsLocal ? DateTime.now() : DateTime.now().toUtc())} "
+                "${timeZoneIsLocal ? 'LT' : 'TCT'}");
 
         // COOLDOWNS HELPER FUNCTIONS
         String timeFormatted(DateTime timeEnd) {
@@ -328,7 +338,7 @@ Future<void> pdaWidget_fetchData() async {
           var formatted = TimeFormatter(
             inputTime: dateTime,
             timeFormatSetting: timePrefs,
-            timeZoneSetting: TimeZoneSetting.localTime,
+            timeZoneSetting: timeZoneIsLocal ? TimeZoneSetting.localTime : TimeZoneSetting.tornTime,
           ).formatHour;
           return "$formatted${timeFormatted(dateTime)}";
         }
