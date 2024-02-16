@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.3.0 - Build 380 - 13/02/2024
+    // v3.3.0 - Build 381 - 16/02/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.3.0'
@@ -54,6 +54,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Downloaded files trigger a share request automatically by default (see Tips for more info)",
           "Added option to enable or disable browser cache (enabled by default)",
           "Added pie option for Torn Stats chart",
+          "Added API permission donor option for retaliation alerts",
           "Fixed Awards images",
           "Fixed RW widget update in Profile",
           "Fixed other reported issues",

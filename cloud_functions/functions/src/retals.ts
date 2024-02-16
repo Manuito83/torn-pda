@@ -45,7 +45,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         if (ownFactionId === 0) return;
 
         // DEBUG!
-        //if (ownFactionId !== 6974) return;
+        //if (ownFactionId !== 33241) return;
 
         if (factionsList[id].timestamp === undefined) {
             promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
@@ -389,10 +389,16 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                 }
             }
 
+            // API FACTION PERMISSION DONOR
+            // (this user chose to serve as a host, but not to be notified)
+            if (subscribers[key].retalsNotificationDonor) {
+                continue;
+            }
+
             // DEBUG! 
             // DEBUG! 
             // DEBUG! 
-            //if (subscribers[key].name !== "Manuito") return;
+            //if (subscribers[key].name !== "Manuito") continue;
 
             let title = notificationTitle;
             let body = notificationBody;
