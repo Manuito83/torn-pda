@@ -90,7 +90,12 @@ class UserScriptModel {
   }
 
   factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
-      {String? url, UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote, bool? isExample, String? name, String? source, UserScriptTime? time}) {
+      {String? url,
+      UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
+      bool? isExample,
+      String? name,
+      String? source,
+      UserScriptTime? time}) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }
@@ -146,7 +151,7 @@ class UserScriptModel {
     final List<String> version1List = version1.split(".");
     final List<String> version2List = version2.split(".");
     for (int i = 0; i < version1List.length; i++) {
-      if (version2.length <= i || int.parse(version1List[i]) > int.parse(version2List[i])) {
+      if (version2List.length <= i || int.parse(version1List[i]) > int.parse(version2List[i])) {
         return true;
       }
     }
@@ -200,8 +205,10 @@ class UserScriptModel {
     };
   }
 
-  shouldInject(String url, [UserScriptTime? time]) => enabled && (this.time == time || time == null) &&  matches
-      .any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
+  shouldInject(String url, [UserScriptTime? time]) =>
+      enabled &&
+      (this.time == time || time == null) &&
+      matches.any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
 
   void update({
     bool? enabled,
