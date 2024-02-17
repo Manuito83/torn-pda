@@ -60,7 +60,7 @@ dependencies:
   #    ref: manuito-beta22
   flutter_local_notifications: 16.1.0
   flutter_secure_storage: 6.0.0
-  flutter_slidable: 2.0.0
+  flutter_slidable: 3.0.1
   flutter_speed_dial: 7.0.0
   flutter_xlider: 3.5.0
   workmanager: 0.5.1
