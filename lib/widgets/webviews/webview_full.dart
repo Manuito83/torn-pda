@@ -1199,19 +1199,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _addScriptApiHandlers(webView!);
           },
           shouldOverrideUrlLoading: (c, request) async {
+            final incomingUrl = request.request.url.toString();
+
             // Handle external schemes
-            if (!request.request.url.toString().startsWith("http:") &&
-                !request.request.url.toString().startsWith("https:") &&
-                !request.request.url.toString().startsWith("tornpda:")) {
+            if (!incomingUrl.startsWith("http:") &&
+                !incomingUrl.startsWith("https:") &&
+                !incomingUrl.startsWith("tornpda:")) {
               try {
-                print(canLaunchUrl(Uri.parse(request.request.url.toString())));
-                await launchUrl(Uri.parse(request.request.url.toString()), mode: LaunchMode.externalApplication);
+                print(canLaunchUrl(Uri.parse(incomingUrl)));
+                await launchUrl(Uri.parse(incomingUrl), mode: LaunchMode.externalApplication);
               } catch (e) {
                 log("Error launching intent: $e");
 
                 // Extract the scheme from the URI
                 String errorMessage = "Cannot find a compatible app for this link!";
-                String scheme = Uri.parse(request.request.url.toString()).scheme;
+                String scheme = Uri.parse(incomingUrl).scheme;
 
                 if (scheme.isNotEmpty) {
                   errorMessage = "Cannot find a compatible app for link $scheme:";
@@ -1246,7 +1248,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               await webView!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-                url: request.request.url.toString(),
+                url: incomingUrl,
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
@@ -1263,17 +1265,32 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               }
             }
 
-            if (request.request.url.toString().contains("http://")) {
-              _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
-              return NavigationActionPolicy.CANCEL;
+            if (incomingUrl.contains("http://")) {
+              _loadUrl(incomingUrl.replaceAll("http:", "https:"));
+              return NavigationActionPolicy.ALLOW;
             }
+
+            // Profiles images in Torn (also used in the forums) come with a ?v= parameter at the end which makes
+            // the WKWebview download the image instantly (or load a null page if downloads are disabled). So we
+            // just get rid of the ?v= parameter and load it again without it
+            if (incomingUrl.contains("profileimages.torn.com")) {
+              final correctedUrl = incomingUrl.replaceAll(RegExp(r'\?v=\d+'), '');
+              if (incomingUrl != correctedUrl) {
+                // The incomingUrl contains the ?v= part, so we cancel the navigation.
+                _loadUrl(correctedUrl);
+                return NavigationActionPolicy.CANCEL;
+              } else {
+                // The incomingUrl does not contain the ?v= part (probably as we reloaded it), so we allow it.
+                return NavigationActionPolicy.ALLOW;
+              }
+            }
+
             // Check for content-type header to prevent loading of non-JS files.
             // Add anyway if there's no header, as it's probably a userscript.
-            if (request.request.url.toString().endsWith(".user.js") &&
+            if (incomingUrl.endsWith(".user.js") &&
                 (request.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
               // First look for existing script with this url
-              final existingScript =
-                  _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == request.request.url.toString());
+              final existingScript = _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == incomingUrl);
               late String message;
               if (existingScript != null) {
                 message = "UserScript already exists, opening dialog...";
@@ -1290,7 +1307,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 showDialog(
                     builder: (_) => UserScriptsAddDialog(
                           editExisting: false,
-                          defaultUrl: request.request.url.toString(),
+                          defaultUrl: incomingUrl,
                           defaultPage: 1,
                         ),
                     context: context);
