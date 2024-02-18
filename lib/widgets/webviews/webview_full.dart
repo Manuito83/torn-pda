@@ -1702,6 +1702,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             await _assessLongPressOptions(result, controller);
           },
           onDownloadStartRequest: (controller, request) async {
+            if (request.mimeType != null && request.mimeType!.contains("image/")) {
+              // We don't want to download images automatically
+              final String u = request.url.toString().replaceAll("http:", "https:");
+              _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
+              _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+              return;
+            }
             await _downloadRequest(autoRequest: request);
           },
           /*
@@ -1757,7 +1764,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
     }
 
-    if (isImage && notHonorImage) {
+    if ((isImage || isAnchorImageType) && notHonorImage) {
       final focus = (await controller.requestFocusNodeHref());
       if (focus?.src != null) {
         _showLongPressCard(focus?.src, focus?.url);

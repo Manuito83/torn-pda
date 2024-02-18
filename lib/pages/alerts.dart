@@ -66,6 +66,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context);
