@@ -130,6 +130,32 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Flexible(
+                    child: Text(
+                      "Midnight X Reviving Services",
+                      style: TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: _w.midnightXReviveActive,
+                    onChanged: (value) {
+                      setState(() {
+                        _w.midnightXReviveActive = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 15),
             const Text(
               "NOTE: Torn PDA is not affiliated to any of these services in any form",

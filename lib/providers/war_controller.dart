@@ -74,6 +74,13 @@ class WarController extends GetxController {
     _wtfReviveActive = value;
   }
 
+  bool _midnightXReviveActive = false;
+  bool get midnightXReviveActive => _midnightXReviveActive;
+  set midnightXReviveActive(bool value) {
+    Prefs().setUseMidnightXevive(value);
+    _midnightXReviveActive = value;
+  }
+
   bool toggleAddUserActive = false;
 
   String playerLocation = "";
@@ -739,6 +746,7 @@ class WarController extends GetxController {
     uhcReviveActive = await Prefs().getUseUhcRevive();
     helaReviveActive = await Prefs().getUseHelaRevive();
     wtfReviveActive = await Prefs().getUseWtfRevive();
+    midnightXReviveActive = await Prefs().getUseMidnightXRevive();
 
     // Get sorting
     final String targetSort = await Prefs().getWarMembersSort();

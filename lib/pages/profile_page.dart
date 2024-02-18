@@ -62,6 +62,7 @@ import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
+import 'package:torn_pda/widgets/revive/midnightX_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
@@ -1249,6 +1250,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: WtfReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
+                  if (_user!.status!.state == 'Hospital' && _w.midnightXReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: MidnightXReviveButton(
                         themeProvider: _themeProvider,
                         user: _user,
                         webViewProvider: _webViewProvider,
