@@ -39,7 +39,7 @@ async function lmp(itemID) {
 	const prices = await torn_api(`market.${itemID}.bazaar`)
 	if (prices.error) { APIERROR = true; return 'API key error' }
 	const lowest_market_price = prices['bazaar'][0].cost
-	return lowest_market_price - 5
+	return Math.max(lowest_market_price - 5, 2)
 }
 
 // HACK to simulate input value change
