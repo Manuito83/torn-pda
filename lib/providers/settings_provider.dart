@@ -369,6 +369,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _highlightWordList = <String>[];
+  List<String> get highlightWordList => _highlightWordList;
+  set changeHighlightWordList(List<String> value) {
+    _highlightWordList = value;
+    Prefs().setHighlightWordList(_highlightWordList);
+    notifyListeners();
+  }
+
   var _removeAirplane = false;
   bool get removeAirplane => _removeAirplane;
   set changeRemoveAirplane(bool value) {
@@ -830,6 +838,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _highlightChat = await Prefs().getHighlightChat();
     _highlightColor = await Prefs().getHighlightColor();
+    _highlightWordList = await Prefs().getHighlightWordList();
 
     _removeAirplane = await Prefs().getRemoveAirplane();
 
