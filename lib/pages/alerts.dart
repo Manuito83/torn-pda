@@ -49,6 +49,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
   ThemeProvider? _themeProvider;
   late WebViewProvider _webViewProvider;
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +63,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
     routeWithDrawer = true;
     routeName = "alerts";
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -86,6 +94,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
               if (snapshot.data[0] is FirebaseUserModel) {
                 _firebaseUserModel ??= snapshot.data[0] as FirebaseUserModel?;
                 return SingleChildScrollView(
+                  controller: _scrollController,
                   child: Column(
                     children: [
                       const Padding(
@@ -758,6 +767,13 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 _firebaseUserModel?.retalsNotification = enabled;
                               });
                               firestore.toggleRetaliationNotification(enabled);
+
+                              // Makes sure to scroll down so that the new 2 options are visible
+                              _scrollController.animateTo(
+                                _scrollController.offset + 100,
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeIn,
+                              );
                             } else {
                               String message = "";
                               int seconds = 0;
@@ -817,7 +833,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       padding: const EdgeInsets.only(right: 10),
                                       child: GestureDetector(
                                         child: const Icon(Icons.info_outline_rounded),
-                                        // Quick update
                                         onTap: () async {
                                           await showDialog(
                                             useRootNavigator: false,
@@ -838,6 +853,71 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   setState(() {
                                     _settingsProvider.setSingleRetaliationOpensBrowser = enabled;
                                   });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (_firebaseUserModel!.retalsNotification! && _factionApiAccess)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Flexible(
+                                child: Row(
+                                  children: [
+                                    const Flexible(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(left: 10, right: 5),
+                                        child: Text(
+                                          "Only as API permission donor",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 10),
+                                      child: GestureDetector(
+                                        child: const Icon(Icons.info_outline_rounded),
+                                        onTap: () async {
+                                          await showDialog(
+                                            useRootNavigator: false,
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return _retalsDonorExplanation();
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                value: _firebaseUserModel?.retalsNotificationDonor ?? false,
+                                onChanged: (enabled) {
+                                  if (enabled) {
+                                    BotToast.showText(
+                                      text: "Please make sure that you understand the consequences of this setting "
+                                          "by reading the information dialog.\n\n"
+                                          "You will NOT receive relation alerts.",
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.blue,
+                                      duration: const Duration(seconds: 6),
+                                      contentPadding: const EdgeInsets.all(10),
+                                    );
+                                  }
+                                  setState(() {
+                                    _firebaseUserModel?.retalsNotificationDonor = enabled;
+                                  });
+                                  firestore.toggleRetaliationDonor(enabled);
                                 },
                               ),
                             ],
@@ -950,7 +1030,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           fontSize: 18,
         ),
       ),
-      content: const SingleChildScrollView(
+      content: SingleChildScrollView(
         child: Column(
           children: [
             Padding(
@@ -1168,6 +1248,46 @@ class AlertsSettingsState extends State<AlertsSettings> {
                   "will automatically open the browser and take you straight to the attack page.\n\n"
                   "NOTE: this will have no effect if you have no faction API permissions, as the browser will "
                   "open in any case.",
+                  style: TextStyle(fontSize: 13),
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            child: const Text("Understood"),
+            onPressed: () {
+              Navigator.of(context).pop('exit');
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  AlertDialog _retalsDonorExplanation() {
+    return AlertDialog(
+      title: const Text("Retaliation API Faction permissions donor"),
+      content: const Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "As explained in the Retalation Alerts information dialog, as a member of your faction with the "
+                  "required Faction API access, your API key send retaliation notifications to faction members. "
+                  "This will work as long as retalation alerts are active.\n\n"
+                  "However, if you personally would prefer NOT to receive these notifications but continue to act "
+                  "as a Faction API permission donor (so that the server can still notify other members), make "
+                  "sure to activate this option.",
                   style: TextStyle(fontSize: 13),
                 ),
                 SizedBox(height: 10),

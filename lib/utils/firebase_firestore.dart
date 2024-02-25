@@ -316,6 +316,13 @@ class FirestoreHelper {
     });
   }
 
+  /// [host] stands for someone that does not have proper Faction API permissions
+  Future<void> toggleRetaliationDonor(bool donor) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "retalsNotificationDonor": donor,
+    });
+  }
+
   Future<void> toggleNpcAlert({
     required String id,
     required int level,

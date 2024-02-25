@@ -121,6 +121,12 @@ Future<void> pdaWidget_fetchData() async {
             String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
             if (statusDescription.contains("Traveling to")) {
               statusDescription = statusDescription.replaceAll("Traveling to ", "");
+
+              // Shorten certain destinations so that we leave as much space as possible for the time
+              statusDescription = statusDescription.replaceAll("Cayman Islands", "Cayman");
+              statusDescription = statusDescription.replaceAll("South Africa", "S. Africa");
+              statusDescription = statusDescription.replaceAll("United Kingdom", "UK");
+
               statusDescription += ' in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
               statusDescription = statusDescription.replaceAll("00h ", "");
               HomeWidget.saveWidgetData<String>("travel", "right");
@@ -294,7 +300,17 @@ Future<void> pdaWidget_fetchData() async {
             formatter = DateFormat('hh:mm a');
             break;
         }
-        HomeWidget.saveWidgetData<String>('last_updated', "${formatter.format(DateTime.now())} LT");
+
+        bool timeZoneIsLocal = true;
+        String restoredTimeZone = await Prefs().getDefaultTimeZone();
+        if (restoredTimeZone == 'torn') {
+          timeZoneIsLocal = false;
+        }
+
+        HomeWidget.saveWidgetData<String>(
+            'last_updated',
+            "${formatter.format(timeZoneIsLocal ? DateTime.now() : DateTime.now().toUtc())} "
+                "${timeZoneIsLocal ? 'LT' : 'TCT'}");
 
         // COOLDOWNS HELPER FUNCTIONS
         String timeFormatted(DateTime timeEnd) {
@@ -322,7 +338,7 @@ Future<void> pdaWidget_fetchData() async {
           var formatted = TimeFormatter(
             inputTime: dateTime,
             timeFormatSetting: timePrefs,
-            timeZoneSetting: TimeZoneSetting.localTime,
+            timeZoneSetting: timeZoneIsLocal ? TimeZoneSetting.localTime : TimeZoneSetting.tornTime,
           ).formatHour;
           return "$formatted${timeFormatted(dateTime)}";
         }

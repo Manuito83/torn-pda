@@ -45,6 +45,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
@@ -61,6 +62,7 @@ import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
+import 'package:torn_pda/widgets/revive/midnightX_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
@@ -145,6 +147,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
   final UserController _u = Get.put(UserController());
+  final WarController _w = Get.find<WarController>();
 
   late int _travelNotificationAhead;
   late int _travelAlarmAhead;
@@ -234,11 +237,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   String _ocFinalStringShort = "";
   int _ocComplexPeopleNotReady = 0;
   bool _ocComplexReady = false;
-
-  bool _nukeReviveActive = false;
-  bool _uhcReviveActive = false;
-  bool _helaReviveActive = false;
-  bool _wtfReviveActive = false;
 
   bool _warnAboutChains = false;
   bool _showHeaderWallet = false;
@@ -1218,7 +1216,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                   if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
-                  if (_user!.status!.state == 'Hospital' && _nukeReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _w.nukeReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: NukeReviveButton(
@@ -1228,7 +1226,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
-                  if (_user!.status!.state == 'Hospital' && _uhcReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _w.uhcReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: UhcReviveButton(
@@ -1238,7 +1236,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
-                  if (_user!.status!.state == 'Hospital' && _helaReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _w.helaReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: HelaReviveButton(
@@ -1248,10 +1246,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         settingsProvider: _settingsProvider,
                       ),
                     ),
-                  if (_user!.status!.state == 'Hospital' && _wtfReviveActive)
+                  if (_user!.status!.state == 'Hospital' && _w.wtfReviveActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 13, top: 10),
                       child: WtfReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
+                  if (_user!.status!.state == 'Hospital' && _w.midnightXReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: MidnightXReviveButton(
                         themeProvider: _themeProvider,
                         user: _user,
                         webViewProvider: _webViewProvider,
@@ -6125,11 +6133,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _alarmSound = await Prefs().getManualAlarmSound();
     _alarmVibration = await Prefs().getManualAlarmVibration();
-
-    _nukeReviveActive = await Prefs().getUseNukeRevive();
-    _uhcReviveActive = await Prefs().getUseUhcRevive();
-    _helaReviveActive = await Prefs().getUseHelaRevive();
-    _wtfReviveActive = await Prefs().getUseWtfRevive();
 
     _warnAboutChains = await Prefs().getWarnAboutChains();
     _showHeaderWallet = await Prefs().getShowHeaderWallet();

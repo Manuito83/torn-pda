@@ -432,6 +432,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                             );
                             widget.editScript!.updateStatus = UserScriptUpdateStatus.error;
                           } else {
+                            try {
                             final String newVersion = resultModel!.version;
                             final String oldVersion = widget.editScript!.version;
                             final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
@@ -453,6 +454,21 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                               duration: const Duration(seconds: 4),
                               contentPadding: const EdgeInsets.all(10),
                             );
+                            } catch (e) {
+                              log("An error occured in script ${widget.editScript!.name}: $e");
+                              BotToast.showText(
+                                align: Alignment(0, 0),
+                                clickClose: true,
+                                text: "An unknown error occurred whilst parsing the remote script.",
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.orange[700]!,
+                                duration: const Duration(seconds: 4),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            }
                           }
                         }
 

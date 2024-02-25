@@ -33,6 +33,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
+import 'package:torn_pda/widgets/revive/midnightX_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
@@ -59,6 +60,9 @@ class WarOptions {
         // Own icon in widget
         break;
       case "WTF revive":
+        // Own icon in widget
+        break;
+      case "Midnight X revive":
         // Own icon in widget
         break;
     }
@@ -121,6 +125,7 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "UHC revive"),
     WarOptions(description: "HeLa revive"),
     WarOptions(description: "WTF revive"),
+    WarOptions(description: "Midnight X revive"),
   ];
 
   @override
@@ -756,6 +761,8 @@ class WarPageState extends State<WarPage> {
                 openHelaReviveDialog(context, _themeProvider!, null);
               case "WTF revive":
                 openWtfReviveDialog(context, _themeProvider!, null);
+              case "Midnight X revive":
+                openMidnightXReviveDialog(context, _themeProvider!, null);
             }
           },
           itemBuilder: (BuildContext context) {
@@ -798,6 +805,9 @@ class WarPageState extends State<WarPage> {
                 return false;
               }
               if (choice.description!.contains("WTF") && !_w.wtfReviveActive) {
+                return false;
+              }
+              if (choice.description!.contains("Midnight X") && !_w.midnightXReviveActive) {
                 return false;
               }
               return true;
@@ -904,6 +914,21 @@ class WarPageState extends State<WarPage> {
                       ),
                       const SizedBox(width: 10),
                       const Flexible(child: Text("Request a revive (WTF)")),
+                    ],
+                  ),
+                );
+              }
+              if (choice.description!.contains("Midnight X")) {
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Image.asset('images/icons/midnightx_revive.png', width: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Request a revive (Midnight X)")),
                     ],
                   ),
                 );
