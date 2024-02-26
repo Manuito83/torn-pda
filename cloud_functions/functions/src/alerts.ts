@@ -12,9 +12,15 @@ import { getUsersStat } from "./torn_api";
 
 const privateKey = require("../key/torn_key");
 import fetch from 'node-fetch';
-const runtimeOpts = {
+
+const runtimeOpts512 = {
   timeoutSeconds: 120,
   memory: "512MB" as "512MB",
+}
+
+const runtimeOpts1024 = {
+  timeoutSeconds: 120,
+  memory: "1GB" as "1GB",
 }
 
 export async function getStockMarket(apiKey: string) {
@@ -28,7 +34,7 @@ export const alertsGroup = {
   //*********** iOS ************//
   //****************************//
   checkIOS: functions.region('us-east4')
-    .runWith(runtimeOpts)
+    .runWith(runtimeOpts1024)
     .pubsub
     .schedule("0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * *")
     .onRun(async () => {
@@ -92,7 +98,7 @@ export const alertsGroup = {
   //******* ANDROID LOW ********//
   //****************************//
   checkAndroidLow: functions.region('us-east4')
-    .runWith(runtimeOpts)
+    .runWith(runtimeOpts512)
     .pubsub
     .schedule("1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52,55,58 * * * *")
     .onRun(async () => {
@@ -157,7 +163,7 @@ export const alertsGroup = {
   //******* ANDROID HIGH *******//
   //****************************//
   checkAndroidHigh: functions.region('us-east4')
-    .runWith(runtimeOpts)
+    .runWith(runtimeOpts512)
     .pubsub
     .schedule("2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59 * * * *")
     .onRun(async () => {
@@ -228,7 +234,7 @@ export const alertsGroup = {
 export const alertsTestGroup = {
 
   checkManuito: functions.region('us-east4')
-    .runWith(runtimeOpts)
+    .runWith(runtimeOpts512)
     .pubsub
     .schedule("*/3 * * * *")
     .onRun(async () => {
