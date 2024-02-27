@@ -676,10 +676,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       additional.add(const SizedBox(width: 5));
     }
 
-    SpiesSource? spySource;
-    int? totalUpdate;
-    int? spyUpdated;
     YataSpyModel? yataSpy;
+    SpiesSource? thisSource;
 
     // Locate the spy first based on the active source
     try {
@@ -688,22 +686,26 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         final spy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
         if (spy != null) {
           yataSpy = spy;
+          thisSource = SpiesSource.yata;
         } else if (_spyController.allowMixedSpiesSources) {
           // Check alternate source of spies if we allow mixed sources
           final altSpy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
           if (altSpy != null) {
             yataSpy = altSpy.toYataModel();
+            thisSource = SpiesSource.tornStats;
           }
         }
       } else if (_spyController.spiesSource == SpiesSource.tornStats) {
         final spy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
         if (spy != null) {
           yataSpy = spy.toYataModel();
+          thisSource = SpiesSource.tornStats;
         } else if (_spyController.allowMixedSpiesSources) {
           // Check alternate source of spies if we allow mixed sources
           final altSpy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
           if (altSpy != null) {
             yataSpy = altSpy;
+            thisSource = SpiesSource.yata;
           }
         }
       }
@@ -905,7 +907,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           child: Row(
             children: [
               Image.asset(
-                spySource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                thisSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
                 height: 18,
               ),
               const SizedBox(width: 8),
@@ -944,9 +946,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 dexterity: dexterity ?? -1,
                                 dexterityUpdate: yataSpy?.dexterityTimestamp ?? -1,
                                 total: total ?? -1,
-                                totalUpdate: totalUpdate,
-                                update: spyUpdated,
-                                spySource: spySource,
+                                totalUpdate: yataSpy?.totalTimestamp,
+                                update: yataSpy?.update ?? 0,
+                                spySource: thisSource,
                                 name: _playerName!,
                                 factionName: _factionName!,
                                 themeProvider: widget.themeProvider!,
