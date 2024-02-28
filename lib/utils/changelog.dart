@@ -45,6 +45,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.3.1'
         ..date = '15 MAR 2024'
         ..features = [
+          "Added custom word list and fixed chat highlight [Kwack]",
           "Fixed spies update times",
         ],
     );

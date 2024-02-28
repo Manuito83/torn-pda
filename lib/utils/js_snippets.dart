@@ -788,112 +788,74 @@ String changeLoadOutJS({required String item, required bool attackWebview}) {
   ''';
 }
 
-String chatHighlightJS({required String highlightMap}) {
+String chatHighlightJS({required String highlights}) {
   return '''
-  // Credit: Torn Tools
-
+// Modified from TornTools' Highlight Chat feature
+(() => {
   "use strict";
+	const highlights = $highlights;
+	async function waitForChat() {
+		let count = 0;
+		return new Promise((res, rej) => {
+			const id = setInterval(() => {
+				const chat = document.querySelector("#chatRoot");
+				if (chat.querySelector("[class*='chat-list-button__']")) {
+					clearInterval(id);
+					res(chat);
+				} else if (count > 20) {
+					clearInterval(id);
+					rej();
+				} else count++;
+			}, 500)
+		});
+	}
 
-  (async () => {    
-    // Example var highlights = [ { name: "Manuito", highlight: "rgba(124, 169, 0, 0.4)", sender: "rgba(124, 169, 0, 1)" } ];
-    var highlights = $highlightMap;
-  
-    chatsLoaded().then(() => {
-      
-      String.prototype.replaceAll = function (text, replace) {
-        let str = this.toString();
-      
-        if (typeof text === "string") {
-          while (str.includes(text)) {
-            str = str.replace(text, replace);
-          }
-        } else if (typeof text === "object") {
-          if (Array.isArray(text)) {
-            for (let t of text) {
-              str = str.replaceAll(t, replace);
-            }
-          }
-        }
-      
-        return str;
-      };
-    
-      if (document.querySelector("[class*='chat-app-container_']")) {
-        manipulateChat();
-      }
-    
-      function manipulateChat() {
-        for (let message of document.querySelectorAll("[class*='chat-box-body__'] [class*='chat-box-body__message-box__']")) {
-      applyChatHighlights(message);
-        }
-      }
-    
-      function applyChatHighlights(message) {
-        if (!message) return;
-      
-        let sender = simplify(message.querySelector("[class*='chat-box-body__sender-button__'] a").textContent);
-        let words = message.lastElementChild.textContent.split(" ").map(simplify);
-      
-        for (let entry of highlights) {
-          if (entry["name"] === sender) {
-            let color = entry["sender"];
-            // Color for name of sender
-            message.querySelector("a").style.color = entry["sender"];
-          }
-        }
-      
-        for (let entry of highlights) {
-          if (!words.includes(entry["name"].toLowerCase())) continue;
-          let color = entry["highlight"];
-          // Color for messages background
-          message.style.backgroundColor = color;
-          break;
-        }
-      
-        function simplify(text) {
-          return text.toLowerCase().replaceAll([".", "?", ":", "!", '"', "'", ";", "`", ","], "").trim();
-        }
-      }  
-                      
-      new MutationObserver((mutationsList) => {
-        for (let mutation of mutationsList) {
-          for (let addedNode of mutation.addedNodes) {
-            
-            if (!addedNode.className && addedNode.parentElement?.className.includes("chat-box-body__")) {
-              // CHAT MESSAGE!
-              applyChatHighlights(addedNode.querySelector("[class*='chat-box-body__message-box__']"));
-            }
-			
-			      /*
-            if (addedNode.className?.includes("group-chat-box__")) {
-              // CHAT BOX!
-              for (const message of addedNode.querySelectorAll("[class*='chat-box-body__'] [class*='chat-box-body__message-box__']")) {
-                applyChatHighlights(message);
-              }
-            }
-			      */
-		      }
-        }
-      }).observe(document.querySelector("#chatRoot"), { childList: true, subtree: true });  
-    });
-    
-    function chatsLoaded() {
-      return new Promise((resolve) => {
-        let checker = setInterval(() => {
-          if (document.querySelector("[class*='chat-app-container_']")) {
-            setInterval(() => {
-              resolve(true);
-            }, 300);
-            return clearInterval(checker);
-          }
-        });
-      });
-    } 
-    
-    // Return to avoid iOS WKErrorDomain
-    123;
-  })(); 
+	function removeHighlights() {
+		[...document.querySelectorAll(".pda-chat-highlight, .pda-chat-outline")].forEach((el) => el.classList.remove("pda-chat-highlight", "pda-chat-outline"));
+	}
+	function applyHighlights(el) {
+		// Spread content, in case the msg content has a : in it.
+		const [sender, ...contentArr] = el.firstElementChild.tagName === "DIV" ? el.lastChild.textContent.split(":") : el.textContent.split(":");
+		const content = contentArr.join(":");
+		// Make it easy to silent the errors, so if (when...) something breaks it doesn't spam the console.
+		if (!sender && !window.pda?.silenceChatErrors) console.error("Missing sender in message element.")
+		if (!content && !window.pda?.silenceChatErrors) console.error("Missing content in message element.");
+		if (sender && sender.toLowerCase() === highlights[0].toLowerCase()) el.classList.add("pda-chat-outline");
+		if (content && highlights.some((highlight) => content.toLowerCase().includes(highlight.toLowerCase()))) el.classList.add("pda-chat-highlight");
+	}
+
+	waitForChat().then((chat) => {
+		removeHighlights();
+	
+		[...chat.querySelectorAll("[class*='chat-box-body__'] [class*='chat-box-message__box__']")].forEach(applyHighlights);
+		new MutationObserver((muts) => {
+			for (const mut of muts) {
+				for (const node of mut.addedNodes) {
+					if (node instanceof HTMLElement && !node.className && node.parentElement?.className.includes("chat-box-body__")) {
+						applyHighlights(node);
+					}
+				}
+			}
+		}).observe(chat, { childList: true, subtree: true })
+	});
+})();
   ''';
+}
+
+String chatHighlightCSS({required String background, required String senderColor}) {
+  // Yes the css is incredibly hacky, it's the only way to workaround Torn's inconsistent chat elements without
+  // using :has() or adding more complex JS. It works, so it works.
+  return """
+  .pda-chat-highlight [class*=chat-box-message__box_][class*=chat-box-message__box--],
+  .pda-chat-highlight[class*=chat-box-message__box_][class*=chat-box-message__box--] {
+    background-color: $background;
+  }
+
+  .pda-chat-outline [class*=chat-box-message__box_][class*=chat-box-message__box--],
+  .pda-chat-outline[class*=chat-box-message__box_][class*=chat-box-message__box--] {
+    border: 1px solid $senderColor;
+  }
+  """;
 }
 
 String jailJS({

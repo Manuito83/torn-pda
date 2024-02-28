@@ -21,6 +21,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
@@ -970,7 +971,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              const Text("Highlight own name in chat"),
+              const Text("Highlight messages in chat"),
               Switch(
                 value: _settingsProvider.highlightChat,
                 onChanged: (value) {
@@ -986,37 +987,42 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
         if (_highlightChat)
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: () {
-                  _showColorPickerChat(context);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      const Text("Choose highlight colour"),
-                      Container(
-                        width: 25,
-                        height: 25,
-                        color: _highlightColor,
-                      )
-                    ],
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Select words to highlight",
+                      ),
+                    ),
+                    ElevatedButton(
+                        child: const Icon(Icons.drive_file_rename_outline_sharp),
+                        onPressed: () => _showHighlightSelectorChat(context)),
+                  ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "The sender's name will appear darker "
-                  'to improve readability',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Flexible(
+                      child: Text(
+                        "Select highlight color",
+                      ),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _highlightColor.withAlpha(255),
+                        foregroundColor: Colors.white, // Ensures icon color is always white
+                      ),
+                      child: Icon(Icons.palette), // No need to set icon color explicitly
+                      onPressed: () => _showColorPickerChat(context),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1920,6 +1926,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         );
       },
     );
+  }
+
+  void _showHighlightSelectorChat(BuildContext context) {
+    showDialog(useRootNavigator: false, context: context, builder: (c) => ChatHighlightAddWordsDialog());
   }
 
   void _showColorPickerChat(BuildContext context) {
