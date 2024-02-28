@@ -95,12 +95,9 @@ class ChatHighlightAddWordsDialogState extends State<ChatHighlightAddWordsDialog
                                 children: [
                                   Expanded(child: Text(s)),
                                   IconButton(
-                                    onPressed: () => setState(
-                                      () {
-                                        _settingsProvider.highlightWordList.remove(s);
-                                        _settingsProvider.changeHighlightWordList = _settingsProvider.highlightWordList;
-                                      },
-                                    ),
+                                    onPressed: () {
+                                      _removeWord(s);
+                                    },
                                     icon: const Icon(Icons.delete, color: Colors.red),
                                   )
                                 ],
@@ -128,8 +125,11 @@ class ChatHighlightAddWordsDialogState extends State<ChatHighlightAddWordsDialog
   }
 
   void _addWord(String s) {
-    _settingsProvider.highlightWordList.add(s.toLowerCase());
+    _settingsProvider.changeHighlightWordList = [..._settingsProvider.highlightWordList, s.toLowerCase()];
     _addChatHighlightTextController.clear();
-    _settingsProvider.changeHighlightWordList = _settingsProvider.highlightWordList;
+  }
+
+  void _removeWord(String s) {
+    _settingsProvider.changeHighlightWordList = _settingsProvider.highlightWordList.where((item) => item != s).toList();
   }
 }
