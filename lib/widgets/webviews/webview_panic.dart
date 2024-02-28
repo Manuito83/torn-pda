@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 // Package imports:
@@ -240,12 +241,16 @@ class WebViewPanicState extends State<WebViewPanic> {
     final intColor = Color(_settingsProvider.highlightColor);
     final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
     final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
-    final String hlMap = '[ { name: "${_userProv!.basic!.name}", highlight: "$background", sender: "$senderColor" } ]';
+    final String hlMap = '[ "${_userProv!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
       _webViewController!.runJavascript(
-        chatHighlightJS(highlightMap: hlMap),
+        chatHighlightJS(highlights: hlMap),
       );
+      _webViewController!.runJavascript("const x = document.createElement('style');"
+          "x.innerHTML = `$css`;"
+          "document.head.appendChild(x);");
     }
   }
 

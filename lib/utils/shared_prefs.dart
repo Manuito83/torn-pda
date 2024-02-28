@@ -198,6 +198,7 @@ class Prefs {
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
   final String _kHighlightChat = "pda_highlightChat";
+  final String _kHighlightChatWordsList = "pda_highlightChatWordsList";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
   final String _kUserScriptsNotifyUpdates = "pda_userScriptsNotifyUpdates";
@@ -2351,6 +2352,16 @@ class Prefs {
   Future<bool> setHighlightChat(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kHighlightChat, value);
+  }
+
+  Future<List<String>> getHighlightWordList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHighlightChatWordsList) ?? const [];
+  }
+
+  Future<bool> setHighlightWordList(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kHighlightChatWordsList, value);
   }
 
   Future<int> getHighlightColor() async {

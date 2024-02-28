@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -2012,12 +2013,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final intColor = Color(_settingsProvider.highlightColor);
     final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
     final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
-    final String hlMap =
-        '[ { name: "${_userProvider!.basic!.name}", highlight: "$background", sender: "$senderColor" } ]';
+    final String hlMap = '[ "${_userProvider!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
       webView!.evaluateJavascript(
-        source: chatHighlightJS(highlightMap: hlMap),
+        source: chatHighlightJS(highlights: hlMap),
+      );
+      webView!.injectCSSCode(
+        source: css,
       );
     }
   }
