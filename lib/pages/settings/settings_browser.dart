@@ -1015,8 +1015,13 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       ),
                     ),
                     ElevatedButton(
-                        child: Icon(Icons.palette, color: _highlightColor.withAlpha(255)),
-                        onPressed: () => _showColorPickerChat(context)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _highlightColor.withAlpha(255),
+                        foregroundColor: Colors.white, // Ensures icon color is always white
+                      ),
+                      child: Icon(Icons.palette), // No need to set icon color explicitly
+                      onPressed: () => _showColorPickerChat(context),
+                    ),
                   ],
                 ),
               ),
