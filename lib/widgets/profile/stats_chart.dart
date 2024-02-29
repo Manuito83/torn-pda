@@ -67,7 +67,7 @@ class StatsChart extends StatelessWidget {
           width: 7,
           height: 7,
           decoration: const BoxDecoration(
-            color: Colors.orange,
+            color: Colors.red,
             shape: BoxShape.circle,
           ),
         ),
@@ -77,7 +77,7 @@ class StatsChart extends StatelessWidget {
           width: 7,
           height: 7,
           decoration: const BoxDecoration(
-            color: Colors.red,
+            color: Colors.orange,
             shape: BoxShape.circle,
           ),
         ),
@@ -135,7 +135,7 @@ class StatsChart extends StatelessWidget {
           spots: _speedSpots,
           isCurved: false,
           barWidth: 2,
-          color: Colors.red,
+          color: Colors.orange,
           dotData: FlDotData(
             show: false,
           ),
@@ -144,7 +144,7 @@ class StatsChart extends StatelessWidget {
           spots: _defenseSpots,
           isCurved: false,
           barWidth: 2,
-          color: Colors.orange,
+          color: Colors.red,
           dotData: FlDotData(
             show: false,
           ),
@@ -207,25 +207,25 @@ class StatsChart extends StatelessWidget {
             tooltips.add(
               LineTooltipItem(
                 "$strLine\n\nSTR: ${f.format(statsData!.data![thisX].strength)}",
-                const TextStyle(fontSize: 10),
+                const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
                 "DEF: ${f.format(statsData!.data![thisX].defense)}",
-                const TextStyle(fontSize: 10),
+                const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
                 "SPD: ${f.format(statsData!.data![thisX].speed)}",
-                const TextStyle(fontSize: 10),
+                const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
                 "DEX: ${f.format(statsData!.data![thisX].dexterity)}\n\n$dexLine",
-                const TextStyle(fontSize: 10),
+                const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
 
@@ -322,9 +322,9 @@ class StatsChart extends StatelessWidget {
       case 'Strength':
         return Colors.blue;
       case 'Speed':
-        return Colors.red;
-      case 'Defense':
         return Colors.orange;
+      case 'Defense':
+        return Colors.red;
       case 'Dexterity':
         return Colors.green;
       default:
