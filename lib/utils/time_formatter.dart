@@ -52,7 +52,7 @@ class TimeFormatter {
     }
 
     final now = DateTime.now();
-    int differenceInDays = (timeZonedTime.weekday - now.weekday + 7) % 7;
+    int differenceInDays = timeZonedTime.difference(now).inDays;
 
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
