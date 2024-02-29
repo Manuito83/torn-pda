@@ -406,6 +406,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
 
       checkForScriptUpdates();
+
+      _syncThemeWithDeviceSettings();
     }
   }
 
@@ -1473,30 +1475,54 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                             MdiIcons.ghost,
                           ],
                           onToggle: (index) {
+                            bool syncToast = false;
+                            if (_settingsProvider.syncTornWebTheme) {
+                              final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+                              if (brightness == Brightness.dark && index == 0 ||
+                                  brightness == Brightness.light && index == 1 ||
+                                  brightness == Brightness.light && index == 2) {
+                                syncToast = true;
+                                BotToast.showText(
+                                  clickClose: true,
+                                  text: "Automatic sync with your device theme is enabled: bear in mind that your "
+                                      "current theme selection might be reverted!",
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.orange[800]!,
+                                  duration: const Duration(seconds: 6),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              }
+                            }
+
                             if (index == 0) {
                               _themeProvider!.changeTheme = AppTheme.light;
-                              if (_settingsProvider.syncTheme) {
+                              if (_settingsProvider.syncTornWebTheme) {
                                 _webViewProvider.changeTornTheme(dark: false);
                               }
                             } else if (index == 1) {
                               _themeProvider!.changeTheme = AppTheme.dark;
-                              if (_settingsProvider.syncTheme) {
+                              if (_settingsProvider.syncTornWebTheme) {
                                 _webViewProvider.changeTornTheme(dark: true);
                               }
                             } else {
                               _themeProvider!.changeTheme = AppTheme.extraDark;
-                              if (_settingsProvider.syncTheme) {
+                              if (_settingsProvider.syncTornWebTheme) {
                                 _webViewProvider.changeTornTheme(dark: true);
                               }
-                              BotToast.showText(
-                                text: "Spooky...!",
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                                contentColor: const Color(0xFF0C0C0C),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
+                              if (!syncToast) {
+                                BotToast.showText(
+                                  text: "Spooky...!",
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                  contentColor: const Color(0xFF0C0C0C),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              }
                             }
                             setState(() {
                               SystemChrome.setSystemUIOverlayStyle(
@@ -2161,6 +2187,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
       log("UserScripts checkForUpdates() completed with $i updates available, $alreadyAvailableCount "
           "already prompted, should notify: ${_userScriptsProvider.userScriptsNotifyUpdates}");
+    });
+  }
+
+  void _syncThemeWithDeviceSettings() {
+    _preferencesCompleter.future.whenComplete(() async {
+      if (!_settingsProvider.syncDeviceTheme) return;
+
+      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      if (brightness == Brightness.dark && _themeProvider!.currentTheme == AppTheme.light) {
+        _themeProvider!.changeTheme = AppTheme.dark;
+      } else if (brightness == Brightness.light && _themeProvider!.currentTheme != AppTheme.light) {
+        _themeProvider!.changeTheme = AppTheme.light;
+      }
     });
   }
 

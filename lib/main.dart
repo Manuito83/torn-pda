@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
@@ -78,6 +79,8 @@ final StreamController<String?> selectNotificationStream = StreamController<Stri
 
 bool exactAlarmsPermissionAndroid = false;
 
+bool syncTheme = false;
+
 class ReceivedNotification {
   ReceivedNotification({
     required this.id,
@@ -113,7 +116,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  // START ## Force splash screen to stay on until we get essential start-up data
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  await _shouldSyncDeviceTheme(widgetsBinding);
+  FlutterNativeSplash.remove();
+  // END ## Release splash screen
 
   // Avoid screen lock when testing in real device
   if (kDebugMode && enableWakelockForDebug) {
@@ -481,5 +490,29 @@ class AppBorderState extends State<AppBorder> {
         ],
       ),
     );
+  }
+}
+
+/// Retrieves and changes Prefs() data directly (as providers have not yet been started)
+/// to manage device theme sync with the app directly from the splash screen
+/// (so that we avoid unintended light/dark containers as providers load in Drawer)
+Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
+  syncTheme = await Prefs().getSyncDeviceTheme();
+  if (syncTheme) {
+    final brightness = widgetsBinding.platformDispatcher.platformBrightness;
+    if (brightness == Brightness.dark) {
+      String whatDarkToSync = await Prefs().getDarkThemeToSync();
+
+      switch (whatDarkToSync) {
+        case "dark":
+          await Prefs().setAppTheme("dark");
+          break;
+        case "extraDark":
+          await Prefs().setAppTheme("extraDark");
+          break;
+      }
+    } else if (brightness == Brightness.light) {
+      await Prefs().setAppTheme("light");
+    }
   }
 }

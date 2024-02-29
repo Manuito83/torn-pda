@@ -66,8 +66,9 @@ class Prefs {
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
   final String _kUseMaterial3Theme = "pda_useMaterial3Theme";
-  final String _kSyncTheme = "tornLite_syncTheme";
-  final String _kThemeToSync = "tornLite_themeToSync";
+  final String _kSyncTornWebTheme = "tornLite_syncTheme";
+  final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
+  final String _kDarkThemeToSync = "tornLite_themeToSync";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreteNotifications = "pda_discreteNotifications";
   final String _kDefaultSection = "pda_defaultSection";
@@ -792,26 +793,36 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for theme sync with web
+  /// Methods for theme sync with web and device
   /// ----------------------------
-  Future<bool> getSyncTheme() async {
+  Future<bool> getSyncTornWebTheme() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSyncTheme) ?? true;
+    return prefs.getBool(_kSyncTornWebTheme) ?? true;
   }
 
-  Future<bool> setSyncTheme(bool value) async {
+  Future<bool> setSyncTornWebTheme(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSyncTheme, value);
+    return prefs.setBool(_kSyncTornWebTheme, value);
   }
 
-  Future<String> getThemeToSync() async {
+  Future<bool> getSyncDeviceTheme() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kThemeToSync) ?? 'dark';
+    return prefs.getBool(_kSyncDeviceTheme) ?? false;
   }
 
-  Future<bool> setThemeToSync(String value) async {
+  Future<bool> setSyncDeviceTheme(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kThemeToSync, value);
+    return prefs.setBool(_kSyncDeviceTheme, value);
+  }
+
+  Future<String> getDarkThemeToSync() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDarkThemeToSync) ?? 'dark';
+  }
+
+  Future<bool> setDarkThemeToSync(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDarkThemeToSync, value);
   }
 
   /// ----------------------------

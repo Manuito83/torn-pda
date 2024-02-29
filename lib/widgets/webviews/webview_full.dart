@@ -1162,7 +1162,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             webView!.addJavaScriptHandler(
               handlerName: 'webThemeChange',
               callback: (args) {
-                if (!_settingsProvider.syncTheme) return;
+                if (!_settingsProvider.syncTornWebTheme) return;
                 if (args.contains("dark")) {
                   // Only change to dark themes if we are currently in light (the web will respond with a
                   // theme change event when we initiate the change, and it could revert to the default dark)
@@ -1500,7 +1500,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 }
               }
 
-              if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTheme) {
+              if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTornWebTheme) {
                 if (_currentUrl.contains("www.torn.com")) {
                   if (_webViewProvider.pendingThemeSync == "light") {
                     _requestTornThemeChange(dark: false);

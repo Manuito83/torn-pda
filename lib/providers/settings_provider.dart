@@ -717,19 +717,27 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _syncTheme = true;
-  bool get syncTheme => _syncTheme;
-  set syncTheme(bool value) {
-    _syncTheme = value;
-    Prefs().setSyncTheme(_syncTheme);
+  var _syncTornWebTheme = true;
+  bool get syncTornWebTheme => _syncTornWebTheme;
+  set syncTornWebTheme(bool value) {
+    _syncTornWebTheme = value;
+    Prefs().setSyncTornWebTheme(_syncTornWebTheme);
     notifyListeners();
   }
 
-  var _themeToSync = "dark";
-  String get darkThemeToSyncFromWeb => _themeToSync;
+  var _syncDeviceTheme = false;
+  bool get syncDeviceTheme => _syncDeviceTheme;
+  set syncDeviceTheme(bool value) {
+    _syncDeviceTheme = value;
+    Prefs().setSyncDeviceTheme(_syncDeviceTheme);
+    notifyListeners();
+  }
+
+  var _darkThemeToSync = "dark";
+  String get darkThemeToSyncFromWeb => _darkThemeToSync;
   set darkThemeToSyncFromWeb(String value) {
-    _themeToSync = value;
-    Prefs().setThemeToSync(value);
+    _darkThemeToSync = value;
+    Prefs().setDarkThemeToSync(value);
     notifyListeners();
   }
 
@@ -944,8 +952,9 @@ class SettingsProvider extends ChangeNotifier {
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
 
-    _syncTheme = await Prefs().getSyncTheme();
-    _themeToSync = await Prefs().getThemeToSync();
+    _syncTornWebTheme = await Prefs().getSyncTornWebTheme();
+    _syncDeviceTheme = await Prefs().getSyncDeviceTheme();
+    _darkThemeToSync = await Prefs().getDarkThemeToSync();
 
     _debugMessages = await Prefs().getDebugMessages();
 
