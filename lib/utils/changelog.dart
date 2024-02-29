@@ -46,9 +46,10 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '15 MAR 2024'
         ..features = [
           "Added custom word list and fixed chat highlight [Kwack]",
+          "Adjusted foreign stocks charts timeframe based on number of recent restocks",
           "Fixed issues with time calculation",
           "Fixed spies update times",
-          "Other several fixes"
+          "Other several fixes",
         ],
     );
 
