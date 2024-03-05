@@ -119,7 +119,9 @@ window.GM = {
 					"Invalid method passed to GM.xmlHttpRequest"
 				);
 			if (!method || method.toLowerCase() === "get") {
-				return await PDA_httpGet(url)
+				const h = headers ?? {};
+				h["X-GMforPDA"] = "Sent from PDA via GMforPDA";
+				return await PDA_httpGet(url, h ?? {})
 					.then(onload ?? ((x) => x))
 					.catch(onerror ?? ((e) => console.error(e)));
 			} else if (method.toLowerCase() === "post") {

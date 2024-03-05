@@ -1805,7 +1805,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.addJavaScriptHandler(
       handlerName: 'PDA_httpGet',
       callback: (args) async {
-        final http.Response resp = await http.get(WebUri(args[0]));
+        final http.Response resp = await http.get(WebUri(args[0], headers: Map<String, String>.from(args[1])));
         return _makeScriptApiResponse(resp);
       },
     );
