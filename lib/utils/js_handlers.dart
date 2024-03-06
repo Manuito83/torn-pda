@@ -7,6 +7,7 @@ String handler_flutterPlatformReady() {
     if(typeof __PDA_platformReadyPromise === 'undefined') {
         __PDA_platformReadyPromise = new Promise(resolve => {
             //console.log("Handler: pdaHandler_platformReady");
+            if (window.flutter_inappwebview?._platformReady) return resolve();
             window.addEventListener("flutterInAppWebViewPlatformReady", resolve);
         });
     }
