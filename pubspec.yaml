@@ -36,7 +36,7 @@ dependencies:
   dart_ping_ios: 3.0.0
   dbcrypt: 2.0.0
   dio: 5.0.3
-  device_info_plus: 8.2.2
+  device_info_plus: 9.1.2
   dotted_border: 2.0.0+2
   easy_rich_text: 2.0.0
   expandable: 5.0.1
