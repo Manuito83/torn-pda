@@ -2953,6 +2953,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
       playerId: _userProvider!.basic!.playerId!,
+      playerName: _userProvider!.basic!.name!,
       sellerName: sellerName,
       sellerId: sellerId,
       tradeId: tradeId,

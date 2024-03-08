@@ -7,10 +7,11 @@ import 'package:html/dom.dart' as dom;
 
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
+import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_in.dart';
+import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_item.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
-//import 'package:torn_pda/utils/external/torntrader_comm.dart';
+import 'package:torn_pda/utils/external/torn_exchange_comm.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -28,15 +29,17 @@ class TradesContainer {
   List<TradeItem> rightProperties = [];
   List<TradeItem> rightShares = [];
 
-  // TornTradesConfig
-  bool ttActive = false;
-  String ttTotalMoney = "";
-  String ttProfit = "";
-  String? ttUrl = "";
-  bool ttServerError = false;
-  bool ttAuthError = false;
-  List<TtInItem>? ttItems = <TtInItem>[];
-  List<TradeMessage>? ttMessages = <TradeMessage>[];
+  // Torn Exchange Config
+  String tornExchangeBuyerName = "";
+  int tornExchangeBuyerId = 0;
+  bool tornExchangeActive = false;
+  String tornExchangeTotalMoney = "";
+  String tornExchangeProfit = "";
+  bool tornExchangeServerError = false;
+  List<TornExchangeItem>? tornExchangeItems = <TornExchangeItem>[];
+  List<String> tornExchangeNames = [];
+  List<int> tornExchangePrices = [];
+  List<int> tornExchangeQuantities = [];
 
   // Arson Warehouse
   bool awhActive = false;
@@ -48,6 +51,7 @@ class TradesProvider extends ChangeNotifier {
 
   Future<void> updateTrades({
     required int playerId,
+    required String playerName,
     required String sellerName,
     required int sellerId,
     required int tradeId,
@@ -62,7 +66,7 @@ class TradesProvider extends ChangeNotifier {
   }) async {
     this.playerId = playerId;
 
-    final newModel = TradesContainer()
+    final tradesContainer = TradesContainer()
       ..tradeId = tradeId
       ..sellerName = sellerName
       ..sellerId = sellerId;
@@ -80,11 +84,11 @@ class TradesProvider extends ChangeNotifier {
     }
 
     if (leftMoneyElements.isNotEmpty) {
-      newModel.leftMoney = colors1(leftMoneyElements);
+      tradesContainer.leftMoney = colors1(leftMoneyElements);
     }
 
     if (rightMoneyElements.isNotEmpty) {
-      newModel.rightMoney = colors1(rightMoneyElements);
+      tradesContainer.rightMoney = colors1(rightMoneyElements);
     }
 
     // Color 2 is general items
@@ -116,44 +120,59 @@ class TradesProvider extends ChangeNotifier {
       } else if (allTornItems is ItemsModel) {
         // Loop left
         for (final itemLine in leftItemsElements) {
-          addColor2Items(itemLine, allTornItems, newModel.leftItems);
+          addColor2Items(itemLine, allTornItems, tradesContainer.leftItems);
         }
         // Loop right
         for (final itemLine in rightItemsElements) {
-          addColor2Items(itemLine, allTornItems, newModel.rightItems);
+          addColor2Items(itemLine, allTornItems, tradesContainer.rightItems);
         }
 
         // Initialize Arson Warehouse
-        newModel.awhActive = await Prefs().getAWHEnabled();
+        tradesContainer.awhActive = await Prefs().getAWHEnabled();
 
-        // TORN TRADER init here (it only takes into account elements sold to us,
-        // so we'll only pass this information
-        /*
-        var tornTraderActive = false; //await Prefs().getTornTraderEnabled();
-        if (rightItemsElements.isNotEmpty && tornTraderActive) {
-          TornTraderInModel tornTraderIn = await TornTraderComm.submitItems(
-            newModel.rightItems,
+        // TORN EXCHANGE init here (it only takes into account elements sold to us, so we'll only pass this information
+        var tornExchangeActive = await Prefs().getTornExchangeEnabled();
+        if (rightItemsElements.isNotEmpty && tornExchangeActive) {
+          TornExchangeInModel tornExchangeIn = await TornExchangeComm.submitItems(
+            tradesContainer.rightItems,
             sellerName,
             tradeId,
-            playerId,
+            playerName,
           );
 
-          if (tornTraderIn.serverError || tornTraderIn.authError) {
-            newModel
-              ..ttActive = true
-              ..ttServerError = tornTraderIn.serverError
-              ..ttAuthError = tornTraderIn.authError;
+          if (tornExchangeIn.serverError) {
+            tradesContainer
+              ..tornExchangeActive = true
+              ..tornExchangeServerError = tornExchangeIn.serverError;
           } else {
-            newModel
-              ..ttActive = true
-              ..ttTotalMoney = tornTraderIn.trade!.tradeTotal!.replaceAll(" ", "")
-              ..ttProfit = tornTraderIn.trade!.totalProfit!.replaceAll(" ", "")
-              ..ttUrl = tornTraderIn.trade!.tradeUrl
-              ..ttItems = tornTraderIn.trade!.items
-              ..ttMessages = tornTraderIn.trade!.tradeMessages;
+            int totalPrices = tornExchangeIn.prices.reduce((sum, price) => sum + price);
+            int totalProfit = tornExchangeIn.profitPerItem.reduce((sum, profit) => sum + profit);
+
+            List<TornExchangeItem> tornExchangeItems = [];
+            for (int i = 0; i < tornExchangeIn.items.length; i++) {
+              // Skip items that have no price in Torn Exchange, so the user knows they are not included
+              if (tornExchangeIn.prices[i] == 0) continue;
+
+              tornExchangeItems.add(TornExchangeItem()
+                ..name = tornExchangeIn.items[i]
+                ..quantity = tornExchangeIn.quantities[i]
+                ..price = (tornExchangeIn.prices[i] / tornExchangeIn.quantities[i]).round()
+                ..totalPrice = tornExchangeIn.prices[i]
+                ..profit = (tornExchangeIn.profitPerItem[i] / tornExchangeIn.quantities[i]).round());
+            }
+
+            tradesContainer
+              ..tornExchangeBuyerId = playerId
+              ..tornExchangeBuyerName = playerName
+              ..tornExchangeActive = true
+              ..tornExchangeTotalMoney = totalPrices.toString()
+              ..tornExchangeProfit = totalProfit.toString()
+              ..tornExchangeItems = tornExchangeItems
+              ..tornExchangeNames = tornExchangeIn.items
+              ..tornExchangeQuantities = tornExchangeIn.quantities
+              ..tornExchangePrices = tornExchangeIn.prices;
           }
         }
-        */
       }
     }
 
@@ -174,10 +193,10 @@ class TradesProvider extends ChangeNotifier {
 
     if (leftPropertyElements.isNotEmpty || rightPropertyElements.isNotEmpty) {
       for (final propertyLine in leftPropertyElements) {
-        addColor3Items(propertyLine, newModel.leftProperties);
+        addColor3Items(propertyLine, tradesContainer.leftProperties);
       }
       for (final propertyLine in rightPropertyElements) {
-        addColor3Items(propertyLine, newModel.rightProperties);
+        addColor3Items(propertyLine, tradesContainer.rightProperties);
       }
     }
 
@@ -205,15 +224,15 @@ class TradesProvider extends ChangeNotifier {
 
     if (leftSharesElements.isNotEmpty || rightSharesElements.isNotEmpty) {
       for (final shareLine in leftSharesElements) {
-        addColor4Items(shareLine, newModel.leftShares);
+        addColor4Items(shareLine, tradesContainer.leftShares);
       }
       for (final shareLine in rightSharesElements) {
-        addColor4Items(shareLine, newModel.rightShares);
+        addColor4Items(shareLine, tradesContainer.rightShares);
       }
     }
 
-    newModel.firstLoad = false;
-    container = newModel;
+    tradesContainer.firstLoad = false;
+    container = tradesContainer;
     notifyListeners();
   }
 }

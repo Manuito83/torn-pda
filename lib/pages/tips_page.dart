@@ -1069,15 +1069,16 @@ class TipsPageState extends State<TipsPage> {
             "it to expand it for more details!",
       ),
     );
-    /*
+
     tips.add(
       ExpandableTip(
-        headerValue: "Sync with Torn Trader",
-        expandedValue: "If you are a user of Torn Trader, tap on the options icon while in the Trades section in game. "
+        headerValue: "Sync with Torn Exchange",
+        expandedValue:
+            "If you are a user of Torn Exchange, tap on the options icon while in the Trades section in game. "
             "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
       ),
     );
-    */
+
     tips.add(
       ExpandableTip(
         headerValue: "Sync with Arson Warehouse",

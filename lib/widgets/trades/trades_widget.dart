@@ -12,11 +12,13 @@ import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/trades/awh_out.dart';
+import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_receipt.dart';
 // Project imports:
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/external/torn_exchange_comm.dart';
 import 'package:torn_pda/widgets/webviews/webview_full_awh.dart';
 
 class TradesWidget extends StatefulWidget {
@@ -88,79 +90,77 @@ class TradesWidgetState extends State<TradesWidget> {
                     ),
                   ],
                 ),
-                if (!_tradesProv.container.ttActive)
+                if (!_tradesProv.container.tornExchangeActive)
                   const SizedBox(width: 90)
                 else
-                  SizedBox(
-                    width: 90,
-                    child: Row(
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(left: 10, right: 5),
-                          child: Image(
-                            image: AssetImage('images/icons/torntrader_logo.png'),
-                            width: 16,
-                            color: ttColor,
-                            fit: BoxFit.fill,
-                          ),
-                        ),
-                        if (_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
-                          Row(
-                            children: [
-                              const Text(
-                                'ERROR',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: IconButton(
-                                  padding: const EdgeInsets.all(0),
-                                  iconSize: 20,
-                                  onPressed: () {
-                                    String errorString = "";
-                                    if (_tradesProv.container.ttServerError) {
-                                      errorString = "There was an error contacting Torn Trader, "
-                                          "please try again later!";
-                                    } else if (_tradesProv.container.ttAuthError) {
-                                      errorString = "There was an error authenticating in Torn "
-                                          "Trades, is your account active?";
-                                    }
-                                    BotToast.showText(
-                                      text: errorString,
-                                      textStyle: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.orange[800]!,
-                                      duration: const Duration(seconds: 5),
-                                      contentPadding: const EdgeInsets.all(10),
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icons.info_outline,
-                                    size: 15,
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                              )
-                            ],
-                          )
-                        else
-                          const Text(
-                            'SYNC',
+                  Row(
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'TORN EXCHANGE',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 10,
                               color: Color(0xffd186cf),
                               fontWeight: FontWeight.bold,
                             ),
-                          )
-                      ],
-                    ),
+                          ),
+                          if (_tradesProv.container.tornExchangeServerError)
+                            Row(
+                              children: [
+                                const Text(
+                                  'ERROR',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: IconButton(
+                                    padding: const EdgeInsets.all(0),
+                                    iconSize: 20,
+                                    onPressed: () {
+                                      String errorString = "";
+                                      if (_tradesProv.container.tornExchangeServerError) {
+                                        errorString = "There was an error contacting Torn Exchange, "
+                                            "please try again later!";
+                                      }
+                                      BotToast.showText(
+                                        text: errorString,
+                                        textStyle: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                        contentColor: Colors.orange[800]!,
+                                        duration: const Duration(seconds: 5),
+                                        contentPadding: const EdgeInsets.all(10),
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.info_outline,
+                                      size: 15,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            )
+                          else
+                            const Text(
+                              'SYNCHED',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                        ],
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -186,9 +186,8 @@ class TradesWidgetState extends State<TradesWidget> {
               ),
             ),
             ConstrainedBox(
-              // Take into account Torn Trader to leave more or less space
-              constraints: _tradesProv.container.ttActive &&
-                      (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
+              // Take into account Torn Exchange to leave more or less space
+              constraints: _tradesProv.container.tornExchangeActive && (!_tradesProv.container.tornExchangeServerError)
                   ? BoxConstraints.loose(
                       Size.fromHeight(
                             MediaQuery.sizeOf(context).height - kToolbarHeight * 3 - AppBar().preferredSize.height,
@@ -299,14 +298,16 @@ class TradesWidgetState extends State<TradesWidget> {
         iconSize: 23,
         onPressed: () {
           String amountCopied;
-          // Also takes into account ttServerError, in which case we copy the standard value below
-          if (_tradesProv.container.ttActive && !_tradesProv.container.ttServerError && side == 'right') {
-            amountCopied = _tradesProv.container.ttTotalMoney.replaceAll("\$", "").replaceAll(",", "");
-            _copyToClipboard(amountCopied, _tradesProv.container.ttTotalMoney);
+          // Also takes into account Torn Exchange Server error, in which case we copy the standard value below
+          if (_tradesProv.container.tornExchangeActive &&
+              !_tradesProv.container.tornExchangeServerError &&
+              side == 'right') {
+            amountCopied = _tradesProv.container.tornExchangeTotalMoney.replaceAll("\$", "").replaceAll(",", "");
+            amountCopied = _moneyFormat.format(int.parse(amountCopied));
           } else {
             amountCopied = _moneyFormat.format(total);
-            _copyToClipboard(amountCopied, amountCopied);
           }
+          _copyToClipboard(amountCopied, amountCopied);
         },
         icon: const Icon(
           Icons.content_copy,
@@ -321,9 +322,8 @@ class TradesWidgetState extends State<TradesWidget> {
       return const SizedBox.shrink();
     }
 
-    if (!_tradesProv.container.ttActive ||
-        (_tradesProv.container.ttActive &&
-            (_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError))) {
+    if (!_tradesProv.container.tornExchangeActive ||
+        (_tradesProv.container.tornExchangeActive && (_tradesProv.container.tornExchangeServerError))) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -368,6 +368,15 @@ class TradesWidgetState extends State<TradesWidget> {
           ],
         );
       } else {
+        // Do out best to parse the Torn Exchange total money and add money formatting
+        String tornExchangeTotal = "";
+        int? tornExchangeTotalMoney = int.tryParse(_tradesProv.container.tornExchangeTotalMoney);
+        if (tornExchangeTotalMoney != null) {
+          tornExchangeTotal = _moneyFormat.format(tornExchangeTotalMoney);
+        } else {
+          tornExchangeTotal = _tradesProv.container.tornExchangeTotalMoney;
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -376,7 +385,7 @@ class TradesWidgetState extends State<TradesWidget> {
               children: [
                 Flexible(
                   child: Text(
-                    _tradesProv.container.ttTotalMoney,
+                    '\$$tornExchangeTotal',
                     textAlign: TextAlign.end,
                     style: const TextStyle(
                       color: ttColor,
@@ -409,7 +418,7 @@ class TradesWidgetState extends State<TradesWidget> {
               children: [
                 Flexible(
                   child: Text(
-                    '${_tradesProv.container.ttProfit} profit',
+                    '${_tradesProv.container.tornExchangeProfit} profit',
                     textAlign: TextAlign.end,
                     style: const TextStyle(
                       color: Colors.white,
@@ -431,28 +440,36 @@ class TradesWidgetState extends State<TradesWidget> {
                   child: IconButton(
                     padding: const EdgeInsets.all(0),
                     iconSize: 23,
-                    onPressed: () {
-                      _copyToClipboard(_tradesProv.container.ttUrl!, "Receipt URL");
+                    onPressed: () async {
+                      // Build trade receipt model
+                      final receiptOut = TornExchangeReceiptOutModel(
+                        ownerUserId: _tradesProv.container.tornExchangeBuyerId,
+                        ownerUsername: _tradesProv.container.tornExchangeBuyerName,
+                        sellerUsername: _tradesProv.container.sellerName,
+                        prices: _tradesProv.container.tornExchangePrices,
+                        itemQuantities: _tradesProv.container.tornExchangeQuantities,
+                        itemNames: _tradesProv.container.tornExchangeNames,
+                      );
+
+                      final receipt = await TornExchangeComm.getReceipt(receiptOut);
+
+                      if (receipt.serverError) {
+                        BotToast.showText(
+                          text: "There was an error getting your receipt, no information copied!",
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.red[800]!,
+                          duration: const Duration(seconds: 5),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      } else {
+                        _copyToClipboard(receipt.tradeMessage, receipt.tradeMessage);
+                      }
                     },
                     icon: const Icon(
                       Icons.receipt_long_outlined,
-                      size: 23,
-                      color: ttColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  height: 23,
-                  width: 23,
-                  child: IconButton(
-                    padding: const EdgeInsets.all(0),
-                    iconSize: 23,
-                    onPressed: () {
-                      _copyTornTraderMessages();
-                    },
-                    icon: const Icon(
-                      Icons.message_outlined,
                       size: 23,
                       color: ttColor,
                     ),
@@ -487,19 +504,19 @@ class TradesWidgetState extends State<TradesWidget> {
     }
 
     // Torn Trades appears before rest of items
-    if (_tradesProv.container.ttActive &&
+    if (_tradesProv.container.tornExchangeActive &&
         side == 'right' &&
-        (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)) {
-      final ttItems = _tradesProv.container.ttItems!;
+        (!_tradesProv.container.tornExchangeServerError)) {
+      final tornExchangeItems = _tradesProv.container.tornExchangeItems!;
 
-      for (final ttProduct in ttItems) {
-        if (ttProduct.price == null) {
+      for (final tornExchangeProduct in tornExchangeItems) {
+        if (tornExchangeProduct.price == null) {
           continue;
         }
 
-        String itemName = ttProduct.name!;
-        if (ttProduct.quantity! > 1) {
-          itemName += ' x${ttProduct.quantity}';
+        String itemName = tornExchangeProduct.name!;
+        if (tornExchangeProduct.quantity! > 1) {
+          itemName += ' x${tornExchangeProduct.quantity}';
         }
 
         items.add(
@@ -513,16 +530,16 @@ class TradesWidgetState extends State<TradesWidget> {
         );
 
         // Item price
-        final String itemPriceTotal = ttProduct.total!.replaceAll(" ", "");
+        final String itemPriceTotal = tornExchangeProduct.totalPrice.toString();
         String itemPriceIndividual = "";
-        if (ttProduct.quantity! > 1) {
-          itemPriceIndividual += '(@ ${ttProduct.price!.replaceAll(" ", "")})';
+        if (tornExchangeProduct.quantity! > 1) {
+          itemPriceIndividual += '(@ ${tornExchangeProduct.price})';
         }
         String itemProfit;
-        if (ttProduct.profit! >= 0) {
-          itemProfit = '\$${_moneyFormat.format(ttProduct.profit)}';
+        if (tornExchangeProduct.profit! >= 0) {
+          itemProfit = '\$${_moneyFormat.format(tornExchangeProduct.profit)}';
         } else {
-          itemProfit = '\$-${_moneyFormat.format(ttProduct.profit)}';
+          itemProfit = '\$-${_moneyFormat.format(tornExchangeProduct.profit)}';
         }
 
         items.add(
@@ -568,16 +585,16 @@ class TradesWidgetState extends State<TradesWidget> {
         items.add(const SizedBox(height: 10));
 
         // We need to remove this product from the ones we have in the normal list,
-        // so that only non-TornTrader products remain there
+        // so that only non-TornExchange products remain there
         final newSideItemList = List<TradeItem>.from(sideItems);
         for (final standardItem in sideItems) {
-          if (standardItem.name == ttProduct.name) {
+          if (standardItem.name == tornExchangeProduct.name) {
             newSideItemList.remove(standardItem);
           }
         }
         sideItems = List<TradeItem>.from(newSideItemList);
 
-        // If we only find TornTrader items, the standard item list will be empty
+        // If we only find TornExchange items, the standard item list will be empty
         // and a warning will show. We need to prevent it with this setting
         noItemsFound = false;
       }
@@ -600,7 +617,7 @@ class TradesWidgetState extends State<TradesWidget> {
             children: [
               Flexible(
                 child: Text(
-                  'NOT IN TORN TRADER',
+                  'NOT IN TORN EXCHANGE',
                   textAlign: TextAlign.end,
                   style: TextStyle(
                     color: Colors.orange,
@@ -821,79 +838,6 @@ class TradesWidgetState extends State<TradesWidget> {
         contentColor: Colors.red[800]!,
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
-      );
-    }
-  }
-
-  void _copyTornTraderMessages() {
-    if (_tradesProv.container.ttMessages!.isEmpty) {
-      BotToast.showText(
-        text: "You have no predefined messages!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.orange[800]!,
-        duration: const Duration(seconds: 5),
-        contentPadding: const EdgeInsets.all(10),
-      );
-    } else if (_tradesProv.container.ttMessages!.length == 1) {
-      final String thisMessage = _tradesProv.container.ttMessages![0].message!;
-      _copyToClipboard(thisMessage, 'Message "$thisMessage"');
-    } else {
-      final options = <Widget>[];
-      for (final msg in _tradesProv.container.ttMessages!) {
-        options.add(
-          SimpleDialogOption(
-            onPressed: () {
-              _copyToClipboard(msg.message!, 'Message "${msg.message}"');
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              msg.message!,
-              style: const TextStyle(
-                fontSize: 12,
-              ),
-            ),
-          ),
-        );
-      }
-      options.add(
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: ElevatedButton(
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ),
-          ],
-        ),
-      );
-      showDialog(
-        useRootNavigator: false,
-        context: context,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            title: const Text(
-              'Choose message to copy',
-              style: TextStyle(
-                color: ttColor,
-                fontSize: 15,
-              ),
-            ),
-            children: options,
-          );
-        },
       );
     }
   }
