@@ -407,7 +407,7 @@ class SettingsProvider extends ChangeNotifier {
   }
   */
 
-  // Torn Stats Central
+  // Torn Spies Central
   // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
   //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
   //  0 == disabled

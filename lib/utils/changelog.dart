@@ -63,7 +63,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Improved user script manager: includes remote fetching, auto update, auto JS file import and fixes [Kwack]",
           "Added private cloud backup and share functionality for specific Torn PDA settings",
-          "Added Torn Stats Central information and merged stats dialogs into one",
+          "Added Torn Spies Central information and merged stats dialogs into one",
           "Spies: added option to allow mixed sources, fixed persistence and other issues",
           "War cards can now be pinned (right swipe)",
           "Added option to delay API calls before hitting the API limit (disabled by default)",

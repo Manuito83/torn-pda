@@ -427,9 +427,8 @@ class WebViewProvider extends ChangeNotifier {
     } on MissingPlatformDirectoryException catch (_) {
       log("No temporary files folder");
     } catch (e, trace) {
-      log("PDA Crash at Deleting Downloaded Files: $e");
-      FirebaseCrashlytics.instance.log("PDA Crash at Deleting Downloaded Files");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      // This is to be expected if the user doesn't have access to the folder or it does not exist
+      log("PDA Crash at Deleting Downloaded Files: $e $trace");
     }
   }
 

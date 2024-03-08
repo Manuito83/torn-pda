@@ -34,7 +34,7 @@ class UserController extends GetxController {
     update();
   }
 
-  // Alternative keys Torn Stats Central
+  // Alternative keys Torn Spies Central
   bool _alternativeTSCKeyEnabled = false;
   bool get alternativeTSCKeyEnabled => _alternativeTSCKeyEnabled;
   set alternativeTSCKeyEnabled(bool enabled) {
