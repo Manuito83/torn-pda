@@ -662,7 +662,7 @@ class SettingsPageState extends State<SettingsPage> {
                         children: [
                           const Flexible(
                             child: Text(
-                              "Use Torn Stats Central",
+                              "Use Torn Spies Central",
                             ),
                           ),
                           SizedBox(width: 8),
@@ -711,7 +711,7 @@ class SettingsPageState extends State<SettingsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'Enable Torn Stats Central estimations in the sections where spied or estimated stats are shown (e.g.: '
+                  'Enable Torn Spies Central estimations in the sections where spied or estimated stats are shown (e.g.: '
                   'war targets cards, retal cards or profile widget)',
                   style: TextStyle(
                     color: Colors.grey[600],

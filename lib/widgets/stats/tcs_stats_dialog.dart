@@ -58,7 +58,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: Text(
-                    "TORN STATS CENTRAL",
+                    "TORN SPIES CENTRAL",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -125,7 +125,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                     return Column(
                       children: [
                         EasyRichText(
-                          "The Torn Stats Central implementation in Torn PDA is part of a bigger stats estimation algorithm "
+                          "The Torn Spies Central implementation in Torn PDA is part of a bigger stats estimation algorithm "
                           "developed by Mavri, which you can review in its own forum thread.\n\n"
                           "You will need to register as an user in TSC's Dicord server if you haven't done so yet\n\n"
                           "IMPORTANT: please be aware that by making use of TSC in Torn PDA, your API Key WILL be shared "

@@ -21,7 +21,7 @@ class TSCInfoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Torn Stats Central"),
+      title: const Text("Torn Spies Central"),
       content: Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
@@ -31,7 +31,7 @@ class TSCInfoDialog extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 EasyRichText(
-                  "The Torn Stats Central implementation in Torn PDA is part of a bigger stats estimation algorithm "
+                  "The Torn Spies Central implementation in Torn PDA is part of a bigger stats estimation algorithm "
                   "developed by Mavri, which you can review in its own forum thread.\n\n"
                   "IMPORTANT: please be aware that by making use of TSC in Torn PDA, your API Key WILL be shared "
                   "with TSC.\n\nAs with other service providers, you can configure an alternative API Key in Torn "

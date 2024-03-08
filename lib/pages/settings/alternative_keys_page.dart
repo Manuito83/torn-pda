@@ -242,7 +242,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'TORN STATS CENTRAL',
+                  'TORN SPIES CENTRAL',
                   style: TextStyle(fontSize: 10),
                 ),
               ],

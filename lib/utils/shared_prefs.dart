@@ -2431,7 +2431,7 @@ class Prefs {
     return prefs.setString(_kAlternativeTornStatsKey, value);
   }
 
-  // TORN STATS CENTRAL
+  // TORN SPIES CENTRAL
   Future<bool> getAlternativeTSCKeyEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kAlternativeTSCKeyEnabled) ?? false;
