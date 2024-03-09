@@ -45,6 +45,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.3.1'
         ..date = '15 MAR 2024'
         ..features = [
+          "Added Torn Exchange sync in the trades widget",
           "Fixed chat highlight and added custom word list [Kwack]",
           "Added device theme sync (disabled by default)",
           "Adjusted foreign stocks charts timeframe based on number of recent restocks",

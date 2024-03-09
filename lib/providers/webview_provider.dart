@@ -1381,8 +1381,8 @@ class WebViewProvider extends ChangeNotifier {
       return Image.asset('images/icons/map/property.png', color: themeProvider.mainText);
     } else if (url.contains("tornstats.com/")) {
       return Image.asset('images/icons/tornstats_logo.png');
-    } else if (url.contains("torntrader.com/")) {
-      return Image.asset('images/icons/torntrader_logo.png', color: themeProvider.mainText);
+    } else if (url.contains("tornexchange.com/")) {
+      return Image.asset('images/icons/tornexchange_logo.png', color: themeProvider.mainText);
     } else if (url.contains("arsonwarehouse.com/")) {
       return Image.asset('images/icons/awh_logo2.png');
     } else if (url.contains("index.php?page=hunting")) {
