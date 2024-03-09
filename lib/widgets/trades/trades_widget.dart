@@ -307,7 +307,7 @@ class TradesWidgetState extends State<TradesWidget> {
           } else {
             amountCopied = _moneyFormat.format(total);
           }
-          _copyToClipboard(amountCopied, amountCopied);
+          _copyToClipboard(amountCopied, "The trade amount of $amountCopied was copied to clipboard!");
         },
         icon: const Icon(
           Icons.content_copy,
@@ -465,7 +465,16 @@ class TradesWidgetState extends State<TradesWidget> {
                           contentPadding: const EdgeInsets.all(10),
                         );
                       } else {
-                        _copyToClipboard(receipt.tradeMessage, receipt.tradeMessage);
+                        String message = receipt.tradeMessage;
+                        int secondsToShow = 5;
+                        if (message.isEmpty) {
+                          message = "Thanks for the trade! Your receipt is available at "
+                              "https://www.tornexchange.com/receipt/${receipt.receiptId}\n\n"
+                              "Note: this is a default receipt template, you can create your own in Torn Exchange";
+                          secondsToShow = 8;
+                        }
+
+                        _copyToClipboard(message, "Receipt copied to clipboard:\n\n$message", seconds: secondsToShow);
                       }
                     },
                     icon: const Icon(
@@ -815,28 +824,30 @@ class TradesWidgetState extends State<TradesWidget> {
     return items;
   }
 
-  Future _copyToClipboard(String copy, String toast) async {
+  Future _copyToClipboard(String copy, String toast, {int seconds = 5}) async {
     if (copy.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: copy));
       BotToast.showText(
-        text: "$toast copied to the clipboard!",
+        clickClose: true,
+        text: toast,
         textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.green,
-        duration: const Duration(seconds: 5),
+        duration: Duration(seconds: seconds),
         contentPadding: const EdgeInsets.all(10),
       );
     } else {
       BotToast.showText(
-        text: "${toast}There was an error, no information copied!",
+        clickClose: true,
+        text: "There was an error, no information copied!",
         textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.red[800]!,
-        duration: const Duration(seconds: 5),
+        duration: Duration(seconds: seconds),
         contentPadding: const EdgeInsets.all(10),
       );
     }
