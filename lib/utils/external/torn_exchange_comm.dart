@@ -43,7 +43,7 @@ class TornExchangeComm {
             },
             body: tornExchangeOutModelToJson(outModel),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 7));
 
       if (response.statusCode == 200) {
         inModel = tornExchangeInModelFromJson(response.body);
@@ -72,7 +72,7 @@ class TornExchangeComm {
             },
             body: tornExchangeReceiptOutModelToJson(receiptOutModel),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 7));
 
       if (response.statusCode == 200) {
         receiptInModel = tornExchangeReceiptInModelFromJson(response.body);

@@ -379,6 +379,14 @@ class TradesWidgetState extends State<TradesWidget> {
           tornExchangeTotal = _tradesProv.container.tornExchangeTotalMoney;
         }
 
+        String tornExchangeProfit = "";
+        int? tornExchangeTotalProfit = int.tryParse(_tradesProv.container.tornExchangeProfit);
+        if (tornExchangeTotalProfit != null) {
+          tornExchangeProfit = _moneyFormat.format(tornExchangeTotalProfit);
+        } else {
+          tornExchangeProfit = _tradesProv.container.tornExchangeProfit;
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -420,7 +428,7 @@ class TradesWidgetState extends State<TradesWidget> {
               children: [
                 Flexible(
                   child: Text(
-                    '${_tradesProv.container.tornExchangeProfit} profit',
+                    '\$$tornExchangeProfit profit',
                     textAlign: TextAlign.end,
                     style: const TextStyle(
                       color: Colors.white,
