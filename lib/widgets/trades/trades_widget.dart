@@ -151,7 +151,7 @@ class TradesWidgetState extends State<TradesWidget> {
                             )
                           else
                             const Text(
-                              'SYNCHED',
+                              "SYNC'D",
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Colors.green,
