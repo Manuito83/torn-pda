@@ -63,6 +63,7 @@ class TradesProvider extends ChangeNotifier {
     required List<dom.Element> rightItemsElements,
     required List<dom.Element> rightPropertyElements,
     required List<dom.Element> rightSharesElements,
+    required bool tornExchangeActiveRemoteConfig,
   }) async {
     this.playerId = playerId;
 
@@ -131,7 +132,7 @@ class TradesProvider extends ChangeNotifier {
         tradesContainer.awhActive = await Prefs().getAWHEnabled();
 
         // TORN EXCHANGE init here (it only takes into account elements sold to us, so we'll only pass this information
-        var tornExchangeActive = await Prefs().getTornExchangeEnabled();
+        var tornExchangeActive = await Prefs().getTornExchangeEnabled() && tornExchangeActiveRemoteConfig;
         if (rightItemsElements.isNotEmpty && tornExchangeActive) {
           TornExchangeInModel tornExchangeIn = await TornExchangeComm.submitItems(
             tradesContainer.rightItems,

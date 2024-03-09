@@ -434,6 +434,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _tornExchangeEnabledStatusRemoteConfig = true;
+  bool get tornExchangeEnabledStatusRemoteConfig => _tornExchangeEnabledStatusRemoteConfig;
+  set tornExchangeEnabledStatusRemoteConfig(bool value) {
+    _tornExchangeEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
   var _friendlyFactions = <FriendlyFaction>[];
   List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
   set setFriendlyFactions(List<FriendlyFaction> faction) {

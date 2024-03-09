@@ -323,6 +323,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     remoteConfig.setDefaults(const {
       "tsc_enabled": true,
       "prefs_backup_enabled": true,
+      "tornexchange_enabled": true,
     });
 
     // Remote Config first fetch and live update
@@ -330,6 +331,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       await remoteConfig.fetchAndActivate();
       _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+      _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
 
       remoteConfig.onConfigUpdated.listen((event) async {
         await remoteConfig.activate();
@@ -337,6 +339,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           log("Remote Config tsc_enabled: ${remoteConfig.getBool("tsc_enabled")}");
           _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
           _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+          _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         }
       });
     });

@@ -15,6 +15,7 @@ import 'package:torn_pda/models/trades/awh_out.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_receipt.dart';
 // Project imports:
 import 'package:torn_pda/models/trades/trade_item_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -45,6 +46,8 @@ class TradesWidgetState extends State<TradesWidget> {
 
   late TradesProvider _tradesProv;
 
+  late bool _tornExchangeActive;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -54,6 +57,8 @@ class TradesWidgetState extends State<TradesWidget> {
   @override
   Widget build(BuildContext context) {
     _tradesProv = Provider.of<TradesProvider>(context);
+    _tornExchangeActive = _tradesProv.container.tornExchangeActive &&
+        Provider.of<SettingsProvider>(context).tornExchangeEnabledStatusRemoteConfig;
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
@@ -90,7 +95,7 @@ class TradesWidgetState extends State<TradesWidget> {
                     ),
                   ],
                 ),
-                if (!_tradesProv.container.tornExchangeActive)
+                if (!_tornExchangeActive)
                   const SizedBox(width: 90)
                 else
                   Row(
@@ -187,7 +192,7 @@ class TradesWidgetState extends State<TradesWidget> {
             ),
             ConstrainedBox(
               // Take into account Torn Exchange to leave more or less space
-              constraints: _tradesProv.container.tornExchangeActive && (!_tradesProv.container.tornExchangeServerError)
+              constraints: _tornExchangeActive && (!_tradesProv.container.tornExchangeServerError)
                   ? BoxConstraints.loose(
                       Size.fromHeight(
                             MediaQuery.sizeOf(context).height - kToolbarHeight * 3 - AppBar().preferredSize.height,
@@ -299,9 +304,7 @@ class TradesWidgetState extends State<TradesWidget> {
         onPressed: () {
           String amountCopied;
           // Also takes into account Torn Exchange Server error, in which case we copy the standard value below
-          if (_tradesProv.container.tornExchangeActive &&
-              !_tradesProv.container.tornExchangeServerError &&
-              side == 'right') {
+          if (_tornExchangeActive && !_tradesProv.container.tornExchangeServerError && side == 'right') {
             amountCopied = _tradesProv.container.tornExchangeTotalMoney.replaceAll("\$", "").replaceAll(",", "");
             amountCopied = _moneyFormat.format(int.parse(amountCopied));
           } else {
@@ -322,8 +325,7 @@ class TradesWidgetState extends State<TradesWidget> {
       return const SizedBox.shrink();
     }
 
-    if (!_tradesProv.container.tornExchangeActive ||
-        (_tradesProv.container.tornExchangeActive && (_tradesProv.container.tornExchangeServerError))) {
+    if (!_tornExchangeActive || (_tornExchangeActive && (_tradesProv.container.tornExchangeServerError))) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -513,9 +515,7 @@ class TradesWidgetState extends State<TradesWidget> {
     }
 
     // Torn Trades appears before rest of items
-    if (_tradesProv.container.tornExchangeActive &&
-        side == 'right' &&
-        (!_tradesProv.container.tornExchangeServerError)) {
+    if (_tornExchangeActive && side == 'right' && (!_tradesProv.container.tornExchangeServerError)) {
       final tornExchangeItems = _tradesProv.container.tornExchangeItems!;
 
       for (final tornExchangeProduct in tornExchangeItems) {

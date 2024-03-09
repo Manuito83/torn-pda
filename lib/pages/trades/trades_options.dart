@@ -160,15 +160,30 @@ class TradesOptionsState extends State<TradesOptions> {
                                             fit: BoxFit.fill,
                                           ),
                                           SizedBox(width: 10),
-                                          Text("Torn Exchange"),
+                                          if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig)
+                                            Text("Torn Exchange")
+                                          else
+                                            Column(
+                                              children: [
+                                                Text(
+                                                  "Torn Exchange has been disabled temporarily",
+                                                  style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
+                                                ),
+                                              ],
+                                            ),
                                         ],
                                       ),
-                                      tornExchangeSwitch(),
+                                      if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig) tornExchangeSwitch(),
                                     ],
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  padding: EdgeInsets.fromLTRB(
+                                    15,
+                                    _settingsProvider.tornExchangeEnabledStatusRemoteConfig ? 0 : 15,
+                                    15,
+                                    0,
+                                  ),
                                   child: Text(
                                     'If you are a professional trader and have an account with Torn '
                                     'Exchange, you can activate the sync functionality here',

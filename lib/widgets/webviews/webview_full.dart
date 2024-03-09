@@ -2965,6 +2965,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       rightItemsElements: rightItemsElements,
       rightPropertyElements: rightPropertyElements,
       rightSharesElements: rightSharesElements,
+      tornExchangeActiveRemoteConfig: _settingsProvider.tornExchangeEnabledStatusRemoteConfig,
     );
   }
 
