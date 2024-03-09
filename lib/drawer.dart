@@ -1002,6 +1002,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';
       } else if (payload.contains("scriptupdate")) {
+        setState(() {
+          _webViewProvider.browserShowInForeground = false;
+        });
+
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (BuildContext context) => UserScriptsPage(),
