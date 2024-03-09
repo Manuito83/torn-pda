@@ -88,6 +88,7 @@ class Prefs {
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
+  final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
@@ -1003,6 +1004,16 @@ class Prefs {
   Future<bool> setAndroidBrowserScale(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kAndroidBrowserScale, value);
+  }
+
+  Future<int> getAndroidBrowserTextScale() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kAndroidBrowserTextScale) ?? 8;
+  }
+
+  Future<bool> setAndroidBrowserTextScale(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kAndroidBrowserTextScale, value);
   }
 
   Future<bool> getIosBrowserPinch() async {

@@ -1136,6 +1136,12 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  void changeTextScale(int size) {
+    for (final tab in _tabList) {
+      tab.webViewKey?.currentState?.setBrowserTextScale(size);
+    }
+  }
+
   void changeUseTabIcons(bool useIcons) {
     _useTabIcons = useIcons;
     Prefs().setUseTabsIcons(useIcons);

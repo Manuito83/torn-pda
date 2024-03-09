@@ -88,6 +88,14 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setAndroidBrowserScale(_androidBrowserScale);
   }
 
+  var _androidBrowserTextScale = 8;
+  int get androidBrowserTextScale => _androidBrowserTextScale;
+  set changeAndroidBrowserTextScale(int choice) {
+    _androidBrowserTextScale = choice;
+    Prefs().setAndroidBrowserTextScale(_androidBrowserTextScale);
+    notifyListeners();
+  }
+
   var _iosBrowserPinch = false;
   bool get iosBrowserPinch => _iosBrowserPinch;
   set setIosBrowserPinch(bool pinch) {
@@ -814,6 +822,7 @@ class SettingsProvider extends ChangeNotifier {
     _webviewCacheEnabled = await Prefs().getWebviewCacheEnabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
+    _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
 
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
     _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();

@@ -114,6 +114,15 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
+                          if (Platform.isAndroid)
+                            Column(
+                              children: [
+                                _textScale(context),
+                                const SizedBox(height: 15),
+                                const Divider(),
+                                const SizedBox(height: 10),
+                              ],
+                            ),
                           _chat(context),
                           const SizedBox(height: 15),
                           const Divider(),
@@ -931,6 +940,65 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ),
             ],
           ),
+      ],
+    );
+  }
+
+  Column _textScale(BuildContext context) {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'TEXT SCALE',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Browser text scale"),
+              Row(
+                children: [
+                  Text(
+                    _settingsProvider.androidBrowserTextScale.toString(),
+                    style: const TextStyle(
+                      fontSize: 12,
+                    ),
+                  ),
+                  Slider(
+                    min: 8,
+                    max: 20,
+                    divisions: 12,
+                    value: _settingsProvider.androidBrowserTextScale.toDouble(),
+                    onChanged: (double value) {
+                      setState(() {
+                        _settingsProvider.changeAndroidBrowserTextScale = value.floor();
+                      });
+                      _webViewProvider.changeTextScale(value.floor());
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "You can adjust the text scale in the browser to make it easier to read. Be advised that Torn might not "
+            "follow this setting properly for all fonts in game, so some text might be unreadable.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.3.1 - Build 384 - 08/03/2024
+    // v3.3.1 - Build 384 - 09/03/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.3.1'
@@ -49,6 +49,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed chat highlight and added custom word list [Kwack]",
           "Added device theme sync (disabled by default)",
           "Adjusted foreign stocks charts timeframe based on number of recent restocks",
+          if (Platform.isAndroid) "Browser font size can now be adjusted (Advanced Browser Settings)",
           "Added headers parameters to PDA_httpGet handler [tiksan]",
           "Fixed issues with time calculation",
           "Fixed spies update times",

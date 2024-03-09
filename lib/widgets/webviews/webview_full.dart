@@ -397,6 +397,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       allowsInlineMediaPlayback: true,
       //
       useOnDownloadStart: widget.allowDownloads,
+      minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -4162,6 +4163,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webView!.setSettings(settings: newSettings);
       _firstLoadRestoreDownloads = false;
     }
+  }
+
+  Future<void> setBrowserTextScale(int value) async {
+    final InAppWebViewSettings newSettings = (await webView!.getSettings())!;
+    newSettings.minimumFontSize = value;
+    webView!.setSettings(settings: newSettings);
   }
 
   void _showLongPressCard(String? src, Uri? url) {
