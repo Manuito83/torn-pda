@@ -36,7 +36,7 @@ class TradesContainer {
   String tornExchangeTotalMoney = "";
   String tornExchangeProfit = "";
   bool tornExchangeServerError = false;
-  List<TornExchangeItem>? tornExchangeItems = <TornExchangeItem>[];
+  List<TornExchangeItem> tornExchangeItems = <TornExchangeItem>[];
   List<String> tornExchangeNames = [];
   List<int> tornExchangePrices = [];
   List<int> tornExchangeQuantities = [];

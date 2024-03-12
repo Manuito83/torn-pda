@@ -39,11 +39,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.3.1 - Build 385 - 09/03/2024
+    // v3.3.1 - Build 386 - 12/03/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.3.1'
-        ..date = '15 MAR 2024'
+        ..date = '18 MAR 2024'
         ..features = [
           "Added Torn Exchange sync in the trades widget",
           "Fixed chat highlight and added custom word list [Kwack]",

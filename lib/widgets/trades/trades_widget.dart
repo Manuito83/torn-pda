@@ -387,6 +387,25 @@ class TradesWidgetState extends State<TradesWidget> {
           tornExchangeProfit = _tradesProv.container.tornExchangeProfit;
         }
 
+        // Alert the user at the top that some items (or shared, properties and money) are not within the TE price
+        bool itemsNotConfiguredInTornExchange = true;
+
+        final sellerItems = List<TradeItem>.from(_tradesProv.container.rightItems);
+        for (var tornExchangeProduct in _tradesProv.container.tornExchangeItems) {
+          for (final sellerItem in sellerItems) {
+            if (sellerItem.name == tornExchangeProduct.name) {
+              itemsNotConfiguredInTornExchange = false;
+              break;
+            }
+          }
+        }
+
+        if (_tradesProv.container.rightMoney != 0 ||
+            _tradesProv.container.rightProperties.isNotEmpty ||
+            _tradesProv.container.rightShares.isNotEmpty) {
+          itemsNotConfiguredInTornExchange = true;
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -397,8 +416,8 @@ class TradesWidgetState extends State<TradesWidget> {
                   child: Text(
                     '\$$tornExchangeTotal',
                     textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      color: ttColor,
+                    style: TextStyle(
+                      color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -406,6 +425,29 @@ class TradesWidgetState extends State<TradesWidget> {
               ],
             ),
             const SizedBox(height: 5),
+            if (itemsNotConfiguredInTornExchange)
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Icon(Icons.warning_amber_outlined, size: 16, color: Colors.orange),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          'EXPAND TO SEE\nMISSING ITEMS',
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                ],
+              ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -524,7 +566,7 @@ class TradesWidgetState extends State<TradesWidget> {
 
     // Torn Trades appears before rest of items
     if (_tornExchangeActive && side == 'right' && (!_tradesProv.container.tornExchangeServerError)) {
-      final tornExchangeItems = _tradesProv.container.tornExchangeItems!;
+      final tornExchangeItems = _tradesProv.container.tornExchangeItems;
 
       for (final tornExchangeProduct in tornExchangeItems) {
         if (tornExchangeProduct.price == null) {
@@ -536,28 +578,15 @@ class TradesWidgetState extends State<TradesWidget> {
           itemName += ' x${tornExchangeProduct.quantity}';
         }
 
-        items.add(
-          Text(
-            itemName,
-            style: const TextStyle(
-              color: ttColor,
-              fontSize: 13,
-            ),
-          ),
-        );
+        items.add(Text(itemName, style: const TextStyle(color: ttColor, fontSize: 13)));
 
         // Item price
-        final String itemPriceTotal = tornExchangeProduct.totalPrice.toString();
+        final String itemPriceTotal = "\$${_moneyFormat.format(tornExchangeProduct.totalPrice)}";
         String itemPriceIndividual = "";
         if (tornExchangeProduct.quantity! > 1) {
-          itemPriceIndividual += '(@ ${tornExchangeProduct.price})';
+          itemPriceIndividual += '(@ \$${tornExchangeProduct.price})';
         }
-        String itemProfit;
-        if (tornExchangeProduct.profit! >= 0) {
-          itemProfit = '\$${_moneyFormat.format(tornExchangeProduct.profit)}';
-        } else {
-          itemProfit = '\$-${_moneyFormat.format(tornExchangeProduct.profit)}';
-        }
+        String itemProfit = '\$${_moneyFormat.format(tornExchangeProduct.profit)}';
 
         items.add(
           Column(
@@ -618,7 +647,10 @@ class TradesWidgetState extends State<TradesWidget> {
 
       // If after comparing there are still items in sideItems, there are items not captured
       // by Torn Trades, so we'll give a warning
-      if (sideItems.isNotEmpty) {
+      if (sideItems.isNotEmpty ||
+          _tradesProv.container.rightMoney != 0 ||
+          _tradesProv.container.rightProperties.isNotEmpty ||
+          _tradesProv.container.rightShares.isNotEmpty) {
         items.add(
           const Padding(
             padding: EdgeInsets.only(top: 5),
@@ -634,7 +666,7 @@ class TradesWidgetState extends State<TradesWidget> {
             children: [
               Flexible(
                 child: Text(
-                  'NOT IN TORN EXCHANGE',
+                  'ITEMS NOT CONFIGURED\nIN TORN EXCHANGE',
                   textAlign: TextAlign.end,
                   style: TextStyle(
                     color: Colors.orange,
@@ -671,21 +703,6 @@ class TradesWidgetState extends State<TradesWidget> {
           ),
         );
       }
-    }
-
-    // CASH
-    if (sideMoney > 0) {
-      noItemsFound = false;
-      items.add(
-        Text(
-          '\$${_moneyFormat.format(sideMoney)} in cash',
-          style: const TextStyle(
-            color: Colors.green,
-            fontSize: 13,
-          ),
-        ),
-      );
-      items.add(const SizedBox(height: 10));
     }
 
     // Item name
@@ -727,6 +744,21 @@ class TradesWidgetState extends State<TradesWidget> {
         ),
       );
 
+      items.add(const SizedBox(height: 10));
+    }
+
+    // CASH
+    if (sideMoney > 0) {
+      noItemsFound = false;
+      items.add(
+        Text(
+          '\$${_moneyFormat.format(sideMoney)} in cash',
+          style: const TextStyle(
+            color: Colors.green,
+            fontSize: 13,
+          ),
+        ),
+      );
       items.add(const SizedBox(height: 10));
     }
 
