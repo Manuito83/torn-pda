@@ -388,15 +388,20 @@ class TradesWidgetState extends State<TradesWidget> {
         }
 
         // Alert the user at the top that some items (or shared, properties and money) are not within the TE price
-        bool itemsNotConfiguredInTornExchange = true;
+        bool itemsNotConfiguredInTornExchange = false;
 
-        final sellerItems = List<TradeItem>.from(_tradesProv.container.rightItems);
-        for (var tornExchangeProduct in _tradesProv.container.tornExchangeItems) {
-          for (final sellerItem in sellerItems) {
-            if (sellerItem.name == tornExchangeProduct.name) {
-              itemsNotConfiguredInTornExchange = false;
+        for (var sellerItem in _tradesProv.container.rightItems) {
+          bool thisFound = false;
+          for (final tornExchangeItem in _tradesProv.container.tornExchangeItems) {
+            if (sellerItem.name == tornExchangeItem.name) {
+              thisFound = true;
               break;
             }
+          }
+
+          if (!thisFound) {
+            itemsNotConfiguredInTornExchange = true;
+            break;
           }
         }
 
@@ -470,10 +475,10 @@ class TradesWidgetState extends State<TradesWidget> {
               children: [
                 Flexible(
                   child: Text(
-                    '\$$tornExchangeProfit profit',
+                    itemsNotConfiguredInTornExchange ? 'Cannot calculate profit!' : '\$$tornExchangeProfit profit',
                     textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: itemsNotConfiguredInTornExchange ? Colors.orange : Colors.white,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -569,12 +574,12 @@ class TradesWidgetState extends State<TradesWidget> {
       final tornExchangeItems = _tradesProv.container.tornExchangeItems;
 
       for (final tornExchangeProduct in tornExchangeItems) {
-        if (tornExchangeProduct.price == null) {
+        if (tornExchangeProduct.price == 0) {
           continue;
         }
 
-        String itemName = tornExchangeProduct.name!;
-        if (tornExchangeProduct.quantity! > 1) {
+        String itemName = tornExchangeProduct.name;
+        if (tornExchangeProduct.quantity > 1) {
           itemName += ' x${tornExchangeProduct.quantity}';
         }
 
@@ -583,8 +588,8 @@ class TradesWidgetState extends State<TradesWidget> {
         // Item price
         final String itemPriceTotal = "\$${_moneyFormat.format(tornExchangeProduct.totalPrice)}";
         String itemPriceIndividual = "";
-        if (tornExchangeProduct.quantity! > 1) {
-          itemPriceIndividual += '(@ \$${tornExchangeProduct.price})';
+        if (tornExchangeProduct.quantity > 1) {
+          itemPriceIndividual += '(@ \$${_moneyFormat.format(tornExchangeProduct.price)})';
         }
         String itemProfit = '\$${_moneyFormat.format(tornExchangeProduct.profit)}';
 

@@ -146,32 +146,49 @@ class TradesProvider extends ChangeNotifier {
               ..tornExchangeActive = true
               ..tornExchangeServerError = tornExchangeIn.serverError;
           } else {
-            int totalPrices = tornExchangeIn.prices.reduce((sum, price) => sum + price);
-            int totalProfit = tornExchangeIn.profitPerItem.reduce((sum, profit) => sum + profit);
+            // We'll return an error like above if there's something wrong coming from Torn Exchange here
+            try {
+              int totalPrices = 0;
+              for (int i = 0; i < tornExchangeIn.prices.length; i++) {
+                totalPrices += tornExchangeIn.prices[i] * tornExchangeIn.quantities[i];
+              }
 
-            List<TornExchangeItem> tornExchangeItems = [];
-            for (int i = 0; i < tornExchangeIn.items.length; i++) {
-              // Skip items that have no price in Torn Exchange, so the user knows they are not included
-              if (tornExchangeIn.prices[i] == 0) continue;
+              int totalProfit = 0;
+              for (int i = 0; i < tornExchangeIn.prices.length; i++) {
+                // Profit per items already comes multiplied from Torn Exchange
+                totalProfit += tornExchangeIn.profitPerItem[i];
+              }
 
-              tornExchangeItems.add(TornExchangeItem()
-                ..name = tornExchangeIn.items[i]
-                ..quantity = tornExchangeIn.quantities[i]
-                ..price = (tornExchangeIn.prices[i] / tornExchangeIn.quantities[i]).round()
-                ..totalPrice = tornExchangeIn.prices[i]
-                ..profit = (tornExchangeIn.profitPerItem[i] / tornExchangeIn.quantities[i]).round());
+              List<TornExchangeItem> tornExchangeItems = [];
+              for (int i = 0; i < tornExchangeIn.items.length; i++) {
+                // Skip items that have no price in Torn Exchange, so the user knows they are not included
+                if (tornExchangeIn.prices[i] == 0) continue;
+
+                tornExchangeItems.add(
+                  TornExchangeItem()
+                    ..name = tornExchangeIn.items[i]
+                    ..quantity = tornExchangeIn.quantities[i]
+                    ..price = tornExchangeIn.prices[i]
+                    ..totalPrice = tornExchangeIn.prices[i] * tornExchangeIn.quantities[i]
+                    ..profit = tornExchangeIn.profitPerItem[i], // Profits already come multiplied
+                );
+              }
+
+              tradesContainer
+                ..tornExchangeBuyerId = playerId
+                ..tornExchangeBuyerName = playerName
+                ..tornExchangeActive = true
+                ..tornExchangeTotalMoney = totalPrices.toString()
+                ..tornExchangeProfit = totalProfit.toString()
+                ..tornExchangeItems = tornExchangeItems
+                ..tornExchangeNames = tornExchangeIn.items
+                ..tornExchangeQuantities = tornExchangeIn.quantities
+                ..tornExchangePrices = tornExchangeIn.prices;
+            } catch (e) {
+              tradesContainer
+                ..tornExchangeActive = true
+                ..tornExchangeServerError = tornExchangeIn.serverError;
             }
-
-            tradesContainer
-              ..tornExchangeBuyerId = playerId
-              ..tornExchangeBuyerName = playerName
-              ..tornExchangeActive = true
-              ..tornExchangeTotalMoney = totalPrices.toString()
-              ..tornExchangeProfit = totalProfit.toString()
-              ..tornExchangeItems = tornExchangeItems
-              ..tornExchangeNames = tornExchangeIn.items
-              ..tornExchangeQuantities = tornExchangeIn.quantities
-              ..tornExchangePrices = tornExchangeIn.prices;
           }
         }
       }

@@ -1,7 +1,7 @@
 class TornExchangeItem {
-  String? name;
-  int? quantity;
-  int? price;
-  int? totalPrice;
-  int? profit;
+  String name = "";
+  int quantity = 0;
+  int price = 0;
+  int totalPrice = 0;
+  int profit = 0;
 }
