@@ -460,7 +460,7 @@ class TradesWidgetState extends State<TradesWidget> {
               children: [
                 Flexible(
                   child: Text(
-                    '\$${_moneyFormat.format(total)} market',
+                    '\$${_moneyFormat.format(total)} market price',
                     textAlign: TextAlign.end,
                     style: const TextStyle(
                       color: Colors.white,
@@ -473,22 +473,53 @@ class TradesWidgetState extends State<TradesWidget> {
             ),
             const SizedBox(height: 5),
             if (_tornExchangeProfitActive)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      itemsNotConfiguredInTornExchange ? 'Cannot calculate profit!' : '\$$tornExchangeProfit profit',
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        color: itemsNotConfiguredInTornExchange ? Colors.orange : Colors.white,
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
+              if (itemsNotConfiguredInTornExchange)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Cannot calculate profit!',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              else
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '\$$tornExchangeProfit profit (TE)',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        '\$${_moneyFormat.format(total - int.parse(_tradesProv.container.tornExchangeTotalMoney))} '
+                        'profit (market)',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             const SizedBox(height: 5),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -594,7 +625,21 @@ class TradesWidgetState extends State<TradesWidget> {
         if (tornExchangeProduct.quantity > 1) {
           itemPriceIndividual += '(@ \$${_moneyFormat.format(tornExchangeProduct.price)})';
         }
-        String itemProfit = '\$${_moneyFormat.format(tornExchangeProduct.profit)}';
+
+        // Torn Exchange profit
+        String tornExchangeItemProfit = '\$${_moneyFormat.format(tornExchangeProduct.profit)}';
+
+        // Market profit
+        int thisItemTotalMarketProfit = 0;
+        for (var marketItem in sideItems) {
+          if (marketItem.name == tornExchangeProduct.name) {
+            int thisItemMarketPrice = marketItem.priceUnit;
+            int thisItemMarketQuantity = marketItem.quantity;
+            thisItemTotalMarketProfit = (thisItemMarketPrice - tornExchangeProduct.price) * thisItemMarketQuantity;
+            break;
+          }
+        }
+        String marketItemProfit = '\$${_moneyFormat.format(thisItemTotalMarketProfit)}';
 
         items.add(
           Column(
@@ -625,13 +670,33 @@ class TradesWidgetState extends State<TradesWidget> {
                 ],
               ),
               if (_tornExchangeProfitActive)
-                Text(
-                  '$itemProfit profit',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontStyle: FontStyle.italic,
-                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '$tornExchangeItemProfit profit (TE)',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        '$marketItemProfit profit (market)',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
