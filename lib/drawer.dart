@@ -2204,8 +2204,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
       if (brightness == Brightness.dark && _themeProvider!.currentTheme == AppTheme.light) {
         _themeProvider!.changeTheme = AppTheme.dark;
+        if (_settingsProvider.syncTornWebTheme) {
+          _webViewProvider.changeTornTheme(dark: true);
+        }
       } else if (brightness == Brightness.light && _themeProvider!.currentTheme != AppTheme.light) {
         _themeProvider!.changeTheme = AppTheme.light;
+        if (_settingsProvider.syncTornWebTheme) {
+          _webViewProvider.changeTornTheme(dark: false);
+        }
       }
     });
   }
