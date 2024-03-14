@@ -208,12 +208,14 @@ class TradesOptionsState extends State<TradesOptions> {
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Row(
-                                              children: [
-                                                Icon(Icons.arrow_right_outlined),
-                                                SizedBox(width: 5),
-                                                Text("Torn Exchange"),
-                                              ],
+                                            Flexible(
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.arrow_right_outlined),
+                                                  SizedBox(width: 5),
+                                                  Flexible(child: Text("Show detailed profits")),
+                                                ],
+                                              ),
                                             ),
                                             tornExchangeProfitSwitch(),
                                           ],
