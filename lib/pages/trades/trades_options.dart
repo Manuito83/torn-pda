@@ -25,6 +25,7 @@ class TradesOptionsState extends State<TradesOptions> {
   bool _tradeCalculatorEnabled = true;
   bool _awhEnabled = true;
   bool _tornExchangeEnabled = true;
+  bool _tornExchangeProfitEnabled = true;
 
   Future? _preferencesLoaded;
 
@@ -145,7 +146,12 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 20),
+                                SizedBox(height: 15),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                                  child: Divider(),
+                                ),
+                                SizedBox(height: 10),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
@@ -194,6 +200,46 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
+                                if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig && _tornExchangeEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(25, 0, 15, 0),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(Icons.arrow_right_outlined),
+                                                SizedBox(width: 5),
+                                                Text("Torn Exchange"),
+                                              ],
+                                            ),
+                                            tornExchangeProfitSwitch(),
+                                          ],
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(30, 0, 0, 0),
+                                          child: Text(
+                                            'By enabling this option, you will be shown additional white figures '
+                                            'with total and individual item profits: one refers to market value profit '
+                                            'and the other to Torn Exchange profit.\n\n'
+                                            'In order to try to avoid Torn market price manipulations, Torn Exchange uses '
+                                            'a custom formula to evaluate base price, and calculates profit as the '
+                                            'difference between this base and your buying price.\n\n'
+                                            'Torn PDA also shows the difference between Torn market price and your '
+                                            'buying price as a more commonly understood measure of profit, '
+                                            'albeit one that sometimes works poorly for infrequently traded items.',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 50),
                               ],
                             ),
@@ -262,15 +308,33 @@ class TradesOptionsState extends State<TradesOptions> {
     );
   }
 
+  Switch tornExchangeProfitSwitch() {
+    return Switch(
+      activeColor: Color(0xffd186cf),
+      activeTrackColor: Colors.pink,
+      value: _tornExchangeProfitEnabled,
+      onChanged: _tradeCalculatorEnabled
+          ? (activated) async {
+              setState(() {
+                _tornExchangeProfitEnabled = activated;
+                Prefs().setTornExchangeProfitEnabled(activated);
+              });
+            }
+          : null,
+    );
+  }
+
   Future _restorePreferences() async {
     final tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
     final awhActive = await Prefs().getAWHEnabled();
     final tornExchangeActive = await Prefs().getTornExchangeEnabled();
+    final tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;
       _awhEnabled = awhActive;
       _tornExchangeEnabled = tornExchangeActive;
+      _tornExchangeProfitEnabled = tornExchangeProfitActive;
     });
   }
 

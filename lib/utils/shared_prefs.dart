@@ -195,6 +195,7 @@ class Prefs {
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
   final String _kTornExchangeEnabled = "pda_tornExchangeActive";
+  final String _kTornExchangeProfitEnabled = "pda_tornExchangeProfitActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
   final String _kAwardsSort = "pda_awardsSort";
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
@@ -2206,6 +2207,16 @@ class Prefs {
   Future<bool> setTornExchangeEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTornExchangeEnabled, value);
+  }
+
+  Future<bool> getTornExchangeProfitEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTornExchangeProfitEnabled) ?? false;
+  }
+
+  Future<bool> setTornExchangeProfitEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTornExchangeProfitEnabled, value);
   }
 
   /// ----------------------------

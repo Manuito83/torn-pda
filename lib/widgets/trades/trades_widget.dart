@@ -47,6 +47,7 @@ class TradesWidgetState extends State<TradesWidget> {
   late TradesProvider _tradesProv;
 
   late bool _tornExchangeActive;
+  late bool _tornExchangeProfitActive;
 
   @override
   void dispose() {
@@ -59,6 +60,7 @@ class TradesWidgetState extends State<TradesWidget> {
     _tradesProv = Provider.of<TradesProvider>(context);
     _tornExchangeActive = _tradesProv.container.tornExchangeActive &&
         Provider.of<SettingsProvider>(context).tornExchangeEnabledStatusRemoteConfig;
+    _tornExchangeProfitActive = _tradesProv.container.tornExchangeProfitActive;
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
@@ -470,22 +472,23 @@ class TradesWidgetState extends State<TradesWidget> {
               ],
             ),
             const SizedBox(height: 5),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    itemsNotConfiguredInTornExchange ? 'Cannot calculate profit!' : '\$$tornExchangeProfit profit',
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      color: itemsNotConfiguredInTornExchange ? Colors.orange : Colors.white,
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
+            if (_tornExchangeProfitActive)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      itemsNotConfiguredInTornExchange ? 'Cannot calculate profit!' : '\$$tornExchangeProfit profit',
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        color: itemsNotConfiguredInTornExchange ? Colors.orange : Colors.white,
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             const SizedBox(height: 5),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -621,14 +624,15 @@ class TradesWidgetState extends State<TradesWidget> {
                   ),
                 ],
               ),
-              Text(
-                '$itemProfit profit',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontStyle: FontStyle.italic,
+              if (_tornExchangeProfitActive)
+                Text(
+                  '$itemProfit profit',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
-              ),
             ],
           ),
         );

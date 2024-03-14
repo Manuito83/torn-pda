@@ -33,6 +33,7 @@ class TradesContainer {
   String tornExchangeBuyerName = "";
   int tornExchangeBuyerId = 0;
   bool tornExchangeActive = false;
+  bool tornExchangeProfitActive = false;
   String tornExchangeTotalMoney = "";
   String tornExchangeProfit = "";
   bool tornExchangeServerError = false;
@@ -133,6 +134,7 @@ class TradesProvider extends ChangeNotifier {
 
         // TORN EXCHANGE init here (it only takes into account elements sold to us, so we'll only pass this information
         var tornExchangeActive = await Prefs().getTornExchangeEnabled() && tornExchangeActiveRemoteConfig;
+        var tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
         if (rightItemsElements.isNotEmpty && tornExchangeActive) {
           TornExchangeInModel tornExchangeIn = await TornExchangeComm.submitItems(
             tradesContainer.rightItems,
@@ -144,6 +146,7 @@ class TradesProvider extends ChangeNotifier {
           if (tornExchangeIn.serverError) {
             tradesContainer
               ..tornExchangeActive = true
+              ..tornExchangeProfitActive = tornExchangeProfitActive
               ..tornExchangeServerError = tornExchangeIn.serverError;
           } else {
             // We'll return an error like above if there's something wrong coming from Torn Exchange here
@@ -178,6 +181,7 @@ class TradesProvider extends ChangeNotifier {
                 ..tornExchangeBuyerId = playerId
                 ..tornExchangeBuyerName = playerName
                 ..tornExchangeActive = true
+                ..tornExchangeProfitActive = tornExchangeProfitActive
                 ..tornExchangeTotalMoney = totalPrices.toString()
                 ..tornExchangeProfit = totalProfit.toString()
                 ..tornExchangeItems = tornExchangeItems
@@ -187,6 +191,7 @@ class TradesProvider extends ChangeNotifier {
             } catch (e) {
               tradesContainer
                 ..tornExchangeActive = true
+                ..tornExchangeProfitActive = tornExchangeProfitActive
                 ..tornExchangeServerError = tornExchangeIn.serverError;
             }
           }

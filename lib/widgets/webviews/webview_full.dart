@@ -314,6 +314,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final GlobalKey _showCaseTitleBar = GlobalKey();
   final GlobalKey _showCaseCloseButton = GlobalKey();
   final GlobalKey _showCasePlayPauseChain = GlobalKey();
+  final GlobalKey _showCaseTradeOptions = GlobalKey();
 
   @override
   void initState() {
@@ -483,6 +484,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           !_settingsProvider.showCases.contains("webview_playPauseChain")) {
         _settingsProvider.addShowCase = "webview_playPauseChain";
         showCases.add(_showCasePlayPauseChain);
+      }
+
+      if (!_settingsProvider.showCases.contains("webview_tradesOptions")) {
+        _settingsProvider.addShowCase = "webview_tradesOptions";
+        showCases.add(_showCaseTradeOptions);
       }
 
       if (showCases.isNotEmpty) {
@@ -3031,36 +3037,50 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Widget _tradesMenuIcon() {
     if (_tradesIconActive) {
-      return OpenContainer(
-        transitionDuration: const Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
-        openBuilder: (BuildContext context, VoidCallback _) {
-          return TradesOptions(
-            playerId: _userProvider!.basic!.playerId,
-            callback: _tradesPreferencesLoad,
-          );
-        },
-        closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
-          ),
-        ),
-        closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas!,
-        closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: SizedBox(
-              height: 20,
-              width: 20,
-              child: Icon(
-                MdiIcons.accountSwitchOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
-              ),
+      return Showcase(
+        key: _showCaseTradeOptions,
+        title: 'Trading options!',
+        description: '\nIf you are a trader, you can manage the different trading providers available in Torn PDA '
+            'by tapping this icon (e.g.: Arson Warehouse and Torn Exchange!\n\nThere\'s also additional options available, '
+            'such as detailed profit information.\n\nIf you prefer, you can also deactivate the whole Trade Calculator '
+            'widget to gain some space.',
+        targetPadding: const EdgeInsets.all(10),
+        disableMovingAnimation: true,
+        textColor: _themeProvider.mainText!,
+        tooltipBackgroundColor: _themeProvider.secondBackground!,
+        descTextStyle: const TextStyle(fontSize: 13),
+        tooltipPadding: const EdgeInsets.all(20),
+        child: OpenContainer(
+          transitionDuration: const Duration(milliseconds: 500),
+          transitionType: ContainerTransitionType.fadeThrough,
+          openBuilder: (BuildContext context, VoidCallback _) {
+            return TradesOptions(
+              playerId: _userProvider!.basic!.playerId,
+              callback: _tradesPreferencesLoad,
+            );
+          },
+          closedElevation: 0,
+          closedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(56 / 2),
             ),
-          );
-        },
+          ),
+          closedColor: Colors.transparent,
+          openColor: _themeProvider.canvas!,
+          closedBuilder: (BuildContext context, VoidCallback openContainer) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: Icon(
+                  MdiIcons.accountSwitchOutline,
+                  color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                ),
+              ),
+            );
+          },
+        ),
       );
     } else {
       return const SizedBox.shrink();
