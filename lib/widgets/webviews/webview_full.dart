@@ -2868,6 +2868,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
         return;
       }
+
+      // This is a trade that was just finished (step=view instead of step=logview)
+      // We hide the widget to avoid sides getting mixed up
+      String? html = await webView!.getHtml();
+      if (html != null && html.contains("The trade was accepted by")) {
+        final nameBar = document.querySelector(".right .title-black")?.innerHtml ?? "";
+        if (nameBar.contains("items traded")) {
+          if (_tradesFullActive) {
+            _toggleTradesWidget(active: false);
+          }
+          return;
+        }
+      }
     } else {
       if (_tradesFullActive) {
         _toggleTradesWidget(active: false);
