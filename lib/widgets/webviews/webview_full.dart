@@ -1379,6 +1379,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
             }
+            // Needs to be done as early as possible
+            if (uri?.host == "greasyfork.org") {
+              c.evaluateJavascript(
+                  source: greasyForkMockVM(jsonEncode(
+                      _userScriptsProvider.userScriptList.map((s) => ({"name": s.name, "version": s.version})).toList())));
+            }
           },
           onProgressChanged: (c, progress) async {
             if (!mounted) return;

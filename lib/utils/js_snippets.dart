@@ -1452,3 +1452,22 @@ String barsDoubleClickRedirect() {
     })();
   ''';
 }
+
+String greasyForkMockVM(String scripts) {
+  // Imitate ViolentMonkey on GreasyFork for identifying version numbers and removing the install warning
+  return """
+    ((PDA_script_list) => {
+	const Violentmonkey = {};
+	Object.defineProperty(Violentmonkey, "getVersion", {
+		value: async () => null,
+	});
+	Object.defineProperty(Violentmonkey, "isInstalled", {
+		// namespace is not used (yet)
+		value: async (name, _) => PDA_script_list.find(s => s.name === name)?.version || null,
+	});
+	Object.defineProperty(window.external, "Violentmonkey", {
+		value: Violentmonkey,
+	});
+})($scripts);
+  """;
+}
