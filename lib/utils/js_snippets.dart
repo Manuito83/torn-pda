@@ -799,7 +799,7 @@ String chatHighlightJS({required String highlights}) {
 		return new Promise((res, rej) => {
 			const id = setInterval(() => {
 				const chat = document.querySelector("#chatRoot");
-				if (chat.querySelector("[class*='chat-list-button__']")) {
+				if (chat?.querySelector("[class*='chat-list-button__']")) {
 					clearInterval(id);
 					res(chat);
 				} else if (count > 20) {
