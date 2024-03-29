@@ -1802,7 +1802,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              const Flexible(child: Text("Short/long tab affect PDA icon")),
+              const Flexible(child: Text("Short/long tap affect PDA icon")),
               Switch(
                 value: _settingsProvider.fullScreenIncludesPDAButtonTap,
                 onChanged: (value) {

@@ -970,7 +970,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 otherEctTaken: otherProfile.personalstats!.exttaken!,
                                 otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
                                 otherName: otherProfile.name!,
-                                otherFactionName: otherProfile.name!,
+                                otherFactionName: otherProfile.faction!.factionName!,
                                 otherLastActionRelative: otherProfile.lastAction!.relative!,
                                 themeProvider: widget.themeProvider!,
                               );
@@ -1064,7 +1064,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             otherEctTaken: otherProfile.personalstats!.exttaken!,
                             otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
                             otherName: otherProfile.name!,
-                            otherFactionName: otherProfile.name!,
+                            otherFactionName: otherProfile.faction!.factionName!,
                             otherLastActionRelative: otherProfile.lastAction!.relative!,
                             themeProvider: widget.themeProvider!,
                           );
