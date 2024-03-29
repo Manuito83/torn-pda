@@ -38,21 +38,28 @@ class TimeFormatter {
 
   String formatHourWithDaysElapsed({bool includeToday = false}) {
     late DateTime timeZonedTime;
+    late DateTime now;
     String? hourFormatted;
     String? zoneId;
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
         timeZonedTime = inputTime!.toLocal();
         zoneId = 'LT';
+        now = DateTime.now();
         break;
       case TimeZoneSetting.tornTime:
         timeZonedTime = inputTime!.toUtc();
         zoneId = 'TCT';
+        now = DateTime.now().toUtc();
         break;
     }
 
-    final now = DateTime.now();
     int differenceInDays = timeZonedTime.difference(now).inDays;
+    if (differenceInDays == 0) {
+      if (timeZonedTime.day != now.day) {
+        differenceInDays = 1;
+      }
+    }
 
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
