@@ -4912,6 +4912,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user == null) return;
 
     // DEBUG #####
+    /*
     // Create a fake ranked war to check time parameters
     if (kDebugMode) {
       RankedWar debugWar = RankedWar(
@@ -4937,6 +4938,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       });
       return;
     }
+    */
     // DEBUG ENDS #####
 
     try {
