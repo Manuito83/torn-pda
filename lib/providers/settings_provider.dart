@@ -605,6 +605,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _rankedWarsInProfileShowTotalHours = false;
+  bool get rankedWarsInProfileShowTotalHours => _rankedWarsInProfileShowTotalHours;
+  set changeRankedWarsInProfileShowTotalHours(bool choice) {
+    _rankedWarsInProfileShowTotalHours = choice;
+    Prefs().setRankedWarsInProfileShowTotalHours(_rankedWarsInProfileShowTotalHours);
+    notifyListeners();
+  }
+
   var _stockExchangeInMenu = false;
   bool get stockExchangeInMenu => _stockExchangeInMenu;
   set changeStockExchangeInMenu(bool choice) {
@@ -938,6 +946,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _rankedWarsInMenu = await Prefs().getRankedWarsInMenu();
     _rankedWarsInProfile = await Prefs().getRankedWarsInProfile();
+    _rankedWarsInProfileShowTotalHours = await Prefs().getRankedWarsInProfileShowTotalHours();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 

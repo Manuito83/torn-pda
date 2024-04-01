@@ -43,6 +43,7 @@ class Prefs {
   // Ranked war extra access
   final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
   final String _kRankedWarsInProfile = "pda_rankedWarsInProfile";
+  final String _kRankedWarsInProfileShowTotalHours = "pda_rankedWarsInProfileShowTotalHours";
 
   // Retaliation
   final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
@@ -2727,6 +2728,16 @@ class Prefs {
   Future<bool> setRankedWarsInProfile(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRankedWarsInProfile, value);
+  }
+
+  Future<bool> getRankedWarsInProfileShowTotalHours() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRankedWarsInProfileShowTotalHours) ?? false;
+  }
+
+  Future<bool> setRankedWarsInProfileShowTotalHours(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRankedWarsInProfileShowTotalHours, value);
   }
 
   /// -----------------------

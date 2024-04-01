@@ -55,10 +55,14 @@ class TimeFormatter {
     }
 
     int differenceInDays = timeZonedTime.difference(now).inDays;
-    if (differenceInDays == 0) {
-      if (timeZonedTime.day != now.day) {
-        differenceInDays = 1;
-      }
+
+    // Handle cases where [differenceInDays] can lead to errors
+    if (differenceInDays == 0 && timeZonedTime.day != now.day) {
+      // Event is happening later in the day but after midnight, so consider it as "tomorrow"
+      differenceInDays = 1;
+    } else if (differenceInDays == 1 && timeZonedTime.day != now.add(Duration(days: 1)).day) {
+      // Event is happening after two midnights, so consider it as "in 2 days"
+      differenceInDays = 2;
     }
 
     switch (timeFormatSetting) {
@@ -74,14 +78,14 @@ class TimeFormatter {
 
     String suffix;
     if (differenceInDays == 0) {
-      suffix = includeToday ? 'today' : '';
+      suffix = includeToday ? ' today' : '';
     } else if (differenceInDays == 1) {
-      suffix = 'tomorrow';
+      suffix = ' tomorrow';
     } else {
-      suffix = 'in $differenceInDays days';
+      suffix = ' in $differenceInDays days';
     }
 
-    return '$hourFormatted $suffix';
+    return '$hourFormatted$suffix';
   }
 
   String? _dayWeekFormatted;

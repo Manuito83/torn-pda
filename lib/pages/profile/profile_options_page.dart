@@ -401,6 +401,43 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
+                              if (_settingsProvider.rankedWarsInProfile)
+                                Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          const Text("Show total hours (hide days)"),
+                                          Switch(
+                                            value: _settingsProvider.rankedWarsInProfileShowTotalHours,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _settingsProvider.changeRankedWarsInProfileShowTotalHours = value;
+                                              });
+                                            },
+                                            activeTrackColor: Colors.lightGreenAccent,
+                                            activeColor: Colors.green,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      child: Text(
+                                        'This will hide the days from the countdown to the ranked war and show '
+                                        'total remaining hours instead (e.g.: you will be shown 75 hours instead of '
+                                        '3 days and 2 hours)',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               const SizedBox(height: 15),
                               const Divider(),
                               const SizedBox(height: 5),
