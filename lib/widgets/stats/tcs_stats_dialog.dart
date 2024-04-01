@@ -74,14 +74,13 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                       return _mainTSCResponseWidget(tsc);
                     }
 
-                    String error = tsc.message;
                     return Center(
                       child: Padding(
                         padding: EdgeInsets.only(top: tsc.code == 3 ? 50 : 100),
                         child: Column(
                           children: [
                             Text(
-                              "Error: $error",
+                              tsc.message,
                               style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                             if (tsc.code == 3)
