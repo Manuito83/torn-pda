@@ -1700,7 +1700,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onConsoleMessage: (controller, consoleMessage) async {
             if (consoleMessage.message != "") {
               if (!consoleMessage.message.contains("Refused to connect to ") &&
-                  !consoleMessage.message.contains("Uncaught (in promise) TypeError") &&
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("has been blocked by CORS policy") &&
                   !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
