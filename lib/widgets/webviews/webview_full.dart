@@ -1379,12 +1379,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
             }
-            // Needs to be done as early as possible
-            if (uri?.host == "greasyfork.org") {
-              c.evaluateJavascript(
-                  source: greasyForkMockVM(jsonEncode(_userScriptsProvider.userScriptList
-                      .map((s) => ({"name": s.name, "version": s.version}))
-                      .toList())));
+
+            // Needs to be done as early as possible, but iOS does not like onLoadStart for this script
+            if (Platform.isAndroid) {
+              evaluateGreasyForMockVM(uri, c);
             }
           },
           onProgressChanged: (c, progress) async {
@@ -1436,6 +1434,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             try {
               _currentUrl = uri.toString();
+
+              // Needs to be done as early as possible, but iOS does not like onLoadStart for this script
+              if (Platform.isIOS) {
+                evaluateGreasyForMockVM(uri, c);
+              }
 
               // Userscripts remove those no longer necessary
               List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
@@ -1758,6 +1761,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  void evaluateGreasyForMockVM(WebUri? uri, InAppWebViewController c) {
+    if (uri?.host == "greasyfork.org") {
+      c.evaluateJavascript(
+          source: greasyForkMockVM(jsonEncode(
+              _userScriptsProvider.userScriptList.map((s) => ({"name": s.name, "version": s.version})).toList())));
+    }
   }
 
   Future<void> _assessLongPressOptions(InAppWebViewHitTestResult result, InAppWebViewController controller) async {
