@@ -1382,8 +1382,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             // Needs to be done as early as possible
             if (uri?.host == "greasyfork.org") {
               c.evaluateJavascript(
-                  source: greasyForkMockVM(jsonEncode(
-                      _userScriptsProvider.userScriptList.map((s) => ({"name": s.name, "version": s.version})).toList())));
+                  source: greasyForkMockVM(jsonEncode(_userScriptsProvider.userScriptList
+                      .map((s) => ({"name": s.name, "version": s.version}))
+                      .toList())));
             }
           },
           onProgressChanged: (c, progress) async {
@@ -1797,7 +1798,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Mini Profiles
     if (request.request.url.toString().contains("https://www.torn.com/profiles.php?") &&
         hitResult!.extra!.contains("https://www.torn.com/images/honors") &&
-        hitResult.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE) {
+        hitResult.type == InAppWebViewHitTestResultType.IMAGE_TYPE) {
       final html = await webView?.getHtml();
       if (html == null || html.isEmpty) return false;
       final document = parse(html);
