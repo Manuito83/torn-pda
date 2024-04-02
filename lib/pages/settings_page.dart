@@ -209,6 +209,10 @@ class SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
+                      _themeSection(),
+                      const SizedBox(height: 15),
+                      const Divider(),
+                      const SizedBox(height: 5),
                       _miscSection(),
                       const SizedBox(height: 15),
                       const Divider(),
@@ -658,7 +662,7 @@ class SettingsPageState extends State<SettingsPage> {
                         children: [
                           const Flexible(
                             child: Text(
-                              "Use Torn Stats Central",
+                              "Use Torn Spies Central",
                             ),
                           ),
                           SizedBox(width: 8),
@@ -707,7 +711,7 @@ class SettingsPageState extends State<SettingsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'Enable Torn Stats Central estimations in the sections where spied or estimated stats are shown (e.g.: '
+                  'Enable Torn Spies Central estimations in the sections where spied or estimated stats are shown (e.g.: '
                   'war targets cards, retal cards or profile widget)',
                   style: TextStyle(
                     color: Colors.grey[600],
@@ -1512,17 +1516,29 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Column _miscSection() {
+  Column _themeSection() {
     return Column(
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'MISC',
+              'THEME',
               style: TextStyle(fontSize: 10),
             ),
           ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          child: Text(
+            "Please note that the main theme selector switch is located in the drawer menu of Torn PDA. Here you "
+            "will be able to select other theming options",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20),
@@ -1552,14 +1568,23 @@ class SettingsPageState extends State<SettingsPage> {
             children: <Widget>[
               const Flexible(
                 child: Text(
-                  "Sync theme and web themes",
+                  "Sync app with device theme",
                 ),
               ),
               Switch(
-                value: _settingsProvider.syncTheme,
+                value: _settingsProvider.syncDeviceTheme,
                 onChanged: (enabled) async {
                   setState(() {
-                    _settingsProvider.syncTheme = enabled;
+                    _settingsProvider.syncDeviceTheme = enabled;
+
+                    if (enabled) {
+                      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+                      if (brightness == Brightness.dark && _themeProvider.currentTheme == AppTheme.light) {
+                        _themeProvider.changeTheme = AppTheme.dark;
+                      } else if (brightness == Brightness.light && _themeProvider.currentTheme != AppTheme.light) {
+                        _themeProvider.changeTheme = AppTheme.light;
+                      }
+                    }
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -1568,7 +1593,30 @@ class SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
-        if (_settingsProvider.syncTheme)
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Sync app and web themes",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.syncTornWebTheme,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.syncTornWebTheme = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        if (_settingsProvider.syncTornWebTheme)
           Column(
             children: [
               Padding(
@@ -1591,7 +1639,8 @@ class SettingsPageState extends State<SettingsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'Specifies which of the two dark themes is activated in the app when the web is switched to dark',
+                  "Specifies which of the two dark themes is activated in the app when the web or your device themes "
+                  "(depending on the options above) are switched to dark",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -1601,6 +1650,22 @@ class SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
+      ],
+    );
+  }
+
+  Column _miscSection() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'MISC',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
         Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(

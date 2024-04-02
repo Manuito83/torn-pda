@@ -1426,9 +1426,41 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     double? maxY = 0;
     final timestamps = <int>[];
 
-    _periodicMap.forEach((key, value) {
+    // In order to avoid too many zigzags when restocks occur very frequently, we will restrict the data:
+    // - If there are <= 5 restocks, we will show all the data (around 24 hours)
+    // - If there are more than 5 restocks, we will show the last 12 hours of data
+
+    // Count the restocks
+    int restockCount = 0;
+    int lastValue = 0;
+    _periodicMap.forEach((timestamp, value) {
+      if (value > 0 && lastValue == 0) {
+        restockCount++;
+      }
+      lastValue = value;
+    });
+
+    // Filter the map if there are more than 5 restocks
+    SplayTreeMap<dynamic, dynamic> filteredMap = _periodicMap;
+    if (restockCount > 5) {
+      // Find the latest timestamp
+      int latestTimestamp = _periodicMap.keys.last * 1000;
+      // Calculate the timestamp 12 hours before the latest timestamp
+      DateTime cutoff = DateTime.fromMillisecondsSinceEpoch(latestTimestamp).subtract(Duration(hours: 12));
+      int cutoffMillis = cutoff.millisecondsSinceEpoch;
+
+      // Ensure that the filtering results in fewer entries than the original map
+      filteredMap = SplayTreeMap.fromIterable(
+        _periodicMap.entries.where((entry) => entry.key * 1000 >= cutoffMillis),
+        key: (entry) => entry.key,
+        value: (entry) => entry.value,
+      );
+    }
+
+    // Update the chart data
+    filteredMap.forEach((timestamp, value) {
       spots.add(FlSpot(count, value.toDouble()));
-      timestamps.add(key);
+      timestamps.add(timestamp); // Assuming timestamps is a list of DateTime
       if (value > maxY) maxY = value.toDouble();
       count++;
     });
@@ -1456,7 +1488,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
               // Get time
               var ts = 0;
               final timesList = [];
-              for (final e in _periodicMap.entries) {
+              for (final e in filteredMap.entries) {
                 timesList.add("${e.key}");
               }
               var x = spot.x.toInt();
@@ -1505,17 +1537,17 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            interval: _periodicMap.length > 12 ? _periodicMap.length / 12 : null,
+            interval: filteredMap.length > 12 ? filteredMap.length / 12 : null,
             reservedSize: 20,
             getTitlesWidget: (xValue, titleMeta) {
-              if (xValue.toInt() >= _periodicMap.length) {
+              if (xValue.toInt() >= filteredMap.length) {
                 xValue = xValue - 1;
               }
               final date = DateTime.fromMillisecondsSinceEpoch(timestamps[xValue.toInt()] * 1000);
 
               // Style
               TextStyle myStyle;
-              if (xValue.toInt() >= _periodicMap.length) {
+              if (xValue.toInt() >= filteredMap.length) {
                 xValue = xValue - 1;
               }
               final difference = DateTime.now().difference(date).inHours;
@@ -1582,7 +1614,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         ),
       ),
       minX: 0,
-      maxX: _periodicMap.length.toDouble(),
+      maxX: filteredMap.length.toDouble(),
       minY: 0,
       maxY: maxY! + maxY! * 0.1,
       lineBarsData: [

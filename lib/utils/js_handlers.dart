@@ -7,6 +7,7 @@ String handler_flutterPlatformReady() {
     if(typeof __PDA_platformReadyPromise === 'undefined') {
         __PDA_platformReadyPromise = new Promise(resolve => {
             //console.log("Handler: pdaHandler_platformReady");
+            if (window.flutter_inappwebview?._platformReady) return resolve();
             window.addEventListener("flutterInAppWebViewPlatformReady", resolve);
         });
     }
@@ -16,6 +17,9 @@ String handler_flutterPlatformReady() {
 String handler_pdaAPI() {
   return '''
     // Performs a GET request to the provided URL
+    // The expected arguments are:
+    //     url
+    //     headers - Object with key, value string pairs (optional for backwards compatibility)
     // Returns a promise for a response object that has these properties:
     //     responseHeaders - String, with CRLF line terminators.
     //     responseText
@@ -28,8 +32,13 @@ String handler_pdaAPI() {
     // 
     //
     // Example call:
+    // 
     //
-    // PDA_httpGet('https://api.example.com/data').then(response => {
+    // let url = 'https://api.example.com/data';
+    // let headers = {
+    //     "Content-Type": "application/json"
+    // }
+    // PDA_httpGet(url, headers).then(response => {
     //     console.log(response);
     // }).catch(error => {
     //     console.error(error);
@@ -40,7 +49,8 @@ String handler_pdaAPI() {
         var loadedPdaApiGetUrls = {};
     }
 
-    async function PDA_httpGet(url) {
+    async function PDA_httpGet(url, headers = {}) {
+        let parameters = `\${url}+\${JSON.stringify(headers)}`;
         let now = Date.now();
 
         // If this URL was loaded less than a second ago, return immediately
@@ -56,7 +66,7 @@ String handler_pdaAPI() {
         console.log("Handler: pdaHandler_ApiGet");
         await __PDA_platformReadyPromise;
           
-        return window.flutter_inappwebview.callHandler("PDA_httpGet", url);
+        return window.flutter_inappwebview.callHandler("PDA_httpGet", url, headers);
     }
 
 
@@ -227,7 +237,9 @@ String handler_GM() {
                         "Invalid method passed to GM.xmlHttpRequest"
                     );
                 if (!method || method.toLowerCase() === "get") {
-                    return await PDA_httpGet(url)
+		    const h = headers ?? {};
+		    h["X-GMforPDA"] = "Sent from PDA via GMforPDA";
+                    return await PDA_httpGet(url, h ?? {})
                         .then(onload ?? ((x) => x))
                         .catch(onerror ?? ((e) => console.error(e)));
                 } else if (method.toLowerCase() === "post") {

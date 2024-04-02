@@ -43,6 +43,7 @@ class Prefs {
   // Ranked war extra access
   final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
   final String _kRankedWarsInProfile = "pda_rankedWarsInProfile";
+  final String _kRankedWarsInProfileShowTotalHours = "pda_rankedWarsInProfileShowTotalHours";
 
   // Retaliation
   final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
@@ -66,8 +67,9 @@ class Prefs {
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
   final String _kUseMaterial3Theme = "pda_useMaterial3Theme";
-  final String _kSyncTheme = "tornLite_syncTheme";
-  final String _kThemeToSync = "tornLite_themeToSync";
+  final String _kSyncTornWebTheme = "tornLite_syncTheme";
+  final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
+  final String _kDarkThemeToSync = "tornLite_themeToSync";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreteNotifications = "pda_discreteNotifications";
   final String _kDefaultSection = "pda_defaultSection";
@@ -87,6 +89,7 @@ class Prefs {
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
+  final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
@@ -192,12 +195,14 @@ class Prefs {
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
-  final String _kTornTraderEnabled = "pda_tornTraderActive";
+  final String _kTornExchangeEnabled = "pda_tornExchangeActive";
+  final String _kTornExchangeProfitEnabled = "pda_tornExchangeProfitActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
   final String _kAwardsSort = "pda_awardsSort";
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
   final String _kHighlightChat = "pda_highlightChat";
+  final String _kHighlightChatWordsList = "pda_highlightChatWordsList";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
   final String _kUserScriptsNotifyUpdates = "pda_userScriptsNotifyUpdates";
@@ -791,26 +796,36 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for theme sync with web
+  /// Methods for theme sync with web and device
   /// ----------------------------
-  Future<bool> getSyncTheme() async {
+  Future<bool> getSyncTornWebTheme() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSyncTheme) ?? true;
+    return prefs.getBool(_kSyncTornWebTheme) ?? true;
   }
 
-  Future<bool> setSyncTheme(bool value) async {
+  Future<bool> setSyncTornWebTheme(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSyncTheme, value);
+    return prefs.setBool(_kSyncTornWebTheme, value);
   }
 
-  Future<String> getThemeToSync() async {
+  Future<bool> getSyncDeviceTheme() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kThemeToSync) ?? 'dark';
+    return prefs.getBool(_kSyncDeviceTheme) ?? false;
   }
 
-  Future<bool> setThemeToSync(String value) async {
+  Future<bool> setSyncDeviceTheme(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kThemeToSync, value);
+    return prefs.setBool(_kSyncDeviceTheme, value);
+  }
+
+  Future<String> getDarkThemeToSync() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDarkThemeToSync) ?? 'dark';
+  }
+
+  Future<bool> setDarkThemeToSync(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDarkThemeToSync, value);
   }
 
   /// ----------------------------
@@ -991,6 +1006,16 @@ class Prefs {
   Future<bool> setAndroidBrowserScale(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kAndroidBrowserScale, value);
+  }
+
+  Future<int> getAndroidBrowserTextScale() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kAndroidBrowserTextScale) ?? 8;
+  }
+
+  Future<bool> setAndroidBrowserTextScale(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kAndroidBrowserTextScale, value);
   }
 
   Future<bool> getIosBrowserPinch() async {
@@ -2175,14 +2200,24 @@ class Prefs {
     return prefs.setBool(_kAWHEnabled, value);
   }
 
-  Future<bool> getTornTraderEnabled() async {
+  Future<bool> getTornExchangeEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTornTraderEnabled) ?? false;
+    return prefs.getBool(_kTornExchangeEnabled) ?? true;
   }
 
-  Future<bool> setTornTraderEnabled(bool value) async {
+  Future<bool> setTornExchangeEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTornTraderEnabled, value);
+    return prefs.setBool(_kTornExchangeEnabled, value);
+  }
+
+  Future<bool> getTornExchangeProfitEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTornExchangeProfitEnabled) ?? false;
+  }
+
+  Future<bool> setTornExchangeProfitEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTornExchangeProfitEnabled, value);
   }
 
   /// ----------------------------
@@ -2353,6 +2388,16 @@ class Prefs {
     return prefs.setBool(_kHighlightChat, value);
   }
 
+  Future<List<String>> getHighlightWordList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHighlightChatWordsList) ?? const [];
+  }
+
+  Future<bool> setHighlightWordList(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kHighlightChatWordsList, value);
+  }
+
   Future<int> getHighlightColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kHighlightColor) ?? 0x701397248;
@@ -2409,7 +2454,7 @@ class Prefs {
     return prefs.setString(_kAlternativeTornStatsKey, value);
   }
 
-  // TORN STATS CENTRAL
+  // TORN SPIES CENTRAL
   Future<bool> getAlternativeTSCKeyEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kAlternativeTSCKeyEnabled) ?? false;
@@ -2683,6 +2728,16 @@ class Prefs {
   Future<bool> setRankedWarsInProfile(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRankedWarsInProfile, value);
+  }
+
+  Future<bool> getRankedWarsInProfileShowTotalHours() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRankedWarsInProfileShowTotalHours) ?? false;
+  }
+
+  Future<bool> setRankedWarsInProfileShowTotalHours(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRankedWarsInProfileShowTotalHours, value);
   }
 
   /// -----------------------

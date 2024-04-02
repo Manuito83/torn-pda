@@ -9,6 +9,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -3471,6 +3472,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var hustling = "";
     var disposal = "";
     var cracking = "";
+    var forgery = "";
     hunting = _miscModel!.hunting ?? "";
     racing = _miscModel!.racing ?? "";
     reviving = _miscModel!.reviving ?? "";
@@ -3484,6 +3486,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     hustling = _miscModel!.hustling ?? "";
     disposal = _miscModel!.disposal ?? "";
     cracking = _miscModel!.cracking ?? "";
+    forgery = _miscModel!.forgery ?? "";
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -3494,7 +3497,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         cardSkimming.isNotEmpty ||
         hustling.isNotEmpty ||
         disposal.isNotEmpty ||
-        cracking.isNotEmpty) {
+        cracking.isNotEmpty ||
+        forgery.isNotEmpty) {
       crimesExist = true;
     }
 
@@ -4130,6 +4134,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   child: Text('Cracking: '),
                                 ),
                                 SelectableText(cracking),
+                              ],
+                            ),
+                          if (forgery.isNotEmpty)
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Forgery: '),
+                                ),
+                                SelectableText(forgery),
                               ],
                             ),
                         ],
@@ -4896,6 +4910,36 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getRankedWars() async {
     if (_user == null) return;
+
+    // DEBUG #####
+    /*
+    // Create a fake ranked war to check time parameters
+    if (kDebugMode) {
+      RankedWar debugWar = RankedWar(
+        factions: {
+          _user!.faction!.factionId.toString(): WarFaction()
+            ..chain = 0
+            ..name = _user!.faction!.factionName
+            ..score = 0,
+          _user!.faction!.factionId.toString(): WarFaction()
+            ..chain = 0
+            ..name = _user!.faction!.factionName
+            ..score = 0,
+        },
+        war: War(
+          start: (DateTime(2024, 4, 2, 20, 0).millisecondsSinceEpoch / 1000).round(),
+          end: 0,
+          target: 2000,
+          winner: 0,
+        ),
+      );
+      setState(() {
+        _factionRankedWar = debugWar;
+      });
+      return;
+    }
+    */
+    // DEBUG ENDS #####
 
     try {
       if (_user!.faction!.factionId == 0) return;

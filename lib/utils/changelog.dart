@@ -39,6 +39,25 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.3.1 - Build 394 - 01/04/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.3.1'
+        ..date = '04 APR 2024'
+        ..features = [
+          "Added Torn Exchange sync in the trades widget",
+          "Added Forgery crime to Misc tab in Profile",
+          "Fixed chat highlight and added custom word list [Kwack]",
+          "Added device theme sync (disabled by default)",
+          "Adjusted foreign stocks charts timeframe based on number of recent restocks",
+          if (Platform.isAndroid) "Browser font size can now be adjusted (Advanced Browser Settings)",
+          "Added headers parameters to PDA_httpGet handler [tiksan]",
+          "Fixed issues with time calculation",
+          "Fixed spies update times",
+          "Other several fixes",
+        ],
+    );
+
     // v3.3.0 - Build 382 - 18/02/2024
     itemList.add(
       ChangeLogItem()
@@ -47,7 +66,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Improved user script manager: includes remote fetching, auto update, auto JS file import and fixes [Kwack]",
           "Added private cloud backup and share functionality for specific Torn PDA settings",
-          "Added Torn Stats Central information and merged stats dialogs into one",
+          "Added Torn Spies Central information and merged stats dialogs into one",
           "Spies: added option to allow mixed sources, fixed persistence and other issues",
           "War cards can now be pinned (right swipe)",
           "Added option to delay API calls before hitting the API limit (disabled by default)",

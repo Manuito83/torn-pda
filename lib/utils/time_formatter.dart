@@ -38,21 +38,32 @@ class TimeFormatter {
 
   String formatHourWithDaysElapsed({bool includeToday = false}) {
     late DateTime timeZonedTime;
+    late DateTime now;
     String? hourFormatted;
     String? zoneId;
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
         timeZonedTime = inputTime!.toLocal();
         zoneId = 'LT';
+        now = DateTime.now();
         break;
       case TimeZoneSetting.tornTime:
         timeZonedTime = inputTime!.toUtc();
         zoneId = 'TCT';
+        now = DateTime.now().toUtc();
         break;
     }
 
-    final now = DateTime.now();
-    int differenceInDays = (timeZonedTime.weekday - now.weekday + 7) % 7;
+    int differenceInDays = timeZonedTime.difference(now).inDays;
+
+    // Handle cases where [differenceInDays] can lead to errors
+    if (differenceInDays == 0 && timeZonedTime.day != now.day) {
+      // Event is happening later in the day but after midnight, so consider it as "tomorrow"
+      differenceInDays = 1;
+    } else if (differenceInDays == 1 && timeZonedTime.day != now.add(Duration(days: 1)).day) {
+      // Event is happening after two midnights, so consider it as "in 2 days"
+      differenceInDays = 2;
+    }
 
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
@@ -67,14 +78,14 @@ class TimeFormatter {
 
     String suffix;
     if (differenceInDays == 0) {
-      suffix = includeToday ? 'today' : '';
+      suffix = includeToday ? ' today' : '';
     } else if (differenceInDays == 1) {
-      suffix = 'tomorrow';
+      suffix = ' tomorrow';
     } else {
-      suffix = 'in $differenceInDays days';
+      suffix = ' in $differenceInDays days';
     }
 
-    return '$hourFormatted $suffix';
+    return '$hourFormatted$suffix';
   }
 
   String? _dayWeekFormatted;

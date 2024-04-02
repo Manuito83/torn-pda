@@ -1,13 +1,11 @@
 // Flutter imports:
 // Package imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesOptions extends StatefulWidget {
@@ -24,11 +22,10 @@ class TradesOptions extends StatefulWidget {
 }
 
 class TradesOptionsState extends State<TradesOptions> {
-  static const ttColor = Color(0xffd186cf);
-
   bool _tradeCalculatorEnabled = true;
   bool _awhEnabled = true;
-  bool _tornTraderEnabled = true;
+  bool _tornExchangeEnabled = true;
+  bool _tornExchangeProfitEnabled = true;
 
   Future? _preferencesLoaded;
 
@@ -114,7 +111,12 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                SizedBox(height: 15),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                                  child: Divider(),
+                                ),
+                                SizedBox(height: 10),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
@@ -149,10 +151,14 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                /*
-                                SizedBox(height: 20),
+                                SizedBox(height: 15),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                                  child: Divider(),
+                                ),
+                                SizedBox(height: 10),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(10, 0, 15, 0),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
@@ -160,24 +166,38 @@ class TradesOptionsState extends State<TradesOptions> {
                                         children: [
                                           SizedBox(width: 8),
                                           Image(
-                                            image: AssetImage('images/icons/torntrader_logo.png'),
+                                            image: AssetImage('images/icons/tornexchange_logo.png'),
                                             width: 25,
-                                            color: ttColor,
                                             fit: BoxFit.fill,
                                           ),
                                           SizedBox(width: 10),
-                                          Text("Torn Trader"),
+                                          if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig)
+                                            Text("Torn Exchange")
+                                          else
+                                            Column(
+                                              children: [
+                                                Text(
+                                                  "Torn Exchange has been disabled temporarily",
+                                                  style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
+                                                ),
+                                              ],
+                                            ),
                                         ],
                                       ),
-                                      tornTraderSwitch(),
+                                      if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig) tornExchangeSwitch(),
                                     ],
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  padding: EdgeInsets.fromLTRB(
+                                    15,
+                                    _settingsProvider.tornExchangeEnabledStatusRemoteConfig ? 0 : 15,
+                                    15,
+                                    0,
+                                  ),
                                   child: Text(
                                     'If you are a professional trader and have an account with Torn '
-                                    'Trader, you can activate the sync functionality here',
+                                    'Exchange, you can activate the sync functionality here',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -185,7 +205,39 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                */
+                                if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig && _tornExchangeEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Flexible(
+                                              child: Flexible(child: Text("Show detailed profits")),
+                                            ),
+                                            tornExchangeProfitSwitch(),
+                                          ],
+                                        ),
+                                        Text(
+                                          'By enabling this option, you will be shown additional white figures '
+                                          'with total and individual item profits: one refers to market value profit '
+                                          'and the other to Torn Exchange profit.\n\n'
+                                          'In order to try to avoid Torn market price manipulations, Torn Exchange uses '
+                                          'a custom formula to evaluate base price, and calculates profit as the '
+                                          'difference between this base and your buying price.\n\n'
+                                          'Torn PDA also shows the difference between Torn market price and your '
+                                          'buying price as a more commonly understood measure of profit, '
+                                          'albeit one that sometimes works poorly for infrequently traded items.',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 50),
                               ],
                             ),
@@ -238,66 +290,33 @@ class TradesOptionsState extends State<TradesOptions> {
     );
   }
 
-  Switch tornTraderSwitch() {
+  Switch tornExchangeSwitch() {
     return Switch(
-      activeColor: ttColor,
+      activeColor: Color(0xffd186cf),
       activeTrackColor: Colors.pink,
-      value: _tornTraderEnabled,
+      value: _tornExchangeEnabled,
       onChanged: _tradeCalculatorEnabled
           ? (activated) async {
-              if (activated) {
-                final auth = await TornTraderComm.checkIfUserExists(
-                  widget.playerId,
-                );
+              setState(() {
+                _tornExchangeEnabled = activated;
+                Prefs().setTornExchangeEnabled(activated);
+              });
+            }
+          : null,
+    );
+  }
 
-                if (auth.error!) {
-                  BotToast.showText(
-                    text: 'There was an issue contacting Torn Trader, please try again later!',
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.orange[800]!,
-                    duration: const Duration(seconds: 5),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                  return;
-                }
-
-                if (auth.allowed!) {
-                  Prefs().setTornTraderEnabled(activated);
-                  setState(() {
-                    _tornTraderEnabled = true;
-                  });
-                  BotToast.showText(
-                    text: 'User ${widget.playerId} synced successfully!',
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.green[500]!,
-                    duration: const Duration(seconds: 5),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                } else {
-                  BotToast.showText(
-                    text: 'No user found, please visit torntrader.com and sign up to use '
-                        'this functionality!',
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.orange[800]!,
-                    duration: const Duration(seconds: 5),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                }
-              } else {
-                setState(() {
-                  _tornTraderEnabled = false;
-                  Prefs().setTornTraderEnabled(activated);
-                });
-              }
+  Switch tornExchangeProfitSwitch() {
+    return Switch(
+      activeColor: Color(0xffd186cf),
+      activeTrackColor: Colors.pink,
+      value: _tornExchangeProfitEnabled,
+      onChanged: _tradeCalculatorEnabled
+          ? (activated) async {
+              setState(() {
+                _tornExchangeProfitEnabled = activated;
+                Prefs().setTornExchangeProfitEnabled(activated);
+              });
             }
           : null,
     );
@@ -306,12 +325,14 @@ class TradesOptionsState extends State<TradesOptions> {
   Future _restorePreferences() async {
     final tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
     final awhActive = await Prefs().getAWHEnabled();
-    const tornTraderActive = false; //await Prefs().getTornTraderEnabled();
+    final tornExchangeActive = await Prefs().getTornExchangeEnabled();
+    final tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;
       _awhEnabled = awhActive;
-      _tornTraderEnabled = tornTraderActive;
+      _tornExchangeEnabled = tornExchangeActive;
+      _tornExchangeProfitEnabled = tornExchangeProfitActive;
     });
   }
 

@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -313,6 +314,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final GlobalKey _showCaseTitleBar = GlobalKey();
   final GlobalKey _showCaseCloseButton = GlobalKey();
   final GlobalKey _showCasePlayPauseChain = GlobalKey();
+  final GlobalKey _showCaseTradeOptions = GlobalKey();
 
   @override
   void initState() {
@@ -396,6 +398,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       allowsInlineMediaPlayback: true,
       //
       useOnDownloadStart: widget.allowDownloads,
+      minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
     );
 
     _pullToRefreshController = PullToRefreshController(
@@ -481,6 +484,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           !_settingsProvider.showCases.contains("webview_playPauseChain")) {
         _settingsProvider.addShowCase = "webview_playPauseChain";
         showCases.add(_showCasePlayPauseChain);
+      }
+
+      if (!_settingsProvider.showCases.contains("webview_tradesOptions")) {
+        _settingsProvider.addShowCase = "webview_tradesOptions";
+        showCases.add(_showCaseTradeOptions);
       }
 
       if (showCases.isNotEmpty) {
@@ -1161,7 +1169,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             webView!.addJavaScriptHandler(
               handlerName: 'webThemeChange',
               callback: (args) {
-                if (!_settingsProvider.syncTheme) return;
+                if (!_settingsProvider.syncTornWebTheme) return;
                 if (args.contains("dark")) {
                   // Only change to dark themes if we are currently in light (the web will respond with a
                   // theme change event when we initiate the change, and it could revert to the default dark)
@@ -1371,6 +1379,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
             }
+
+            // Needs to be done as early as possible, but iOS does not like onLoadStart for this script
+            if (Platform.isAndroid) {
+              evaluateGreasyForMockVM(uri, c);
+            }
           },
           onProgressChanged: (c, progress) async {
             if (!mounted) return;
@@ -1421,6 +1434,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             try {
               _currentUrl = uri.toString();
+
+              // Needs to be done as early as possible, but iOS does not like onLoadStart for this script
+              if (Platform.isIOS) {
+                evaluateGreasyForMockVM(uri, c);
+              }
 
               // Userscripts remove those no longer necessary
               List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
@@ -1499,7 +1517,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 }
               }
 
-              if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTheme) {
+              if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTornWebTheme) {
                 if (_currentUrl.contains("www.torn.com")) {
                   if (_webViewProvider.pendingThemeSync == "light") {
                     _requestTornThemeChange(dark: false);
@@ -1685,7 +1703,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onConsoleMessage: (controller, consoleMessage) async {
             if (consoleMessage.message != "") {
               if (!consoleMessage.message.contains("Refused to connect to ") &&
-                  !consoleMessage.message.contains("Uncaught (in promise) TypeError") &&
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("has been blocked by CORS policy") &&
                   !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
@@ -1746,6 +1763,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
+  void evaluateGreasyForMockVM(WebUri? uri, InAppWebViewController c) {
+    if (uri?.host == "greasyfork.org") {
+      c.evaluateJavascript(
+          source: greasyForkMockVM(jsonEncode(
+              _userScriptsProvider.userScriptList.map((s) => ({"name": s.name, "version": s.version})).toList())));
+    }
+  }
+
   Future<void> _assessLongPressOptions(InAppWebViewHitTestResult result, InAppWebViewController controller) async {
     final bool notCurrentUrl = result.extra!.replaceAll("#", "") != _currentUrl;
     final bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
@@ -1783,7 +1808,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Mini Profiles
     if (request.request.url.toString().contains("https://www.torn.com/profiles.php?") &&
         hitResult!.extra!.contains("https://www.torn.com/images/honors") &&
-        hitResult.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE) {
+        hitResult.type == InAppWebViewHitTestResultType.IMAGE_TYPE) {
       final html = await webView?.getHtml();
       if (html == null || html.isEmpty) return false;
       final document = parse(html);
@@ -1805,7 +1830,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.addJavaScriptHandler(
       handlerName: 'PDA_httpGet',
       callback: (args) async {
-        final http.Response resp = await http.get(WebUri(args[0]));
+        final http.Response resp = await http.get(WebUri(args[0]), headers: Map<String, String>.from(args[1]));
         return _makeScriptApiResponse(resp);
       },
     );
@@ -2012,12 +2037,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final intColor = Color(_settingsProvider.highlightColor);
     final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
     final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
-    final String hlMap =
-        '[ { name: "${_userProvider!.basic!.name}", highlight: "$background", sender: "$senderColor" } ]';
+    final String hlMap = '[ "${_userProvider!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
       webView!.evaluateJavascript(
-        source: chatHighlightJS(highlightMap: hlMap),
+        source: chatHighlightJS(highlights: hlMap),
+      );
+      webView!.injectCSSCode(
+        source: css,
       );
     }
   }
@@ -2857,6 +2885,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
         return;
       }
+
+      // This is a trade that was just finished (step=view instead of step=logview)
+      // We hide the widget to avoid sides getting mixed up
+      String? html = await webView!.getHtml();
+      if (html != null && html.contains("The trade was accepted by")) {
+        final nameBar = document.querySelector(".right .title-black")?.innerHtml ?? "";
+        if (nameBar.contains("items traded")) {
+          if (_tradesFullActive) {
+            _toggleTradesWidget(active: false);
+          }
+          return;
+        }
+      }
     } else {
       if (_tradesFullActive) {
         _toggleTradesWidget(active: false);
@@ -2949,6 +2990,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
       playerId: _userProvider!.basic!.playerId!,
+      playerName: _userProvider!.basic!.name!,
       sellerName: sellerName,
       sellerId: sellerId,
       tradeId: tradeId,
@@ -2960,6 +3002,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       rightItemsElements: rightItemsElements,
       rightPropertyElements: rightPropertyElements,
       rightSharesElements: rightSharesElements,
+      tornExchangeActiveRemoteConfig: _settingsProvider.tornExchangeEnabledStatusRemoteConfig,
     );
   }
 
@@ -3024,36 +3067,50 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Widget _tradesMenuIcon() {
     if (_tradesIconActive) {
-      return OpenContainer(
-        transitionDuration: const Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
-        openBuilder: (BuildContext context, VoidCallback _) {
-          return TradesOptions(
-            playerId: _userProvider!.basic!.playerId,
-            callback: _tradesPreferencesLoad,
-          );
-        },
-        closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
-          ),
-        ),
-        closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas!,
-        closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: SizedBox(
-              height: 20,
-              width: 20,
-              child: Icon(
-                MdiIcons.accountSwitchOutline,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
-              ),
+      return Showcase(
+        key: _showCaseTradeOptions,
+        title: 'Trading options!',
+        description: '\nIf you are a trader, you can manage the different trading providers available in Torn PDA '
+            'by tapping this icon (e.g.: Arson Warehouse and Torn Exchange)!\n\nThere\'s also additional options available, '
+            'such as detailed profit information.\n\nIf you prefer, you can also deactivate the whole Trade Calculator '
+            'widget to gain some space.',
+        targetPadding: const EdgeInsets.all(10),
+        disableMovingAnimation: true,
+        textColor: _themeProvider.mainText!,
+        tooltipBackgroundColor: _themeProvider.secondBackground!,
+        descTextStyle: const TextStyle(fontSize: 13),
+        tooltipPadding: const EdgeInsets.all(20),
+        child: OpenContainer(
+          transitionDuration: const Duration(milliseconds: 500),
+          transitionType: ContainerTransitionType.fadeThrough,
+          openBuilder: (BuildContext context, VoidCallback _) {
+            return TradesOptions(
+              playerId: _userProvider!.basic!.playerId,
+              callback: _tradesPreferencesLoad,
+            );
+          },
+          closedElevation: 0,
+          closedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(56 / 2),
             ),
-          );
-        },
+          ),
+          closedColor: Colors.transparent,
+          openColor: _themeProvider.canvas!,
+          closedBuilder: (BuildContext context, VoidCallback openContainer) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: Icon(
+                  MdiIcons.accountSwitchOutline,
+                  color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                ),
+              ),
+            );
+          },
+        ),
       );
     } else {
       return const SizedBox.shrink();
@@ -4156,6 +4213,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webView!.setSettings(settings: newSettings);
       _firstLoadRestoreDownloads = false;
     }
+  }
+
+  Future<void> setBrowserTextScale(int value) async {
+    final InAppWebViewSettings newSettings = (await webView!.getSettings())!;
+    newSettings.minimumFontSize = value;
+    webView!.setSettings(settings: newSettings);
   }
 
   void _showLongPressCard(String? src, Uri? url) {

@@ -88,6 +88,14 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setAndroidBrowserScale(_androidBrowserScale);
   }
 
+  var _androidBrowserTextScale = 8;
+  int get androidBrowserTextScale => _androidBrowserTextScale;
+  set changeAndroidBrowserTextScale(int choice) {
+    _androidBrowserTextScale = choice;
+    Prefs().setAndroidBrowserTextScale(_androidBrowserTextScale);
+    notifyListeners();
+  }
+
   var _iosBrowserPinch = false;
   bool get iosBrowserPinch => _iosBrowserPinch;
   set setIosBrowserPinch(bool pinch) {
@@ -369,6 +377,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _highlightWordList = <String>[];
+  List<String> get highlightWordList => _highlightWordList;
+  set changeHighlightWordList(List<String> value) {
+    _highlightWordList = value;
+    Prefs().setHighlightWordList(_highlightWordList);
+    notifyListeners();
+  }
+
   var _removeAirplane = false;
   bool get removeAirplane => _removeAirplane;
   set changeRemoveAirplane(bool value) {
@@ -399,7 +415,7 @@ class SettingsProvider extends ChangeNotifier {
   }
   */
 
-  // Torn Stats Central
+  // Torn Spies Central
   // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
   //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
   //  0 == disabled
@@ -423,6 +439,13 @@ class SettingsProvider extends ChangeNotifier {
   bool get backupPrefsEnabledStatusRemoteConfig => _backupPrefsEnabledStatusRemoteConfig;
   set backupPrefsEnabledStatusRemoteConfig(bool value) {
     _backupPrefsEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
+  bool _tornExchangeEnabledStatusRemoteConfig = true;
+  bool get tornExchangeEnabledStatusRemoteConfig => _tornExchangeEnabledStatusRemoteConfig;
+  set tornExchangeEnabledStatusRemoteConfig(bool value) {
+    _tornExchangeEnabledStatusRemoteConfig = value;
     notifyListeners();
   }
 
@@ -582,6 +605,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _rankedWarsInProfileShowTotalHours = false;
+  bool get rankedWarsInProfileShowTotalHours => _rankedWarsInProfileShowTotalHours;
+  set changeRankedWarsInProfileShowTotalHours(bool choice) {
+    _rankedWarsInProfileShowTotalHours = choice;
+    Prefs().setRankedWarsInProfileShowTotalHours(_rankedWarsInProfileShowTotalHours);
+    notifyListeners();
+  }
+
   var _stockExchangeInMenu = false;
   bool get stockExchangeInMenu => _stockExchangeInMenu;
   set changeStockExchangeInMenu(bool choice) {
@@ -709,19 +740,27 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _syncTheme = true;
-  bool get syncTheme => _syncTheme;
-  set syncTheme(bool value) {
-    _syncTheme = value;
-    Prefs().setSyncTheme(_syncTheme);
+  var _syncTornWebTheme = true;
+  bool get syncTornWebTheme => _syncTornWebTheme;
+  set syncTornWebTheme(bool value) {
+    _syncTornWebTheme = value;
+    Prefs().setSyncTornWebTheme(_syncTornWebTheme);
     notifyListeners();
   }
 
-  var _themeToSync = "dark";
-  String get darkThemeToSyncFromWeb => _themeToSync;
+  var _syncDeviceTheme = false;
+  bool get syncDeviceTheme => _syncDeviceTheme;
+  set syncDeviceTheme(bool value) {
+    _syncDeviceTheme = value;
+    Prefs().setSyncDeviceTheme(_syncDeviceTheme);
+    notifyListeners();
+  }
+
+  var _darkThemeToSync = "dark";
+  String get darkThemeToSyncFromWeb => _darkThemeToSync;
   set darkThemeToSyncFromWeb(String value) {
-    _themeToSync = value;
-    Prefs().setThemeToSync(value);
+    _darkThemeToSync = value;
+    Prefs().setDarkThemeToSync(value);
     notifyListeners();
   }
 
@@ -791,6 +830,7 @@ class SettingsProvider extends ChangeNotifier {
     _webviewCacheEnabled = await Prefs().getWebviewCacheEnabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
+    _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
 
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
     _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();
@@ -830,6 +870,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _highlightChat = await Prefs().getHighlightChat();
     _highlightColor = await Prefs().getHighlightColor();
+    _highlightWordList = await Prefs().getHighlightWordList();
 
     _removeAirplane = await Prefs().getRemoveAirplane();
 
@@ -905,6 +946,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _rankedWarsInMenu = await Prefs().getRankedWarsInMenu();
     _rankedWarsInProfile = await Prefs().getRankedWarsInProfile();
+    _rankedWarsInProfileShowTotalHours = await Prefs().getRankedWarsInProfileShowTotalHours();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 
@@ -935,8 +977,9 @@ class SettingsProvider extends ChangeNotifier {
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
 
-    _syncTheme = await Prefs().getSyncTheme();
-    _themeToSync = await Prefs().getThemeToSync();
+    _syncTornWebTheme = await Prefs().getSyncTornWebTheme();
+    _syncDeviceTheme = await Prefs().getSyncDeviceTheme();
+    _darkThemeToSync = await Prefs().getDarkThemeToSync();
 
     _debugMessages = await Prefs().getDebugMessages();
 

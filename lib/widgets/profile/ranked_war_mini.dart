@@ -37,7 +37,7 @@ class RankedWarMiniState extends State<RankedWarMini> {
 
     if (widget.rankedWar!.war!.start! * 1000 > DateTime.now().millisecondsSinceEpoch) {
       _tickerCall = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-        _updateTimeString();
+        _updateTimeString(displayTotalHours: context.read<SettingsProvider>().rankedWarsInProfileShowTotalHours);
       });
     }
   }
@@ -180,19 +180,31 @@ class RankedWarMiniState extends State<RankedWarMini> {
     return const SizedBox.shrink();
   }
 
-  _updateTimeString() {
+  _updateTimeString({bool displayTotalHours = false}) {
     final dt = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar!.war!.start! * 1000);
     final timeDifference = dt.difference(DateTime.now());
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    final String twoDigitHours = twoDigits(timeDifference.inHours.remainder(24));
-    final String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-    final String twoDigitSeconds = twoDigits(timeDifference.inSeconds.remainder(60));
-    String diff = '${timeDifference.inDays}d ${twoDigitHours}h '
-        '${twoDigitMinutes}m ${twoDigitSeconds}s';
-    diff = diff.replaceAll("0d 00h ", "");
-    diff = diff.replaceAll("0d ", "");
+
+    String formattedTime;
+    if (displayTotalHours) {
+      String twoDigits(int n) => n.toString().padLeft(2, "0");
+      final twoDigitHours = twoDigits(timeDifference.inHours);
+      final twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+      final twoDigitSeconds = twoDigits(timeDifference.inSeconds.remainder(60));
+      formattedTime = '${twoDigitHours}h ${twoDigitMinutes}m ${twoDigitSeconds}s';
+      formattedTime = formattedTime.replaceAll("00h ", "");
+    } else {
+      // Original formatting with days, hours, minutes, and seconds
+      String twoDigits(int n) => n.toString().padLeft(2, "0");
+      final twoDigitHours = twoDigits(timeDifference.inHours.remainder(24));
+      final twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+      final twoDigitSeconds = twoDigits(timeDifference.inSeconds.remainder(60));
+      formattedTime = '${timeDifference.inDays}d ${twoDigitHours}h ${twoDigitMinutes}m ${twoDigitSeconds}s';
+      formattedTime = formattedTime.replaceAll("0d 00h ", "");
+      formattedTime = formattedTime.replaceAll("0d ", "");
+    }
+
     setState(() {
-      _timeString = diff;
+      _timeString = formattedTime;
     });
   }
 }
