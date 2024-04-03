@@ -938,10 +938,10 @@ class WarController extends GetxController {
       member.statsDef = spy.defense;
       member.statsDex = spy.dexterity;
       int known = 0;
-      if (spy.strength != 1) known += spy.strength!;
-      if (spy.speed != 1) known += spy.speed!;
-      if (spy.defense != 1) known += spy.defense!;
-      if (spy.dexterity != 1) known += spy.dexterity!;
+      if (spy.strength != -1) known += spy.strength!;
+      if (spy.speed != -1) known += spy.speed!;
+      if (spy.defense != -1) known += spy.defense!;
+      if (spy.dexterity != -1) known += spy.dexterity!;
       member.statsExactTotalKnown = known;
     }
 
@@ -959,10 +959,10 @@ class WarController extends GetxController {
       member.statsDex = spy.dexterity;
       member.statsDexUpdated = spy.dexterityTimestamp;
       int known = 0;
-      if (spy.strength != 1) known += spy.strength!;
-      if (spy.speed != 1) known += spy.speed!;
-      if (spy.defense != 1) known += spy.defense!;
-      if (spy.dexterity != 1) known += spy.dexterity!;
+      if (spy.strength != -1) known += spy.strength!;
+      if (spy.speed != -1) known += spy.speed!;
+      if (spy.defense != -1) known += spy.defense!;
+      if (spy.dexterity != -1) known += spy.dexterity!;
       member.statsExactTotalKnown = known;
     }
 
