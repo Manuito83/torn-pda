@@ -728,11 +728,25 @@ class WarPageState extends State<WarPage> {
             return _popupSortChoices.map((WarSort choice) {
               return PopupMenuItem<WarSort>(
                 value: choice,
-                child: Text(
-                  choice.description,
-                  style: const TextStyle(
-                    fontSize: 13,
-                  ),
+                child: Row(
+                  children: [
+                    if (_w.currentSort == choice.type)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(
+                          Icons.arrow_forward_ios_outlined,
+                          size: 15,
+                        ),
+                      ),
+                    Flexible(
+                      child: Text(
+                        choice.description,
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }).toList();
@@ -1692,11 +1706,11 @@ class WarTargetsListState extends State<WarTargetsList> {
             }
           });
         case WarSortType.bounty:
+          for (var m in members) {
+            m.memberModel.bountyAmount ??= 0;
+          }
           members.sort((a, b) {
-            if (a.memberModel.bountyAmount == null && b.memberModel.bountyAmount == null) return 0;
-            if (a.memberModel.bountyAmount == null) return 1;
-            if (b.memberModel.bountyAmount == null) return -1;
-            return b.memberModel.bountyAmount!.compareTo(a.memberModel.bountyAmount ?? 0);
+            return b.memberModel.bountyAmount!.compareTo(a.memberModel.bountyAmount!);
           });
         default:
           members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));

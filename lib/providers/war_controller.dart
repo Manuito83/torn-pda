@@ -208,11 +208,12 @@ class WarController extends GetxController {
         // Bounty calculation
         if (updatedTarget.basicicons?.icon13 != null) {
           // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
-          RegExp amountRegex = RegExp(r"\$\d+(,\d{3})*(\.\d+)?(?=:|$)");
+          RegExp amountRegex = RegExp(r"\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?");
           Match? match = amountRegex.firstMatch(updatedTarget.basicicons!.icon13!);
           if (match != null) {
             String amountStr = match.group(0)!;
-            member.bountyAmount = int.tryParse(amountStr.replaceAll(",", "").replaceAll("\$", ""));
+            amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
+            member.bountyAmount = int.tryParse(amountStr);
           }
         }
 

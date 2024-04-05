@@ -63,6 +63,7 @@ class TargetsListState extends State<TargetsList> {
     }
 
     return Slidable(
+      key: ValueKey(widget.targets[index].playerId),
       closeOnScroll: false,
       startActionPane: ActionPane(
         motion: const ScrollMotion(),

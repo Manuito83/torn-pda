@@ -53,7 +53,7 @@ class TargetsProvider extends ChangeNotifier {
   List<String> _currentColorFilterOut = [];
   List<String> get currentColorFilterOut => _currentColorFilterOut;
 
-  TargetSortType? _currentSort;
+  TargetSortType? currentSort;
 
   TargetsProvider() {
     restorePreferences();
@@ -91,7 +91,7 @@ class TargetsProvider extends ChangeNotifier {
       }
 
       _targets.add(myNewTargetModel);
-      sortTargets(_currentSort);
+      sortTargets(currentSort);
       notifyListeners();
       _saveTargetsSharedPrefs();
       return AddTargetResult(
@@ -432,7 +432,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void sortTargets(TargetSortType? sortType) {
-    _currentSort = sortType;
+    currentSort = sortType;
     switch (sortType!) {
       case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level!.compareTo(a.level!));
@@ -477,11 +477,11 @@ class TargetsProvider extends ChangeNotifier {
           }
         });
       case TargetSortType.bounty:
+        for (var t in _targets) {
+          t.bountyAmount ??= 0;
+        }
         _targets.sort((a, b) {
-          if (a.bountyAmount == null && b.bountyAmount == null) return 0;
-          if (a.bountyAmount == null) return 1;
-          if (b.bountyAmount == null) return -1;
-          return b.bountyAmount!.compareTo(a.bountyAmount ?? 0);
+          return b.bountyAmount!.compareTo(a.bountyAmount!);
         });
     }
     _saveSortSharedPrefs();
@@ -515,7 +515,7 @@ class TargetsProvider extends ChangeNotifier {
 
   void _saveSortSharedPrefs() {
     late String sortToSave;
-    switch (_currentSort!) {
+    switch (currentSort!) {
       case TargetSortType.levelDes:
         sortToSave = 'levelDes';
       case TargetSortType.levelAsc:
@@ -586,33 +586,33 @@ class TargetsProvider extends ChangeNotifier {
     final String targetSort = await Prefs().getTargetsSort();
     switch (targetSort) {
       case '':
-        _currentSort = TargetSortType.levelDes;
+        currentSort = TargetSortType.levelDes;
       case 'levelDes':
-        _currentSort = TargetSortType.levelDes;
+        currentSort = TargetSortType.levelDes;
       case 'levelAsc':
-        _currentSort = TargetSortType.levelAsc;
+        currentSort = TargetSortType.levelAsc;
       case 'respectDes':
-        _currentSort = TargetSortType.respectDes;
+        currentSort = TargetSortType.respectDes;
       case 'respectAsc':
-        _currentSort = TargetSortType.respectAsc;
+        currentSort = TargetSortType.respectAsc;
       case 'ffDes':
-        _currentSort = TargetSortType.ffDes;
+        currentSort = TargetSortType.ffDes;
       case 'ffAsc':
-        _currentSort = TargetSortType.ffAsc;
+        currentSort = TargetSortType.ffAsc;
       case 'nameDes':
-        _currentSort = TargetSortType.nameDes;
+        currentSort = TargetSortType.nameDes;
       case 'nameAsc':
-        _currentSort = TargetSortType.nameAsc;
+        currentSort = TargetSortType.nameAsc;
       case 'colorAsc':
-        _currentSort = TargetSortType.colorDes;
+        currentSort = TargetSortType.colorDes;
       case 'colorDes':
-        _currentSort = TargetSortType.colorAsc;
+        currentSort = TargetSortType.colorAsc;
       case 'onlineDes':
-        _currentSort = TargetSortType.onlineDes;
+        currentSort = TargetSortType.onlineDes;
       case 'onlineAsc':
-        _currentSort = TargetSortType.onlineAsc;
+        currentSort = TargetSortType.onlineAsc;
       case 'bounty':
-        _currentSort = TargetSortType.bounty;
+        currentSort = TargetSortType.bounty;
     }
 
     // Targets color filter
@@ -643,12 +643,12 @@ class TargetsProvider extends ChangeNotifier {
 
   // Bounty calculation
   int? _getBountyAmount(TargetModel myUpdatedTargetModel) {
-    // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
-    RegExp amountRegex = RegExp(r"\$\d+(,\d{3})*(\.\d+)?(?=:|$)");
+    RegExp amountRegex = RegExp(r"\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?");
     Match? match = amountRegex.firstMatch(myUpdatedTargetModel.basicicons!.icon13!);
     if (match != null) {
       String amountStr = match.group(0)!;
-      return int.tryParse(amountStr.replaceAll(",", "").replaceAll("\$", ""));
+      amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
+      return int.tryParse(amountStr);
     }
     return null;
   }

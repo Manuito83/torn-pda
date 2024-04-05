@@ -255,8 +255,14 @@ class TargetsPageState extends State<TargetsPage> {
           ),
         Consumer<TargetsProvider>(
           builder: (context, targetsModel, child) => MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
-              : TargetsList(targets: targetsModel.allTargets),
+              ? Flexible(
+                  child: TargetsList(
+                    targets: targetsModel.allTargets,
+                  ),
+                )
+              : TargetsList(
+                  targets: targetsModel.allTargets,
+                ),
         ),
       ],
     );
@@ -423,11 +429,25 @@ class TargetsPageState extends State<TargetsPage> {
             return _popupSortChoices.map((TargetSort choice) {
               return PopupMenuItem<TargetSort>(
                 value: choice,
-                child: Text(
-                  choice.description,
-                  style: const TextStyle(
-                    fontSize: 13,
-                  ),
+                child: Row(
+                  children: [
+                    if (_targetsProvider.currentSort == choice.type)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(
+                          Icons.arrow_forward_ios_outlined,
+                          size: 15,
+                        ),
+                      ),
+                    Flexible(
+                      child: Text(
+                        choice.description,
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }).toList();
