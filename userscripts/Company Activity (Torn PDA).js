@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Company Activity for Torn PDA
 // @namespace    TornExtensions
-// @version      1.2 (updated by Manuito)
+// @version      1.3 (updated by Manuito)
 // @description  Shows the activity of employees.
 // @author       Twenu [XID 2659526]
 // @match        https://www.torn.com/companies.php*
@@ -39,7 +39,7 @@
                         $($($(this).parent().parent().parent()).find(".acc-body")).find(".stats").append('<span tabindex="0" class="span-cont t-first activeEmployee" aria-label=" "><span class="bold t-show"></span></span> <span class="t-hide">/</span>');
                         let days = res.last_action.relative.split(" ");
 
-                        if (days[1].includes("hour"))
+                        if (days[1].includes("day"))
                             if (parseInt(days[0]) == 1)
                                 $(this).parent().css("background-color", "orange");
                             else if (parseInt(days[0]) >= 2)
