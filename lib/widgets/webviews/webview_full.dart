@@ -1807,8 +1807,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Mini Profiles
     if (request.request.url.toString().contains("https://www.torn.com/profiles.php?") &&
-        hitResult!.extra!.contains("https://www.torn.com/images/honors") &&
-        hitResult.type == InAppWebViewHitTestResultType.IMAGE_TYPE) {
+        hitResult!.extra!.contains("https://www.torn.com/images/honors")) {
+      // Check for image types based on platform (simplifies the IF above)
+      if ((Platform.isAndroid && hitResult.type != InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE) ||
+          (Platform.isIOS && hitResult.type != InAppWebViewHitTestResultType.IMAGE_TYPE)) {
+        return false;
+      }
+
       final html = await webView?.getHtml();
       if (html == null || html.isEmpty) return false;
       final document = parse(html);
