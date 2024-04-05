@@ -436,6 +436,7 @@ class TargetsPageState extends State<TargetsPage> {
                         padding: const EdgeInsets.only(right: 5),
                         child: Icon(
                           Icons.arrow_forward_ios_outlined,
+                          color: _themeProvider.mainText,
                           size: 15,
                         ),
                       ),
