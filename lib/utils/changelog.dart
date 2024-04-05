@@ -45,6 +45,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.3.2'
         ..date = '15 APR 2024'
         ..features = [
+          "Added bounty information to targets cards in Chaining (target update is required)",
           "Fixed item types",
           "Fixed mini-profiles not opening in new tab when enabled",
           "Fixed total spies stats count",

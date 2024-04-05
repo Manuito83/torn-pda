@@ -116,6 +116,7 @@ class WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.colorDes),
     WarSort(type: WarSortType.notesDes),
     WarSort(type: WarSortType.notesAsc),
+    WarSort(type: WarSortType.bounty),
   ];
 
   final _popupOptionsChoices = <WarOptions>[
@@ -1092,6 +1093,8 @@ class WarPageState extends State<WarPage> {
         _w.sortTargets(WarSortType.notesDes);
       case WarSortType.notesAsc:
         _w.sortTargets(WarSortType.notesAsc);
+      case WarSortType.bounty:
+        _w.sortTargets(WarSortType.bounty);
       default:
         _w.sortTargets(WarSortType.nameAsc);
         break;
@@ -1687,6 +1690,13 @@ class WarTargetsListState extends State<WarTargetsList> {
             } else {
               return a.memberModel.personalNote!.toLowerCase().compareTo(b.memberModel.personalNote!.toLowerCase());
             }
+          });
+        case WarSortType.bounty:
+          members.sort((a, b) {
+            if (a.memberModel.bountyAmount == null && b.memberModel.bountyAmount == null) return 0;
+            if (a.memberModel.bountyAmount == null) return 1;
+            if (b.memberModel.bountyAmount == null) return -1;
+            return b.memberModel.bountyAmount!.compareTo(a.memberModel.bountyAmount ?? 0);
           });
         default:
           members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));

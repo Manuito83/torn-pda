@@ -15,6 +15,7 @@ enum WarSortType {
   lifeAsc,
   notesDes,
   notesAsc,
+  bounty,
 }
 
 class WarSort {
@@ -55,6 +56,8 @@ class WarSort {
         description = 'Sort by note (des)';
       case WarSortType.notesAsc:
         description = 'Sort by note (asc)';
+      case WarSortType.bounty:
+        description = 'Sort by bounty amount';
       default:
         description = 'Sort by respect (des)';
         break;

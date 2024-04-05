@@ -84,6 +84,12 @@ class TargetsProvider extends ChangeNotifier {
       myNewTargetModel.personalNote = notes;
       myNewTargetModel.personalNoteColor = notesColor;
       myNewTargetModel.lifeSort = _getLifeSort(myNewTargetModel);
+
+      // Parse bounty ammount if it exists
+      if (myNewTargetModel.basicicons?.icon13 != null) {
+        myNewTargetModel.bountyAmount = _getBountyAmount(myNewTargetModel);
+      }
+
       _targets.add(myNewTargetModel);
       sortTargets(_currentSort);
       notifyListeners();
@@ -225,6 +231,12 @@ class TargetsProvider extends ChangeNotifier {
         newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
         newTarget.lastUpdated = DateTime.now();
         newTarget.lifeSort = _getLifeSort(newTarget);
+
+        // Parse bounty ammount if it exists
+        if (myUpdatedTargetModel.basicicons?.icon13 != null) {
+          newTarget.bountyAmount = _getBountyAmount(myUpdatedTargetModel);
+        }
+
         _saveTargetsSharedPrefs();
         return true;
       } else {
@@ -271,6 +283,12 @@ class TargetsProvider extends ChangeNotifier {
           _targets[i].personalNoteColor = notesColor;
           _targets[i].lastUpdated = DateTime.now();
           _targets[i].lifeSort = _getLifeSort(_targets[i]);
+
+          // Parse bounty ammount if it exists
+          if (myUpdatedTargetModel.basicicons?.icon13 != null) {
+            _targets[i].bountyAmount = _getBountyAmount(myUpdatedTargetModel);
+          }
+
           _saveTargetsSharedPrefs();
           numberSuccessful++;
         } else {
@@ -331,6 +349,12 @@ class TargetsProvider extends ChangeNotifier {
               newTarget.personalNoteColor = tar.personalNoteColor;
               newTarget.lastUpdated = DateTime.now();
               newTarget.lifeSort = _getLifeSort(newTarget);
+
+              // Parse bounty ammount if it exists
+              if (myUpdatedTargetModel.basicicons?.icon13 != null) {
+                newTarget.bountyAmount = _getBountyAmount(myUpdatedTargetModel);
+              }
+
               _saveTargetsSharedPrefs();
             } else {
               tar.isUpdating = false;
@@ -452,6 +476,13 @@ class TargetsProvider extends ChangeNotifier {
             return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
           }
         });
+      case TargetSortType.bounty:
+        _targets.sort((a, b) {
+          if (a.bountyAmount == null && b.bountyAmount == null) return 0;
+          if (a.bountyAmount == null) return 1;
+          if (b.bountyAmount == null) return -1;
+          return b.bountyAmount!.compareTo(a.bountyAmount ?? 0);
+        });
     }
     _saveSortSharedPrefs();
     _saveTargetsSharedPrefs();
@@ -517,6 +548,8 @@ class TargetsProvider extends ChangeNotifier {
         sortToSave = 'notesDes';
       case TargetSortType.notesAsc:
         sortToSave = 'notesAsc';
+      case TargetSortType.bounty:
+        sortToSave = 'bounty';
     }
     Prefs().setTargetsSort(sortToSave);
   }
@@ -578,6 +611,8 @@ class TargetsProvider extends ChangeNotifier {
         _currentSort = TargetSortType.onlineDes;
       case 'onlineAsc':
         _currentSort = TargetSortType.onlineAsc;
+      case 'bounty':
+        _currentSort = TargetSortType.bounty;
     }
 
     // Targets color filter
@@ -604,6 +639,18 @@ class TargetsProvider extends ChangeNotifier {
 
     _saveTargetsSharedPrefs();
     notifyListeners();
+  }
+
+  // Bounty calculation
+  int? _getBountyAmount(TargetModel myUpdatedTargetModel) {
+    // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
+    RegExp amountRegex = RegExp(r"\$\d+(,\d{3})*(\.\d+)?(?=:|$)");
+    Match? match = amountRegex.firstMatch(myUpdatedTargetModel.basicicons!.icon13!);
+    if (match != null) {
+      String amountStr = match.group(0)!;
+      return int.tryParse(amountStr.replaceAll(",", "").replaceAll("\$", ""));
+    }
+    return null;
   }
 
   // YATA SYNC

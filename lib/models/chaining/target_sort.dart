@@ -15,6 +15,7 @@ enum TargetSortType {
   onlineAsc,
   notesDes,
   notesAsc,
+  bounty,
 }
 
 class TargetSort {
@@ -55,6 +56,8 @@ class TargetSort {
         description = 'Sort by note (des)';
       case TargetSortType.notesAsc:
         description = 'Sort by note (asc)';
+      case TargetSortType.bounty:
+        description = 'Sort by bounty amount';
       default:
         description = 'Sort by respect (des)';
         break;

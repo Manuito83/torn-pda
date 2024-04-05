@@ -203,6 +203,18 @@ class WarController extends GetxController {
         member.status!.state = updatedTarget.status!.state;
         member.status!.until = updatedTarget.status!.until;
         member.status!.color = updatedTarget.status!.color;
+        member.bounty = updatedTarget.basicicons?.icon13 ?? "";
+
+        // Bounty calculation
+        if (updatedTarget.basicicons?.icon13 != null) {
+          // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
+          RegExp amountRegex = RegExp(r"\$\d+(,\d{3})*(\.\d+)?(?=:|$)");
+          Match? match = amountRegex.firstMatch(updatedTarget.basicicons!.icon13!);
+          if (match != null) {
+            String amountStr = match.group(0)!;
+            member.bountyAmount = int.tryParse(amountStr.replaceAll(",", "").replaceAll("\$", ""));
+          }
+        }
 
         member.lastUpdated = DateTime.now();
         if (allAttacksSuccess is AttackModel) {
@@ -411,6 +423,7 @@ class WarController extends GetxController {
       apiFaction.members!.forEach((apiMemberId, apiMember) {
         if (f.members!.containsKey(apiMemberId)) {
           f.members![apiMemberId]!.overrideEasyLife = false;
+          f.members![apiMemberId]!.bounty = "";
 
           f.members![apiMemberId]!.justUpdatedWithSuccess = true;
           update();
@@ -785,6 +798,8 @@ class WarController extends GetxController {
         currentSort = WarSortType.notesDes;
       case 'notesAsc':
         currentSort = WarSortType.notesAsc;
+      case 'bounty':
+        currentSort = WarSortType.bounty;
     }
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
@@ -846,6 +861,8 @@ class WarController extends GetxController {
         sortToSave = 'notesDes';
       case WarSortType.notesAsc:
         sortToSave = 'notesAsc';
+      case WarSortType.bounty:
+        sortToSave = 'bounty';
     }
     Prefs().setWarMembersSort(sortToSave);
   }
