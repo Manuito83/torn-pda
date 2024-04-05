@@ -35,7 +35,7 @@ class OtherProfileModel {
     this.job,
     this.faction,
     this.married,
-    //this.basicicons,
+    this.basicicons,
     this.states,
     this.lastAction,
     this.criminalrecord,
@@ -65,7 +65,7 @@ class OtherProfileModel {
   Job? job;
   Faction? faction;
   Married? married;
-  //Basicicons basicicons;
+  TargetBasicIcons? basicicons;
   States? states;
   LastAction? lastAction;
   Criminalrecord? criminalrecord;
@@ -95,7 +95,7 @@ class OtherProfileModel {
         job: json["job"] == null ? null : Job.fromJson(json["job"]),
         faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
         married: json["married"] == null ? null : Married.fromJson(json["married"]),
-        //basicicons: json["basicicons"] == null ? null : Basicicons.fromJson(json["basicicons"]),
+        basicicons: json["basicicons"] == null ? null : TargetBasicIcons.fromJson(json["basicicons"]),
         states: json["states"] == null ? null : States.fromJson(json["states"]),
         lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
         criminalrecord: json["criminalrecord"] == null ? null : Criminalrecord.fromJson(json["criminalrecord"]),
@@ -126,7 +126,7 @@ class OtherProfileModel {
         "job": job?.toJson(),
         "faction": faction?.toJson(),
         "married": married?.toJson(),
-        //"basicicons": basicicons == null ? null : basicicons.toJson(),
+        "basicicons": basicicons?.toJson(),
         "states": states?.toJson(),
         "last_action": lastAction?.toJson(),
         "criminalrecord": criminalrecord?.toJson(),
@@ -135,39 +135,21 @@ class OtherProfileModel {
       };
 }
 
-/*
-class Basicicons {
-  Basicicons({
-    this.icon6,
-    this.icon8,
-    this.icon27,
-    this.icon9,
-    this.icon71,
+class TargetBasicIcons {
+  String? icon13; // Bounties
+
+  TargetBasicIcons({
+    this.icon13 = "",
   });
 
-  String icon6;
-  String icon8;
-  String icon27;
-  String icon9;
-  String icon71;
-
-  factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
-    icon6: json["icon6"] == null ? null : json["icon6"],
-    icon8: json["icon8"] == null ? null : json["icon8"],
-    icon27: json["icon27"] == null ? null : json["icon27"],
-    icon9: json["icon9"] == null ? null : json["icon9"],
-    icon71: json["icon71"] == null ? null : json["icon71"],
-  );
+  factory TargetBasicIcons.fromJson(Map<String, dynamic> json) => TargetBasicIcons(
+        icon13: json["icon13"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "icon6": icon6 == null ? null : icon6,
-    "icon8": icon8 == null ? null : icon8,
-    "icon27": icon27 == null ? null : icon27,
-    "icon9": icon9 == null ? null : icon9,
-    "icon71": icon71 == null ? null : icon71,
-  };
+        "icon13": icon13,
+      };
 }
-*/
 
 class Bazaar {
   Bazaar({

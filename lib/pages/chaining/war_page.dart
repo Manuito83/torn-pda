@@ -116,6 +116,7 @@ class WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.colorDes),
     WarSort(type: WarSortType.notesDes),
     WarSort(type: WarSortType.notesAsc),
+    WarSort(type: WarSortType.bounty),
   ];
 
   final _popupOptionsChoices = <WarOptions>[
@@ -727,11 +728,26 @@ class WarPageState extends State<WarPage> {
             return _popupSortChoices.map((WarSort choice) {
               return PopupMenuItem<WarSort>(
                 value: choice,
-                child: Text(
-                  choice.description,
-                  style: const TextStyle(
-                    fontSize: 13,
-                  ),
+                child: Row(
+                  children: [
+                    if (_w.currentSort == choice.type)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(
+                          Icons.arrow_forward_ios_outlined,
+                          color: _themeProvider!.mainText,
+                          size: 15,
+                        ),
+                      ),
+                    Flexible(
+                      child: Text(
+                        choice.description,
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }).toList();
@@ -1092,6 +1108,8 @@ class WarPageState extends State<WarPage> {
         _w.sortTargets(WarSortType.notesDes);
       case WarSortType.notesAsc:
         _w.sortTargets(WarSortType.notesAsc);
+      case WarSortType.bounty:
+        _w.sortTargets(WarSortType.bounty);
       default:
         _w.sortTargets(WarSortType.nameAsc);
         break;
@@ -1687,6 +1705,13 @@ class WarTargetsListState extends State<WarTargetsList> {
             } else {
               return a.memberModel.personalNote!.toLowerCase().compareTo(b.memberModel.personalNote!.toLowerCase());
             }
+          });
+        case WarSortType.bounty:
+          for (var m in members) {
+            m.memberModel.bountyAmount ??= 0;
+          }
+          members.sort((a, b) {
+            return b.memberModel.bountyAmount!.compareTo(a.memberModel.bountyAmount!);
           });
         default:
           members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));

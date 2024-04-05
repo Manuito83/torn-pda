@@ -53,7 +53,7 @@ class TargetsProvider extends ChangeNotifier {
   List<String> _currentColorFilterOut = [];
   List<String> get currentColorFilterOut => _currentColorFilterOut;
 
-  TargetSortType? _currentSort;
+  TargetSortType? currentSort;
 
   TargetsProvider() {
     restorePreferences();
@@ -84,8 +84,14 @@ class TargetsProvider extends ChangeNotifier {
       myNewTargetModel.personalNote = notes;
       myNewTargetModel.personalNoteColor = notesColor;
       myNewTargetModel.lifeSort = _getLifeSort(myNewTargetModel);
+
+      // Parse bounty ammount if it exists
+      if (myNewTargetModel.basicicons?.icon13 != null) {
+        myNewTargetModel.bountyAmount = _getBountyAmount(myNewTargetModel);
+      }
+
       _targets.add(myNewTargetModel);
-      sortTargets(_currentSort);
+      sortTargets(currentSort);
       notifyListeners();
       _saveTargetsSharedPrefs();
       return AddTargetResult(
@@ -225,6 +231,12 @@ class TargetsProvider extends ChangeNotifier {
         newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
         newTarget.lastUpdated = DateTime.now();
         newTarget.lifeSort = _getLifeSort(newTarget);
+
+        // Parse bounty ammount if it exists
+        if (myUpdatedTargetModel.basicicons?.icon13 != null) {
+          newTarget.bountyAmount = _getBountyAmount(myUpdatedTargetModel);
+        }
+
         _saveTargetsSharedPrefs();
         return true;
       } else {
@@ -271,6 +283,12 @@ class TargetsProvider extends ChangeNotifier {
           _targets[i].personalNoteColor = notesColor;
           _targets[i].lastUpdated = DateTime.now();
           _targets[i].lifeSort = _getLifeSort(_targets[i]);
+
+          // Parse bounty ammount if it exists
+          if (myUpdatedTargetModel.basicicons?.icon13 != null) {
+            _targets[i].bountyAmount = _getBountyAmount(myUpdatedTargetModel);
+          }
+
           _saveTargetsSharedPrefs();
           numberSuccessful++;
         } else {
@@ -331,6 +349,12 @@ class TargetsProvider extends ChangeNotifier {
               newTarget.personalNoteColor = tar.personalNoteColor;
               newTarget.lastUpdated = DateTime.now();
               newTarget.lifeSort = _getLifeSort(newTarget);
+
+              // Parse bounty ammount if it exists
+              if (myUpdatedTargetModel.basicicons?.icon13 != null) {
+                newTarget.bountyAmount = _getBountyAmount(myUpdatedTargetModel);
+              }
+
               _saveTargetsSharedPrefs();
             } else {
               tar.isUpdating = false;
@@ -408,7 +432,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void sortTargets(TargetSortType? sortType) {
-    _currentSort = sortType;
+    currentSort = sortType;
     switch (sortType!) {
       case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level!.compareTo(a.level!));
@@ -452,6 +476,13 @@ class TargetsProvider extends ChangeNotifier {
             return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
           }
         });
+      case TargetSortType.bounty:
+        for (var t in _targets) {
+          t.bountyAmount ??= 0;
+        }
+        _targets.sort((a, b) {
+          return b.bountyAmount!.compareTo(a.bountyAmount!);
+        });
     }
     _saveSortSharedPrefs();
     _saveTargetsSharedPrefs();
@@ -484,7 +515,7 @@ class TargetsProvider extends ChangeNotifier {
 
   void _saveSortSharedPrefs() {
     late String sortToSave;
-    switch (_currentSort!) {
+    switch (currentSort!) {
       case TargetSortType.levelDes:
         sortToSave = 'levelDes';
       case TargetSortType.levelAsc:
@@ -517,6 +548,8 @@ class TargetsProvider extends ChangeNotifier {
         sortToSave = 'notesDes';
       case TargetSortType.notesAsc:
         sortToSave = 'notesAsc';
+      case TargetSortType.bounty:
+        sortToSave = 'bounty';
     }
     Prefs().setTargetsSort(sortToSave);
   }
@@ -553,31 +586,33 @@ class TargetsProvider extends ChangeNotifier {
     final String targetSort = await Prefs().getTargetsSort();
     switch (targetSort) {
       case '':
-        _currentSort = TargetSortType.levelDes;
+        currentSort = TargetSortType.levelDes;
       case 'levelDes':
-        _currentSort = TargetSortType.levelDes;
+        currentSort = TargetSortType.levelDes;
       case 'levelAsc':
-        _currentSort = TargetSortType.levelAsc;
+        currentSort = TargetSortType.levelAsc;
       case 'respectDes':
-        _currentSort = TargetSortType.respectDes;
+        currentSort = TargetSortType.respectDes;
       case 'respectAsc':
-        _currentSort = TargetSortType.respectAsc;
+        currentSort = TargetSortType.respectAsc;
       case 'ffDes':
-        _currentSort = TargetSortType.ffDes;
+        currentSort = TargetSortType.ffDes;
       case 'ffAsc':
-        _currentSort = TargetSortType.ffAsc;
+        currentSort = TargetSortType.ffAsc;
       case 'nameDes':
-        _currentSort = TargetSortType.nameDes;
+        currentSort = TargetSortType.nameDes;
       case 'nameAsc':
-        _currentSort = TargetSortType.nameAsc;
+        currentSort = TargetSortType.nameAsc;
       case 'colorAsc':
-        _currentSort = TargetSortType.colorDes;
+        currentSort = TargetSortType.colorDes;
       case 'colorDes':
-        _currentSort = TargetSortType.colorAsc;
+        currentSort = TargetSortType.colorAsc;
       case 'onlineDes':
-        _currentSort = TargetSortType.onlineDes;
+        currentSort = TargetSortType.onlineDes;
       case 'onlineAsc':
-        _currentSort = TargetSortType.onlineAsc;
+        currentSort = TargetSortType.onlineAsc;
+      case 'bounty':
+        currentSort = TargetSortType.bounty;
     }
 
     // Targets color filter
@@ -604,6 +639,18 @@ class TargetsProvider extends ChangeNotifier {
 
     _saveTargetsSharedPrefs();
     notifyListeners();
+  }
+
+  // Bounty calculation
+  int? _getBountyAmount(TargetModel myUpdatedTargetModel) {
+    RegExp amountRegex = RegExp(r"\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?");
+    Match? match = amountRegex.firstMatch(myUpdatedTargetModel.basicicons!.icon13!);
+    if (match != null) {
+      String amountStr = match.group(0)!;
+      amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
+      return int.tryParse(amountStr);
+    }
+    return null;
   }
 
   // YATA SYNC

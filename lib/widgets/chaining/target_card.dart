@@ -306,6 +306,30 @@ class TargetCardState extends State<TargetCard> {
                         ),
                       ),
                       const SizedBox(width: 10),
+                      if (_target?.basicicons?.icon13 != null)
+                        GestureDetector(
+                          onTap: () {
+                            BotToast.showText(
+                              clickClose: true,
+                              text: _target!.basicicons!.icon13!,
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.blue,
+                              duration: const Duration(seconds: 3),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: Image(
+                              image: AssetImage('images/icons/status/icon13.png'),
+                              width: 18,
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Text(

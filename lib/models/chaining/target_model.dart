@@ -55,6 +55,8 @@ class TargetModel {
   LastAction? lastAction;
   Discord? discord;
   Competition? competition;
+  TargetBasicIcons? basicicons;
+  int? bountyAmount;
 
   TargetModel({
     // This first batch is here to export/import from SharedPreferences,
@@ -94,6 +96,8 @@ class TargetModel {
     this.lastAction,
     this.discord,
     this.competition,
+    this.basicicons,
+    this.bountyAmount,
   });
 
   factory TargetModel.fromJson(Map<String, dynamic> json) => TargetModel(
@@ -133,6 +137,8 @@ class TargetModel {
         lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
         discord: json["discord"] == null ? null : Discord.fromJson(json["discord"]),
         competition: json["competition"] == null ? null : Competition.fromJson(json["competition"]),
+        basicicons: json["basicicons"] == null ? null : TargetBasicIcons.fromJson(json["basicicons"]),
+        bountyAmount: json["bountyAmount"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -169,6 +175,8 @@ class TargetModel {
         "last_action": lastAction!.toJson(),
         "discord": discord?.toJson(),
         "competition": competition?.toJson(),
+        "basicicons": basicicons?.toJson(),
+        "bountyAmount": bountyAmount,
       };
 }
 
@@ -413,5 +421,21 @@ class Competition {
         "treats_collected_total": treatsCollectedTotal,
         "votes": votes,
         "position": position,
+      };
+}
+
+class TargetBasicIcons {
+  String? icon13; // Bounties
+
+  TargetBasicIcons({
+    this.icon13 = "",
+  });
+
+  factory TargetBasicIcons.fromJson(Map<String, dynamic> json) => TargetBasicIcons(
+        icon13: json["icon13"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "icon13": icon13,
       };
 }

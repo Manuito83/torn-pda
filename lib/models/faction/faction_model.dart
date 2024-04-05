@@ -102,6 +102,8 @@ class Member {
     this.hidden,
     this.pinned = false,
     this.statsEstimated,
+    this.bounty,
+    this.bountyAmount,
     //
     this.spySource = SpiesSource.yata,
     this.statsExactTotal = -1,
@@ -160,6 +162,8 @@ class Member {
   bool? hidden = false;
   bool pinned = false;
   String? statsEstimated = "";
+  String? bounty;
+  int? bountyAmount;
   // Spies parameters
   SpiesSource? spySource;
   int? statsExactTotal;
@@ -218,6 +222,8 @@ class Member {
         hidden: json["hidden"] ?? false,
         pinned: json["pinned"] ?? false,
         statsEstimated: json["statsEstimated"] ?? "",
+        bounty: json["bounty"],
+        bountyAmount: json["bountyAmount"],
         spySource: json["spiesSource"] == null
             ? SpiesSource.yata
             : json["spiesSource"] == "yata"
@@ -275,6 +281,8 @@ class Member {
         "hidden": hidden,
         "pinned": pinned,
         "statsEstimated": statsEstimated,
+        "bounty": bounty,
+        "bountyAmount": bountyAmount,
         "spiesSource": spySource == SpiesSource.yata ? "yata" : "tornStats",
         "statsExactTotal": statsExactTotal,
         "statsExactTotalUpdated": statsExactTotalUpdated,

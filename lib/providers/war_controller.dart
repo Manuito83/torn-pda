@@ -203,6 +203,19 @@ class WarController extends GetxController {
         member.status!.state = updatedTarget.status!.state;
         member.status!.until = updatedTarget.status!.until;
         member.status!.color = updatedTarget.status!.color;
+        member.bounty = updatedTarget.basicicons?.icon13 ?? "";
+
+        // Bounty calculation
+        if (updatedTarget.basicicons?.icon13 != null) {
+          // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
+          RegExp amountRegex = RegExp(r"\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?");
+          Match? match = amountRegex.firstMatch(updatedTarget.basicicons!.icon13!);
+          if (match != null) {
+            String amountStr = match.group(0)!;
+            amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
+            member.bountyAmount = int.tryParse(amountStr);
+          }
+        }
 
         member.lastUpdated = DateTime.now();
         if (allAttacksSuccess is AttackModel) {
@@ -411,6 +424,7 @@ class WarController extends GetxController {
       apiFaction.members!.forEach((apiMemberId, apiMember) {
         if (f.members!.containsKey(apiMemberId)) {
           f.members![apiMemberId]!.overrideEasyLife = false;
+          f.members![apiMemberId]!.bounty = "";
 
           f.members![apiMemberId]!.justUpdatedWithSuccess = true;
           update();
@@ -785,6 +799,8 @@ class WarController extends GetxController {
         currentSort = WarSortType.notesDes;
       case 'notesAsc':
         currentSort = WarSortType.notesAsc;
+      case 'bounty':
+        currentSort = WarSortType.bounty;
     }
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
@@ -846,6 +862,8 @@ class WarController extends GetxController {
         sortToSave = 'notesDes';
       case WarSortType.notesAsc:
         sortToSave = 'notesAsc';
+      case WarSortType.bounty:
+        sortToSave = 'bounty';
     }
     Prefs().setWarMembersSort(sortToSave);
   }
@@ -938,10 +956,10 @@ class WarController extends GetxController {
       member.statsDef = spy.defense;
       member.statsDex = spy.dexterity;
       int known = 0;
-      if (spy.strength != 1) known += spy.strength!;
-      if (spy.speed != 1) known += spy.speed!;
-      if (spy.defense != 1) known += spy.defense!;
-      if (spy.dexterity != 1) known += spy.dexterity!;
+      if (spy.strength != -1) known += spy.strength!;
+      if (spy.speed != -1) known += spy.speed!;
+      if (spy.defense != -1) known += spy.defense!;
+      if (spy.dexterity != -1) known += spy.dexterity!;
       member.statsExactTotalKnown = known;
     }
 
@@ -959,10 +977,10 @@ class WarController extends GetxController {
       member.statsDex = spy.dexterity;
       member.statsDexUpdated = spy.dexterityTimestamp;
       int known = 0;
-      if (spy.strength != 1) known += spy.strength!;
-      if (spy.speed != 1) known += spy.speed!;
-      if (spy.defense != 1) known += spy.defense!;
-      if (spy.dexterity != 1) known += spy.dexterity!;
+      if (spy.strength != -1) known += spy.strength!;
+      if (spy.speed != -1) known += spy.speed!;
+      if (spy.defense != -1) known += spy.defense!;
+      if (spy.dexterity != -1) known += spy.dexterity!;
       member.statsExactTotalKnown = known;
     }
 
