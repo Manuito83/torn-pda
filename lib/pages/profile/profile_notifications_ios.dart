@@ -3,6 +3,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -18,6 +19,7 @@ import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/profile/energy_trigger_dialog.dart';
 
 class ProfileNotificationsIOS extends StatefulWidget {
   final Function callback;
@@ -186,11 +188,11 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
       if (element == ProfileNotification.energy) {
         types.add(
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
+            padding: const EdgeInsets.only(left: 15, right: 30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Text('Energy'),
+                const Flexible(child: Text('Energy')),
                 const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
@@ -211,6 +213,27 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                         Prefs().setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
+                    GestureDetector(
+                      child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+                      onTap: () {
+                        showDialog<void>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return EnergyNerveTriggerDialog(
+                              parameterCallback: (newEnergy) {
+                                setState(() {
+                                  _energyTrigger = newEnergy.toDouble();
+                                });
+                                Prefs().setEnergyNotificationValue(newEnergy.floor());
+                              },
+                              currentValue: _energyTrigger.toInt(),
+                              minimum: _energyMin.toInt(),
+                              maximun: widget.energyMax!,
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -222,11 +245,11 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
       if (element == ProfileNotification.nerve) {
         types.add(
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
+            padding: const EdgeInsets.only(left: 15, right: 30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Text('Nerve'),
+                const Flexible(child: Text('Nerve')),
                 const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
@@ -244,6 +267,27 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                       },
                       onChangeEnd: (double finalValue) {
                         Prefs().setNerveNotificationValue(finalValue.floor());
+                      },
+                    ),
+                    GestureDetector(
+                      child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+                      onTap: () {
+                        showDialog<void>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return EnergyNerveTriggerDialog(
+                              parameterCallback: (newNerve) {
+                                setState(() {
+                                  _nerveTrigger = newNerve.toDouble();
+                                });
+                                Prefs().setNerveNotificationValue(newNerve.floor());
+                              },
+                              currentValue: _nerveTrigger.toInt(),
+                              minimum: _nerveMin.toInt(),
+                              maximun: widget.nerveMax!,
+                            );
+                          },
+                        );
                       },
                     ),
                   ],
