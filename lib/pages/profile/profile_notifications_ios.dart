@@ -214,7 +214,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                       },
                     ),
                     GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,
@@ -270,7 +270,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                       },
                     ),
                     GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,

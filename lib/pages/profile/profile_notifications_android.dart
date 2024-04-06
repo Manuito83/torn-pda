@@ -261,7 +261,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
       if (element == ProfileNotification.energy) {
         types.add(
           Padding(
-            padding: const EdgeInsets.only(left: 15, right: 30),
+            padding: const EdgeInsets.only(left: 15, right: 15),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -287,7 +287,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
                       },
                     ),
                     GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,
@@ -318,7 +318,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
       if (element == ProfileNotification.nerve) {
         types.add(
           Padding(
-            padding: const EdgeInsets.only(left: 15, right: 30),
+            padding: const EdgeInsets.only(left: 15, right: 15),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -343,7 +343,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
                       },
                     ),
                     GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,
