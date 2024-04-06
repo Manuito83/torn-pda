@@ -205,17 +205,8 @@ class WarController extends GetxController {
         member.status!.color = updatedTarget.status!.color;
         member.bounty = updatedTarget.basicicons?.icon13 ?? "";
 
-        // Bounty calculation
-        if (updatedTarget.basicicons?.icon13 != null) {
-          // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
-          RegExp amountRegex = RegExp(r"\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?");
-          Match? match = amountRegex.firstMatch(updatedTarget.basicicons!.icon13!);
-          if (match != null) {
-            String amountStr = match.group(0)!;
-            amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
-            member.bountyAmount = int.tryParse(amountStr);
-          }
-        }
+        // Erase previous bounties and calculate new ones
+        _calculateMemberBounty(updatedTarget, member);
 
         member.lastUpdated = DateTime.now();
         if (allAttacksSuccess is AttackModel) {
@@ -424,7 +415,9 @@ class WarController extends GetxController {
       apiFaction.members!.forEach((apiMemberId, apiMember) {
         if (f.members!.containsKey(apiMemberId)) {
           f.members![apiMemberId]!.overrideEasyLife = false;
-          f.members![apiMemberId]!.bounty = "";
+
+          // Remove active bounties since we are not getting the necessary details from a quick update
+          _removeMemberBountyInfo(f.members![apiMemberId]!);
 
           f.members![apiMemberId]!.justUpdatedWithSuccess = true;
           update();
@@ -1046,5 +1039,26 @@ class WarController extends GetxController {
     member.statsDex = -1;
     member.statsDexUpdated = -1;
     member.statsExactTotalKnown = -1;
+  }
+
+  void _calculateMemberBounty(OtherProfileModel updatedTarget, Member member) {
+    if (updatedTarget.basicicons?.icon13 != null) {
+      // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
+      RegExp amountRegex = RegExp(r"\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?");
+      Match? match = amountRegex.firstMatch(updatedTarget.basicicons!.icon13!);
+      if (match != null) {
+        String amountStr = match.group(0)!;
+        amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
+        member.bountyAmount = int.tryParse(amountStr);
+      }
+    } else {
+      // Erase bounty information in case there was a previous [bountyAmount] saved
+      _removeMemberBountyInfo(member);
+    }
+  }
+
+  void _removeMemberBountyInfo(Member m) {
+    m.bounty = "";
+    m.bountyAmount = null;
   }
 }
