@@ -549,6 +549,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _colorCodedStatusCard = true;
+  bool get colorCodedStatusCard => _colorCodedStatusCard;
+  set colorCodedStatusCard(bool choice) {
+    _colorCodedStatusCard = choice;
+    Prefs().setColorCodedStatusCard(_colorCodedStatusCard);
+    notifyListeners();
+  }
+
   var _iosAllowLinkPreview = true;
   bool get iosAllowLinkPreview => _iosAllowLinkPreview;
   set changeIosAllowLinkPreview(bool choice) {
@@ -935,6 +943,8 @@ class SettingsProvider extends ChangeNotifier {
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
 
     _lifeBarOption = await Prefs().getLifeBarOption();
+
+    _colorCodedStatusCard = await Prefs().getColorCodedStatusCard();
 
     _iosAllowLinkPreview = await Prefs().getIosAllowLinkPreview();
 

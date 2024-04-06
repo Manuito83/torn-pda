@@ -276,6 +276,50 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
+                                    'STATUS CARD',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    const Text("Coloured status card"),
+                                    Switch(
+                                      value: _settingsProvider.colorCodedStatusCard,
+                                      onChanged: (value) {
+                                        Prefs().setColorCodedStatusCard(value);
+                                        setState(() {
+                                          _settingsProvider.colorCodedStatusCard = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  "If active, you\'ll see a coloured shadow under the status card depending on the "
+                                  "actual player status colour in Torn",
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
                                     'TRAVEL',
                                     style: TextStyle(fontSize: 10),
                                   ),
