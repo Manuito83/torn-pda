@@ -46,7 +46,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '15 APR 2024'
         ..features = [
           "Added bounty information to targets cards in Chaining (target update is required)",
-          "Added coloured shadow to status card (can be disabled)",
+          "Added colored shadow to status card (can be disabled)",
           "Stock market section: added pull to refresh",
           "Added new tab option when quickly accessing vaults from trades",
           "Fixed Items section filters (item types)",

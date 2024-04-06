@@ -450,7 +450,7 @@ class Prefs {
   }
 
   /// ------------------------------
-  /// Methods for coloured status card
+  /// Methods for colored status card
   /// --------------------------------
   Future<bool> getColorCodedStatusCard() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
