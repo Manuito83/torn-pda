@@ -11,7 +11,6 @@ export const lootRangersGroup = {
     .onRun(async () => {
 
       const promises: Promise<any>[] = [];
-      const errorUID = "";
 
       const firebaseAdmin = require("firebase-admin");
       const db = firebaseAdmin.database();
@@ -98,26 +97,23 @@ export const lootRangersGroup = {
           return;
         }
 
-        let title = `Loot Rangers attack shortly: ${timeString} TCT!`;
-        console.log(title);
+        let fullTitle = `Loot Rangers attack shortly: ${timeString} TCT!`;
+        console.log(fullTitle);
 
-        let subtitle = `Attack order: ${orderArray.join(', ')}`;
-        console.log(subtitle);
+        let fullSubtitle = `Attack order: ${orderArray.join(', ')}`;
+        console.log(fullSubtitle);
+
+        let discreteTitle = "LR";
+        let discreteSubtitle = "";
 
         const attackTime = `${hours}:${minutes}`;
 
         for (const key of Array.from(subscribers.keys())) {
-
-          if (subscribers[key].discrete) {
-            title = `LR`;
-            subtitle = ``;
-          }
-
           promises.push(
             sendNotificationToUser(
               subscribers[key].token,
-              title,
-              subtitle,
+              subscribers[key].discrete ? discreteTitle : fullTitle,
+              subscribers[key].discrete ? discreteSubtitle : fullSubtitle,
               "notification_loot",
               "#FF0000",
               "Alerts loot",
@@ -127,14 +123,16 @@ export const lootRangersGroup = {
               attackTime,
               subscribers[key].vibration,
               "sword_clash.aiff"
-            )
+            ).catch((e) => {
+              functions.logger.warn(`ERROR LOOT RANGERS SEND for ${subscribers[key].uid}\n${e}`);
+            })
           );
         }
 
         await Promise.all(promises);
 
       } catch (e) {
-        functions.logger.warn(`ERROR LOOT RANGERS SEND for ${errorUID}\n${e}`);
+        functions.logger.warn(`ERROR LOOT RANGERS GENERAL CATCH: ${e}`);
       }
 
     }),
