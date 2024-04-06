@@ -47,6 +47,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Added bounty information to targets cards in Chaining (target update is required)",
           "Added coloured shadow to status card (can be disabled)",
+          "Stock market section: added pull to refresh",
           "Fixed Items section filters (item types)",
           "Fixed Company Activity example user script",
           "Fixed mini-profiles not opening in new tab when enabled",

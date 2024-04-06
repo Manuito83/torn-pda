@@ -68,7 +68,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       routeWithDrawer = true;
     }
     _stocksInitialised = _initialiseStocks();
-    analytics.setCurrentScreen(screenName: 'stockMarket');
+    analytics.logScreenView(screenName: 'stockMarket');
   }
 
   @override
@@ -104,40 +104,47 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         if (!_errorInitializing) {
-                          return SingleChildScrollView(
-                            child: Column(
-                              children: <Widget>[
-                                _alertActivator(),
-                                const Divider(),
-                                const Text("Traded Companies"),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      "Value: ",
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                    Text(
-                                      formatProfit(inputDouble: _totalValue),
-                                      style: const TextStyle(fontSize: 10),
-                                    ),
-                                    Text(
-                                      " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
-                                      style: const TextStyle(fontSize: 10),
-                                    ),
-                                    Text(
-                                      formatProfit(inputDouble: _totalProfit),
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: _totalProfit >= 0 ? Colors.green : Colors.red,
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              await _initialiseStocks();
+                              setState(() {});
+                              await Future.delayed(const Duration(seconds: 1));
+                            },
+                            child: SingleChildScrollView(
+                              child: Column(
+                                children: <Widget>[
+                                  _alertActivator(),
+                                  const Divider(),
+                                  const Text("Traded Companies"),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        "Value: ",
+                                        style: TextStyle(fontSize: 10),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                _allStocksList(),
-                                const SizedBox(height: 50),
-                              ],
+                                      Text(
+                                        formatProfit(inputDouble: _totalValue),
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                      Text(
+                                        " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                      Text(
+                                        formatProfit(inputDouble: _totalProfit),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: _totalProfit >= 0 ? Colors.green : Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _allStocksList(),
+                                  const SizedBox(height: 50),
+                                ],
+                              ),
                             ),
                           );
                         } else {
@@ -321,7 +328,6 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       }
 
       // Get owned stocks
-
       for (final stockOwned in ownedStocks) {
         for (final listedStock in _stockList) {
           if (stockOwned.stockId == listedStock.stockId) {
