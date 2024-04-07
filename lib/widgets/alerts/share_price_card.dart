@@ -58,6 +58,16 @@ class SharePriceCardState extends State<SharePriceCard> {
       );
     }
 
+    // Avoid floats for shares below 1K
+    String ownedShares = "";
+    if (widget.stock.sharesOwned != null) {
+      if (widget.stock.sharesOwned! <= 999) {
+        ownedShares = widget.stock.sharesOwned.toString();
+      } else {
+        ownedShares = formatProfit(inputInt: widget.stock.sharesOwned);
+      }
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -94,7 +104,7 @@ class SharePriceCardState extends State<SharePriceCard> {
                       Padding(
                         padding: const EdgeInsets.only(right: 10),
                         child: Text(
-                          "OWNED (x${formatProfit(inputInt: widget.stock.sharesOwned)})",
+                          "OWNED (x$ownedShares)",
                           style: const TextStyle(color: Colors.green, fontSize: 10),
                         ),
                       ),
@@ -199,12 +209,8 @@ class SharePriceCardState extends State<SharePriceCard> {
 
   void onCallbackPrices(double? gain, double? loss) {
     setState(() {
-      if (gain != null) {
-        widget.stock.alertGain = gain;
-      }
-      if (loss != null) {
-        widget.stock.alertLoss = loss;
-      }
+      widget.stock.alertGain = gain;
+      widget.stock.alertLoss = loss;
     });
   }
 

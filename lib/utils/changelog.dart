@@ -39,17 +39,21 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.3.2 - Build 399 - 06/04/2024
+    // v3.3.2 - Build 402 - 06/04/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.3.2'
         ..date = '15 APR 2024'
         ..features = [
           "Added bounty information to targets cards in Chaining (target update is required)",
-          "Fixed item types",
-          "Fixex Company Activity example user script",
+          "Added colored shadow to status card (can be disabled)",
+          "Stock market section: added pull to refresh",
+          "Added new tab option when quickly accessing vaults from trades",
+          "Fixed Items section filters (item types)",
+          "Fixed Company Activity example user script",
           "Fixed mini-profiles not opening in new tab when enabled",
           "Fixed total spied stats count",
+          "Fixed other reported issues",
         ],
     );
 

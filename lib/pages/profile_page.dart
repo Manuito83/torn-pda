@@ -9,7 +9,6 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -1098,181 +1097,208 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'STATUS',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+      child: Stack(
+        children: [
+          // Shadow layer
+          if (_settingsProvider!.colorCodedStatusCard)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: _user!.status!.color! == 'green'
+                          ? Colors.green
+                          : _user!.status!.color! == "red"
+                              ? Colors.red
+                              : Colors.blue,
+                      blurRadius: 4.0,
+                      spreadRadius: 0.5,
                     ),
-                  ),
-                  if (_factionRankedWar != null && _settingsProvider!.rankedWarsInProfile)
-                    Row(
+                  ],
+                ),
+              ),
+            ),
+
+          Container(
+            color: _themeProvider!.cardColor!,
+            child: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        GestureDetector(
-                          onLongPress: () => _launchBrowser(
-                            url: 'https://www.torn.com/factions.php?step=your#/war/rank',
-                            shortTap: false,
-                          ),
-                          onTap: () {
-                            _launchBrowser(
-                              url: 'https://www.torn.com/factions.php?step=your#/war/rank',
-                              shortTap: true,
-                            );
-                          },
-                          child: RankedWarMini(
-                            rankedWar: _factionRankedWar,
-                            playerFactionName: _user!.faction!.factionName,
-                            playerFactionTag: _user!.faction!.factionTag,
+                        const Text(
+                          'STATUS',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (warInFuture)
+                        if (_factionRankedWar != null && _settingsProvider!.rankedWarsInProfile)
                           Row(
                             children: [
-                              const SizedBox(width: 10),
-                              _notificationIcon(ProfileNotification.rankedWar),
+                              GestureDetector(
+                                onLongPress: () => _launchBrowser(
+                                  url: 'https://www.torn.com/factions.php?step=your#/war/rank',
+                                  shortTap: false,
+                                ),
+                                onTap: () {
+                                  _launchBrowser(
+                                    url: 'https://www.torn.com/factions.php?step=your#/war/rank',
+                                    shortTap: true,
+                                  );
+                                },
+                                child: RankedWarMini(
+                                  rankedWar: _factionRankedWar,
+                                  playerFactionName: _user!.faction!.factionName,
+                                  playerFactionTag: _user!.faction!.factionTag,
+                                ),
+                              ),
+                              if (warInFuture)
+                                Row(
+                                  children: [
+                                    const SizedBox(width: 10),
+                                    _notificationIcon(ProfileNotification.rankedWar),
+                                  ],
+                                ),
                             ],
                           ),
                       ],
                     ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Column(
-                children: <Widget>[
-                  if (!repatriated)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Row(
-                          children: [
-                            const SizedBox(
-                              width: 60,
-                              child: Text('Status: '),
-                            ),
-                            Text(_user!.status!.state!),
-                            stateBall(),
-                          ],
-                        ),
-                        if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
-                          _notificationIcon(ProfileNotification.hospital),
-                        if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
-                          _notificationIcon(ProfileNotification.jail),
-                      ],
-                    )
-                  else
-                    // Travelling while in hospital (repatriation)
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 60,
-                                  child: Text('Status: '),
-                                ),
-                                Text(_user!.status!.state!),
-                                stateBall(),
-                              ],
-                            ),
-                            if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
-                              _notificationIcon(ProfileNotification.hospital),
-                            if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
-                              _notificationIcon(ProfileNotification.jail),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Row(
-                              children: [
-                                const SizedBox(width: 60),
-                                const Text("Travel (repatriated)"),
-                                stateBall(forceBlue: true),
-                              ],
-                            ),
-                            _notificationIcon(ProfileNotification.travel),
-                          ],
-                        ),
-                        if (!_dedicatedTravelCard) _travelWidget(repatriated: true),
-                      ],
-                    ),
-                  BazaarStatusCard(
-                    // Careful, in this card we mixed sync with async items, so the miscModel can still be null
-                    bazaarModel: _miscModel?.bazaar,
-                    launchBrowser: _launchBrowser,
                   ),
-                  if (!_dedicatedTravelCard) _travelWidget(),
-                  descriptionWidget(),
-                  if (_user!.status!.state == 'Hospital' && _w.nukeReviveActive)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 13, top: 10),
-                      child: NukeReviveButton(
-                        themeProvider: _themeProvider,
-                        user: _user,
-                        webViewProvider: _webViewProvider,
-                        settingsProvider: _settingsProvider,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Column(
+                      children: <Widget>[
+                        if (!repatriated)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 60,
+                                    child: Text('Status: '),
+                                  ),
+                                  Text(_user!.status!.state!),
+                                  stateBall(),
+                                ],
+                              ),
+                              if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
+                                _notificationIcon(ProfileNotification.hospital),
+                              if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
+                                _notificationIcon(ProfileNotification.jail),
+                            ],
+                          )
+                        else
+                          // Travelling while in hospital (repatriation)
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 60,
+                                        child: Text('Status: '),
+                                      ),
+                                      Text(_user!.status!.state!),
+                                      stateBall(),
+                                    ],
+                                  ),
+                                  if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
+                                    _notificationIcon(ProfileNotification.hospital),
+                                  if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
+                                    _notificationIcon(ProfileNotification.jail),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(
+                                    children: [
+                                      const SizedBox(width: 60),
+                                      const Text("Travel (repatriated)"),
+                                      stateBall(forceBlue: true),
+                                    ],
+                                  ),
+                                  _notificationIcon(ProfileNotification.travel),
+                                ],
+                              ),
+                              if (!_dedicatedTravelCard) _travelWidget(repatriated: true),
+                            ],
+                          ),
+                        BazaarStatusCard(
+                          // Careful, in this card we mixed sync with async items, so the miscModel can still be null
+                          bazaarModel: _miscModel?.bazaar,
+                          launchBrowser: _launchBrowser,
+                        ),
+                        if (!_dedicatedTravelCard) _travelWidget(),
+                        descriptionWidget(),
+                        if (_user!.status!.state == 'Hospital' && _w.nukeReviveActive)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13, top: 10),
+                            child: NukeReviveButton(
+                              themeProvider: _themeProvider,
+                              user: _user,
+                              webViewProvider: _webViewProvider,
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                        if (_user!.status!.state == 'Hospital' && _w.uhcReviveActive)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13, top: 10),
+                            child: UhcReviveButton(
+                              themeProvider: _themeProvider,
+                              user: _user,
+                              webViewProvider: _webViewProvider,
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                        if (_user!.status!.state == 'Hospital' && _w.helaReviveActive)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13, top: 10),
+                            child: HelaReviveButton(
+                              themeProvider: _themeProvider,
+                              user: _user,
+                              webViewProvider: _webViewProvider,
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                        if (_user!.status!.state == 'Hospital' && _w.wtfReviveActive)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13, top: 10),
+                            child: WtfReviveButton(
+                              themeProvider: _themeProvider,
+                              user: _user,
+                              webViewProvider: _webViewProvider,
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                        if (_user!.status!.state == 'Hospital' && _w.midnightXReviveActive)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13, top: 10),
+                            child: MidnightXReviveButton(
+                              themeProvider: _themeProvider,
+                              user: _user,
+                              webViewProvider: _webViewProvider,
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                      ],
                     ),
-                  if (_user!.status!.state == 'Hospital' && _w.uhcReviveActive)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 13, top: 10),
-                      child: UhcReviveButton(
-                        themeProvider: _themeProvider,
-                        user: _user,
-                        webViewProvider: _webViewProvider,
-                        settingsProvider: _settingsProvider,
-                      ),
-                    ),
-                  if (_user!.status!.state == 'Hospital' && _w.helaReviveActive)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 13, top: 10),
-                      child: HelaReviveButton(
-                        themeProvider: _themeProvider,
-                        user: _user,
-                        webViewProvider: _webViewProvider,
-                        settingsProvider: _settingsProvider,
-                      ),
-                    ),
-                  if (_user!.status!.state == 'Hospital' && _w.wtfReviveActive)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 13, top: 10),
-                      child: WtfReviveButton(
-                        themeProvider: _themeProvider,
-                        user: _user,
-                        webViewProvider: _webViewProvider,
-                        settingsProvider: _settingsProvider,
-                      ),
-                    ),
-                  if (_user!.status!.state == 'Hospital' && _w.midnightXReviveActive)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 13, top: 10),
-                      child: MidnightXReviveButton(
-                        themeProvider: _themeProvider,
-                        user: _user,
-                        webViewProvider: _webViewProvider,
-                        settingsProvider: _settingsProvider,
-                      ),
-                    ),
+                  ),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

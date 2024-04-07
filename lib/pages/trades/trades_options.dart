@@ -214,7 +214,7 @@ class TradesOptionsState extends State<TradesOptions> {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Flexible(
-                                              child: Flexible(child: Text("Show detailed profits")),
+                                              child: Text("Show detailed profits"),
                                             ),
                                             tornExchangeProfitSwitch(),
                                           ],

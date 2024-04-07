@@ -102,6 +102,7 @@ class Prefs {
   final String _kSpiesSource = "pda_SpiesSource";
   final String _kAllowMixedSpiesSources = "pda_allowMixedSpiesSources";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
+  final String _kColorCodedStatusCard = "pda_colorCodedStatusCard";
   final String _kLifeBarOption = "pda_LifeBarOption";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
@@ -446,6 +447,19 @@ class Prefs {
   Future<bool> setProfileSectionOrder(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kProfileSectionOrder, value);
+  }
+
+  /// ------------------------------
+  /// Methods for colored status card
+  /// --------------------------------
+  Future<bool> getColorCodedStatusCard() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kColorCodedStatusCard) ?? true;
+  }
+
+  Future<bool> setColorCodedStatusCard(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kColorCodedStatusCard, value);
   }
 
   /// ----------------------------

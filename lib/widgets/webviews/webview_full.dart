@@ -106,6 +106,12 @@ class VaultsOptions {
         break;
       case "Company vault":
         break;
+      case "Personal vault (new tab)":
+        break;
+      case "Faction vault (new tab)":
+        break;
+      case "Company vault (new tab)":
+        break;
     }
   }
 }
@@ -264,6 +270,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     VaultsOptions(description: "Personal vault"),
     VaultsOptions(description: "Faction vault"),
     VaultsOptions(description: "Company vault"),
+    VaultsOptions(description: "Personal vault (new tab)"),
+    VaultsOptions(description: "Faction vault (new tab)"),
+    VaultsOptions(description: "Company vault (new tab)"),
   ];
 
   bool _scrollAfterLoad = false;
@@ -3067,6 +3076,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _loadUrl("https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
       case "Company vault":
         _loadUrl("https://www.torn.com/companies.php#/option=funds");
+      case "Personal vault (new tab)":
+        _webViewProvider.addTab(url: "https://www.torn.com/properties.php#/p=options&tab=vault");
+      case "Faction vault (new tab)":
+        _webViewProvider.addTab(url: "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
+      case "Company vault (new tab)":
+        _webViewProvider.addTab(url: "https://www.torn.com/companies.php#/option=funds");
     }
   }
 
