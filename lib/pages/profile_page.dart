@@ -1120,7 +1120,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
 
           Container(
-            color: _themeProvider!.cardColor!,
+            decoration: BoxDecoration(
+              color: _themeProvider!.cardColor!,
+              borderRadius: BorderRadius.circular(_settingsProvider!.colorCodedStatusCard ? 5 : 0),
+            ),
+            //color: _themeProvider!.cardColor!,
             child: Padding(
               padding: const EdgeInsets.all(15.0),
               child: Column(

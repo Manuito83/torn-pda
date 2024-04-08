@@ -59,7 +59,7 @@ dependencies:
   #    url: https://github.com/Manuito83/flutter_inappwebview.git
   #    ref: manuito-beta22
   flutter_local_notifications: 16.1.0
-  flutter_native_splash: 2.3.3
+  flutter_native_splash: 2.4.0
   flutter_secure_storage: 6.0.0
   flutter_slidable: 3.0.1
   flutter_speed_dial: 7.0.0
