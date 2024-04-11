@@ -5,6 +5,7 @@ import 'dart:developer';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -57,7 +58,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   Future? _apiCalled;
   late bool _apiSuccess;
-  bool _yataTimeOut = false;
+  bool _yataSuccess = false;
+  bool _prometheusSuccess = false;
 
   Map<String, dynamic>? _activeRestocks = <String, dynamic>{};
 
@@ -683,20 +685,62 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     final thisStockList = <Widget>[];
 
     final Widget lastUpdateDetails = Padding(
-      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
       child: Row(
         children: <Widget>[
-          const Text(
-            'Last server update: ',
-            style: TextStyle(fontSize: 11),
-          ),
-          const SizedBox(width: 6),
           Flexible(
-            child: Text(
-              _timeStampToString(_stocksYataModel.timestamp!),
-              style: const TextStyle(fontSize: 11),
+            child: Row(
+              children: [
+                const Text(
+                  'Last server update: ',
+                  style: TextStyle(fontSize: 11),
+                ),
+                const SizedBox(width: 2),
+                Flexible(
+                  child: Text(
+                    _timeStampToString(_stocksYataModel.timestamp!),
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+              ],
+              // Icon of successful provider
             ),
           ),
+          if (_yataSuccess)
+            GestureDetector(
+              child: Image.asset('images/icons/yata_logo.png', height: 25),
+              onTap: () {
+                BotToast.showText(
+                  text: "Data provided by YATA",
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  clickClose: true,
+                  duration: const Duration(seconds: 4),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            )
+          else if (_prometheusSuccess)
+            GestureDetector(
+              child: Text("P"),
+              onTap: () {
+                BotToast.showText(
+                  text: "Data provided by Prometheus",
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  clickClose: true,
+                  duration: const Duration(seconds: 4),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              },
+            ) // TODO
+          //Image.asset('images/icons/prometheus_logo.png', height: 25),
         ],
       ),
     );
@@ -709,7 +753,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
             'Countries: ',
             style: TextStyle(fontSize: 11),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 2),
           Flexible(
             child: Text(
               _countriesFilteredText,
@@ -728,7 +772,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
             'Items: ',
             style: TextStyle(fontSize: 11),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 2),
           Flexible(
             child: Text(
               _typesFilteredText,
@@ -807,9 +851,36 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   Future<void> _fetchApiInformation() async {
     try {
       // Get all APIs
-      await yataAPI();
-      if (_yataTimeOut) {
+      var apiReturn = await fetchApiProviders();
+      if (!apiReturn.providersSuccess) {
+        BotToast.showText(
+          text: apiReturn.providersMessage,
+          textStyle: const TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800]!,
+          clickClose: true,
+          duration: const Duration(seconds: 6),
+          contentPadding: const EdgeInsets.all(10),
+        );
         return;
+      } else {
+        // If debug messages are enabled, returned which provider contributed to the result
+        // (this would also return any error with YATA if Prometheus is successful)
+        if (_settingsProvider!.debugMessages) {
+          BotToast.showText(
+            text: apiReturn.providersMessage,
+            textStyle: const TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            clickClose: true,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
       }
 
       await Future.wait<void>([
@@ -940,46 +1011,54 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
   }
 
-  Future yataAPI() async {
-    try {
-      _yataTimeOut = false;
-      const String yataURL = 'https://yata.yt/api/v1/travel/export/';
-      final responseDB = await http.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 25));
-      if (responseDB.statusCode == 200) {
-        _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
-        _apiSuccess = true;
-      } else {
-        _apiSuccess = false;
+  Future<({bool providersSuccess, String providersMessage})> fetchApiProviders() async {
+    _apiSuccess = false;
 
-        if (_settingsProvider!.debugMessages) {
-          BotToast.showText(
-            text: "YATA debug error: ${responseDB.body}",
-            textStyle: const TextStyle(
-              fontSize: 13,
-              color: Colors.white,
-            ),
-            contentColor: Colors.red[800]!,
-            duration: const Duration(seconds: 4),
-            contentPadding: const EdgeInsets.all(10),
-          );
+    // Both providers use the same model
+    Future<({bool apiSuccess, String apiMessage})> getFromProvider({required String provider}) async {
+      try {
+        String url = "https://yata.yt/api/v1/travel/export/";
+        if (provider == "prometheus") url = "https://prombot.co.uk:8443/api/travel";
+
+        final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 6));
+        if (responseDB.statusCode == 200) {
+          _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
+          if (provider == "yata") _yataSuccess = true;
+          if (provider == "prometheus") _prometheusSuccess = true;
+          return (apiSuccess: true, apiMessage: "");
         }
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.log("Issue fetching Foreign Stocks");
+        FirebaseCrashlytics.instance.recordError("Provider: $provider, Error: $e", trace);
+        return (apiSuccess: false, apiMessage: e.toString());
       }
-    } catch (e) {
-      _apiSuccess = false;
-      if (e is TimeoutException) {
-        _yataTimeOut = true;
-        BotToast.showText(
-          text: "YATA connection timed out, the server might be busy.\n\nPlease try again later!",
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red[800]!,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
+      return (apiSuccess: false, apiMessage: "");
+    }
+
+    // Try YATA first
+    final yataResult = await getFromProvider(provider: "yata");
+    if (yataResult.apiSuccess) {
+      _apiSuccess = true;
+      return (providersSuccess: true, providersMessage: "Fetched YATA successfully");
+    }
+
+    // As a backup, try Prometheus
+    if (!yataResult.apiSuccess) {
+      final prometheusResult = await getFromProvider(provider: "prometheus");
+      if (prometheusResult.apiSuccess) {
+        _apiSuccess = true;
+        return (
+          providersSuccess: true,
+          providersMessage: "YATA failed: ${yataResult.apiMessage}\n\nFetched Prometheus successfully"
         );
       }
     }
+
+    // In case both failed
+    return (
+      providersSuccess: false,
+      providersMessage: "YATA failed: ${yataResult.apiMessage}\n\nPrometheus failed: ${yataResult.apiMessage}"
+    );
   }
 
   Future tornItems() async {
