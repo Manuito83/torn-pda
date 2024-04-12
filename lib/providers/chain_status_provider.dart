@@ -280,7 +280,7 @@ class ChainStatusProvider extends ChangeNotifier {
       _currentApiCallPeriod = 30;
       _tickerCallChainApi = Timer.periodic(const Duration(seconds: 30), (Timer t) => _getAllStatus());
       log("Decreasing Chain Status calls to every 30 seconds");
-    } else if (chainModel!.chain!.current! >= 10 && _currentApiCallPeriod != 10) {
+    } else if (chainModel!.chain!.current! >= 10 && _currentApiCallPeriod != 10 && chainModel!.chain!.cooldown! == 0) {
       _tickerCallChainApi?.cancel();
       _currentApiCallPeriod = 10;
       _tickerCallChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
