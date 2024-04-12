@@ -1,28 +1,61 @@
-// Dart imports:
+// To parse this JSON data, do
+//
+//     final foreignStockOutModel = foreignStockOutModelFromJson(jsonString);
+
 import 'dart:convert';
 
-// Project imports:
-import 'package:torn_pda/main.dart';
+ForeignStockOutModel foreignStockOutModelFromJson(String str) => ForeignStockOutModel.fromJson(json.decode(str));
 
-ForeignStockOutModel foreignStockOutModelFromJson(String str) =>
-    ForeignStockOutModel.fromJson(json.decode(str));
+String foreignStockOutModelToJson(ForeignStockOutModel data) => json.encode(data.toJson());
 
-String foreignStockOutModelToJson(ForeignStockOutModel data) =>
-    json.encode(data.toJson());
+class ForeignStockOutModel {
+  String client;
+  String version;
+  String authorName;
+  int authorId;
+  String country;
+  List<ForeignStockOutItem> items;
 
-class ForeignStockOutItem {
-  int? id;
-  int? quantity;
-  int? cost;
-
-  ForeignStockOutItem({
-    this.id,
-    this.quantity,
-    this.cost,
+  ForeignStockOutModel({
+    required this.client,
+    required this.version,
+    required this.authorName,
+    required this.authorId,
+    required this.country,
+    required this.items,
   });
 
-  factory ForeignStockOutItem.fromJson(Map<String, dynamic> json) =>
-      ForeignStockOutItem(
+  factory ForeignStockOutModel.fromJson(Map<String, dynamic> json) => ForeignStockOutModel(
+        client: json["client"],
+        version: json["version"],
+        authorName: json["author_name"],
+        authorId: json["author_id"],
+        country: json["country"],
+        items: List<ForeignStockOutItem>.from(json["items"].map((x) => ForeignStockOutItem.fromJson(x))),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "client": client,
+        "version": version,
+        "author_name": authorName,
+        "author_id": authorId,
+        "country": country,
+        "items": List<dynamic>.from(items.map((x) => x.toJson())),
+      };
+}
+
+class ForeignStockOutItem {
+  int id;
+  int quantity;
+  int cost;
+
+  ForeignStockOutItem({
+    required this.id,
+    required this.quantity,
+    required this.cost,
+  });
+
+  factory ForeignStockOutItem.fromJson(Map<String, dynamic> json) => ForeignStockOutItem(
         id: json["id"],
         quantity: json["quantity"],
         cost: json["cost"],
@@ -32,46 +65,5 @@ class ForeignStockOutItem {
         "id": id,
         "quantity": quantity,
         "cost": cost,
-      };
-}
-
-class ForeignStockOutModel {
-  String? client;
-  String? version;
-  String? authorName;
-  int? authorId;
-  String? country;
-  List<ForeignStockOutItem>? items;
-
-  ForeignStockOutModel(
-      {this.client,
-      this.version,
-      this.authorName,
-      this.authorId,
-      this.country,
-      this.items,}) {
-    client = "Torn PDA";
-    version = appVersion;
-    items = <ForeignStockOutItem>[];
-  }
-
-  factory ForeignStockOutModel.fromJson(Map<String, dynamic> json) =>
-      ForeignStockOutModel(
-        client: json["client"],
-        version: json["version"],
-        authorName: json["author_name"],
-        authorId: json["author_id"],
-        country: json["country"],
-        items: List<ForeignStockOutItem>.from(
-            json["items"].map((x) => ForeignStockOutItem.fromJson(x)),),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "client": client,
-        "version": version,
-        "author_name": authorName,
-        "author_id": authorId,
-        "country": country,
-        "items": List<dynamic>.from(items!.map((x) => x.toJson())),
       };
 }

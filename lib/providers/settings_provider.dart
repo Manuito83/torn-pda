@@ -676,6 +676,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _foreignStocksDataProvider = "yata";
+  String get foreignStocksDataProvider => _foreignStocksDataProvider;
+  set foreignStocksDataProvider(String provider) {
+    _foreignStocksDataProvider = provider;
+    Prefs().setForeignStocksDataProvider(provider);
+    notifyListeners();
+  }
+
   var _targetSkippingAll = true;
   bool get targetSkippingAll => _targetSkippingAll;
   set changeTargetSkippingAll(bool value) {
@@ -975,6 +983,8 @@ class SettingsProvider extends ChangeNotifier {
       case "business":
         _travelTicket = TravelTicket.business;
     }
+
+    _foreignStocksDataProvider = await Prefs().getForeignStocksDataProvider();
 
     _targetSkippingAll = await Prefs().getTargetSkippingAll();
     _targetSkippingFirst = await Prefs().getTargetSkippingFirst();

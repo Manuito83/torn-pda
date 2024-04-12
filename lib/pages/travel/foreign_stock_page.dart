@@ -685,7 +685,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     final thisStockList = <Widget>[];
 
     final Widget lastUpdateDetails = Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Row(
         children: <Widget>[
           Flexible(
@@ -706,41 +706,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               // Icon of successful provider
             ),
           ),
-          if (_yataSuccess)
-            GestureDetector(
-              child: Image.asset('images/icons/yata_logo.png', height: 25),
-              onTap: () {
-                BotToast.showText(
-                  text: "Data provided by YATA",
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  clickClose: true,
-                  duration: const Duration(seconds: 4),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-            )
-          else if (_prometheusSuccess)
-            GestureDetector(
-              child: Text("P"),
-              onTap: () {
-                BotToast.showText(
-                  text: "Data provided by Prometheus",
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  clickClose: true,
-                  duration: const Duration(seconds: 4),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-            ) // TODO
-          //Image.asset('images/icons/prometheus_logo.png', height: 25),
         ],
       ),
     );
@@ -800,10 +765,96 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       );
     }
 
+    Widget providerIcon = SizedBox.shrink();
+    if (_yataSuccess) {
+      providerIcon = GestureDetector(
+        child: Column(
+          children: [
+            Text("PROVIDER", style: TextStyle(fontSize: 10)),
+            SizedBox(height: 4),
+            Image.asset('images/icons/yata_logo.png', height: 36),
+          ],
+        ),
+        onTap: () {
+          BotToast.showText(
+            text: "Data provided by YATA",
+            textStyle: const TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            clickClose: true,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      );
+    } else if (_prometheusSuccess) {
+      providerIcon = GestureDetector(
+        child: Column(
+          children: [
+            Text("PROVIDER", style: TextStyle(fontSize: 10)),
+            SizedBox(height: 4),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.grey[800]!,
+                  width: 2,
+                ),
+                shape: BoxShape.circle,
+                image: const DecorationImage(
+                  fit: BoxFit.fill,
+                  image: AssetImage('images/icons/prometheus_logo.png'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        onTap: () {
+          BotToast.showText(
+            text: "Data provided by Prometheus",
+            textStyle: const TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            clickClose: true,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      );
+    }
+
+    Widget header = Row(
+      children: [
+        Flexible(
+          child: Column(
+            children: [
+              lastUpdateDetails,
+              countriesFilterDetails,
+              typesFilterDetails,
+              hiddenDetails,
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 8, 15, 8),
+          child: providerIcon,
+        ),
+      ],
+    );
+
+    /*
     thisStockList.add(lastUpdateDetails);
     thisStockList.add(countriesFilterDetails);
     thisStockList.add(typesFilterDetails);
     thisStockList.add(hiddenDetails);
+    */
+
+    thisStockList.add(header);
 
     bool displayShowcase = true; // Add showcase to first card only
     for (final stock in _filteredStocksCards) {
@@ -1013,6 +1064,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   Future<({bool providersSuccess, String providersMessage})> fetchApiProviders() async {
     _apiSuccess = false;
+    _yataSuccess = false;
+    _prometheusSuccess = false;
 
     // Both providers use the same model
     Future<({bool apiSuccess, String apiMessage})> getFromProvider({required String provider}) async {
@@ -1035,29 +1088,61 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       return (apiSuccess: false, apiMessage: "");
     }
 
-    // Try YATA first
-    final yataResult = await getFromProvider(provider: "yata");
-    if (yataResult.apiSuccess) {
-      _apiSuccess = true;
-      return (providersSuccess: true, providersMessage: "Fetched YATA successfully");
+    if (_settingsProvider!.foreignStocksDataProvider == "yata") {
+      // Try YATA first
+      final yataResult = await getFromProvider(provider: "yata");
+      if (yataResult.apiSuccess) {
+        _apiSuccess = true;
+        return (providersSuccess: true, providersMessage: "Fetched YATA successfully");
+      }
+
+      // As a backup, try Prometheus
+      if (!yataResult.apiSuccess) {
+        final prometheusResult = await getFromProvider(provider: "prometheus");
+        if (prometheusResult.apiSuccess) {
+          _apiSuccess = true;
+          return (
+            providersSuccess: true,
+            providersMessage: "YATA failed: ${yataResult.apiMessage}\n\nFetched Prometheus successfully"
+          );
+        }
+
+        // In case both failed
+        return (
+          providersSuccess: false,
+          providersMessage: "YATA failed: ${yataResult.apiMessage}\n\n"
+              "Prometheus failed: ${prometheusResult.apiMessage}",
+        );
+      }
     }
 
-    // As a backup, try Prometheus
-    if (!yataResult.apiSuccess) {
-      final prometheusResult = await getFromProvider(provider: "prometheus");
-      if (prometheusResult.apiSuccess) {
+    // Else, try Promethus first
+    final prometheusResult = await getFromProvider(provider: "prometheus");
+    if (prometheusResult.apiSuccess) {
+      _apiSuccess = true;
+      return (providersSuccess: true, providersMessage: "Fetched Prometheus successfully");
+    }
+
+    // As a backup, try YATA
+    String yataError = "";
+    if (!prometheusResult.apiSuccess) {
+      final yataResult = await getFromProvider(provider: "yata");
+      if (yataResult.apiSuccess) {
         _apiSuccess = true;
         return (
           providersSuccess: true,
-          providersMessage: "YATA failed: ${yataResult.apiMessage}\n\nFetched Prometheus successfully"
+          providersMessage: "Prometheus failed: ${prometheusResult.apiMessage}\n\nFetched YATA successfully"
         );
+      } else {
+        yataError = yataResult.apiMessage;
       }
     }
 
     // In case both failed
     return (
       providersSuccess: false,
-      providersMessage: "YATA failed: ${yataResult.apiMessage}\n\nPrometheus failed: ${yataResult.apiMessage}"
+      providersMessage: "Prometheus failed: ${prometheusResult.apiMessage}\n\n"
+          "YATA failed: $yataError",
     );
   }
 

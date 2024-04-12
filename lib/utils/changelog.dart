@@ -39,6 +39,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.3.3 - Build 403 - 12/04/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.3.3'
+        ..date = '25 APR 2024'
+        ..features = [
+          "Added Prometheus as a Foreign Stocks provider with automatic failover",
+          "Fixed issues with chat highlight [Kwack]",
+          "Fixed theme issues",
+        ],
+    );
+
     // v3.3.2 - Build 402 - 06/04/2024
     itemList.add(
       ChangeLogItem()
