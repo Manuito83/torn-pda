@@ -240,7 +240,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                     children: [
                       Flexible(
                         child: Text(
-                          "Prefered data provider",
+                          "Preferred data provider",
                           style: TextStyle(
                             fontSize: 13,
                           ),
@@ -250,8 +250,8 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                     ],
                   ),
                   Text(
-                    'Dictates with data provider will be used to download the data in first place (there is a failover '
-                    'between them to ensure data availability). Note: data will be uploaded to both providers '
+                    'Dictates which data provider will be used to download the data in first place (there is a '
+                    'failover between them to ensure data availability). Note: data will be uploaded to both providers '
                     'regardless of this setting',
                     style: TextStyle(
                       color: Colors.grey[600],
