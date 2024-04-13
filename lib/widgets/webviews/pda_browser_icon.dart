@@ -18,25 +18,42 @@ class PdaBrowserIcon extends StatelessWidget {
       return Container();
     }
 
-    return GestureDetector(
-      child: Image.asset(
-        'images/icons/torn_pda_browser.png',
-        width: 25,
-      ),
-      onTap: () {
-        context.read<WebViewProvider>().pdaIconActivation(
-              shortTap: true,
-              automaticLogin: automaticLogins,
-              context: context,
-            );
-      },
-      onLongPress: () {
-        context.read<WebViewProvider>().pdaIconActivation(
-              shortTap: false,
-              automaticLogin: automaticLogins,
-              context: context,
-            );
-      },
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 5),
+          child: Container(
+            color: Colors.red[700],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 3),
+              child: Text(
+                "08:20",
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+        GestureDetector(
+          child: Image.asset(
+            'images/icons/torn_pda_browser.png',
+            width: 25,
+          ),
+          onTap: () {
+            context.read<WebViewProvider>().pdaIconActivation(
+                  shortTap: true,
+                  automaticLogin: automaticLogins,
+                  context: context,
+                );
+          },
+          onLongPress: () {
+            context.read<WebViewProvider>().pdaIconActivation(
+                  shortTap: false,
+                  automaticLogin: automaticLogins,
+                  context: context,
+                );
+          },
+        ),
+      ],
     );
   }
 }

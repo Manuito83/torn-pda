@@ -559,71 +559,75 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return AppBar(
       iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      title: Column(
+      title: Stack(
         children: [
-          if (_user?.name != null && _user!.name!.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                final String status = _user!.lastAction!.status == 'Offline'
-                    ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
-                    : _user!.lastAction!.status == 'Online'
-                        ? 'Online now'
-                        : 'Online ${_user!.lastAction!.relative}';
-                BotToast.showText(
-                  text: status,
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  duration: const Duration(seconds: 3),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-              onLongPress: () {
-                Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
-                BotToast.showText(
-                  text: "ID copied to the clipboard!",
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 5),
-                          child: Text(_user!.name!, style: TextStyle(color: Colors.white)),
+          Column(
+            children: [
+              if (_user?.name != null && _user!.name!.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    final String status = _user!.lastAction!.status == 'Offline'
+                        ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
+                        : _user!.lastAction!.status == 'Online'
+                            ? 'Online now'
+                            : 'Online ${_user!.lastAction!.relative}';
+                    BotToast.showText(
+                      text: status,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.blue,
+                      duration: const Duration(seconds: 3),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  },
+                  onLongPress: () {
+                    Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
+                    BotToast.showText(
+                      text: "ID copied to the clipboard!",
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.blue,
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.fitWidth,
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 5),
+                              child: Text(_user!.name!, style: TextStyle(color: Colors.white)),
+                            ),
+                            if (_user!.lastAction!.status == "Offline")
+                              const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
+                            else
+                              _user!.lastAction!.status == "Idle"
+                                  ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
+                                  : Icon(Icons.circle, size: 14, color: Colors.green[400]),
+                          ],
                         ),
-                        if (_user!.lastAction!.status == "Offline")
-                          const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
-                        else
-                          _user!.lastAction!.status == "Idle"
-                              ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
-                              : Icon(Icons.circle, size: 14, color: Colors.green[400]),
-                      ],
-                    ),
+                      ),
+                      Text(
+                        "[${_user!.playerId}] - Level ${_user!.level}",
+                        style: const TextStyle(fontSize: 10, color: Colors.white),
+                      ),
+                    ],
                   ),
-                  Text(
-                    "[${_user!.playerId}] - Level ${_user!.level}",
-                    style: const TextStyle(fontSize: 10, color: Colors.white),
-                  ),
-                ],
-              ),
-            )
-          else
-            const Text("Profile", style: TextStyle(color: Colors.white)),
+                )
+              else
+                const Text("Profile", style: TextStyle(color: Colors.white)),
+            ],
+          ),
         ],
       ),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 85,
       leading: Row(
         children: [
           IconButton(
