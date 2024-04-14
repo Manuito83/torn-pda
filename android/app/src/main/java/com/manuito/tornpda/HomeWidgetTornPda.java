@@ -349,8 +349,9 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             view.setViewVisibility(R.id.widget_icon_reload_active, View.GONE);
         }
 
+        // Note: URI (back in PDA) does not support ':' as other intents, hence the underscore
         PendingIntent reloadIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context,
-                Uri.parse("pdaWidget://reload:clicked"), "Reloading...");
+                Uri.parse("pdaWidget://reload_clicked"), "Reloading...");
         view.setOnClickPendingIntent(R.id.widget_update_box, reloadIntent);
 
         // ## DRUGS

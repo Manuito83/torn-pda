@@ -65,7 +65,7 @@ const String iosCompilation = '403';
 const bool pointFunctionsEmulatorToLocal = false;
 
 // TODO (App release)
-const bool enableWakelockForDebug = false;
+const bool enableWakelockForDebug = true;
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
@@ -126,6 +126,9 @@ Future<void> main() async {
 
   // Avoid screen lock when testing in real device
   if (kDebugMode && enableWakelockForDebug) {
+    log("########################################################");
+    log("####### WAKELOCK ENABLED FOR DEBUGGING PURPOSES #######");
+    log("########################################################");
     WakelockPlus.enable();
   }
 
@@ -280,7 +283,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Handle home widget
     if (Platform.isAndroid) {
       HomeWidget.setAppGroupId('torn_pda');
-      HomeWidget.registerBackgroundCallback(pdaWidget_callback);
+      HomeWidget.registerInteractivityCallback(pdaWidget_callback);
       pdaWidget_handleBackgroundUpdateStatus();
     }
 

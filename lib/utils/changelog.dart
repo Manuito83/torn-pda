@@ -47,6 +47,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Added Prometheus as a Foreign Stocks provider with automatic failover",
           "Fixed issues with chat highlight [Kwack]",
+          if (Platform.isAndroid) "Fixed home widget manual reload button",
           "Fixed theme issues",
         ],
     );
