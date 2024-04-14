@@ -58,14 +58,14 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.3.3';
-const String androidCompilation = '403';
-const String iosCompilation = '403';
+const String androidCompilation = '404';
+const String iosCompilation = '404';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
 
 // TODO (App release)
-const bool enableWakelockForDebug = true;
+const bool enableWakelockForDebug = false;
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
