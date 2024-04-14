@@ -93,7 +93,7 @@ dependencies:
   timezone: 0.9.1
   toggle_switch: 2.0.1
   url_launcher: 6.2.1
-  vibration: 1.7.4-nullsafety.0
+  vibration: 1.8.4
   wakelock_plus: 1.2.4
   webview_flutter: 3.0.4
   collection: 1.18.0
