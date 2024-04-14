@@ -25,7 +25,7 @@ import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class TargetsOptions {
   String? description;

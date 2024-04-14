@@ -36,7 +36,7 @@ import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 enum LootTimeType {

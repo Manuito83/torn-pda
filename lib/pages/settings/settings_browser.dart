@@ -22,7 +22,7 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({super.key});

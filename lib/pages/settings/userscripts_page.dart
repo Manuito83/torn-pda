@@ -17,7 +17,7 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 

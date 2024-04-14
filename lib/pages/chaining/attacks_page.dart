@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/attacks_list.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class AttacksPage extends StatefulWidget {
   const AttacksPage({super.key});

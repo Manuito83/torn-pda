@@ -38,7 +38,7 @@ import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class WarOptions {
   String? description;

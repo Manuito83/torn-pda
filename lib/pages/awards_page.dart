@@ -24,7 +24,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/widgets/awards/award_card_pin.dart';
 import 'package:torn_pda/widgets/other/flipping_yata.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AwardsHeaderInfo {

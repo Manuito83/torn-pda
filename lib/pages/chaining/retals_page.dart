@@ -19,7 +19,7 @@ import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class RetalsOptions {
   String? description;

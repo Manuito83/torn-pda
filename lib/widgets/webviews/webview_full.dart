@@ -3947,8 +3947,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
-      final stats = await Get.find<ApiCallerController>().getBars();
-      if (stats is BarsModel) {
+      final stats = await Get.find<ApiCallerController>().getBarsAndStatus();
+      if (stats is BarsAndStatusModel) {
         var message = "";
         if (stats.chain!.current! > 10 && stats.chain!.cooldown == 0) {
           message = 'Caution: your faction is chaining!';

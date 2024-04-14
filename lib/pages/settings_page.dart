@@ -52,7 +52,7 @@ import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/stats/tsc_info.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
 

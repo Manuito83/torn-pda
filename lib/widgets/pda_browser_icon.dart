@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
+import 'package:torn_pda/widgets/status_color_counter.dart';
 
 class PdaBrowserIcon extends StatelessWidget {
   const PdaBrowserIcon({
@@ -19,20 +20,9 @@ class PdaBrowserIcon extends StatelessWidget {
     }
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 5),
-          child: Container(
-            color: Colors.red[700],
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 3),
-              child: Text(
-                "08:20",
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
-          ),
-        ),
+        StatusColorCounter(),
         GestureDetector(
           child: Image.asset(
             'images/icons/torn_pda_browser.png',

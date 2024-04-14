@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
@@ -32,7 +33,39 @@ enum WatchDefcon {
   apiFail,
 }
 
+enum PlayerStatusColor {
+  ok,
+  hospital,
+  jail,
+  travel,
+}
+
 class ChainStatusProvider extends ChangeNotifier {
+  // ### PLAYER STATUS COLOR AND TIMERS
+  bool _statusColorWidgetActive = true;
+  bool get statusColorWidgetActive => _statusColorWidgetActive;
+  set statusColorWidgetActive(bool value) {
+    _statusColorWidgetActive = value;
+    // TODO: save
+    notifyListeners();
+  }
+
+  PlayerStatusColor _statusColorCurrent = PlayerStatusColor.ok;
+  PlayerStatusColor get statusColorCurrent => _statusColorCurrent;
+  set statusColorCurrent(PlayerStatusColor value) {
+    _statusColorCurrent = value;
+    // TODO: save
+  }
+
+  int _statusColorUntil = 0;
+  int get statusColorUntil => _statusColorUntil;
+  set statusColorUntil(int value) {
+    _statusColorUntil = value;
+    // TODO: save
+  }
+
+  // ##################################
+
   final List<PanicTargetModel> _panicTargets = <PanicTargetModel>[];
   List<PanicTargetModel> get panicTargets {
     return _panicTargets;
@@ -83,9 +116,9 @@ class ChainStatusProvider extends ChangeNotifier {
     return _chainModel;
   }
 
-  dynamic _barsModel;
+  dynamic _barsAndStatusModel;
   dynamic get barsModel {
-    return _barsModel;
+    return _barsAndStatusModel;
   }
 
   bool _modelError = true;
@@ -142,7 +175,7 @@ class ChainStatusProvider extends ChangeNotifier {
     if (_statusActive) return;
     _statusActive = true;
     await getChainStatus();
-    await getEnergy();
+    await getEnergyAndStatus();
 
     // Activate timers
     _tickerCallChainApi?.cancel();
@@ -288,12 +321,29 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     getChainStatus();
-    getEnergy();
+    getEnergyAndStatus();
   }
 
-  Future<void> getEnergy() async {
-    final dynamic myBars = await Get.find<ApiCallerController>().getBars();
-    _barsModel = myBars;
+  Future<void> getEnergyAndStatus() async {
+    final dynamic myBars = await Get.find<ApiCallerController>().getBarsAndStatus();
+    _barsAndStatusModel = myBars;
+
+    // Update status color
+    if (myBars is BarsAndStatusModel) {
+      switch (myBars.status.color) {
+        case "green":
+          _statusColorCurrent = PlayerStatusColor.ok;
+        case "red":
+          _statusColorCurrent = PlayerStatusColor.hospital;
+          if (myBars.status.state == "Jail") {
+            _statusColorCurrent = PlayerStatusColor.jail;
+          }
+        case "blue":
+          _statusColorCurrent = PlayerStatusColor.travel;
+      }
+      _statusColorUntil = myBars.status.until;
+    }
+
     notifyListeners();
   }
 
