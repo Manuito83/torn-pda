@@ -58,8 +58,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.3.3';
-const String androidCompilation = '403';
-const String iosCompilation = '403';
+const String androidCompilation = '404';
+const String iosCompilation = '404';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
@@ -126,6 +126,9 @@ Future<void> main() async {
 
   // Avoid screen lock when testing in real device
   if (kDebugMode && enableWakelockForDebug) {
+    log("########################################################");
+    log("####### WAKELOCK ENABLED FOR DEBUGGING PURPOSES #######");
+    log("########################################################");
     WakelockPlus.enable();
   }
 
@@ -280,7 +283,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Handle home widget
     if (Platform.isAndroid) {
       HomeWidget.setAppGroupId('torn_pda');
-      HomeWidget.registerBackgroundCallback(pdaWidget_callback);
+      HomeWidget.registerInteractivityCallback(pdaWidget_callback);
       pdaWidget_handleBackgroundUpdateStatus();
     }
 

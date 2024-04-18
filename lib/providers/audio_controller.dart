@@ -11,11 +11,11 @@ class AudioController extends GetxController {
       _audioPlayer.setAudioContext(AudioContext(
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.playback,
-          options: [
+          options: {
             AVAudioSessionOptions.mixWithOthers,
             AVAudioSessionOptions.interruptSpokenAudioAndMixWithOthers,
             AVAudioSessionOptions.duckOthers,
-          ],
+          },
         ),
       ));
     }
@@ -31,10 +31,10 @@ class AudioController extends GetxController {
         _audioPlayer.setAudioContext(AudioContext(
           iOS: AudioContextIOS(
             category: AVAudioSessionCategory.playback,
-            options: [
+            options: {
               AVAudioSessionOptions.mixWithOthers,
               AVAudioSessionOptions.interruptSpokenAudioAndMixWithOthers,
-            ],
+            },
           ),
         ));
       });

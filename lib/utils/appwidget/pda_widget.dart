@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:async';
 import 'dart:developer';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
@@ -13,9 +14,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:workmanager/workmanager.dart';
 
-Future<int> pdaWidget_numberInstalled() async {
+Future<List<HomeWidgetInfo>> pdaWidget_numberInstalled() async {
   // Check whether the user is using a widget
-  return await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda') ?? 0;
+  return await HomeWidget.getInstalledWidgets();
 }
 
 /// Used for Background Updates using Workmanager Plugin
@@ -26,8 +27,7 @@ void pdaWidget_backgroundUpdate() {
     //String timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
     //log("Widget $taskName update @$timeString ");
 
-    int count = await pdaWidget_numberInstalled();
-    if (count == 0) return true;
+    if ((await pdaWidget_numberInstalled()).isEmpty) return true;
 
     // If it is the main task, update and setup several one-off tasks
     if (taskName == "wm_backgroundUpdate") {
@@ -69,10 +69,11 @@ void pdaWidget_backgroundUpdate() {
 
 /// Called when Doing Background Work initiated from Widget
 @pragma("vm:entry-point")
-void pdaWidget_callback(Uri? data) async {
+FutureOr<void> pdaWidget_callback(Uri? data) async {
   if (data == null) return;
   log(data.toString());
-  if (data.host == 'reload:clicked') {
+  // Note: URI does not support ':' as other intents, hence the underscore
+  if (data.host == 'reload_clicked') {
     HomeWidget.saveWidgetData<bool>('reloading', true);
     HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
     await pdaWidget_fetchData();
@@ -473,7 +474,7 @@ void pdaWidget_startBackgroundUpdate() async {
 void pdaWidget_handleBackgroundUpdateStatus() async {
   log("Handling appWidget background status!");
 
-  if (await pdaWidget_numberInstalled() > 0) {
+  if ((await pdaWidget_numberInstalled()).isNotEmpty) {
     log("Widget installed: calling appWidget background task");
     HomeWidget.saveWidgetData<bool>('background_active', true);
     pdaWidget_startBackgroundUpdate();

@@ -20,14 +20,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  android_intent_plus: 3.1.5
+  android_intent_plus: 5.0.2
   animations: 2.0.2
-  app_links: 3.5.0-beta.2
+  app_links: 4.0.1
   app_settings: 5.1.1
-  audioplayers: 5.2.1
+  audioplayers: 6.0.0
   bot_toast: 4.1.3
-  cloud_firestore: 4.15.5
-  cloud_functions: 4.6.5
+  cloud_firestore: 4.16.1
+  cloud_functions: 4.7.1
   connectivity_plus: 5.0.2
   cookie_jar: 3.0.1
   crypto: 3.0.3
@@ -42,13 +42,13 @@ dependencies:
   expandable: 5.0.1
   ## ffi ^ to avoid strut errors
   ## ffi: ^1.0.0
-  firebase_analytics: 10.8.6
-  firebase_auth: 4.17.5
-  firebase_core: 2.25.4
-  firebase_crashlytics: 3.4.15
-  firebase_database: 10.4.6
-  firebase_messaging: 14.7.16
-  firebase_remote_config: 4.3.14
+  firebase_analytics: 10.10.1
+  firebase_auth: 4.19.1
+  firebase_core: 2.29.0
+  firebase_crashlytics: 3.5.1
+  firebase_database: 10.5.1
+  firebase_messaging: 14.8.1
+  firebase_remote_config: 4.4.1
   fl_chart: 0.50.6
   flutter_app_badger: 1.3.0
   flutter_colorpicker: 1.0.3
@@ -58,19 +58,19 @@ dependencies:
   #  git:
   #    url: https://github.com/Manuito83/flutter_inappwebview.git
   #    ref: manuito-beta22
-  flutter_local_notifications: 16.1.0
+  flutter_local_notifications: 17.0.1
   flutter_native_splash: 2.4.0
   flutter_secure_storage: 6.0.0
   flutter_slidable: 3.0.1
   flutter_speed_dial: 7.0.0
   flutter_xlider: 3.5.0
-  workmanager: 0.5.1
+  workmanager: 0.5.2
   font_awesome_flutter: 10.4.0
   get: 4.6.3
   home_widget:
     git:
       url: https://github.com/Manuito83/home_widget.git
-      ref: main
+      ref: pda-dev  ## TODO: merge into pda-stable
   html: 0.15.4
   http: 0.13.6
   lints: 2.1.1
@@ -78,9 +78,9 @@ dependencies:
   import_sorter: 4.6.0
   intl: 0.17.0
   material_design_icons_flutter: 5.0.5955-rc.1 ## Breaking changes in minor versions
-  path_provider: 2.1.1
+  path_provider: 2.1.3
   percent_indicator: 4.2.2
-  provider: 6.0.2
+  provider: 6.1.2
   pull_to_refresh: 2.0.0
   quick_actions: 1.0.5
   receive_intent: 0.2.3
@@ -93,8 +93,8 @@ dependencies:
   timezone: 0.9.1
   toggle_switch: 2.0.1
   url_launcher: 6.2.1
-  vibration: 1.7.4-nullsafety.0
-  wakelock_plus: 1.1.4
+  vibration: 1.8.4
+  wakelock_plus: 1.2.4
   webview_flutter: 3.0.4
   collection: 1.18.0
 
