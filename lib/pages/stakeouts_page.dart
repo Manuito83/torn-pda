@@ -390,14 +390,17 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: Colors.white,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.mainText,
-                      radius: 22,
+                      backgroundColor: Colors.black,
+                      radius: 24,
                       child: const SizedBox(
                         height: 28,
                         width: 28,
-                        child: Icon(MdiIcons.cctv),
+                        child: Icon(
+                          MdiIcons.cctv,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
