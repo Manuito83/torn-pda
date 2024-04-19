@@ -335,6 +335,8 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       }
 
       // Get owned stocks
+      _totalValue = 0;
+      _totalProfit = 0;
       for (final stockOwned in ownedStocks) {
         for (final listedStock in _stockList) {
           if (stockOwned.stockId == listedStock.stockId) {
