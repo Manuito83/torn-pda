@@ -3947,12 +3947,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
-      final stats = await Get.find<ApiCallerController>().getBarsAndStatus();
+      final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
       if (stats is BarsAndStatusModel) {
         var message = "";
-        if (stats.chain!.current! > 10 && stats.chain!.cooldown == 0) {
+        if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
           message = 'Caution: your faction is chaining!';
-        } else if (stats.energy!.current! >= _settingsProvider.warnAboutExcessEnergyThreshold) {
+        } else if (stats.energy.current >= _settingsProvider.warnAboutExcessEnergyThreshold) {
           message = 'Caution: high energy detected, you might be stacking!';
         }
 

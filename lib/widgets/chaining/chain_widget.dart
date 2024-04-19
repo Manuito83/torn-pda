@@ -420,7 +420,7 @@ class ChainWidgetState extends State<ChainWidget> {
     if (!_initialised || _chainStatusProvider.chainModel == null) {
       _initialised = true;
       if (!_chainStatusProvider.statusActive) {
-        _finishedLoadingChain = _finishedGettingBars = _chainStatusProvider.activateStatus();
+        _finishedLoadingChain = _finishedGettingBars = _chainStatusProvider.activateChainWidgetStatusRequests();
       } else {
         _finishedLoadingChain = _finishedGettingBars = Future.value(true);
       }

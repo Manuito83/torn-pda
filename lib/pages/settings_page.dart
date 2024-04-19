@@ -29,6 +29,7 @@ import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -1673,6 +1674,41 @@ class SettingsPageState extends State<SettingsPage> {
             children: <Widget>[
               const Flexible(
                 child: Text(
+                  "Show status color counter",
+                ),
+              ),
+              Switch(
+                value: context.read<ChainStatusProvider>().statusColorWidgetEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    context.read<ChainStatusProvider>().statusColorWidgetEnabled = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Shows a player status counter attached to the Torn PDA icon in the main app sections and in the browser '
+            'three-dotted icon, whenever the player is hospitalised, jailed or traveling',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
                   "App bar position",
                 ),
               ),
@@ -2124,7 +2160,7 @@ class SettingsPageState extends State<SettingsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('Settings', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(

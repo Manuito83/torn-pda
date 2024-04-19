@@ -193,7 +193,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return AppBar(
       iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(

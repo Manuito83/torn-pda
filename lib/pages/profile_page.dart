@@ -144,6 +144,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
   UserDetailsProvider? _userProv;
+  late ChainStatusProvider _chainProvider;
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
   final UserController _u = Get.put(UserController());
@@ -296,6 +297,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
+    _chainProvider = context.read<ChainStatusProvider>();
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -352,6 +354,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _chainProvider.statusUpdateSource = "provider";
     _tickerCallApi?.cancel();
     _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -627,7 +630,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
         ],
       ),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 85,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(
@@ -4808,9 +4811,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
     // Otherwise, call the API
     dynamic chain;
-    final ChainStatusProvider chainProvider = context.read<ChainStatusProvider>();
-    if (chainProvider.chainModel is ChainModel) {
-      chain = chainProvider.chainModel;
+
+    if (_chainProvider.chainModel is ChainModel) {
+      chain = _chainProvider.chainModel;
     } else {
       chain = await Get.find<ApiCallerController>().getChainStatus();
     }
@@ -4839,6 +4842,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             // Default to empty chain, with all parameters at 0
             _chainModel = ChainModel();
             _chainModel.chain = ChainDetails();
+          }
+
+          if (apiResponse.status != null && apiResponse.travel != null) {
+            _chainProvider.statusUpdateSource = "profile";
+            _chainProvider.updatePlayerStatusColor(
+              apiResponse.status!.color!,
+              apiResponse.status!.state!,
+              apiResponse.status!.until!,
+              apiResponse.travel!.timestamp!,
+            );
           }
 
           _checkIfNotificationsAreCurrent();

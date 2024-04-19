@@ -72,7 +72,7 @@ enum ApiSelection {
   attacks,
   attacksFull,
   chainStatus,
-  barsAndStatus,
+  barsAndPlayerStatus,
   items,
   inventory,
   education,
@@ -587,9 +587,9 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getBarsAndStatus() async {
+  Future<dynamic> getBarsAndPlayerStatus() async {
     dynamic apiResult;
-    await enqueueApiCall(apiSelection: ApiSelection.barsAndStatus).then((value) {
+    await enqueueApiCall(apiSelection: ApiSelection.barsAndPlayerStatus).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -881,8 +881,8 @@ class ApiCallerController extends GetxController {
         url += 'user/$prefix?selections=attacksfull';
       case ApiSelection.chainStatus:
         url += 'faction/?selections=chain';
-      case ApiSelection.barsAndStatus:
-        url += 'user/?selections=bars,profile';
+      case ApiSelection.barsAndPlayerStatus:
+        url += 'user/?selections=bars,profile,travel';
       case ApiSelection.items:
         url += 'torn/?selections=items';
       case ApiSelection.inventory:

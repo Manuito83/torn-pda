@@ -21,6 +21,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 import 'package:torn_pda/widgets/alerts/share_price_options.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
@@ -194,24 +195,30 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       elevation: _settingsP!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stock market alerts", style: TextStyle(color: Colors.white)),
-      leading: IconButton(
-        icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
-        onPressed: () {
-          if (widget.calledFromMenu) {
-            final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
-            if (scaffoldState != null) {
-              if (_webViewProvider.webViewSplitActive &&
-                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
-                scaffoldState.openEndDrawer();
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leading: Row(
+        children: [
+          IconButton(
+            icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
+            onPressed: () {
+              if (widget.calledFromMenu) {
+                final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+                if (scaffoldState != null) {
+                  if (_webViewProvider.webViewSplitActive &&
+                      _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                    scaffoldState.openEndDrawer();
+                  } else {
+                    scaffoldState.openDrawer();
+                  }
+                }
               } else {
-                scaffoldState.openDrawer();
+                routeWithDrawer = true;
+                _goBack();
               }
-            }
-          } else {
-            routeWithDrawer = true;
-            _goBack();
-          }
-        },
+            },
+          ),
+          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+        ],
       ),
       actions: [
         GestureDetector(

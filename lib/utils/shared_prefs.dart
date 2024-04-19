@@ -62,6 +62,7 @@ class Prefs {
   final String _kChainWatcherVibration = "pda_chainWatcherVibration";
   final String _kChainWatcherNotifications = "pda_chainWatcherNotifications";
   final String _kYataTargetsEnabled = "pda_yataTargetsEnabled";
+  final String _kStatusColorWidgetEnabled = "pda_statusColorWidgetEnabled";
   final String _kAttacksSort = "pda_attacksSort";
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
@@ -748,6 +749,16 @@ class Prefs {
   Future<bool> setYataTargetsEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kYataTargetsEnabled, value);
+  }
+
+  Future<bool> getStatusColorWidgetEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatusColorWidgetEnabled) ?? true;
+  }
+
+  Future<bool> setStatusColorWidgetEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatusColorWidgetEnabled, value);
   }
 
   /// ----------------------------

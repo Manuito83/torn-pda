@@ -2042,7 +2042,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
       title: const Text('Browser settings', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(

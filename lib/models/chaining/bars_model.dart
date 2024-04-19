@@ -42,6 +42,7 @@ class BarsAndStatusModel {
   States states;
   LastAction lastAction;
   Competition competition;
+  Travel travel;
 
   BarsAndStatusModel({
     required this.serverTime,
@@ -77,6 +78,7 @@ class BarsAndStatusModel {
     required this.states,
     required this.lastAction,
     required this.competition,
+    required this.travel,
   });
 
   factory BarsAndStatusModel.fromJson(Map<String, dynamic> json) => BarsAndStatusModel(
@@ -113,6 +115,7 @@ class BarsAndStatusModel {
         states: States.fromJson(json["states"]),
         lastAction: LastAction.fromJson(json["last_action"]),
         competition: Competition.fromJson(json["competition"]),
+        travel: Travel.fromJson(json["travel"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -149,6 +152,7 @@ class BarsAndStatusModel {
         "states": states.toJson(),
         "last_action": lastAction.toJson(),
         "competition": competition.toJson(),
+        "travel": travel.toJson(),
       };
 }
 
@@ -441,5 +445,33 @@ class Status {
         "state": state,
         "color": color,
         "until": until,
+      };
+}
+
+class Travel {
+  Travel({
+    this.destination,
+    this.timestamp,
+    this.departed,
+    this.timeLeft,
+  });
+
+  String? destination;
+  int? timestamp;
+  int? departed;
+  int? timeLeft;
+
+  factory Travel.fromJson(Map<String, dynamic> json) => Travel(
+        destination: json["destination"],
+        timestamp: json["timestamp"],
+        departed: json["departed"],
+        timeLeft: json["time_left"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "destination": destination,
+        "timestamp": timestamp,
+        "departed": departed,
+        "time_left": timeLeft,
       };
 }
