@@ -47,6 +47,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Added player status color counter widget in PDA icon and browser (can be disabled)",
           "Added Prometheus as a Foreign Stocks provider with automatic failover",
+          "Fixed user backup share with other players",
           "Fixed issues with chat highlight [Kwack]",
           "Fixed issue with pinned war targets",
           if (Platform.isAndroid) "Fixed home widget manual reload button",

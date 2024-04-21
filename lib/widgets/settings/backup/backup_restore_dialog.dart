@@ -122,6 +122,7 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
                 children: [
                   if (_serverPrefs.isNotEmpty && _selectedItems.isNotEmpty && _serverError.isEmpty)
                     BackupRestoreButton(
+                      ownBackup: true,
                       userProfile: widget.userProfile,
                       overwritteShortcuts: _overwritteShortcuts,
                       overwritteUserscripts: _overwritteUserscripts,

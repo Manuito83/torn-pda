@@ -267,11 +267,11 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                             _importedSelectedItems.isNotEmpty &&
                             _serverError.isEmpty)
                           BackupRestoreButton(
-                            userProfile: widget.userProfile,
+                            ownBackup: false,
+                            otherData: _importedPrefs,
                             overwritteShortcuts: _overwritteShortcuts,
                             overwritteUserscripts: _overwritteUserscripts,
                             overwritteTargets: _overwritteTargets,
-                            fromShareDialog: true,
                           ),
                         TextButton(
                           onPressed: () {
