@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
@@ -366,7 +367,9 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                   suffixIcon: IconButton(
                     icon: Icon(
                       _ownSharePasswordVisible ? Icons.visibility_off : Icons.visibility,
-                      color: Theme.of(context).primaryColorDark,
+                      color: context.read<ThemeProvider>().currentTheme == AppTheme.light
+                          ? Theme.of(context).primaryColorDark
+                          : Theme.of(context).primaryColorLight,
                     ),
                     onPressed: () {
                       setState(() {
@@ -468,7 +471,9 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                 suffixIcon: IconButton(
                   icon: Icon(
                     _ownSharePasswordVisible ? Icons.visibility_off : Icons.visibility,
-                    color: Theme.of(context).primaryColorDark,
+                    color: context.read<ThemeProvider>().currentTheme == AppTheme.light
+                        ? Theme.of(context).primaryColorDark
+                        : Theme.of(context).primaryColorLight,
                   ),
                   onPressed: () {
                     setState(() {

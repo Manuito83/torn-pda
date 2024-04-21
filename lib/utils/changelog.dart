@@ -39,11 +39,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.3.3 - Build 408 - 20/04/2024
+    // v3.4.0 - Build 409 - 21/04/2024
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.3.3'
-        ..date = '28 APR 2024'
+        ..version = 'Torn PDA v3.4.0'
+        ..date = '26 APR 2024'
         ..features = [
           "Added player status color counter widget in PDA icon and browser (can be disabled)",
           "Added Prometheus as a Foreign Stocks provider with automatic failover",
