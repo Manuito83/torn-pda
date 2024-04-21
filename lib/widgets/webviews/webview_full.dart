@@ -26,6 +26,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -240,6 +241,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   BountiesModel? _bountiesModel;
 
   DateTime? _urlTriggerTime;
+
+  DateTime? _foreignStocksSentTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -2681,36 +2684,98 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (elements.isNotEmpty) {
       try {
         // Parse stocks
-        final stockModel = ForeignStockOutModel();
-        stockModel.authorName = "Manuito";
-        stockModel.authorId = 2225097;
-
-        stockModel.country =
-            document.querySelector(".content-title > h4")!.innerHtml.substring(0, 4).toLowerCase().trim();
-
+        final items = <ForeignStockOutItem>[];
         for (final el in elements) {
-          final stockItem = ForeignStockOutItem();
+          int id = int.tryParse(el.querySelector(".details")!.attributes["itemid"]!) ?? 0;
+          int quantity =
+              int.tryParse(el.querySelector(".stck-amount")!.innerHtml.replaceAll(RegExp("[^0-9]"), "")) ?? 0;
+          int cost = int.tryParse(el.querySelector(".c-price")!.innerHtml.replaceAll(RegExp("[^0-9]"), "")) ?? 0;
 
-          stockItem.id = int.tryParse(el.querySelector(".details")!.attributes["itemid"]!);
-          stockItem.quantity =
-              int.tryParse(el.querySelector(".stck-amount")!.innerHtml.replaceAll(RegExp("[^0-9]"), ""));
-          stockItem.cost = int.tryParse(el.querySelector(".c-price")!.innerHtml.replaceAll(RegExp("[^0-9]"), ""));
-
-          if (stockItem.id != null && stockItem.quantity != null && stockItem.cost != null) {
-            stockModel.items!.add(stockItem);
+          if (id != 0 && cost != 0) {
+            items.add(ForeignStockOutItem(id: id, quantity: quantity, cost: cost));
           }
         }
 
-        // Send to server
-        await http
-            .post(
-              Uri.parse('https://yata.yt/api/v1/travel/import/'),
-              headers: <String, String>{
-                'Content-Type': 'application/json; charset=UTF-8',
-              },
-              body: foreignStockOutModelToJson(stockModel),
-            )
-            .timeout(const Duration(seconds: 15));
+        final stockModel = ForeignStockOutModel(
+          client: "Torn PDA",
+          version: appVersion,
+          authorName: "Manuito",
+          authorId: 2225097,
+          country: document.querySelector(".content-title > h4")!.text.trim().substring(0, 3).toLowerCase(),
+          items: items,
+        );
+
+        Future<void> sendToYATA() async {
+          String error = "";
+          try {
+            final response = await http
+                .post(
+                  Uri.parse('https://yata.yt/api/v1/travel/import/'),
+                  headers: <String, String>{
+                    'Content-Type': 'application/json; charset=UTF-8',
+                  },
+                  body: foreignStockOutModelToJson(stockModel),
+                )
+                .timeout(const Duration(seconds: 8));
+
+            log("YATA replied with status code ${response.statusCode}. Response: ${response.body}");
+            if (response.statusCode != 200) {
+              error = "Replied with status code ${response.statusCode}. Response: ${response.body}";
+            }
+          } catch (e) {
+            log('Error sending request to YATA: $e');
+            error = "Catched exception: $e";
+          }
+
+          if (error.isNotEmpty) {
+            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
+            FirebaseCrashlytics.instance.recordError(error, null);
+          }
+        }
+
+        Future<void> sendToPrometheus() async {
+          String error = "";
+          try {
+            final response = await http
+                .post(
+                  Uri.parse('https://prombot.co.uk:8443/api/travel'),
+                  headers: <String, String>{
+                    'Content-Type': 'application/json; charset=UTF-8',
+                  },
+                  body: foreignStockOutModelToJson(stockModel),
+                )
+                .timeout(const Duration(seconds: 8));
+
+            log("Prometeus replied with status code ${response.statusCode}. Response: ${response.body}");
+            if (response.statusCode != 200) {
+              error = "Replied with status code ${response.statusCode}. Response: ${response.body}";
+            }
+          } catch (e) {
+            log('Error sending request to Prometheus: $e');
+            error = "Catched exception: $e";
+          }
+
+          if (error.isNotEmpty) {
+            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
+            FirebaseCrashlytics.instance.recordError(error, null);
+          }
+        }
+
+        if (stockModel.items.isEmpty) {
+          log("Foreign stocks are empty!!");
+          return;
+        }
+
+        // Avoid repetitive submissions
+        if (_foreignStocksSentTime != null && (DateTime.now().difference(_foreignStocksSentTime!).inSeconds) < 3) {
+          return;
+        }
+        _foreignStocksSentTime = DateTime.now();
+
+        await Future.wait([
+          sendToYATA(),
+          sendToPrometheus(),
+        ]);
       } catch (e) {
         // Error parsing
       }
@@ -3882,12 +3947,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
-      final stats = await Get.find<ApiCallerController>().getBars();
-      if (stats is BarsModel) {
+      final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
+      if (stats is BarsAndStatusModel) {
         var message = "";
-        if (stats.chain!.current! > 10 && stats.chain!.cooldown == 0) {
+        if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
           message = 'Caution: your faction is chaining!';
-        } else if (stats.energy!.current! >= _settingsProvider.warnAboutExcessEnergyThreshold) {
+        } else if (stats.energy.current >= _settingsProvider.warnAboutExcessEnergyThreshold) {
           message = 'Caution: high energy detected, you might be stacking!';
         }
 

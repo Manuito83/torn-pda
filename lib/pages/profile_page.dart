@@ -68,7 +68,7 @@ import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 enum ProfileNotification {
@@ -144,6 +144,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
   UserDetailsProvider? _userProv;
+  late ChainStatusProvider _chainProvider;
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
   final UserController _u = Get.put(UserController());
@@ -296,6 +297,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
+    _chainProvider = context.read<ChainStatusProvider>();
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -352,6 +354,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _chainProvider.statusUpdateSource = "provider";
     _tickerCallApi?.cancel();
     _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -559,71 +562,75 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return AppBar(
       iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      title: Column(
+      title: Stack(
         children: [
-          if (_user?.name != null && _user!.name!.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                final String status = _user!.lastAction!.status == 'Offline'
-                    ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
-                    : _user!.lastAction!.status == 'Online'
-                        ? 'Online now'
-                        : 'Online ${_user!.lastAction!.relative}';
-                BotToast.showText(
-                  text: status,
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  duration: const Duration(seconds: 3),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-              onLongPress: () {
-                Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
-                BotToast.showText(
-                  text: "ID copied to the clipboard!",
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 5),
-                          child: Text(_user!.name!, style: TextStyle(color: Colors.white)),
+          Column(
+            children: [
+              if (_user?.name != null && _user!.name!.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    final String status = _user!.lastAction!.status == 'Offline'
+                        ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
+                        : _user!.lastAction!.status == 'Online'
+                            ? 'Online now'
+                            : 'Online ${_user!.lastAction!.relative}';
+                    BotToast.showText(
+                      text: status,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.blue,
+                      duration: const Duration(seconds: 3),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  },
+                  onLongPress: () {
+                    Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
+                    BotToast.showText(
+                      text: "ID copied to the clipboard!",
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.blue,
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.fitWidth,
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 5),
+                              child: Text(_user!.name!, style: TextStyle(color: Colors.white)),
+                            ),
+                            if (_user!.lastAction!.status == "Offline")
+                              const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
+                            else
+                              _user!.lastAction!.status == "Idle"
+                                  ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
+                                  : Icon(Icons.circle, size: 14, color: Colors.green[400]),
+                          ],
                         ),
-                        if (_user!.lastAction!.status == "Offline")
-                          const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
-                        else
-                          _user!.lastAction!.status == "Idle"
-                              ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
-                              : Icon(Icons.circle, size: 14, color: Colors.green[400]),
-                      ],
-                    ),
+                      ),
+                      Text(
+                        "[${_user!.playerId}] - Level ${_user!.level}",
+                        style: const TextStyle(fontSize: 10, color: Colors.white),
+                      ),
+                    ],
                   ),
-                  Text(
-                    "[${_user!.playerId}] - Level ${_user!.level}",
-                    style: const TextStyle(fontSize: 10, color: Colors.white),
-                  ),
-                ],
-              ),
-            )
-          else
-            const Text("Profile", style: TextStyle(color: Colors.white)),
+                )
+              else
+                const Text("Profile", style: TextStyle(color: Colors.white)),
+            ],
+          ),
         ],
       ),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(
@@ -1120,7 +1127,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
 
           Container(
-            color: _themeProvider!.cardColor!,
+            decoration: BoxDecoration(
+              color: _themeProvider!.cardColor!,
+              borderRadius: BorderRadius.circular(_settingsProvider!.colorCodedStatusCard ? 5 : 0),
+            ),
+            //color: _themeProvider!.cardColor!,
             child: Padding(
               padding: const EdgeInsets.all(15.0),
               child: Column(
@@ -4800,9 +4811,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
     // Otherwise, call the API
     dynamic chain;
-    final ChainStatusProvider chainProvider = context.read<ChainStatusProvider>();
-    if (chainProvider.chainModel is ChainModel) {
-      chain = chainProvider.chainModel;
+
+    if (_chainProvider.chainModel is ChainModel) {
+      chain = _chainProvider.chainModel;
     } else {
       chain = await Get.find<ApiCallerController>().getChainStatus();
     }
@@ -4831,6 +4842,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             // Default to empty chain, with all parameters at 0
             _chainModel = ChainModel();
             _chainModel.chain = ChainDetails();
+          }
+
+          if (apiResponse.status != null && apiResponse.travel != null) {
+            _chainProvider.statusUpdateSource = "profile";
+            _chainProvider.updatePlayerStatusColor(
+              apiResponse.status!.color!,
+              apiResponse.status!.state!,
+              apiResponse.status!.until!,
+              apiResponse.travel!.timestamp!,
+            );
           }
 
           _checkIfNotificationsAreCurrent();

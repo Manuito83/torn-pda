@@ -248,6 +248,8 @@ class UserScriptsProvider extends ChangeNotifier {
         for (final script in _userScriptList) {
           script.enabled = false;
         }
+        // Ensure that current scripts are actually saved as disabled
+        _saveUserScriptsListSharedPrefs();
       }
       return;
     }

@@ -18,7 +18,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/stakeouts/stakeout_card.dart';
 import 'package:torn_pda/widgets/stakeouts/stakeouts_info_dialog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class StakeoutsPage extends StatefulWidget {
   const StakeoutsPage({
@@ -189,7 +189,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stakeouts", style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(
@@ -390,14 +390,17 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
+                    backgroundColor: Colors.white,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.mainText,
-                      radius: 22,
+                      backgroundColor: Colors.black,
+                      radius: 24,
                       child: const SizedBox(
                         height: 28,
                         width: 28,
-                        child: Icon(MdiIcons.cctv),
+                        child: Icon(
+                          MdiIcons.cctv,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

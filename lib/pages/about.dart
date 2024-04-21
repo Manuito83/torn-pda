@@ -12,7 +12,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -361,7 +361,7 @@ class AboutPageState extends State<AboutPage> {
                     Flexible(
                       child: RichText(
                         text: TextSpan(
-                          text: 'Developer: ',
+                          text: 'Developers: ',
                           style: DefaultTextStyle.of(context).style,
                           children: <InlineSpan>[
                             WidgetSpan(
@@ -384,6 +384,33 @@ class AboutPageState extends State<AboutPage> {
                                 },
                                 child: const Text(
                                   'Manuito',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ', ',
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
+                                  const url = 'https://www.torn.com/profiles.php?XID=2190604';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
+                                onLongPress: () {
+                                  const url = 'https://www.torn.com/profiles.php?XID=2190604';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: const Text(
+                                  'Kwack',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
                               ),
@@ -526,7 +553,36 @@ class AboutPageState extends State<AboutPage> {
                               ),
                             ),
                             TextSpan(
-                              text: ' for the resources and support offered by YATA and Torn Stats respectively.',
+                              text: ' for the resources and support offered by YATA and Torn Stats respectively. '
+                                  'Also to the team at ',
+                              style: DefaultTextStyle.of(context).style,
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
+                                  const url = 'https://www.prombot.co.uk/home';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
+                                onLongPress: () {
+                                  const url = 'https://www.prombot.co.uk/home';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: const Text(
+                                  'Prometheus',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' for the help with their foreign stock database.',
                               style: DefaultTextStyle.of(context).style,
                             ),
                           ],
@@ -649,7 +705,7 @@ class AboutPageState extends State<AboutPage> {
     return AppBar(
       iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(

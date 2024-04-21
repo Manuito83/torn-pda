@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
@@ -32,7 +33,46 @@ enum WatchDefcon {
   apiFail,
 }
 
+enum PlayerStatusColor {
+  ok,
+  hospital,
+  jail,
+  travel,
+}
+
 class ChainStatusProvider extends ChangeNotifier {
+  // ### PLAYER STATUS COLOR AND TIMERS
+  bool _statusColorWidgetEnabled = true;
+  bool get statusColorWidgetEnabled => _statusColorWidgetEnabled;
+  set statusColorWidgetEnabled(bool value) {
+    _statusColorWidgetEnabled = value;
+    Prefs().setStatusColorWidgetEnabled(value);
+    notifyListeners();
+  }
+
+  // [true] whenever there's a special status condition that needs to be shown
+  bool _statusColorIsShown = false;
+  bool get statusColorIsShown => _statusColorIsShown;
+  set statusColorIsShown(bool value) {
+    _statusColorIsShown = value;
+    notifyListeners();
+  }
+
+  PlayerStatusColor statusColorCurrent = PlayerStatusColor.ok;
+  int statusColorUntil = 0;
+
+  // State parameter for status color counter widget to show new condition text (e.g.: "HOSP") when it changes
+  int lastWidgetKnownTimeStamp = 0;
+
+  // Avoids more than one request to be started by different widgets
+  bool _statusColorRequestsAlreadyStarted = false;
+
+  // We allow other sources (e.g.: Profile page) to update this information to save API calls. We will monitor
+  // who is updating it to save additional calls.
+  String statusUpdateSource = "provider";
+
+  // ##################################
+
   final List<PanicTargetModel> _panicTargets = <PanicTargetModel>[];
   List<PanicTargetModel> get panicTargets {
     return _panicTargets;
@@ -83,9 +123,9 @@ class ChainStatusProvider extends ChangeNotifier {
     return _chainModel;
   }
 
-  dynamic _barsModel;
+  dynamic _barsAndStatusModel;
   dynamic get barsModel {
-    return _barsModel;
+    return _barsAndStatusModel;
   }
 
   bool _modelError = true;
@@ -103,14 +143,16 @@ class ChainStatusProvider extends ChangeNotifier {
     return _currentSecondsCounter;
   }
 
+  /// Gets the API everywhere for the watcher
   bool _watcherActive = false;
   bool get watcherActive {
     return _watcherActive;
   }
 
-  bool _statusActive = false;
+  /// Gets the API for the widget
+  bool _chainWidgetRequestsActive = false;
   bool get statusActive {
-    return _statusActive;
+    return _chainWidgetRequestsActive;
   }
 
   WatchDefcon _chainWatcherDefcon = WatchDefcon.off;
@@ -135,19 +177,48 @@ class ChainStatusProvider extends ChangeNotifier {
 
   Timer? _tickerDecreaseCount;
 
-  int _currentApiCallPeriod = 10;
-  Timer? _tickerCallChainApi;
+  bool _chainIdling = false;
+  bool _chainOngoing = true;
 
-  Future activateStatus() async {
-    if (_statusActive) return;
-    _statusActive = true;
-    await getChainStatus();
-    await getEnergy();
+  Timer? _tickerCallFullChainApi;
+  Timer? _tickerCallOnlyStatusColorApi;
+
+  initialiseProvider() {
+    if (!initialised) {
+      _loadPreferences();
+    }
+  }
+
+  /// Initiate API calls to supply ONLY the status color for players
+  Future startStatusColorRequests() async {
+    // API calls for color already fullfil the needs of the player status calls
+    if (_chainWidgetRequestsActive) return;
+    if (_statusColorRequestsAlreadyStarted) return;
+    _statusColorRequestsAlreadyStarted = true;
+
+    await getEnergyAndStatus();
 
     // Activate timers
-    _tickerCallChainApi?.cancel();
+    _tickerCallOnlyStatusColorApi?.cancel();
+    _tickerCallOnlyStatusColorApi = Timer.periodic(Duration(seconds: 20), (Timer t) {
+      // Only call if main widget calls are not active
+      getEnergyAndStatus();
+    });
+    //log("ChainStatusProvider: activated calls for player status color!");
+  }
+
+  /// Calls API to supply the main chain widget and the status color for players
+  Future activateChainWidgetStatusRequests() async {
+    if (_chainWidgetRequestsActive) return;
+
+    _chainWidgetRequestsActive = true;
+    await getChainStatus();
+    await getEnergyAndStatus();
+
+    // Activate timers
+    _tickerCallFullChainApi?.cancel();
     _tickerDecreaseCount?.cancel();
-    _tickerCallChainApi = Timer.periodic(Duration(seconds: _currentApiCallPeriod), (Timer t) => _getAllStatus());
+    _tickerCallFullChainApi = Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
     _tickerDecreaseCount = Timer.periodic(
       const Duration(seconds: 1),
       (Timer t) {
@@ -162,9 +233,9 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   deactivateStatus() {
-    _tickerCallChainApi?.cancel();
+    _tickerCallFullChainApi?.cancel();
     _tickerDecreaseCount?.cancel();
-    _statusActive = false;
+    _chainWidgetRequestsActive = false;
     log("Chain watcher timers deactivated!");
   }
 
@@ -274,27 +345,116 @@ class ChainStatusProvider extends ChangeNotifier {
   Future _getAllStatus() async {
     if (chainModel == null) return;
 
+    if (!_watcherActive && !_chainWidgetRequestsActive) {
+      log("ChainStatusProvider: pausing API request, no clients");
+    }
+
+    bool changeToChainIdling = false;
+    if (_chainOngoing) {
+      if (chainModel!.chain!.current! < 10 || chainModel!.chain!.cooldown! > 0) {
+        changeToChainIdling = true;
+        _chainIdling = true;
+        _chainOngoing = false;
+      }
+    }
+
+    bool changeToChainOngoing = false;
+    if (_chainIdling) {
+      if (chainModel!.chain!.current! >= 10 && chainModel!.chain!.cooldown! == 0) {
+        changeToChainOngoing = true;
+        _chainIdling = false;
+        _chainOngoing = true;
+      }
+    }
+
+    log("ChainStatusProvider getting status (status = $_chainWidgetRequestsActive, watcher = $_watcherActive, "
+        "color = $statusColorWidgetEnabled)");
+
     // Adapt API calls depending on the Chain count
-    if ((chainModel!.chain!.current! < 10 || chainModel!.chain!.cooldown! > 0) && _currentApiCallPeriod != 30) {
-      _tickerCallChainApi?.cancel();
-      _currentApiCallPeriod = 30;
-      _tickerCallChainApi = Timer.periodic(const Duration(seconds: 30), (Timer t) => _getAllStatus());
-      log("Decreasing Chain Status calls to every 30 seconds");
-    } else if (chainModel!.chain!.current! >= 10 && _currentApiCallPeriod != 10) {
-      _tickerCallChainApi?.cancel();
-      _currentApiCallPeriod = 10;
-      _tickerCallChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
+    if (changeToChainIdling) {
+      _tickerCallFullChainApi?.cancel();
+
+      // If we use the status color check widget, leave it at 20 seconds
+      int idleApiCallPeriod = 30;
+      if (statusColorWidgetEnabled) {
+        idleApiCallPeriod = 20;
+      }
+      _tickerCallFullChainApi = Timer.periodic(Duration(seconds: idleApiCallPeriod), (Timer t) => _getAllStatus());
+      log("Decreasing Chain Status calls to every $idleApiCallPeriod seconds");
+    } else if (changeToChainOngoing) {
+      _tickerCallFullChainApi?.cancel();
+      _tickerCallFullChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
       log("Increasing Chain Status calls to every 10 seconds");
     }
 
     getChainStatus();
-    getEnergy();
+    getEnergyAndStatus();
   }
 
-  Future<void> getEnergy() async {
-    final dynamic myBars = await Get.find<ApiCallerController>().getBars();
-    _barsModel = myBars;
+  Future<void> getEnergyAndStatus() async {
+    if (!_statusColorWidgetEnabled) {
+      statusColorCurrent = PlayerStatusColor.ok;
+      statusColorUntil = 0;
+      return;
+    }
+
+    // By checking the last update source, we reduce the API call rate in case another
+    // source (e.g.: Profile page) is helping us to allow the player status in this provider
+    if (statusUpdateSource != "provider") {
+      //log("Player status color: not updating since there is another information source");
+      return;
+    }
+
+    if (statusColorCurrent == PlayerStatusColor.travel) {
+      if (DateTime.fromMillisecondsSinceEpoch(statusColorUntil * 1000).isAfter(DateTime.now())) {
+        //log("Player status color: not updating because we are still traveling!");
+        return;
+      }
+    }
+
+    //log("Player status color: updating from provider!");
+
+    final dynamic myBars = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
+    _barsAndStatusModel = myBars;
+
+    // Update status color
+    if (myBars is BarsAndStatusModel) {
+      updatePlayerStatusColor(
+        myBars.status.color,
+        myBars.status.state,
+        myBars.status.until,
+        myBars.travel.timestamp!,
+      );
+    }
+
     notifyListeners();
+  }
+
+  void updatePlayerStatusColor(String color, String state, int stateUntil, int travelTimestamp) {
+    switch (color) {
+      case "green":
+        if (statusColorIsShown) {
+          statusColorIsShown = false;
+        }
+        statusColorCurrent = PlayerStatusColor.ok;
+        statusColorUntil = 0;
+      case "red":
+        if (!statusColorIsShown) {
+          statusColorIsShown = true;
+        }
+        statusColorCurrent = PlayerStatusColor.hospital;
+        statusColorUntil = stateUntil;
+        if (state == "Jail") {
+          statusColorCurrent = PlayerStatusColor.jail;
+          statusColorUntil = stateUntil;
+        }
+      case "blue":
+        if (!statusColorIsShown) {
+          statusColorIsShown = true;
+        }
+        statusColorCurrent = PlayerStatusColor.travel;
+        statusColorUntil = travelTimestamp;
+    }
   }
 
   Future<void> getChainStatus() async {
@@ -599,7 +759,7 @@ class ChainStatusProvider extends ChangeNotifier {
     });
   }
 
-  loadPreferences() async {
+  _loadPreferences() async {
     initialised = true;
     _soundEnabled = await Prefs().getChainWatcherSound();
     _vibrationEnabled = await Prefs().getChainWatcherVibration();
@@ -631,6 +791,8 @@ class ChainStatusProvider extends ChangeNotifier {
     for (final String p in savedPanicTargets) {
       panicTargets.add(panicTargetModelFromJson(p));
     }
+
+    _statusColorWidgetEnabled = await Prefs().getStatusColorWidgetEnabled();
   }
 
   Future<void> showNotification(

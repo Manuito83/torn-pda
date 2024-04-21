@@ -15,7 +15,6 @@ import 'package:torn_pda/pages/chaining/retals_page.dart';
 //import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/war_page.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -36,7 +35,6 @@ class ChainingPage extends StatefulWidget {
 
 class ChainingPageState extends State<ChainingPage> {
   ThemeProvider? _themeProvider;
-  late ChainStatusProvider _chainStatusProvider;
   Future? _preferencesLoaded;
   late SettingsProvider _settingsProvider;
   late UserDetailsProvider _userProvider;
@@ -52,7 +50,6 @@ class ChainingPageState extends State<ChainingPage> {
   @override
   void initState() {
     super.initState();
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _isAppBarTop = context.read<SettingsProvider>().appBarTop;
     _userProvider = context.read<UserDetailsProvider>();
     _r = Get.put(RetalsController());
@@ -207,10 +204,6 @@ class ChainingPageState extends State<ChainingPage> {
 
   Future _restorePreferences() async {
     //_tacEnabled = await Prefs().getTACEnabled();
-
-    if (!_chainStatusProvider.initialised) {
-      await _chainStatusProvider.loadPreferences();
-    }
 
     if (widget.retalsRedirection && (_userProvider.basic!.faction!.factionId != 0 || !_retaliationEnabled)) {
       _currentPage = 3;

@@ -21,7 +21,6 @@ import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:home_widget/home_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -51,6 +50,7 @@ import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -343,6 +343,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       });
     });
+
+    // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
+    context.read<ChainStatusProvider>().initialiseProvider();
   }
 
   @override
@@ -384,7 +387,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Refresh widget to have up to date info when we exit
       if (Platform.isAndroid) {
-        if ((await pdaWidget_numberInstalled()) > 0) {
+        if ((await pdaWidget_numberInstalled()).isNotEmpty) {
           pdaWidget_startBackgroundUpdate();
         }
       }
@@ -1919,9 +1922,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Appwidget dialog
       if (Platform.isAndroid) {
         if (!await Prefs().getAppwidgetExplanationShown()) {
-          final int widgets =
-              (await HomeWidget.getWidgetCount(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda'))!;
-          if (widgets > 0) {
+          if ((await pdaWidget_numberInstalled()).isNotEmpty) {
             await _showAppwidgetExplanationDialog(context);
             Prefs().setAppwidgetExplanationShown(true);
             return; // Do not show more dialogs below

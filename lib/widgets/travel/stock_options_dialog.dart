@@ -227,7 +227,32 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                   ),
                   Text(
                     'Affects all travel time-based calculations. Does not affect '
-                    'profit calculation.',
+                    'profit calculation',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          "Preferred data provider",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      _dataProviderDropdown(),
+                    ],
+                  ),
+                  Text(
+                    'Dictates which data provider will be used to download the data in first place (there is a '
+                    'failover between them to ensure data availability). Note: data will be uploaded to both providers '
+                    'regardless of this setting',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 11,
@@ -338,6 +363,47 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
         if (value == null) return;
         setState(() {
           widget.settingsProvider!.changeTravelTicket = value;
+        });
+        _callBackValues();
+      },
+    );
+  }
+
+  DropdownButton _dataProviderDropdown() {
+    return DropdownButton<String>(
+      value: widget.settingsProvider!.foreignStocksDataProvider,
+      items: const [
+        DropdownMenuItem(
+          value: "yata",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "YATA",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "prometheus",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Prometheus",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          widget.settingsProvider!.foreignStocksDataProvider = value;
         });
         _callBackValues();
       },

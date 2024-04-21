@@ -16,12 +16,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '402'
+    flutterVersionCode = '409'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '3.3.2'
+    flutterVersionName = '3.4.0'
 }
 
 def keystoreProperties = new Properties()
@@ -93,6 +93,9 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.core:core-splashscreen:1.0.0'
+    
+    // Required by Home Widget
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
 
     // See https://github.com/flutter/flutter/issues/110658 (local_notifications_plugin)
     implementation 'androidx.window:window:1.0.0'

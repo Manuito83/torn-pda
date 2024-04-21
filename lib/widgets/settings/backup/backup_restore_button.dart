@@ -1,4 +1,5 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -7,19 +8,29 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 
+/// If it's [ownBackup], userProfile must not be null
+/// If it's not [ownBackup], user data must come as part of [otherData]
 class BackupRestoreButton extends StatefulWidget {
-  final OwnProfileBasic userProfile;
+  final bool ownBackup;
+
+  // For own backup
+  final OwnProfileBasic? userProfile;
+
+  // For others
+  final Map<String, dynamic> otherData;
+
+  // Overwritte parameters
   final bool overwritteShortcuts;
   final bool overwritteUserscripts;
   final bool overwritteTargets;
-  final bool fromShareDialog;
 
   const BackupRestoreButton({
-    required this.userProfile,
+    required this.ownBackup,
+    this.userProfile,
+    this.otherData = const {},
     required this.overwritteShortcuts,
     required this.overwritteUserscripts,
     required this.overwritteTargets,
-    this.fromShareDialog = false,
   });
 
   @override
@@ -39,7 +50,12 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
                 _restoreInProcess = true;
               });
 
-              await _restoreOnlineBackup();
+              if (widget.ownBackup) {
+                await _restoreOwnOnlineBackup();
+              } else {
+                await _getOtherOnlineBackup();
+              }
+
               if (mounted) Navigator.pop(context);
             },
       child: _restoreInProcess
@@ -48,12 +64,24 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
     );
   }
 
-  Future<void> _restoreOnlineBackup() async {
-    //final SharedPreferences prefs = await SharedPreferences.getInstance();
+  Future<void> _restoreOwnOnlineBackup() async {
+    if (widget.userProfile == null) {
+      BotToast.showText(
+        text: "Error getting user data: empty!",
+        contentColor: Colors.red,
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        duration: const Duration(seconds: 3),
+        contentPadding: const EdgeInsets.all(10),
+      );
+      return;
+    }
 
     final result = await firebaseFunctions.getUserPrefs(
-      userId: widget.userProfile.playerId ?? 0,
-      apiKey: widget.userProfile.userApiKey.toString(),
+      userId: widget.userProfile!.playerId ?? 0,
+      apiKey: widget.userProfile!.userApiKey.toString(),
     );
 
     // Protect against user closing the dialog while the request is being processed
@@ -83,7 +111,6 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
         userscriptsProvider.restoreScriptsFromServerSave(
           overwritte: widget.overwritteUserscripts,
           scriptsList: userscripts,
-          defaultToDisabled: widget.fromShareDialog,
         );
       }
 
@@ -108,6 +135,87 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
         color: Colors.white,
       ),
       duration: const Duration(seconds: 10),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  Future<void> _getOtherOnlineBackup() async {
+    // Protect against user closing the dialog while the request is being processed
+    if (!mounted) return;
+
+    bool success = false;
+    String message = "";
+
+    try {
+      if (widget.otherData.isEmpty) {
+        BotToast.showText(
+          text: "Error getting user data: empty!",
+          contentColor: Colors.red,
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(10),
+        );
+        return;
+      }
+
+      // Shortcuts
+      final activeShortcutsList = widget.otherData["pda_activeShortcutsList"] as List?;
+      final shortcutTile = widget.otherData["pda_shortcutTile"];
+      final shortcutMenu = widget.otherData["pda_shortcutMenu"];
+      if (activeShortcutsList != null) {
+        // Restore through the provider
+        final shortcutsList = activeShortcutsList.map((item) => item as String).toList();
+        final shortcutsProvider = context.read<ShortcutsProvider>();
+        shortcutsProvider.restoreShortcutsFromServerSave(
+          overwritte: widget.overwritteShortcuts,
+          shortcutsList: shortcutsList,
+          shortcutTile: shortcutTile,
+          shortcutMenu: shortcutMenu,
+        );
+      }
+
+      // User scripts
+      String? userscripts = widget.otherData["pda_userScriptsList"];
+      if (userscripts != null) {
+        final userscriptsProvider = context.read<UserScriptsProvider>();
+        userscriptsProvider.restoreScriptsFromServerSave(
+          overwritte: widget.overwritteUserscripts,
+          scriptsList: userscripts,
+          defaultToDisabled: true,
+        );
+      }
+
+      // Shortcuts
+      final targetsBackup = widget.otherData["pda_targetsList"] as List?;
+      if (targetsBackup != null) {
+        // Restore through the provider
+        final targetsList = targetsBackup.map((item) => item as String).toList();
+        final targetsProvider = context.read<TargetsProvider>();
+        targetsProvider.restoreTargetsFromServerSave(
+          backup: targetsList,
+          overwritte: widget.overwritteTargets,
+        );
+      }
+
+      success = true;
+      message = "Settings imported successfully!";
+    } catch (e, trace) {
+      message = "Error importing settings: $e";
+      FirebaseCrashlytics.instance.log("PDA Crash at Importing Other User Settings");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
+
+    BotToast.showText(
+      text: message,
+      contentColor: success ? Colors.green : Colors.red,
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      duration: Duration(seconds: success ? 3 : 5),
       contentPadding: const EdgeInsets.all(10),
     );
   }

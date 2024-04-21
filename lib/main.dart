@@ -57,9 +57,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.3.2';
-const String androidCompilation = '402';
-const String iosCompilation = '402';
+const String appVersion = '3.4.0';
+const String androidCompilation = '409';
+const String iosCompilation = '409';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
@@ -126,6 +126,9 @@ Future<void> main() async {
 
   // Avoid screen lock when testing in real device
   if (kDebugMode && enableWakelockForDebug) {
+    log("########################################################");
+    log("####### WAKELOCK ENABLED FOR DEBUGGING PURPOSES #######");
+    log("########################################################");
     WakelockPlus.enable();
   }
 
@@ -215,42 +218,18 @@ Future<void> main() async {
         ChangeNotifierProvider<AttacksProvider>(create: (context) => AttacksProvider()),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
-        ChangeNotifierProvider<FriendsProvider>(
-          create: (context) => FriendsProvider(),
-        ),
-        ChangeNotifierProvider<UserScriptsProvider>(
-          create: (context) => UserScriptsProvider(),
-        ),
-        ChangeNotifierProvider<ChainStatusProvider>(
-          create: (context) => ChainStatusProvider(),
-        ),
-        ChangeNotifierProvider<CrimesProvider>(
-          create: (context) => CrimesProvider(),
-        ),
-        ChangeNotifierProvider<QuickItemsProvider>(
-          create: (context) => QuickItemsProvider(),
-        ),
-        ChangeNotifierProvider<QuickItemsProviderFaction>(
-          create: (context) => QuickItemsProviderFaction(),
-        ),
-        ChangeNotifierProvider<TradesProvider>(
-          create: (context) => TradesProvider(),
-        ),
-        ChangeNotifierProvider<ShortcutsProvider>(
-          create: (context) => ShortcutsProvider(),
-        ),
-        ChangeNotifierProvider<AwardsProvider>(
-          create: (context) => AwardsProvider(),
-        ),
-        ChangeNotifierProvider<TacProvider>(
-          create: (context) => TacProvider(),
-        ),
-        ChangeNotifierProvider<TerminalProvider>(
-          create: (context) => TerminalProvider(""),
-        ),
-        ChangeNotifierProvider<WebViewProvider>(
-          create: (context) => WebViewProvider(),
-        ),
+        ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
+        ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
+        ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
+        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
+        ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
+        ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
+        ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
+        ChangeNotifierProvider<AwardsProvider>(create: (context) => AwardsProvider()),
+        ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
+        ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider("")),
+        ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
         // Native login
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
         ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
@@ -280,7 +259,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Handle home widget
     if (Platform.isAndroid) {
       HomeWidget.setAppGroupId('torn_pda');
-      HomeWidget.registerBackgroundCallback(pdaWidget_callback);
+      HomeWidget.registerInteractivityCallback(pdaWidget_callback);
       pdaWidget_handleBackgroundUpdateStatus();
     }
 

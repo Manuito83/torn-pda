@@ -853,7 +853,7 @@ String chatHighlightCSS({required String background, required String senderColor
 
   .pda-chat-outline [class*=chat-box-message__box_][class*=chat-box-message__box--],
   .pda-chat-outline[class*=chat-box-message__box_][class*=chat-box-message__box--] {
-    border: 1px solid $senderColor;
+    box-shadow: 0 0 0 1px $senderColor;
   }
   """;
 }
