@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -78,7 +79,9 @@ class StatusColorCounterState extends State<StatusColorCounter> {
               child: Container(
                 color: _formattedUntil == null ? Colors.transparent : statusColor,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
+                  padding: Platform.isAndroid
+                      ? const EdgeInsets.fromLTRB(2, 1.5, 1, 0.5)
+                      : const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
                   child: Center(
                     child: Text(
                       showNew ? newText : _formattedUntil ?? "",
