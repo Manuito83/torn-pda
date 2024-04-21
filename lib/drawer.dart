@@ -50,6 +50,7 @@ import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -342,6 +343,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       });
     });
+
+    // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
+    context.read<ChainStatusProvider>().initialiseProvider();
   }
 
   @override

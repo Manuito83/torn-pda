@@ -58,8 +58,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.3.3';
-const String androidCompilation = '404';
-const String iosCompilation = '404';
+const String androidCompilation = '406';
+const String iosCompilation = '406';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
@@ -218,42 +218,18 @@ Future<void> main() async {
         ChangeNotifierProvider<AttacksProvider>(create: (context) => AttacksProvider()),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
-        ChangeNotifierProvider<FriendsProvider>(
-          create: (context) => FriendsProvider(),
-        ),
-        ChangeNotifierProvider<UserScriptsProvider>(
-          create: (context) => UserScriptsProvider(),
-        ),
-        ChangeNotifierProvider<ChainStatusProvider>(
-          create: (context) => ChainStatusProvider(),
-        ),
-        ChangeNotifierProvider<CrimesProvider>(
-          create: (context) => CrimesProvider(),
-        ),
-        ChangeNotifierProvider<QuickItemsProvider>(
-          create: (context) => QuickItemsProvider(),
-        ),
-        ChangeNotifierProvider<QuickItemsProviderFaction>(
-          create: (context) => QuickItemsProviderFaction(),
-        ),
-        ChangeNotifierProvider<TradesProvider>(
-          create: (context) => TradesProvider(),
-        ),
-        ChangeNotifierProvider<ShortcutsProvider>(
-          create: (context) => ShortcutsProvider(),
-        ),
-        ChangeNotifierProvider<AwardsProvider>(
-          create: (context) => AwardsProvider(),
-        ),
-        ChangeNotifierProvider<TacProvider>(
-          create: (context) => TacProvider(),
-        ),
-        ChangeNotifierProvider<TerminalProvider>(
-          create: (context) => TerminalProvider(""),
-        ),
-        ChangeNotifierProvider<WebViewProvider>(
-          create: (context) => WebViewProvider(),
-        ),
+        ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
+        ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
+        ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
+        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
+        ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
+        ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
+        ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
+        ChangeNotifierProvider<AwardsProvider>(create: (context) => AwardsProvider()),
+        ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
+        ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider("")),
+        ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
         // Native login
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
         ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),

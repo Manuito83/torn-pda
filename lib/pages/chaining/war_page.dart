@@ -38,7 +38,7 @@ import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
-import 'package:torn_pda/widgets/webviews/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class WarOptions {
   String? description;
@@ -580,7 +580,7 @@ class WarPageState extends State<WarPage> {
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War", style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 80,
+      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
           IconButton(
@@ -1568,30 +1568,24 @@ class WarTargetsListState extends State<WarTargetsList> {
       ],
     );
 
-    if (MediaQuery.orientationOf(context) == Orientation.portrait) {
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: filteredCards.length,
-        itemBuilder: (context, index) {
-          if (index == pinnedMembersCount && index != 0) {
-            return separator;
-          }
-          return slidableCard(filteredCards[index]);
-        },
-      );
-    } else {
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: filteredCards.length,
-        physics: const NeverScrollableScrollPhysics(),
-        itemBuilder: (context, index) {
-          if (index == pinnedMembersCount && index != 0) {
-            return separator;
-          }
-          return slidableCard(filteredCards[index]);
-        },
-      );
-    }
+    final orientationPortrait = MediaQuery.orientationOf(context) == Orientation.portrait;
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: filteredCards.length,
+      physics: orientationPortrait ? null : const NeverScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        if (index == pinnedMembersCount && index != 0) {
+          // Add the first unpinned card preceded by the separator
+          return Column(
+            children: [
+              separator,
+              slidableCard(filteredCards[index]),
+            ],
+          );
+        }
+        return slidableCard(filteredCards[index]);
+      },
+    );
   }
 
   List<WarCard> getChildrenTarget() {

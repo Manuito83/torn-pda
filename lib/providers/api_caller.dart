@@ -72,7 +72,7 @@ enum ApiSelection {
   attacks,
   attacksFull,
   chainStatus,
-  bars,
+  barsAndPlayerStatus,
   items,
   inventory,
   education,
@@ -587,14 +587,14 @@ class ApiCallerController extends GetxController {
     }
   }
 
-  Future<dynamic> getBars() async {
+  Future<dynamic> getBarsAndPlayerStatus() async {
     dynamic apiResult;
-    await enqueueApiCall(apiSelection: ApiSelection.bars).then((value) {
+    await enqueueApiCall(apiSelection: ApiSelection.barsAndPlayerStatus).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
       try {
-        return BarsModel.fromJson(apiResult as Map<String, dynamic>);
+        return BarsAndStatusModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -881,8 +881,8 @@ class ApiCallerController extends GetxController {
         url += 'user/$prefix?selections=attacksfull';
       case ApiSelection.chainStatus:
         url += 'faction/?selections=chain';
-      case ApiSelection.bars:
-        url += 'user/?selections=bars';
+      case ApiSelection.barsAndPlayerStatus:
+        url += 'user/?selections=bars,profile,travel';
       case ApiSelection.items:
         url += 'torn/?selections=items';
       case ApiSelection.inventory:

@@ -231,7 +231,7 @@ class ChainWidgetState extends State<ChainWidget> {
                     future: _finishedGettingBars,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
-                        if (_chainStatusProvider.barsModel is BarsModel) {
+                        if (_chainStatusProvider.barsModel is BarsAndStatusModel) {
                           final bars = _chainStatusProvider.barsModel;
                           return Column(
                             children: <Widget>[
@@ -420,7 +420,7 @@ class ChainWidgetState extends State<ChainWidget> {
     if (!_initialised || _chainStatusProvider.chainModel == null) {
       _initialised = true;
       if (!_chainStatusProvider.statusActive) {
-        _finishedLoadingChain = _finishedGettingBars = _chainStatusProvider.activateStatus();
+        _finishedLoadingChain = _finishedGettingBars = _chainStatusProvider.activateChainWidgetStatusRequests();
       } else {
         _finishedLoadingChain = _finishedGettingBars = Future.value(true);
       }

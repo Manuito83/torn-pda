@@ -7,11 +7,13 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
+import 'package:torn_pda/widgets/status_color_counter.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_fixed.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
@@ -676,14 +678,33 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                 color: _themeProvider.navSelected,
                                 child: Row(
                                   children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                                      child: _webViewProvider.currentUiMode == UiMode.window
-                                          ? const Icon(MdiIcons.dotsHorizontal)
-                                          : Icon(
-                                              MdiIcons.dotsHorizontalCircleOutline,
-                                              color: Colors.orange[800],
+                                    Consumer<ChainStatusProvider>(
+                                      builder: (BuildContext context, provider, Widget? child) {
+                                        return Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Padding(
+                                              padding: EdgeInsets.fromLTRB(
+                                                8,
+                                                0,
+                                                8,
+                                                provider.statusColorIsShown ? 12 : 0,
+                                              ),
+                                              child: _webViewProvider.currentUiMode == UiMode.window
+                                                  ? const Icon(MdiIcons.dotsHorizontal)
+                                                  : Icon(
+                                                      MdiIcons.dotsHorizontalCircleOutline,
+                                                      color: Colors.orange[800],
+                                                    ),
                                             ),
+                                            if (provider.statusColorIsShown && provider.statusColorWidgetEnabled)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 22.0),
+                                                child: StatusColorCounter(),
+                                              ),
+                                          ],
+                                        );
+                                      },
                                     ),
                                     SizedBox(
                                       height: 40,
@@ -699,6 +720,35 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                             ],
                           ),
                           items: [
+                            if (context.read<ChainStatusProvider>().statusColorIsShown)
+                              if (context.read<ChainStatusProvider>().statusColorCurrent == PlayerStatusColor.hospital)
+                                CircularMenuItem(
+                                  icon: MdiIcons.hospital,
+                                  color: Colors.red[800],
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    _webViewProvider.loadCurrentTabUrl("https://www.torn.com/hospitalview.php");
+                                  },
+                                )
+                              else if (context.read<ChainStatusProvider>().statusColorCurrent == PlayerStatusColor.jail)
+                                CircularMenuItem(
+                                  icon: MdiIcons.officeBuilding,
+                                  color: Colors.brown,
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    _webViewProvider.loadCurrentTabUrl("https://www.torn.com/jailview.php");
+                                  },
+                                )
+                              else if (context.read<ChainStatusProvider>().statusColorCurrent ==
+                                  PlayerStatusColor.travel)
+                                CircularMenuItem(
+                                  icon: MdiIcons.airplaneTakeoff,
+                                  color: Colors.blue[800],
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    _webViewProvider.loadCurrentTabUrl("https://www.torn.com/");
+                                  },
+                                ),
                             CircularMenuItem(
                               icon: MdiIcons.heartOutline,
                               onTap: () {
