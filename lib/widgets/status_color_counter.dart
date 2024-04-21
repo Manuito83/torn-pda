@@ -7,10 +7,7 @@ import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
 class StatusColorCounter extends StatefulWidget {
-  final Function? widgetShownCallback;
-
   const StatusColorCounter({
-    this.widgetShownCallback,
     Key? key,
   }) : super(key: key);
 
@@ -27,12 +24,20 @@ class StatusColorCounterState extends State<StatusColorCounter> {
 
   String? _formattedUntil;
 
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
     _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _updateFormattedUntil(_chainStatusProvider.statusColorUntil);
     _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -86,37 +91,24 @@ class StatusColorCounterState extends State<StatusColorCounter> {
   }
 
   void _startTimer() {
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      if (mounted) {
-        // Make sure that we are updating from the provider whenever the browser is open
-        String currentSource = context.read<ChainStatusProvider>().statusUpdateSource;
-        bool browserOnTop = context.read<WebViewProvider>().browserShowInForeground;
-        if (browserOnTop && currentSource != "provider") {
-          context.read<ChainStatusProvider>().statusUpdateSource = "provider";
-        }
-
-        // Creates a count so that we can blink the condition (e.g.: "HOSP") whenever it's encountered
-        if (_newKnownTimestamp && _newTimeStampCount < 5) {
-          _newTimeStampCount++;
-        } else if (_newKnownTimestamp && _newTimeStampCount >= 5) {
-          _newKnownTimestamp = false;
-          _newTimeStampCount = 0;
-        }
-
-        // Callback to hide the widget when not applicable (e.g.: in Webview Stackview)
-        if (widget.widgetShownCallback != null) {
-          if (_formattedUntil != null) {
-            widget.widgetShownCallback!(true);
-          } else {
-            widget.widgetShownCallback!(false);
-          }
-        }
-
-        // Updates the timer string in the widget
-        _updateFormattedUntil(_chainStatusProvider.statusColorUntil);
-      } else {
-        timer.cancel();
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      // Make sure that we are updating from the provider whenever the browser is open
+      String currentSource = context.read<ChainStatusProvider>().statusUpdateSource;
+      bool browserOnTop = context.read<WebViewProvider>().browserShowInForeground;
+      if (browserOnTop && currentSource != "provider") {
+        context.read<ChainStatusProvider>().statusUpdateSource = "provider";
       }
+
+      // Creates a count so that we can blink the condition (e.g.: "HOSP") whenever it's encountered
+      if (_newKnownTimestamp && _newTimeStampCount < 5) {
+        _newTimeStampCount++;
+      } else if (_newKnownTimestamp && _newTimeStampCount >= 5) {
+        _newKnownTimestamp = false;
+        _newTimeStampCount = 0;
+      }
+
+      // Updates the timer string in the widget
+      _updateFormattedUntil(_chainStatusProvider.statusColorUntil);
     });
   }
 
@@ -137,9 +129,18 @@ class StatusColorCounterState extends State<StatusColorCounter> {
       setState(() {
         _formattedUntil = "END";
       });
+
       return;
     } else if (untilSeconds < -60) {
       _formattedUntil = null;
+
+      // Ensure we are not just returning an empty widget, but also hiding the widget (to ensure proper padding
+      // measurement) even if no API calls have been performed from the Provider since then
+      // (e.g.: if the app was in the background)
+      if (_chainStatusProvider.statusColorIsShown) {
+        _chainStatusProvider.statusColorIsShown = false;
+      }
+
       return;
     }
 
