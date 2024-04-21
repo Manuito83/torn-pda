@@ -79,10 +79,11 @@ class StatusColorCounterState extends State<StatusColorCounter> {
                 color: _formattedUntil == null ? Colors.transparent : statusColor,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
-                  child: Text(
-                    showNew ? newText : _formattedUntil ?? "",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                  child: Center(
+                    child: Text(
+                      showNew ? newText : _formattedUntil ?? "",
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
                   ),
                 ),
               ),
