@@ -405,13 +405,6 @@ class ChainStatusProvider extends ChangeNotifier {
       return;
     }
 
-    if (statusColorCurrent == PlayerStatusColor.travel) {
-      if (DateTime.fromMillisecondsSinceEpoch(statusColorUntil * 1000).isAfter(DateTime.now())) {
-        //log("Player status color: not updating because we are still traveling!");
-        return;
-      }
-    }
-
     //log("Player status color: updating from provider!");
 
     final dynamic myBars = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
