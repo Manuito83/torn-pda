@@ -395,7 +395,6 @@ class ChainStatusProvider extends ChangeNotifier {
     if (!_statusColorWidgetEnabled) {
       statusColorCurrent = PlayerStatusColor.ok;
       statusColorUntil = 0;
-      return;
     }
 
     // By checking the last update source, we reduce the API call rate in case another
@@ -460,15 +459,14 @@ class ChainStatusProvider extends ChangeNotifier {
 
       // For timer debugging
       //
-      /*
-      chainModel.chain
+      // TODO
+      chainModel!.chain!
         ..timeout = 200
         ..current = 51
         ..max = 2500
         ..start = 1230000
         ..modifier = 1.23
         ..cooldown = 0;
-      */
 
       tryToDeactivateStatus();
 
