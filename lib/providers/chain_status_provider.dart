@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -457,16 +458,19 @@ class ChainStatusProvider extends ChangeNotifier {
       _chainModel = chainResponse;
       _modelError = false;
 
-      // For timer debugging
-      //
-      // TODO
-      chainModel!.chain!
-        ..timeout = 200
-        ..current = 51
-        ..max = 2500
-        ..start = 1230000
-        ..modifier = 1.23
-        ..cooldown = 0;
+      if (kDebugMode) {
+        // For timer debugging
+        //
+        /*
+        chainModel!.chain!
+          ..timeout = 200
+          ..current = 51
+          ..max = 2500
+          ..start = 1230000
+          ..modifier = 1.23
+          ..cooldown = 0;
+        */
+      }
 
       tryToDeactivateStatus();
 
