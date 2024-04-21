@@ -368,8 +368,10 @@ class ChainStatusProvider extends ChangeNotifier {
       }
     }
 
+    /*
     log("ChainStatusProvider getting status (status = $_chainWidgetRequestsActive, watcher = $_watcherActive, "
         "color = $statusColorWidgetEnabled)");
+    */
 
     // Adapt API calls depending on the Chain count
     if (changeToChainIdling) {
@@ -413,10 +415,10 @@ class ChainStatusProvider extends ChangeNotifier {
     // Update status color
     if (myBars is BarsAndStatusModel) {
       updatePlayerStatusColor(
-        myBars.status.color,
-        myBars.status.state,
-        myBars.status.until,
-        myBars.travel.timestamp!,
+        myBars.status!.color!,
+        myBars.status!.state!,
+        myBars.status!.until!,
+        myBars.travel!.timestamp!,
       );
     }
 
