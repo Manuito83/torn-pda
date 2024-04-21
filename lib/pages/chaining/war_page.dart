@@ -1568,30 +1568,24 @@ class WarTargetsListState extends State<WarTargetsList> {
       ],
     );
 
-    if (MediaQuery.orientationOf(context) == Orientation.portrait) {
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: filteredCards.length,
-        itemBuilder: (context, index) {
-          if (index == pinnedMembersCount && index != 0) {
-            return separator;
-          }
-          return slidableCard(filteredCards[index]);
-        },
-      );
-    } else {
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: filteredCards.length,
-        physics: const NeverScrollableScrollPhysics(),
-        itemBuilder: (context, index) {
-          if (index == pinnedMembersCount && index != 0) {
-            return separator;
-          }
-          return slidableCard(filteredCards[index]);
-        },
-      );
-    }
+    final orientationPortrait = MediaQuery.orientationOf(context) == Orientation.portrait;
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: filteredCards.length,
+      physics: orientationPortrait ? null : const NeverScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        if (index == pinnedMembersCount && index != 0) {
+          // Add the first unpinned card preceded by the separator
+          return Column(
+            children: [
+              separator,
+              slidableCard(filteredCards[index]),
+            ],
+          );
+        }
+        return slidableCard(filteredCards[index]);
+      },
+    );
   }
 
   List<WarCard> getChildrenTarget() {

@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.3.3 - Build 405 - 20/04/2024
+    // v3.3.3 - Build 406 - 20/04/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.3.3'
@@ -48,6 +48,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added player status color counter widget in PDA icon and browser (can be disabled)",
           "Added Prometheus as a Foreign Stocks provider with automatic failover",
           "Fixed issues with chat highlight [Kwack]",
+          "Fixed issue with pinned war targets",
           if (Platform.isAndroid) "Fixed home widget manual reload button",
           "Fixed theme issues",
         ],
