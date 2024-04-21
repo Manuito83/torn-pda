@@ -9,76 +9,74 @@ BarsAndStatusModel barsAndStatusModelFromJson(String str) => BarsAndStatusModel.
 String barsAndStatusModelToJson(BarsAndStatusModel data) => json.encode(data.toJson());
 
 class BarsAndStatusModel {
-  int serverTime;
-  String rank;
-  int level;
-  int honor;
-  String gender;
-  String property;
-  DateTime signup;
-  int awards;
-  int friends;
-  int enemies;
-  int forumPosts;
-  int karma;
-  int age;
-  String role;
-  int donator;
-  int playerId;
-  String name;
-  int propertyId;
-  int revivable;
-  String profileImage;
-  PersonalBars happy;
-  PersonalBars life;
-  PersonalBars energy;
-  PersonalBars nerve;
-  Chain chain;
-  Status status;
-  Job job;
-  Faction faction;
-  Married married;
-  Basicicons basicicons;
-  States states;
-  LastAction lastAction;
-  Competition competition;
-  Travel travel;
+  int? serverTime;
+  String? rank;
+  int? level;
+  int? honor;
+  String? gender;
+  String? property;
+  int? awards;
+  int? friends;
+  int? enemies;
+  int? forumPosts;
+  int? karma;
+  int? age;
+  String? role;
+  int? donator;
+  int? playerId;
+  String? name;
+  int? propertyId;
+  int? revivable;
+  String? profileImage;
+  PersonalBars? happy;
+  PersonalBars? life;
+  PersonalBars? energy;
+  PersonalBars? nerve;
+  Chain? chain;
+  Status? status;
+  Job? job;
+  Faction? faction;
+  Married? married;
+  dynamic basicicons;
+  States? states;
+  LastAction? lastAction;
+  Competition? competition;
+  Travel? travel;
 
   BarsAndStatusModel({
-    required this.serverTime,
-    required this.rank,
-    required this.level,
-    required this.honor,
-    required this.gender,
-    required this.property,
-    required this.signup,
-    required this.awards,
-    required this.friends,
-    required this.enemies,
-    required this.forumPosts,
-    required this.karma,
-    required this.age,
-    required this.role,
-    required this.donator,
-    required this.playerId,
-    required this.name,
-    required this.propertyId,
-    required this.revivable,
-    required this.profileImage,
-    required this.happy,
-    required this.life,
-    required this.energy,
-    required this.nerve,
-    required this.chain,
-    required this.status,
-    required this.job,
-    required this.faction,
-    required this.married,
-    required this.basicicons,
-    required this.states,
-    required this.lastAction,
-    required this.competition,
-    required this.travel,
+    this.serverTime,
+    this.rank,
+    this.level,
+    this.honor,
+    this.gender,
+    this.property,
+    this.awards,
+    this.friends,
+    this.enemies,
+    this.forumPosts,
+    this.karma,
+    this.age,
+    this.role,
+    this.donator,
+    this.playerId,
+    this.name,
+    this.propertyId,
+    this.revivable,
+    this.profileImage,
+    this.happy,
+    this.life,
+    this.energy,
+    this.nerve,
+    this.chain,
+    this.status,
+    this.job,
+    this.faction,
+    this.married,
+    this.basicicons,
+    this.states,
+    this.lastAction,
+    this.competition,
+    this.travel,
   });
 
   factory BarsAndStatusModel.fromJson(Map<String, dynamic> json) => BarsAndStatusModel(
@@ -88,7 +86,6 @@ class BarsAndStatusModel {
         honor: json["honor"],
         gender: json["gender"],
         property: json["property"],
-        signup: DateTime.parse(json["signup"]),
         awards: json["awards"],
         friends: json["friends"],
         enemies: json["enemies"],
@@ -102,20 +99,24 @@ class BarsAndStatusModel {
         propertyId: json["property_id"],
         revivable: json["revivable"],
         profileImage: json["profile_image"],
-        happy: PersonalBars.fromJson(json["happy"]),
-        life: PersonalBars.fromJson(json["life"]),
-        energy: PersonalBars.fromJson(json["energy"]),
-        nerve: PersonalBars.fromJson(json["nerve"]),
-        chain: Chain.fromJson(json["chain"]),
-        status: Status.fromJson(json["status"]),
-        job: Job.fromJson(json["job"]),
-        faction: Faction.fromJson(json["faction"]),
-        married: Married.fromJson(json["married"]),
-        basicicons: Basicicons.fromJson(json["basicicons"]),
-        states: States.fromJson(json["states"]),
-        lastAction: LastAction.fromJson(json["last_action"]),
-        competition: Competition.fromJson(json["competition"]),
-        travel: Travel.fromJson(json["travel"]),
+        happy: json["happy"] == null ? null : PersonalBars.fromJson(json["happy"]),
+        life: json["life"] == null ? null : PersonalBars.fromJson(json["life"]),
+        energy: json["energy"] == null ? null : PersonalBars.fromJson(json["energy"]),
+        nerve: json["nerve"] == null ? null : PersonalBars.fromJson(json["nerve"]),
+        chain: json["chain"] == null ? null : Chain.fromJson(json["chain"]),
+        status: json["status"] == null ? null : Status.fromJson(json["status"]),
+        job: json["job"] == null ? null : Job.fromJson(json["job"]),
+        faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
+        married: json["married"] == null ? null : Married.fromJson(json["married"]),
+        basicicons: json["icons"] is List<dynamic>
+            ? json["icons"] = Basicicons()
+            : json["icons"] == null
+                ? null
+                : Basicicons.fromJson(json["icons"]),
+        states: json["states"] == null ? null : States.fromJson(json["states"]),
+        lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
+        competition: json["competition"] == null ? null : Competition.fromJson(json["competition"]),
+        travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -125,7 +126,6 @@ class BarsAndStatusModel {
         "honor": honor,
         "gender": gender,
         "property": property,
-        "signup": signup.toIso8601String(),
         "awards": awards,
         "friends": friends,
         "enemies": enemies,
@@ -139,40 +139,40 @@ class BarsAndStatusModel {
         "property_id": propertyId,
         "revivable": revivable,
         "profile_image": profileImage,
-        "happy": happy.toJson(),
-        "life": life.toJson(),
-        "energy": energy.toJson(),
-        "nerve": nerve.toJson(),
-        "chain": chain.toJson(),
-        "status": status.toJson(),
-        "job": job.toJson(),
-        "faction": faction.toJson(),
-        "married": married.toJson(),
-        "basicicons": basicicons.toJson(),
-        "states": states.toJson(),
-        "last_action": lastAction.toJson(),
-        "competition": competition.toJson(),
-        "travel": travel.toJson(),
+        "happy": happy?.toJson(),
+        "life": life?.toJson(),
+        "energy": energy?.toJson(),
+        "nerve": nerve?.toJson(),
+        "chain": chain?.toJson(),
+        "status": status?.toJson(),
+        "job": job?.toJson(),
+        "faction": faction?.toJson(),
+        "married": married?.toJson(),
+        "basicicons": basicicons?.toJson(),
+        "states": states?.toJson(),
+        "last_action": lastAction?.toJson(),
+        "competition": competition?.toJson(),
+        "travel": travel?.toJson(),
       };
 }
 
 class Basicicons {
-  String icon6;
-  String icon4;
-  String icon10;
-  String icon8;
-  String icon27;
-  String icon9;
-  String icon35;
+  String? icon6;
+  String? icon4;
+  String? icon10;
+  String? icon8;
+  String? icon27;
+  String? icon9;
+  String? icon35;
 
   Basicicons({
-    required this.icon6,
-    required this.icon4,
-    required this.icon10,
-    required this.icon8,
-    required this.icon27,
-    required this.icon9,
-    required this.icon35,
+    this.icon6,
+    this.icon4,
+    this.icon10,
+    this.icon8,
+    this.icon27,
+    this.icon9,
+    this.icon35,
   });
 
   factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
@@ -197,25 +197,25 @@ class Basicicons {
 }
 
 class Chain {
-  int current;
-  int maximum;
-  int timeout;
-  int modifier;
-  int cooldown;
+  int? current;
+  int? maximum;
+  int? timeout;
+  double? modifier;
+  int? cooldown;
 
   Chain({
-    required this.current,
-    required this.maximum,
-    required this.timeout,
-    required this.modifier,
-    required this.cooldown,
+    this.current,
+    this.maximum,
+    this.timeout,
+    this.modifier,
+    this.cooldown,
   });
 
   factory Chain.fromJson(Map<String, dynamic> json) => Chain(
         current: json["current"],
         maximum: json["maximum"],
         timeout: json["timeout"],
-        modifier: json["modifier"],
+        modifier: json["modifier"]?.toDouble(),
         cooldown: json["cooldown"],
       );
 
@@ -229,12 +229,12 @@ class Chain {
 }
 
 class Competition {
-  String name;
-  String status;
+  String? name;
+  String? status;
 
   Competition({
-    required this.name,
-    required this.status,
+    this.name,
+    this.status,
   });
 
   factory Competition.fromJson(Map<String, dynamic> json) => Competition(
@@ -249,20 +249,20 @@ class Competition {
 }
 
 class PersonalBars {
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
+  int? current;
+  int? maximum;
+  int? increment;
+  int? interval;
+  int? ticktime;
+  int? fulltime;
 
   PersonalBars({
-    required this.current,
-    required this.maximum,
-    required this.increment,
-    required this.interval,
-    required this.ticktime,
-    required this.fulltime,
+    this.current,
+    this.maximum,
+    this.increment,
+    this.interval,
+    this.ticktime,
+    this.fulltime,
   });
 
   factory PersonalBars.fromJson(Map<String, dynamic> json) => PersonalBars(
@@ -285,18 +285,18 @@ class PersonalBars {
 }
 
 class Faction {
-  String position;
-  int factionId;
-  int daysInFaction;
-  String factionName;
-  String factionTag;
+  String? position;
+  int? factionId;
+  int? daysInFaction;
+  String? factionName;
+  String? factionTag;
 
   Faction({
-    required this.position,
-    required this.factionId,
-    required this.daysInFaction,
-    required this.factionName,
-    required this.factionTag,
+    this.position,
+    this.factionId,
+    this.daysInFaction,
+    this.factionName,
+    this.factionTag,
   });
 
   factory Faction.fromJson(Map<String, dynamic> json) => Faction(
@@ -304,7 +304,7 @@ class Faction {
         factionId: json["faction_id"],
         daysInFaction: json["days_in_faction"],
         factionName: json["faction_name"],
-        factionTag: json["faction_tag"],
+        factionTag: json["faction_tag"] ?? "",
       );
 
   Map<String, dynamic> toJson() => {
@@ -312,23 +312,23 @@ class Faction {
         "faction_id": factionId,
         "days_in_faction": daysInFaction,
         "faction_name": factionName,
-        "faction_tag": factionTag,
+        "faction_tag": factionTag ?? "",
       };
 }
 
 class Job {
-  String job;
-  String position;
-  int companyId;
-  String companyName;
-  int companyType;
+  String? job;
+  String? position;
+  int? companyId;
+  String? companyName;
+  int? companyType;
 
   Job({
-    required this.job,
-    required this.position,
-    required this.companyId,
-    required this.companyName,
-    required this.companyType,
+    this.job,
+    this.position,
+    this.companyId,
+    this.companyName,
+    this.companyType,
   });
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
@@ -349,14 +349,14 @@ class Job {
 }
 
 class LastAction {
-  String status;
-  int timestamp;
-  String relative;
+  String? status;
+  int? timestamp;
+  String? relative;
 
   LastAction({
-    required this.status,
-    required this.timestamp,
-    required this.relative,
+    this.status,
+    this.timestamp,
+    this.relative,
   });
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
@@ -373,14 +373,14 @@ class LastAction {
 }
 
 class Married {
-  int spouseId;
-  String spouseName;
-  int duration;
+  int? spouseId;
+  String? spouseName;
+  int? duration;
 
   Married({
-    required this.spouseId,
-    required this.spouseName,
-    required this.duration,
+    this.spouseId,
+    this.spouseName,
+    this.duration,
   });
 
   factory Married.fromJson(Map<String, dynamic> json) => Married(
@@ -397,12 +397,12 @@ class Married {
 }
 
 class States {
-  int hospitalTimestamp;
-  int jailTimestamp;
+  int? hospitalTimestamp;
+  int? jailTimestamp;
 
   States({
-    required this.hospitalTimestamp,
-    required this.jailTimestamp,
+    this.hospitalTimestamp,
+    this.jailTimestamp,
   });
 
   factory States.fromJson(Map<String, dynamic> json) => States(
@@ -417,18 +417,18 @@ class States {
 }
 
 class Status {
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
+  String? description;
+  String? details;
+  String? state;
+  String? color;
+  int? until;
 
   Status({
-    required this.description,
-    required this.details,
-    required this.state,
-    required this.color,
-    required this.until,
+    this.description,
+    this.details,
+    this.state,
+    this.color,
+    this.until,
   });
 
   factory Status.fromJson(Map<String, dynamic> json) => Status(

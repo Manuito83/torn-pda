@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -367,8 +368,10 @@ class ChainStatusProvider extends ChangeNotifier {
       }
     }
 
+    /*
     log("ChainStatusProvider getting status (status = $_chainWidgetRequestsActive, watcher = $_watcherActive, "
         "color = $statusColorWidgetEnabled)");
+    */
 
     // Adapt API calls depending on the Chain count
     if (changeToChainIdling) {
@@ -395,7 +398,6 @@ class ChainStatusProvider extends ChangeNotifier {
     if (!_statusColorWidgetEnabled) {
       statusColorCurrent = PlayerStatusColor.ok;
       statusColorUntil = 0;
-      return;
     }
 
     // By checking the last update source, we reduce the API call rate in case another
@@ -403,13 +405,6 @@ class ChainStatusProvider extends ChangeNotifier {
     if (statusUpdateSource != "provider") {
       //log("Player status color: not updating since there is another information source");
       return;
-    }
-
-    if (statusColorCurrent == PlayerStatusColor.travel) {
-      if (DateTime.fromMillisecondsSinceEpoch(statusColorUntil * 1000).isAfter(DateTime.now())) {
-        //log("Player status color: not updating because we are still traveling!");
-        return;
-      }
     }
 
     //log("Player status color: updating from provider!");
@@ -420,10 +415,10 @@ class ChainStatusProvider extends ChangeNotifier {
     // Update status color
     if (myBars is BarsAndStatusModel) {
       updatePlayerStatusColor(
-        myBars.status.color,
-        myBars.status.state,
-        myBars.status.until,
-        myBars.travel.timestamp!,
+        myBars.status!.color!,
+        myBars.status!.state!,
+        myBars.status!.until!,
+        myBars.travel!.timestamp!,
       );
     }
 
@@ -465,17 +460,19 @@ class ChainStatusProvider extends ChangeNotifier {
       _chainModel = chainResponse;
       _modelError = false;
 
-      // For timer debugging
-      //
-      /*
-      chainModel.chain
-        ..timeout = 200
-        ..current = 51
-        ..max = 2500
-        ..start = 1230000
-        ..modifier = 1.23
-        ..cooldown = 0;
-      */
+      if (kDebugMode) {
+        // For timer debugging
+        //
+        /*
+        chainModel!.chain!
+          ..timeout = 200
+          ..current = 51
+          ..max = 2500
+          ..start = 1230000
+          ..modifier = 1.23
+          ..cooldown = 0;
+        */
+      }
 
       tryToDeactivateStatus();
 
