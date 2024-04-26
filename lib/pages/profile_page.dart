@@ -5329,6 +5329,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       curve: Curves.bounceIn,
+      overlayOpacity: 0,
       children: [
         SpeedDialChild(
           onTap: () async {
