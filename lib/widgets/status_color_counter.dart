@@ -149,28 +149,27 @@ class StatusColorCounterState extends State<StatusColorCounter> {
     }
 
     final double days = untilSeconds / (24 * 3600);
-    final double remainingHours = (untilSeconds % (24 * 3600)) / 3600;
 
     if (days >= 1) {
       final formattedDays = days.toStringAsFixed(1);
       final formattedDaysWithoutDecimal =
           formattedDays.endsWith('.0') ? formattedDays.substring(0, formattedDays.length - 2) : formattedDays;
       setState(() {
-        _formattedUntil = "$formattedDaysWithoutDecimal d";
+        _formattedUntil = "${formattedDaysWithoutDecimal}d";
       });
-    } else if (untilSeconds <= 5999) {
-      // If less than 100 minutes remaining, show in mm:ss format
+    } else if (untilSeconds <= 3599) {
+      // If less than or equal to 59 minutes and 59 seconds remaining, formar as mm:ss (e.g.: 23:45)
       final int minutes = untilSeconds ~/ 60;
       final int seconds = untilSeconds % 60;
       setState(() {
         _formattedUntil = "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
       });
     } else {
-      final formattedHours = remainingHours.toStringAsFixed(1);
-      final formattedHoursWithoutDecimal =
-          formattedHours.endsWith('.0') ? formattedHours.substring(0, formattedHours.length - 2) : formattedHours;
+      // For durations above 59 minutes and 59 seconds, format as HHhMM (e.g.: 23h22)
+      final int hours = untilSeconds ~/ 3600;
+      final int minutes = (untilSeconds % 3600) ~/ 60;
       setState(() {
-        _formattedUntil = "$formattedHoursWithoutDecimal h";
+        _formattedUntil = "${hours.toString().padLeft(2, '0')}h${minutes.toString().padLeft(2, '0')}";
       });
     }
   }
