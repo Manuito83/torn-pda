@@ -953,14 +953,14 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       // recalculate in real time in the card widget. This first calculation is
       // only to compare ones with the others and sort.
 
-      final itemList = _allTornItems!.items!.values.toList();
       _stocksYataModel.countries!.forEach((countryKey, countryDetails) {
         for (final stock in countryDetails.stocks!) {
-          // Match with Torn items (contained in itemList)
-          final Item itemMatch = itemList[stock.id! - 1];
+          // Match with Torn by using the incoming provider's stock id to locate keys (id) in Torn's items
+          // ! Not all Torn items have concurrent ids (there are gaps)
+          final itemMatch = _allTornItems!.items![stock.id!.toString()];
 
           // Complete fields we need for value and profit
-          stock.value = itemMatch.marketValue! - stock.cost!;
+          stock.value = itemMatch!.marketValue! - stock.cost!;
 
           // Assign actual profit depending on country (+ the country)
           stock.countryCode = countryKey;
@@ -1011,7 +1011,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               .round();
 
           stock.timestamp = countryDetails.update;
-          stock.itemType = itemList[stock.id! - 1].type;
+          stock.itemType = itemMatch.type;
 
           stock.arrivalTime = DateTime.now().add(
             Duration(
