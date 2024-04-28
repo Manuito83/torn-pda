@@ -19,6 +19,7 @@ import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 // 101 -> 109 profile cooldowns
 // 201 travel arrival
 // 211 travel departure
+// 300 war targets status
 // 400 loot
 // 499 loot rangers
 // 555 chain watcher
@@ -740,6 +741,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Manual scripts ${modifier.channelIdModifier}',
       'Manual scripts ${modifier.channelIdModifier}',
       description: 'Manual notifications for scripts',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual war member ${modifier.channelIdModifier}',
+      'Manual war member ${modifier.channelIdModifier}',
+      description: 'Manual notifications for war member',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

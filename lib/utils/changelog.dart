@@ -45,6 +45,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.4.1'
         ..date = '15 MAY 2024'
         ..features = [
+          "War: added red status filter and notifications for jail and hospital release",
           "Fixed default launch section dropdown menu",
         ],
     );
