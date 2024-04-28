@@ -46,7 +46,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '15 MAY 2024'
         ..features = [
           "War: added red status filter and notifications for jail and hospital release",
-          "Fixed some erroneus values and profits shown in Foreign Stocks",
+          "Fixed some erroneous values and profits shown in Foreign Stocks",
           "Fixed default launch section dropdown menu",
         ],
     );
