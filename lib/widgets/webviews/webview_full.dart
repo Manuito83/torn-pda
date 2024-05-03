@@ -431,7 +431,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   @override
   void dispose() {
     try {
-      webView = null;
+      webView?.dispose();
       _findController.dispose();
       _chainWidgetController.dispose();
       WidgetsBinding.instance.removeObserver(this);
