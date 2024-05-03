@@ -17,6 +17,7 @@
 *.ipr
 *.iws
 .idea/*
+.idx/*
 !.idea/codeStyles/
 
 # The .vscode folder contains launch configuration and tasks you configure in
