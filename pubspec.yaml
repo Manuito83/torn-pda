@@ -85,7 +85,7 @@ dependencies:
   quick_actions: 1.0.5
   receive_intent: 0.2.3
   rxdart: 0.27.7
-  share_plus: 7.2.2
+  share_plus: 9.0.0
   shared_preferences: 2.0.15
   showcaseview: 2.0.0+1
   sliding_up_panel: 2.0.0+1

@@ -4587,6 +4587,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         await Share.shareXFiles(
           [XFile(fileSavePath)],
           text: fileName,
+          sharePositionOrigin: Rect.fromLTWH(
+            0,
+            0,
+            MediaQuery.of(context).size.width,
+            MediaQuery.of(context).size.height / 2,
+          ),
         );
       }
 
