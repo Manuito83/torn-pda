@@ -34,6 +34,7 @@
 .pub-cache/
 .pub/
 /build/
+/devtools_options.yaml
 
 # Firebase
 **/android/app/google-services.json

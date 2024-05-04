@@ -1226,7 +1226,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 !incomingUrl.startsWith("https:") &&
                 !incomingUrl.startsWith("tornpda:")) {
               try {
-                print(canLaunchUrl(Uri.parse(incomingUrl)));
                 await launchUrl(Uri.parse(incomingUrl), mode: LaunchMode.externalApplication);
               } catch (e) {
                 log("Error launching intent: $e");
