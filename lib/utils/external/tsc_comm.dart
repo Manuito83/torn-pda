@@ -25,7 +25,7 @@ class TSCComm {
 
       response = await http
           .post(
-            Uri.parse('https://tsc.diicot.cc/stats/update'),
+            Uri.parse('https://tsc.diicot.cc/next'),
             headers: headers,
             body: body,
           )
