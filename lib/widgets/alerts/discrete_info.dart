@@ -433,6 +433,23 @@ class DiscreteInfoState extends State<DiscreteInfo> {
                         ),
                       ],
                     ),
+                    SizedBox(height: 20),
+                    Column(
+                      children: [
+                        Text(
+                          "War target notification",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "Title: WT",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        Text(
+                          "(blank body)",
+                          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 SizedBox(height: 10),

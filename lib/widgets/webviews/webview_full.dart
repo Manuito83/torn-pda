@@ -431,7 +431,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   @override
   void dispose() {
     try {
-      webView = null;
+      webView?.dispose();
       _findController.dispose();
       _chainWidgetController.dispose();
       WidgetsBinding.instance.removeObserver(this);
@@ -1226,7 +1226,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 !incomingUrl.startsWith("https:") &&
                 !incomingUrl.startsWith("tornpda:")) {
               try {
-                print(canLaunchUrl(Uri.parse(incomingUrl)));
                 await launchUrl(Uri.parse(incomingUrl), mode: LaunchMode.externalApplication);
               } catch (e) {
                 log("Error launching intent: $e");
@@ -4587,6 +4586,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         await Share.shareXFiles(
           [XFile(fileSavePath)],
           text: fileName,
+          sharePositionOrigin: Rect.fromLTWH(
+            0,
+            0,
+            MediaQuery.of(context).size.width,
+            MediaQuery.of(context).size.height / 2,
+          ),
         );
       }
 

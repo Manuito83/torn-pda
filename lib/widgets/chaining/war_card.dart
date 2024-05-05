@@ -1,20 +1,29 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 // Flutter imports:
 import 'package:animations/animations.dart';
+
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -25,13 +34,13 @@ import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class WarCard extends StatefulWidget {
   final Member memberModel;
@@ -218,7 +227,11 @@ class WarCardState extends State<WarCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       _returnRespectFF(_member.respectGain, _member.fairFight),
-                      CombinedHealthBars(member: _member),
+                      CombinedHealthBars(
+                        member: _member,
+                        warController: _w,
+                        themeProvider: _themeProvider,
+                      ),
                     ],
                   ),
                 ),
@@ -1099,7 +1112,7 @@ class WarCardState extends State<WarCard> {
   }
 
   Future<void> _updateThisMember() async {
-    final bool success = await _w.updateSingleMemberFull(_member);
+    final bool success = await _w.updateSingleMemberFull(_member, fromCard: true);
     String message = "Updated ${_member.name}!";
     Color? color = Colors.green;
     if (!success) {
@@ -1207,22 +1220,28 @@ class WarCardState extends State<WarCard> {
 
 class CombinedHealthBars extends StatefulWidget {
   final Member member;
+  final WarController warController;
+  final ThemeProvider themeProvider;
 
-  CombinedHealthBars({required this.member});
+  CombinedHealthBars({
+    required this.member,
+    required this.warController,
+    required this.themeProvider,
+  });
 
   @override
   CombinedHealthBarsState createState() => CombinedHealthBarsState();
 }
 
 class CombinedHealthBarsState extends State<CombinedHealthBars> {
-  Timer? _lifeTicker;
+  Timer? _redStatusTicker;
   String _currentLifeString = '';
 
   late Member _member;
 
   @override
   void dispose() {
-    _lifeTicker?.cancel();
+    _redStatusTicker?.cancel();
     super.dispose();
   }
 
@@ -1232,19 +1251,65 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
 
     double? lifePercentage;
     Color lifeBarColor = Colors.green.shade300;
-    Widget hospitalWarning = const SizedBox.shrink();
+    Widget hospitalJailWarning = const SizedBox.shrink();
     String lifeText = _member.lifeCurrent == -1 ? "?" : _member.lifeCurrent.toString();
 
-    if (!_member.overrideEasyLife!) {
-      lifeBarColor = Colors.transparent;
-      lifeText = "";
-      if (_member.status!.state == "Hospital") {
-        lifeText = "Hospital";
+    if (_member.status!.state == "Hospital") {
+      // Handle if target is still in hospital
+      final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+      if (_member.status!.until! > now) {
+        final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(_member.status!.until! * 1000);
+        _redStatusTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
+        _refreshLifeClock(endTimeStamp);
+        lifeText = _currentLifeString;
         lifeBarColor = Colors.red.shade300;
-      } else if (_member.status!.state == "Jail") {
-        lifeText = "Jailed";
+        hospitalJailWarning = const Icon(
+          Icons.local_hospital,
+          size: 20,
+          color: Colors.red,
+        );
+      } else {
+        _redStatusTicker?.cancel();
+        lifeText = "OUT";
+        hospitalJailWarning = const Icon(
+          MdiIcons.bandage,
+          size: 20,
+          color: Colors.green,
+        );
+      }
+    } else if (_member.status!.state == "Jail") {
+      // Handle if target is still in jail
+      final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+      if (_member.status!.until! > now) {
+        final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(_member.status!.until! * 1000);
+        _redStatusTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
+        _refreshLifeClock(endTimeStamp);
+        lifeText = _currentLifeString;
         lifeBarColor = Colors.brown.shade300;
-      } else if (_member.status!.state == "Okay") {
+        hospitalJailWarning = Padding(
+          padding: const EdgeInsets.only(right: 5.0),
+          child: Image.asset(
+            'images/icons/jail.png',
+            color: widget.themeProvider.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
+            width: 18,
+            height: 18,
+          ),
+        );
+      } else {
+        _redStatusTicker?.cancel();
+        lifeText = "OUT";
+        hospitalJailWarning = const Icon(
+          Icons.exit_to_app,
+          size: 20,
+          color: Colors.green,
+        );
+      }
+    } else {
+      _redStatusTicker?.cancel();
+    }
+
+    if (!_member.overrideEasyLife!) {
+      if (_member.status!.state == "Okay") {
         lifeText = "Okay";
         lifeBarColor = Colors.green.shade300;
       } else if (_member.status!.state == "Traveling") {
@@ -1255,33 +1320,6 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
         lifeBarColor = Colors.blue.shade300;
       }
     } else {
-      if (_member.status!.state == "Hospital") {
-        // Handle if target is still in hospital
-        final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-        if (_member.status!.until! > now) {
-          final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(_member.status!.until! * 1000);
-          _lifeTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
-          _refreshLifeClock(endTimeStamp);
-          lifeText = _currentLifeString;
-          lifeBarColor = Colors.red.shade300;
-          hospitalWarning = const Icon(
-            Icons.local_hospital,
-            size: 20,
-            color: Colors.red,
-          );
-        } else {
-          _lifeTicker?.cancel();
-          lifeText = "OUT";
-          hospitalWarning = const Icon(
-            MdiIcons.bandage,
-            size: 20,
-            color: Colors.green,
-          );
-        }
-      } else {
-        _lifeTicker?.cancel();
-      }
-
       if (_member.status!.state == "Traveling" || _member.status!.state == "Abroad") {
         lifeBarColor = Colors.blue.shade300;
       }
@@ -1299,13 +1337,83 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       }
     }
 
+    Widget statusUntilNotification = SizedBox.shrink();
+    if (_member.status?.until != null && (_member.status?.until != 0 || true)) {
+      final int currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final int untilSeconds = _member.status!.until! - currentTime;
+
+      // If time has finished, do not show anything
+      if (untilSeconds > 0) {
+        bool existingNotification = false;
+        if (widget.warController.pendingNotifications
+            .where((element) => element.payload!.contains("300-${widget.member.memberId}"))
+            .isNotEmpty) {
+          existingNotification = true;
+        }
+
+        statusUntilNotification = Padding(
+          padding: const EdgeInsets.only(left: 5),
+          child: InkWell(
+            splashColor: Colors.transparent,
+            child: Icon(
+              Icons.chat_bubble_outline,
+              size: 18,
+              color: existingNotification ? Colors.green : widget.themeProvider.mainText,
+            ),
+            onTap: () async {
+              if (existingNotification) {
+                await flutterLocalNotificationsPlugin.cancel(widget.member.memberId!);
+                List<PendingNotificationRequest> currentPending = widget.warController.pendingNotifications;
+
+                currentPending.removeWhere((element) => element.payload!.contains("300-${widget.member.memberId}"));
+                widget.warController.pendingNotifications = List<PendingNotificationRequest>.from(currentPending);
+                BotToast.showText(
+                  text: "Notification cancelled",
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  duration: const Duration(seconds: 1),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+                return;
+              }
+
+              // Calculate notification time and string
+              DateTime notificationTime = DateTime.now().add(Duration(seconds: untilSeconds));
+              final formattedTime = TimeFormatter(
+                inputTime: notificationTime,
+                timeFormatSetting: context.read<SettingsProvider>().currentTimeFormat,
+                timeZoneSetting: context.read<SettingsProvider>().currentTimeZone,
+              ).formatHourWithDaysElapsed();
+              String message = "Notification for ${_member.status!.state!.toLowerCase()} release set at $formattedTime"
+                  " (15 seconds ahead)";
+
+              // Schedule notification (and update pending ones)
+              _scheduleNotification(notificationTime);
+
+              // Alert user
+              BotToast.showText(
+                text: message,
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: const Duration(seconds: 5),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            },
+          ),
+        );
+      }
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        const Text(
-          'Life ',
-          style: TextStyle(fontSize: 13),
-        ),
+        hospitalJailWarning,
         Flexible(
           child: LinearPercentIndicator(
             padding: const EdgeInsets.all(0),
@@ -1320,7 +1428,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
             percent: !_member.overrideEasyLife! ? 1 : lifePercentage ?? 0,
           ),
         ),
-        hospitalWarning,
+        statusUntilNotification,
       ],
     );
   }
@@ -1359,26 +1467,112 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
         }
       }
 
-      if (_lifeTicker != null) {
-        _lifeTicker!.cancel();
-        _lifeTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
+      if (_redStatusTicker != null) {
+        _redStatusTicker!.cancel();
+        _redStatusTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
       if (diff.inSeconds < 2) {
         // Artificially release instead of updating
-        _releaseFromHospital();
+        _releaseFromRedStatus();
       }
     }
   }
 
-  _releaseFromHospital() async {
+  _releaseFromRedStatus() async {
     await Future.delayed(const Duration(seconds: 5));
-    if (_lifeTicker != null) {
-      _lifeTicker!.cancel();
+    if (_redStatusTicker != null) {
+      _redStatusTicker!.cancel();
     }
     _member.status!.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _scheduleNotification(DateTime untilTime) async {
+    String notificationTitle = "";
+    String notificationSubtitle = "";
+    String notificationIconAndroid = "notification_assist";
+    Color notificationIconColor = Colors.red;
+
+    int secondsToNotification = untilTime.difference(DateTime.now()).inSeconds - 15;
+    String channelTitle = 'Manual war member';
+    String channelSubtitle = 'Manual war member';
+    String channelDescription = 'Manual notifications for war member';
+
+    String place = "";
+    if (_member.status!.state == "Hospital") {
+      place = "#h#";
+      notificationTitle = context.read<SettingsProvider>().discreteNotifications ? "WT" : "War target";
+      notificationSubtitle = context.read<SettingsProvider>().discreteNotifications
+          ? " "
+          : "${_member.name} is about to be released from hospital!";
+    } else if (_member.status!.state == "Jail") {
+      place = "#j#";
+      notificationTitle = context.read<SettingsProvider>().discreteNotifications ? "WT" : "";
+      notificationSubtitle = context.read<SettingsProvider>().discreteNotifications
+          ? " "
+          : "${_member.name} is about to be released from jail!";
+    } else {
+      return;
+    }
+
+    // We will add the timestamp, id and place details to the payload
+    String notificationPayload = '300-${_member.memberId}-${untilTime.millisecondsSinceEpoch}-$place';
+
+    final modifier = await getNotificationChannelsModifiers();
+
+    channelTitle = "$channelTitle ${modifier.channelIdModifier}";
+    channelSubtitle = "$channelSubtitle ${modifier.channelIdModifier}";
+
+    final androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      channelTitle,
+      channelSubtitle,
+      channelDescription: channelDescription,
+      priority: Priority.high,
+      visibility: NotificationVisibility.public,
+      icon: notificationIconAndroid,
+      color: notificationIconColor,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+      ledOnMs: 1000,
+      ledOffMs: 500,
+    );
+
+    var iOSPlatformChannelSpecifics = const DarwinNotificationDetails(
+      presentSound: true,
+      sound: 'slow_spring_board.aiff',
+    );
+
+    final platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
+
+    if (Platform.isAndroid) {
+      await assessExactAlarmsPermissionsAndroid(context, context.read<SettingsProvider>());
+    }
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      widget.member.memberId!,
+      notificationTitle,
+      notificationSubtitle,
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)), // DEBUG
+      tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification)),
+      platformChannelSpecifics,
+      payload: notificationPayload,
+      androidScheduleMode: exactAlarmsPermissionAndroid
+          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          : AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
+
+    // DEBUG
+    if (kDebugMode) {
+      debugPrint('Notification $notificationTitle @ '
+          '${tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification))}');
+    }
+
+    widget.warController.assessPendingNotifications();
   }
 }

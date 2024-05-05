@@ -132,7 +132,13 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
                                       contentPadding: const EdgeInsets.all(10),
                                     );
                                   } else {
-                                    Share.share(export);
+                                    Share.share(export, sharePositionOrigin: Rect.fromLTWH(
+                                        0,
+                                        0,
+                                        MediaQuery.of(context).size.width,
+                                        MediaQuery.of(context).size.height / 2,
+                                      ),
+                                    );
                                   }
                                 },
                               ),

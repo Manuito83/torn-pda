@@ -62,7 +62,7 @@ import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
-import 'package:torn_pda/widgets/revive/midnightX_revive_button.dart';
+import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
@@ -3550,142 +3550,39 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _sharedEffTotal = 'Total: ${decimalFormat.format(totalEffective)}';
 
     return Card(
-      child: ExpandablePanel(
-        theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
-        controller: _basicInfoExpController,
-        header: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Row(
-            children: [
-              const Text(
-                'BASIC INFO',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+      child: Builder(builder: (context) {
+        return ExpandablePanel(
+          theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
+          controller: _basicInfoExpController,
+          header: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Row(
+              children: [
+                const Text(
+                  'BASIC INFO',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
-              GestureDetector(
-                child: const Icon(Icons.copy, size: 14),
-                onTap: () {
-                  _shareMisc();
-                },
-              ),
-            ],
-          ),
-        ),
-        collapsed: Padding(
-          padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _cashWallet(dense: false),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  GestureDetector(
-                    onLongPress: () {
-                      _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
-                    },
-                    onTap: () async {
-                      _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
-                    },
-                    child: const Icon(
-                      MdiIcons.alphaPCircleOutline,
-                      color: Colors.blueAccent,
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text('${_miscModel!.points}'),
-                ],
-              ),
-              const SizedBox(height: 4),
-              _jobPoints(),
-              const SizedBox(height: 4),
-              _companyAddictionWidget(),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Flexible(
-                    child: SelectableText(
-                      'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
-                    ),
-                  ),
-                  if (totalEffectiveModifier < 0)
-                    Text(
-                      ' ($totalEffectiveModifier%)',
-                      style: const TextStyle(
-                        color: Colors.red,
-                      ),
-                    )
-                  else if (totalEffectiveModifier > 0)
-                    Text(
-                      ' (+$totalEffectiveModifier%)',
-                      style: const TextStyle(
-                        color: Colors.green,
-                      ),
-                    )
-                ],
-              ),
-              const SizedBox(height: 2),
-              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
-              if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
-                FutureBuilder(
-                  future: _statsChartDataFetched,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (_statsChartModel?.data != null) {
-                        return Column(
-                          children: [
-                            const SizedBox(height: 20),
-                            SizedBox(
-                              height: 200,
-                              child: StatsChart(
-                                statsData: _statsChartModel,
-                                chartType: _settingsProvider!.tornStatsChartType == "line"
-                                    ? TornStatsChartType.Line
-                                    : TornStatsChartType.Pie,
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                          ],
-                        );
-                      }
-                    }
-                    return const SizedBox(height: 8);
+                const SizedBox(width: 5),
+                GestureDetector(
+                  child: const Icon(Icons.copy, size: 14),
+                  onTap: () {
+                    _shareMisc();
                   },
-                )
-              else
-                const SizedBox(height: 8),
-              SelectableText('MAN: ${decimalFormat.format(_miscModel!.manualLabor)}'),
-              SelectableText('INT: ${decimalFormat.format(_miscModel!.intelligence)}'),
-              SelectableText('END: ${decimalFormat.format(_miscModel!.endurance)}'),
-            ],
-          ),
-        ),
-        expanded: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SelectableText('Rank: ${_user!.rank}'),
-                    SelectableText('Age: ${_user!.age}'),
-                  ],
                 ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: _cashWallet(dense: false),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Row(
+              ],
+            ),
+          ),
+          collapsed: Padding(
+            padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _cashWallet(dense: false),
+                const SizedBox(height: 4),
+                Row(
                   children: [
                     GestureDetector(
                       onLongPress: () {
@@ -3700,499 +3597,604 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                     ),
                     const SizedBox(width: 5),
-                    SelectableText('${_miscModel!.points}'),
+                    Text('${_miscModel!.points}'),
                   ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: _jobPoints(),
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: _companyAddictionWidget(),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
+                const SizedBox(height: 4),
+                _jobPoints(),
+                const SizedBox(height: 4),
+                _companyAddictionWidget(),
+                const SizedBox(height: 8),
+                Row(
                   children: [
-                    const Text(
-                      'EFFECTIVE STATS',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: SelectableText(
+                        'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
                       ),
                     ),
-                    const SizedBox(width: 5),
-                    GestureDetector(
-                      child: const Icon(Icons.copy, size: 14),
-                      onTap: () {
-                        _shareMisc(shareType: "effective");
-                      },
-                    ),
+                    if (totalEffectiveModifier < 0)
+                      Text(
+                        ' ($totalEffectiveModifier%)',
+                        style: const TextStyle(
+                          color: Colors.red,
+                        ),
+                      )
+                    else if (totalEffectiveModifier > 0)
+                      Text(
+                        ' (+$totalEffectiveModifier%)',
+                        style: const TextStyle(
+                          color: Colors.green,
+                        ),
+                      )
                   ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Strength: '),
-                        ),
-                        SelectableText(decimalFormat.format(strengthModifiedTotal)),
-                        if (strengthModified)
-                          Text(
-                            " $strengthString",
-                            style: TextStyle(color: strengthColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Defense: '),
-                        ),
-                        SelectableText(decimalFormat.format(defenseModifiedTotal)),
-                        if (defenseModified)
-                          Text(
-                            " $defenseString",
-                            style: TextStyle(color: defenseColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Speed: '),
-                        ),
-                        SelectableText(decimalFormat.format(speedModifiedTotal)),
-                        if (speedModified)
-                          Text(
-                            " $speedString",
-                            style: TextStyle(color: speedColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Dexterity: '),
-                        ),
-                        SelectableText(decimalFormat.format(dexModifiedTotal)),
-                        if (dexModified)
-                          Text(
-                            " $dexString",
-                            style: TextStyle(color: dexColor, fontSize: 12),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
-                    SizedBox(
-                      width: 50,
-                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text(
-                            'Total: ',
-                          ),
-                        ),
-                        SelectableText(
-                          decimalFormat.format(totalEffective),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  children: [
-                    const Text(
-                      'BATTLE STATS',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    GestureDetector(
-                      child: const Icon(Icons.copy, size: 14),
-                      onTap: () {
-                        _shareMisc(shareType: "battle");
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Strength: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.strength)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Defense: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.defense)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Speed: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.speed)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Dexterity: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.dexterity)),
-                        Text(
-                          " (${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)",
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      width: 50,
-                      child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 80,
-                          child: Text('Total: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.total)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (_settingsProvider!.tornStatsChartEnabled)
-                FutureBuilder(
-                  future: _statsChartDataFetched,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (_statsChartModel?.data != null) {
-                        return Column(
-                          children: [
-                            const SizedBox(height: 40),
-                            SizedBox(
-                              height: 200,
-                              child: StatsChart(
-                                statsData: _statsChartModel,
-                                chartType: _settingsProvider!.tornStatsChartType == "line"
-                                    ? TornStatsChartType.Line
-                                    : TornStatsChartType.Pie,
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                          ],
-                        );
-                      }
-                    }
-                    return const SizedBox(height: 20);
-                  },
-                )
-              else
-                const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
-                  children: [
-                    const Text(
-                      'WORK STATS',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    GestureDetector(
-                      child: const Icon(Icons.copy, size: 14),
-                      onTap: () {
-                        _shareMisc(shareType: "work");
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 100,
-                          child: Text('Manual labor: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.manualLabor)),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 100,
-                          child: Text('Intelligence: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.intelligence)),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 100,
-                          child: Text('Endurance: '),
-                        ),
-                        SelectableText(decimalFormat.format(_miscModel!.endurance)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (skillsExist)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'SKILLS',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          GestureDetector(
-                            child: const Icon(Icons.copy, size: 14),
-                            onTap: () {
-                              _shareMisc(shareType: "skills");
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (racing.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 80,
-                                  child: Text('Racing: '),
-                                ),
-                                SelectableText(racing),
-                              ],
-                            ),
-                          if (reviving.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 80,
-                                  child: Text('Reviving: '),
-                                ),
-                                SelectableText(reviving),
-                              ],
-                            ),
-                          if (hunting.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 80,
-                                  child: Text('Hunting: '),
-                                ),
-                                SelectableText(hunting),
-                              ],
-                            ),
-                          if (crimesExist)
-                            if (searchForCash.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 10, 0, 5),
-                                child: Text(
-                                  'CRIMES',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ),
-                          Row(
+                const SizedBox(height: 2),
+                SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
+                if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
+                  FutureBuilder(
+                    future: _statsChartDataFetched,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (_statsChartModel?.data != null) {
+                          return Column(
                             children: [
-                              const SizedBox(
-                                width: 130,
-                                child: Text('Search for Cash: '),
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                height: 200,
+                                child: StatsChart(
+                                  statsData: _statsChartModel,
+                                  chartType: _settingsProvider!.tornStatsChartType == "line"
+                                      ? TornStatsChartType.Line
+                                      : TornStatsChartType.Pie,
+                                ),
                               ),
-                              SelectableText(searchForCash),
+                              const SizedBox(height: 40),
                             ],
+                          );
+                        }
+                      }
+                      return const SizedBox(height: 8);
+                    },
+                  )
+                else
+                  const SizedBox(height: 8),
+                SelectableText('MAN: ${decimalFormat.format(_miscModel!.manualLabor)}'),
+                SelectableText('INT: ${decimalFormat.format(_miscModel!.intelligence)}'),
+                SelectableText('END: ${decimalFormat.format(_miscModel!.endurance)}'),
+              ],
+            ),
+          ),
+          expanded: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SelectableText('Rank: ${_user!.rank}'),
+                      SelectableText('Age: ${_user!.age}'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: _cashWallet(dense: false),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onLongPress: () {
+                          _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
+                        },
+                        onTap: () async {
+                          _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
+                        },
+                        child: const Icon(
+                          MdiIcons.alphaPCircleOutline,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      SelectableText('${_miscModel!.points}'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: _jobPoints(),
+                ),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: _companyAddictionWidget(),
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'EFFECTIVE STATS',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      GestureDetector(
+                        child: const Icon(Icons.copy, size: 14),
+                        onTap: () {
+                          _shareMisc(shareType: "effective");
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Strength: '),
                           ),
-                          if (bootlegging.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Bootlegging: '),
-                                ),
-                                SelectableText(bootlegging),
-                              ],
-                            ),
-                          if (graffiti.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Graffiti: '),
-                                ),
-                                SelectableText(graffiti),
-                              ],
-                            ),
-                          if (shoplifting.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Shoplifting: '),
-                                ),
-                                SelectableText(shoplifting),
-                              ],
-                            ),
-                          if (pickpocketing.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Pickpocketing: '),
-                                ),
-                                SelectableText(pickpocketing),
-                              ],
-                            ),
-                          if (cardSkimming.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Card Skimming: '),
-                                ),
-                                SelectableText(cardSkimming),
-                              ],
-                            ),
-                          if (burglary.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Burglary: '),
-                                ),
-                                SelectableText(burglary),
-                              ],
-                            ),
-                          if (hustling.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Hustling: '),
-                                ),
-                                SelectableText(hustling),
-                              ],
-                            ),
-                          if (disposal.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Disposal: '),
-                                ),
-                                SelectableText(disposal),
-                              ],
-                            ),
-                          if (cracking.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Cracking: '),
-                                ),
-                                SelectableText(cracking),
-                              ],
-                            ),
-                          if (forgery.isNotEmpty)
-                            Row(
-                              children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Forgery: '),
-                                ),
-                                SelectableText(forgery),
-                              ],
-                            ),
+                          SelectableText(decimalFormat.format(strengthModifiedTotal)),
+                          if (strengthModified)
+                            Text(
+                              " $strengthString",
+                              style: TextStyle(color: strengthColor, fontSize: 12),
+                            )
+                          else
+                            const SizedBox.shrink(),
                         ],
                       ),
-                    ),
-                  ],
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Defense: '),
+                          ),
+                          SelectableText(decimalFormat.format(defenseModifiedTotal)),
+                          if (defenseModified)
+                            Text(
+                              " $defenseString",
+                              style: TextStyle(color: defenseColor, fontSize: 12),
+                            )
+                          else
+                            const SizedBox.shrink(),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Speed: '),
+                          ),
+                          SelectableText(decimalFormat.format(speedModifiedTotal)),
+                          if (speedModified)
+                            Text(
+                              " $speedString",
+                              style: TextStyle(color: speedColor, fontSize: 12),
+                            )
+                          else
+                            const SizedBox.shrink(),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Dexterity: '),
+                          ),
+                          SelectableText(decimalFormat.format(dexModifiedTotal)),
+                          if (dexModified)
+                            Text(
+                              " $dexString",
+                              style: TextStyle(color: dexColor, fontSize: 12),
+                            )
+                          else
+                            const SizedBox.shrink(),
+                        ],
+                      ),
+                      SizedBox(
+                        width: 50,
+                        child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text(
+                              'Total: ',
+                            ),
+                          ),
+                          SelectableText(
+                            decimalFormat.format(totalEffective),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              const SizedBox(height: 10),
-            ],
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'BATTLE STATS',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      GestureDetector(
+                        child: const Icon(Icons.copy, size: 14),
+                        onTap: () {
+                          _shareMisc(shareType: "battle");
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Strength: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.strength)),
+                          Text(
+                            " (${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Defense: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.defense)),
+                          Text(
+                            " (${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Speed: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.speed)),
+                          Text(
+                            " (${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Dexterity: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.dexterity)),
+                          Text(
+                            " (${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        width: 50,
+                        child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 80,
+                            child: Text('Total: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.total)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (_settingsProvider!.tornStatsChartEnabled)
+                  FutureBuilder(
+                    future: _statsChartDataFetched,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (_statsChartModel?.data != null) {
+                          return Column(
+                            children: [
+                              const SizedBox(height: 40),
+                              SizedBox(
+                                height: 200,
+                                child: StatsChart(
+                                  statsData: _statsChartModel,
+                                  chartType: _settingsProvider!.tornStatsChartType == "line"
+                                      ? TornStatsChartType.Line
+                                      : TornStatsChartType.Pie,
+                                ),
+                              ),
+                              const SizedBox(height: 40),
+                            ],
+                          );
+                        }
+                      }
+                      return const SizedBox(height: 20);
+                    },
+                  )
+                else
+                  const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'WORK STATS',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      GestureDetector(
+                        child: const Icon(Icons.copy, size: 14),
+                        onTap: () {
+                          _shareMisc(shareType: "work");
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 100,
+                            child: Text('Manual labor: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.manualLabor)),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 100,
+                            child: Text('Intelligence: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.intelligence)),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 100,
+                            child: Text('Endurance: '),
+                          ),
+                          SelectableText(decimalFormat.format(_miscModel!.endurance)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (skillsExist)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: Row(
+                          children: [
+                            const Text(
+                              'SKILLS',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            GestureDetector(
+                              child: const Icon(Icons.copy, size: 14),
+                              onTap: () {
+                                _shareMisc(shareType: "skills");
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (racing.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 80,
+                                    child: Text('Racing: '),
+                                  ),
+                                  SelectableText(racing),
+                                ],
+                              ),
+                            if (reviving.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 80,
+                                    child: Text('Reviving: '),
+                                  ),
+                                  SelectableText(reviving),
+                                ],
+                              ),
+                            if (hunting.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 80,
+                                    child: Text('Hunting: '),
+                                  ),
+                                  SelectableText(hunting),
+                                ],
+                              ),
+                            if (crimesExist)
+                              if (searchForCash.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 5),
+                                  child: Text(
+                                    'CRIMES',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ),
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 130,
+                                  child: Text('Search for Cash: '),
+                                ),
+                                SelectableText(searchForCash),
+                              ],
+                            ),
+                            if (bootlegging.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Bootlegging: '),
+                                  ),
+                                  SelectableText(bootlegging),
+                                ],
+                              ),
+                            if (graffiti.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Graffiti: '),
+                                  ),
+                                  SelectableText(graffiti),
+                                ],
+                              ),
+                            if (shoplifting.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Shoplifting: '),
+                                  ),
+                                  SelectableText(shoplifting),
+                                ],
+                              ),
+                            if (pickpocketing.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Pickpocketing: '),
+                                  ),
+                                  SelectableText(pickpocketing),
+                                ],
+                              ),
+                            if (cardSkimming.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Card Skimming: '),
+                                  ),
+                                  SelectableText(cardSkimming),
+                                ],
+                              ),
+                            if (burglary.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Burglary: '),
+                                  ),
+                                  SelectableText(burglary),
+                                ],
+                              ),
+                            if (hustling.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Hustling: '),
+                                  ),
+                                  SelectableText(hustling),
+                                ],
+                              ),
+                            if (disposal.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Disposal: '),
+                                  ),
+                                  SelectableText(disposal),
+                                ],
+                              ),
+                            if (cracking.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Cracking: '),
+                                  ),
+                                  SelectableText(cracking),
+                                ],
+                              ),
+                            if (forgery.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Forgery: '),
+                                  ),
+                                  SelectableText(forgery),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 
@@ -5329,6 +5331,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       curve: Curves.bounceIn,
+      overlayOpacity: 0,
       children: [
         SpeedDialChild(
           onTap: () async {
@@ -6100,22 +6103,67 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return skillsString;
     }
 
+    String getCrimes() {
+      var crimesExist = false;
+      var crimesString = "\n\nCRIMES";
+      if (_miscModel!.searchForCash != null) {
+        crimesString += '\nSearch for Cash: ${_miscModel!.searchForCash}';
+        crimesExist = true;
+      }
+      if (_miscModel!.bootlegging != null) {
+        crimesString += '\nSBootlegging: ${_miscModel!.bootlegging}';
+        crimesExist = true;
+      }
+      if (_miscModel!.graffiti != null) {
+        crimesString += '\nGraffiti: ${_miscModel!.graffiti}';
+        crimesExist = true;
+      }
+      if (_miscModel!.shoplifting != null) {
+        crimesString += '\nShoplifting: ${_miscModel!.shoplifting}';
+        crimesExist = true;
+      }
+      if (_miscModel!.cardSkimming != null) {
+        crimesString += '\nCard Skimming: ${_miscModel!.cardSkimming}';
+        crimesExist = true;
+      }
+      if (_miscModel!.burglary != null) {
+        crimesString += '\nBurglary: ${_miscModel!.burglary}';
+        crimesExist = true;
+      }
+      if (_miscModel!.hustling != null) {
+        crimesString += '\nHustling: ${_miscModel!.hustling}';
+        crimesExist = true;
+      }
+      if (_miscModel!.disposal != null) {
+        crimesString += '\nDisposal: ${_miscModel!.disposal}';
+        crimesExist = true;
+      }
+      if (_miscModel!.forgery != null) {
+        crimesString += '\nForgery: ${_miscModel!.forgery}';
+        crimesExist = true;
+      }
+
+      if (!crimesExist) crimesString = "";
+      return crimesString;
+    }
+
     switch (shareType) {
       case "battle":
         final battle = playerString += getBattle();
-        Share.share(battle);
+        _onShare(battle);
       //print(battle);
       case "effective":
         final effective = playerString += getEffective();
-        Share.share(effective);
+        _onShare(effective);
       //print(effective);
       case "work":
         final work = playerString += getWork();
-        Share.share(work);
+        _onShare(work);
       //print(work);
       case "skills":
-        final skills = playerString += getSkills();
-        Share.share(skills);
+        String skills = playerString += getSkills();
+        skills += getCrimes();
+        _onShare(skills);
       //print(skills);
       default:
         var all = playerString;
@@ -6126,10 +6174,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         all += getEffective();
         all += getWork();
         all += getSkills();
-        Share.share(all);
+        all += getCrimes();
+        _onShare(all);
         //print(all);
         break;
     }
+  }
+
+  void _onShare(String shareText) async {
+    await Share.share(
+      shareText,
+      sharePositionOrigin: Rect.fromLTWH(
+        0,
+        0,
+        MediaQuery.of(context).size.width,
+        MediaQuery.of(context).size.height / 2,
+      ),
+    );
   }
 
   Future _loadPreferences() async {

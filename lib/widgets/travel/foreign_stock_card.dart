@@ -808,7 +808,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
 
     profitPerMinuteWidget = Text(
       '($profitPerHourFormatted/hour)',
-      style: TextStyle(color: profitColor),
+      style: TextStyle(color: profitColor, fontSize: 11),
     );
 
     return Row(

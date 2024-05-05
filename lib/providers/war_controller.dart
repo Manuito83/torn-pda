@@ -1,6 +1,10 @@
-import 'dart:math';
+import 'dart:developer';
+import 'dart:math' as math;
 import 'dart:developer' as dev;
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
@@ -32,7 +36,7 @@ class WarController extends GetxController {
   // Filters
   List<String> activeFilters = [];
   int onlineFilter = 0;
-  bool okayFilter = false;
+  int okayRedFilter = 0;
   bool countryFilter = false;
   bool travelingFilter = false;
   bool showChainWidget = true;
@@ -89,6 +93,13 @@ class WarController extends GetxController {
   bool _initWithIntegrity = true;
   WarController({bool initWithIntegrity = true}) {
     _initWithIntegrity = initWithIntegrity;
+  }
+
+  List<PendingNotificationRequest> _pendingNotifications = <PendingNotificationRequest>[];
+  List<PendingNotificationRequest> get pendingNotifications => _pendingNotifications;
+  set pendingNotifications(List<PendingNotificationRequest> value) {
+    _pendingNotifications = value;
+    update();
   }
 
   @override
@@ -160,6 +171,7 @@ class WarController extends GetxController {
     stopUpdate();
     // Remove also if it was filtered
     factions.removeWhere((f) => f.id == removeId);
+    _integrityCheck(force: true);
     savePreferences();
     update();
   }
@@ -174,7 +186,13 @@ class WarController extends GetxController {
 
   /// [allAttacks] is to be provided when updating several members at the same time, so that it does not have
   /// to call the API twice every time
-  Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies, dynamic ownStats}) async {
+  Future<bool> updateSingleMemberFull(
+    Member member, {
+    dynamic allAttacks,
+    dynamic spies,
+    dynamic ownStats,
+    bool fromCard = false,
+  }) async {
     dynamic allAttacksSuccess = allAttacks;
     allAttacksSuccess ??= await getAllAttacks();
 
@@ -271,6 +289,11 @@ class WarController extends GetxController {
     // End animation and update
     member.isUpdating = false;
     update();
+
+    // Avoid hundred of updates when performing a full faction update
+    if (fromCard) {
+      assessPendingNotifications();
+    }
 
     // Return result and save if successful
     if (!error) {
@@ -451,6 +474,7 @@ class WarController extends GetxController {
     }
 
     update();
+
     savePreferences();
     return numberUpdated;
   }
@@ -498,6 +522,7 @@ class WarController extends GetxController {
     _stopUpdate = false;
     updating = false;
     update();
+    assessPendingNotifications();
   }
 
   void stopUpdate() {
@@ -538,7 +563,7 @@ class WarController extends GetxController {
         // we lost or we have no records)
         if (value.respectGain > 0) {
           fairFight = value.modifiers!.fairFight;
-          respect = fairFight! * 0.25 * (log(member.level!) + 1);
+          respect = fairFight! * 0.25 * (math.log(member.level!) + 1);
         } else if (respect == -1) {
           respect = 0;
           fairFight = 1.00;
@@ -701,12 +726,17 @@ class WarController extends GetxController {
     update();
   }
 
-  void setOkayFilterActive(bool value) {
-    okayFilter = value;
-    if (!value) {
+  void setOkayRedFilter(int value) {
+    okayRedFilter = value;
+    if (value == 0) {
       activeFilters.removeWhere((element) => element == "okay");
-    } else {
+      activeFilters.removeWhere((element) => element == "red");
+    } else if (value == 1) {
       activeFilters.add("okay");
+      activeFilters.removeWhere((element) => element == "red");
+    } else if (value == 2) {
+      activeFilters.add("red");
+      activeFilters.removeWhere((element) => element == "okay");
     }
     savePreferences();
     update();
@@ -744,7 +774,7 @@ class WarController extends GetxController {
 
     activeFilters = await Prefs().getFilterListInWars();
     onlineFilter = await Prefs().getOnlineFilterInWars();
-    okayFilter = await Prefs().getOkayFilterInWars();
+    okayRedFilter = await Prefs().getOkayRedFilterInWars();
     countryFilter = await Prefs().getCountryFilterInWars();
     travelingFilter = await Prefs().getTravelingFilterInWars();
     showChainWidget = await Prefs().getShowChainWidgetInWars();
@@ -815,7 +845,7 @@ class WarController extends GetxController {
 
     Prefs().setFilterListInWars(activeFilters);
     Prefs().setOnlineFilterInWars(onlineFilter);
-    Prefs().setOkayFilterInWars(okayFilter);
+    Prefs().setOkayRedFilterInWars(okayRedFilter);
     Prefs().setCountryFilterInWars(countryFilter);
     Prefs().setTravelingFilterInWars(travelingFilter);
     Prefs().setShowChainWidgetInWars(showChainWidget);
@@ -926,6 +956,7 @@ class WarController extends GetxController {
 
     Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
     savePreferences();
+    assessPendingNotifications();
     update();
   }
 
@@ -1060,5 +1091,88 @@ class WarController extends GetxController {
   void _removeMemberBountyInfo(Member m) {
     m.bounty = "";
     m.bountyAmount = null;
+  }
+
+  void assessPendingNotifications() async {
+    try {
+      // Get the current active notifications
+      List<PendingNotificationRequest> active = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+      List<PendingNotificationRequest> newList = List<PendingNotificationRequest>.from(active);
+
+      // Assess whether the last udpated members are still in the same condition
+      for (final notification in active) {
+        // Check notificaiton ids 300 only
+        if (notification.payload == null) continue;
+        if (!notification.payload!.contains("300-")) continue;
+
+        String notificationMemberId = notification.payload!.split("-")[1];
+        String notificationTime = notification.payload!.split("-")[2];
+        String notificationPlace = notification.payload!.split("#")[1];
+
+        bool memberFound = false;
+
+        // Locate the member
+        for (final FactionModel f in factions) {
+          f.members!.forEach((apiMemberId, apiMember) async {
+            if (apiMember!.memberId!.toString() == notificationMemberId) {
+              memberFound = true;
+              bool remove = false;
+
+              // Remove notification if no longet in hospital or jail condition
+              if (apiMember.status!.state! == "Hospital") {
+                if (notificationPlace != "h") {
+                  log("Removing member ${apiMember.memberId!} notification as he's no longer in Hospital");
+                  remove = true;
+                }
+              } else if (apiMember.status!.state! == "Jail") {
+                if (notificationPlace != "j") {
+                  log("Removing member ${apiMember.memberId!} notification as he's no longer in Jail");
+                  remove = true;
+                }
+              } else {
+                log("Removing member ${apiMember.memberId!} notification as he's no longer in red state");
+                remove = true;
+              }
+
+              // Remove notification if time has elapsed
+              if (!remove) {
+                int? ts = int.tryParse(notificationTime);
+                if (ts != null) {
+                  DateTime notTime = DateTime.fromMillisecondsSinceEpoch(ts);
+                  if (notTime.isBefore(DateTime.now())) {
+                    remove = true;
+                    log("Removing member ${apiMember.memberId!} notification as it's expired");
+                  }
+                }
+              }
+
+              if (remove) {
+                await flutterLocalNotificationsPlugin.cancel(apiMember.memberId!);
+                newList.removeWhere((element) => element.payload!.contains("300-${apiMember.memberId!}"));
+              }
+            }
+          });
+        }
+
+        // If member is not found, remove its notification
+        if (!memberFound) {
+          log("Member $notificationMemberId not found, removing its notification");
+          await flutterLocalNotificationsPlugin.cancel(int.parse(notificationMemberId));
+          newList.removeWhere((element) => element.payload!.contains("300-$notificationMemberId"));
+        }
+      }
+
+      // Print the list of pending war member notifications
+      if (newList.isNotEmpty) {
+        log("Found pending war member notifications: ${newList.map((notification) => notification.payload).toList()}");
+      }
+
+      pendingNotifications = List<PendingNotificationRequest>.from(newList);
+
+      update();
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.log("PDA Crash at Assess Pending Notifications");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
   }
 }

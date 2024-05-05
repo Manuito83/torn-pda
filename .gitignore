@@ -17,6 +17,7 @@
 *.ipr
 *.iws
 .idea/*
+.idx/*
 !.idea/codeStyles/
 
 # The .vscode folder contains launch configuration and tasks you configure in
@@ -33,6 +34,7 @@
 .pub-cache/
 .pub/
 /build/
+/devtools_options.yaml
 
 # Firebase
 **/android/app/google-services.json

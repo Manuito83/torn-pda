@@ -39,6 +39,19 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.4.1 - Build 415 - 05/05/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.4.1'
+        ..date = '15 MAY 2024'
+        ..features = [
+          "War: added red status filter and notifications for jail and hospital release",
+          "Fixed some erroneous values and profits shown in Foreign Stocks",
+          "Fixed default launch section dropdown menu",
+          "Fixed share dialog in certain devices",
+        ],
+    );
+
     // v3.4.0 - Build 412 - 21/04/2024
     itemList.add(
       ChangeLogItem()

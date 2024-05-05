@@ -33,7 +33,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
-import 'package:torn_pda/widgets/revive/midnightX_revive_button.dart';
+import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
@@ -92,6 +92,8 @@ class WarPageState extends State<WarPage> {
 
   final _chainWidgetKey = GlobalKey();
 
+  Timer? _updatedTicker;
+
   final WarController _w = Get.find<WarController>();
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
@@ -136,6 +138,8 @@ class WarPageState extends State<WarPage> {
 
     _performQuickUpdate(firstTime: true);
 
+    _updatedTicker = Timer.periodic(const Duration(seconds: 30), (Timer t) => _w.assessPendingNotifications());
+
     routeWithDrawer = true;
     routeName = "chaining_war";
   }
@@ -144,6 +148,7 @@ class WarPageState extends State<WarPage> {
   Future dispose() async {
     _addIdController.dispose();
     _searchController.dispose();
+    _updatedTicker?.cancel();
     _w.stopUpdate();
     Get.delete<WarController>();
     super.dispose();
@@ -233,7 +238,7 @@ class WarPageState extends State<WarPage> {
               children: [
                 _onlineFilter(),
                 const SizedBox(width: 10),
-                _okayFilter(w),
+                _okayRedFilter(w),
                 const SizedBox(width: 10),
                 _countryFilter(w),
                 const SizedBox(width: 5),
@@ -248,7 +253,7 @@ class WarPageState extends State<WarPage> {
                 child: WarTargetsList(
                   warController: w,
                   offlineSelector: w.onlineFilter,
-                  okayFilterActive: w.okayFilter,
+                  okayRedFilterActive: w.okayRedFilter,
                   countryFilterActive: w.countryFilter,
                   travelingFilterActive: w.travelingFilter,
                 ),
@@ -257,7 +262,7 @@ class WarPageState extends State<WarPage> {
               WarTargetsList(
                 warController: w,
                 offlineSelector: w.onlineFilter,
-                okayFilterActive: w.okayFilter,
+                okayRedFilterActive: w.okayRedFilter,
                 countryFilterActive: w.countryFilter,
                 travelingFilterActive: w.travelingFilter,
               ),
@@ -344,16 +349,20 @@ class WarPageState extends State<WarPage> {
     );
   }
 
-  Widget _okayFilter(WarController w) {
+  Widget _okayRedFilter(WarController w) {
     return SizedBox(
       height: 25,
       child: ToggleSwitch(
-        customWidths: const [32],
+        customWidths: const [32, 32],
         borderWidth: 1,
         cornerRadius: 5,
         doubleTapDisable: true,
         borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-        initialLabelIndex: !w.okayFilter ? null : 0,
+        initialLabelIndex: _w.okayRedFilter == 0
+            ? null
+            : _w.okayRedFilter == 1
+                ? 0
+                : 1,
         activeBgColor: _themeProvider!.currentTheme == AppTheme.light
             ? [Colors.blueGrey]
             : _themeProvider!.currentTheme == AppTheme.dark
@@ -366,22 +375,30 @@ class WarPageState extends State<WarPage> {
                 ? Colors.grey[800]
                 : Colors.black,
         inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        totalSwitches: 1,
+        totalSwitches: 2,
         animate: true,
         animationDuration: 500,
         customIcons: const [
           Icon(
-            MdiIcons.accountCheckOutline,
+            MdiIcons.check,
             size: 12,
+            color: Colors.green,
+          ),
+          Icon(
+            MdiIcons.hospital,
+            size: 12,
+            color: Colors.red,
           ),
         ],
         onToggle: (index) async {
           await _performQuickUpdate(forceIntegrityCheck: false);
 
           if (index == null) {
-            _w.setOkayFilterActive(false);
-          } else {
-            _w.setOkayFilterActive(true);
+            _w.setOkayRedFilter(0);
+          } else if (index == 0) {
+            _w.setOkayRedFilter(1);
+          } else if (index == 1) {
+            _w.setOkayRedFilter(2);
           }
 
           String message;
@@ -1520,14 +1537,14 @@ class WarTargetsList extends StatefulWidget {
   const WarTargetsList({
     required this.warController,
     required this.offlineSelector,
-    required this.okayFilterActive,
+    required this.okayRedFilterActive,
     required this.countryFilterActive,
     required this.travelingFilterActive,
   });
 
   final WarController warController;
   final int offlineSelector;
-  final bool okayFilterActive;
+  final int okayRedFilterActive;
   final bool countryFilterActive;
   final bool travelingFilterActive;
 
@@ -1620,7 +1637,11 @@ class WarTargetsListState extends State<WarTargetsList> {
         continue;
       }
 
-      if (widget.okayFilterActive && thisMember.status!.color == "red") {
+      if (widget.okayRedFilterActive == 1 && thisMember.status!.color == "red") {
+        continue;
+      }
+
+      if (widget.okayRedFilterActive == 2 && thisMember.status!.color != "red") {
         continue;
       }
 
@@ -1639,9 +1660,13 @@ class WarTargetsListState extends State<WarTargetsList> {
 
       //filteredCards.add(WarCard(memberModel: thisMember));
       if (thisMember.pinned) {
-        pinnedMembers.add(WarCard(memberModel: thisMember));
+        pinnedMembers.add(
+          WarCard(memberModel: thisMember),
+        );
       } else {
-        nonPinnedMembers.add(WarCard(memberModel: thisMember));
+        nonPinnedMembers.add(
+          WarCard(memberModel: thisMember),
+        );
       }
     }
 

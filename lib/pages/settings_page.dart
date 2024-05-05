@@ -2737,7 +2737,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "Awards",
+              "Friends",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -2750,7 +2750,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "Items",
+              "Stakeouts",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -2760,6 +2760,19 @@ class SettingsPageState extends State<SettingsPage> {
         ),
         DropdownMenuItem(
           value: "6",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Awards",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "7",
           child: SizedBox(
             width: 80,
             child: Text(

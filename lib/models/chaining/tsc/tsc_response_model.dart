@@ -74,7 +74,7 @@ class Estimate {
   });
 
   factory Estimate.fromJson(Map<String, dynamic> json) => Estimate(
-        stats: json["stats"],
+        stats: json["stats"].toString(),
         lastUpdated: DateTime.parse(json["lastUpdated"]),
       );
 
