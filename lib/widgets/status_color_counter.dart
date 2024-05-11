@@ -85,6 +85,7 @@ class StatusColorCounterState extends State<StatusColorCounter> {
                   child: Center(
                     child: Text(
                       showNew ? newText : _formattedUntil ?? "",
+                      softWrap: false,
                       style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
