@@ -39,8 +39,8 @@ class TscResponse {
 class Spy {
   int userId;
   String userName;
-  Estimate estimate;
-  StatInterval statInterval;
+  Estimate? estimate;
+  StatInterval? statInterval;
 
   Spy({
     required this.userId,
@@ -52,21 +52,21 @@ class Spy {
   factory Spy.fromJson(Map<String, dynamic> json) => Spy(
         userId: json["userId"],
         userName: json["userName"],
-        estimate: Estimate.fromJson(json["estimate"]),
-        statInterval: StatInterval.fromJson(json["statInterval"]),
+        estimate: json["estimate"] != null ? Estimate.fromJson(json["estimate"]) : null,
+        statInterval: json["statInterval"] != null ? StatInterval.fromJson(json["statInterval"]) : null,
       );
 
   Map<String, dynamic> toJson() => {
         "userId": userId,
         "userName": userName,
-        "estimate": estimate.toJson(),
-        "statInterval": statInterval.toJson(),
+        "estimate": estimate?.toJson(),
+        "statInterval": statInterval?.toJson(),
       };
 }
 
 class Estimate {
-  String stats;
-  DateTime lastUpdated;
+  String? stats;
+  DateTime? lastUpdated;
 
   Estimate({
     required this.stats,
@@ -80,15 +80,15 @@ class Estimate {
 
   Map<String, dynamic> toJson() => {
         "stats": stats,
-        "lastUpdated": lastUpdated.toIso8601String(),
+        "lastUpdated": lastUpdated?.toIso8601String(),
       };
 }
 
 class StatInterval {
-  String min;
-  String max;
-  double battleScore;
-  String fairFight;
+  String? min;
+  String? max;
+  double? battleScore;
+  String? fairFight;
   dynamic lastUpdated;
 
   StatInterval({

@@ -273,34 +273,42 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
     String bsString = "";
     String ff = "";
     String dateString = "";
-    bool intervalExists = tsc.spy!.statInterval.lastUpdated != null;
+    bool intervalExists = tsc.spy!.statInterval?.lastUpdated != null;
 
     if (intervalExists) {
       try {
-        DateTime parsedDate = DateTime.parse(tsc.spy!.statInterval.lastUpdated!);
-        intervalIsNew = DateTime.now().difference(parsedDate).inDays < 45;
-        dateString = DateFormat('dd MMM yyyy').format(parsedDate);
+        if (tsc.spy!.statInterval!.lastUpdated != null) {
+          DateTime parsedDate = DateTime.parse(tsc.spy!.statInterval!.lastUpdated!);
+          intervalIsNew = DateTime.now().difference(parsedDate).inDays < 45;
+          dateString = DateFormat('dd MMM yyyy').format(parsedDate);
+        } else {
+          dateString = "ERROR";
+        }
       } on FormatException {
         dateString = "ERROR";
       }
 
-      int? min = int.tryParse(tsc.spy!.statInterval.min);
+      int? min = int.tryParse(tsc.spy!.statInterval!.min!);
       if (min != null) {
         minString = formatBigNumbers(min);
       }
 
-      int? max = int.tryParse(tsc.spy!.statInterval.max);
+      int? max = int.tryParse(tsc.spy!.statInterval!.max!);
       if (max != null) {
         maxString = formatBigNumbers(max);
       }
 
-      bsString = formatBigNumbers(tsc.spy!.statInterval.battleScore.floor());
+      if (tsc.spy!.statInterval!.battleScore != null) {
+        bsString = formatBigNumbers(tsc.spy!.statInterval!.battleScore!.floor());
+      }
 
-      ff = tsc.spy!.statInterval.fairFight;
+      if (tsc.spy!.statInterval!.fairFight != null) {
+        ff = tsc.spy!.statInterval!.fairFight!;
+      }
     }
 
     String estimateString = "ERROR";
-    int? estimate = int.tryParse(tsc.spy!.estimate.stats);
+    int? estimate = int.tryParse(tsc.spy!.estimate!.stats!);
     if (estimate != null) {
       estimateString = formatBigNumbers(estimate);
     }
@@ -343,42 +351,44 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 10),
-                  child: Row(
-                    children: [
-                      Text(
-                        "Battle Score: ",
-                        style: TextStyle(fontSize: 15),
-                      ),
-                      Text(
-                        bsString,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                if (bsString.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, top: 10),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Battle Score: ",
+                          style: TextStyle(fontSize: 15),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 10),
-                  child: Row(
-                    children: [
-                      Text(
-                        "Fair Fight: ",
-                        style: TextStyle(fontSize: 15),
-                      ),
-                      Text(
-                        ff,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                        Text(
+                          bsString,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                if (ff.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, top: 10),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Fair Fight: ",
+                          style: TextStyle(fontSize: 15),
+                        ),
+                        Text(
+                          ff,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.only(left: 20, top: 10),
                   child: Row(
