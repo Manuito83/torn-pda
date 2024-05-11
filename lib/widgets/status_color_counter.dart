@@ -80,8 +80,8 @@ class StatusColorCounterState extends State<StatusColorCounter> {
                 color: _formattedUntil == null ? Colors.transparent : statusColor,
                 child: Padding(
                   padding: Platform.isAndroid
-                      ? const EdgeInsets.fromLTRB(2, 1.5, 1, 0.5)
-                      : const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
+                      ? const EdgeInsets.fromLTRB(1, 1.5, 1, 0.5)
+                      : const EdgeInsets.symmetric(vertical: 1, horizontal: 1),
                   child: Center(
                     child: Text(
                       showNew ? newText : _formattedUntil ?? "",

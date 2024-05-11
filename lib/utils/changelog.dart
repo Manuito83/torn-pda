@@ -39,6 +39,17 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.4.2 - Build 416 - 11/05/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.4.2'
+        ..date = '20 MAY 2024'
+        ..features = [
+          "Fixed issues with TSC model",
+          "Fixed status color widget margins",
+        ],
+    );
+
     // v3.4.1 - Build 415 - 05/05/2024
     itemList.add(
       ChangeLogItem()

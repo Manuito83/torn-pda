@@ -57,9 +57,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.4.1';
-const String androidCompilation = '415';
-const String iosCompilation = '415';
+const String appVersion = '3.4.2';
+const String androidCompilation = '416';
+const String iosCompilation = '416';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
