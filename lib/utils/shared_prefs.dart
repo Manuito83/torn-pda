@@ -31,7 +31,7 @@ class Prefs {
   final String _kOnlineFilterInWars = "pda_onlineFilterInWars";
   final String _kOkayRedFilterInWars = "pda_okayRedFilterInWars";
   final String _kCountryFilterInWars = "pda_countryFilterInWars";
-  final String _kTravelingFilterInWars = "pda_travelingFilterInWars";
+  final String _kTravelingFilterInWars = "pda_travelingFilterStatusInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
   final String _kYataSpies = "pda_yataSpies";
@@ -550,14 +550,14 @@ class Prefs {
     return prefs.setBool(_kCountryFilterInWars, value);
   }
 
-  Future<bool> getTravelingFilterInWars() async {
+  Future<int> getTravelingFilterInWars() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelingFilterInWars) ?? false;
+    return prefs.getInt(_kTravelingFilterInWars) ?? 0;
   }
 
-  Future<bool> setTravelingFilterInWars(bool value) async {
+  Future<bool> setTravelingFilterInWars(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelingFilterInWars, value);
+    return prefs.setInt(_kTravelingFilterInWars, value);
   }
 
   Future<bool> getShowChainWidgetInWars() async {

@@ -50,7 +50,7 @@ String countryCheck({required String? state, required String? description}) {
 }
 
 /// Takes a player status and returns if the player is traveling (active flight)
-bool travelingCheck({required String? state}) {
+bool isTraveling({required String? state}) {
   try {
     // Travelling
     if (state == "Traveling") {

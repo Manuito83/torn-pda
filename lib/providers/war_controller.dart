@@ -38,7 +38,7 @@ class WarController extends GetxController {
   int onlineFilter = 0;
   int okayRedFilter = 0;
   bool countryFilter = false;
-  bool travelingFilter = false;
+  int travelingFilter = 0;
   bool showChainWidget = true;
 
   bool updating = false;
@@ -753,12 +753,17 @@ class WarController extends GetxController {
     update();
   }
 
-  void setTravelingFilterActive(bool value) {
+  void setTravelingFilterStatus(int value) {
     travelingFilter = value;
-    if (!value) {
-      activeFilters.removeWhere((element) => element == "hide traveling");
-    } else {
-      activeFilters.add("hide traveling");
+    if (value == 0) {
+      activeFilters.removeWhere((element) => element == "on the ground");
+      activeFilters.removeWhere((element) => element == "airborne");
+    } else if (value == 1) {
+      activeFilters.removeWhere((element) => element == "on the ground");
+      activeFilters.add("airborne");
+    } else if (value == 2) {
+      activeFilters.removeWhere((element) => element == "airborne");
+      activeFilters.add("on the ground");
     }
     savePreferences();
     update();
