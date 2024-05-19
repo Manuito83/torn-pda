@@ -1481,7 +1481,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         touchTooltipData: LineTouchTooltipData(
           fitInsideHorizontally: true,
           fitInsideVertically: false,
-          tooltipBgColor: Colors.blueGrey.withOpacity(1),
+          getTooltipColor: (touchedSpot) => Colors.blueGrey.withOpacity(1),
           getTooltipItems: (value) {
             final tooltips = <LineTooltipItem>[];
             for (final spot in value) {

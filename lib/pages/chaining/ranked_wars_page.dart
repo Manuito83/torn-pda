@@ -382,7 +382,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
               }
             }
           } else {
-            Get.back();
+            Navigator.pop(context);
           }
         },
       ),
@@ -444,7 +444,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
     } else {
       routeWithDrawer = true;
       routeName = "chaining_war";
-      Get.back();
+      Navigator.pop(context);
     }
   }
 }

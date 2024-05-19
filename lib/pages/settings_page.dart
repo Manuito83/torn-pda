@@ -1227,7 +1227,7 @@ class SettingsPageState extends State<SettingsPage> {
             children: <Widget>[
               const Flexible(
                 child: Text(
-                  "Clear tutorials",
+                  "Reset tutorials",
                 ),
               ),
               ElevatedButton(

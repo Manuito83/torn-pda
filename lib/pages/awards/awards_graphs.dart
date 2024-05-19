@@ -169,7 +169,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
     return BarChartData(
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-          tooltipBgColor: Colors.blueGrey,
+          getTooltipColor: (touchedSpot) => Colors.blueGrey,
           fitInsideVertically: true,
           fitInsideHorizontally: true,
           getTooltipItem: (group, groupIndex, rod, rodIndex) {

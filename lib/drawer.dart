@@ -17,7 +17,7 @@ import 'package:flutter/foundation.dart';
 // Flutter imports:
 import 'package:flutter/material.dart' hide Intent;
 import 'package:flutter/services.dart';
-import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -1318,7 +1318,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                           padding: EdgeInsets.zero,
                           children: <Widget>[
                             _getDrawerHeader(),
-                            _getDrawerItems(),
+                            Consumer<SettingsProvider>(builder: (context, settingsProvider, child) {
+                              return _getDrawerItems(settingsProvider);
+                            }),
                           ],
                         ),
                       )
@@ -1334,7 +1336,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                           padding: EdgeInsets.zero,
                           children: <Widget>[
                             _getDrawerHeader(),
-                            _getDrawerItems(),
+                            Consumer<SettingsProvider>(builder: (context, settingsProvider, child) {
+                              return _getDrawerItems(settingsProvider);
+                            }),
                           ],
                         ),
                       ),
@@ -1577,7 +1581,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     );
   }
 
-  Widget _getDrawerItems() {
+  Widget _getDrawerItems(SettingsProvider settingsProvider) {
     final drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings + About pages
     // (just don't add the other sections to the list)
@@ -1609,13 +1613,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       for (var i = 0; i < _drawerItemsList.length; i++) {
         // For this two, it is necessary to call Settings Provider from the Drawer and pass the callbacks all the
         // way to the relevant children. Otherwise, the drawer won't update in realtime (it's not listening)
-        if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
+        if (settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
           continue;
         }
-        if (!_settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
+        if (!settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
           continue;
         }
-        if (!_settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
+        if (!settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
           continue;
         }
 
@@ -2028,7 +2032,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _clearBadge() {
     try {
-      FlutterAppBadger.removeBadge();
+      AppBadgePlus.updateBadge(0);
     } catch (e) {
       // Not supported?
     }

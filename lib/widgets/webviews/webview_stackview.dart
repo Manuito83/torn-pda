@@ -353,18 +353,18 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
   void _closeWithError() {
     BotToast.showText(
       clickClose: true,
-      text: "Something went wrong, please try again. "
-          "If tabs are stuck, consider resetting the browser cache in Settings.",
+      text: "Something went wrong, please try again.",
       textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.deepOrangeAccent,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 6),
       contentPadding: const EdgeInsets.all(10),
     );
 
-    Get.back();
+    _webViewProvider.browserShowInForeground = false;
+    _webViewProvider.clearCacheAndTabs();
   }
 
   Future<void> _initialiseSecondary() async {

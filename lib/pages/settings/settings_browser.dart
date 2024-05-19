@@ -4,11 +4,11 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
@@ -1973,14 +1973,13 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           title: const Text('Pick a color!'),
           content: SingleChildScrollView(
             child: ColorPicker(
-              pickerColor: Color(_settingsProvider.tabsHideBarColor),
+              color: Color(_settingsProvider.tabsHideBarColor),
               //enableAlpha: false,
               onColorChanged: (color) {
                 setState(() {
                   _settingsProvider.changeTabsHideBarColor = color.value;
                 });
               },
-              pickerAreaHeightPercent: 0.8,
             ),
           ),
           actions: <Widget>[
@@ -2010,7 +2009,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           title: const Text('Pick a color!'),
           content: SingleChildScrollView(
             child: ColorPicker(
-              pickerColor: _highlightColor,
+              color: _highlightColor,
               //enableAlpha: false,
               onColorChanged: (color) {
                 _settingsProvider.changeHighlightColor = color.value;
@@ -2018,7 +2017,6 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   pickerColor = color;
                 });
               },
-              pickerAreaHeightPercent: 0.8,
             ),
           ),
           actions: <Widget>[

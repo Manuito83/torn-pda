@@ -115,6 +115,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
@@ -337,6 +339,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     return MaterialApp(
       title: 'Torn PDA',
+      navigatorKey: navigatorKey,
       theme: theme,
       debugShowCheckedModeBanner: false,
       builder: BotToastInit(),
@@ -366,7 +369,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 Row(
                   children: [
                     Flexible(
-                      child: GetMaterialApp(
+                      child: MaterialApp(
                         debugShowCheckedModeBanner: false,
                         theme: theme,
                         home: DrawerPage(),
@@ -391,7 +394,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                       child: wProvider.stackView,
                     ),
                     Flexible(
-                      child: GetMaterialApp(
+                      child: MaterialApp(
                         debugShowCheckedModeBanner: false,
                         theme: theme,
                         home: DrawerPage(),
@@ -405,7 +408,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
           } else {
             return Stack(
               children: [
-                GetMaterialApp(
+                MaterialApp(
                   debugShowCheckedModeBanner: false,
                   theme: theme,
                   home: DrawerPage(),

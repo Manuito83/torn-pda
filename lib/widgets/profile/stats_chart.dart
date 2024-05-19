@@ -173,7 +173,7 @@ class StatsChart extends StatelessWidget {
         touchTooltipData: LineTouchTooltipData(
           fitInsideHorizontally: true,
           fitInsideVertically: false,
-          tooltipBgColor: Colors.blueGrey.withOpacity(1),
+          getTooltipColor: (touchedSpot) => Colors.blueGrey.withOpacity(1),
           getTooltipItems: (value) {
             final tooltips = <LineTooltipItem>[];
             int thisX = value[0].x.toInt();
