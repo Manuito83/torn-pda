@@ -1964,7 +1964,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
-  void _showColorPickerTabs(BuildContext context) {
+  void _showColorPickerTabs(BuildContext context) async {
     showDialog(
       useRootNavigator: false,
       context: context,
@@ -1974,11 +1974,45 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           content: SingleChildScrollView(
             child: ColorPicker(
               color: Color(_settingsProvider.tabsHideBarColor),
-              //enableAlpha: false,
               onColorChanged: (color) {
                 setState(() {
                   _settingsProvider.changeTabsHideBarColor = color.value;
                 });
+              },
+              width: 40,
+              height: 40,
+              borderRadius: 4,
+              spacing: 5,
+              runSpacing: 5,
+              wheelDiameter: 155,
+              heading: Text(
+                'Select color',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              subheading: Text(
+                'Select color shade',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              wheelSubheading: Text(
+                'Selected color and its shades',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              showMaterialName: true,
+              showColorName: true,
+              showColorCode: true,
+              copyPasteBehavior: const ColorPickerCopyPasteBehavior(
+                longPressMenu: true,
+              ),
+              materialNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorCodeTextStyle: Theme.of(context).textTheme.bodySmall,
+              pickersEnabled: const <ColorPickerType, bool>{
+                ColorPickerType.both: false,
+                ColorPickerType.primary: true,
+                ColorPickerType.accent: true,
+                ColorPickerType.bw: false,
+                ColorPickerType.custom: true,
+                ColorPickerType.wheel: true,
               },
             ),
           ),
@@ -2010,12 +2044,46 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           content: SingleChildScrollView(
             child: ColorPicker(
               color: _highlightColor,
-              //enableAlpha: false,
               onColorChanged: (color) {
                 _settingsProvider.changeHighlightColor = color.value;
                 setState(() {
                   pickerColor = color;
                 });
+              },
+              width: 40,
+              height: 40,
+              borderRadius: 4,
+              spacing: 5,
+              runSpacing: 5,
+              wheelDiameter: 155,
+              heading: Text(
+                'Select color',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              subheading: Text(
+                'Select color shade',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              wheelSubheading: Text(
+                'Selected color and its shades',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              showMaterialName: true,
+              showColorName: true,
+              showColorCode: true,
+              copyPasteBehavior: const ColorPickerCopyPasteBehavior(
+                longPressMenu: true,
+              ),
+              materialNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorCodeTextStyle: Theme.of(context).textTheme.bodySmall,
+              pickersEnabled: const <ColorPickerType, bool>{
+                ColorPickerType.both: false,
+                ColorPickerType.primary: true,
+                ColorPickerType.accent: true,
+                ColorPickerType.bw: false,
+                ColorPickerType.custom: true,
+                ColorPickerType.wheel: true,
               },
             ),
           ),

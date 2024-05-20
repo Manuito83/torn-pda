@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
