@@ -58,7 +58,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
 
     routeName = "profile_notifications";
     routeWithDrawer = false;
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "profile_notifications") _goBack();
     });
   }

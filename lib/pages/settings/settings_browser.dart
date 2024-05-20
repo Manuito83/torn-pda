@@ -56,7 +56,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
     routeWithDrawer = false;
     routeName = "settings_browser";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "settings_browser") _goBack();
     });
   }

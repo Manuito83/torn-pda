@@ -32,7 +32,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
     routeWithDrawer = false;
     routeName = "friendly_factions";
-    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friendly_factions") _goBack();
     });
   }

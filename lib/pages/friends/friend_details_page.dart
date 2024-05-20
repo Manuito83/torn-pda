@@ -35,7 +35,7 @@ class FriendDetailsPageState extends State<FriendDetailsPage> {
 
     routeWithDrawer = false;
     routeName = "friend_details";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friend_details") _goBack();
     });
   }

@@ -56,7 +56,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
 
     routeWithDrawer = false;
     routeName = "friends_backup";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friends_backup") _goBack();
     });
   }

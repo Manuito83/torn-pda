@@ -56,7 +56,7 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
 
     routeWithDrawer = false;
     routeName = "targets_backup";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "targets_backup") _goBack();
     });
   }
@@ -132,7 +132,9 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
                                       contentPadding: const EdgeInsets.all(10),
                                     );
                                   } else {
-                                    Share.share(export, sharePositionOrigin: Rect.fromLTWH(
+                                    Share.share(
+                                      export,
+                                      sharePositionOrigin: Rect.fromLTWH(
                                         0,
                                         0,
                                         MediaQuery.of(context).size.width,

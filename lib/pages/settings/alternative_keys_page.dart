@@ -40,7 +40,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
 
     routeWithDrawer = false;
     routeName = "alternative_keys";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "alternative_keys") _goBack();
     });
   }

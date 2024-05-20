@@ -75,7 +75,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
     routeWithDrawer = false;
     routeName = "profile_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "profile_options") _goBack();
     });
   }

@@ -42,7 +42,7 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
 
     routeWithDrawer = false;
     routeName = "war_ahead_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "war_ahead_options") _goBack();
     });
   }

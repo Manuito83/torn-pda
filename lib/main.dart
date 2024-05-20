@@ -250,6 +250,7 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
+  late Widget _mainBrowser;
 
   @override
   void initState() {
@@ -272,6 +273,16 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
       }
     });
+
+    _mainBrowser = Consumer<WebViewProvider>(
+      builder: (context, w, child) {
+        return Visibility(
+          maintainState: true,
+          visible: w.browserShowInForeground || w.webViewSplitActive,
+          child: w.stackView,
+        );
+      },
+    );
   }
 
   @override
@@ -344,103 +355,84 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],
-      home: WillPopScope(
-        onWillPop: () async {
-          final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+      home: Consumer<SettingsProvider>(builder: (context, sProvider, child) {
+        return PopScope(
+          canPop: sProvider.onAppExit == "exit",
+          onPopInvoked: (didPop) async {
+            if (didPop) return;
+            final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+            if (w.browserShowInForeground) {
+              // Browser is in front, delegate the call
+              w.tryGoBack();
+            } else {
+              _openDrawerIfPossible();
+            }
+          },
+          child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
+            if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
+                wProvider.webViewSplitActive &&
+                screenIsWide) {
+              return Stack(
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: DrawerPage(),
+                      ),
+                      Flexible(
+                        child: _mainBrowser,
+                      ),
+                    ],
+                  ),
+                  const AppBorder(),
+                ],
+              );
+            } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+                wProvider.webViewSplitActive &&
+                screenIsWide) {
+              return Stack(
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: _mainBrowser,
+                      ),
+                      Flexible(
+                        child: DrawerPage(),
+                      ),
+                    ],
+                  ),
+                  const AppBorder(),
+                ],
+              );
+            }
 
-          if (w.browserShowInForeground) {
-            // Browser is in front, delegate the call
-            w.tryGoBack();
-            return false;
-          } else {
-            // App is in front
-            //_webViewProvider.willPopCallbackStream.add(true);
-            final bool shouldPop = await _willPopFromApp();
-            if (shouldPop) return true;
-            return false;
-          }
-        },
-        child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
-          if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
-              _webViewProvider.webViewSplitActive &&
-              screenIsWide) {
             return Stack(
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: MaterialApp(
-                        debugShowCheckedModeBanner: false,
-                        theme: theme,
-                        home: DrawerPage(),
-                      ),
-                    ),
-                    Flexible(
-                      child: wProvider.stackView,
-                    ),
-                  ],
+                // Inside of Navigator so that even if DrawerPage is replaced (we push another route), the
+                // reference to this widget is not lost
+                Navigator(
+                  onGenerateRoute: (_) {
+                    return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
+                  },
                 ),
+                _mainBrowser,
                 const AppBorder(),
               ],
             );
-          } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
-              _webViewProvider.webViewSplitActive &&
-              screenIsWide) {
-            return Stack(
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: wProvider.stackView,
-                    ),
-                    Flexible(
-                      child: MaterialApp(
-                        debugShowCheckedModeBanner: false,
-                        theme: theme,
-                        home: DrawerPage(),
-                      ),
-                    ),
-                  ],
-                ),
-                const AppBorder(),
-              ],
-            );
-          } else {
-            return Stack(
-              children: [
-                MaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  theme: theme,
-                  home: DrawerPage(),
-                ),
-                Visibility(
-                  maintainState: true,
-                  visible: wProvider.browserShowInForeground,
-                  child: wProvider.stackView,
-                ),
-                const AppBorder(),
-              ],
-            );
-          }
-        }),
-      ),
+          }),
+        );
+      }),
     );
   }
 
-  Future<bool> _willPopFromApp() async {
+  _openDrawerIfPossible() async {
     final SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
-    final appExit = s.onAppExit;
-    if (appExit == 'exit') {
-      return true;
+    if (routeWithDrawer) {
+      // Open drawer instead
+      s.willPopShouldOpenDrawerStream.add(true);
     } else {
-      if (routeWithDrawer) {
-        // Open drawer instead
-        s.willPopShouldOpenDrawer.add(true);
-        return false;
-      } else {
-        s.willPopShouldGoBack.add(true);
-        return false;
-      }
+      s.willPopShouldGoBackStream.add(true);
     }
   }
 }

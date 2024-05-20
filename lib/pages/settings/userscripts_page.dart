@@ -59,7 +59,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
     routeWithDrawer = false;
     routeName = "userscripts";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "userscripts") _goBack();
     });
   }

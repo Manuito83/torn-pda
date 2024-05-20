@@ -49,7 +49,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
     routeWithDrawer = false;
     routeName = "targets_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "targets_options") _goBack();
     });
   }

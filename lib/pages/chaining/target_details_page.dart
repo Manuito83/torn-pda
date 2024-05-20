@@ -35,7 +35,7 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
 
     routeWithDrawer = false;
     routeName = "target_details";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "target_details") _goBack();
     });
   }

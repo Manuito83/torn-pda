@@ -39,7 +39,7 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
 
     routeName = "travel_options";
     routeWithDrawer = false;
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "travel_options") _goBack();
     });
   }

@@ -153,7 +153,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
     routeWithDrawer = false;
     routeName = "foreign_stock";
-    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "foreign_stock") _goBack(false, false);
     });
   }

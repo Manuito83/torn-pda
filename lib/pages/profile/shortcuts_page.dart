@@ -35,7 +35,7 @@ class ShortcutsPageState extends State<ShortcutsPage> {
 
     routeWithDrawer = false;
     routeName = "shortcuts";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "shortcuts") _goBack();
     });
   }

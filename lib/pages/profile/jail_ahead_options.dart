@@ -42,7 +42,7 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
 
     routeWithDrawer = false;
     routeName = "jail_ahead_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "jail_ahead_options") _goBack();
     });
   }

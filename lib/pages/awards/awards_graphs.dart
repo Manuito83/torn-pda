@@ -41,7 +41,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
 
     routeWithDrawer = false;
     routeName = "awards_graphs";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "awards_graphs") _goBack();
     });
   }

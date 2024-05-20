@@ -42,7 +42,7 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
 
     routeWithDrawer = false;
     routeName = "loot_notification";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "loot_notification") _goBack();
     });
   }

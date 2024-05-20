@@ -42,7 +42,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
 
     routeWithDrawer = false;
     routeName = "hospital_ahead_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "hospital_ahead_options") _goBack();
     });
   }
