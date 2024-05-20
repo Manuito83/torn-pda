@@ -255,7 +255,7 @@ class WarPageState extends State<WarPage> {
                   offlineSelector: w.onlineFilter,
                   okayRedFilterActive: w.okayRedFilter,
                   countryFilterActive: w.countryFilter,
-                  travelingFilterActive: w.travelingFilter,
+                  abroadFilterActive: w.abroadFilter,
                 ),
               )
             else
@@ -264,7 +264,7 @@ class WarPageState extends State<WarPage> {
                 offlineSelector: w.onlineFilter,
                 okayRedFilterActive: w.okayRedFilter,
                 countryFilterActive: w.countryFilter,
-                travelingFilterActive: w.travelingFilter,
+                abroadFilterActive: w.abroadFilter,
               ),
             if (_settingsProvider!.appBarTop) const SizedBox(height: 50),
           ],
@@ -452,7 +452,7 @@ class WarPageState extends State<WarPage> {
         animationDuration: 500,
         customIcons: const [
           Icon(
-            MdiIcons.earth,
+            MdiIcons.mapMarker,
             size: 12,
           ),
         ],
@@ -498,12 +498,12 @@ class WarPageState extends State<WarPage> {
         cornerRadius: 5,
         doubleTapDisable: true,
         borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-        initialLabelIndex: _w.travelingFilter == 0
+        initialLabelIndex: _w.abroadFilter == 0
             ? null
-            : _w.travelingFilter == 1
+            : _w.abroadFilter == 1
                 ? 0
                 : 1,
-        activeBgColor: _w.travelingFilter == 1
+        activeBgColor: _w.abroadFilter == 1
             ? _themeProvider!.currentTheme == AppTheme.light
                 ? [Colors.blue[200]!]
                 : _themeProvider!.currentTheme == AppTheme.dark
@@ -530,7 +530,7 @@ class WarPageState extends State<WarPage> {
             size: 12,
           ),
           Icon(
-            MdiIcons.airplaneLanding,
+            MdiIcons.airplaneOff,
             size: 12,
           ),
         ],
@@ -1560,14 +1560,14 @@ class WarTargetsList extends StatefulWidget {
     required this.offlineSelector,
     required this.okayRedFilterActive,
     required this.countryFilterActive,
-    required this.travelingFilterActive,
+    required this.abroadFilterActive,
   });
 
   final WarController warController;
   final int offlineSelector;
   final int okayRedFilterActive;
   final bool countryFilterActive;
-  final int travelingFilterActive;
+  final int abroadFilterActive;
 
   @override
   State<WarTargetsList> createState() => WarTargetsListState();
@@ -1675,8 +1675,18 @@ class WarTargetsListState extends State<WarTargetsList> {
         continue;
       }
 
-      if ((widget.travelingFilterActive == 2 && isTraveling(state: thisMember.status!.state)) ||
-          (widget.travelingFilterActive == 1 && !isTraveling(state: thisMember.status!.state))) {
+      if ((widget.abroadFilterActive == 2 &&
+              countryCheck(
+                    state: thisMember.status!.state,
+                    description: thisMember.status!.description,
+                  ) !=
+                  "Torn") ||
+          (widget.abroadFilterActive == 1 &&
+              countryCheck(
+                    state: thisMember.status!.state,
+                    description: thisMember.status!.description,
+                  ) ==
+                  "Torn")) {
         continue;
       }
 
