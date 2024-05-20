@@ -2423,7 +2423,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     if ((_currentUrl.contains('city.php') && !_cityTriggered) ||
-        (!_currentUrl.contains('city.php') && _cityTriggered)) {
+        (!_currentUrl.contains('city.php') && (_cityTriggered || _cityIconActive))) {
       anySectionTriggered = true;
       getCity = true;
     }
