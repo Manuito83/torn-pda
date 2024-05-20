@@ -2390,6 +2390,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
     _assessBarsRedirect(document);
+    _assessProfileAgeToWords();
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -3659,6 +3660,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     } else {
       return const SizedBox.shrink();
     }
+  }
+
+  void _assessProfileAgeToWords() {
+    if (_currentUrl.contains("www.torn.com/profiles.php?")) webView?.evaluateJavascript(source: ageToWordsOnProfile());
   }
 
   // ASSESS PROFILES

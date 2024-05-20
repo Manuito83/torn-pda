@@ -1304,3 +1304,52 @@ String greasyForkMockVM(String scripts) {
     })($scripts);
   """;
 }
+
+String ageToWordsOnProfile() {
+  return r"""
+    (() => {
+    	const waitForContainer = (maxCount = 100) =>
+    		new Promise((resolve) => {
+    			const intID = setInterval(() => {
+    				const container = $("div.age");
+    				if (container.length) {
+    					clearInterval(intID);
+    					resolve(container);
+    				} else if (maxCount-- <= 0) {
+    					clearInterval(intID);
+    					resolve(null);
+    				}
+    			}, 100);
+    		});
+    
+    	const modifyTextToAge = (container) => {
+    		const ageString = generateAgeString(container);
+    		container
+    			.find("div.box-name")
+    			.text(ageString)
+    			.css("margin", "8px 0 0 0")
+    			.appendTo(container);
+    	};
+    
+    	const generateAgeString = (container) => {
+    		const el = container.find("ul.box-value");
+    		const age = parseInt(el.text());
+    
+    		const current = new Date();
+    		const signup = new Date(current - age * 24 * 60 * 60 * 1000);
+    		const diffDate = new Date(current - signup);
+    		const years = diffDate.getUTCFullYear() - 1970,
+    			months = diffDate.getUTCMonth(),
+    			days = diffDate.getUTCDate() - 1;
+    
+    		// yes this is dirty, but not incorrect....
+    		let ageString = `${days} days`;
+    		if (months) ageString = `${months} months, ${ageString}`;
+    		if (years) ageString = `${years} years, ${ageString}`;
+    		return ageString;
+    	};
+    
+    	waitForContainer().then(modifyTextToAge);
+    })();
+  """;
+}
