@@ -348,6 +348,14 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
     );
 
+    // Inside of Navigator so that even if DrawerPage is replaced (we push another route), the
+    // reference to this widget is not lost
+    final homeDrawer = Navigator(
+      onGenerateRoute: (_) {
+        return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
+      },
+    );
+
     return MaterialApp(
       title: 'Torn PDA',
       navigatorKey: navigatorKey,
@@ -376,12 +384,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: [
-                      Flexible(
-                        child: DrawerPage(),
-                      ),
-                      Flexible(
-                        child: _mainBrowser,
-                      ),
+                      Flexible(child: homeDrawer),
+                      Flexible(child: _mainBrowser),
                     ],
                   ),
                   const AppBorder(),
@@ -394,12 +398,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: [
-                      Flexible(
-                        child: _mainBrowser,
-                      ),
-                      Flexible(
-                        child: DrawerPage(),
-                      ),
+                      Flexible(child: _mainBrowser),
+                      Flexible(child: homeDrawer),
                     ],
                   ),
                   const AppBorder(),
@@ -409,13 +409,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
             return Stack(
               children: [
-                // Inside of Navigator so that even if DrawerPage is replaced (we push another route), the
-                // reference to this widget is not lost
-                Navigator(
-                  onGenerateRoute: (_) {
-                    return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
-                  },
-                ),
+                homeDrawer,
                 _mainBrowser,
                 const AppBorder(),
               ],

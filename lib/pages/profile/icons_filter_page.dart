@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 
 class IconsFilterPage extends StatefulWidget {
@@ -42,6 +43,10 @@ class IconsFilterPageState extends State<IconsFilterPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: widget.settingsProvider!.appBarTop ? buildAppBar() : null,

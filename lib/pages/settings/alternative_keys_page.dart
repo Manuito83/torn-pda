@@ -11,6 +11,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AlternativeKeysPage extends StatefulWidget {
@@ -55,6 +56,10 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

@@ -14,6 +14,7 @@ import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
@@ -90,6 +91,10 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
