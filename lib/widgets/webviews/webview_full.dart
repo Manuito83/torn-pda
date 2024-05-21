@@ -2390,6 +2390,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
     _assessBarsRedirect(document);
+    _assessProfileAgeToWords();
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -3661,6 +3662,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
+  void _assessProfileAgeToWords() {
+    if (_currentUrl.contains("www.torn.com/profiles.php?")) webView?.evaluateJavascript(source: ageToWordsOnProfile());
+  }
+
   // ASSESS PROFILES
   Future _assessProfileAttack({dom.Document? document, String pageTitle = ""}) async {
     if (mounted) {
@@ -4151,7 +4156,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // On iOS, when using the new menu icon for OC, the html doc does not respond for some reason
       // We just wait a second and then add the script (should not be noticeable)
       await Future.delayed(const Duration(milliseconds: 1000));
-      webView!.evaluateJavascript(source: ocNNB(members: membersString));
+      webView!.evaluateJavascript(source: ocNNB(members: membersString, playerID: _u.playerId));
     } catch (e) {
       BotToast.showText(
         text: "Could not load NNB from $_ocSource: $e",
