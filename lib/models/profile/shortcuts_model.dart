@@ -7,6 +7,7 @@ import 'dart:convert';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:torn_pda/utils/color_json.dart';
 
 Shortcut shortcutFromJson(String str) => Shortcut.fromJson(json.decode(str));
 
@@ -55,7 +56,7 @@ class Shortcut {
         originalNickname: json["originalNickname"],
         originalUrl: json["originalUrl"],
         iconUrl: json["iconUrl"],
-        color: json["color"] == null ? null : Color(int.parse(json["color"].split('(0x')[1].split(')')[0], radix: 16)),
+        color: getColorFromJson(json["color"]),
         isCustom: json["isCustom"],
         addPlayerId: json["addPlayerId"],
         addFactionId: json["addFactionId"],
