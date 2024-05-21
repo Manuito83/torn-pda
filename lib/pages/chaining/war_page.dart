@@ -1675,19 +1675,20 @@ class WarTargetsListState extends State<WarTargetsList> {
         continue;
       }
 
-      if ((widget.abroadFilterActive == 2 &&
-              countryCheck(
-                    state: thisMember.status!.state,
-                    description: thisMember.status!.description,
-                  ) !=
-                  "Torn") ||
-          (widget.abroadFilterActive == 1 &&
-              countryCheck(
-                    state: thisMember.status!.state,
-                    description: thisMember.status!.description,
-                  ) ==
-                  "Torn")) {
-        continue;
+      // Filter out not traveling
+      if (widget.abroadFilterActive == 1) {
+        if (countryCheck(state: thisMember.status!.state, description: thisMember.status!.description) == "Torn" &&
+            !isTraveling(state: thisMember.status!.state)) {
+          continue;
+        }
+      }
+
+      // Filter out traveling
+      if (widget.abroadFilterActive == 2) {
+        if (countryCheck(state: thisMember.status!.state, description: thisMember.status!.description) != "Torn" ||
+            isTraveling(state: thisMember.status!.state)) {
+          continue;
+        }
       }
 
       //filteredCards.add(WarCard(memberModel: thisMember));
