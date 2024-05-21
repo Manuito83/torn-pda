@@ -73,7 +73,7 @@ class Shortcut {
         "originalNickname": originalNickname,
         "originalUrl": originalUrl,
         "iconUrl": iconUrl,
-        "color": color?.toString(),
+        "color": color?.value,
         "isCustom": isCustom,
         "addPlayerId": addPlayerId,
         "addFactionId": addFactionId,

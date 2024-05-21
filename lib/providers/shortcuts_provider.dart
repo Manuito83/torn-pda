@@ -2,7 +2,6 @@
 import 'dart:collection';
 
 // Flutter imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
@@ -130,17 +129,6 @@ class ShortcutsProvider extends ChangeNotifier {
       } catch (e, trace) {
         FirebaseCrashlytics.instance.log("PDA Crash at Shortcuts initialization");
         FirebaseCrashlytics.instance.recordError(e, trace);
-        BotToast.showText(
-          onlyOne: false,
-          text: "Error restoring shortcuts: $e",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.blue[700]!,
-          duration: const Duration(seconds: 3),
-          contentPadding: const EdgeInsets.all(10),
-        );
       }
     }
 
