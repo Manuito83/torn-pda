@@ -9,12 +9,14 @@ class BackupImportWidget extends StatefulWidget {
   final OwnProfileBasic userProfile;
   final Map<String, dynamic> serverPrefs;
   final Function(BackupPrefs, bool) overwritteCallback;
+  final Function(BackupPrefs, bool) toggleBackupSelection;
   final bool fromShareDialog;
 
   const BackupImportWidget({
     required this.userProfile,
     required this.serverPrefs,
     required this.overwritteCallback,
+    required this.toggleBackupSelection,
     this.fromShareDialog = false,
   });
 
@@ -60,19 +62,18 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
           child: CheckboxListTile(
-            checkColor: Colors.white,
-            activeColor: Colors.blueGrey,
-            value: _selectedItems.contains("shortcuts"),
-            title: const Text("Shorcuts"),
-            subtitle: Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
-            onChanged: (value) {
-              setState(() {
-                _selectedItems.contains("shortcuts")
-                    ? _selectedItems.remove("shortcuts")
-                    : _selectedItems.add("shortcuts");
-              });
-            },
-          ),
+              checkColor: Colors.white,
+              activeColor: Colors.blueGrey,
+              value: _selectedItems.contains("shortcuts"),
+              title: const Text("Shorcuts"),
+              subtitle: Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
+              onChanged: (value) {
+                final bool shouldEnable = !_selectedItems.contains("shortcuts");
+                setState(() {
+                  shouldEnable ? _selectedItems.add("shortcuts") : _selectedItems.remove("shortcuts");
+                });
+                widget.toggleBackupSelection(BackupPrefs.shortcuts, shouldEnable);
+              }),
         ),
         if (_selectedItems.contains("shortcuts"))
           Padding(
@@ -149,12 +150,11 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                   contentPadding: const EdgeInsets.all(10),
                 );
               }
-
+              final bool shouldEnable = !_selectedItems.contains("userscripts");
               setState(() {
-                _selectedItems.contains("userscripts")
-                    ? _selectedItems.remove("userscripts")
-                    : _selectedItems.add("userscripts");
+                shouldEnable ? _selectedItems.add("userscripts") : _selectedItems.remove("userscripts");
               });
+              widget.toggleBackupSelection(BackupPrefs.userscripts, shouldEnable);
             },
           ),
         ),
@@ -219,9 +219,11 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
             title: const Text("Targets"),
             subtitle: Text("Targets list and notes", style: TextStyle(fontSize: 12)),
             onChanged: (value) {
+              final bool shouldEnable = !_selectedItems.contains("targets");
               setState(() {
-                _selectedItems.contains("targets") ? _selectedItems.remove("targets") : _selectedItems.add("targets");
+                shouldEnable ? _selectedItems.add("targets") : _selectedItems.remove("targets");
               });
+              widget.toggleBackupSelection(BackupPrefs.targets, shouldEnable);
             },
           ),
         ),
