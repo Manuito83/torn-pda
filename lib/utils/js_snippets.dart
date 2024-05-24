@@ -1190,12 +1190,13 @@ String ocNNB({required String members, required int playerID}) {
     	};
 
     	const handleOCTable = (table) => {
+    		// add .stat to the new Li element to match the status styling at the end of the row
     		let shouldHighlightRow = false;
     		table.addClass("pda-modified");
     		table.find("> ul > li > ul:not(.pda-table-row)").each((i, row) => {
     			\$(row).addClass("pda-table-row");
     			if (i === 0)
-    				return \$("<li/>", { text: "NNB" }).insertBefore(
+    				return \$("<li/>", { text: "NNB", class: "stat" }).insertBefore(
     					\$(row).find("li.stat")
     				);
     			const id = \$(row)
@@ -1204,7 +1205,8 @@ String ocNNB({required String members, required int playerID}) {
     				?.match(/XID=(\\d+)/)?.[1];
     			if (!id) return console.error("Missing ID for row", row);
     			if (id === playerID.toString()) shouldHighlightRow = true;
-    			\$("<li/>", { text: members[id] || "unk" }).insertBefore(
+
+    			\$("<li/>", { text: members[id] || "unk", class: "stat" }).insertBefore(
     				\$(row).find("li.stat")
     			);
     		});
@@ -1213,18 +1215,29 @@ String ocNNB({required String members, required int playerID}) {
 
     	const addStyles = () => {
     		const styles = `
-    		.pda-table-row {
-    			display: grid;
-    			grid-template-columns: 1fr 3rem 3rem 5rem;
-    		}
-    		.pda-table-row > * {
-    			width: unset !important;
-    		}
-        .pda-table-row > *:not(.member) {
-          text-align: center !important;
-        }
     		.pda-highlight-row {
     			background-color: #F0F7 !important;
+    		}    		
+    		/* Absolute values are modified from Torn's css, don't blame me */
+    		/* standard: li.level width = 275px, li.stat width = 47px */
+    		.pda-table-row > li.level {
+    			width: 208px !important;
+    		}
+    		/* compact: li.member = 229px, li.level = 42px, li.stat = 52px */
+    		@media screen and (max-width: 784px) {
+    			.pda-table-row > li.member {
+    				width: 157px !important;
+    			}
+    			/* must fix the width of li.level */
+    			.pda-table-row > li.level {
+    				width: 42px !important;
+    			}
+    		}
+    		/* verycompact: li.member = 163px, li.level = 42px, li.stat = 52px */
+    		@media screen and (max-width: 386px) {
+    			.pda-table-row > li.member {
+    				width: 91px !important;
+    			}
     		}
     		`;
     		\$("<style/>", { text: styles }).appendTo("head");
