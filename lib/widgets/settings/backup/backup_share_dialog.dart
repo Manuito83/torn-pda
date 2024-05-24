@@ -269,6 +269,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                           BackupRestoreButton(
                             ownBackup: false,
                             otherData: _importedPrefs,
+                            selectedItems: _importedSelectedItems,
                             overwritteShortcuts: _overwritteShortcuts,
                             overwritteUserscripts: _overwritteUserscripts,
                             overwritteTargets: _overwritteTargets,
@@ -418,6 +419,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
       userProfile: widget.userProfile,
       serverPrefs: _importedPrefs,
       overwritteCallback: _onOverwritteShortcutsChanged,
+      toggleBackupSelection: _onToggleBackupSelection,
       fromShareDialog: true,
     );
   }
@@ -739,6 +741,44 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
         setState(() {
           _overwritteTargets = value;
         });
+        break;
+    }
+  }
+
+  void _onToggleBackupSelection(BackupPrefs pref, bool value) {
+    switch (pref) {
+      case BackupPrefs.shortcuts:
+        if (value) {
+          setState(() {
+            _importedSelectedItems.add("shortcuts");
+          });
+        } else {
+          setState(() {
+            _importedSelectedItems.remove("shortcuts");
+          });
+        }
+        break;
+      case BackupPrefs.userscripts:
+        if (value) {
+          setState(() {
+            _importedSelectedItems.add("userscripts");
+          });
+        } else {
+          setState(() {
+            _importedSelectedItems.remove("userscripts");
+          });
+        }
+        break;
+      case BackupPrefs.targets:
+        if (value) {
+          setState(() {
+            _importedSelectedItems.add("targets");
+          });
+        } else {
+          setState(() {
+            _importedSelectedItems.remove("targets");
+          });
+        }
         break;
     }
   }

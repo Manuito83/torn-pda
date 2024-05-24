@@ -23,11 +23,13 @@ class BackupRestoreButton extends StatefulWidget {
   final bool overwritteShortcuts;
   final bool overwritteUserscripts;
   final bool overwritteTargets;
+  final List<String> selectedItems;
 
   const BackupRestoreButton({
     required this.ownBackup,
     this.userProfile,
     this.otherData = const {},
+    required this.selectedItems,
     required this.overwritteShortcuts,
     required this.overwritteUserscripts,
     required this.overwritteTargets,
@@ -92,7 +94,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
       final activeShortcutsList = result["prefs"]["pda_activeShortcutsList"] as List?;
       final shortcutTile = result["prefs"]["pda_shortcutTile"];
       final shortcutMenu = result["prefs"]["pda_shortcutMenu"];
-      if (activeShortcutsList != null) {
+      if (activeShortcutsList != null && widget.selectedItems.contains("shortcuts")) {
         // Restore through the provider
         final shortcutsList = activeShortcutsList.map((item) => item as String).toList();
         final shortcutsProvider = context.read<ShortcutsProvider>();
@@ -106,7 +108,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
 
       // User scripts
       String? userscripts = result["prefs"]["pda_userScriptsList"];
-      if (userscripts != null) {
+      if (userscripts != null && widget.selectedItems.contains("userscripts")) {
         final userscriptsProvider = context.read<UserScriptsProvider>();
         userscriptsProvider.restoreScriptsFromServerSave(
           overwritte: widget.overwritteUserscripts,
@@ -116,7 +118,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
 
       // Shortcuts
       final targetsBackup = result["prefs"]["pda_targetsList"] as List?;
-      if (targetsBackup != null) {
+      if (targetsBackup != null && widget.selectedItems.contains("targets")) {
         // Restore through the provider
         final targetsList = targetsBackup.map((item) => item as String).toList();
         final targetsProvider = context.read<TargetsProvider>();
