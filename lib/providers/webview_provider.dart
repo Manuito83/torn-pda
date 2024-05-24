@@ -1354,53 +1354,55 @@ class WebViewProvider extends ChangeNotifier {
     final url = tabList[i].currentUrl!;
 
     final themeProvider = context.read<ThemeProvider>();
-    Widget boxWidget = const ImageIcon(AssetImage('images/icons/pda_icon.png'));
+    Color iconColor = themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white;
+
+    Widget boxWidget = ImageIcon(AssetImage('images/icons/pda_icon.png'), color: iconColor);
 
     // Find some icons manually first, as they might trigger errors with shortcuts
-    if (!url.contains("torn.com")) {
-      return Icon(Icons.public, size: 22, color: themeProvider.mainText);
-    } else if (tabList[i].isChainingBrowser) {
-      return const Icon(MdiIcons.linkVariant, color: Colors.red);
+    if (tabList[i].isChainingBrowser) {
+      return Icon(MdiIcons.linkVariant, color: Colors.red);
     } else if (url.contains("sid=attack&user2ID=2225097")) {
-      return const Icon(MdiIcons.pistol, color: Colors.pink);
+      return Icon(MdiIcons.pistol, color: Colors.pink);
     } else if (url.contains("sid=attack&user2ID=")) {
-      return const Icon(Icons.person);
+      return Icon(Icons.person, color: iconColor);
     } else if (url.contains("profiles.php?XID=2225097")) {
-      return const Icon(Icons.person, color: Colors.pink);
+      return Icon(Icons.person, color: Colors.pink);
     } else if (url.contains("profiles.php")) {
-      return Icon(Icons.person, color: themeProvider.mainText);
+      return Icon(Icons.person, color: iconColor);
     } else if (url.contains("companies.php") || url.contains("joblist.php")) {
-      return const ImageIcon(AssetImage('images/icons/home/job.png'));
+      return ImageIcon(AssetImage('images/icons/home/job.png'), color: iconColor);
     } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
-      return const ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
+      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
     } else if (url.contains("https://www.torn.com/forums.php")) {
-      return const ImageIcon(AssetImage('images/icons/home/forums.png'));
+      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: iconColor);
     } else if (url.contains("yata.yt")) {
       return Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("jailview.php")) {
-      return Image.asset('images/icons/map/jail.png', color: themeProvider.mainText);
+      return Image.asset('images/icons/map/jail.png', color: iconColor);
     } else if (url.contains("hospitalview.php")) {
-      return Image.asset('images/icons/map/hospital.png', color: themeProvider.mainText);
+      return Image.asset('images/icons/map/hospital.png', color: iconColor);
     } else if (url.contains("events.php") || url.contains("page.php?sid=events")) {
-      return Image.asset('images/icons/home/events.png', color: themeProvider.mainText);
+      return Image.asset('images/icons/home/events.png', color: iconColor);
     } else if (url.contains("properties.php")) {
-      return Image.asset('images/icons/map/property.png', color: themeProvider.mainText);
+      return Image.asset('images/icons/map/property.png', color: iconColor);
     } else if (url.contains("tornstats.com/")) {
       return Image.asset('images/icons/tornstats_logo.png');
     } else if (url.contains("tornexchange.com/")) {
-      return Image.asset('images/icons/tornexchange_logo.png', color: themeProvider.mainText);
+      return Image.asset('images/icons/tornexchange_logo.png');
     } else if (url.contains("arsonwarehouse.com/")) {
       return Image.asset('images/icons/awh_logo2.png');
     } else if (url.contains("index.php?page=hunting")) {
-      return const Icon(MdiIcons.target, size: 20);
+      return Icon(MdiIcons.target, size: 20, color: iconColor);
     } else if (url.contains("bazaar.php")) {
-      return Image.asset('images/icons/inventory/bazaar.png', color: themeProvider.mainText);
+      return Image.asset('images/icons/inventory/bazaar.png', color: iconColor);
     } else if (url.contains("imarket.php")) {
-      return Image.asset('images/icons/map/item_market.png', color: themeProvider.mainText);
+      return Image.asset('images/icons/map/item_market.png', color: iconColor);
     } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
-      return Image.asset('images/icons/home/crimes.png');
+      return Image.asset('images/icons/home/crimes.png', color: iconColor);
     } else if (url.contains("index.php")) {
-      return const ImageIcon(AssetImage('images/icons/home/home.png'));
+      return ImageIcon(AssetImage('images/icons/home/home.png'), color: iconColor);
+    } else if (!url.contains("torn.com")) {
+      return Icon(Icons.public, size: 22, color: iconColor);
     }
 
     // Try to find by using shortcuts list
@@ -1409,7 +1411,10 @@ class WebViewProvider extends ChangeNotifier {
     final shortProvider = context.read<ShortcutsProvider>();
     for (final short in shortProvider.allShortcuts) {
       if (url.contains(short.url!)) {
-        boxWidget = ImageIcon(AssetImage(short.iconUrl!));
+        boxWidget = ImageIcon(
+          AssetImage(short.iconUrl!),
+          color: themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        );
         // Return if the coincidence is not with the default shortcut
         if (short.name != "Home") {
           return boxWidget;
