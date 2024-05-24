@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.4.2 - Build 421 - 21/05/2024
+    // v3.4.2 - Build 422 - 24/05/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.4.2'
@@ -50,6 +50,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added user's age in words in profiles [Kwack]",
           "Fixed issues with TSC model",
           "Fixed status color widget margins",
+          "Fixed issues when restoring settings from cloud save [Kwack]",
         ],
     );
 
