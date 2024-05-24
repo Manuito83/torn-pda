@@ -363,11 +363,52 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],
-      home: Consumer<SettingsProvider>(builder: (context, sProvider, child) {
+      home: Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
+        // Build standard or split-screen home
+        Widget home = Stack(
+          children: [
+            homeDrawer,
+            _mainBrowser,
+            const AppBorder(),
+          ],
+        );
+
+        if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
+            wProvider.webViewSplitActive &&
+            screenIsWide) {
+          home = Stack(
+            children: [
+              Row(
+                children: [
+                  Flexible(child: homeDrawer),
+                  Flexible(child: _mainBrowser),
+                ],
+              ),
+              const AppBorder(),
+            ],
+          );
+        } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+            wProvider.webViewSplitActive &&
+            screenIsWide) {
+          home = Stack(
+            children: [
+              Row(
+                children: [
+                  Flexible(child: _mainBrowser),
+                  Flexible(child: homeDrawer),
+                ],
+              ),
+              const AppBorder(),
+            ],
+          );
+        }
+
         return PopScope(
-          canPop: sProvider.onAppExit == "exit",
+          // Only exit app if user allows and we are not in the browser
+          canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
           onPopInvoked: (didPop) async {
             if (didPop) return;
+            // If we can't pop, decide if we open the drawer or go backwards in the browser
             final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
             if (w.browserShowInForeground) {
               // Browser is in front, delegate the call
@@ -376,45 +417,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
               _openDrawerIfPossible();
             }
           },
-          child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
-            if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
-                wProvider.webViewSplitActive &&
-                screenIsWide) {
-              return Stack(
-                children: [
-                  Row(
-                    children: [
-                      Flexible(child: homeDrawer),
-                      Flexible(child: _mainBrowser),
-                    ],
-                  ),
-                  const AppBorder(),
-                ],
-              );
-            } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
-                wProvider.webViewSplitActive &&
-                screenIsWide) {
-              return Stack(
-                children: [
-                  Row(
-                    children: [
-                      Flexible(child: _mainBrowser),
-                      Flexible(child: homeDrawer),
-                    ],
-                  ),
-                  const AppBorder(),
-                ],
-              );
-            }
-
-            return Stack(
-              children: [
-                homeDrawer,
-                _mainBrowser,
-                const AppBorder(),
-              ],
-            );
-          }),
+          child: home,
         );
       }),
     );

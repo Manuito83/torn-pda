@@ -118,11 +118,11 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? _onAppExit = 'ask';
-  String? get onAppExit => _onAppExit;
+  String? _onBackButtonAppExit = 'ask';
+  String? get onBackButtonAppExit => _onBackButtonAppExit;
   set changeOnAppExit(String? choice) {
-    _onAppExit = choice;
-    Prefs().setOnAppExit(_onAppExit!);
+    _onBackButtonAppExit = choice;
+    Prefs().setOnAppExit(_onBackButtonAppExit!);
     notifyListeners();
   }
 
@@ -880,7 +880,7 @@ class SettingsProvider extends ChangeNotifier {
         _browserRefreshMethod = BrowserRefreshSetting.both;
     }
 
-    _onAppExit = await Prefs().getOnAppExit();
+    _onBackButtonAppExit = await Prefs().getOnBackButtonAppExit();
 
     _chatRemoveEnabled = await Prefs().getChatRemovalEnabled();
 
