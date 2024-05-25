@@ -33,12 +33,6 @@ class StatsChart extends StatefulWidget {
 }
 
 class _StatsChartState extends State<StatsChart> {
-  final _strengthSpots = <FlSpot>[];
-  final _speedSpots = <FlSpot>[];
-  final _defenseSpots = <FlSpot>[];
-  final _dexteritySpots = <FlSpot>[];
-  final _timestamps = <int?>[];
-
   bool _statsUpdating = false;
 
   @override
@@ -237,12 +231,19 @@ class _StatsChartState extends State<StatsChart> {
 
   LineChartData _buildLineChartData() {
     double maxStat = 0;
+
+    final strengthSpots = <FlSpot>[];
+    final speedSpots = <FlSpot>[];
+    final defenseSpots = <FlSpot>[];
+    final dexteritySpots = <FlSpot>[];
+    final timestamps = <int?>[];
+
     for (int i = 0; i < widget.statsData!.data!.length; i++) {
-      _strengthSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].strength!.toDouble()));
-      _speedSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].speed!.toDouble()));
-      _defenseSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].defense!.toDouble()));
-      _dexteritySpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].dexterity!.toDouble()));
-      _timestamps.add(widget.statsData!.data![i].timestamp);
+      strengthSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].strength!.toDouble()));
+      speedSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].speed!.toDouble()));
+      defenseSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].defense!.toDouble()));
+      dexteritySpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].dexterity!.toDouble()));
+      timestamps.add(widget.statsData!.data![i].timestamp);
       final int thisMax = [
         widget.statsData!.data![i].strength ?? 0,
         widget.statsData!.data![i].speed ?? 0,
@@ -258,7 +259,7 @@ class _StatsChartState extends State<StatsChart> {
       maxY: maxStat * 1.05,
       lineBarsData: [
         LineChartBarData(
-          spots: _strengthSpots,
+          spots: strengthSpots,
           isCurved: false,
           barWidth: 2,
           color: Colors.blue,
@@ -267,7 +268,7 @@ class _StatsChartState extends State<StatsChart> {
           ),
         ),
         LineChartBarData(
-          spots: _speedSpots,
+          spots: speedSpots,
           isCurved: false,
           barWidth: 2,
           color: Colors.orange,
@@ -276,7 +277,7 @@ class _StatsChartState extends State<StatsChart> {
           ),
         ),
         LineChartBarData(
-          spots: _defenseSpots,
+          spots: defenseSpots,
           isCurved: false,
           barWidth: 2,
           color: Colors.red,
@@ -285,7 +286,7 @@ class _StatsChartState extends State<StatsChart> {
           ),
         ),
         LineChartBarData(
-          spots: _dexteritySpots,
+          spots: dexteritySpots,
           isCurved: false,
           barWidth: 2,
           color: Colors.green,
@@ -318,7 +319,7 @@ class _StatsChartState extends State<StatsChart> {
             // Get time comparing position in x with timestamps
             var ts = 0;
             final timesList = [];
-            for (final e in _timestamps) {
+            for (final e in timestamps) {
               timesList.add("$e");
             }
             if (thisX > timesList.length) {
@@ -376,7 +377,7 @@ class _StatsChartState extends State<StatsChart> {
             getTitlesWidget: (position, meta) {
               if (position == 0) return const SizedBox.shrink();
 
-              final int ts = _timestamps[position.toInt()]! * 1000;
+              final int ts = timestamps[position.toInt()]! * 1000;
               final DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts);
               final DateFormat formatter = DateFormat('d LLL');
               final String date = formatter.format(dt);
