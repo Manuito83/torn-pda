@@ -24,6 +24,7 @@ import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:toastification/toastification.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/firebase_options.dart';
@@ -58,8 +59,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.4.2';
-const String androidCompilation = '422';
-const String iosCompilation = '422';
+const String androidCompilation = '423';
+const String iosCompilation = '423';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
@@ -356,70 +357,72 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       },
     );
 
-    return MaterialApp(
-      title: 'Torn PDA',
-      navigatorKey: navigatorKey,
-      theme: theme,
-      debugShowCheckedModeBanner: false,
-      builder: BotToastInit(),
-      navigatorObservers: [BotToastNavigatorObserver()],
-      home: Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
-        // Build standard or split-screen home
-        Widget home = Stack(
-          children: [
-            homeDrawer,
-            _mainBrowser,
-            const AppBorder(),
-          ],
-        );
-
-        if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
-            wProvider.webViewSplitActive &&
-            screenIsWide) {
-          home = Stack(
+    return ToastificationWrapper(
+      child: MaterialApp(
+        title: 'Torn PDA',
+        navigatorKey: navigatorKey,
+        theme: theme,
+        debugShowCheckedModeBanner: false,
+        builder: BotToastInit(),
+        navigatorObservers: [BotToastNavigatorObserver()],
+        home: Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
+          // Build standard or split-screen home
+          Widget home = Stack(
             children: [
-              Row(
-                children: [
-                  Flexible(child: homeDrawer),
-                  Flexible(child: _mainBrowser),
-                ],
-              ),
+              homeDrawer,
+              _mainBrowser,
               const AppBorder(),
             ],
           );
-        } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
-            wProvider.webViewSplitActive &&
-            screenIsWide) {
-          home = Stack(
-            children: [
-              Row(
-                children: [
-                  Flexible(child: _mainBrowser),
-                  Flexible(child: homeDrawer),
-                ],
-              ),
-              const AppBorder(),
-            ],
-          );
-        }
 
-        return PopScope(
-          // Only exit app if user allows and we are not in the browser
-          canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
-          onPopInvoked: (didPop) async {
-            if (didPop) return;
-            // If we can't pop, decide if we open the drawer or go backwards in the browser
-            final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
-            if (w.browserShowInForeground) {
-              // Browser is in front, delegate the call
-              w.tryGoBack();
-            } else {
-              _openDrawerIfPossible();
-            }
-          },
-          child: home,
-        );
-      }),
+          if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
+              wProvider.webViewSplitActive &&
+              screenIsWide) {
+            home = Stack(
+              children: [
+                Row(
+                  children: [
+                    Flexible(child: homeDrawer),
+                    Flexible(child: _mainBrowser),
+                  ],
+                ),
+                const AppBorder(),
+              ],
+            );
+          } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+              wProvider.webViewSplitActive &&
+              screenIsWide) {
+            home = Stack(
+              children: [
+                Row(
+                  children: [
+                    Flexible(child: _mainBrowser),
+                    Flexible(child: homeDrawer),
+                  ],
+                ),
+                const AppBorder(),
+              ],
+            );
+          }
+
+          return PopScope(
+            // Only exit app if user allows and we are not in the browser
+            canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
+            onPopInvoked: (didPop) async {
+              if (didPop) return;
+              // If we can't pop, decide if we open the drawer or go backwards in the browser
+              final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+              if (w.browserShowInForeground) {
+                // Browser is in front, delegate the call
+                w.tryGoBack();
+              } else {
+                _openDrawerIfPossible();
+              }
+            },
+            child: home,
+          );
+        }),
+      ),
     );
   }
 

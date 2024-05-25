@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.4.2 - Build 422 - 24/05/2024
+    // v3.4.2 - Build 423 - 25/05/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.4.2'
@@ -48,6 +48,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added traveling filter in War",
           "Added highlight for user's own OC [Kwack]",
           "Added user's age in words in profiles [Kwack]",
+          "Added option to manually report and update Torn Stats' chart",
           "Fixed issues with TSC model",
           "Fixed status color widget margins",
           "Fixed issues when restoring settings from cloud save [Kwack]",

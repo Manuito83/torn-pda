@@ -98,6 +98,7 @@ dependencies:
   sliding_up_panel: 2.0.0+1
   timeline_tile: 2.0.0
   timezone: 0.9.1
+  toastification: 2.0.0
   toggle_switch: 2.3.0
   url_launcher: 6.2.1
   vibration: 1.9.0

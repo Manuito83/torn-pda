@@ -613,9 +613,10 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
-                                  "Show TornStats's stats chart in the Basic Info card. Stats are updated every "
-                                  "24 hours. If there is an issue, you can try to force a manual update by "
-                                  "switching this option off and back to on",
+                                  "Show Torn Stats's stats chart in the Basic Info card. Stats are updated every "
+                                  "24 hours, but you can force a manual update request by tapping the Torn Stats logo "
+                                  "in the chart legend. If there is an issue, you can try to force a manual update by "
+                                  "switching this option off and back to on.",
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
