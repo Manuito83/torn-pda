@@ -1163,88 +1163,135 @@ String bountiesJS({
 
 String ocNNB({required String members, required int playerID}) {
   return '''
-    ((members, playerID) => {
-    	const waitForOCs = (maxCount = 100) =>
-    		new Promise((resolve, reject) => {
-    			const intID = setInterval(() => {
-    				const ocRows = \$("ul.crimes-list > li");
-    				if (ocRows.length) {
-    					clearInterval(intID);
-    					resolve(ocRows);
-    				} else {
-    					if (maxCount-- <= 0) {
-    						clearInterval(intID);
-    						reject(new Error("Could not find member rows"));
-    					}
-    				}
-    			}, 100);
-    		});
+((members, playerID) => {
+		const waitForOCs = (maxCount = 100) =>
+			new Promise((resolve, reject) => {
+				const intID = setInterval(() => {
+					const ocRows = \$("ul.crimes-list > li");
+					if (ocRows.length) {
+						clearInterval(intID);
+						resolve(ocRows);
+					} else {
+						if (maxCount-- <= 0) {
+							clearInterval(intID);
+							reject(new Error("Could not find member rows"));
+						}
+					}
+				}, 100);
+			});
 
-    	const handleOCRows = (ocRows) => {
-    		ocRows.each((_, row) => {
-    			const table = \$(row).find(".details-wrap:not(.pda-modified)");
-    			if (!table.length) return // No new table to update
-    			const shouldHighlightRow = handleOCTable(table);
-    			if (shouldHighlightRow) \$(row).find("> ul.item").addClass("pda-highlight-row");
-    		});
-    	};
+		const handleOCRows = (ocRows) => {
+			ocRows.each((_, row) => {
+				const table = \$(row).find(
+					".details-wrap:not(.pda-modified), .plans-wrap:not(.pda-modified)"
+				);
+				if (!table.length) return; // No new table to update
+				if (row.closest(".organize-wrap")) {
+					const shouldHighlightRow = handleOCTable(table);
+					if (shouldHighlightRow)
+						\$(row).find("> ul.item").addClass("pda-highlight-row");
+				} else {
+					handleOCPlanningTable(table);
+				}
+			});
+		};
 
-    	const handleOCTable = (table) => {
-    		// add .stat to the new Li element to match the status styling at the end of the row
-    		let shouldHighlightRow = false;
-    		table.addClass("pda-modified");
-    		table.find("> ul > li > ul:not(.pda-table-row)").each((i, row) => {
-    			\$(row).addClass("pda-table-row");
-    			if (i === 0)
-    				return \$("<li/>", { text: "NNB", class: "stat" }).insertBefore(
-    					\$(row).find("li.stat")
-    				);
-    			const id = \$(row)
-    				.find("a[href*='profiles.php?XID=']")
-    				.attr("href")
-    				?.match(/XID=(\\d+)/)?.[1];
-    			if (!id) return console.error("Missing ID for row", row);
-    			if (id === playerID.toString()) shouldHighlightRow = true;
+		const handleOCTable = (table) => {
+			// add .stat to the new Li element to match the status styling at the end of the row
+			let shouldHighlightRow = false;
+			table.addClass("pda-modified");
+			table.find("> ul > li > ul:not(.pda-table-row)").each((i, row) => {
+				\$(row).addClass("pda-table-row");
+				if (i === 0)
+					return \$("<li/>", { text: "NNB", class: "stat" }).insertBefore(
+						\$(row).find("li.stat")
+					);
+				const id = \$(row)
+					.find("a[href*='profiles.php?XID=']")
+					.attr("href")
+					?.match(/XID=(\\d+)/)?.[1];
+				if (!id) return console.error("Missing ID for row", row);
+				if (id === playerID.toString()) shouldHighlightRow = true;
 
-    			\$("<li/>", { text: members[id] || "unk", class: "stat" }).insertBefore(
-    				\$(row).find("li.stat")
-    			);
-    		});
-    		return shouldHighlightRow;
-    	};
+				\$("<li/>", {
+					text: members[id] || "unk",
+					class: "stat",
+				}).insertBefore(\$(row).find("li.stat"));
+			});
+			return shouldHighlightRow;
+		};
 
-    	const addStyles = () => {
-    		const styles = `
-    		.pda-highlight-row {
-    			background-color: #F0F7 !important;
-    		}    		
-    		/* Absolute values are modified from Torn's css, don't blame me */
-    		/* standard: li.level width = 275px, li.stat width = 47px */
-    		.pda-table-row > li.level {
-    			width: 208px !important;
-    		}
-    		/* compact: li.member = 229px, li.level = 42px, li.stat = 52px */
-    		@media screen and (max-width: 784px) {
-    			.pda-table-row > li.member {
-    				width: 157px !important;
-    			}
-    			/* must fix the width of li.level */
-    			.pda-table-row > li.level {
-    				width: 42px !important;
-    			}
-    		}
-    		/* verycompact: li.member = 163px, li.level = 42px, li.stat = 52px */
-    		@media screen and (max-width: 386px) {
-    			.pda-table-row > li.member {
-    				width: 91px !important;
-    			}
-    		}
-    		`;
-    		\$("<style/>", { text: styles }).appendTo("head");
-    	};
-    	addStyles();
-    	waitForOCs().then(handleOCRows).catch(console.trace);
-    })($members, $playerID);
+		const handleOCPlanningTable = (table) => {
+			table.addClass("pda-modified");
+			table.find("div.plans-list > ul, ul.plans-list > li").each((i, row) => {
+				\$(row).addClass("pda-table-row-planning");
+				if (i === 0)
+					return \$("<li/>", { text: "NNB", class: "pda-nnb-planning" }).insertBefore(
+						\$(row).find("li.act")
+					);
+				const id = \$(row)
+					.find("a[href*='profiles.php?XID=']")
+					.attr("href")
+					?.match(/XID=(\\d+)/)?.[1];
+				if (!id) return console.error("Missing ID for row", row);
+				\$("<li/>", {
+					text: members[id] || "unk",
+					class: "pda-nnb-planning",
+				}).insertBefore(\$(row).find("li.act"));
+			});
+		};
+
+		const addStyles = () => {
+			const styles = `
+								.pda-highlight-row {
+					background-color: #F0F7 !important;
+				}    		
+				/* Absolute values are modified from Torn's css, don't blame me */
+				.pda-table-row > li.level {
+					width: 208px !important;
+				}
+				.pda-table-row-planning .member {
+					width: 230px !important;
+				}
+				.pda-table-row-planning .pda-nnb-planning {
+					width: 30px !important;
+				}
+				
+				@media screen and (max-width: 784px) {
+					.pda-table-row > li.member {
+						width: 157px !important;
+					}
+					.pda-table-row > li.level {
+						width: 42px !important;
+					}
+					.pda-table-row-planning .member {
+						width: 99px !important;
+					}
+					.pda-table-row-planning .offences, .pda-table-row-planning .offenses {
+						width: 96px !important;
+					}
+				}
+				
+				@media screen and (max-width: 386px) {
+					.pda-table-row > li.member {
+						width: 91px !important;
+					}
+					.pda-table-row-planning .pda-nnb-planning {
+						display: none !important; /* Hide NNB column, screen is too thin */
+					}
+					.pda-table-row-planning .member {
+						width: 119px !important; /* reset */
+					}
+					.pda-table-row-planning .offences, .pda-table-row-planning .offenses {
+						width: 60px !important; /* reset */
+					}
+				}
+				`;
+			\$("<style/>", { text: styles }).appendTo("head");
+		};
+		addStyles();
+		waitForOCs().then(handleOCRows).catch(console.trace);
+	})($members, $playerID);
   ''';
 }
 
