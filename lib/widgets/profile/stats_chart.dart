@@ -159,6 +159,13 @@ class _StatsChartState extends State<StatsChart> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        side: BorderSide(color: Colors.white, width: 2.0),
+                                      ),
+                                    ),
                                   ),
                                   GestureDetector(
                                     onTap: () {
